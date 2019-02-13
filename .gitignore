@@ -1,0 +1,6 @@
+Manifest.toml
+*.o
+*.mod
+*.so
+tutorials/.ipynb_checkpoints/*
+deps/build.log
