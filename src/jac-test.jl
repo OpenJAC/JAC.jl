@@ -31,8 +31,8 @@ function testCompareFiles(fold::String, fnew::String, sa::String, noLines::Int64
     # Compare the test computations with previous results
     oldLines = readlines(fold)
     newLines = readlines(fnew)
-    iold = 0;  for i=1:length(oldLines)   line = oldLines[i];   if  contains(line, sa)  iold = i;   break   end   end  
-    inew = 0;  for i=1:length(newLines)   line = newLines[i];   if  contains(line, sa)  inew = i;   break   end   end  
+    iold = 0;  for i=1:length(oldLines)   line = oldLines[i];   if  occursin(sa, line)  iold = i;   break   end   end  
+    inew = 0;  for i=1:length(newLines)   line = newLines[i];   if  occursin(sa, line)  inew = i;   break   end   end  
     if  iold == 0   ||   inew == 0    success = false 
         if printTest   println(iostream, "Tries to compare two inappropriate files fold = $(fold); fnew =$(fnew) on string $sa  ($iold, $inew)")  end
         return( success )
