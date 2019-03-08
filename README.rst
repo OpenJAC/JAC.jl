@@ -1,4 +1,5 @@
-
+.. image:: https://travis-ci.com/OpenJAC/JAC.jl.svg?branch=master
+    :target: https://travis-ci.com/OpenJAC/JAC.jl
 
 *Jena Atomic Calculator* for the computation of atomic structures, processes and cascades
 =========================================================================================
