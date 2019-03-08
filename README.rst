@@ -71,15 +71,15 @@ computations which can be summarized as follows:
 
 Documentation & News
 ~~~~~~~~~~~~~~~~~~~~ 
-A detailed `Manual, Compendium & Theoretical Background to JAC <https://~Manual-Jac-dist.rst>` is available that
+A detailed `Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.rst>` is available that
 describes the **use** and **underlying atomic theory** of the JAC code. News about recent developments of JAC
-are summarized `here <https://~NEWS.rst>`.
+are summarized `here <NEWS.rst>`.
 
 
 
 Licence & Reference
 ~~~~~~~~~~~~~~~~~~~
-The code in this repository is distributed under the `xxMITxx licence <https://...>`. The associated manual 
+The code in this repository is distributed under the `MIT licence <LICENSE.md>`. The associated manual 
 "Manual, Compendium & Theoretical Background to JAC" is distributed under the Creative Commons 
 Attribution 4.0 International (CC BY 4.0) license.
 
@@ -119,13 +119,13 @@ They can be explored statically at GitHub or can be run locally after the softwa
 In order to modify the cell-output of the notebooks and to better print the 'wide' tables, create or modify the file
 ~/.jupyter/custom/custom.css in your home directory and add the line:  div.output_area pre { font-size: 7pt;}
 
-- `Getting started <https://~tutorials/01-getting-started.ipynb>`__: A first tutorial
+- `Getting started <tutorials/01-getting-started.ipynb>`__: A first tutorial
 
-- `Hydrogenic estimates <https://~tutorials/02-hydrogenic-computations.ipynb>`__: A first tutorial
+- `Hydrogenic estimates <tutorials/02-hydrogenic-computations.ipynb>`__: A first tutorial
 
-- `Nuclear model <https://~tutorials/03-setting-the-nucleus.ipynb>`__: A first tutorial
+- `Nuclear model <tutorials/03-setting-the-nucleus.ipynb>`__: A first tutorial
 
-- `SCF + CI computations <https://~tutorials/05-compute-SCF+CI-carbon-III.ipynb>`__: A first tutorial
+- `SCF + CI computations <tutorials/05-compute-SCF+CI-carbon-III.ipynb>`__: A first tutorial
 
 - `...`__: Several further tutorials are available.
 
