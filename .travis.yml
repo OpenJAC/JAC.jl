@@ -13,6 +13,11 @@ julia:
 notifications:
   email: false
 
+addons:
+  apt:
+    packages:
+    - gfortran
+
 after_success:
   - julia -e 'using Pkg;
       cd(Pkg.dir("JAC"));
