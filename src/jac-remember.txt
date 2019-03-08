@@ -1,0 +1,20 @@
+
+using IJulia
+notebook()
+
+using Interact
+ui = button()
+display(ui)
+
+a1 = textbox("Write here");
+a2 = checkbox(label = "Check me!");
+a3 = toggle(label = "I have read and agreed");
+a4 = slider(1:100, label = "To what extent?", value = 33);
+a5 = dropdown(["None", "aaaaaaaaaaaaaaaaaaaaaa", "b", "c"]);
+a6 = togglebuttons(["aaaaaaaaaaa", "b", "c", "d", "e", "f"]);
+a7 = radiobuttons(["a", "b", "c"]);
+uk = button("hallo") |> display
+
+s = dropdown(OrderedDict("a" => "Value 1", "b" => "Value 2"))
+display(s)
+observe(s)[]

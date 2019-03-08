@@ -1,0 +1,912 @@
+
+
+
+Log-file from screen to the example from the MS:
+================================================  
+
+Define a radial grid of type MeshGL with 400 grid points
+ [rnt=2.000e-06, h=5.000e-02, hp=0.000e+00, NoPoints=390, r_max=9.161e+02;
+  B-splines wit break points at every 7th point, nsL=56, nsS=57, orderL=7, orderS=8, orderGL=7] 
+
+... in perform('computation: SCF', ...
+perform-aa: Configuration: 1s_1/2^2 2s_1/2^2 2p_1/2^2 2p_3/2^4 3s_1/2^1 3p_1/2^2 3p_3/2^4 
+perform-aa: Configuration: 1s_1/2^2 2s_1/2^2 2p_1/2^2 2p_3/2^4 3s_1/2^2 3p_3/2^4 3d_5/2^1 
+perform-aa: Configuration: 1s_1/2^2 2s_1/2^2 2p_1/2^2 2p_3/2^4 3s_1/2^2 3p_1/2^1 3p_3/2^3 3d_5/2^1 
+perform-aa: Configuration: 1s_1/2^2 2s_1/2^2 2p_1/2^2 2p_3/2^4 3s_1/2^2 3p_1/2^2 3p_3/2^2 3d_5/2^1 
+perform-aa: Configuration: 1s_1/2^2 2s_1/2^2 2p_1/2^2 2p_3/2^4 3s_1/2^2 3p_3/2^4 3d_3/2^1 
+perform-aa: Configuration: 1s_1/2^2 2s_1/2^2 2p_1/2^2 2p_3/2^4 3s_1/2^2 3p_1/2^1 3p_3/2^3 3d_3/2^1 
+perform-aa: Configuration: 1s_1/2^2 2s_1/2^2 2p_1/2^2 2p_3/2^4 3s_1/2^2 3p_1/2^2 3p_3/2^2 3d_3/2^1 
+(Re-) Define a new standard subshell list.
+(Re-) Define a storage array for various B-spline matrices:
+Nuclear model = Fermi nuclear model for Z = 26.0 with mass = 55.38, radius R = 3.756573410087755 fm and nuclear spin I = 0, dipole moment mu = 0.0 and quadrupole moment Q = 0.0. 
+Generate hydrogenic orbital for subshell 1s_1/2 
+  -----------------------------------------------------------------------------
+   Index    Subshell     Energies [a.u.]    Dirac-E  [a.u.]     Delta-E / |E|    
+  -----------------------------------------------------------------------------
+      1      1s_1/2      -3.41095882e+02    -3.41097837e+02    +5.73282577e-06    
+      2      2s_1/2      -8.54687335e+01    -8.54689584e+01    +2.63136714e-06    
+      3      3s_1/2      -3.78995149e+01    -3.78994478e+01    -1.77118976e-06    
+      4      4s_1/2      -2.12860102e+01    -2.12819385e+01    -1.91283922e-04    
+      5      5s_1/2      -1.36596748e+01    -1.36039714e+01    -4.07794550e-03    
+      6      6s_1/2      -1.02231533e+01    -9.43887322e+00    -7.67160661e-02    
+      7      7s_1/2      -8.71004839e+00    -6.93005925e+00    -2.04360420e-01    
+      8      8s_1/2      -6.39173280e+00    -5.30306679e+00    -1.70324081e-01    
+      :       :    
+     51     51s_1/2      +8.42794522e+07    -1.30041283e-01    +1.00000000e+00    
+     52     52s_1/2      +1.28010239e+08    -1.25086123e-01    +1.00000000e+00    
+     53     53s_1/2      +2.02324641e+08    -1.20408879e-01    +1.00000000e+00    
+     54     54s_1/2      +3.44744353e+08    -1.15989152e-01    +1.00000000e+00    
+     55     55s_1/2      +6.89589055e+08    -1.11808377e-01    +1.00000000e+00    
+     56     56s_1/2      +2.35235601e+09    -1.07849636e-01    +1.00000000e+00    
+  -----------------------------------------------------------------------------
+Use hydrogenic orbital from this symmetriy block also for 1s_1/2.
+Use hydrogenic orbital from this symmetriy block also for 2s_1/2.
+Use hydrogenic orbital from this symmetriy block also for 3s_1/2.
+Generate hydrogenic orbital for subshell 2p_1/2 
+  -----------------------------------------------------------------------------
+   Index    Subshell     Energies [a.u.]    Dirac-E  [a.u.]     Delta-E / |E|    
+  -----------------------------------------------------------------------------
+      1      2p_1/2      -8.54689639e+01    -8.54689584e+01    -6.48489779e-08    
+      2      3p_1/2      -3.78994938e+01    -3.78994478e+01    -1.21351773e-06    
+      3      4p_1/2      -2.12835731e+01    -2.12819385e+01    -7.68010407e-05    
+      4      5p_1/2      -1.36205252e+01    -1.36039714e+01    -1.21535783e-03    
+      5      6p_1/2      -9.56125779e+00    -9.43887322e+00    -1.28000495e-02    
+      6      7p_1/2      -7.52775477e+00    -6.93005925e+00    -7.93989094e-02    
+      7      8p_1/2      -6.03969738e+00    -5.30306679e+00    -1.21964819e-01    
+      8      9p_1/2      -4.48651176e+00    -4.18833237e+00    -6.64612987e-02    
+      :       :    
+     50     51p_1/2      +7.00735016e+07    -1.30041283e-01    +1.00000000e+00    
+     51     52p_1/2      +1.05223801e+08    -1.25086123e-01    +1.00000000e+00    
+     52     53p_1/2      +1.62933722e+08    -1.20408879e-01    +1.00000000e+00    
+     53     54p_1/2      +2.66765784e+08    -1.15989152e-01    +1.00000000e+00    
+     54     55p_1/2      +4.87784029e+08    -1.11808377e-01    +1.00000000e+00    
+     55     56p_1/2      +1.16201287e+09    -1.07849636e-01    +1.00000000e+00    
+  -----------------------------------------------------------------------------
+Use hydrogenic orbital from this symmetriy block also for 2p_1/2.
+Use hydrogenic orbital from this symmetriy block also for 3p_1/2.
+Generate hydrogenic orbital for subshell 2p_3/2 
+  -----------------------------------------------------------------------------
+   Index    Subshell     Energies [a.u.]    Dirac-E  [a.u.]     Delta-E / |E|    
+  -----------------------------------------------------------------------------
+      1      2p_3/2      -8.46909840e+01    -8.46909743e+01    -1.14756318e-07    
+      2      3p_3/2      -3.76688504e+01    -3.76687634e+01    -2.30930719e-06    
+      3      4p_3/2      -2.11877104e+01    -2.11846929e+01    -1.42417132e-04    
+      4      5p_3/2      -1.36424365e+01    -1.35542226e+01    -6.46613863e-03    
+      5      6p_3/2      -1.15227486e+01    -9.41010352e+00    -1.83345584e-01    
+      6      7p_3/2      -9.11847384e+00    -6.91195226e+00    -2.41983649e-01    
+      7      8p_3/2      -6.55244670e+00    -5.29094223e+00    -1.92524186e-01    
+      8      9p_3/2      -4.81673112e+00    -4.17982022e+00    -1.32228867e-01    
+      :       :    
+     51     52p_3/2      +9.99498601e+07    -1.25042127e-01    +1.00000000e+00    
+     52     53p_3/2      +1.53621355e+08    -1.20367328e-01    +1.00000000e+00    
+     53     54p_3/2      +2.48089620e+08    -1.15949867e-01    +1.00000000e+00    
+     54     55p_3/2      +4.40723192e+08    -1.11771197e-01    +1.00000000e+00    
+     55     56p_3/2      +9.65224244e+08    -1.07814412e-01    +1.00000000e+00    
+     56     57p_3/2      +3.73425631e+09    -1.04064077e-01    +1.00000000e+00    
+  -----------------------------------------------------------------------------
+Use hydrogenic orbital from this symmetriy block also for 2p_3/2.
+Use hydrogenic orbital from this symmetriy block also for 3p_3/2.
+Generate hydrogenic orbital for subshell 3d_3/2 
+  -----------------------------------------------------------------------------
+   Index    Subshell     Energies [a.u.]    Dirac-E  [a.u.]     Delta-E / |E|    
+  -----------------------------------------------------------------------------
+      1      3d_3/2      -3.76687691e+01    -3.76687634e+01    -1.52461907e-07    
+      2      4d_3/2      -2.11851380e+01    -2.11846929e+01    -2.10095112e-05    
+      3      5d_3/2      -1.35602665e+01    -1.35542226e+01    -4.45706919e-04    
+      4      6d_3/2      -9.45681978e+00    -9.41010352e+00    -4.93995501e-03    
+      5      7d_3/2      -7.15654748e+00    -6.91195226e+00    -3.41778239e-02    
+      6      8d_3/2      -5.73484357e+00    -5.29094223e+00    -7.74042630e-02    
+      7      9d_3/2      -4.37575111e+00    -4.17982022e+00    -4.47765173e-02    
+      8     10d_3/2      -3.21293530e+00    -3.38519008e+00    +5.36129033e-02    
+      :       :    
+     50     52d_3/2      +8.40904995e+07    -1.25042127e-01    +1.00000000e+00    
+     51     53d_3/2      +1.27688821e+08    -1.20367328e-01    +1.00000000e+00    
+     52     54d_3/2      +2.01753591e+08    -1.15949867e-01    +1.00000000e+00    
+     53     55d_3/2      +3.43703176e+08    -1.11771197e-01    +1.00000000e+00    
+     54     56d_3/2      +6.87810122e+08    -1.07814412e-01    +1.00000000e+00    
+     55     57d_3/2      +2.35095215e+09    -1.04064077e-01    +1.00000000e+00    
+  -----------------------------------------------------------------------------
+Use hydrogenic orbital from this symmetriy block also for 3d_3/2.
+Generate hydrogenic orbital for subshell 3d_5/2 
+  -----------------------------------------------------------------------------
+   Index    Subshell     Energies [a.u.]    Dirac-E  [a.u.]     Delta-E / |E|    
+  -----------------------------------------------------------------------------
+      1      3d_5/2      -3.75932131e+01    -3.75931842e+01    -7.68046876e-07    
+      2      4d_5/2      -2.11537737e+01    -2.11527840e+01    -4.67870315e-05    
+      3      5d_5/2      -1.42866282e+01    -1.35378838e+01    -5.24087583e-02    
+      4      6d_5/2      -1.34268187e+01    -9.40064903e+00    -2.99860282e-01    
+      5      7d_5/2      -9.32053372e+00    -6.90599924e+00    -2.59055389e-01    
+      6      8d_5/2      -6.78324096e+00    -5.28695474e+00    -2.20585739e-01    
+      7      9d_5/2      -5.22429585e+00    -4.17702006e+00    -2.00462574e-01    
+      8     10d_5/2      -4.17514391e+00    -3.38314902e+00    -1.89692837e-01    
+      :       :    
+     51     53d_5/2      +1.16989082e+08    -1.20353636e-01    +1.00000000e+00    
+     52     54d_5/2      +1.81915747e+08    -1.15936922e-01    +1.00000000e+00    
+     53     55d_5/2      +2.99816817e+08    -1.11758945e-01    +1.00000000e+00    
+     54     56d_5/2      +5.51599673e+08    -1.07802805e-01    +1.00000000e+00    
+     55     57d_5/2      +1.27192094e+09    -1.04053071e-01    +1.00000000e+00    
+     56     58d_5/2      +5.15428367e+09    -1.00495628e-01    +1.00000000e+00    
+  -----------------------------------------------------------------------------
+Use hydrogenic orbital from this symmetriy block also for 3d_5/2.
+Re-define the standard grid with 390 grid points.
+(Re-) Define a storage array for various B-spline matrices:
+
+Iteration 1 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.50257975e+02;   self-consistency = 1.536101e-01  [1.000000e+02 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.13236973e+01;   self-consistency = 4.636006e-01  [1.000000e+02 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -8.60660281e+00;   self-consistency = 6.298722e-01  [1.000000e+02 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -2.85749503e+01;   self-consistency = 4.988781e-01  [1.000000e+02 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -7.91990546e+00;   self-consistency = 6.542990e-01  [1.000000e+02 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.02004215e+01;   self-consistency = 4.742788e-01  [1.000000e+02 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -8.31380968e+00;   self-consistency = 6.383937e-01  [1.000000e+02 for symmetry block kappa = -2]
+  3d_3/2::  en [a.u.] = -7.17024977e+00;   self-consistency = 6.801781e-01  [1.000000e+02 for symmetry block kappa = 2]
+  3d_5/2::  en [a.u.] = -7.25812748e+00;   self-consistency = 6.763474e-01  [1.000000e+02 for symmetry block kappa = -3]
+
+Iteration 2 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.67239415e+02;   self-consistency = 3.281454e-02  [1.182626e+00 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.93308755e+01;   self-consistency = 1.133285e-01  [1.182626e+00 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.07629157e+01;   self-consistency = 1.113251e-01  [1.182626e+00 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.48048188e+01;   self-consistency = 9.829428e-02  [2.900393e-01 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.33574827e+00;   self-consistency = 8.205095e-02  [2.900393e-01 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.38694025e+01;   self-consistency = 5.726535e-02  [2.152869e+00 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.12780881e+00;   self-consistency = 4.666993e-02  [2.152869e+00 for symmetry block kappa = -2]
+  3d_3/2::  en [a.u.] = -6.99932998e+00;   self-consistency = 1.206245e-02  [2.922411e-02 for symmetry block kappa = 2]
+  3d_5/2::  en [a.u.] = -6.99016463e+00;   self-consistency = 1.880666e-02  [2.576936e+00 for symmetry block kappa = -3]
+
+Iteration 3 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64337089e+02;   self-consistency = 5.459846e-03  [1.627010e-01 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.79156897e+01;   self-consistency = 1.832037e-02  [1.627010e-01 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03182172e+01;   self-consistency = 2.109462e-02  [1.627010e-01 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.39238432e+01;   self-consistency = 1.281817e-02  [5.911406e-02 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.10016697e+00;   self-consistency = 1.277839e-02  [5.911406e-02 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35253870e+01;   self-consistency = 5.104482e-03  [1.096553e-01 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.03949326e+00;   self-consistency = 4.861236e-03  [1.096553e-01 for symmetry block kappa = -2]
+  3d_3/2::  en [a.u.] = -7.06915899e+00;   self-consistency = 4.963504e-03  [1.039049e-02 for symmetry block kappa = 2]
+  3d_5/2::  en [a.u.] = -7.05581036e+00;   self-consistency = 4.673633e-03  [2.065317e-01 for symmetry block kappa = -3]
+
+Iteration 4 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64714929e+02;   self-consistency = 7.141825e-04  [3.646640e-02 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.80941675e+01;   self-consistency = 2.348087e-03  [3.646640e-02 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03722400e+01;   self-consistency = 2.610999e-03  [3.646640e-02 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40106313e+01;   self-consistency = 1.277527e-03  [4.979668e-03 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.12117599e+00;   self-consistency = 1.152989e-03  [4.979668e-03 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35442868e+01;   self-consistency = 2.817925e-04  [4.066279e-03 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.04262883e+00;   self-consistency = 1.734076e-04  [4.066279e-03 for symmetry block kappa = -2]
+  3d_3/2::  en [a.u.] = -7.05885491e+00;   self-consistency = 7.293367e-04  [1.541630e-03 for symmetry block kappa = 2]
+  3d_5/2::  en [a.u.] = -7.04723959e+00;   self-consistency = 6.077247e-04  [3.271656e-02 for symmetry block kappa = -3]
+
+Iteration 5 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64674665e+02;   self-consistency = 7.605693e-05  [3.502112e-03 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.80755635e+01;   self-consistency = 2.442447e-04  [3.502112e-03 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03666674e+01;   self-consistency = 2.687026e-04  [3.502112e-03 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40040850e+01;   self-consistency = 9.624859e-05  [3.225286e-04 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.11981545e+00;   self-consistency = 7.458660e-05  [3.225286e-04 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35445166e+01;   self-consistency = 3.425550e-06  [5.416608e-04 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.04299845e+00;   self-consistency = 2.043713e-05  [5.416608e-04 for symmetry block kappa = -2]
+  3d_3/2::  en [a.u.] = -7.05991552e+00;   self-consistency = 7.512053e-05  [1.589230e-04 for symmetry block kappa = 2]
+  3d_5/2::  en [a.u.] = -7.04806223e+00;   self-consistency = 5.836307e-05  [3.060229e-03 for symmetry block kappa = -3]
+
+Iteration 6 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64678107e+02;   self-consistency = 6.501418e-06  [2.673015e-04 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.80771070e+01;   self-consistency = 2.026923e-05  [2.673015e-04 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03671194e+01;   self-consistency = 2.180148e-05  [2.673015e-04 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40043468e+01;   self-consistency = 3.848999e-06  [4.300287e-06 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.11983541e+00;   self-consistency = 1.094290e-06  [4.300287e-06 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35442684e+01;   self-consistency = 3.699739e-06  [1.451297e-04 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.04289592e+00;   self-consistency = 5.669116e-06  [1.451297e-04 for symmetry block kappa = -2]
+  3d_3/2::  en [a.u.] = -7.05983305e+00;   self-consistency = 5.840541e-06  [1.238325e-05 for symmetry block kappa = 2]
+  3d_5/2::  en [a.u.] = -7.04800349e+00;   self-consistency = 4.167205e-06  [2.196917e-04 for symmetry block kappa = -3]
+
+Iteration 7 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64677902e+02;   self-consistency = 3.869605e-07  [1.378329e-05 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.80770207e+01;   self-consistency = 1.133915e-06  [1.378329e-05 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03670954e+01;   self-consistency = 1.162121e-06  [1.378329e-05 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40043699e+01;   self-consistency = 3.404066e-07  [2.726840e-06 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.11984660e+00;   self-consistency = 6.132180e-07  [2.726840e-06 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35443119e+01;   self-consistency = 6.492036e-07  [2.094942e-05 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.04291087e+00;   self-consistency = 8.267401e-07  [2.094942e-05 for symmetry block kappa = -2]
+  3d_3/2::  en [a.u.] = -7.05983678e+00;   self-consistency = 2.641334e-07  [5.628325e-07 for symmetry block kappa = 2]
+  3d_5/2::  en [a.u.] = -7.04800546e+00;   self-consistency = 1.393930e-07  [7.416585e-06 for symmetry block kappa = -3]
+
+Iteration 8 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64677903e+02;   self-consistency = 1.402064e-09  [3.368861e-07 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.80770200e+01;   self-consistency = 8.656908e-09  [3.368861e-07 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03670949e+01;   self-consistency = 1.948782e-08  [3.368861e-07 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40043627e+01;   self-consistency = 1.058496e-07  [5.554375e-07 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.11984429e+00;   self-consistency = 1.263039e-07  [5.554375e-07 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35443065e+01;   self-consistency = 8.037859e-08  [2.309100e-06 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.04290921e+00;   self-consistency = 9.177415e-08  [2.309100e-06 for symmetry block kappa = -2]
+  3d_3/2::  en [a.u.] = -7.05983698e+00;   self-consistency = 1.442345e-08  [3.006853e-08 for symmetry block kappa = 2]
+  3d_5/2::  en [a.u.] = -7.04800573e+00;   self-consistency = 1.932132e-08  [1.006503e-06 for symmetry block kappa = -3]
+
+Iteration 9 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64677905e+02;   self-consistency = 3.949184e-09  [2.118445e-07 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.80770211e+01;   self-consistency = 1.391852e-08  [2.118445e-07 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03670953e+01;   self-consistency = 1.620357e-08  [2.118445e-07 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40043638e+01;   self-consistency = 1.603045e-08  [7.373857e-08 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.11984460e+00;   self-consistency = 1.684792e-08  [7.373857e-08 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35443071e+01;   self-consistency = 7.876881e-09  [2.006131e-07 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.04290936e+00;   self-consistency = 8.055752e-09  [2.006131e-07 for symmetry block kappa = -2]
+  3d_3/2::  en [a.u.] = -7.05983690e+00;   self-consistency = 5.550824e-09  [1.171478e-08 for symmetry block kappa = 2]
+  3d_5/2::  en [a.u.] = -7.04800566e+00;   self-consistency = 5.100748e-09  [2.666899e-07 for symmetry block kappa = -3]
+Compute CI matrix of dimension 8 x 8 for the symmetry 5/2^+ ...   ... done.
+Compute CI matrix of dimension 6 x 6 for the symmetry 1/2^+ ...   ... done.
+Compute CI matrix of dimension 8 x 8 for the symmetry 3/2^+ ...   ... done.
+Compute CI matrix of dimension 2 x 2 for the symmetry 9/2^+ ...   ... done.
+Compute CI matrix of dimension 5 x 5 for the symmetry 7/2^+ ...   ... done.
+
+  Eigenenergies:
+
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     1    1/2 +     -1.241474818158662e+03    -3.378225051102466e+04    -3.378225051102466e+04 
+     2    7/2 +     -1.241013110079942e+03    -3.376968679426605e+04    -3.376968679426605e+04 
+     3    5/2 +     -1.241013074627370e+03    -3.376968582955244e+04    -3.376968582955244e+04 
+     4    3/2 +     -1.241007439938115e+03    -3.376953250184801e+04    -3.376953250184801e+04 
+     5    1/2 +     -1.241000331020361e+03    -3.376933905834283e+04    -3.376933905834283e+04 
+     6    9/2 +     -1.240876002318339e+03    -3.376595590203874e+04    -3.376595590203874e+04 
+     7    7/2 +     -1.240851896490872e+03    -3.376529994906220e+04    -3.376529994906220e+04 
+     8    1/2 +     -1.240842104563432e+03    -3.376503349714474e+04    -3.376503349714474e+04 
+     9    5/2 +     -1.240834404865486e+03    -3.376482397769170e+04    -3.376482397769170e+04 
+    10    3/2 +     -1.240826655701975e+03    -3.376461311221208e+04    -3.376461311221208e+04 
+    11    3/2 +     -1.240805417301733e+03    -3.376403518590464e+04    -3.376403518590464e+04 
+    12    1/2 +     -1.240786387855217e+03    -3.376351736828974e+04    -3.376351736828974e+04 
+    13    3/2 +     -1.240782458453917e+03    -3.376341044383414e+04    -3.376341044383414e+04 
+    14    3/2 +     -1.240760353689479e+03    -3.376280894255616e+04    -3.376280894255616e+04 
+    15    7/2 +     -1.240752452984444e+03    -3.376259395342161e+04    -3.376259395342161e+04 
+    16    5/2 +     -1.240751036442943e+03    -3.376255540736402e+04    -3.376255540736402e+04 
+    17    5/2 +     -1.240737652935352e+03    -3.376219122357266e+04    -3.376219122357266e+04 
+    18    9/2 +     -1.240709021208032e+03    -3.376141211458814e+04    -3.376141211458814e+04 
+    19    7/2 +     -1.240704710454432e+03    -3.376129481300787e+04    -3.376129481300787e+04 
+    20    5/2 +     -1.240686479031669e+03    -3.376079871072538e+04    -3.376079871072538e+04 
+    21    5/2 +     -1.240546090369549e+03    -3.375697854064759e+04    -3.375697854064759e+04 
+    22    7/2 +     -1.240527426818643e+03    -3.375647067955938e+04    -3.375647067955938e+04 
+    23    3/2 +     -1.240380922322362e+03    -3.375248408915744e+04    -3.375248408915744e+04 
+    24    5/2 +     -1.240359826223126e+03    -3.375191003505760e+04    -3.375191003505760e+04 
+    25    1/2 +     -1.240130451180644e+03    -3.374566842223326e+04    -3.374566842223326e+04 
+    26    3/2 +     -1.240108035427256e+03    -3.374505845851489e+04    -3.374505845851489e+04 
+    27    1/2 +     -1.240080577257321e+03    -3.374431128365340e+04    -3.374431128365340e+04 
+    28    5/2 +     -1.240032618798754e+03    -3.374300626752440e+04    -3.374300626752440e+04 
+    29    3/2 +     -1.239970450104006e+03    -3.374131457117325e+04    -3.374131457117325e+04 
+
+  Energy of each level relative to immediately lower level:
+
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     2    7/2 +     4.617080787206760e-01    1.256371675862086e+01    1.256371675862086e+01 
+     3    5/2 +     3.545257141013280e-05    9.647136060427395e-04    9.647136060427395e-04 
+     4    3/2 +     5.634689255430203e-03    1.533277044322576e-01    1.533277044322576e-01 
+     5    1/2 +     7.108917753839705e-03    1.934435051841636e-01    1.934435051841636e-01 
+     6    9/2 +     1.243287020220123e-01    3.383156304086531e+00    3.383156304086531e+00 
+     7    7/2 +     2.410582746711043e-02    6.559529765390607e-01    6.559529765390607e-01 
+     8    1/2 +     9.791927440119252e-03    2.664519174529154e-01    2.664519174529154e-01 
+     9    5/2 +     7.699697946009110e-03    2.095194530462550e-01    2.095194530462550e-01 
+    10    3/2 +     7.749163510652579e-03    2.108654796204657e-01    2.108654796204657e-01 
+    11    3/2 +     2.123840024250967e-02    5.779263074461922e-01    5.779263074461922e-01 
+    12    1/2 +     1.902944651601501e-02    5.178176148942286e-01    5.178176148942286e-01 
+    13    3/2 +     3.929401299956226e-03    1.069244556005987e-01    1.069244556005987e-01 
+    14    3/2 +     2.210476443724474e-02    6.015012779830347e-01    6.015012779830347e-01 
+    15    7/2 +     7.900705035353894e-03    2.149891345471726e-01    2.149891345471726e-01 
+    16    5/2 +     1.416541500702806e-03    3.854605758897415e-02    3.854605758897415e-02 
+    17    5/2 +     1.338350759101559e-02    3.641837913607254e-01    3.641837913607254e-01 
+    18    9/2 +     2.863172731986197e-02    7.791089845201440e-01    7.791089845201440e-01 
+    19    7/2 +     4.310753600520911e-03    1.173015802608794e-01    1.173015802608794e-01 
+    20    5/2 +     1.823142276293765e-02    4.961022824961114e-01    4.961022824961114e-01 
+    21    5/2 +     1.403886621203583e-01    3.820170077788421e+00    3.820170077788421e+00 
+    22    7/2 +     1.866355090601246e-02    5.078610882074258e-01    5.078610882074258e-01 
+    23    3/2 +     1.465044962801585e-01    3.986590401945047e+00    3.986590401945047e+00 
+    24    5/2 +     2.109609923627431e-02    5.740540998344875e-01    5.740540998344875e-01 
+    25    1/2 +     2.293750424826158e-01    6.241612824348357e+00    6.241612824348357e+00 
+    26    3/2 +     2.241575338780422e-02    6.099637183646632e-01    6.099637183646632e-01 
+    27    1/2 +     2.745816993456174e-02    7.471748614921175e-01    7.471748614921175e-01 
+    28    5/2 +     4.795845856733649e-02    1.305016128999969e+00    1.305016128999969e+00 
+    29    3/2 +     6.216869474815212e-02    1.691696351151514e+00    1.691696351151514e+00 
+
+  Energy of each level relative to lowest level:
+
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     2    7/2 +     4.617080787206760e-01    1.256371675862086e+01    1.256371675862086e+01 
+     3    5/2 +     4.617435312920861e-01    1.256468147222690e+01    1.256468147222690e+01 
+     4    3/2 +     4.673782205475163e-01    1.271800917665916e+01    1.271800917665916e+01 
+     5    1/2 +     4.744871383013560e-01    1.291145268184333e+01    1.291145268184333e+01 
+     6    9/2 +     5.988158403233683e-01    1.629460898592986e+01    1.629460898592986e+01 
+     7    7/2 +     6.229216677904788e-01    1.695056196246892e+01    1.695056196246892e+01 
+     8    1/2 +     6.327135952305980e-01    1.721701387992183e+01    1.721701387992183e+01 
+     9    5/2 +     6.404132931766071e-01    1.742653333296809e+01    1.742653333296809e+01 
+    10    3/2 +     6.481624566872597e-01    1.763739881258855e+01    1.763739881258855e+01 
+    11    3/2 +     6.694008569297694e-01    1.821532512003474e+01    1.821532512003474e+01 
+    12    1/2 +     6.884303034457844e-01    1.873314273492898e+01    1.873314273492898e+01 
+    13    3/2 +     6.923597047457406e-01    1.884006719052957e+01    1.884006719052957e+01 
+    14    3/2 +     7.144644691829853e-01    1.944156846851261e+01    1.944156846851261e+01 
+    15    7/2 +     7.223651742183392e-01    1.965655760305978e+01    1.965655760305978e+01 
+    16    5/2 +     7.237817157190420e-01    1.969510366064875e+01    1.969510366064875e+01 
+    17    5/2 +     7.371652233100576e-01    2.005928745200948e+01    2.005928745200948e+01 
+    18    9/2 +     7.657969506299196e-01    2.083839643652962e+01    2.083839643652962e+01 
+    19    7/2 +     7.701077042304405e-01    2.095569801679050e+01    2.095569801679050e+01 
+    20    5/2 +     7.883391269933782e-01    2.145180029928661e+01    2.145180029928661e+01 
+    21    5/2 +     9.287277891137364e-01    2.527197037707504e+01    2.527197037707504e+01 
+    22    7/2 +     9.473913400197489e-01    2.577983146528246e+01    2.577983146528246e+01 
+    23    3/2 +     1.093895836299907e+00    2.976642186722751e+01    2.976642186722751e+01 
+    24    5/2 +     1.114991935536182e+00    3.034047596706199e+01    3.034047596706199e+01 
+    25    1/2 +     1.344366978018797e+00    3.658208879141035e+01    3.658208879141035e+01 
+    26    3/2 +     1.366782731406602e+00    3.719205250977502e+01    3.719205250977502e+01 
+    27    1/2 +     1.394240901341163e+00    3.793922737126713e+01    3.793922737126713e+01 
+    28    5/2 +     1.442199359908500e+00    3.924424350026710e+01    3.924424350026710e+01 
+    29    3/2 +     1.504368054656652e+00    4.093593985141862e+01    4.093593985141862e+01 
+
+... in perform('computation: SCF', ...
+perform-aa: Configuration: 1s_1/2^2 2s_1/2^2 2p_1/2^2 2p_3/2^4 3s_1/2^2 3p_1/2^1 3p_3/2^4 
+perform-aa: Configuration: 1s_1/2^2 2s_1/2^2 2p_1/2^2 2p_3/2^4 3s_1/2^2 3p_1/2^2 3p_3/2^3 
+(Re-) Define a new standard subshell list.
+(Re-) Define a storage array for various B-spline matrices:
+Nuclear model = Fermi nuclear model for Z = 26.0 with mass = 55.38, radius R = 3.756573410087755 fm and nuclear spin I = 0, dipole moment mu = 0.0 and quadrupole moment Q = 0.0. 
+Generate hydrogenic orbital for subshell 1s_1/2 
+  -----------------------------------------------------------------------------
+   Index    Subshell     Energies [a.u.]    Dirac-E  [a.u.]     Delta-E / |E|    
+  -----------------------------------------------------------------------------
+      1      1s_1/2      -3.41095882e+02    -3.41097837e+02    +5.73282577e-06    
+      2      2s_1/2      -8.54687335e+01    -8.54689584e+01    +2.63136714e-06    
+      3      3s_1/2      -3.78995149e+01    -3.78994478e+01    -1.77118976e-06    
+      4      4s_1/2      -2.12860102e+01    -2.12819385e+01    -1.91283922e-04    
+      5      5s_1/2      -1.36596748e+01    -1.36039714e+01    -4.07794550e-03    
+      6      6s_1/2      -1.02231533e+01    -9.43887322e+00    -7.67160661e-02    
+      7      7s_1/2      -8.71004839e+00    -6.93005925e+00    -2.04360420e-01    
+      8      8s_1/2      -6.39173280e+00    -5.30306679e+00    -1.70324081e-01    
+      :       :    
+     51     51s_1/2      +8.42794522e+07    -1.30041283e-01    +1.00000000e+00    
+     52     52s_1/2      +1.28010239e+08    -1.25086123e-01    +1.00000000e+00    
+     53     53s_1/2      +2.02324641e+08    -1.20408879e-01    +1.00000000e+00    
+     54     54s_1/2      +3.44744353e+08    -1.15989152e-01    +1.00000000e+00    
+     55     55s_1/2      +6.89589055e+08    -1.11808377e-01    +1.00000000e+00    
+     56     56s_1/2      +2.35235601e+09    -1.07849636e-01    +1.00000000e+00    
+  -----------------------------------------------------------------------------
+Use hydrogenic orbital from this symmetriy block also for 1s_1/2.
+Use hydrogenic orbital from this symmetriy block also for 2s_1/2.
+Use hydrogenic orbital from this symmetriy block also for 3s_1/2.
+Generate hydrogenic orbital for subshell 2p_1/2 
+  -----------------------------------------------------------------------------
+   Index    Subshell     Energies [a.u.]    Dirac-E  [a.u.]     Delta-E / |E|    
+  -----------------------------------------------------------------------------
+      1      2p_1/2      -8.54689639e+01    -8.54689584e+01    -6.48489779e-08    
+      2      3p_1/2      -3.78994938e+01    -3.78994478e+01    -1.21351773e-06    
+      3      4p_1/2      -2.12835731e+01    -2.12819385e+01    -7.68010407e-05    
+      4      5p_1/2      -1.36205252e+01    -1.36039714e+01    -1.21535783e-03    
+      5      6p_1/2      -9.56125779e+00    -9.43887322e+00    -1.28000495e-02    
+      6      7p_1/2      -7.52775477e+00    -6.93005925e+00    -7.93989094e-02    
+      7      8p_1/2      -6.03969738e+00    -5.30306679e+00    -1.21964819e-01    
+      8      9p_1/2      -4.48651176e+00    -4.18833237e+00    -6.64612987e-02    
+      :       :    
+     50     51p_1/2      +7.00735016e+07    -1.30041283e-01    +1.00000000e+00    
+     51     52p_1/2      +1.05223801e+08    -1.25086123e-01    +1.00000000e+00    
+     52     53p_1/2      +1.62933722e+08    -1.20408879e-01    +1.00000000e+00    
+     53     54p_1/2      +2.66765784e+08    -1.15989152e-01    +1.00000000e+00    
+     54     55p_1/2      +4.87784029e+08    -1.11808377e-01    +1.00000000e+00    
+     55     56p_1/2      +1.16201287e+09    -1.07849636e-01    +1.00000000e+00    
+  -----------------------------------------------------------------------------
+Use hydrogenic orbital from this symmetriy block also for 2p_1/2.
+Use hydrogenic orbital from this symmetriy block also for 3p_1/2.
+Generate hydrogenic orbital for subshell 2p_3/2 
+  -----------------------------------------------------------------------------
+   Index    Subshell     Energies [a.u.]    Dirac-E  [a.u.]     Delta-E / |E|    
+  -----------------------------------------------------------------------------
+      1      2p_3/2      -8.46909840e+01    -8.46909743e+01    -1.14756318e-07    
+      2      3p_3/2      -3.76688504e+01    -3.76687634e+01    -2.30930719e-06    
+      3      4p_3/2      -2.11877104e+01    -2.11846929e+01    -1.42417132e-04    
+      4      5p_3/2      -1.36424365e+01    -1.35542226e+01    -6.46613863e-03    
+      5      6p_3/2      -1.15227486e+01    -9.41010352e+00    -1.83345584e-01    
+      6      7p_3/2      -9.11847384e+00    -6.91195226e+00    -2.41983649e-01    
+      7      8p_3/2      -6.55244670e+00    -5.29094223e+00    -1.92524186e-01    
+      8      9p_3/2      -4.81673112e+00    -4.17982022e+00    -1.32228867e-01    
+      :       :    
+     51     52p_3/2      +9.99498601e+07    -1.25042127e-01    +1.00000000e+00    
+     52     53p_3/2      +1.53621355e+08    -1.20367328e-01    +1.00000000e+00    
+     53     54p_3/2      +2.48089620e+08    -1.15949867e-01    +1.00000000e+00    
+     54     55p_3/2      +4.40723192e+08    -1.11771197e-01    +1.00000000e+00    
+     55     56p_3/2      +9.65224244e+08    -1.07814412e-01    +1.00000000e+00    
+     56     57p_3/2      +3.73425631e+09    -1.04064077e-01    +1.00000000e+00    
+  -----------------------------------------------------------------------------
+Use hydrogenic orbital from this symmetriy block also for 2p_3/2.
+Use hydrogenic orbital from this symmetriy block also for 3p_3/2.
+Re-define the standard grid with 390 grid points.
+(Re-) Define a storage array for various B-spline matrices:
+
+Iteration 1 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.50329197e+02;   self-consistency = 1.534711e-01  [1.000000e+02 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.16057081e+01;   self-consistency = 4.600750e-01  [1.000000e+02 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -8.65728142e+00;   self-consistency = 6.280981e-01  [1.000000e+02 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -2.88468674e+01;   self-consistency = 4.953128e-01  [1.000000e+02 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -7.96315385e+00;   self-consistency = 6.527390e-01  [1.000000e+02 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.08305404e+01;   self-consistency = 4.662373e-01  [1.000000e+02 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -8.47151291e+00;   self-consistency = 6.327938e-01  [1.000000e+02 for symmetry block kappa = -2]
+
+Iteration 2 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.67073409e+02;   self-consistency = 3.236206e-02  [1.191831e+00 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.93716599e+01;   self-consistency = 1.094145e-01  [1.191831e+00 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.07939527e+01;   self-consistency = 1.098476e-01  [1.191831e+00 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.48369178e+01;   self-consistency = 9.405927e-02  [2.868958e-01 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.36973519e+00;   self-consistency = 8.115100e-02  [2.868958e-01 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.38496623e+01;   self-consistency = 4.667768e-02  [5.302854e+00 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.13500346e+00;   self-consistency = 3.768437e-02  [5.302854e+00 for symmetry block kappa = -2]
+
+Iteration 3 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64190821e+02;   self-consistency = 5.425904e-03  [1.640417e-01 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.79267695e+01;   self-consistency = 1.869236e-02  [1.640417e-01 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03235672e+01;   self-consistency = 2.227466e-02  [1.640417e-01 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.39190358e+01;   self-consistency = 1.334985e-02  [6.634176e-02 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.10505115e+00;   self-consistency = 1.432677e-02  [6.634176e-02 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35341034e+01;   self-consistency = 4.683011e-03  [1.101064e-01 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.04935018e+00;   self-consistency = 4.710274e-03  [1.101064e-01 for symmetry block kappa = -2]
+
+Iteration 4 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64591459e+02;   self-consistency = 7.576627e-04  [4.923840e-02 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.81286960e+01;   self-consistency = 2.654989e-03  [4.923840e-02 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03884434e+01;   self-consistency = 3.132303e-03  [4.923840e-02 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40261735e+01;   self-consistency = 1.576825e-03  [7.286212e-03 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.13544931e+00;   self-consistency = 1.666520e-03  [7.286212e-03 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35588298e+01;   self-consistency = 3.685408e-04  [8.962864e-03 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.05569379e+00;   self-consistency = 3.503784e-04  [8.962864e-03 for symmetry block kappa = -2]
+
+Iteration 5 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64543260e+02;   self-consistency = 9.109065e-05  [4.985591e-03 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.81042004e+01;   self-consistency = 3.213252e-04  [4.985591e-03 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03804710e+01;   self-consistency = 3.838618e-04  [4.985591e-03 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40153925e+01;   self-consistency = 1.584474e-04  [7.405745e-04 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.13238057e+00;   self-consistency = 1.679859e-04  [7.405745e-04 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35576359e+01;   self-consistency = 1.778894e-05  [3.821955e-04 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.05544154e+00;   self-consistency = 1.392809e-05  [3.821955e-04 for symmetry block kappa = -2]
+
+Iteration 6 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64548287e+02;   self-consistency = 9.501257e-06  [4.847080e-04 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.81067634e+01;   self-consistency = 3.362936e-05  [4.847080e-04 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03813084e+01;   self-consistency = 4.033133e-05  [4.847080e-04 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40162739e+01;   self-consistency = 1.295469e-05  [5.988228e-05 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.13262890e+00;   self-consistency = 1.359581e-05  [5.988228e-05 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35575716e+01;   self-consistency = 9.579269e-07  [3.685135e-05 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.05541256e+00;   self-consistency = 1.600338e-06  [3.685135e-05 for symmetry block kappa = -2]
+
+Iteration 7 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64547846e+02;   self-consistency = 8.330098e-07  [4.286237e-05 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.81065382e+01;   self-consistency = 2.954709e-06  [4.286237e-05 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03812345e+01;   self-consistency = 3.559308e-06  [4.286237e-05 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40162271e+01;   self-consistency = 6.878658e-07  [3.061562e-06 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.13261620e+00;   self-consistency = 6.949525e-07  [3.061562e-06 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35576001e+01;   self-consistency = 4.236500e-07  [1.254795e-05 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.05542181e+00;   self-consistency = 5.111435e-07  [1.254795e-05 for symmetry block kappa = -2]
+
+Iteration 8 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64547875e+02;   self-consistency = 5.366645e-08  [2.745971e-06 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.81065527e+01;   self-consistency = 1.908314e-07  [2.745971e-06 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03812393e+01;   self-consistency = 2.317070e-07  [2.745971e-06 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40162256e+01;   self-consistency = 2.090531e-08  [1.229622e-07 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.13261569e+00;   self-consistency = 2.792643e-08  [1.229622e-07 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35575950e+01;   self-consistency = 7.596861e-08  [2.147359e-06 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.05542025e+00;   self-consistency = 8.619753e-08  [2.147359e-06 for symmetry block kappa = -2]
+
+Iteration 9 for symmetries ... 
+  1s_1/2::  en [a.u.] = -2.64547874e+02;   self-consistency = 6.644031e-10  [3.072984e-08 for symmetry block kappa = -1]
+  2s_1/2::  en [a.u.] = -3.81065525e+01;   self-consistency = 2.430641e-09  [3.072984e-08 for symmetry block kappa = -1]
+  3s_1/2::  en [a.u.] = -1.03812392e+01;   self-consistency = 3.287374e-09  [3.072984e-08 for symmetry block kappa = -1]
+  2p_1/2::  en [a.u.] = -3.40162265e+01;   self-consistency = 1.305436e-08  [6.442330e-08 for symmetry block kappa = 1]
+  3p_1/2::  en [a.u.] = -9.13261596e+00;   self-consistency = 1.462554e-08  [6.442330e-08 for symmetry block kappa = 1]
+  2p_3/2::  en [a.u.] = -3.35575957e+01;   self-consistency = 1.044219e-08  [2.887003e-07 for symmetry block kappa = -2]
+  3p_3/2::  en [a.u.] = -9.05542046e+00;   self-consistency = 1.147286e-08  [2.887003e-07 for symmetry block kappa = -2]
+Compute CI matrix of dimension 1 x 1 for the symmetry 1/2^- ...   ... done.
+Compute CI matrix of dimension 1 x 1 for the symmetry 3/2^- ...   ... done.
+
+  Eigenenergies:
+
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     1    3/2 -     -1.242746372725031e+03    -3.381685127317562e+04    -3.381685127317562e+04 
+     2    1/2 -     -1.242672314266558e+03    -3.381483603987407e+04    -3.381483603987407e+04 
+
+  Energy of each level relative to immediately lower level:
+
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     2    1/2 -     7.405845847279124e-02    2.015233301549262e+00    2.015233301549262e+00 
+
+  Energy of each level relative to lowest level:
+
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     2    1/2 -     7.405845847279124e-02    2.015233301549262e+00    2.015233301549262e+00 
+subshells from two basis = Subshell[1s_1/2, 2s_1/2, 2p_1/2, 2p_3/2, 3s_1/2, 3p_1/2, 3p_3/2, 3d_3/2, 3d_5/2]
+(Re-) Define a new standard subshell list.
+
+JAC.Radiative.computeLines(): The computation of the transition amplitudes and properties starts now ... 
+-------------------------------------------------------------------------------------------------------- 
+
+ 
+  Selected radiative lines:
+ 
+  -----------------------------------------------------------------------------------------------
+       i-level-f           i--J^P--f            Energy        List of multipoles                
+                                                 [eV]                                           
+  -----------------------------------------------------------------------------------------------
+        1 --     1      1/2 + --> 3/2 -     3.46007622e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+        1 --     2      1/2 + --> 1/2 -     3.25855288e+01    E1(Coulomb), E1(Babushkin)
+        2 --     1      7/2 + --> 3/2 -     4.71644789e+01    M2(Magnetic)
+        2 --     2      7/2 + --> 1/2 -     4.51492456e+01    
+        3 --     1      5/2 + --> 3/2 -     4.71654436e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+        3 --     2      5/2 + --> 1/2 -     4.51502103e+01    M2(Magnetic)
+        4 --     1      3/2 + --> 3/2 -     4.73187713e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+        4 --     2      3/2 + --> 1/2 -     4.53035380e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+        5 --     1      1/2 + --> 3/2 -     4.75122148e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+        5 --     2      1/2 + --> 1/2 -     4.54969815e+01    E1(Coulomb), E1(Babushkin)
+        6 --     1      9/2 + --> 3/2 -     5.08953711e+01    
+        6 --     2      9/2 + --> 1/2 -     4.88801378e+01    
+        7 --     1      7/2 + --> 3/2 -     5.15513241e+01    M2(Magnetic)
+        7 --     2      7/2 + --> 1/2 -     4.95360908e+01    
+        8 --     1      1/2 + --> 3/2 -     5.18177760e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+        8 --     2      1/2 + --> 1/2 -     4.98025427e+01    E1(Coulomb), E1(Babushkin)
+        9 --     1      5/2 + --> 3/2 -     5.20272955e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+        9 --     2      5/2 + --> 1/2 -     5.00120622e+01    M2(Magnetic)
+       10 --     1      3/2 + --> 3/2 -     5.22381610e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       10 --     2      3/2 + --> 1/2 -     5.02229277e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       11 --     1      3/2 + --> 3/2 -     5.28160873e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       11 --     2      3/2 + --> 1/2 -     5.08008540e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       12 --     1      1/2 + --> 3/2 -     5.33339049e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       12 --     2      1/2 + --> 1/2 -     5.13186716e+01    E1(Coulomb), E1(Babushkin)
+       13 --     1      3/2 + --> 3/2 -     5.34408293e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       13 --     2      3/2 + --> 1/2 -     5.14255960e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       14 --     1      3/2 + --> 3/2 -     5.40423306e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       14 --     2      3/2 + --> 1/2 -     5.20270973e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       15 --     1      7/2 + --> 3/2 -     5.42573198e+01    M2(Magnetic)
+       15 --     2      7/2 + --> 1/2 -     5.22420865e+01    
+       16 --     1      5/2 + --> 3/2 -     5.42958658e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       16 --     2      5/2 + --> 1/2 -     5.22806325e+01    M2(Magnetic)
+       17 --     1      5/2 + --> 3/2 -     5.46600496e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       17 --     2      5/2 + --> 1/2 -     5.26448163e+01    M2(Magnetic)
+       18 --     1      9/2 + --> 3/2 -     5.54391586e+01    
+       18 --     2      9/2 + --> 1/2 -     5.34239253e+01    
+       19 --     1      7/2 + --> 3/2 -     5.55564602e+01    M2(Magnetic)
+       19 --     2      7/2 + --> 1/2 -     5.35412269e+01    
+       20 --     1      5/2 + --> 3/2 -     5.60525625e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       20 --     2      5/2 + --> 1/2 -     5.40373291e+01    M2(Magnetic)
+       21 --     1      5/2 + --> 3/2 -     5.98727325e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       21 --     2      5/2 + --> 1/2 -     5.78574992e+01    M2(Magnetic)
+       22 --     1      7/2 + --> 3/2 -     6.03805936e+01    M2(Magnetic)
+       22 --     2      7/2 + --> 1/2 -     5.83653603e+01    
+       23 --     1      3/2 + --> 3/2 -     6.43671840e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       23 --     2      3/2 + --> 1/2 -     6.23519507e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       24 --     1      5/2 + --> 3/2 -     6.49412381e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       24 --     2      5/2 + --> 1/2 -     6.29260048e+01    M2(Magnetic)
+       25 --     1      1/2 + --> 3/2 -     7.11828509e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       25 --     2      1/2 + --> 1/2 -     6.91676176e+01    E1(Coulomb), E1(Babushkin)
+       26 --     1      3/2 + --> 3/2 -     7.17928147e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       26 --     2      3/2 + --> 1/2 -     6.97775814e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       27 --     1      1/2 + --> 3/2 -     7.25399895e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       27 --     2      1/2 + --> 1/2 -     7.05247562e+01    E1(Coulomb), E1(Babushkin)
+       28 --     1      5/2 + --> 3/2 -     7.38450057e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       28 --     2      5/2 + --> 1/2 -     7.18297723e+01    M2(Magnetic)
+       29 --     1      3/2 + --> 3/2 -     7.55367020e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+       29 --     2      3/2 + --> 1/2 -     7.35214687e+01    E1(Coulomb), E1(Babushkin), M2(Magnetic)
+  -----------------------------------------------------------------------------------------------
+ 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [1-1] ... nz = 2
+done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [1-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [1-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [1-2] ... nz = 2
+done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [1-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [2-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [3-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [3-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [3-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [3-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [4-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [4-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [4-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [4-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [4-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [4-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [5-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [5-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [5-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [5-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [5-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [7-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [8-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [8-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [8-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [8-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [8-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [9-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [9-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [9-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [9-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [10-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [10-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [10-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [10-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [10-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [10-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [11-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [11-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [11-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [11-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [11-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [11-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [12-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [12-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [12-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [12-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [12-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [13-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [13-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [13-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [13-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [13-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [13-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [14-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [14-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [14-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [14-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [14-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [14-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [15-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [16-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [16-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [16-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [16-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [17-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [17-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [17-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [17-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [19-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [20-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [20-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [20-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [20-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [21-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [21-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [21-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [21-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [22-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [23-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [23-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [23-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [23-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [23-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [23-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [24-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [24-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [24-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [24-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [25-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [25-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [25-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [25-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [25-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [26-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [26-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [26-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [26-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [26-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [26-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [27-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [27-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [27-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [27-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [27-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [28-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [28-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [28-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [28-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [29-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [29-1] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [29-1] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [29-2] ... done. 
+Compute radiative E1 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [29-2] ... done. 
+Compute radiative M2 matrix of dimension 2 x 29 in the initial- and final-state bases for the transition [29-2] ... done. 
+ 
+  Einstein coefficients, transition rates and oscillator strengths:
+ 
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------
+       i-level-f           i--J^P--f            Energy         Multipole   Gauge                A--Einstein--B            Osc. strength     Decay widths     
+                                                 [eV]                                        [1/s]          [1/s]                               [eV]         
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------
+        1 --     1      1/2 + --> 3/2 -     3.46007622e+01        E1       Coulomb      7.60629145e+08  1.13646697e-01    7.32085963e-03    5.00655194e-07      
+        1 --     1      1/2 + --> 3/2 -     3.46007622e+01        E1       Babushkin    2.94634145e+09  4.40217124e-01    2.83577776e-02    1.93931715e-06      
+
+
+
+
+
+
+
+Summary file opened at 2019-01-01T18:05: 
+========================================   
+
+ 
+  Einstein coefficients, transition rates and oscillator strengths:
+ 
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------
+       i-level-f           i--J^P--f            Energy         Multipole   Gauge                A--Einstein--B            Osc. strength     Decay widths     
+                                                 [eV]                                        [1/s]          [1/s]                               [eV]         
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------
+        1 --     1      1/2 + --> 3/2 -     3.46007622e+01        E1       Coulomb      7.60629145e+08  1.13646697e-01    7.32085963e-03    5.00655194e-07      
+        1 --     1      1/2 + --> 3/2 -     3.46007622e+01        E1       Babushkin    2.94634145e+09  4.40217124e-01    2.83577776e-02    1.93931715e-06      
+        1 --     1      1/2 + --> 3/2 -     3.46007622e+01        M2       Magnetic     2.24147890e+01  3.34902594e-09    2.15736571e-10    1.47536820e-14      
+        1 --     2      1/2 + --> 1/2 -     3.25855288e+01        E1       Coulomb      2.77260499e+08  9.91937998e-02    6.01767732e-03    1.82496174e-07      
+        1 --     2      1/2 + --> 1/2 -     3.25855288e+01        E1       Babushkin    1.28472245e+09  4.59627324e-01    2.78836876e-02    8.45619669e-07      
+        2 --     1      7/2 + --> 3/2 -     4.71644789e+01        M2       Magnetic     4.60451117e+01  1.08652382e-08    9.54056047e-10    3.03074428e-14      
+        3 --     1      5/2 + --> 3/2 -     4.71654436e+01        E1       Coulomb      1.69738393e+06  3.00379591e-04    2.63763041e-05    1.11723839e-09      
+        3 --     1      5/2 + --> 3/2 -     4.71654436e+01        E1       Babushkin    7.71201889e+06  1.36476671e-03    1.19840039e-04    5.07614301e-09      
+        3 --     1      5/2 + --> 3/2 -     4.71654436e+01        M2       Magnetic     1.10729318e+00  1.95953471e-10    1.72066562e-11    7.28833605e-16      
+        3 --     2      5/2 + --> 1/2 -     4.51502103e+01        M2       Magnetic     8.28205961e+00  3.34157429e-09    2.80886259e-10    5.45135062e-15      
+        4 --     1      3/2 + --> 3/2 -     4.73187713e+01        E1       Coulomb      3.05292197e+06  3.56686090e-04    3.14223910e-05    2.00946973e-09      
+        4 --     1      3/2 + --> 3/2 -     4.73187713e+01        E1       Babushkin    5.11308031e+06  5.97383309e-04    5.26267002e-05    3.36549057e-09      
+        4 --     1      3/2 + --> 3/2 -     4.73187713e+01        M2       Magnetic     8.51101551e-01  9.94378789e-11    8.76001615e-12    5.60205213e-16      
+        4 --     2      3/2 + --> 1/2 -     4.53035380e+01        E1       Coulomb      1.03419811e+05  2.75364673e-05    2.32252255e-06    6.80721557e-11      
+        4 --     2      3/2 + --> 1/2 -     4.53035380e+01        E1       Babushkin    2.95520452e+05  7.86850139e-05    6.63657095e-06    1.94515094e-10      
+        4 --     2      3/2 + --> 1/2 -     4.53035380e+01        M2       Magnetic     3.24321237e+00  8.63534854e-10    7.28335682e-11    2.13472115e-15      
+        5 --     1      1/2 + --> 3/2 -     4.75122148e+01        E1       Coulomb      2.25680953e+06  1.30232666e-04    1.15197964e-05    1.48545900e-09      
+        5 --     1      1/2 + --> 3/2 -     4.75122148e+01        E1       Babushkin    2.42294077e+06  1.39819525e-04    1.23678068e-05    1.59480857e-09      
+        5 --     1      1/2 + --> 3/2 -     4.75122148e+01        M2       Magnetic     4.72358800e+00  2.72581913e-10    2.41113710e-11    3.10912208e-15      
+        5 --     2      1/2 + --> 1/2 -     4.54969815e+01        E1       Coulomb      3.31142286e+06  4.35248954e-04    3.68671797e-05    2.17961810e-09      
+        5 --     2      1/2 + --> 1/2 -     4.54969815e+01        E1       Babushkin    2.83065579e+06  3.72057579e-04    3.15146390e-05    1.86317147e-09      
+        7 --     1      7/2 + --> 3/2 -     5.15513241e+01        M2       Magnetic     2.66839750e+00  4.82205206e-10    4.62797831e-11    1.75637113e-15      
+        8 --     1      1/2 + --> 3/2 -     5.18177760e+01        E1       Coulomb      6.70958741e+07  2.98469775e-03    2.87937827e-04    4.41633062e-08      
+        8 --     1      1/2 + --> 3/2 -     5.18177760e+01        E1       Babushkin    3.99388022e+07  1.77664059e-03    1.71394919e-04    2.62881969e-08      
+        8 --     1      1/2 + --> 3/2 -     5.18177760e+01        M2       Magnetic     8.49651638e+01  3.77959654e-09    3.64622788e-10    5.59250863e-14      
+        8 --     2      1/2 + --> 1/2 -     4.98025427e+01        E1       Coulomb      1.88452271e+08  1.88850297e-02    1.75101064e-03    1.24041537e-07      
+        8 --     2      1/2 + --> 1/2 -     4.98025427e+01        E1       Babushkin    1.66268240e+08  1.66619412e-02    1.54488697e-03    1.09439743e-07      
+        9 --     1      5/2 + --> 3/2 -     5.20272955e+01        E1       Coulomb      1.87940919e+07  2.47793381e-03    2.40016196e-04    1.23704959e-08      
+        9 --     1      5/2 + --> 3/2 -     5.20272955e+01        E1       Babushkin    4.65963334e+07  6.14355992e-03    5.95073958e-04    3.06702635e-08      
+        9 --     1      5/2 + --> 3/2 -     5.20272955e+01        M2       Magnetic     2.04693610e-01  2.69881205e-11    2.61410776e-12    1.34731781e-16      
+        9 --     2      5/2 + --> 1/2 -     5.00120622e+01        M2       Magnetic     1.37261590e-01  4.07489892e-11    3.79412119e-12    9.03472191e-17      
+       10 --     1      3/2 + --> 3/2 -     5.22381610e+01        E1       Coulomb      1.09472741e+06  9.50633690e-05    9.24529294e-06    7.20562664e-10      
+       10 --     1      3/2 + --> 3/2 -     5.22381610e+01        E1       Babushkin    5.01938778e+06  4.35870984e-04    4.23901969e-05    3.30382103e-09      
+       10 --     1      3/2 + --> 3/2 -     5.22381610e+01        M2       Magnetic     2.40518842e-01  2.08860500e-11    2.03125192e-12    1.58312376e-16      
+       10 --     2      3/2 + --> 1/2 -     5.02229277e+01        E1       Coulomb      9.88985853e+06  1.93279078e-03    1.80720104e-04    6.50962309e-09      
+       10 --     2      3/2 + --> 1/2 -     5.02229277e+01        E1       Babushkin    3.12421653e+07  6.10570606e-03    5.70896675e-04    2.05639666e-08      
+       10 --     2      3/2 + --> 1/2 -     5.02229277e+01        M2       Magnetic     3.32377287e-02  6.49570218e-12    6.07362154e-13    2.18774703e-17      
+       11 --     1      3/2 + --> 3/2 -     5.28160873e+01        E1       Coulomb      2.99356518e+08  2.51513263e-02    2.47312867e-03    1.97040038e-07      
+       11 --     1      3/2 + --> 3/2 -     5.28160873e+01        E1       Babushkin    3.04724832e+08  2.56023612e-02    2.51747891e-03    2.00573527e-07      
+       11 --     1      3/2 + --> 3/2 -     5.28160873e+01        M2       Magnetic     5.27775541e+00  4.43426285e-10    4.36020846e-11    3.47388169e-15      
+       11 --     2      3/2 + --> 1/2 -     5.08008540e+01        E1       Coulomb      1.00387235e+08  1.89568554e-02    1.79290346e-03    6.60760780e-08      
+       11 --     2      3/2 + --> 1/2 -     5.08008540e+01        E1       Babushkin    1.08911622e+08  2.05665777e-02    1.94514795e-03    7.16869314e-08      
+       11 --     2      3/2 + --> 1/2 -     5.08008540e+01        M2       Magnetic     1.20422703e+01  2.27402993e-09    2.15073441e-10    7.92636624e-15      
+       12 --     1      1/2 + --> 3/2 -     5.33339049e+01        E1       Coulomb      8.40536846e+07  3.42915773e-03    3.40494765e-04    5.53251398e-08      
+       12 --     1      1/2 + --> 3/2 -     5.33339049e+01        E1       Babushkin    2.68318864e+08  1.09466671e-02    1.08693829e-03    1.76610683e-07      
+       12 --     1      1/2 + --> 3/2 -     5.33339049e+01        M2       Magnetic     1.69236212e+01  6.90436914e-10    6.85562384e-11    1.11393298e-14      
+       12 --     2      1/2 + --> 1/2 -     5.13186716e+01        E1       Coulomb      1.90841684e+07  1.74790518e-03    1.66998616e-04    1.25614277e-08      
+       12 --     2      1/2 + --> 1/2 -     5.13186716e+01        E1       Babushkin    4.65333553e+07  4.26195636e-03    4.07196466e-04    3.06288106e-08      
+       13 --     1      3/2 + --> 3/2 -     5.34408293e+01        E1       Coulomb      1.42400205e+08  1.15494657e-02    1.14909167e-03    9.37295166e-08      
+       13 --     1      3/2 + --> 3/2 -     5.34408293e+01        E1       Babushkin    2.23410448e+08  1.81198567e-02    1.80279998e-03    1.47051427e-07      
+       13 --     1      3/2 + --> 3/2 -     5.34408293e+01        M2       Magnetic     2.79222509e+01  2.26465320e-09    2.25317275e-10    1.83787592e-14      
+       13 --     2      3/2 + --> 1/2 -     5.14255960e+01        E1       Coulomb      1.05567535e+08  1.92173377e-02    1.83989124e-03    6.94858133e-08      
+       13 --     2      3/2 + --> 1/2 -     5.14255960e+01        E1       Babushkin    9.94859368e+07  1.81102537e-02    1.73389768e-03    6.54828327e-08      
+       13 --     2      3/2 + --> 1/2 -     5.14255960e+01        M2       Magnetic     2.24273804e+00  4.08264287e-10    3.90877184e-11    1.47619698e-15      
+       14 --     1      3/2 + --> 3/2 -     5.40423306e+01        E1       Coulomb      4.09659645e+07  3.21286015e-03    3.23255176e-04    2.69642875e-08      
+       14 --     1      3/2 + --> 3/2 -     5.40423306e+01        E1       Babushkin    1.97227361e+07  1.54680584e-03    1.55628620e-04    1.29817406e-08      
+       14 --     1      3/2 + --> 3/2 -     5.40423306e+01        M2       Magnetic     5.11959290e+00  4.01517118e-10    4.03978016e-11    3.36977724e-15      
+       14 --     2      3/2 + --> 1/2 -     5.20270973e+01        E1       Coulomb      1.04277222e+06  1.83316479e-04    1.77562274e-05    6.86365138e-10      
+       14 --     2      3/2 + --> 1/2 -     5.20270973e+01        E1       Babushkin    2.03449738e+06  3.57659025e-04    3.46432303e-05    1.33913049e-09      
+       14 --     2      3/2 + --> 1/2 -     5.20270973e+01        M2       Magnetic     6.46084399e+01  1.13579855e-08    1.10014645e-09    4.25260473e-14      
+       15 --     1      7/2 + --> 3/2 -     5.42573198e+01        M2       Magnetic     1.12619149e+01  1.74557325e-09    1.76325860e-10    7.41272702e-15      
+       16 --     1      5/2 + --> 3/2 -     5.42958658e+01        E1       Coulomb      6.03687420e+07  7.00283581e-03    7.07881076e-04    3.97354275e-08      
+       16 --     1      5/2 + --> 3/2 -     5.42958658e+01        E1       Babushkin    7.55452949e+07  8.76333147e-03    8.85840634e-04    4.97248160e-08      
+       16 --     1      5/2 + --> 3/2 -     5.42958658e+01        M2       Magnetic     4.76920476e+01  5.53232630e-09    5.59234745e-10    3.13914758e-14      
+       16 --     2      5/2 + --> 1/2 -     5.22806325e+01        M2       Magnetic     6.58789872e-01  1.71205029e-10    1.66639113e-11    4.33623368e-16      
+       17 --     1      5/2 + --> 3/2 -     5.46600496e+01        E1       Coulomb      1.32053434e+08  1.50141842e-02    1.52788743e-03    8.69191482e-08      
+       17 --     1      5/2 + --> 3/2 -     5.46600496e+01        E1       Babushkin    1.22751643e+08  1.39565912e-02    1.42026366e-03    8.07965986e-08      
+       17 --     1      5/2 + --> 3/2 -     5.46600496e+01        M2       Magnetic     6.87338723e-01  7.81488973e-11    7.95266102e-12    4.52414563e-16      
+       17 --     2      5/2 + --> 1/2 -     5.26448163e+01        M2       Magnetic     7.97235756e+01  2.02914007e-08    1.98878226e-09    5.24750103e-14      
+       19 --     1      7/2 + --> 3/2 -     5.55564602e+01        M2       Magnetic     1.15689297e+01  1.67028402e-09    1.72760514e-10    7.61480778e-15      
+       20 --     1      5/2 + --> 3/2 -     5.60525625e+01        E1       Coulomb      1.46775547e+07  1.54749552e-03    1.61489566e-04    9.66094191e-09      
+       20 --     1      5/2 + --> 3/2 -     5.60525625e+01        E1       Babushkin    2.03310708e+07  2.14356149e-03    2.23692288e-04    1.33821538e-08      
+       20 --     1      5/2 + --> 3/2 -     5.60525625e+01        M2       Magnetic     6.06416622e+00  6.39361955e-10    6.67208940e-11    3.99150668e-15      
+       20 --     2      5/2 + --> 1/2 -     5.40373291e+01        M2       Magnetic     1.07402942e+01  2.52770655e-09    2.54296349e-10    7.06939001e-15      
+       21 --     1      5/2 + --> 3/2 -     5.98727325e+01        E1       Coulomb      7.51031181e+07  6.49729876e-03    7.24238340e-04    4.94337699e-08      
+       21 --     1      5/2 + --> 3/2 -     5.98727325e+01        E1       Babushkin    1.75378985e+08  1.51723350e-02    1.69122386e-03    1.15436544e-07      
+       21 --     1      5/2 + --> 3/2 -     5.98727325e+01        M2       Magnetic     1.07287703e+00  9.28164208e-11    1.03460243e-11    7.06180486e-16      
+       21 --     2      5/2 + --> 1/2 -     5.78574992e+01        M2       Magnetic     5.41378850e+00  1.03804077e-09    1.11813352e-10    3.56342029e-15      
+       22 --     1      7/2 + --> 3/2 -     6.03805936e+01        M2       Magnetic     1.64297175e+00  1.84773125e-10    2.07709222e-11    1.08142364e-15      
+       23 --     1      3/2 + --> 3/2 -     6.43671840e+01        E1       Coulomb      3.86828510e+08  1.79554293e-02    2.15169098e-03    2.54615148e-07      
+       23 --     1      3/2 + --> 3/2 -     6.43671840e+01        E1       Babushkin    6.57647843e+08  3.05260576e-02    3.65809369e-03    4.32871671e-07      
+       23 --     1      3/2 + --> 3/2 -     6.43671840e+01        M2       Magnetic     1.73024837e+01  8.03129849e-10    9.62431597e-11    1.13887016e-14      
+       23 --     2      3/2 + --> 1/2 -     6.23519507e+01        E1       Coulomb      2.87810609e+08  2.93939198e-02    3.41214239e-03    1.89440382e-07      
+       23 --     2      3/2 + --> 1/2 -     6.23519507e+01        E1       Babushkin    5.36726917e+08  5.48155888e-02    6.36317291e-03    3.53280072e-07      
+       23 --     2      3/2 + --> 1/2 -     6.23519507e+01        M2       Magnetic     1.17235974e+01  1.19732376e-09    1.38989260e-10    7.71661190e-15      
+       24 --     1      5/2 + --> 3/2 -     6.49412381e+01        E1       Coulomb      3.39605788e+07  2.30237202e-03    2.78365660e-04    2.23532589e-08      
+       24 --     1      5/2 + --> 3/2 -     6.49412381e+01        E1       Babushkin    7.32649647e+07  4.96702972e-03    6.00533057e-04    4.82238754e-08      
+       24 --     1      5/2 + --> 3/2 -     6.49412381e+01        M2       Magnetic     3.07879907e+01  2.08728504e-09    2.52360815e-10    2.02650235e-14      
+       24 --     2      5/2 + --> 1/2 -     6.29260048e+01        M2       Magnetic     5.62221931e-02  8.37933219e-12    9.81655632e-13    3.70061195e-17      
+       25 --     1      1/2 + --> 3/2 -     7.11828509e+01        E1       Coulomb      1.12936314e+11  1.93797570e+00    2.56828551e-01    7.43360318e-05      
+       25 --     1      1/2 + --> 3/2 -     7.11828509e+01        E1       Babushkin    2.48892859e+11  4.27097623e+00    5.66007425e-01    1.63824254e-04      
+       25 --     1      1/2 + --> 3/2 -     7.11828509e+01        M2       Magnetic     9.02589149e+00  1.54883383e-10    2.05257861e-11    5.94094965e-15      
+       25 --     2      1/2 + --> 1/2 -     6.91676176e+01        E1       Coulomb      1.28849857e+10  4.81999221e-01    6.20681426e-02    8.48105158e-06      
+       25 --     2      1/2 + --> 1/2 -     6.91676176e+01        E1       Babushkin    3.69286606e+10  1.38142067e+00    1.77888701e-01    2.43068858e-05      
+       26 --     1      3/2 + --> 3/2 -     7.17928147e+01        E1       Coulomb      1.09895251e+11  3.67626519e+00    4.91368609e-01    7.23343677e-05      
+       26 --     1      3/2 + --> 3/2 -     7.17928147e+01        E1       Babushkin    1.86742069e+11  6.24697939e+00    8.34969572e-01    1.22915862e-04      
+       26 --     1      3/2 + --> 3/2 -     7.17928147e+01        M2       Magnetic     1.11815212e+02  3.74049259e-09    4.99953225e-10    7.35981089e-14      
+       26 --     2      3/2 + --> 1/2 -     6.97775814e+01        E1       Coulomb      5.54221887e+09  4.03865523e-01    5.24653154e-02    3.64795470e-06      
+       26 --     2      3/2 + --> 1/2 -     6.97775814e+01        E1       Babushkin    8.80641322e+09  6.41729742e-01    8.33657526e-02    5.79648643e-06      
+       26 --     2      3/2 + --> 1/2 -     6.97775814e+01        M2       Magnetic     3.09808900e+00  2.25760001e-10    2.93280039e-11    2.03919921e-15      
+       27 --     1      1/2 + --> 3/2 -     7.25399895e+01        E1       Coulomb      1.14603862e+10  1.85826496e-01    2.50960126e-02    7.54336316e-06      
+       27 --     1      1/2 + --> 3/2 -     7.25399895e+01        E1       Babushkin    1.44958681e+10  2.35045865e-01    3.17431265e-02    9.54135366e-06      
+       27 --     1      1/2 + --> 3/2 -     7.25399895e+01        M2       Magnetic     1.37785452e+00  2.23414703e-11    3.01723290e-12    9.06920312e-16      
+       27 --     2      1/2 + --> 1/2 -     7.05247562e+01        E1       Coulomb      1.00408781e+11  3.54338027e+00    4.65242040e-01    6.60902598e-05      
+       27 --     2      1/2 + --> 1/2 -     7.05247562e+01        E1       Babushkin    1.81424704e+11  6.40239537e+00    8.40627666e-01    1.19415908e-04      
+       28 --     1      5/2 + --> 3/2 -     7.38450057e+01        E1       Coulomb      1.50050965e+11  6.91890735e+00    9.51214011e-01    9.87653384e-05      
+       28 --     1      5/2 + --> 3/2 -     7.38450057e+01        E1       Babushkin    2.71099793e+11  1.25005151e+01    1.71857557e+00    1.78441124e-04      
+       28 --     1      5/2 + --> 3/2 -     7.38450057e+01        M2       Magnetic     1.33696904e+01  6.16481534e-10    8.47541155e-11    8.80009000e-15      
+       28 --     2      5/2 + --> 1/2 -     7.18297723e+01        M2       Magnetic     3.51054117e-01  3.51765063e-11    4.70410264e-12    2.31068016e-16      
+       29 --     1      3/2 + --> 3/2 -     7.55367020e+01        E1       Coulomb      1.07171937e+10  3.07806558e-01    4.32868002e-02    7.05418496e-06      
+       29 --     1      3/2 + --> 3/2 -     7.55367020e+01        E1       Babushkin    1.99441885e+10  5.72813389e-01    8.05546798e-02    1.31275033e-05      
+       29 --     1      3/2 + --> 3/2 -     7.55367020e+01        M2       Magnetic     1.43948662e+00  4.13432319e-11    5.81409386e-12    9.47487299e-16      
+       29 --     2      3/2 + --> 1/2 -     7.35214687e+01        E1       Coulomb      1.37395414e+11  8.55914846e+00    1.17155944e+00    9.04353039e-05      
+       29 --     2      3/2 + --> 1/2 -     7.35214687e+01        E1       Babushkin    2.47488293e+11  1.54174654e+01    2.11031240e+00    1.62899752e-04      
+       29 --     2      3/2 + --> 1/2 -     7.35214687e+01        M2       Magnetic     3.08913894e+00  1.92440184e-10    2.63408347e-11    2.03330817e-15      
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+  Radiative lifetimes (as derived from these computations):
+ 
+  ---------------------------------------------------------------------------------------------------------------
+     Level        J^P        Level energy      Used Gauge                  Lifetime                Decay widths     
+                                 [eV]                               [a.u.]          [sec]             [eV]         
+  ---------------------------------------------------------------------------------------------------------------
+         1       1/2 +      -3.37822505e+04    Coulomb          3.98321466e+07  9.63493521e-10    6.83151383e-07
+                                               Babushkin        9.77091676e+06  2.36347167e-10    2.78493684e-06
+         2       7/2 +      -3.37696868e+04    Coulomb          8.97845000e+14  2.17178313e-02    3.03074428e-14
+                                               Babushkin        8.97845000e+14  2.17178313e-02    3.03074428e-14
+         3       5/2 +      -3.37696858e+04    Coulomb          2.43558007e+10  5.89138628e-07    1.11724457e-09
+                                               Babushkin        5.36063559e+09  1.29667570e-07    5.07614919e-09
+         4       3/2 +      -3.37695325e+04    Coulomb          1.30978590e+10  3.16822050e-07    2.07754458e-09
+                                               Babushkin        7.64362980e+09  1.84890558e-07    3.56000836e-09
+         5       1/2 +      -3.37693391e+04    Coulomb          7.42449944e+09  1.79590048e-07    3.66508022e-09
+                                               Babushkin        7.86914938e+09  1.90345615e-07    3.45798316e-09
+         6       9/2 +      -3.37659559e+04    Coulomb          Inf  Inf    0.00000000e+00
+                                               Babushkin        Inf  Inf    0.00000000e+00
+         7       7/2 +      -3.37652999e+04    Coulomb          1.54929591e+16  3.74756748e-01    1.75637113e-15
+                                               Babushkin        1.54929591e+16  3.74756748e-01    1.75637113e-15
+         8       1/2 +      -3.37650335e+04    Coulomb          1.61775229e+08  3.91315553e-09    1.68204899e-07
+                                               Babushkin        2.00484696e+08  4.84949275e-09    1.35727996e-07
+         9       5/2 +      -3.37648240e+04    Coulomb          2.19970045e+09  5.32082079e-08    1.23704962e-08
+                                               Babushkin        8.87223737e+08  2.14609153e-08    3.06702638e-08
+        10       3/2 +      -3.37646131e+04    Coulomb          3.76358039e+09  9.10366535e-08    7.23018593e-09
+                                               Babushkin        1.14008832e+09  2.75774168e-08    2.38677878e-08
+        11       3/2 +      -3.37640352e+04    Coulomb          1.03419681e+08  2.50160239e-09    2.63116127e-07
+                                               Babushkin        9.99461512e+07  2.41758171e-09    2.72260469e-07
+        12       1/2 +      -3.37635174e+04    Coulomb          4.00836021e+08  9.69575939e-09    6.78865786e-08
+                                               Babushkin        1.31304049e+08  3.17609296e-09    2.07239505e-07
+        13       3/2 +      -3.37634104e+04    Coulomb          1.66720753e+08  4.03278204e-09    1.63215350e-07
+                                               Babushkin        1.28032928e+08  3.09696833e-09    2.12534279e-07
+        14       3/2 +      -3.37628089e+04    Coulomb          9.84112066e+08  2.38045318e-08    2.76506985e-08
+                                               Babushkin        1.90011477e+09  4.59615771e-08    1.43209170e-08
+        15       7/2 +      -3.37625940e+04    Coulomb          3.67090086e+15  8.87948430e-02    7.41272702e-15
+                                               Babushkin        3.67090086e+15  8.87948430e-02    7.41272702e-15
+        16       5/2 +      -3.37625554e+04    Coulomb          6.84813678e+08  1.65648502e-08    3.97354593e-08
+                                               Babushkin        5.47239202e+08  1.32370829e-08    4.97248478e-08
+        17       5/2 +      -3.37621912e+04    Coulomb          3.13065303e+08  7.57268731e-09    8.69192012e-08
+                                               Babushkin        3.36788536e+08  8.14652488e-09    8.07966515e-08
+        18       9/2 +      -3.37614121e+04    Coulomb          Inf  Inf    0.00000000e+00
+                                               Babushkin        Inf  Inf    0.00000000e+00
+        19       7/2 +      -3.37612948e+04    Coulomb          3.57348298e+15  8.64384172e-02    7.61480778e-15
+                                               Babushkin        3.57348298e+15  8.64384172e-02    7.61480778e-15
+        20       5/2 +      -3.37607987e+04    Coulomb          2.81663580e+09  6.81311599e-08    9.66095297e-09
+                                               Babushkin        2.03340688e+09  4.91857587e-08    1.33821648e-08
+        21       5/2 +      -3.37569785e+04    Coulomb          5.50461430e+08  1.33150248e-08    4.94337742e-08
+                                               Babushkin        2.35725915e+08  5.70193704e-09    1.15436549e-07
+        22       7/2 +      -3.37564707e+04    Coulomb          2.51625588e+16  6.08653174e-01    1.08142364e-15
+                                               Babushkin        2.51625588e+16  6.08653174e-01    1.08142364e-15
+        23       3/2 +      -3.37524841e+04    Coulomb          6.12792387e+07  1.48227386e-09    4.44055550e-07
+                                               Babushkin        3.46134008e+07  8.37258102e-10    7.86151761e-07
+        24       5/2 +      -3.37519100e+04    Coulomb          1.21733307e+09  2.94458780e-08    2.23532792e-08
+                                               Babushkin        5.64271833e+08  1.36490825e-08    4.82238957e-08
+        25       1/2 +      -3.37456684e+04    Coulomb          3.28572137e+05  7.94777967e-12    8.28170834e-05
+                                               Babushkin        1.44640520e+05  3.49868677e-12    1.88131140e-04
+        26       3/2 +      -3.37450585e+04    Coulomb          3.58127853e+05  8.66269825e-12    7.59823224e-05
+                                               Babushkin        2.11412396e+05  5.11382117e-12    1.28712348e-04
+        27       1/2 +      -3.37443113e+04    Coulomb          3.69551095e+05  8.93901325e-12    7.36336230e-05
+                                               Babushkin        2.11010885e+05  5.10410908e-12    1.28957262e-04
+        28       5/2 +      -3.37430063e+04    Coulomb          2.75515545e+05  6.66440213e-12    9.87653385e-05
+                                               Babushkin        1.52495038e+05  3.68867846e-12    1.78441124e-04
+        29       3/2 +      -3.37413146e+04    Coulomb          2.79121230e+05  6.75161948e-12    9.74894888e-05
+                                               Babushkin        1.54586208e+05  3.73926145e-12    1.76027256e-04
+  ---------------------------------------------------------------------------------------------------------------
