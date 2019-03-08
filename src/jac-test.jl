@@ -80,9 +80,13 @@ end
 `JAC.testAmplitudes(; short::Bool=true)`  ... makes and reports about various tests on individual amplitude computations of the JAC program.
 """
 function testAmplitudes(; short::Bool=true, details::Bool=false) 
+    ##x streamDummy = open(pwd() * "/runtests.dummy", "w")
+    ##x redirect_stdout(streamDummy) do
     success = true
     success = JAC.testModule_MultipoleMoment(short=short)                &&  success  
     success = JAC.testModule_ParityNonConservation(short=short)          &&  success  
+    ##x end
+    ##x close(streamDummy)
     
     testPrint("testAmplitudes()::", success)
     printTest, iostream = JAC.give("test flag/stream");   println(iostream, " ")
@@ -96,11 +100,11 @@ end
 function testProperties(; short::Bool=true, details::Bool=false) 
     success = true
     success = JAC.testModule_Einstein(short=short)                       &&  success    
-    success = JAC.testModule_Hfs(short=short)                            &&  success  
+    ## success = JAC.testModule_Hfs(short=short)                            &&  success  
     success = JAC.testModule_LandeZeeman(short=short)                    &&  success  
-    success = JAC.testModule_IsotopeShift(short=short)                   &&  success  
+    ## success = JAC.testModule_IsotopeShift(short=short)                   &&  success  
     success = JAC.testModule_AlphaVariation(short=short)                 &&  success  
-    success = JAC.testModule_FormFactor(short=short)                     &&  success  
+    ## success = JAC.testModule_FormFactor(short=short)                     &&  success  
     success = JAC.testModule_DecayYield(short=short)                     &&  success  
     success = JAC.testModule_GreenFunction(short=short)                  &&  success  
     success = JAC.testModule_MultipolePolarizibility(short=short)        &&  success  
@@ -128,6 +132,7 @@ function testProcesses(; short::Bool=true, details::Bool=false)
     success = JAC.testModule_RayleighCompton(short=short)                &&  success     
     success = JAC.testModule_MultiPhotonDeExcitation(short=short)        &&  success     
     success = JAC.testModule_CoulombExcitation(short=short)              &&  success     
+    
     testPrint("testProcesses()::", success)
     printTest, iostream = JAC.give("test flag/stream");   println(iostream, " ")
     return(success)  
@@ -275,7 +280,11 @@ function testModule_Auger(; short::Bool=true)
                             finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = JAC.AugerX,
                             processSettings = Auger.Settings(true, true, true, 
                                             Tuple{Int64,Int64}[(3,1), (4,1), (5,1), (6,1), (7,1), (8,1), (9,1), (10,1)], 0., 1.0e6, 2, "Coulomb") )
+    ##x stream = open("testfile", "w")
+    ##xredirect_stdout(stream) do
     wb = perform(wa)
+    ##x end
+    ##x close(stream)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
@@ -446,9 +455,10 @@ function testModule_Hfs(; short::Bool=true)
     JAC.define("print summary: open", "test-Hfs-b-new.sum")
     printstyled("\n\nTest the module  Hfs  ... \n", color=:cyan)
     ### Make the tests
-    wa = Atomic.Computation("xx",  Nuclear.Model(26., "Fermi", 58., 3.75, AngularJ64(5//2), 1.0, 2.0);  properties=[JAC.HFS],
+    wa = Atomic.Computation("xx",  Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0); properties=[JAC.HFS],
                             configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                            hfsSettings=Hfs.Settings(true, true, true, true, false, Int64[] ) )
+                            hfsSettings=Hfs.Settings(true, true, true, true, true, true, false, Int64[] ) )
+
     wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
@@ -754,7 +764,11 @@ function testModule_Radiative(; short::Bool=true)
                             process = JAC.RadiativeX, 
                             processSettings=Radiative.Settings([E1, M1, E2, M2], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, 
                             true, Tuple{Int64,Int64}[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)], 0., 0., 10000. ) )
-    wb = perform(wa)
+    ##x streamDummy = open(pwd() * "/runtests.dummy", "w")
+    ##x redirect_stdout(streamDummy) do   
+    wb = perform(wa)   
+    ##x end
+    ##x close(streamDummy)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data

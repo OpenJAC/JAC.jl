@@ -1,4 +1,9 @@
-
+#
+#  Use git:                    git status ....;   git add <filenames>;   git commit -m "..";   git push;   git rm  <filenames>
+#  Use Jupyter notebooks:      using IJulia;   notebook()
+#  Activation:                 ];   pkg> up;   pkg> activate
+#  Working with JAC:           using Revise;   using JAC;   include("../src/jac.jl");   pkg> test
+#
 """
 `module JAC`  ... Jena's atomic calculator (JAC) provides tools for performing atomic (structure) calculations at various degrees of complexity 
                   and sophistication. It has been designed to calculate not only atomic level structures and properties [such as g-factors or
@@ -58,9 +63,6 @@ export AlphaVariation, AnapoleMoment, AsfSettings, Atomic, Auger, Basis, Cascade
        SchiffMoment, Shell, Subshell
     
 global JAC_counter = 0
-
-##x wa = GSL.hypergeom(3.0, 2.0, 2.0)
-##x println("wa = $wa ")
 
 include("jac-basics.jl")
 include("module-Radial.jl")

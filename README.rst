@@ -1,5 +1,7 @@
-.. image:: https://travis-ci.com/OpenJAC/JAC.jl.svg?branch=master
-    :target: https://travis-ci.com/OpenJAC/JAC.jl
+
+
+.. image:: https://travis-ci.com/OpenJAC/JAC.jl.svg?branch=master   :target: https://travis-ci.com/OpenJAC/JAC.jl
+
 
 *Jena Atomic Calculator* for the computation of atomic structures, processes and cascades
 =========================================================================================
@@ -17,11 +19,11 @@ facilitate -- more and more -- also studies on atomic cascades, responses as wel
 atoms and ions. 
 
 A primary guiding philosophy of JAC was to develop a general and **easy-to-use toolbox for the atomic physics 
-community**, including an interface that is equally accessible for working spectroscopiest, theoretician and 
-code developers. Beside of its simple use, however, I also wish to provide a modern code design, and along 
-with a reasonable detailed documentation and features for integrated testing. In particular, typical 
-operations with/on atomic data should appear within the code similar to how they would appear in spoken or 
-written language. Overall, therefore, JAC aims to provide a powerful **platform to extent atomic theory towards 
+community**, including an interface that is equally accessible for working spectroscopiest, theoreticians and 
+code developers. Beside of its simple use, however, I also wish to provide a modern code design, a reasonable 
+detailed documentation of the code and features for integrated testing. In particular, typical calculations and 
+the handling of atomic data should appear within the code similar to how they would appear in spoken or written 
+language. Overall, therefore, JAC aims to provide a powerful **platform to extent atomic theory towards 
 new applications**.
 
 
@@ -41,7 +43,7 @@ computations which can be summarized as follows:
        (number and/or kind of the) virtual excitations that are taken to be into account. Such RAS
        computations are normally performed stepwise by utilizing the orbitals from some prior step.
     3. Interactive computations: Here, the (large set of) methods of the Jac program are applied interactively,
-       either directly (from the REPL [34]) or by using some short Julia script in order to compute and evaluate
+       either directly (from the REPL) or by using some short Julia script in order to compute and evaluate
        the desired observables (parameters), such as energies, expansion coefficients, transition matrices, rates,
        cross sections, etc. An interactive computation typically first prepares and applies (instances of) Jac’s
        data types, such as orbitals, (configuration-state) bases, multiplets, and others. And like Julia is built
@@ -71,7 +73,7 @@ computations which can be summarized as follows:
 
 Documentation & News
 ~~~~~~~~~~~~~~~~~~~~ 
-A detailed `Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.rst>` is available that
+A detailed `Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_  is available that
 describes the **use** and **underlying atomic theory** of the JAC code. News about recent developments of JAC
 are summarized `here <NEWS.rst>`.
 
@@ -85,7 +87,7 @@ Attribution 4.0 International (CC BY 4.0) license.
 
 For reference, please, use the Computer Physics Communications publication on JAC:
 
-+ S. Fritzsche, Computer Physics Communications xx, yy (2019); https://doi.org/10.1016xx/j.cpc.xxx
++ S. Fritzsche, Computer Physics Communications xx, yy (2019); `Getting started <https://doi.org/10.1016/j.cpc.2019.01.012>`_
 
 
     
