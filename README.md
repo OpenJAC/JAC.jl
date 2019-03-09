@@ -31,15 +31,15 @@ towards new applications**.
 In some more detail, JAC distinguishes and aims to support (partly still in the future) **seven kinds of 
 computations** which can be summarized as follows:
 
-    1. **Atomic computations**, based on explicitly specified electron configurations: This kind refers to the 
+1. **Atomic computations**, based on explicitly specified electron configurations: This kind refers to the 
        computation of level energies, atomic state representations and to either one or several atomic properties 
        for selected levels of a given multiplet. It also help compute *one* selected process at a time, if atomic 
        levels from two or more multiplets are involved in atomic transitions.
-    2. **Restricted active-space computations (RAS)**: This kind concerns systematically-enlarged calculations
+2. **Restricted active-space computations (RAS)**: This kind concerns systematically-enlarged calculations
        of atomic states and level energies due to a specified active space of orbitals as well as due to the
        (number and/or kind of) virtual excitations that are taken to be into account. Such RAS computations are 
        normally performed stepwise by utilizing the (one-electron) orbital functions from some prior step.
-    3. **Interactive computations**: Here, the (large set of) methods of the JAC program are applied interactively,
+3. **Interactive computations**: Here, the (large set of) methods of the JAC program are applied interactively,
        either directly (from the REPL) or by using some short Julia script in order to compute and evaluate
        the desired observables (parameters), such as energies, expansion coefficients, transition matrices, rates,
        cross sections, etc. An interactive computation typically first prepares and applies (instances of) JAC’s
@@ -76,19 +76,19 @@ computations** which can be summarized as follows:
 
 A detailed `Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_  is available that
 describes the **use and underlying atomic theory** of the JAC code. News about recent developments of JAC
-are summarized `here <NEWS.rst>`_.
+are summarized [here](NEWS.rst)
 
 
 
 ## Licence & Reference
 
-The code in this repository is distributed under the `MIT licence <LICENSE.md>`_. The associated manual 
+The code in this repository is distributed under the [MIT licence](LICENSE.md). The associated manual 
 `Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_ is distributed under the Creative 
 Commons Attribution 4.0 International (CC BY 4.0) license.
 
 For reference, please, use the Computer Physics Communications publication on JAC:
 
-* S. Fritzsche, `Computer Physics Communications xx, yy (2019); <https://doi.org/10.1016/j.cpc.2019.01.012>`_
+* S. Fritzsche, [Computer Physics Communications xx, yy (2019](https://doi.org/10.1016/j.cpc.2019.01.012)
 
 
 
