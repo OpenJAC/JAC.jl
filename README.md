@@ -129,7 +129,7 @@ calculations:
     perform(comp::Atomic.Computation)
 ```
 
-This example is discussed also in the `tutorial <06-compute-Fe-X-spectrum.ipynb>`_.
+This example is discussed also in the [tutorial](tutorials/06-compute-Fe-X-spectrum.ipynb).
     
     
 ## Tutorials
