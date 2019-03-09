@@ -91,18 +91,19 @@ Commons Attribution 4.0 International (CC BY 4.0) license.
 
 For reference, please, use the Computer Physics Communications publication on JAC:
 
-    + S. Fritzsche, `Computer Physics Communications xx, yy (2019); <https://doi.org/10.1016/j.cpc.2019.01.012>`_
+    * S. Fritzsche, `Computer Physics Communications xx, yy (2019); <https://doi.org/10.1016/j.cpc.2019.01.012>`_
 
 
 
 Dependencies and external code used in JAC
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The JAC code makes use of:
+
     + standard Julia packages, such as SpecialFunctions, FortranFiles, GaussQuadrature, GSL and QuadGK.
     + ANCO library, G. Gaigalas, S. Fritzsche and I. P. Grant, Comp. Phys. Commun. 139, 269 (2001).
     + Matrix elements from G. Gaigalas, T. Zalandauskas and S. Fritzsche, Comp. Phys. Commun. 157, 239 (2004).
 
-    
+
     
 Quickstart
 ~~~~~~~~~~
@@ -120,17 +121,17 @@ together with the specifier `process=RadiativeX`. We here also provide a title (
 calculations:
 
 
-"""
     comp = Atomic.Computation("Energies and Einstein coefficients for the spectrum Fe X",  Nuclear.Model(26.);
                     initialConfigs = [Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],
                     finalConfigs   = [Configuration("[Ne] 3s^2 3p^5")], 
                     process = RadiativeX, 
                     processSettings = Radiative.Settings([E1, M1, E2, M2], [UseCoulomb, UseBabushkin] )
     perform(comp::Atomic.Computation)
-"""
+
 This example is discussed also in the `tutorial <06-compute-Fe-X-spectrum.ipynb>`_.
-    
-    
+
+
+
 Tutorials
 ~~~~~~~~~
 The following IJulia/jupyter notebooks introduce the reader to JAC and demonstrate various features of this toolbox.  
@@ -182,7 +183,7 @@ error free. I shall therefore appreciate reports from the users if problems are 
 if solutions are provided. One of the simplest way to start contributing to JAC is writing a tutorial, in addition 
 to those provided above, in order to navigate others to the task of a new user. Also, new graphical user 
 interface and plotting features on different outcomes of atomic computations will be very helpful for the community. 
-A few further suggestions can be found in section 1.7 in the 
+A few further suggestions can be found in section 1.5 in the 
 `Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_.
 
 

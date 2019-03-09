@@ -4,13 +4,11 @@
     :target: https://travis-ci.com/OpenJAC/JAC.jl
 
 
-*Jena Atomic Calculator (JAC)* for the computation of atomic structures, processes and cascades
-===============================================================================================
+# Jena Atomic Calculator (JAC)* for the computation of atomic structures, processes and cascades
 
 
 
-What is ``JAC``?
-~~~~~~~~~~~~~~~~
+## What is `JAC`?
 
 We here provide a first public version of *JAC*, the Jena Atomic Calculator and an open-source Julia package for 
 doing atomic computations. JAC is a (relativistic) electronic structure code for the computation of (many-electron) 
@@ -28,8 +26,7 @@ towards new applications**.
 
 
 
-*Kinds* of computations
-~~~~~~~~~~~~~~~~~~~~~~~
+## *Kinds* of computations
 
 In some more detail, JAC distinguishes and aims to support (partly still in the future) **seven kinds of 
 computations** which can be summarized as follows:
@@ -75,37 +72,37 @@ computations** which can be summarized as follows:
 
        
 
-Documentation & News
-~~~~~~~~~~~~~~~~~~~~ 
+## Documentation & News
+
 A detailed `Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_  is available that
 describes the **use and underlying atomic theory** of the JAC code. News about recent developments of JAC
 are summarized `here <NEWS.rst>`_.
 
 
 
-Licence & Reference
-~~~~~~~~~~~~~~~~~~~
+## Licence & Reference
+
 The code in this repository is distributed under the `MIT licence <LICENSE.md>`_. The associated manual 
 `Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_ is distributed under the Creative 
 Commons Attribution 4.0 International (CC BY 4.0) license.
 
 For reference, please, use the Computer Physics Communications publication on JAC:
 
-    + S. Fritzsche, `Computer Physics Communications xx, yy (2019); <https://doi.org/10.1016/j.cpc.2019.01.012>`_
+* S. Fritzsche, `Computer Physics Communications xx, yy (2019); <https://doi.org/10.1016/j.cpc.2019.01.012>`_
 
 
 
-Dependencies and external code used in JAC
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Dependencies and external code used in JAC
+
 The JAC code makes use of:
-    + standard Julia packages, such as SpecialFunctions, FortranFiles, GaussQuadrature, GSL and QuadGK.
-    + ANCO library, G. Gaigalas, S. Fritzsche and I. P. Grant, Comp. Phys. Commun. 139, 269 (2001).
-    + Matrix elements from G. Gaigalas, T. Zalandauskas and S. Fritzsche, Comp. Phys. Commun. 157, 239 (2004).
+* standard Julia packages, such as SpecialFunctions, FortranFiles, GaussQuadrature, GSL and QuadGK.
+* ANCO library, G. Gaigalas, S. Fritzsche and I. P. Grant, Comp. Phys. Commun. 139, 269 (2001).
+* Matrix elements from G. Gaigalas, T. Zalandauskas and S. Fritzsche, Comp. Phys. Commun. 157, 239 (2004).
 
     
     
-Quickstart
-~~~~~~~~~~
+## Quickstart
+
 The numerous features of JAC can be easily understood by following the tutorials that are distributed together
 with the code. Further details can then be found from the 
 `Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_. Make use the index or a
@@ -120,46 +117,47 @@ together with the specifier `process=RadiativeX`. We here also provide a title (
 calculations:
 
 
-"""
+```julia
     comp = Atomic.Computation("Energies and Einstein coefficients for the spectrum Fe X",  Nuclear.Model(26.);
                     initialConfigs = [Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],
                     finalConfigs   = [Configuration("[Ne] 3s^2 3p^5")], 
                     process = RadiativeX, 
                     processSettings = Radiative.Settings([E1, M1, E2, M2], [UseCoulomb, UseBabushkin] )
     perform(comp::Atomic.Computation)
-"""
+```
+
 This example is discussed also in the `tutorial <06-compute-Fe-X-spectrum.ipynb>`_.
     
     
-Tutorials
-~~~~~~~~~
+## Tutorials
+
 The following IJulia/jupyter notebooks introduce the reader to JAC and demonstrate various features of this toolbox.  
 They can be explored statically at GitHub or can be run locally after the software repository has been cloned and installed.
 In order to modify the cell-output of the notebooks and to better print the *wide tables*, you can create or modify the file
 ~/.jupyter/custom/custom.css in your home directory and add the line:  div.output_area pre { font-size: 7pt;} .
 
-- `Getting started <tutorials/01-getting-started.ipynb>`_ 
+* `Getting started <tutorials/01-getting-started.ipynb>`_ 
 
-- `Simple hydrogenic estimates <tutorials/02-hydrogenic-computations.ipynb>`_
+* `Simple hydrogenic estimates <tutorials/02-hydrogenic-computations.ipynb>`_
 
-- `Nuclear models and potentials <tutorials/03-setting-the-nucleus.ipynb>`_
+* `Nuclear models and potentials <tutorials/03-setting-the-nucleus.ipynb>`_
 
-- `Atomic potentials <tutorials/04-compare-radial-potentials.ipynb>`_
+* `Atomic potentials <tutorials/04-compare-radial-potentials.ipynb>`_
 
-- `SCF + CI computations for carbon <tutorials/05-compute-SCF+CI-carbon-III.ipynb>`_
+* `SCF + CI computations for carbon <tutorials/05-compute-SCF+CI-carbon-III.ipynb>`_
 
-- `Einstein coefficients for Fe X <tutorials/06-compute-Fe-X-spectrum.ipynb>`_
+* `Einstein coefficients for Fe X <tutorials/06-compute-Fe-X-spectrum.ipynb>`_
 
-- `Neon K-LL Auger rates <tutorials/07-compute-Ne-KLL-Auger-spectrum.ipynb>`_
+* `Neon K-LL Auger rates <tutorials/07-compute-Ne-KLL-Auger-spectrum.ipynb>`_
 
-- `Argon 2s, 2p photoionization <tutorials/09-compute-Ar-2s-2p-photoionization.ipynb>`_
+* `Argon 2s, 2p photoionization <tutorials/09-compute-Ar-2s-2p-photoionization.ipynb>`_
 
-- Several further tutorials are also available.
+* Several further tutorials are also available.
 
 
 
-Encouragement & Contributions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Encouragement & Contributions
+
 The scope of JAC is much larger than what I can (and plan to) implement myself here in Jena. 
 With JAC's upload to GitHub, I therefore wish to encourage the users to fork the code and to report improvements,
 failures, bugs, etc. Non-trivial changes to the code can be made available via pull requests, i.e. 
@@ -187,13 +185,11 @@ A few further suggestions can be found in section 1.7 in the
 
 
 
-Developers:
-~~~~~~~~~~~
+## Developers:
 
-- Stephan Fritzsche,  `s.fritzsche@gsi.de`
-
+* Stephan Fritzsche,  `s.fritzsche@gsi.de`
 
 
-Supporters:
-~~~~~~~~~~~
+
+## Supporters:
 
