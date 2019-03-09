@@ -1,14 +1,17 @@
 
 
-.. image:: https://travis-ci.com/OpenJAC/JAC.jl.svg?branch=master   
-    :target: https://travis-ci.com/OpenJAC/JAC.jl
+[![Build Status](https://travis-ci.com/OpenJAC/JAC.jl.svg?branch=master)](https://travis-ci.com/OpenJAC/JAC.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/v162jvq76dwifxdx/branch/master?svg=true)](https://ci.appveyor.com/project/OpenJAC/JAC-jl/branch/master)
+[![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)
+[![Coverage Status](https://coveralls.io/repos/github/OpenJAC/JAC.jl/badge.svg?branch=master)](https://coveralls.io/github/OpenJAC/JAC.jl?branch=master)
 
 
-# Jena Atomic Calculator (JAC)* for the computation of atomic structures, processes and cascades
+
+# Jena Atomic Calculator (JAC) for the computation of atomic structures, processes and cascades
 
 
 
-## What is `JAC`?
+## What is JAC?
 
 We here provide a first public version of *JAC*, the Jena Atomic Calculator and an open-source Julia package for 
 doing atomic computations. JAC is a (relativistic) electronic structure code for the computation of (many-electron) 
