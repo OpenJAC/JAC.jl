@@ -408,20 +408,17 @@ Following the Julia's standard conventions, all types (struct) are named in Came
 ### `Basic data types`
 
       + AngularJ64                   ... (positive, half-integer) angular momentum, j = 0, 1/2, 1, 3/2, ... .
-      + AngularM64                   ... (half-integer) projection of ang. momentum, m = -1/2, 0, 1/2, ... 
-                                         can be initialized w.r.t AngularJ64().
+      + AngularM64                   ... (half-integer) projection of ang. momentum, m = -1/2, 0, 1/2, ... can be initialized also
+                                         w.r.t AngularJ64().
       + ContinuumNormalization       ... method for dealing with the normalization of continuum orbitals.
       + ContinuumPhase               ... method for determining the phase of continuum orbitals.
       + ContinuumSolutions           ... method for solving continuum orbitals.
-      + Eigen                        ... represents eigenvalues and eigenvectors if different diagonalization 
-                                         procedures are used.
+      + Eigen                        ... represents eigenvalues and eigenvectors if different diagonalization procedures are used.
       + EmMultipole                  ... a multiole of the em field.
-      + EmGauge                      ... an allowed gauge form for the em field, for instance, Coulomb, Babushkin, 
-                                         Magnetic, ...
+      + EmGauge                      ... an allowed gauge form for the em field, for instance, Coulomb, Babushkin, Magnetic, ...
       + EmProperty                   ... a given property in Coulomb (velocity) as well as Babushkin (length) gauge.
       + EmStokes                     ... (computed) Stokes parameter for the polarization of emitted radiation.
-      + ExpStokes                    ... (experimentally) given Stokes parameter for the polarization of incoming 
-                                         radiation.
+      + ExpStokes                    ... (experimentally) given Stokes parameter for the polarization of incoming radiation.
       + Guint                        ... specifier for dealing with graphical user interfaces (GUI).
       + LevelSymmetry                ... total level symmetry (J, parity).
       + Model                        ... to keep the all nuclear parameters.
@@ -431,44 +428,34 @@ Following the Julia's standard conventions, all types (struct) are named in Came
       + Subshell                     ... a relativistic subshell.
       + SubshellStateR               ... a relativistic antisymmetric subshell state within the seniority scheme.
       + TensorComp                   ... component of the statistical tensor as associated with an atomic level. 
-      + UseGauge                     ... an allowed gauge form requested for explicit computations: UseCoulomb or 
-                                         UseBabushkin.
+      + UseGauge                     ... an allowed gauge form requested for explicit computations: UseCoulomb or UseBabushkin.
       + Warnings                     ... for dealing with warnings that are made during a run or REPL session.
 
 ### `Data types from many-electron theory`
 
       + AsfSettings                  ... settings for SCF and CI computations.
-      + Atomic.Computation           ... atomic computation of a multiplet, including the SCF, CI and transition 
-                                         properties.
-      + Basis                        ... (relativistic) atomic basis, including the configuration space and radial 
-                                         orbitals.
+      + Atomic.Computation           ... atomic computation of a multiplet, including the SCF, CI and transition properties.
+      + Basis                        ... (relativistic) atomic basis, including the configuration space and radial orbitals.
       + Bspline                      ... set of B-splines.
-      + Configuration                ... (non-relativistic) electron configuration as specified by its shells and 
-                                         their occupation.
-      + ConfigurationR               ... (relativistic) electron configuration as specified by its subshells and 
-                                         their occupation.
-      + Level                        ... atomic level in terms of its quantum number, energy and a (possible) 
-                                         representation.
+      + Configuration                ... (non-relativistic) electron configuration as specified by its shells and their occupation.
+      + ConfigurationR               ... (relativistic) electron configuration as specified by its subshells and their occupation.
+      + Level                        ... atomic level in terms of its quantum number, energy and a (possible) representation.
       + Multiplet                    ... an ordered list of atomic levels with a name.
-      + Orbital                      ... (relativistic) radial orbital function that appears as 'buildung block' to 
-                                         define many-electron states; more often than not, it just occurs as radial 
-                                         orbital on a given (radial) grid while the angular dependence is given by 
-                                         the subshell label.
+      + Orbital                      ... (relativistic) radial orbital function that appears as 'buildung block' to define many-electron 
+                                         states; more often than not, it just occurs as radial orbital on a given (radial) grid while the 
+                                         angular dependence is given by the subshell label.
       + Radial.Grid                  ... radial grid to represent the (radial) orbitals.
       + Radial.Potential             ... radial potential function.
-      + Radial.Primitives            ... a list of radial functions, that may serve as a set of primitives in SCF 
-                                         computations, together with several parameters for its definition.
-      + Radial.SingleSymOrbitals     ... a list of radial orbitals with large and small component but of the same 
-                                         symmetry (kappa); such a list may serves as (complete) single-electron basis 
-                                         to deal with second- and higher-order processes.
+      + Radial.Primitives            ... a list of radial functions, that may serve as a set of primitives in SCF computations, together 
+                                         with several parameters for its definition.
+      + Radial.SingleSymOrbitals     ... a list of radial orbitals with large and small component but of the same symmetry (kappa); such a 
+                                         list may serves as (complete) single-electron basis to deal with second- and higher-order processes.
     
 
 ### `Data types calculating level properties`
 
-      + AtomicLevelProperty          ... an atomic level property that is supported by the JAC module, such as HFS, 
-                                         IsotopeShift, ....
-      + Einstein.Settings            ... settings for Einstein A and B coefficients, calculated within a single given 
-                                         Multiplet.
+      + AtomicLevelProperty          ... an atomic level property that is supported by the JAC module, such as HFS, IsotopeShift, ....
+      + Einstein.Settings            ... settings for Einstein A and B coefficients, calculated within a single given Multiplet.
       + Einstein.Outcome             ... (results of the) Einstein A and B coefficients for a single line.
       + Hfs.Settings                 ... settings for HFS A and B coefficients.
       + Hfs.Outcome                  ... (results of the) HFS A and B coefficients for a single level.
@@ -477,8 +464,7 @@ Following the Julia's standard conventions, all types (struct) are named in Came
       + LandeZeeman.sublevelJ        ... specifies a magnetic sublevel with well-defined J.
       + LandeZeeman.sublevelF        ... specifies a magnetic hyperfine sublevel with well-defined F, M_f.
       + LandeZeeman.Outcome          ... (results of the) Lande factors and Zeeman splittings for a single level.
-      + LandeZeeman.Settings         ... settings for the Lande factors and Zeeman splitting in an external magnetic 
-                                         field.
+      + LandeZeeman.Settings         ... settings for the Lande factors and Zeeman splitting in an external magnetic field.
       + PlasmaShift.PlasmaModel      ... Model for dealing with the plasma environment.
       + PlasmaShift.Outcome          ... (results of the) plasma shifts and energies for a single level.
       + PlasmaShift.Settings         ... settings for including plasma interactions into the CI matrix.
@@ -486,13 +472,11 @@ Following the Julia's standard conventions, all types (struct) are named in Came
 
 ### `Data types for calculating (time-independent) atomic processes`
 
-      + AtomicProcess                     ... an atomic process that is supported by the JAC module, such as Auger, 
-                                              photo, ....
+      + AtomicProcess                     ... an atomic process that is supported by the JAC module, such as Auger, photo, ....
       + AlphaVariation.Outcome            ... outcome of a alpha-variation computation, such as the K enhancement.
       + AlphaVariation.Settings           ... seetings for computing alpha variation parameters.
       + Auger.Channel                     ... Auger channel of well-defined energy and partial outgoing wave.
-      + Auger.Line                        ... Auger line between (two) specified initial- and final-state levels 
-                                              and with (possible) subchannels.
+      + Auger.Line                        ... Auger line between (two) specified initial- and final-state levels and with (possible) subchannels.
       + Auger.Settings                    ... settings for computing Auger lines.
       + CoulombExcitation.Channel         ... Coulomb excitation channel of well-defined energy and partial wave.
       + CoulombExcitation.Line            ... Coulomb excitation line with (possible) subchannels.
@@ -500,140 +484,120 @@ Following the Julia's standard conventions, all types (struct) are named in Came
       + CoulombIonization.Channel         ... Coulomb ionization channel of well-defined energy and partial wave.
       + CoulombIonization.Line            ... Coulomb ionization line with (possible) subchannels.
       + CoulombIonization.Settings        ... settings for computing Coulomb ionization  lines.
-      + Dielectronic.Channel              ... dielectronic-recombination channel of well-defined multipolarity 
-                                              and gauge as well as energy and partial incoming wave.
-      + Dielectronic.Line                 ... dielectronic recombination line between (three) specified initial-, 
-                                              intermediate and final-state levels and with (possible) subchannels.
-      + Dielectronic.Resonance            ... single dielectronic resonance that summarizes all Dielectronic.Line's 
-                                              for some fixed intermediate level within the continuum. 
+      + Dielectronic.Channel              ... dielectronic-recombination channel of well-defined multipolarity and gauge as well as energy and 
+                                              partial incoming wave.
+      + Dielectronic.Line                 ... dielectronic recombination line between (three) specified initial-, intermediate and final-state 
+                                              levels and with (possible) subchannels.
+      + Dielectronic.Resonance            ... single dielectronic resonance that summarizes all Dielectronic.Line's for some fixed intermediate
+                                              level within the continuum. 
       + Dielectronic.Settings             ... settings for computing dielectronic recombination lines.
       + DecayYield.Outcome                ... outcome of a decay yield computation.
       + DecayYield.Settings               ... settings for computing decay yields lines.
-      + DoubleAuger.Channel               ... DoubleAuger channel of two partial outgoing waves with well-defined 
-                                              energy.
-      + DoubleAuger.Line                  ... DoubleAuger line between (two) specified initial- and final-state 
-                                              levels and with (possible) subchannels.
-      + DoubleAuger.Settings              ... settings for computing DoubleAuger lines.
-      + ImpactExcitation.Channel          ... electron-impact excitation channel of well-defined energies. partial 
-                                              waves and phases of the incoming and outgoing electrons.
-      + ImpactExcitation.Line             ... electron-impact excitation line between (two) specified initial- and 
-                                              final-state levels and with (possible) subchannels.
-      + ImpactExcitation.Settings         ... settings for computing electron-impact excitation lines.
-      + ImpactExcitationAutoion.Channel   ... electron-impact excitation channel of well-defined energies, partial 
-                                              waves and phases of the incoming and outgoing electrons.
-      + ImpactExcitationAutoion.Pathway   ... electron-impact excitation line between (two) specified initial- and 
-                                              final-state levels and with (possible) subchannels.
-      + ImpactExcitationAutoion.Settings  ... settings for computing electron-impact excitation lines.
-      + ImpactIonization.Channel          ... electron-impact ionization channel of well-defined energies, partial 
-                                              waves and phases of the incoming and outgoing electrons.
-      + ImpactIonization.Line             ... electron-impact ionization line between (two) specified initial- and 
-                                              final-state levels and with (possible) subchannels.
-      + ImpactIonization.Settings         ... settings for computing electron-impact ionization lines.
-      + MultiPhotonDeExcitation.Channel   ... multi-photon excitation or decay channel with well-defined 
-                                              multipolarities and gauge.
-      + MultiPhotonDeExcitation.Line      ... multi-photon excitation or decay line between (two) specified initial- 
-                                              and final-state levels and with (possible) subchannels.
-      + MultiPhotonDeExcitation.Settings  ... settings for computing multi-photon excitation or decay lines.
-      + MultiPhotonIonization.Channel     ... multi-photon ionization channel with well-defined multipolarities, gauge 
-                                              as well as energy and partial wave of the outgoing electron.
-      + MultiPhotonIonization.Line        ... multi-photon ionization line between (two) specified initial- and 
-                                              final-state levels and with (possible) subchannels.
-      + MultiPhotonIonization.Settings    ... settings for computing multi-photon ionization lines.
-      + MultiPhotonDoubleIon.Channel      ... multi-photon double ionization channel with well-defined multipolarities, 
-                                              gauge as well as energy and partial waves of the (two) outgoing 
-                                            electrons.
-      + MultiPhotonDoubleIon.Line         ... multi-photon double ionization line between (two) specified initial- and 
-                                              final-state levels and with (possible) subchannels.
-      + MultiPhotonDoubleIon.Settings     ... settings for computing multi-photon double ionization lines.
-      + PairAnnihilation1Photon.Channel   ... positron-bound-electron pair annihilation (PEPA) with single-photon 
-                                              emission channel of well-defined multipolarity, gauge as well as energy 
-                                              and partial incoming (positron) wave.
-      + PairAnnihilation1Photon.Line      ... PEPA with single-photon emission line between (two) specified initial- 
-                                              and final-state levels and with (possible) subchannels.
-      + PairAnnihilation1Photon.Settings  ... settings for computing PEPA with single-photon emission lines.
-      + PairAnnihilation2Photon.Channel   ... positron-bound-electron pair annihilation (PEPA) with two-photon emission 
-                                              channel of well-defined multipolarities, gauge as well as energy and 
-                                              partial incoming (positron) wave.
-      + PairAnnihilation2Photon.Line      ... PEPA with two-photon emission line between (two) specified initial- 
-                                              and final-state levels and with (possible) subchannels.
-      + PairAnnihilation2Photon.Settings  ... settings for computing PEPA with two-photon emission lines.
-      + PairProduction.Channel            ... positron-bound-electron pair production (PEPP) by single-photon 
-                                              absorption channel of well-defined multipolarity, gauge as well as energy 
-                                              and partial outgoing (positron) wave.
-      + PairProduction.Line               ... PEPP by single-photon absorption line between (two) specified 
-                                              initial- and final-state levels and with (possible) subchannels.
-      + PairProduction.Settings           ... settings for computing PEPP lines.
-      + PhotoExcitation.Line              ... photoexcitation line between (two) specified initial- and final-
-                                              state levels and with (possible JAC.Radiative.Channel) subchannels.
-      + PhotoExcitation.Settings          ... settings for computing photoexcitation lines.
-      + PhotoExcitationAutoion.Channel    ... photo-excitation autoionization channel of well-defined energies of 
-                                              the incoming photon as well as the partial wave and phase of the outgoing 
-                                              electron.
-      + PhotoExcitationAutoion.Pathway    ... photo-excitation autoionization pathways between (three) specified 
-                                              initial-, intermediate and final-state levels and with (possible) 
+      + DoubleAuger.Channel               ... DoubleAuger channel of two partial outgoing waves with well-defined energy.
+      + DoubleAuger.Line                  ... DoubleAuger line between (two) specified initial- and final-state levels and with (possible) 
                                               subchannels.
-      + PhotoExcitationAutoion.Settings   ... settings for computing photo-excitation autoionization pathways.
-      + PhotoIonization.Channel           ... photoionization channel of well-defined multipolarity, gauge as well as 
-                                              energy and partial outgoing wave.
-      + PhotoIonization.Line              ... photoionization line between (two) specified initial- and final-state 
-                                              levels and with (possible) subchannels.
-      + PhotoIonization.Settings          ... settings for computing photoionization lines.
-      + PhotoRecombination.Channel        ... Rec channel of well-defined multipolarity and gauge as well as energy 
-                                              and partial incoming wave.
-      + PhotoRecombination.Line           ... radiative electron capture line between (two) specified initial- and 
+      + DoubleAuger.Settings              ... settings for computing DoubleAuger lines.
+      + ImpactExcitation.Channel          ... electron-impact excitation channel of well-defined energies. partial waves and phases of the 
+                                              incoming and outgoing electrons.
+      + ImpactExcitation.Line             ... electron-impact excitation line between (two) specified initial- and final-state levels and with 
+                                              (possible) subchannels.
+      + ImpactExcitation.Settings         ... settings for computing electron-impact excitation lines.
+      + ImpactExcitationAutoion.Channel   ... electron-impact excitation channel of well-defined energies, partial waves and phases of the 
+                                              incoming and outgoing electrons.
+      + ImpactExcitationAutoion.Pathway   ... electron-impact excitation line between (two) specified initial- and final-state levels and with 
+                                              (possible) subchannels.
+      + ImpactExcitationAutoion.Settings  ... settings for computing electron-impact excitation lines.
+      + ImpactIonization.Channel          ... electron-impact ionization channel of well-defined energies, partial waves and phases of the 
+                                              incoming and outgoing electrons.
+      + ImpactIonization.Line             ... electron-impact ionization line between (two) specified initial- and final-state levels and with 
+                                              (possible) subchannels.
+      + ImpactIonization.Settings         ... settings for computing electron-impact ionization lines.
+      + MultiPhotonDeExcitation.Channel   ... multi-photon excitation or decay channel with well-defined multipolarities and gauge.
+      + MultiPhotonDeExcitation.Line      ... multi-photon excitation or decay line between (two) specified initial- and final-state levels 
+                                              and with (possible) subchannels.
+      + MultiPhotonDeExcitation.Settings  ... settings for computing multi-photon excitation or decay lines.
+      + MultiPhotonIonization.Channel     ... multi-photon ionization channel with well-defined multipolarities, gauge as well as energy and 
+                                              partial wave of the outgoing electron.
+      + MultiPhotonIonization.Line        ... multi-photon ionization line between (two) specified initial- and final-state levels and with 
+                                              (possible) subchannels.
+      + MultiPhotonIonization.Settings    ... settings for computing multi-photon ionization lines.
+      + MultiPhotonDoubleIon.Channel      ... multi-photon double ionization channel with well-defined multipolarities, gauge as well as energy
+                                              and partial waves of the (two) outgoing electrons.
+      + MultiPhotonDoubleIon.Line         ... multi-photon double ionization line between (two) specified initial- and final-state levels and 
+                                              with (possible) subchannels.
+      + MultiPhotonDoubleIon.Settings     ... settings for computing multi-photon double ionization lines.
+      + PairAnnihilation1Photon.Channel   ... positron-bound-electron pair annihilation (PEPA) with single-photon emission channel of 
+                                              well-defined multipolarity, gauge as well as energy and partial incoming (positron) wave.
+      + PairAnnihilation1Photon.Line      ... PEPA with single-photon emission line between (two) specified initial- and final-state levels and 
+                                              with (possible) subchannels.
+      + PairAnnihilation1Photon.Settings  ... settings for computing PEPA with single-photon emission lines.
+      + PairAnnihilation2Photon.Channel   ... positron-bound-electron pair annihilation (PEPA) with two-photon emission channel of well-defined 
+                                              multipolarities, gauge as well as energy and partial incoming (positron) wave.
+      + PairAnnihilation2Photon.Line      ... PEPA with two-photon emission line between (two) specified initial- and final-state levels and 
+                                              with (possible) subchannels.
+      + PairAnnihilation2Photon.Settings  ... settings for computing PEPA with two-photon emission lines.
+      + PairProduction.Channel            ... positron-bound-electron pair production (PEPP) by single-photon absorption channel of well-defined 
+                                              multipolarity, gauge as well as energy and partial outgoing (positron) wave.
+      + PairProduction.Line               ... PEPP by single-photon absorption line between (two) specified initial- and final-state levels and 
+                                              with (possible) subchannels.
+      + PairProduction.Settings           ... settings for computing PEPP lines.
+      + PhotoExcitation.Line              ... photoexcitation line between (two) specified initial- and final- state levels and with (possible
+                                              JAC.Radiative.Channel) subchannels.
+      + PhotoExcitation.Settings          ... settings for computing photoexcitation lines.
+      + PhotoExcitationAutoion.Channel    ... photo-excitation autoionization channel of well-defined energies of the incoming photon as well as 
+                                              the partial wave and phase of the outgoing electron.
+      + PhotoExcitationAutoion.Pathway    ... photo-excitation autoionization pathways between (three) specified initial-, intermediate and 
                                               final-state levels and with (possible) subchannels.
+      + PhotoExcitationAutoion.Settings   ... settings for computing photo-excitation autoionization pathways.
+      + PhotoIonization.Channel           ... photoionization channel of well-defined multipolarity, gauge as well as energy and partial 
+                                              outgoing wave.
+      + PhotoIonization.Line              ... photoionization line between (two) specified initial- and final-state levels and with (possible) 
+                                              subchannels.
+      + PhotoIonization.Settings          ... settings for computing photoionization lines.
+      + PhotoRecombination.Channel        ... Rec channel of well-defined multipolarity and gauge as well as energy and partial incoming wave.
+      + PhotoRecombination.Line           ... radiative electron capture line between (two) specified initial- and final-state levels and with 
+                                              (possible) subchannels.
       + PhotoRecombination.Settings       ... settings for computing radiative electron capture lines.
       + Radiative.Channel                 ... radiative channel of well-defined multipolarity and gauge.
-      + Radiative.Line                    ... radiative line between (two) specified initial- and final-state levels 
-                                              and with (possible) sublines.
+      + Radiative.Line                    ... radiative line between (two) specified initial- and final-state levels and with (possible) sublines.
       + Radiative.Settings                ... settings for computing radiative lines.
-      + RadiativeAuger.Channel            ... RadiativeAuger channel of a partial outgoing waves and one photon with 
-                                              well-defined energy.
-      + RadiativeAuger.Line               ... RadiativeAuger line between (two) specified initial- and final-state 
-                                              levels and with (possible) subchannels.
+      + RadiativeAuger.Channel            ... RadiativeAuger channel of a partial outgoing waves and one photon with well-defined energy.
+      + RadiativeAuger.Line               ... RadiativeAuger line between (two) specified initial- and final-state levels and with (possible) 
+                                              subchannels.
       + RadiativeAuger.Settings           ... settings for computing RadiativeAuger lines.
       + Radiative.Settings                ... settings for computing radiative lines.
-      + RayleighCompton.Channel           ... RayleighCompton channel of an incoming and outgoing photon with 
-                                              well-defined energy.
-      + RayleighCompton.Line              ... RayleighCompton line between (two) specified initial- and final-state 
-                                              levels and with (possible) subchannels.
+      + RayleighCompton.Channel           ... RayleighCompton channel of an incoming and outgoing photon with well-defined energy.
+      + RayleighCompton.Line              ... RayleighCompton line between (two) specified initial- and final-state levels and with (possible) 
+                                              subchannels.
       + RayleighCompton.Settings          ... settings for computing RayleighCompton lines.
-      + REDA.Channel                      ... resonant electron-excitation (sequential) double-autoionization (REDA) 
-                                              channel of well-defined energies, partial waves and phases of the 
-                                              incoming and outgoing electrons.
-      + REDA.Pathway                      ... resonant electron-excitation (sequential) double-autoionization (REDA) 
-                                              pathways.between (four) specified initial-, (two) intrmediate and 
-                                              final-state levels and with (possible) subchannels.
-      + REDA.Settings                     ... settings for computing resonant electron-excitation (sequential) 
-                                              double-autoionization (REDA) pathways.
+      + REDA.Channel                      ... resonant electron-excitation (sequential) double-autoionization (REDA) channel of well-defined 
+                                              energies, partial waves and phases of the incoming and outgoing electrons.
+      + REDA.Pathway                      ... resonant electron-excitation (sequential) double-autoionization (REDA) pathways.between (four) 
+                                              specified initial-, (two) intrmediate and final-state levels and with (possible) subchannels.
+      + REDA.Settings                     ... settings for computing resonant electron-excitation (sequential) double-autoionization (REDA) 
+                                              pathways.
 
 ### `Data types for calculating (time-dependent) atomic processes`
 
-      + Pulse.Envelope                       ... defines a type for the envelope (function) of an em pulse with 
-                                                 well-defined time delay, amplitude and (normalized) shape function.
-      + Pulse.ExperimentalCharacterization   ... to characterized an experimental or physically described em pulse in 
-                                                 terms of its propagation direction, frequency, maximum intensity, 
-                                                 pulse length or No. of cycles, time-delay, polarization, etc., i.e. 
-                                                 of what is easily accesssible by an experiment.
-      + Pulse.Gaussian                       ... a Gaussian light pulse that is used for evaluating time-dependent 
-                                                 statistical tensors.
-      + Pulse.Polarization                   ... defines the polarization of an em pulse in terms of its linear and 
-                                                 circular degrees, the direction of the polarization vector or some 
-                                                 generalized polarization coefficients.
-      + Pulse.PolarizationType               ... defines the polarization of an experimentally described light pulse 
-                                                 as linear, left-circular, ...
+      + Pulse.Envelope                       ... defines a type for the envelope (function) of an em pulse with well-defined time delay, 
+                                                 amplitude and (normalized) shape function.
+      + Pulse.ExperimentalCharacterization   ... to characterized an experimental or physically described em pulse in terms of its 
+                                                 propagation direction, frequency, maximum intensity, pulse length or No. of cycles, time-delay, 
+                                                 polarization, etc., i.e. of what is easily accesssible by an experiment.
+      + Pulse.Gaussian                       ... a Gaussian light pulse that is used for evaluating time-dependent statistical tensors.
+      + Pulse.Polarization                   ... defines the polarization of an em pulse in terms of its linear and circular degrees, the 
+                                                 direction of the polarization vector or some generalized polarization coefficients.
+      + Pulse.PolarizationType               ... defines the polarization of an experimentally described light pulse as linear, left-circular, ..
       + Pulse.Shape                          ... defines a shape of a general em pulse as Gaussian, SineSquared, etc.
-      + Pulse.SineSquared                    ... a SinSquared light pulse that is used for evaluating time-dependent 
-                                                 statistical tensors.
+      + Pulse.SineSquared                    ... a SinSquared light pulse that is used for evaluating time-dependent statistical tensors.
 
 ### `Data types for dealing wiht (time-dependent) statistical tensors`
 
-      + Statistical.ResonanceR               ... a resonance state in the continuum with a well-defined bound-ionic 
-                                                 core, one or several electrons in the continuum, a widths as well as 
-                                                 a loss rate due to *additional* decay processes that cannot
-                                                 be accounted for explicitly.
-      + Statistical.Tensor                   ... represents a statistical tensor of given rank k, projection q and 
-                                                 which generally depends upon two resonances.
+      + Statistical.ResonanceR      ... a resonance state in the continuum with a well-defined bound-ionic core, one or several electrons 
+                                        in the continuum, a widths as well as a loss rate due to *additional* decay processes that cannot be 
+                                        accounted for explicitly.
+      + Statistical.Tensor          ... represents a statistical tensor of given rank k, projection q and which generally depends upon two 
+                                        resonances.
 
 ### `Data types for advanced computations`
 
@@ -643,15 +607,11 @@ Following the Julia's standard conventions, all types (struct) are named in Came
 
       + Cascade.Approach               ... a particular (computational) approach in which a cascade is considered.
       + Cascade.Block                  ... a block of configurations that are treatet together within a given cascade. 
-      + Cascade.Data                   ... all transition data of a cascade as given by a list of lines (of different 
-                                           type).
-      + Cascade.Computation            ... definition of an atomic exciation/decay cascade from which the actual 
-                                           computations can be derived.
+      + Cascade.Data                   ... all transition data of a cascade as given by a list of lines (of different type).
+      + Cascade.Computation            ... definition of an atomic exciation/decay cascade from which the actual computations can be derived.
       + Cascade.Level (mutable)        ... defines a level specification for dealing with cascade transitions.
-      + Cascade.LineIndex              ... defines a line index with regard to the various lineLists of 
-                                           data::Cascade.Data.
-      + Cascade.Step                   ... an individual step of a Cascade.Computation that generally combines two 
-                                           ionization states of ions.
+      + Cascade.LineIndex              ... defines a line index with regard to the various lineLists of data::Cascade.Data.
+      + Cascade.Step                   ... an individual step of a Cascade.Computation that generally combines two ionization states of ions.
       + Cascade.Simulation             ... simulation of cascade data.
       + Cascade.SimulationSettings     ... defines settings for performing the simulation of some cascade (data).
       + Cascade.Settings               ... settings for cascade computations (not yet).
@@ -738,15 +698,13 @@ function processes()  end
 Apart from approximate level energies and eigenvectors, JAC supports the computation of the following level properties:
 
     + AlphaX         ... alpha variations; differential sensitivity parameters.
-    + Einstein       ... Einstein A, B coefficients and oscillator strength; although these coefficients 
-                         are not an original *level property*, Einstein treats these computations within a 
-                         single basis/multiplet and, hence, cannot include relaxation effects, etc. The 
-                         Einstein feature of JAC can be used, however, for a quick overwiew to transition 
-                         probabilities or in order to simplify cascade computations.
+    + Einstein       ... Einstein A, B coefficients and oscillator strength; although these coefficients are not an original level property, 
+                         Einstein treats these computations within a single basis/multiplet and, hence, cannot include relaxation effects, 
+                         etc. The Einstein feature of JAC can be used, however, for a quick overwiew to transition probabilities or in order 
+                         to simplify cascade computations.
     + FormF          ... Standard and modified atomic form factors.
     + Greens         ... Greens function of an atomic level.
     + HFS            ... Hyperfine A and B parameters.
-    ##x + IJF_Expansion  ... Representation of atomic levels in an IJF-coupled basis
     + Isotope        ... Isotope shift M and F parameters.
     + LandeJ         ... Lande g_J factors.
     + LandeF         ... Lande g_F factors.

@@ -5,26 +5,27 @@
 #  Working with JAC:           using Revise;   using JAC;   include("../src/jac.jl");   pkg> test
 #
 """
-`module JAC`  ... Jena's atomic calculator (JAC) provides tools for performing atomic (structure) calculations at various degrees of complexity 
-                  and sophistication. It has been designed to calculate not only atomic level structures and properties [such as g-factors or
-                  hyperfine and isotope-shift parameters] but also transition amplitudes between bound-state levels [anapole moment, dipole 
+`module JAC`  ... Jena Atomic Calculator (JAC) provides tools for performing atomic (structure) calculations at various degrees of complexity 
+                  and sophistication. It has been designed to not only calculate atomic level structures and properties [such as g-factors or
+                  hyperfine and isotope-shift parameters] but also transition amplitudes between bound-state levels [for the anapole moment, dipole 
                   operator, electron electric-dipole moment, parity non-conservation, etc.] and, in particular, (atomic) transition probabilities, 
-                  Auger rates, photoionization cross sections, radiative and dielectronic recombination rates and cross sections for many 
-                  other (elementary) processes. JAC also facilitates interactive computations, the simulation of atomic cascades, the 
-                  time-evolution of statistical tensors as well as various semi-empirical estimates of atomic properties. -- 
-                  In addition, the JAC module supports the display of level energies, electron and photon spectra, radial orbitals and others.
+                  Auger rates, photoionization cross sections, radiative and dielectronic recombination rates as well as cross sections for many 
+                  other (elementary) processes. In the future, JAC will also facilitate interactive computations, the simulation of atomic cascades, 
+                  the time-evolution of statistical tensors as well as various semi-empirical estimates of atomic properties. -- 
+                  In addition, the JAC module supports the display of level energies, electron and photon spectra, radial orbitals and 
+                  and other atomic data.
 
 
-**`Perform (atomic) computations of different complexity:`**  JAC will eventually support **seven kinds** of computations for which the major 
-                    steps can be summarized as follows:
+**`Perform (atomic) computations of different complexity:`**  JAC will eventually support **seven kinds** of computations which can be 
+                    summarized as follows:
 
-   + Atomic computations, based on explicitly specified electron configurations
-   + Complete active-space computations (CAS)   (not yet properly implemented)
-   + Interactive computations
-   + Atomic cascade computations (not yet fully implemented)
-   + Atomic responses (not yet properly implemented)
-   + Time evolution of statistical tensors in (intense) light pusles (not yet implemented)
-   + Semi-empirical estimates of cross sections, etc.` (not yet properly implemented)
+   + Atomic computations, based on explicitly specified electron configurations.
+   + Restricted active-space computations (RAS)   (not yet properly implemented).
+   + Interactive computations.
+   + Atomic cascade computations (not yet fully implemented).
+   + Atomic responses (not yet implemented).
+   + Time-evolution of statistical tensors in (intense) light pusles (not yet implemented).
+   + Semi-empirical estimates of cross sections, etc. (not yet properly implemented).
 
 
 **`Further details and information`**

@@ -17,7 +17,8 @@ module HydrogenicIon
     """
     function energy(sh::Shell, Z::Float64)
         energy = - Z^2 / sh.n^2 / 2.
-        sa     = "  Energie for shell $sh is [in $(JAC.give("unit: energy"))]: " * @sprintf("%.8e", energy)
+        energx = JAC.convert("energy: from atomic to eV", energy)
+        sa     = "  Energie for shell $sh is [in $(JAC.give("unit: energy"))]: " * @sprintf("%.8e", energx)
         println(sa)
         return( energy )
     end
@@ -35,7 +36,8 @@ module HydrogenicIon
         wa = sqrt(jPlusHalf^2 - Z^2 * alpha^2 )  
         wa = sqrt(1.0 + Z^2 * alpha^2 / (nr + wa)^2)
         wa = JAC.give("speed of light: c")^2 * (1/wa - 1.0)
-        sa = "  Energie for subshell $sh is [in $(JAC.give("unit: energy"))]: " * @sprintf("%.8e", wa)
+        wb = JAC.convert("energy: from atomic to eV", wa)
+        sa = "  Energie for subshell $sh is [in $(JAC.give("unit: energy"))]: " * @sprintf("%.8e", wb)
         println(sa)
         return( wa )
     end

@@ -297,10 +297,8 @@ module Radial
              standard constructor but are typically set explicitly after an instance of this type has been created.
 
         + subshell        ::Subshell          ... Relativistic subshell.
-        + isBound         ::Bool              ... Logical flag to distinguish between bound (true) and free-electron 
-                                                  orbitals (false).
-        + useStandardGrid ::Bool              ... Logical flag for using the standard grid (true) or an explicitly 
-                                                  given grid (false).
+        + isBound         ::Bool              ... Logical flag to distinguish between bound (true) and free-electron orbitals (false).
+        + useStandardGrid ::Bool              ... Logical flag for using the standard grid (true) or an explicitly given grid (false).
         + energy          ::Float64           ... Single-electron energies of bound orbitals are always negative.
         + P               ::Array{Float64,1}  ... Large and ..
         + Q               ::Array{Float64,1}  ... small component of the radial orbital.
