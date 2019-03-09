@@ -32,49 +32,49 @@ In some more detail, JAC distinguishes and aims to support (partly still in the 
 computations** which can be summarized as follows:
 
 1. **Atomic computations**, based on explicitly specified electron configurations: This kind refers to the 
-       computation of level energies, atomic state representations and to either one or several atomic properties 
-       for selected levels of a given multiplet. It also help compute *one* selected process at a time, if atomic 
-       levels from two or more multiplets are involved in atomic transitions.
+    computation of level energies, atomic state representations and to either one or several atomic properties 
+    for selected levels of a given multiplet. It also help compute *one* selected process at a time, if atomic 
+    levels from two or more multiplets are involved in atomic transitions.
 2. **Restricted active-space computations (RAS)**: This kind concerns systematically-enlarged calculations
-       of atomic states and level energies due to a specified active space of orbitals as well as due to the
-       (number and/or kind of) virtual excitations that are taken to be into account. Such RAS computations are 
-       normally performed stepwise by utilizing the (one-electron) orbital functions from some prior step.
+    of atomic states and level energies due to a specified active space of orbitals as well as due to the
+    (number and/or kind of) virtual excitations that are taken to be into account. Such RAS computations are 
+    normally performed stepwise by utilizing the (one-electron) orbital functions from some prior step.
 3. **Interactive computations**: Here, the (large set of) methods of the JAC program are applied interactively,
-       either directly (from the REPL) or by using some short Julia script in order to compute and evaluate
-       the desired observables (parameters), such as energies, expansion coefficients, transition matrices, rates,
-       cross sections, etc. An interactive computation typically first prepares and applies (instances of) JAC’s
-       data types, such as orbitals, configuration-state functions (CSF), bases, multiplets, and others. And like 
-       Julia is built on many (high-level) functions and methods, JAC then provides the required language elements 
-       for performing specific atomic computations at various degree of complexity and sophistication.
-    4. **Atomic cascade computations**: A cascade typically includes ions of an element in three or more charge 
-       states that are connected to each other by different atomic processes, such as photoionization, dielectronic 
-       recombination, Auger decay, radiative transitions, and where the level population is determined by the 
-       set-up and geometry of the given experiment. Cascade computations are usually based on some predefined 
-       (cascade) approach that enables one to select automatically the state-space of the ions, the atomic 
-       processes to be considered for the various steps of the cascade, and to specify perhaps additional 
-       restrictions in order to keep the computations feasible.
-    5. **Atomic responses**: With this kind, I wish to support in the future computations that help analyze 
-       the response of atoms to incident beams of light pulses and particles, such as field-induced ionization 
-       processes, high-harmonic generation and several others. For these responses, the detailed atomic 
-       structure has often not yet been considered until the present but will become relevant as more elaborate 
-       and accurate measurements are becoming feasible.
-    6. **Atomic time-evolution of statistical tensors**: We here wish to simulate the population and coherences
-       of (atomic) levels using the *Liouville equation*, when atoms and ions are irradiated by (intense) light
-       pulses. For these computations, however, we always assume that the level structure of the atoms is kept 
-       intact. Further (decay) processes of the excited atoms and ions can be takent into account by some loss 
-       rate, but without that the atoms leave the *pre-specified space of sublevels*. In particular, I here plan 
-       to consider the interaction of atoms and ions with pulses of different shape, polarization strength 
-       and duration.
-    7. **Semi-empirical estimates** of atomic properties, such as cross sections, stopping powers, asymptotic
-       behaviour, etc. These *estimates* often refer to simple model computations or the use of fit functions.
-       They are only implemented when data are needed but no *ab-initio* computations of the properties are 
-       feasible otherwise.
+    either directly (from the REPL) or by using some short Julia script in order to compute and evaluate
+    the desired observables (parameters), such as energies, expansion coefficients, transition matrices, rates,
+    cross sections, etc. An interactive computation typically first prepares and applies (instances of) JAC’s
+    data types, such as orbitals, configuration-state functions (CSF), bases, multiplets, and others. And like 
+    Julia is built on many (high-level) functions and methods, JAC then provides the required language elements 
+    for performing specific atomic computations at various degree of complexity and sophistication.
+4. **Atomic cascade computations**: A cascade typically includes ions of an element in three or more charge 
+    states that are connected to each other by different atomic processes, such as photoionization, dielectronic 
+    recombination, Auger decay, radiative transitions, and where the level population is determined by the 
+    set-up and geometry of the given experiment. Cascade computations are usually based on some predefined 
+    (cascade) approach that enables one to select automatically the state-space of the ions, the atomic 
+    processes to be considered for the various steps of the cascade, and to specify perhaps additional 
+    restrictions in order to keep the computations feasible.
+5. **Atomic responses**: With this kind, I wish to support in the future computations that help analyze 
+    the response of atoms to incident beams of light pulses and particles, such as field-induced ionization 
+    processes, high-harmonic generation and several others. For these responses, the detailed atomic 
+    structure has often not yet been considered until the present but will become relevant as more elaborate 
+    and accurate measurements are becoming feasible.
+6. **Atomic time-evolution of statistical tensors**: We here wish to simulate the population and coherences
+    of (atomic) levels using the *Liouville equation*, when atoms and ions are irradiated by (intense) light
+    pulses. For these computations, however, we always assume that the level structure of the atoms is kept 
+    intact. Further (decay) processes of the excited atoms and ions can be takent into account by some loss 
+    rate, but without that the atoms leave the *pre-specified space of sublevels*. In particular, I here plan 
+    to consider the interaction of atoms and ions with pulses of different shape, polarization strength 
+    and duration.
+7. **Semi-empirical estimates** of atomic properties, such as cross sections, stopping powers, asymptotic
+    behaviour, etc. These *estimates* often refer to simple model computations or the use of fit functions.
+    They are only implemented when data are needed but no *ab-initio* computations of the properties are 
+    feasible otherwise.
 
        
 
 ## Documentation & News
 
-A detailed `Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_  is available that
+A detailed [Manual, Compendium & Theoretical Background to JAC](Manual-Jac-dist.pdf)  is available that
 describes the **use and underlying atomic theory** of the JAC code. News about recent developments of JAC
 are summarized [here](NEWS.rst)
 
@@ -83,12 +83,12 @@ are summarized [here](NEWS.rst)
 ## Licence & Reference
 
 The code in this repository is distributed under the [MIT licence](LICENSE.md). The associated manual 
-`Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_ is distributed under the Creative 
+[Manual, Compendium & Theoretical Background to JAC](Manual-Jac-dist.pdf) is distributed under the Creative 
 Commons Attribution 4.0 International (CC BY 4.0) license.
 
 For reference, please, use the Computer Physics Communications publication on JAC:
 
-* S. Fritzsche, [Computer Physics Communications xx, yy (2019](https://doi.org/10.1016/j.cpc.2019.01.012)
+* S. Fritzsche, [Computer Physics Communications xx, yy (2019)](https://doi.org/10.1016/j.cpc.2019.01.012)
 
 
 
@@ -105,7 +105,7 @@ The JAC code makes use of:
 
 The numerous features of JAC can be easily understood by following the tutorials that are distributed together
 with the code. Further details can then be found from the 
-`Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_. Make use the index or a
+[Manual, Compendium & Theoretical Background to JAC](Manual-Jac-dist.pdf). Make use the index or a
 full-text search to find selected items in this (.pdf) manual.
 
 A very first **simple example** has been discussed in the reference above and refers to the low-lying level 
@@ -136,22 +136,14 @@ They can be explored statically at GitHub or can be run locally after the softwa
 In order to modify the cell-output of the notebooks and to better print the *wide tables*, you can create or modify the file
 ~/.jupyter/custom/custom.css in your home directory and add the line:  div.output_area pre { font-size: 7pt;} .
 
-* `Getting started <tutorials/01-getting-started.ipynb>`_ 
-
-* `Simple hydrogenic estimates <tutorials/02-hydrogenic-computations.ipynb>`_
-
-* `Nuclear models and potentials <tutorials/03-setting-the-nucleus.ipynb>`_
-
-* `Atomic potentials <tutorials/04-compare-radial-potentials.ipynb>`_
-
-* `SCF + CI computations for carbon <tutorials/05-compute-SCF+CI-carbon-III.ipynb>`_
-
-* `Einstein coefficients for Fe X <tutorials/06-compute-Fe-X-spectrum.ipynb>`_
-
-* `Neon K-LL Auger rates <tutorials/07-compute-Ne-KLL-Auger-spectrum.ipynb>`_
-
-* `Argon 2s, 2p photoionization <tutorials/09-compute-Ar-2s-2p-photoionization.ipynb>`_
-
+* [Getting started](tutorials/01-getting-started.ipynb)
+* [Simple hydrogenic estimates](tutorials/02-hydrogenic-computations.ipynb)
+* [Nuclear models and potentials](tutorials/03-setting-the-nucleus.ipynb)
+* [Atomic potentials](tutorials/04-compare-radial-potentials.ipynb)
+* [SCF + CI computations for carbon](tutorials/05-compute-SCF+CI-carbon-III.ipynb)
+* [Einstein coefficients for Fe X](tutorials/06-compute-Fe-X-spectrum.ipynb)
+* [Neon K-LL Auger rates](tutorials/07-compute-Ne-KLL-Auger-spectrum.ipynb)
+* [Argon 2s, 2p photoionization](tutorials/09-compute-Ar-2s-2p-photoionization.ipynb)
 * Several further tutorials are also available.
 
 
@@ -181,13 +173,13 @@ if solutions are provided. One of the simplest way to start contributing to JAC 
 to those provided above, in order to navigate others to the task of a new user. Also, new graphical user 
 interface and plotting features on different outcomes of atomic computations will be very helpful for the community. 
 A few further suggestions can be found in section 1.7 in the 
-`Manual, Compendium & Theoretical Background to JAC <Manual-Jac-dist.pdf>`_.
+[Manual, Compendium & Theoretical Background to JAC](Manual-Jac-dist.pdf).
 
 
 
 ## Developers:
 
-* Stephan Fritzsche,  `s.fritzsche@gsi.de`
+* Stephan Fritzsche,  s.fritzsche@gsi.de
 
 
 
