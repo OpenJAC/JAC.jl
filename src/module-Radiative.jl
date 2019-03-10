@@ -42,7 +42,7 @@ module Radiative
     `JAC.Radiative.Settings()`  ... constructor for the default values of radiative line computations
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0.)
+        Settings(EmMultipole[E1], UseGauge[JAC.UseCoulomb], false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0.)
     end
 
 

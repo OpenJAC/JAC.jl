@@ -173,13 +173,13 @@ module ManyElectron
         + áccuracyScf          ::Float64            ... convergence criterion for the SCF field.
         + shellSequenceScf     ::Array{Subshell,1}  ... Sequence of subshells to be optimized.
         
-    	+ coulombCI		       ::Bool 		        ... logical flag to include Coulomb interactions.
-    	+ breitCI		       ::Bool 		        ... logical flag to include Breit interactions.
-    	+ qedCI			       ::Bool 		        ... logical flag to include QED interactions.
-    	+ methodCI             ::String		        ... method for diagonalizing the matrix.
-    	+ selectLevelsCI       ::Bool 		        ... true, if specific level (number)s have been selected for computation.
-    	+ selectedLevelsCI     ::Array{Int64,1}	    ... Level number that have been selected.
-    	+ selectSymmetriesCI   ::Bool 		        ... true, if specific level symmetries have been selected for computation.
+    	+ coulombCI            ::Bool               ... logical flag to include Coulomb interactions.
+    	+ breitCI              ::Bool               ... logical flag to include Breit interactions.
+    	+ qedCI                ::Bool               ... logical flag to include QED interactions.
+    	+ methodCI             ::String             ... method for diagonalizing the matrix.
+    	+ selectLevelsCI       ::Bool               ... true, if specific level (number)s have been selected for computation.
+    	+ selectedLevelsCI     ::Array{Int64,1}     ... Level number that have been selected.
+    	+ selectSymmetriesCI   ::Bool               ... true, if specific level symmetries have been selected for computation.
     	+ selectedSymmetriesCI ::Array{LevelSymmetry,1}       ... Level symmetries that have been selected.
     """
     struct  AsfSettings
@@ -221,19 +221,19 @@ module ManyElectron
     	  println(io, "breitScf:             $(settings.breitScf)  ")
     	  println(io, "methodScf:            $(settings.methodScf)  ")
     	  println(io, "startScf:             $(settings.startScf)  ")
-    	  println(io, "orbitalFileScf:	     $(settings.orbitalFileScf)  ")
-    	  println(io, "levelsScf:	         $(settings.levelsScf)  ")
-    	  println(io, "maxIterationsScf:	 $(settings.maxIterationsScf)  ")
-    	  println(io, "accuracyScf:	         $(settings.accuracyScf)  ")
-    	  println(io, "shellSequenceScf:	 $(settings.shellSequenceScf)  ")
+    	  println(io, "orbitalFileScf:       $(settings.orbitalFileScf)  ")
+    	  println(io, "levelsScf:            $(settings.levelsScf)  ")
+    	  println(io, "maxIterationsScf:     $(settings.maxIterationsScf)  ")
+    	  println(io, "accuracyScf:          $(settings.accuracyScf)  ")
+    	  println(io, "shellSequenceScf:     $(settings.shellSequenceScf)  ")
     	  #
-    	  println(io, "coulombCI:	         $(settings.coulombCI)  ")
-    	  println(io, "breitCI:	             $(settings.breitCI)  ")
-    	  println(io, "qedCI:	             $(settings.qedCI)  ")
-    	  println(io, "methodCI:	         $(settings.methodCI)  ")
-    	  println(io, "selectLevelsCI:	     $(settings.selectLevelsCI)  ")
-    	  println(io, "selectedLevelsCI:	 $(settings.selectedLevelsCI)  ")
-    	  println(io, "selectSymmetriesCI:	 $(settings.selectSymmetriesCI)  ")
+    	  println(io, "coulombCI:            $(settings.coulombCI)  ")
+    	  println(io, "breitCI:              $(settings.breitCI)  ")
+    	  println(io, "qedCI:                $(settings.qedCI)  ")
+    	  println(io, "methodCI:             $(settings.methodCI)  ")
+    	  println(io, "selectLevelsCI:       $(settings.selectLevelsCI)  ")
+    	  println(io, "selectedLevelsCI:     $(settings.selectedLevelsCI)  ")
+    	  println(io, "selectSymmetriesCI:   $(settings.selectSymmetriesCI)  ")
     	  println(io, "selectedSymmetriesCI: $(settings.selectedSymmetriesCI)  ")
 
     end

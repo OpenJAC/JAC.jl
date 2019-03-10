@@ -16,9 +16,10 @@ module PhotoIonization
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + photonEnergies          ::Array{Float64,1}             ... List of photon energies.  
-        + calcAnisotropy          ::Bool                         ... True, if the beta anisotropy parameters are to be calculated and false otherwise 
+        + calcAnisotropy          ::Bool                         ... True, if the beta anisotropy parameters are to be calculated and false otherwise. 
         + calcPartialCs           ::Bool                         ... True, if partial cross sections are to be calculated and false otherwise.  
-        + calcTensors             ::Bool                         ... True, if the statistical tensors of the excited atom are to be calculated and false otherwise. 
+        + calcTensors             ::Bool                         ... True, if the statistical tensors of the excited atom are to be calculated and 
+                                                                     false otherwise. 
         + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
@@ -40,7 +41,7 @@ module PhotoIonization
     `JAC.PhotoIonization.Settings()`  ... constructor for the default values of photoionization line computations
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], Float64[], false, false, false, false, false, Tuple{Int64,Int64}[])
+        Settings(EmMultipole[E1], UseGauge[JAC.UseCoulomb], Float64[], false, false, false, false, false, Tuple{Int64,Int64}[])
     end
 
 
@@ -52,7 +53,7 @@ module PhotoIonization
         println(io, "gauges:                   $(settings.gauges)  ")
         println(io, "photonEnergies:           $(settings.photonEnergies)  ")
         println(io, "calcAnisotropy:           $(settings.calcAnisotropy)  ")
-        println(io, "calccalcPartialCs:        $(settings.calccalcPartialCs)  ")
+        println(io, "calcPartialCs:            $(settings.calcPartialCs)  ")
         println(io, "calcTensors:              $(settings.calcTensors)  ")
         println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
         println(io, "selectLines:              $(settings.selectLines)  ")

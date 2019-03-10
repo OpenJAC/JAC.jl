@@ -112,8 +112,8 @@ with the code. Further details can then be found from the
 full-text search to find selected items in this (.pdf) manual.
 
 A very first **simple example** has been discussed in the reference above and refers to the low-lying level 
-structure and the Einstein A and B coefficients of the $3s 3p^6 \:+\: 3s^2 3p^4 3d \:\to\: 3s^2 3p^5$ 
-transition array for Fe$^{9+}$ ions, also known as the spectrum Fe X. To perform such a computation within 
+structure and the Einstein A and B coefficients of the 3s 3p^6 + 3s^2 3p^4 3d -> 3s^2 3p^5
+transition array for Fe^{9+} ions, also known as the spectrum Fe X. To perform such a computation within 
 the framework of JAC, one needs to specify the initial- and final-state configurations in an instance of an
 `Atomic.Computation`, together with the specifier `process=RadiativeX`. We here also provide a title (line), 
 the multipoles (default E1) and the gauge forms for the coupling of the radiation field that are to be

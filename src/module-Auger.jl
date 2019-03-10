@@ -20,8 +20,8 @@ module Auger
         + minAugerEnergy          ::Float64                      ... Minimum energy of free (Auger) electrons to be included.
         + maxAugerEnergy          ::Float64                      ... Maximum energy of free (Auger) electrons to be included.
         + maxKappa                ::Int64                        ... Maximum kappa value of partial waves to be included.
-        + operator                ::String                       ... Auger operator that is to be used for evaluating the Auger amplitudes: allowed values
-                                                                     are: "Coulomb", "Breit", "Coulomb+Breit"
+        + operator                ::String                       ... Auger operator that is to be used for evaluating the Auger amplitudes: 
+                                                                     allowed values are: "Coulomb", "Breit", "Coulomb+Breit"
     """
     struct Settings
         calcAnisotropy            ::Bool         
