@@ -13,7 +13,7 @@
 
 ## What is JAC?
 
-We here provide a first public version of *JAC*, the Jena Atomic Calculator and an open-source Julia package for 
+We here provide a first public version of JAC, the Jena Atomic Calculator and an open-source Julia package for 
 doing atomic computations. JAC is a (relativistic) electronic structure code for the computation of (many-electron) 
 interaction amplitudes, properties as well as a large number of excitation and decay processes for open-shell 
 atoms and ions across the whole periodic table. In the future, moreover, JAC will -- more and more -- facilitate 
@@ -112,12 +112,12 @@ with the code. Further details can then be found from the
 full-text search to find selected items in this (.pdf) manual.
 
 A very first **simple example** has been discussed in the reference above and refers to the low-lying level 
-structure and the Einstein A and B coefficients of the 3s 3p^6 + 3s^2 3p^4 3d → 3s^2 3p^5 transition array 
-for Fe^9+ ions, also known as the spectrum Fe X. To perform such a computation within the framework of JAC, 
-one needs to specify the initial- and final-state configurations in an instance of an `Atomic.Computation`, 
-together with the specifier `process=RadiativeX`. We here also provide a title (line), the multipoles 
-(default E1) and the gauge forms for the coupling of the radiation field that are to be applied in these 
-calculations:
+structure and the Einstein A and B coefficients of the $3s 3p^6 \:+\: 3s^2 3p^4 3d \:\to\: 3s^2 3p^5$ 
+transition array for Fe$^{9+}$ ions, also known as the spectrum Fe X. To perform such a computation within 
+the framework of JAC, one needs to specify the initial- and final-state configurations in an instance of an
+`Atomic.Computation`, together with the specifier `process=RadiativeX`. We here also provide a title (line), 
+the multipoles (default E1) and the gauge forms for the coupling of the radiation field that are to be
+applied in these calculations:
 
 
 ```julia

@@ -17,11 +17,11 @@ module  RadialIntegrals
          `I(ab) = <a | h_D | b> = delta_{kappa_a, kappa_b} int_0^infty dr  [ c Q_a ( d/dr + kappa_a/r ) P_b +  c P_a (-d/dr + kappa_a/r ) Q_b
                                                                              - 2c^2 Q_a Q_b + V_nuc (r) (P_a P_b + Q_a Q_b) ]`
                                   
-         for the orbitals a and b on the grid. potential.V must provide the effective nuclear charge Z(r) on this grid.
+         for the orbitals a and b on the grid. potential.Zr must provide the effective nuclear charge Z(r) on this grid.
     """
     function GrantIab(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, potential::Radial.Potential)
         if  a.subshell.kappa != b.subshell.kappa    return( 0 )    end
-        kappa = a.subshell.kappa;                   Zr = potential.V
+        kappa = a.subshell.kappa;                   Zr = potential.Zr
         mtp   = min(size(a.P, 1), size(b.P, 1));    wc = JAC.give("speed of light: c")
         
         # Distinguish the radial integration for different grid definitions
@@ -395,7 +395,7 @@ module  RadialIntegrals
         if  grid.mesh == MeshGL
             wa = 0.
             for  i = 1:mtp   
-                wb = tIntegral(grid.r[i]) * (-pot.V[i] * grid.r[i])     
+                wb = tIntegral(grid.r[i]) * (-pot.Zr[i] * grid.r[i])     
                 wa = wa + (a.P[i]*wb*b.P[i] + a.Q[i]*wb*b.Q[i]) * grid.wr[i]   
             end
             wa = 2. * JAC.give("alpha") / (3pi) * wa
@@ -427,7 +427,7 @@ module  RadialIntegrals
         if  grid.mesh == MeshGL
             wa = 0.
             for  i = 1:mtp   
-                wb = tIntegral(grid.r[i]) * (-pot.V[i] * grid.r[i])     
+                wb = tIntegral(grid.r[i]) * (-pot.Zr[i] * grid.r[i])     
                 wa = wa + (a.P[i]*wb*b.P[i] + a.Q[i]*wb*b.Q[i]) * grid.wr[i]   
             end
             wa = 2. * JAC.give("alpha") / (3pi) * wa
@@ -641,7 +641,7 @@ module  RadialIntegrals
 
     """
     `JAC.RadialIntegrals.Vlocal(bspline1::JAC.Bsplines.Bspline, bspline2::JAC.Bsplines.Bspline, potential::Radial.Potential, grid::Radial.Grid)`  
-         ... computes the (radial) integral for the local potential and for two bpslines, all defined on grid <bspline1| potential.V | bspline2>. 
+         ... computes the (radial) integral for the local potential and for two bpslines, all defined on grid <bspline1| potential.Zr | bspline2>. 
          -- Here, potential. V must provide the effective charge zz(r) = - V * r.
     """
     function Vlocal(bspline1::JAC.Bsplines.Bspline, bspline2::JAC.Bsplines.Bspline, potential::Radial.Potential, grid::Radial.Grid)
@@ -653,8 +653,8 @@ module  RadialIntegrals
         if  grid.mesh == MeshGrasp
     
             function f(i :: Int64)
-                if  i == 1  wa = - bspline1.bs[i] * potential.V[i] * bspline2.bs[i] / (0.3 * grid.r[2]) 
-                else        wa = - bspline1.bs[i] * potential.V[i] * bspline2.bs[i] / grid.r[i]   end
+                if  i == 1  wa = - bspline1.bs[i] * potential.Zr[i] * bspline2.bs[i] / (0.3 * grid.r[2]) 
+                else        wa = - bspline1.bs[i] * potential.Zr[i] * bspline2.bs[i] / grid.r[i]   end
                 return( wa )
             end
     
@@ -662,8 +662,8 @@ module  RadialIntegrals
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = n0:mtp  
-                if  i == 1  wa = wa - bspline1.bs[i] * potential.V[i] * bspline2.bs[i] / (0.3 * grid.r[2]) * grid.wr[i] 
-                else        wa = wa - bspline1.bs[i] * potential.V[i] * bspline2.bs[i] / grid.r[i] * grid.wr[i]   end
+                if  i == 1  wa = wa - bspline1.bs[i] * potential.Zr[i] * bspline2.bs[i] / (0.3 * grid.r[2]) * grid.wr[i] 
+                else        wa = wa - bspline1.bs[i] * potential.Zr[i] * bspline2.bs[i] / grid.r[i] * grid.wr[i]   end
             end
             return( wa )
         else

@@ -10,13 +10,13 @@
 function  add(pota::Radial.Potential, potb::Radial.Potential)
     if  pota.grid.NoPoints != potb.grid.NoPoints  ||   pota.grid.rnt != potb.grid.rnt  ||  pota.grid.h != potb.grid.h  ||  
         pota.grid.hp != potb.grid.hp                   error("stop a")   end
-    name = pota.name * "+" * pota.name;   nmax = max(length(pota.V), length(potb.V));   nmin = min(length(pota.V), length(potb.V))
-    V  = zeros(nmax);   
-    nx = length(pota.V);    V[1:nx] = V[1:nx] + pota.V[1:nx] 
-    nx = length(potb.V);    V[1:nx] = V[1:nx] + potb.V[1:nx]
-    V[nmin+1:nmax] .= V[nmin] 
+    name = pota.name * "+" * pota.name;   nmax = max(length(pota.Zr), length(potb.Zr));   nmin = min(length(pota.Zr), length(potb.Zr))
+    Zr   = zeros(nmax);   
+    nx = length(pota.Zr);    Zr[1:nx] = Zr[1:nx] + pota.Zr[1:nx] 
+    nx = length(potb.Zr);    Zr[1:nx] = Zr[1:nx] + potb.Zr[1:nx]
+    Zr[nmin+1:nmax] .= Zr[nmin] 
 
-    potential = Radial.Potential(name, V, pota.grid)
+    potential = Radial.Potential(name, Zr, pota.grid)
     return( potential )
 end
 

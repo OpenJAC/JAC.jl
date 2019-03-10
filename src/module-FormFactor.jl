@@ -148,7 +148,7 @@ module FormFactor
             nrho = length(orb.P)
             #
             for    i = 2:nrho 
-                wx = wc^2 / (wc^2 + ei + pot.V[i]/grid.r[i])
+                wx = wc^2 / (wc^2 + ei + pot.Zr[i]/grid.r[i])
                 if     q == 0.   wa[i] = wa[i] + occ * (orb.P[i]^2 + orb.Q[i]^2) * wx
                 else             wa[i] = wa[i] + occ * (orb.P[i]^2 + orb.Q[i]^2) / grid.r[i] * sin(q*grid.r[i]) / q * wx
                 end

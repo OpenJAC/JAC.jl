@@ -247,12 +247,12 @@ module Radial
     `struct  Radial.Potential`  ... defines a struct for the radial potential which contains all information about its physical content.
 
         + name           ::String            ... A name for the potential.
-        + V              ::Array{Float64,1}  ... radial potential function.
+        + Zr             ::Array{Float64,1}  ... radial potential function Z(r) = - r * V(r) as usual in atomic structure theory.
         + grid           ::RadialGrid        ... radial grid on which the potential is defined.
     """
     struct  Potential
         name             ::String
-        V                ::Array{Float64,1}
+        Zr               ::Array{Float64,1}
         grid             ::Radial.Grid
     end
 
@@ -272,8 +272,8 @@ module Radial
     
         sa = Base.string(potential);    print(io, sa * "\n")
     
-        n = length(potential.V);                    if  n < 6   return( nothing )    end
-        print(io, "V:    ", potential.V[1:23],    "  ...  ", potential.V[n-22:n],    "\n") 
+        n = length(potential.Zr);                    if  n < 6   return( nothing )    end
+        print(io, "Zr:    ", potential.Zr[1:23],    "  ...  ", potential.Zr[n-22:n],    "\n") 
         print(io, potential.grid)
     end
 
@@ -282,10 +282,10 @@ module Radial
     `Base.string(potential::Radial.Potential)`  ... provides a String notation for the variable potential::Radial.Potential.
     """
     function Base.string(potential::Radial.Potential) 
-        if  length(potential.V)  == 0
+        if  length(potential.Zr)  == 0
             sa = "Radial potential not yet defined; kind = $(potential.name) ..."
         else
-            sa = "$(potential.name) (radial) potential ... defined on $(length(potential.V)) grid points ..."
+            sa = "$(potential.name) (radial) potential ... defined on $(length(potential.Zr)) grid points ..."
         end 
     end
 
@@ -573,10 +573,10 @@ module Radial
     """
     function determineZbar(pot::Radial.Potential) 
         nx = 5   # Number of grid points for determining the effective charge Zbar
-        mtp = size( pot.V, 1);    grid = pot.grid;    meanZbar = zeros(nx);    devsZbar = zeros(nx);   ny = 0
-        ##x println("mtp = $mtp,  pot.V = $(pot.V[mtp-nx+1:mtp])")
+        mtp = size( pot.Zr, 1);    grid = pot.grid;    meanZbar = zeros(nx);    devsZbar = zeros(nx);   ny = 0
+        ##x println("mtp = $mtp,  pot.Zr = $(pot.Zr[mtp-nx+1:mtp])")
         for  i = mtp-nx+1:mtp
-            ny  = ny + 1;    meanZbar[ny] = pot.V[mtp]
+            ny  = ny + 1;    meanZbar[ny] = pot.Zr[mtp]
         end
         mZbar   = sum(meanZbar) / nx;   for  i = 1:nx    devsZbar[i] = (meanZbar[i] - mZbar)^2    end
         stdZbar = sqrt( sum(devsZbar) / nx )

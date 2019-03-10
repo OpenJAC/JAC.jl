@@ -12,7 +12,7 @@ function plot(sa::String, potentials::Array{Radial.Potential,1}, grid::Radial.Gr
     wa = Float64[];   wc = [NaN for i=1:N];   labels = String[];   np = length(potentials)
     for  pot in potentials
         wb = wc
-        nx = min(length(pot.V), N);   wb[1:nx] = pot.V[1:nx]
+        nx = min(length(pot.Zr), N);   wb[1:nx] = pot.Zr[1:nx]
         append!(wa, wb)
         push!(labels, pot.name)
     end
