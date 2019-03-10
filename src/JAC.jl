@@ -20,7 +20,7 @@
                     summarized as follows:
 
    + Atomic computations, based on explicitly specified electron configurations.
-   + Restricted active-space computations (RAS)   (not yet properly implemented).
+   + Restricted active-space computations (RAS; not yet properly implemented).
    + Interactive computations.
    + Atomic cascade computations (not yet fully implemented).
    + Atomic responses (not yet implemented).
@@ -31,11 +31,11 @@
 **`Further details and information`**
 
       + Kinds of atomic implementation                                             [cf. ? JAC.kindsOfComputation]
-      + Atomic processes (partly) implemented in JAC                               [cf. ? JAC.amplitudes]
+      + Atomic amplitudes (partly) implemented in JAC                              [cf. ? JAC.amplitudes]
       + Atomic level properties (partly) implemented in JAC                        [cf. ? JAC.properties]
       + Atomic processes (partly) implemented in JAC                               [cf. ? JAC.processes]
       + Interactive use of JAC procedures                                          [cf. ? JAC.interactive]
-      + Design principles and limitations of the JAC program`**                    [cf. ? JAC.design]
+      + Design principles and limitations of the JAC program                       [cf. ? JAC.design]
       + Data types, structs and name conventions of the JAC module                 [cf. ? JAC.datatypes]
       + Atomic cascade computations and approximations                             [cf. ? JAC.decayCascades]
       + Use of (em) light pulses in the time evolution of statistical tensors      [cf. ? JAC.pulses]
