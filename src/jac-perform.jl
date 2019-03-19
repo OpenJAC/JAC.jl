@@ -75,7 +75,7 @@ function perform(computation::Atomic.Computation; output::Bool=false)
             if output    results = Base.merge( results, Dict("Polarizibility outcomes:" => outcome) )         end
         end
         if  JAC.Plasma         in computation.properties   
-            outcome = JAC.PlasmaShift.computeOutcomes(multiplet, nModel, computation.grid, computation.plasmaSettings)         
+            outcome = JAC.PlasmaShift.computeOutcomes(multiplet, nModel, computation.grid, computation.asfSettings, computation.plasmaSettings)         
             if output    results = Base.merge( results, Dict("Plasma shift outcomes:" => outcome) )            end
         end
         
@@ -370,6 +370,70 @@ end
 """
 function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
     !(sa == "computation: CI")   &&   error("Unsupported keystring = $sa")
+    
+    # Determine the J^P symmetry blocks
+    symmetries = Dict{JAC.LevelSymmetry,Int64}()
+    for  csf in basis.csfs
+        sym = LevelSymmetry(csf.J, csf.parity)
+        if     haskey(symmetries, sym)    symmetries[sym] = symmetries[sym] + 1
+        else   symmetries = Base.merge( symmetries, Dict( sym => 1 ) )
+        end
+    end
+
+    # Test the total number of CSF
+    NoCsf = 0
+    for (sym,v) in symmetries   NoCsf = NoCsf + v   end
+   
+    # Calculate for each symmetry block the corresponding CI matrix, diagonalize it and append a Multiplet for this block
+    multiplets = Multiplet[]
+    for  (sym,v) in  symmetries
+        matrix = compute("matrix: CI, J^P symmetry", sym, basis, nuclearModel, grid, settings; printout=printout)
+        eigen  = JAC.diagonalize("matrix: Julia, eigfact", matrix)
+        levels = Level[]
+        for  ev = 1:length(eigen.values)
+            # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)
+            evSym = eigen.vectors[ev];    vector = zeros( length(basis.csfs) );   ns = 0
+            for  r = 1:length(basis.csfs) 
+                if LevelSymmetry(basis.csfs[r].J, basis.csfs[r].parity) == sym    ns = ns + 1;   vector[r] = evSym[ns]   end
+            end
+            newlevel = Level( sym.J, AngularM64(sym.J.num//sym.J.den), sym.parity, 0, eigen.values[ev], 0., true, basis, vector ) 
+            push!( levels, newlevel)
+        end
+        wa = Multiplet("noName", levels)
+        push!( multiplets, wa)
+    end
+    
+    # Merge all multiplets into a single one
+    mp = JAC.merge("multiplets", multiplets)
+    mp = JAC.sort("multiplet: by energy", mp)
+    
+    # Display all level energies and energy splittings
+    if  printout
+        JAC.tabulate("multiplet: energies", mp)
+        JAC.tabulate("multiplet: energy relative to immediately lower level",    mp)
+        JAC.tabulate("multiplet: energy of each level relative to lowest level", mp)
+    end
+    printSummary, iostream = JAC.give("summary flag/stream")
+    if  printSummary     
+        JAC.tabulate("multiplet: energies", mp, stream=iostream)
+        JAC.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
+        JAC.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
+    end
+  
+    return( mp )
+end
+
+
+"""
+  + `("computation: CI for plasma", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
+                                    settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
+        ... to  set-up and diagonalize from the given (SCF) basis the configuration-interaction matrix and to derive and
+            display the level structure of the corresponding multiplet due to the given settings. Here, the CI matrix
+            includes the modifications of the Hamiltonian due to the given plasmaSettings; a multiplet::Multiplet is returned.   
+"""
+function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
+                 settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)
+    !(sa == "computation: CI for plasma")   &&   error("Unsupported keystring = $sa")
     
     # Determine the J^P symmetry blocks
     symmetries = Dict{JAC.LevelSymmetry,Int64}()

@@ -108,6 +108,18 @@ end
 
 
 """
+`JAC.projections(ja::AngularJ64)`  ... returns all allowed projections of a given angular momenta ja as a list::Array{AngularM64,1} 
+                                      of m-values, i.e. -ja, -ja+1, ..., j.
+"""
+function  projections(ja::AngularJ64)
+    if  ja.den == 1   ja2 = 2ja.num   else   ja2 = ja.num   end
+    mList = AngularM64[]
+    for  m = -ja2:2:ja2    push!(mList, AngularM64(m//2) )    end
+    return( mList )
+end
+
+
+"""
 `struct  Eigen`  ... defines a simple struct to communicate eigenvalues and eigenvectors if different diagonalization procedures are used.
 
     + values   ::Array{Float64,1}            ... List of eigenvalues.

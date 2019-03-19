@@ -286,5 +286,20 @@ module Nuclear
         return( potential )
      end
 
+    
+    """
+    `JAC.Nuclear.nuclearPotentialDH(model::Nuclear.Model, grid::Radial.Grid, lambda::Float64)`  ... computes the effective, 
+         radial-dependent charge Z(r) for a nucleus with radius R, nuclear charge Z and for a Debye-Hueckel screening exp(-lambda r). 
+         The full Debye-Hueckel nuclear potential is then given by V_nuc = - Z(r)/r; a potential::Radial.Potential is returned.
+    """ 
+    function nuclearPotentialDH(nm::Nuclear.Model, grid::Radial.Grid, lambda::Float64)
+        pot = nuclearPotential(nm, grid)
+        Zr  = pot.Zr
+        for  i = 1:length(Zr)   Zr[i] = Zr[i] *exp(-lambda * pot.grid.r[i])    end
+        
+        potential = Radial.Potential(pot.name, Zr, deepcopy(pot.grid))
+        return( potential )
+     end  
+
 end # module
 

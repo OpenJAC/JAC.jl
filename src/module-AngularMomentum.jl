@@ -346,12 +346,6 @@ module AngularMomentum
         if  ee.den == 1      je = ee.num + ee.num  else    je = ee.num     end
         if  f.den == 1       jf = f.num + f.num    else    jf = f.num      end
         #
-        ##x w6jTest = WignerSymbols.wigner6j(ja/2, jb/2, jc/2, jd/2, je/2, jf/2)
-        ##x println("ja/2 = $(ja/2), jb/2 = $(jb/2), jc/2 = $(jc/2), jd/2 = $(jd/2), je/2 = $(je/2), jf/2 = $(jf/2)   w6j = $w6j ")
-        ##x return( w6j )
-        ##x #
-        ##x error("code does not work")
-        #
         wa = JAC.AngularMomentum.triangularDelta(ja+1, jb+1, jc+1) * JAC.AngularMomentum.triangularDelta(ja+1, je+1, jf+1) *
              JAC.AngularMomentum.triangularDelta(jd+1, jb+1, jf+1) * JAC.AngularMomentum.triangularDelta(jd+1, je+1, jc+1)
         if  wa == 0    return( 0. )    end
@@ -381,8 +375,22 @@ module AngularMomentum
         if   rem(n5+kmin,2) == 0       w6j = -w6j   end   
         if   rem(ja+jb+je+jd,4) != 0   w6j = -w6j   end
         
-        ##x println("w6j = $w6j,   w6jTest = $w6jTest  relDelta = $( abs((w6j-w6jTest)/w6j) )  ")
         return( w6j )
+    end
+
+
+    """
+    `JAC.AngularMomentum.Wigner_9j(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, e::AngularJ64, f::AngularJ64,
+                                   g::AngularJ64, h::AngularJ64, i::AngularJ64)`  
+         ... calculates the value of a Wigner 6-j symbol  for given quantum numbers by its algebraic formulae as displayed in many texts on the 
+             theory of angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, 
+             p. 142); a value::Float64 is returned.
+    """
+    function Wigner_9j(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, ee::AngularJ64, f::AngularJ64,
+                       g::AngularJ64, h::AngularJ64, i::AngularJ64)
+        error("Here, we wish to call an external Julia package/interface.")
+        
+        return( w9j )
     end
 
 end # module
