@@ -75,8 +75,10 @@ JAC_CROSS_SECTION_UNIT      = "barn"
 JAC_RATE_UNIT               = "1/s"
 JAC_TIME_UNIT               = "sec"
 
-JAC_SUMMARY_IOSTREAM        = stdout
-JAC_TEST_IOSTREAM           = stdout
+# JAC_SUMMARY_IOSTREAM and JAC_TEST_IOSTREAM are initialized at runtime (see JAC.__init__())
+# JAC_SUMMARY_IOSTREAM        = stdout
+# JAC_TEST_IOSTREAM           = stdout
+
 JAC_PRINT_SUMMARY           = false
 JAC_PRINT_TEST              = false
 
