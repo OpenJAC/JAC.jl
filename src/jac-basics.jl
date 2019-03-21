@@ -3,51 +3,8 @@ Here, we define all basic types/struct that are specific to the JAC module; we s
 individual subcomponents of each type/struct definition
 =#
 
-export  AngularJ64, AngularM64, HalfInt64, HalfInteger, SolidAngle, Parity, LevelSymmetry, Shell, Subshell, 
+export  AngularJ64, AngularM64, HalfInt, HalfInteger, SolidAngle, Parity, LevelSymmetry, Shell, Subshell,
         EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, TensorComp
-
-
-abstract type  HalfInteger  end
-
-
-"""
-`struct  HalfInt64 <: HalfInteger`  ... defines a type for half-integer values.
-
-    + num  ::Int64                ... numerator
-    + den  ::Int64                ... denominator, must be 1 or 2
-"""
-struct  HalfInt64 <: HalfInteger
-    num      ::Int64
-    den      ::Int64
-end
-
-
-"""
-`JAC.HalfInt64(m::Integer)`  ... constructor for a given integer (numerator).
-"""
-function HalfInt64(m::Integer)
-    HalfInt64(m, 1)
-end
-
-
-"""
-`JAC.HalfInt64(rational::Rational{Int64})`  ... constructor for a given Rational{Int64}.
-"""
-function HalfInt64(rational::Rational{Int64})
-    !(rational.den in [1,2]) && error("Denominator must be 1 or 2.")
-    HalfInt64(rational.num, rational.den)
-end
-
-
-"""
-`Base.show(io::IO, wa::JAC.HalfInt64)`  ... prepares a proper printout of the variable wa::JAC.HalfInt64.
-"""
-function Base.show(io::IO, wa::JAC.HalfInt64) 
-    if      wa.den == 1    print(io, wa.num)
-    elseif  wa.den == 2    print(io, wa.num, "/2")
-    else    error("stop a")
-    end
-end
 
 
 abstract type  AngularJ  end
@@ -217,6 +174,9 @@ function Base.show(io::IO, m::JAC.AngularM64)
     else    error("stop a")
     end
 end
+
+
+include("halfintegers.jl")
 
 
 
