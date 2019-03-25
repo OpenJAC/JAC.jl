@@ -10,6 +10,42 @@ module Hfs
     
 
     """
+    `struct  Hfs.InteractionMatrix`  ... defines a type for storing the T^1 and T^2 interaction matrices for a given basis.
+
+        + calcT1   ::Bool               ... true, if the matrixT1 has been calculated and false otherwise.
+        + calcT2   ::Bool               ... true, if the matrixT2 has been calculated and false otherwise.
+        + matrixT1 ::Array{Float64,2}   ... T1 interaction matrix
+        + matrixT2 ::Array{Float64,2}   ... T2 interaction matrix
+
+    """
+    struct InteractionMatrix
+        calcT1     ::Bool
+        calcT2     ::Bool
+        matrixT1   ::Array{Float64,2}
+        matrixT2   ::Array
+    end 
+
+
+    """
+    `JAC.Hfs.InteractionMatrix()`  ... constructor for an `empty` instance of InteractionMatrix.
+    """
+    function InteractionMatrix()
+        InteractionMatrix(false, false, zeros(2,2), zeros(2,2))
+    end
+
+
+    """
+    `Base.show(io::IO, im::Hfs.InteractionMatrix)`  ... prepares a proper printout of the variable InteractionMatrix.
+    """
+    function Base.show(io::IO, im::Hfs.InteractionMatrix) 
+        println(io, "calcT1:           $(im.calcT1)  ")
+        println(io, "calcT1:           $(im.calcT1)  ")
+        println(io, "matrixT1:         $(im.matrixT1)  ")
+        println(io, "matrixT2:         $(im.matrixT2)  ")
+    end
+    
+
+    """
     `struct  Hfs.IJF_Vector`  ... defines a type for a IJF-coupled basis vector, here based on an ASF.
 
         + I        ::AngularJ64   ... Nuclear spin I.
@@ -154,7 +190,7 @@ module Hfs
     `struct  Hfs.Outcome`  ... defines a type to keep the outcome of a HFS computation, such as the HFS A and B coefficients as well other results.
 
         + Jlevel                    ::Level            ... Atomic level to which the outcome refers to.
-        + AIoverMu                  ::Float64          ... HFS A*I / mu value.
+        + AIoverMu                  ::Float64          ... HFS A * I / mu value.
         + BoverQ                    ::Float64          ... HFS B / Q value
         + amplitudeT1               ::Complex{Float64} ... T1 amplitude
         + amplitudeT2               ::Complex{Float64} ... T2 amplitude
@@ -260,7 +296,7 @@ module Hfs
         #
         if  rLevel.parity != sLevel.parity   return( ComplexF64(0.) )   end
         nr = length(rLevel.basis.csfs);    ns = length(sLevel.basis.csfs);    matrix = zeros(ComplexF64, nr, ns)
-        if  printout   printstyled("Compute hyperfine $(kind[1:5]) matrix of dimension $nr x $ns ... ", color=:light_green)   end
+        if  printout   printstyled("Compute hyperfine $(kind[1:5]) matrix of dimension $nr x $ns ... \n", color=:light_green)   end
         #
         for  r = 1:nr
             for  s = 1:ns
@@ -276,6 +312,8 @@ module Hfs
                         ja = JAC.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = JAC.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = JAC.InteractionStrength.hfs_t1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
+                        #
+                        ## println("**  <$(coeff.a) || t1 || $(coeff.b)>  = $(coeff.T * tamp)   = $(coeff.T) * $tamp" )
                         me = me + coeff.T * tamp  
                     end
                 #
@@ -286,6 +324,8 @@ module Hfs
                         ja = JAC.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = JAC.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = JAC.InteractionStrength.hfs_t2(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
+                        #
+                        ## println("**  <$(coeff.a) || t2 || $(coeff.b)>  = $(coeff.T * tamp)   = $(coeff.T) * $tamp" )
                         me = me + coeff.T * tamp  
                     end
                 #
@@ -293,6 +333,8 @@ module Hfs
                 end
                 #
                 matrix[r,s] = me
+                println("**                                                                    " *
+                        "                      <$r || $kind || $s> = $me" )
             end
         end
         if  printout   printstyled("done.\n", color=:light_green)   end
@@ -303,21 +345,27 @@ module Hfs
 
 
     """
-    `JAC.Hfs.computeAmplitudesProperties(outcome::Hfs.Outcome, grid::Radial.Grid, settings::Hfs.Settings) ... to compute all amplitudes and 
-         properties of for a given level; an outcome::Hfs.Outcome is returned for which the amplitudes and properties are now evaluated explicitly.
+    `JAC.Hfs.computeAmplitudesProperties(outcome::Hfs.Outcome, grid::Radial.Grid, settings::Hfs.Settings, im::Hfs.InteractionMatrix) 
+        ... to compute all amplitudes and properties of for a given level; an outcome::Hfs.Outcome is returned for which the 
+            amplitudes and properties are now evaluated explicitly.
     """
-    function  computeAmplitudesProperties(outcome::Hfs.Outcome, grid::Radial.Grid, settings::Hfs.Settings)
-        AIoverMu = 0.0;   BoverQ = 0.0;   amplitudeT1 = 0.0;   amplitudeT2 = 0.0;    J = JAC.AngularMomentum.oneJ(outcome.Jlevel.J) 
-        if  settings.calcT1
-            amplitudeT1 = JAC.Hfs.amplitude("T^(1) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
-            AIoverMu = amplitudeT1 / sqrt(J * (J+1))
+    function  computeAmplitudesProperties(outcome::Hfs.Outcome, grid::Radial.Grid, settings::Hfs.Settings, im::Hfs.InteractionMatrix)
+        AIoverMu = 0.0;   BoverQ = 0.0;   amplitudeT1 = 0.0;   amplitudeT2 = 0.0;    J = JAC.AngularMomentum.oneJ(outcome.Jlevel.J)
+        ##x println("++ AngJ = $(outcome.Jlevel.J)  J = $J ")
+        if  settings.calcT1  &&  outcome.Jlevel.J != AngularJ64(0)
+            if  im.calcT1   amplitudeT1 = transpose(outcome.Jlevel.mc) * im.matrixT1 * outcome.Jlevel.mc
+            else            amplitudeT1 = JAC.Hfs.amplitude("T^(1) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
+            end
             
-            AIoverMu *= 1 / ( 2 * JAC.PROTON_MASS_U/JAC.ELECTRON_MASS_U )
+            AIoverMu = amplitudeT1 / sqrt(J * (J+1))
         end
         #
-        if  settings.calcT2
-            amplitudeT2 = JAC.Hfs.amplitude("T^(2) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
-            BoverQ      = 2 * amplitudeT2 * sqrt( J*(2J-1) / ((J+1)*(2J+3)) )
+        if  settings.calcT2  &&  outcome.Jlevel.J != AngularJ64(0)
+            if  im.calcT2   amplitudeT2 = transpose(outcome.Jlevel.mc) * im.matrixT2 * outcome.Jlevel.mc
+            else            amplitudeT2 = JAC.Hfs.amplitude("T^(2) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
+            end
+            
+            BoverQ   = 2 * amplitudeT2 * sqrt( (2J-1) / ((J+1)*(2J+3)) )  ## * sqrt(J)
         end
         newOutcome = Hfs.Outcome( outcome.Jlevel, AIoverMu, BoverQ, amplitudeT1, amplitudeT2, 
                                   outcome.nuclearI, outcome.hasFlevels, outcome.Flevels)
@@ -405,6 +453,60 @@ module Hfs
         
         return( hfsMultiplet )
     end
+
+
+    """
+    `JAC.Hfs.computeInteractionMatrix(basis::Basis, grid::Radial.Grid, settings::Hfs.Settings)` ... to compute the
+            T^1 and/or T^2 interaction matrices for the given basis, i.e. (<csf_r || T^(n)) || csf_s>).
+            An im::Hfs.InteractionMatrix is returned.
+    """
+    function  computeInteractionMatrix(basis::Basis, grid::Radial.Grid, settings::Hfs.Settings)
+        #
+        ncsf = length(basis.csfs);    matrixT1 = zeros(ncsf,ncsf);    matrixT2 = zeros(ncsf,ncsf)
+        #
+        if  settings.calcT1
+            calcT1 = true;    matrixT1 = zeros(ncsf,ncsf)
+            for  r = 1:ncsf
+                for  s = 1:ncsf
+                    if  basis.csfs[r].parity  != basis.csfs[s].parity   continue    end 
+                    #
+                    wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, basis.csfs[r], basis.csfs[s])
+                    for  coeff in wa
+                        ja   = JAC.subshell_2j(basis.orbitals[coeff.a].subshell)
+                        jb   = JAC.subshell_2j(basis.orbitals[coeff.b].subshell)
+                        tamp = JAC.InteractionStrength.hfs_t1(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
+                        matrixT1[r,s] = matrixT1[r,s] + coeff.T * tamp  
+                    end
+                end
+            end
+        else   
+            calcT1 = false;    matrixT1 = zeros(2,2)
+        end
+        #
+        if  settings.calcT2
+            calcT2 = true;    matrixT2 = zeros(ncsf,ncsf)
+            for  r = 1:ncsf
+                for  s = 1:ncsf
+                    if  basis.csfs[r].parity  != basis.csfs[s].parity   continue    end 
+                    #
+                    wa = compute("angular coefficients: 1-p, Grasp92", 0, 2, basis.csfs[r], basis.csfs[s])
+                    for  coeff in wa
+                        ja   = JAC.subshell_2j(basis.orbitals[coeff.a].subshell)
+                        jb   = JAC.subshell_2j(basis.orbitals[coeff.b].subshell)
+                        tamp  = JAC.InteractionStrength.hfs_t2(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
+                        matrixT2[r,s] = matrixT2[r,s] + coeff.T * tamp  
+                    end
+                end
+            end
+        else   
+            calcT2 = false;    matrixT2 = zeros(2,2)
+        end
+        #
+        im = Hfs.InteractionMatrix(calcT1, calcT2, matrixT1, matrixT2)
+        println("im = $im")
+        #
+        return( im )
+    end
     
 
 
@@ -423,9 +525,10 @@ module Hfs
         # Display all selected levels before the computations start
         if  settings.printBeforeComputation    JAC.Hfs.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
+        im = computeInteractionMatrix(multiplet.levels[1].basis, grid, settings)
         newOutcomes = Hfs.Outcome[]
         for  outcome in outcomes
-            newOutcome = JAC.Hfs.computeAmplitudesProperties(outcome, grid, settings) 
+            newOutcome = JAC.Hfs.computeAmplitudesProperties(outcome, grid, settings, im) 
             push!( newOutcomes, newOutcome)
         end
         # Print all results to screen
@@ -435,7 +538,7 @@ module Hfs
         printSummary, iostream = JAC.give("summary flag/stream")
         if  printSummary    
             JAC.Hfs.displayResults(iostream, newOutcomes, nm, settings) 
-            JAC.Hfs.displayNondiagonal(iostream, multiplet, grid, settings)
+            if  settings.calcNondiagonal    JAC.Hfs.displayNondiagonal(iostream, multiplet, grid, settings)   end
         end
         #
         if    output    return( newOutcomes )
@@ -642,29 +745,33 @@ module Hfs
         println(stream, " ")
         println(stream, "  HFS parameters and amplitudes:")
         println(stream, " ")
-        println(stream, "  ", JAC.TableStrings.hLine(115))
+        println(stream, "  ", JAC.TableStrings.hLine(117))
         sa = "  ";   sb = "  "
         sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
         sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
         sa = sa * JAC.TableStrings.center(14, "Energy"; na=4);              
         sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.center(31, "A*I/mu  --  HFS  --  B/Q  "; na=4);              
+        sa = sa * JAC.TableStrings.center(31, "A/mu [mu_N]  --  HFS  --  B/Q [barn]"; na=4);              
         sb = sb * JAC.TableStrings.center(31, JAC.TableStrings.inUnits("energy"); na=4)
         sa = sa * JAC.TableStrings.center(32, "T1 -- Amplitudes -- T2"    ; na=4);        sb = sb * JAC.TableStrings.hBlank(36)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(115)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(117)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.Jlevel.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
             energy = outcome.Jlevel.energy
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", energy))           * "    "
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", outcome.AIoverMu)) * "    " ## / (2 * pi * 10^6  * nm.spinI.num / nm.spinI.den ) ) 
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", outcome.BoverQ))   * "    " ##   / (2 * pi * 10^6 ) * 10^(-28) / JAC.BOHR_RADIUS_SI^2 ) 
+            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", energy))           * "      "
+            wa = JAC.convert("energy: from atomic", outcome.AIoverMu) / nm.spinI.num * nm.spinI.den 
+            wa = wa / (2 * 1836.15267 ) * JAC.give("alpha")  # take 2m_p and alpha into account
+            sa = sa * @sprintf("%.8e", wa)                                                   * "    " 
+            wa = JAC.convert("energy: from atomic", outcome.BoverQ) 
+            wa = wa / JAC.convert("cross section: from atomic to barn", 1.0)  # take Q [barn] into account
+            sa = sa * @sprintf("%.8e", wa)                                                   * "    "
             sa = sa * @sprintf("%.8e %s %.8e", outcome.amplitudeT1.re, "  ", outcome.amplitudeT2.re) * "    "
             println(stream, sa )
         end
-        println(stream, "  ", JAC.TableStrings.hLine(115))
+        println(stream, "  ", JAC.TableStrings.hLine(117))
         #
         #
         if !settings.printDeltaEF   return( nothing )   end

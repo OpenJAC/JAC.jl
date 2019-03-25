@@ -177,6 +177,41 @@ module PhotoIonization
     end
 
 
+
+    """
+    `JAC.PhotoIonization.computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+                                                           settings::PlasmaShift.PhotoSettings)`  
+         ... to compute all amplitudes and properties of the given line but for the given plasma model; 
+             a line::PhotoIonization.Line is returned for which the amplitudes and properties are now evaluated.
+    """
+    function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::PlasmaShift.PhotoSettings)
+        newChannels = PhotoIonization.Channel[];;   contSettings = JAC.Continuum.Settings(false, grid.nr-50);    csC = 0.;    csB = 0.
+        for channel in line.channels
+            newiLevel = JAC.generateLevelWithSymmetryReducedBasis(line.initialLevel)
+            newiLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
+            newfLevel = JAC.generateLevelWithSymmetryReducedBasis(line.finalLevel)
+            @warn "Adapt a proper continuum orbital for the plasma potential"
+            cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
+            newcLevel  = JAC.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
+            newChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
+            @warn "Adapt a proper Auger amplitude for the plasma e-e interaction"
+            amplitude = 1.0
+            # amplitude  = JAC.PhotoIonization.amplitude("photoionization", channel, line.photonEnergy, newcLevel, newiLevel, grid)
+            push!( newChannels, PhotoIonization.Channel(newChannel.multipole, newChannel.gauge, newChannel.kappa, newChannel.symmetry, 
+                                                        newChannel.phase, amplitude) )
+            if       channel.gauge == JAC.Coulomb     csC = csC + abs(amplitude)^2
+            elseif   channel.gauge == JAC.Babushkin   csB = csB + abs(amplitude)^2
+            elseif   channel.gauge == JAC.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
+            end
+        end
+        Ji2 = JAC.AngularMomentum.twoJ(line.initialLevel.J)
+        csFactor     = 4 * pi^2 * JAC.give("alpha") * line.photonEnergy / (2*(Ji2 + 1))
+        crossSection = EmProperty(csFactor * csC, csFactor * csB)
+        newline = PhotoIonization.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, crossSection, true, newChannels)
+        return( line )
+    end
+
+
     """
     `JAC.PhotoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::PhotoIonization.Settings; 
                                       output::Bool=true)`  ... to compute the photoIonization transition amplitudes and all properties as requested 
@@ -201,6 +236,41 @@ module PhotoIonization
         JAC.PhotoIonization.displayResults(stdout, lines, settings)
         printSummary, iostream = JAC.give("summary flag/stream")
         if  printSummary   JAC.PhotoIonization.displayResults(iostream, lines, settings)     end
+        #
+        if    output    return( lines )
+        else            return( nothing )
+        end
+    end
+
+
+    """
+    `JAC.PhotoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+                                            settings::PlasmaShift.PhotoSettings; output::Bool=true)`  
+        ... to compute the photoIonization transition amplitudes and all properties as requested by the given settings. 
+            A list of lines::Array{PhotoIonization.Lines} is returned.
+    """
+    function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+                                 settings::PlasmaShift.PhotoSettings; output::Bool=true)
+        println("")
+        printstyled("JAC.PhotoIonization.computeLinesPlasma(): The computation of photo-ionization cross sections starts now ... \n", color=:light_green)
+        printstyled("----------------------------------------------------------------------------------------------------------- \n", color=:light_green)
+        println("")
+        photoSettings = JAC.PhotoIonization.Settings(settings.multipoles, settings.gauges, settings.photonEnergies, false, false, false,
+                                                     settings.printBeforeComputation, settings.selectLines, settings.selectedLines)
+        
+        lines = JAC.PhotoIonization.determineLines(finalMultiplet, initialMultiplet, photoSettings)
+        # Display all selected lines before the computations start
+        if  settings.printBeforeComputation    JAC.PhotoIonization.displayLines(lines)    end
+        # Calculate all amplitudes and requested properties
+        newLines = PhotoIonization.Line[]
+        for  line in lines
+            newLine = JAC.PhotoIonization.computeAmplitudesPropertiesPlasma(line, nm, grid, settings) 
+            push!( newLines, newLine)
+        end
+        # Print all results to screen
+        JAC.PhotoIonization.displayResults(stdout, lines, photoSettings)
+        printSummary, iostream = JAC.give("summary flag/stream")
+        if  printSummary   JAC.PhotoIonization.displayResults(iostream, lines, photoSettings)     end
         #
         if    output    return( lines )
         else            return( nothing )

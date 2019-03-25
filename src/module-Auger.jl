@@ -215,6 +215,35 @@ module Auger
     end
 
 
+    """
+    `JAC.Auger.computeAmplitudesPropertiesPlasma(line::Auger.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+                                                 settings::PlasmaShift.AugerSettings)`  
+        ... to compute all amplitudes and properties of the given line but for the given plasma model; 
+             a line::Auger.Line is returned for which the amplitudes and properties are now evaluated.
+    """
+    function computeAmplitudesPropertiesPlasma(line::Auger.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::PlasmaShift.AugerSettings) 
+        newChannels = Auger.Channel[];   contSettings = JAC.Continuum.Settings(false, grid.nr-50);   rate = 0.
+        for channel in line.channels
+            newiLevel = JAC.generateLevelWithSymmetryReducedBasis(line.initialLevel)
+            newiLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
+            newfLevel = JAC.generateLevelWithSymmetryReducedBasis(line.finalLevel)
+            @warn "Adapt a proper continuum orbital for the plasma potential"
+            cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
+            newcLevel  = JAC.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
+            newChannel = Auger.Channel(channel.kappa, channel.symmetry, phase, 0.)
+            @warn "Adapt a proper Auger amplitude for the plasma e-e interaction"
+            amplitude = 1.0
+            # amplitude  = JAC.Auger.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid)
+            rate       = rate + conj(amplitude) * amplitude
+            push!( newChannels, Auger.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )
+        end
+        totalRate = 2pi* rate;   angularAlpha = 0.
+        newLine   = Auger.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, true, newChannels)
+        
+        return( newLine )
+    end
+
+
 
     """
     `JAC.Auger.computeIntrinsicAlpha(k::Int64, line::Auger.Line)`  
@@ -251,6 +280,41 @@ module Auger
         JAC.Auger.displayLifetimes(stdout, newLines)
         printSummary, iostream = JAC.give("summary flag/stream")
         if  printSummary   JAC.Auger.displayRates(iostream, newLines, settings);   JAC.Auger.displayLifetimes(iostream, newLines)     end
+        #
+        if    output    return( lines )
+        else            return( nothing )
+        end
+    end
+
+
+
+    """
+    `JAC.Auger.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+                                  settings::PlasmaShift.AugerSettings; output=true)`  
+               ... to compute the Auger transition amplitudes and all properties as requested by the given settings. A list of 
+                   lines::Array{Auger.Lines} is returned.
+    """
+    function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+                                 settings::PlasmaShift.AugerSettings; output=true)
+        println("")
+        printstyled("JAC.Auger.computeLinesPlasma(): The computation of Auger rates starts now ... \n", color=:light_green)
+        printstyled("----------------------------------------------------------------------------- \n", color=:light_green)
+        println("")
+        augerSettings = JAC.Auger.Settings(false, settings.printBeforeComputation, settings.selectLines, settings.selectedLines, 0., 1.0e6, 100, "Coulomb")
+        lines = JAC.Auger.determineLines(finalMultiplet, initialMultiplet, augerSettings)
+        # Display all selected lines before the computations start
+        if  settings.printBeforeComputation    JAC.Auger.displayLines(lines)    end
+        # Calculate all amplitudes and requested properties
+        newLines = Auger.Line[]
+        for  line in lines
+            newLine = JAC.Auger.computeAmplitudesPropertiesPlasma(line, nm, grid, settings) 
+            push!( newLines, newLine)
+        end
+        # Print all results to screen
+        JAC.Auger.displayRates(stdout, newLines, augerSettings)
+        JAC.Auger.displayLifetimes(stdout, newLines)
+        printSummary, iostream = JAC.give("summary flag/stream")
+        if  printSummary   JAC.Auger.displayRates(iostream, newLines, augerSettings);   JAC.Auger.displayLifetimes(iostream, newLines)     end
         #
         if    output    return( lines )
         else            return( nothing )

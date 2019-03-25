@@ -78,16 +78,34 @@ function perform(computation::Atomic.Computation; output::Bool=false)
             outcome = JAC.PlasmaShift.computeOutcomes(multiplet, nModel, computation.grid, computation.asfSettings, computation.plasmaSettings)         
             if output    results = Base.merge( results, Dict("Plasma shift outcomes:" => outcome) )            end
         end
-        
-    else
+    
+    # Evaluate processes that need special SCF and CI procedures
+    elseif  computation.process in [AugerInPlasma, PhotoInPlasma]
+        pSettings        = computation.processSettings
+        plasmaSettings   = PlasmaShift.Settings(pSettings.plasmaModel, pSettings.lambdaDebye, pSettings.ionSphereR0, pSettings.NoBoundElectrons)
         initialBasis     = perform("computation: SCF", computation.initialConfigs, nModel, computation.grid, 
                                                        computation.initialAsfSettings)
-        initialMultiplet = perform("computation: CI",  initialBasis, nModel, computation.grid, 
-                                                       computation.initialAsfSettings)
-        finalBasis       = perform("computation: SCF", computation.finalConfigs, nModel, computation.grid, 
-                                                       computation.finalAsfSettings)
-        finalMultiplet   = perform("computation: CI",  finalBasis, nModel, computation.grid, 
-                                                       computation.finalAsfSettings)
+        initialMultiplet = perform("computation: CI for plasma",  initialBasis, nModel, computation.grid, computation.initialAsfSettings,
+                                                                  plasmaSettings)
+        finalBasis       = perform("computation: SCF", computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
+        finalMultiplet   = perform("computation: CI for plasma",  finalBasis, nModel, computation.grid, computation.finalAsfSettings,
+                                                                  plasmaSettings)
+        #
+        if      computation.process == JAC.AugerInPlasma   
+            outcome = JAC.Auger.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+            if output    results = Base.merge( results, Dict("Auger lines in plasma:" => outcome) )                  end
+        elseif  computation.process == JAC.PhotoInPlasma   
+            outcome = JAC.PhotoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+            if output    results = Base.merge( results, Dict("Photo lines in plasma:" => outcome) )                  end
+        else
+            error("stop a")
+        end
+        
+    else
+        initialBasis     = perform("computation: SCF", computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
+        initialMultiplet = perform("computation: CI",  initialBasis, nModel, computation.grid, computation.initialAsfSettings)
+        finalBasis       = perform("computation: SCF", computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
+        finalMultiplet   = perform("computation: CI",  finalBasis, nModel, computation.grid, computation.finalAsfSettings)
         #
         if computation.process in [PhotoExcFluor, PhotoExcAuto, PhotoIonFluor, PhotoIonAuto, ImpactExcAuto, Dierec]
             intermediateBasis     = perform("computation: SCF", computation.intermediateConfigs, nModel, computation.grid, 
@@ -182,7 +200,7 @@ function perform(computation::Atomic.Computation; output::Bool=false)
                                                                   computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("dielectronic recombination pathways:" => outcome) )           end
         else
-            error("stop a")
+            error("stop b")
         end
     end
        
@@ -448,10 +466,11 @@ function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Ra
     NoCsf = 0
     for (sym,v) in symmetries   NoCsf = NoCsf + v   end
    
-    # Calculate for each symmetry block the corresponding CI matrix, diagonalize it and append a Multiplet for this block
+    # Calculate for each symmetry block the corresponding CI matrix for the given plasma model and parameters as specified by
+    # plasmaSettings, diagonalize it and append a Multiplet for this block
     multiplets = Multiplet[]
     for  (sym,v) in  symmetries
-        matrix = compute("matrix: CI, J^P symmetry", sym, basis, nuclearModel, grid, settings; printout=printout)
+        matrix = compute("matrix: CI for plasma, J^P symmetry", sym, basis, nuclearModel, grid, settings, plasmaSettings; printout=printout)
         eigen  = JAC.diagonalize("matrix: Julia, eigfact", matrix)
         levels = Level[]
         for  ev = 1:length(eigen.values)

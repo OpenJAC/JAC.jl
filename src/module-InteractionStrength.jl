@@ -60,8 +60,12 @@ module InteractionStrength
     function hfs_t1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
-        wa = - JAC.give("alpha") * (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell) *
-               JAC.RadialIntegrals.rkNonDiagonal(-2, a, b, grid)
+        ##x wa = - JAC.give("alpha") * (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell) *
+        wb =   - (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell)
+        wc =   JAC.RadialIntegrals.rkNonDiagonal(-2, a, b, grid)
+        wa =   wb * wc
+        #
+        println("**  <$(a.subshell) || t1 || $(b.subshell)>  = $wa   = $wb * $wc" )
         return( wa )
     end
 
@@ -72,7 +76,12 @@ module InteractionStrength
      """
     function hfs_t2(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
-        wa = - JAC.AngularMomentum.CL_reduced_me_rb(a.subshell, 2, b.subshell) * JAC.RadialIntegrals.rkDiagonal(-3, a, b, grid)
+        wb = - JAC.AngularMomentum.CL_reduced_me_rb(a.subshell, 2, b.subshell)
+        ## wc =   JAC.RadialIntegrals.rkDiagonal(-3, a, b, grid)
+        wc =   JAC.RadialIntegrals.rkDiagonal(-3, a, b, grid)
+        wa =   wb * wc
+        #
+        println("**  <$(a.subshell) || t2 || $(b.subshell)>  = $wa   = $wb * $wc" )
         return( wa )
     end
 
@@ -438,6 +447,30 @@ module InteractionStrength
         XL_Coulomb = xc * JAC.RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid)
         ##x XL_Coulomb = xc * JAC.RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
         return( XL_Coulomb )
+    end
+
+
+    """
+    `JAC.InteractionStrength.XL_Coulomb_DH(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid, lambda::Float64)`  
+        ... computes the the effective Coulomb-Debye-Hückel interaction strengths X^L_Coulomb_DH (abcd) for given rank L and orbital functions a, b, c and d 
+            at the given grid and for the given screening parameter lambda. A value::Float64 is returned.
+    """
+    function XL_Coulomb_DH(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid, lambda::Float64)
+        # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
+        la = JAC.subshell_l(a.subshell);    ja2 = JAC.subshell_2j(a.subshell)
+        lb = JAC.subshell_l(b.subshell);    jb2 = JAC.subshell_2j(b.subshell)
+        lc = JAC.subshell_l(c.subshell);    jc2 = JAC.subshell_2j(c.subshell)
+        ld = JAC.subshell_l(d.subshell);    jd2 = JAC.subshell_2j(d.subshell)
+
+        if  JAC.AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * JAC.AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
+            rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
+            return( 0. )
+        end
+        xc = JAC.AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * JAC.AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
+        if   rem(L,2) == 1    xc = - xc    end 
+
+        XL_Coulomb_DH = xc * JAC.RadialIntegrals.SlaterRk_DebyeHueckel_2dim(L, a, b, c, d, grid, lambda)
+        return( XL_Coulomb_DH )
     end
 
 

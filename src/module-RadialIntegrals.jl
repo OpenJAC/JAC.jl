@@ -455,7 +455,8 @@ module  RadialIntegrals
             return( JAC.Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
-            for  i = 2:mtp   wa = wa + (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * (grid.r[i]^k) * grid.wr[i]   end
+            if  k > -3   m0 = 2   else   m0 = 6   end    # Don't allow too small r-values
+            for  i = m0:mtp   wa = wa + (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * (grid.r[i]^k) * grid.wr[i]   end
             return( wa )
         else
             error("stop a")
@@ -609,6 +610,66 @@ module  RadialIntegrals
                     else  error("stop b")
                     end
                 end
+            end
+            return( wa )
+        else
+            error("stop a")
+        end
+    end
+  
+  
+    """
+    `JAC.RadialIntegrals.SlaterRk_DebyeHueckel_2dim(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, 
+                                                    grid::Radial.Grid, lambda::Float64)`  
+         ... computes the (relativistic) Slater-Debye-Hueckel integral
+
+         R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) [r_<^k / r_>^(k+1)]^(DH screened) (P_b P_d + Q_b Q_d)
+
+         of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration scheme; a 
+         value::Float64 is returned.
+    """
+    function SlaterRk_DebyeHueckel_2dim(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Radial.Orbital, 
+                                        grid::Radial.Grid, lambda::Float64)
+                 
+        function ul_DH(L::Int64, s::Float64, r::Float64) 
+            # Calculates the ul_DH(r,s) function for  s <= r.
+            sum = 0.;   suma = 0.
+            for  p = 0:2
+                for q = 0:L
+                    sum = sum + (2^(L-q)) * (lambda^(L+p+p-q)) *  factorial(L+q) * factorial(L+p) /
+                                ( factorial(L+L+p+p+1) * factorial(L-q) * factorial(p) * factorial(q)) * 
+                                (s^(L+p+p)) * exp(-lambda*r) / (r^(q+1))
+                end
+                if (p == 2) suma = sum   end
+            end
+            return( (L+L+1) * sum )
+        end                                 
+
+        function ul(r :: Float64, s :: Float64) :: Float64
+            if     r <= s    return( ul_DH(k, r, s) )
+            elseif r > s     return( ul_DH(k, s, r) )
+            end
+        end
+    
+        
+        # Distinguish the radial integration for different grid definitions
+        if  grid.mesh == MeshGrasp
+            function fs(r :: Int64, s :: Int64) :: Float64
+                return( ul(grid.r[r], grid.r[s]) * ( b.P[s] * d.P[s] + b.Q[s] * d.Q[s] ) )
+            end
+    
+            function f(r :: Int64) :: Float64
+            function ff(i :: Int64) :: Float64    return( fs(r, i) )    end
+            return( (a.P[r] * c.P[r] + a.Q[r] * c.Q[r] ) * JAC.Math.integrateFitTransform(ff, min(size(b.P, 1), size(d.P, 1)), grid) )
+            end
+    
+            return JAC.Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
+        elseif  grid.mesh == MeshGL
+            mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
+            wa = 0.
+            for  r = 2:mtp_ac
+                for  s = 2:mtp_bd   wa = wa + (a.P[r] * c.P[r] + a.Q[r] * c.Q[r]) * ul(grid.r[r], grid.r[s]) * 
+                                              (b.P[s] * d.P[s] + b.Q[s] * d.Q[s]) * grid.wr[r] * grid.wr[s]   end
             end
             return( wa )
         else

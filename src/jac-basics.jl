@@ -644,6 +644,7 @@ end
                              of transition arrays or whole excitation/decay cascades.
 
     + AugerX        ... Auger transitions, i.e. single autoionization or the emission of a single free electron into the continuum.
+    + AugerInPlasma ... Auger transitions but calculated for a specified plasma model.
     + Compton       ... Rayleigh-Compton scattering cross sections.
     + Coulex        ... Coulomb-excitation of target or projeticle electrons by fast, heavy ions.
     + Coulion       ... Coulomb-ionization of target or projeticle electrons by fast, heavy ions.
@@ -652,21 +653,22 @@ end
     + MultiPI       ... multi-photon (single-electron) ionization.
     + MultiPDI      ... multi-photon (single-electron) double ionization.
     + Photo         ... Photoionization processes, i.e. the emission of a single free electron into the continuum due to an external light field.
-    + PhotoExc      ... Photo-excitation rates.
-    + PhotoExcFluor ... photo-excitation fluorescence rates and cross sections.
-    + PhotoExcAuto  ... photo-excitation autoionization cross sections and collision strengths.
-    + PhotoIonFluor ... photo-ionization fluorescence rates and cross sections.
-    + PhotoIonAuto  ... photo-ionization autoionization cross sections and collision strengths.
+    + PhotoExc      ... Photoexcitation rates.
+    + PhotoExcFluor ... photoexcitation fluorescence rates and cross sections.
+    + PhotoExcAuto  ... photoexcitation autoionization cross sections and collision strengths.
+    + PhotoInPlasma ... Photoionization processes but calculated for a specified plasma model.
+    + PhotoIonFluor ... photoionization fluorescence rates and cross sections.
+    + PhotoIonAuto  ... photoionization autoionization cross sections and collision strengths.
     + RadiativeX    ... Radiative (multipole) transitions between bound-state levels of the same charge state.
     + Rec           ... radiative electron capture, i.e. the capture of a free electron with the simultaneous emission of a photon.
     + Eimex         ... electron-impact excitation cross sections and collision strengths.
     + RAuger        ... Radiative Auger rates.
 """
-@enum   AtomicProcess  NoProcess  AugerX  Compton  Coulex  Dierec  Eimex  ImpactExcAuto  InternalConv  MultiPhotonDE  MultiPI  MultiPDI=
-                   10  Photo  PhotoExc  PhotoExcAuto  PhotoExcFluor  PhotoIonAuto  PhotoIonFluor   RadiativeX  RAuger=
-                   20  Rec  PairA1P  Coulion
-export  AtomicProcess, NoProcess, AugerX, Compton, Coulex, Dierec, Eimex, ImpactExcAuto, InternalConv, MultiPhotonDE, MultiPI, MultiPDI,
-                       Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoIonAuto, PhotoIonFluor,  RadiativeX, RAuger, 
+@enum   AtomicProcess  NoProcess  AugerX  AugerInPlasma  Compton  Coulex  Dierec  Eimex  ImpactExcAuto  InternalConv  MultiPhotonDE  MultiPI  MultiPDI=
+                   20  Photo  PhotoExc  PhotoExcAuto  PhotoExcFluor  PhotoInPlasma  PhotoIonAuto  PhotoIonFluor   RadiativeX  RAuger=
+                   40  Rec  PairA1P  Coulion
+export  AtomicProcess, NoProcess, AugerX, AugerInPlasma, Compton, Coulex, Dierec, Eimex, ImpactExcAuto, InternalConv, MultiPhotonDE, MultiPI, MultiPDI,
+                       Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoInPlasma, PhotoIonAuto, PhotoIonFluor,  RadiativeX, RAuger, 
                        Rec, PairA1P, Coulion
 
 
@@ -676,6 +678,7 @@ export  AtomicProcess, NoProcess, AugerX, Compton, Coulex, Dierec, Eimex, Impact
 function AtomicProcess(sa::String)
     if       sa in [ "none", "NoProcess"]                       wa = NoProcess
     elseif   sa in [ "Auger"]                                   wa = AugerX
+    elseif   sa in [ "Auger in plasma"]                         wa = AugerInPlasma
     elseif   sa in [ "Compton", "Rayleigh"]                     wa = Compton
     elseif   sa in [ "Coulex", "Coulomb excitation"]            wa = Coulex
     elseif   sa in [ "Coulion", "Coulomb ionization"]           wa = Coulion
@@ -686,6 +689,7 @@ function AtomicProcess(sa::String)
     elseif   sa in [ "multi-PI"]                                wa = MultiPI
     elseif   sa in [ "multi-PDI"]                               wa = MultiPDI
     elseif   sa in [ "photo", "Photo"]                          wa = Photo
+    elseif   sa in [ "photo in plasma"]                         wa = PhotoInPlasma
     elseif   sa in [ "PhotoExc", "photoexcitation"]             wa = PhotoExc
     elseif   sa in [ "photo-EA"]                                wa = PhotoExcAuto
     elseif   sa in [ "photo-IA"]                                wa = PhotoIonAuto
@@ -718,6 +722,7 @@ end
 function Base.string(process::AtomicProcess) 
     if      process == NoProcess       return( "no process" )
     elseif  process == AugerX          return( "Auger" )  
+    elseif  process == AugerInPlasma   return( "Auger in plasma" )  
     elseif  process == Compton         return( "Rayleigh-Compton" )  
     elseif  process == Dierec          return( "Dielectronic recombination" )  
     elseif  process == Eimex           return( "Eimex" )  
@@ -725,6 +730,7 @@ function Base.string(process::AtomicProcess)
     elseif  process == Photo           return( "Photo" )  
     elseif  process == PhotoExcFluor   return( "Photo-Excitation-Fluoresence" )  
     elseif  process == PhotoExcAuto    return( "Photo-Excitation-Autoionization" )  
+    elseif  process == PhotoInPlasma   return( "Photo in plasma" )  
     elseif  process == PhotoIonFluor   return( "Photo-Ionization-Fluoresence" )  
     elseif  process == PhotoIonAuto    return( "Photo-Ionization-Autoionization" )  
     elseif  process == PhotoExc        return( "Photo-Excitation" )  
