@@ -297,7 +297,7 @@ module Nuclear
         Zr  = pot.Zr
         for  i = 1:length(Zr)   Zr[i] = Zr[i] *exp(-lambda * pot.grid.r[i])    end
         
-        potential = Radial.Potential(pot.name, Zr, deepcopy(pot.grid))
+        potential = Radial.Potential(pot.name* "+ Debey-Hueckel screening", Zr, deepcopy(pot.grid))
         return( potential )
      end  
 

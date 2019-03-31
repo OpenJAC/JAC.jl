@@ -155,8 +155,8 @@ module  RadialIntegrals
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 2:mtp   
-                wb = (a.Pprime[i] * b.Pprime[i]  +  a.Qprime[i] * b.Qprime[i]  + 
-                      lb*(lb+1) * a.P[i] * b.P[i]  +  (jb2-1)*jb2 * a.Q[i] * b.Q[i]) / (grid.r[i]^2)
+                wb = (a.Pprime[i] * b.Pprime[i]  +  a.Qprime[i] * b.Qprime[i])  + 
+                     (lb*(lb+1) * a.P[i] * b.P[i]  +  (jb2-1)*jb2 * a.Q[i] * b.Q[i]) / (grid.r[i]^2)
                 wc = - 2 * alphaZ * (a.Q[i] * b.Pprime[i]  +  b.Q[i] * a.Pprime[i]) / grid.r[i]
                 wd = - alphaZ * (b.subshell.kappa - 1) * (a.Q[i] * b.P[i]  +  b.Q[i] * a.P[i]) / (grid.r[i]^2)
                 wa = wa + (wb + wc + wd) * grid.wr[i]   
@@ -681,8 +681,10 @@ module  RadialIntegrals
     """
     `JAC.RadialIntegrals.Vinti(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)` ... computes the (radial) Vinti integral for the two
          radia integrals a and b:
-    
-         R^(Vinti) = int_0^infty dr  ....
+                
+                                         [ d        kappa_a (kappa_a+1) - kappa_b (kappa_b+1) ]
+         R^(Vinti) = int_0^infty dr  P_a [ --   -  ------------------------------------------ ] P_b    +  similar (not equal) in Q_a, Q_b
+                                         [ dr                          2 r                    ]
          
          a value::Float64 is returned.
     """
@@ -692,7 +694,13 @@ module  RadialIntegrals
         if  grid.mesh == MeshGrasp
             error("stop a")
         elseif  grid.mesh == MeshGL
-            wa = 1.0
+            mtp_ab = min(size(a.P, 1), size(b.P, 1));    kapa = a.subshell.kappa;     kapb = b.subshell.kappa
+            wa = 0.
+            for  r = 2:mtp_ab
+                wc = a.P[r] * b.Pprime[r] - a.P[r] * kapa * (kapa+1) * b.P[r] / (2grid.r[r])  + a.P[r] * kapb * (kapb+1) * b.P[r] / (2grid.r[r])
+                wd = a.Q[r] * b.Qprime[r] + a.Q[r] * kapa * (-kapa+1)* b.Q[r] / (2grid.r[r]) - a.Q[r] * kapb * (-kapb+1) * b.Q[r] / (2grid.r[r])                            
+                wa = wa +  (wc + wd) * grid.wr[r]
+            end
             return( wa )
         else
             error("stop a")

@@ -188,11 +188,12 @@ module Auger
 
 
     """
-    `JAC.Auger.computeAmplitudesProperties(line::Auger.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Auger.Settings)`  ... to compute all amplitudes 
-               and properties of the given line; a line::Euer.Line is returned for which the amplitudes and properties are now evaluated.
+    `JAC.Auger.computeAmplitudesProperties(line::Auger.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, settings::Auger.Settings)` 
+        ... to compute all amplitudes and properties of the given line; a line::Euer.Line is returned for which the amplitudes and properties 
+            are now evaluated.
     """
-    function computeAmplitudesProperties(line::Auger.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Auger.Settings) 
-        newChannels = Auger.Channel[];   contSettings = JAC.Continuum.Settings(false, grid.nr-50);   rate = 0.
+    function computeAmplitudesProperties(line::Auger.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, settings::Auger.Settings) 
+        newChannels = Auger.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
             newiLevel = JAC.generateLevelWithSymmetryReducedBasis(line.initialLevel)
             newiLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
@@ -216,13 +217,14 @@ module Auger
 
 
     """
-    `JAC.Auger.computeAmplitudesPropertiesPlasma(line::Auger.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.Auger.computeAmplitudesPropertiesPlasma(line::Auger.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                                  settings::PlasmaShift.AugerSettings)`  
         ... to compute all amplitudes and properties of the given line but for the given plasma model; 
              a line::Auger.Line is returned for which the amplitudes and properties are now evaluated.
     """
-    function computeAmplitudesPropertiesPlasma(line::Auger.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::PlasmaShift.AugerSettings) 
-        newChannels = Auger.Channel[];   contSettings = JAC.Continuum.Settings(false, grid.nr-50);   rate = 0.
+    function computeAmplitudesPropertiesPlasma(line::Auger.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+                                               settings::PlasmaShift.AugerSettings) 
+        newChannels = Auger.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
             newiLevel = JAC.generateLevelWithSymmetryReducedBasis(line.initialLevel)
             newiLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
@@ -250,7 +252,31 @@ module Auger
                ... to compute the intrinsic alpha_k anisotropy parameter for the given line. A value::Float64 is returned.
     """
     function  computeIntrinsicAlpha(k::Int64, line::Auger.Line)
-        value = 2.0
+        ##x println("line = $line")
+        if  !line.hasChannels   error("No channels are defined for the given Auger.line.")                   end
+        wn = 0.;    for  channel in line.channels    wn = wn + conj(channel.amplitude) * channel.amplitude   end
+        wa = 0.;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J;
+        for  cha  in line.channels  
+            j = JAC.AngularMomentum.kappa_j(cha.kappa);    l = JAC.AngularMomentum.kappa_l(cha.kappa)
+            ##x println("wn = $wn   j = $j   l =$l")
+            for  chp  in line.channels  
+                jp = JAC.AngularMomentum.kappa_j(chp.kappa);    lp = JAC.AngularMomentum.kappa_l(chp.kappa)
+                ##x println("bracket = $(JAC.AngularMomentum.bracket([l, lp, j, jp])) ")
+                ##x println("CG      = $(JAC.AngularMomentum.ClebschGordan(l, AngularM64(0), lp, AngularM64(0), AngularJ64(k), AngularM64(0))) ")
+                ##x println("w-6     = $(JAC.AngularMomentum.Wigner_6j(Ji, j, Jf, jp, Ji, AngularJ64(k))) ")
+                ##x println("w-6     = $(JAC.AngularMomentum.Wigner_6j(l,  j, AngularJ64(1//2), jp, lp, AngularJ64(k))) ")
+                wa = wa + JAC.AngularMomentum.bracket([l, lp, j, jp]) *  
+                          JAC.AngularMomentum.ClebschGordan(l, AngularM64(0), lp, AngularM64(0), AngularJ64(k), AngularM64(0)) *
+                          JAC.AngularMomentum.Wigner_6j(Ji, j, Jf, jp, Ji, AngularJ64(k)) * 
+                          JAC.AngularMomentum.Wigner_6j(l,  j, AngularJ64(1//2), jp, lp, AngularJ64(k)) * 
+                          cha.amplitude * conj(chp.amplitude)
+                ##x println("wa = $wa")
+            end    
+        end
+        value = JAC.AngularMomentum.phaseFactor([Ji, +1, Jf, +1, AngularJ64(k), -1, AngularJ64(1//2)]) * 
+                sqrt(JAC.AngularMomentum.twoJ(Ji) + 1) * wa / wn
+        ##x println("value = $value")
+
         return( value )
     end
 
@@ -268,11 +294,14 @@ module Auger
         println("")
         lines = JAC.Auger.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.Auger.displayLines(lines)    end
+        if  settings.printBeforeComputation    JAC.Auger.displayLines(lines)    end  
+        # Determine maximum energy and check for consistency of the grid
+        maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
+        nrContinuum = JAC.Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = Auger.Line[]
         for  line in lines
-            newLine = JAC.Auger.computeAmplitudesProperties(line, nm, grid, settings) 
+            newLine = JAC.Auger.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
@@ -304,10 +333,13 @@ module Auger
         lines = JAC.Auger.determineLines(finalMultiplet, initialMultiplet, augerSettings)
         # Display all selected lines before the computations start
         if  settings.printBeforeComputation    JAC.Auger.displayLines(lines)    end
+        # Determine maximum energy and check for consistency of the grid
+        maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
+        nrContinuum = JAC.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = Auger.Line[]
         for  line in lines
-            newLine = JAC.Auger.computeAmplitudesPropertiesPlasma(line, nm, grid, settings) 
+            newLine = JAC.Auger.computeAmplitudesPropertiesPlasma(line, nm, grid, nrContinuum, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
@@ -514,7 +546,7 @@ module Auger
             sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.initialLevel.energy))  * "    "
             sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.electronEnergy))       * "    "
             sa = sa * @sprintf("%.8e", JAC.convert("rate: from atomic", line.totalRate))              * "    "
-            sa = sa * @sprintf("%.8e", line.angularAlpha)                                             * "    "
+            sa = sa * JAC.TableStrings.flushright(13, @sprintf("%.5e", line.angularAlpha))            * "    "
             println(stream, sa)
         end
         println(stream, "  ", JAC.TableStrings.hLine(115))

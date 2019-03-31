@@ -238,6 +238,32 @@ module Continuum
 
 
     """
+    `JAC.Continuum.gridConsistency(maxEnergy::Float64, grid::Radial.Grid)`   
+         ... to check the consistency of the given grid with the maximum energy of the required continuum electrons; an error message
+             is issued if the grid.hp = 0.   or  15 * grid.hp < wavelength(maxEnergy)   or  if the grid has less than 600 grid points.
+             The function also returns the recommended grid point where the normalization and phase is to be determined. This number 
+             is currently set to nrContinuum = grid.nr - 200  ... to correct for the wrong 'phase behaviour' at large r-values.
+    """
+    function gridConsistency(maxEnergy::Float64, grid::Radial.Grid)
+        JAC.warn(AddWarning, "Continuum.gridConsistency(): Improve the grid point for normalization; currently 600.")
+        
+        wavenb      = sqrt( 2maxEnergy + maxEnergy * JAC.give("alpha")^2 )
+        wavelgth    = 2pi / wavenb
+        nrContinuum = grid.nr - 200
+        
+        if      grid.hp == 0.               error("Improper grid for continuum processes with grid.hp = 0.")
+        elseif  15 * grid.hp > wavelgth     error("Improper grid for continuum processes with 15*grid.hp = $(15*grid.hp) > " *
+                                                  "wavelength = $wavelgth .")
+        elseif  grid.nr < 600               error("Improper No of grid points for continuum processes; grid.nr = $(grid.nr).")
+        elseif  grid.r[nrContinuum] < 2.0   error("Improper grid extent for continuum processes; grid.r[nrContinuum] = " *
+                                                  "$(grid.r[nrContinuum]) < 2.")
+        end
+        
+        return( nrContinuum )
+    end
+
+
+    """
     `JAC.Continuum.generateOrbitalPureSine(energy::Float64, sh::Subshell, grid::Radial.Grid, settings::Continuum.Settings)`   
          ... to generate a simple, non-relativistic and non-normalized Bessel wave for the large component of the continuum
          orbital and a small component due to the kinetic-balance condition. A (non-normalized) orbital::Orbital is returned.
@@ -274,6 +300,7 @@ module Continuum
             PPprime = cOrbital.P[i] / cOrbital.Pprime[i];    kr  = q * grid.r[i];   at = atan( PPprime * q )
             phi = atan( PPprime * q ) - kr + l*pi/2;         phi = rem(phi, pi) + pi   # to bring phi in the intervaö 0 <= phi < pi
             A   = cOrbital.P[i] / sin(kr - l*pi/2 + phi);    N   = sqrt(2/(pi*q)) / A
+            if  abs(N) > 1.0e1   println("**Skip normalization at i = i, r[i] = $(grid.r[i])");   continue   end
             ## println("kr=" * @sprintf("%.4e",kr) * ",  PPprime=" * @sprintf("%.4e",PPprime) * ",  at=" * @sprintf("%.4e",at) * 
             ##         ",  phi=" * @sprintf("%.4e",phi) * ",  A=" * @sprintf("%.4e",A) * ",  N=" * @sprintf("%.4e",N) )
             #
@@ -323,6 +350,7 @@ module Continuum
             theta = q * pot.grid.r[i]  +  y * log(2q * pot.grid.r[i])  - angle( SpecialFunctions.gamma(gammaBar + im*y) )  -  pi*gammaBar/2  +  eta.re
             phi = at - theta;       phi = rem(phi, pi) + pi   # to bring phi in the interval 0 <= phi < pi
             A   = cOrbital.P[i] / cos(theta + phi);             N   = NP / A
+            if  abs(N) > 1.0e1   println("**Skip normalization at i = i, r[i] = $(pot.grid.r[i])");   continue   end
             ## println("theta=" * @sprintf("%.4e",theta) * ",  PprimeP=" * @sprintf("%.4e",PprimeP) * ",  at=" * @sprintf("%.4e",at) * 
             ##         ",  phi=" * @sprintf("%.4e",phi) * ",  A=" * @sprintf("%.4e",A) * ",  N=" * @sprintf("%.4e",N) ) 
             #

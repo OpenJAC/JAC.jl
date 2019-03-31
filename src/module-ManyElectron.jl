@@ -638,8 +638,16 @@ module ManyElectron
     
     
     """
-    `JAC.Level(J::AngularJ64, parity::Parity, energy::Float64, relativeOcc::Float64)`  ... constructor an atomic level without a state
-    												                   representation: hasStateRep == false.
+    `JAC.Level()`  ... constructor an empty level without useful data.
+    """
+    function Level()
+        Level( AngularJ64(0),  AngularM64(0), Parity("+"), 0, 0., 0., false, Basis(), Vector{Float64}[] )
+    end
+    
+    
+    """
+    `JAC.Level(J::AngularJ64, parity::Parity, energy::Float64, relativeOcc::Float64)`  
+        ... constructor an atomic level without a state representation: hasStateRep == false.
     """
     function Level(J::AngularJ64, parity::Parity, energy::Float64, relativeOcc::Float64)
         Level(J, J, parity, 0, energy, relativeOcc, false, Basis(), Vector{Float64}[] )

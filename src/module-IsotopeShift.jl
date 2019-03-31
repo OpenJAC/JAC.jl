@@ -366,20 +366,23 @@ module IsotopeShift
         println(stream, "  IsotopeShift parameters and amplitudes:")
         println(stream, " ")
         println(stream, "  ", JAC.TableStrings.hLine(102))
-        sa = "  ";   sb = "  "
+        sa = "  ";   sb = "  ";   sc = "  "
         sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
         sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=5)              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=5)
+        sa = sa * JAC.TableStrings.center(14, "Energy"; na=5)
+        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=5);  sc = sc * JAC.TableStrings.hBlank(45)
         sa = sa * JAC.TableStrings.center(11, "K_nms"; na=4)              
         sb = sb * JAC.TableStrings.center(11, "[Hz]" ; na=4)
+        sc = sc * JAC.TableStrings.center(11, "[a.u.]" ; na=4)
         sa = sa * JAC.TableStrings.center(11, "K_sms"; na=4)             
         sb = sb * JAC.TableStrings.center(11, "[Hz]" ; na=4)
+        sc = sc * JAC.TableStrings.center(11, "[a.u.]" ; na=4)
         sa = sa * JAC.TableStrings.center(11, "K_ms "; na=4)              
         sb = sb * JAC.TableStrings.center(11, "[Hz]" ; na=4)
+        sc = sc * JAC.TableStrings.center(11, "[a.u.]" ; na=4)
         sa = sa * JAC.TableStrings.center(11, " F ";   na=4)              
         sb = sb * JAC.TableStrings.center(11, "[..]" ; na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(102)) 
+        println(stream, sa);    println(stream, sb);    println(stream, sc);    println(stream, "  ", JAC.TableStrings.hLine(102)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -391,6 +394,12 @@ module IsotopeShift
             sa = sa * @sprintf("%.5e", JAC.convert("energy: from atomic to Hz", outcome.Knms + outcome.Ksms))  * "    "
             sa = sa * @sprintf("%.5e", JAC.convert("energy: from atomic to Hz", outcome.F))                    * "    "
             println(stream, sa )
+            sb = JAC.TableStrings.hBlank(47)
+            sb = sb * @sprintf("%.5e", outcome.Knms * 1822.888 * 2)                                            * "    "
+            sb = sb * @sprintf("%.5e", outcome.Ksms * 1822.888 * 2)                                            * "    "
+            sb = sb * @sprintf("%.5e", (outcome.Knms + outcome.Ksms) * 1822.888 * 2)                           * "    "
+            sb = sb * @sprintf("%.5e", outcome.F)                                                              * "    "
+            println(stream, sb )
         end
         println(stream, "  ", JAC.TableStrings.hLine(102), "\n\n")
         #

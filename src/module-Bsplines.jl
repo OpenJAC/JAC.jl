@@ -365,6 +365,7 @@ module Bsplines
         # Set-up the local Hamiltonian matrix
         wa = setupLocalMatrix(sh.kappa, primitives, pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}})
         wa[1:end,1:end] = wa[1:end,1:end] - energy * wb[1:end,1:end]
+        ##x wa[1:nsL+nsS,1:nsL+nsS] = wa[1:nsL+nsS,1:nsL+nsS] - energy * wb[1:end,1:end]
 
         return( wa )
     end

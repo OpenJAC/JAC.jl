@@ -52,7 +52,7 @@ module PhotoExcitationAutoion
     end
 
 
-
+    #==
     """
     `struct  JAC.PhotoExcitationAutoion.Channel`  ... defines a type for a photon-impact excitaton & autoionization channel that specifies 
                                                       all quantum numbers, phases and amplitudes.
@@ -63,33 +63,35 @@ module PhotoExcitationAutoion
     struct  Channel
         excitationChannel    ::JAC.Radiative.Channel
         augerChannel         ::JAC.Auger.Channel
-    end 
+    end ==#
 
 
     """
     `struct  JAC.PhotoExcitationAutoion.Pathway`  ... defines a type for a photon-impact excitation pathway that may include the definition 
                                                       of different excitation and autoionization channels and their corresponding amplitudes.
 
-        + initialLevel        ::Level                  ... initial-(state) level
-        + intermediateLevel   ::Level                  ... intermediate-(state) level
-        + finalLevel          ::Level                  ... final-(state) level
-        + photonEnergy        ::Float64                 ... energy of the (incoming) electron
-        + electronEnergy      ::Float64                 ... energy of the (finally outgoing, scattered) electron
-        + crossSection        ::EmProperty              ... total cross section of this pathway
-        + hasChannels         ::Bool                    ... Determines whether the individual excitation and autoionization channels are defined 
-                                                            in terms of their multipole, gauge, free-electron kappa, phases and the total 
-                                                            angular momentum/parity as well as the amplitude, or not.
-        + channels            ::Array{PhotoExcitationAutoion.Channel,1}  ... List of channels of this pathway.
+        + initialLevel        ::Level           ... initial-(state) level
+        + intermediateLevel   ::Level           ... intermediate-(state) level
+        + finalLevel          ::Level           ... final-(state) level
+        + excitEnergy         ::Float64         ... photon excitation energy of this pathway
+        + electronEnergy      ::Float64         ... energy of the (finally outgoing, scattered) electron
+        + crossSection        ::EmProperty      ... total cross section of this pathway
+        + hasChannels         ::Bool            ... Determines whether the individual excitation and autoionization channels are defined in terms of 
+                                                    their multipole, gauge, free-electron kappa, phases and the total angular momentum/parity as well 
+                                                    as the amplitude, or not.
+        + excitChannels       ::Array{JAC.Radiative.Channel,1}  ... List of excitation channels of this pathway.
+        + augerChannels       ::Array{JAC.Auger.Channel,1}      ... List of Auger channels of this pathway.
     """
     struct  Pathway
         initialLevel          ::Level
         intermediateLevel     ::Level
         finalLevel            ::Level
-        photonEnergy          ::Float64
+        excitEnergy           ::Float64
         electronEnergy        ::Float64
         crossSection          ::EmProperty
         hasChannels           ::Bool
-        channels              ::Array{PhotoExcitationAutoion.Channel,1}
+        excitChannels         ::Array{JAC.Radiative.Channel,1}  
+        augerChannels         ::Array{JAC.Auger.Channel,1}
     end 
 
 
@@ -98,7 +100,7 @@ module PhotoExcitationAutoion
                                                 initial, intermediate and final level.
     """
     function Pathway()
-        Pathway(Level(), Level(), Level(), 0., 0., 0., false, PhotoExcitationAutoion.Channel[] )
+        Pathway(Level(), Level(), Level(), 0., 0., EmProperty(0., 0.), false, Radiative.Channel[], Auger.Channel[] )
     end
 
 
@@ -110,49 +112,48 @@ module PhotoExcitationAutoion
         println(io, "initialLevel:               $(pathway.initialLevel)  ")
         println(io, "intermediateLevel:          $(pathway.intermediateLevel)  ")
         println(io, "finalLevel:                 $(pathway.finalLevel)  ")
-        println(io, "photonEnergy                $(pathway.photonEnergy)  ") 
+        println(io, "excitEnergy                 $(pathway.excitEnergy)  ") 
         println(io, "electronEnergy              $(pathway.electronEnergy)  ")
         println(io, "crossSection:               $(pathway.crossSection)  ")
         println(io, "hasChannels:                $(pathway.hasChannels)  ")
-        println(io, "channels:                   $(pathway.channels)  ")
+        println(io, "excitEnergy:                $(pathway.excitEnergy)  ")
+        println(io, "augerEnergy:                $(pathway.augerEnergy)  ")
     end
 
 
 
     """
-    `JAC.PhotoExcitationAutoion.computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, grid::Radial.Grid, 
-                                                            settings::PhotoExcitationAutoion.Settings)` ... to compute all amplitudes and 
-         properties of the given line; a line::PhotoExcitationAutoion.Line is returned for which the amplitudes and properties have now been 
-         evaluated.
+    `JAC.PhotoExcitationAutoion.computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+                                                            nrContinuum::Int64, settings::PhotoExcitationAutoion.Settings)` 
+        ... to compute all amplitudes and properties of the given pathway; a line::PhotoExcitationAutoion.Pathway is returned for which 
+            the amplitudes and properties have now been evaluated.
     """
-    function  computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, grid::Radial.Grid, settings::PhotoExcitationAutoion.Settings)
-        global JAC_counter
-        newChannels = PhotoExcitationAutoion.Channel[]
-        for channel in pathway.channels
-            # Generate a continuum orbital
-            JAC_counter = JAC_counter + 1
-            if   JAC_counter < 20   println("PhotoExcitationAutoion.computeAmplitudesProperties-aa: warning ... no cont. orb. is generated.")  end
-            phase  = 0.
-            # Define a proper continuum basis from the finalLevel.basis and the continuum orbital
-            JAC_counter = JAC_counter + 1
-            if   JAC_counter < 20   println("PhotoExcitationAutoion.computeAmplitudesProperties-ab: warning ... no cont. basis generated.") end
-            # Compute the transition matrix for the continuum and the initial-state basis
-            JAC_counter = JAC_counter + 1
-            if   JAC_counter < 20   println("PhotoExcitationAutoion.computeAmplitudesProperties-ac: warning ... no trans-matrix computed.") end
-            # matrix    = JAC.PhotoExcitationAutoion.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
-            #                                                      line.initialLevel.basis, grid, settings)
-            # amplitude = line.finalLevel.mc * matrix * line.initialLevel.mc 
-            amplitude = 1.0 
-            eChannel  = Radiative.Channel( channel.excitationChannel.multipole, channel.excitationChannel.gauge, 0.)
-            aChannel  = Auger.Channel( channel.augerChannel.kappa, channel.augerChannel.symmetry, 0., Complex(0.))
-            push!( newChannels, PhotoExcitationAutoion.Channel(eChannel, aChannel) )
+    function  computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64,
+                                          settings::PhotoExcitationAutoion.Settings)
+        # Compute all excitation channels
+        neweChannels = Radiative.Channel[]
+        for eChannel in pathway.excitChannels
+            amplitude   = JAC.Radiative.amplitude("absorption", eChannel.multipole, eChannel.gauge, pathway.excitEnergy, 
+                                                  pathway.intermediateLevel, pathway.initialLevel, grid)
+             push!( neweChannels, Radiative.Channel( eChannel.multipole, eChannel.gauge, amplitude))
         end
-        # Calculate the totalRate 
-        JAC_counter = JAC_counter + 1
-        if   JAC_counter < 20   println("PhotoExcitationAutoion.computeAmplitudesProperties-ba: warning ... crossSection set to -1.") end
+        # Compute all Auger decay channels
+        newaChannels = Auger.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum)
+        for aChannel in pathway.augerChannels
+            newnLevel   = JAC.generateLevelWithSymmetryReducedBasis(pathway.intermediateLevel)
+            newnLevel   = JAC.generateLevelWithExtraSubshell(Subshell(101, aChannel.kappa), newnLevel)
+            newfLevel   = JAC.generateLevelWithSymmetryReducedBasis(pathway.finalLevel)
+            cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(pathway.electronEnergy, Subshell(101, aChannel.kappa), newfLevel, nm, grid, contSettings)
+            newcLevel   = JAC.generateLevelWithExtraElectron(cOrbital, aChannel.symmetry, newfLevel)
+            newcChannel = Auger.Channel( aChannel.kappa, aChannel.symmetry, phase, Complex(0.))
+            amplitude = 1.0
+            ## amplitude   = JAC.Auger.amplitude("Coulomb", aChannel, newnLevel, newcLevel, grid)
+            push!( newaChannels, Auger.Channel( aChannel.kappa, aChannel.symmetry, phase, amplitude))
+        end
+        #
         crossSection = EmProperty(-1., -1.)
         pathway = PhotoExcitationAutoion.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, 
-                                                  pathway.photonEnergy, pathway.electronEnergy, crossSection, true, newChannels)
+                                                  pathway.excitEnergy, pathway.electronEnergy, crossSection, true, neweChannels, newaChannels)
         return( pathway )
     end
 
@@ -160,12 +161,12 @@ module PhotoExcitationAutoion
 
     """
     `JAC.PhotoExcitationAutoion.computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
-                                                grid::Radial.Grid, settings::PhotoExcitation.Settings; output=true)`  ... to compute the 
-         photo-excitation-autoionization amplitudes and all properties as requested by the given settings. A list of 
-         lines::Array{PhotoExcitationAutoion.Lines} is returned.
+                                                nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::PhotoExcitation.Settings; output=true)`  
+        ... to compute the photo-excitation-autoionization amplitudes and all properties as requested by the given settings. A list of 
+            lines::Array{PhotoExcitationAutoion.Lines} is returned.
     """
-    function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
-                              settings::PhotoExcitationAutoion.Settings; output=true)
+    function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, 
+                              grid::Radial.Grid, settings::PhotoExcitationAutoion.Settings; output=true)
         println("")
         printstyled("JAC.PhotoExcitationAutoion.computePathways(): The computation of photo-excitation-autoionization amplitudes starts now ... \n", color=:light_green)
         printstyled("-------------------------------------------------------------------------------------------------------------------------- \n", color=:light_green)
@@ -174,18 +175,20 @@ module PhotoExcitationAutoion
         pathways = JAC.PhotoExcitationAutoion.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
         if  settings.printBeforeComputation    JAC.PhotoExcitationAutoion.displayPathways(pathways)    end
+        # Determine maximum (electron) energy and check for consistency of the grid
+        maxEnergy = 0.;   for  pathway in pathways   maxEnergy = max(maxEnergy, pathway.electronEnergy)   end
+        nrContinuum = JAC.Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newPathways = PhotoExcitationAutoion.Pathway[]
         for  pathway in pathways
-            newPathway = JAC.PhotoExcitationAutoion.computeAmplitudesProperties(pathway, grid, settings) 
-            push!( newPathways, newPathway)
+            push!( newPathways, JAC.PhotoExcitationAutoion.computeAmplitudesProperties(pathway, nm, grid, nrContinuum, settings) )
         end
         # Print all results to screen
-        JAC.PhotoExcitationAutoion.displayResults(stdout, pathways)
+        JAC.PhotoExcitationAutoion.displayResults(stdout, newPathways)
         printSummary, iostream = JAC.give("summary flag/stream")
-        if  printSummary    JAC.PhotoExcitationAutoion.displayResults(iostream, pathways)   end
+        if  printSummary    JAC.PhotoExcitationAutoion.displayResults(iostream, newPathways)   end
         #
-        if    output    return( pathways )
+        if    output    return( newPathways )
         else            return( nothing )
         end
     end
@@ -193,10 +196,11 @@ module PhotoExcitationAutoion
 
     """
     `JAC.PhotoExcitationAutoion.determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
-                                                  settings::PhotoExcitationAutoion.Settings)`  ... to determine a list of photoexcitation-
-         autoionization pathways between the levels from the given initial-, intermediate- and final-state multiplets and by taking into account 
-         the particular selections and settings for this computation; an Array{PhotoExcitationAutoion.Line,1} is returned. Apart from the 
-         level specification, all physical properties are set to zero during the initialization process.  
+                                                  settings::PhotoExcitationAutoion.Settings)`  
+        ... to determine a list of photoexcitation-autoionization pathways between the levels from the given initial-, intermediate- and 
+            final-state multiplets and by taking into account the particular selections and settings for this computation; an 
+            Array{PhotoExcitationAutoion.Line,1} is returned. Apart from the level specification, all physical properties are set to zero 
+            during the initialization process.  
     """
     function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                 settings::PhotoExcitationAutoion.Settings)
@@ -210,14 +214,16 @@ module PhotoExcitationAutoion
                 for  f = 1:length(finalMultiplet.levels)
                     if  selectPathways  &&  !(haskey(selectedPathways, (i,n,f)) )    continue   end
                     ##x println("PhotoExcitationAutoion.determineLines-aa: angular i = $i, f = $f")
-                    pEnergy = intermediateMultiplet.levels[n].energy - initialMultiplet.levels[i].energy
-                    eEnergy = intermediateMultiplet.levels[n].energy - finalMultiplet.levels[f].energy
-                    if  pEnergy < 0.   ||   eEnergy < 0    continue    end
+                    eEnergy = intermediateMultiplet.levels[n].energy - initialMultiplet.levels[i].energy
+                    aEnergy = intermediateMultiplet.levels[n].energy - finalMultiplet.levels[f].energy
+                    if  eEnergy < 0.   ||   aEnergy < 0    continue    end
 
-                    channels = JAC.PhotoExcitationAutoion.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], 
-                                                                            initialMultiplet.levels[i], settings) 
-                    push!( pathways, PhotoExcitationAutoion.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[i], 
-                                                            finalMultiplet.levels[f], pEnergy, eEnergy, EmProperty(0., 0.), true, channels) )
+                    rSettings = JAC.Radiative.Settings( settings.multipoles, settings.gauges, false, false, false, Tuple{Int64,Int64}[], 0., 0., 0.)
+                    eChannels = JAC.Radiative.determineChannels(intermediateMultiplet.levels[n], initialMultiplet.levels[i], rSettings) 
+                    aSettings = JAC.Auger.Settings( false, false, false, Tuple{Int64,Int64}[], 0., 0., settings.maxKappa, "Coulomb")
+                    aChannels = JAC.Auger.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], aSettings) 
+                    push!( pathways, PhotoExcitationAutoion.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[n], 
+                                            finalMultiplet.levels[f], eEnergy, aEnergy, EmProperty(0., 0.), true, eChannels, aChannels) )
                 end
             end
         end
@@ -225,6 +231,7 @@ module PhotoExcitationAutoion
     end
 
 
+    #==
     """
     `JAC.PhotoExcitationAutoion.determineChannels(finalLevel::Level, intermediateLevel::Level, initialLevel::Level, 
                                                   settings::PhotoExcitationAutoion.Settings)`  ... to determine a list of photoexcitation-
@@ -266,13 +273,13 @@ module PhotoExcitationAutoion
         end
  
         return( channels )  
-    end
+    end  ==#
 
 
     """
-    `JAC.PhotoExcitationAutoion.displayPathways(pathways::Array{PhotoExcitationAutoion.Line,1})`  ... to display a list of pathways and 
-         channels that have been selected due to the prior settings. A neat table of all selected transitions and energies is printed but 
-         nothing is returned otherwise.
+    `JAC.PhotoExcitationAutoion.displayPathways(pathways::Array{PhotoExcitationAutoion.Line,1})`  
+        ... to display a list of pathways and channels that have been selected due to the prior settings. A neat table of all selected 
+            transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayPathways(pathways::Array{PhotoExcitationAutoion.Pathway,1})
         println(" ")
@@ -297,14 +304,15 @@ module PhotoExcitationAutoion
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", pathway.photonEnergy))   * "    "
+            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", pathway.excitEnergy))   * "    "
             sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", pathway.electronEnergy)) * "   "
             kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
-            for  i in 1:length(pathway.channels)
-                eChannel = pathway.channels[i].excitationChannel;    aChannel = pathway.channels[i].augerChannel;  
-                push!( kappaMultipoleSymmetryList, (aChannel.kappa, eChannel.multipole, eChannel.gauge, aChannel.symmetry) )
+            for  ech in pathway.excitChannels
+                for  ach in pathway.augerChannels
+                    ##x eChannel = pathway.channels[i].excitationChannel;    aChannel = pathway.channels[i].augerChannel;  
+                    push!( kappaMultipoleSymmetryList, (ach.kappa, ech.multipole, ech.gauge, ach.symmetry) )
+                end
             end
-            ##x println("PhotoExcitationAutoion-diplayLines-ad: kappaMultipoleSymmetryList = ", kappaMultipoleSymmetryList)
             wa = JAC.TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
             if  length(wa) > 0    sb = sa * wa[1];    println( sb )    end  
             for  i = 2:length(wa)
@@ -318,12 +326,13 @@ module PhotoExcitationAutoion
 
 
     """
-    `JAC.PhotoExcitationAutoion.displayResults(stream::IO, pathways::Array{PhotoExcitationAutoion.Line,1})`  ... to list all results, energies, 
-         cross sections, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
+    `JAC.PhotoExcitationAutoion.displayResults(stream::IO, pathways::Array{PhotoExcitationAutoion.Line,1})`  
+        ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing is returned 
+            otherwise.
     """
     function  displayResults(stream::IO, pathways::Array{PhotoExcitationAutoion.Pathway,1})
         println(stream, " ")
-        println(stream, "  Photo-excitation & autoionization cross sections:")
+        println(stream, "  Partial photo-excitation & autoionization cross sections:")
         println(stream, " ")
         println(stream, "  ", JAC.TableStrings.hLine(135))
         sa = "     ";   sb = "     "
@@ -346,11 +355,11 @@ module PhotoExcitationAutoion
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", pathway.photonEnergy))   * "    "
+            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", pathway.excitEnergy))   * "    "
             sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", pathway.electronEnergy)) * "    "
             multipoles = EmMultipole[]
-            for  ch in pathway.channels
-                multipoles = push!( multipoles, ch.excitationChannel.multipole)
+            for  ech in pathway.excitChannels
+                multipoles = push!( multipoles, ech.multipole)
             end
             multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
             sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=3)

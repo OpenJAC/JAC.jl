@@ -67,6 +67,17 @@ module AngularMomentum
 
 
     """
+    `JAC.AngularMomentum.bracket(jList::Array{AngularJ64,1})`  
+        ... to compute the bracket [a, b, c, ... ] = (2a+1) * (2b+1) * (2b+1) * ... of the given angular momenta. 
+            A value::Int64 is returned.
+    """
+    function bracket(jList::Array{AngularJ64,1})
+        value = 1;    for  j in jList    value = value * (AngularMomentum.twoJ(j) + 1)    end
+        return( value )         
+    end
+
+
+    """
     `JAC.AngularMomentum.ChengI
 
        + (kapa::Int64, ma::AngularM64, kapb::Int64, mb::AngularM64, L::AngularJ64, M::AngularM64)` ... evaluates the
@@ -180,6 +191,25 @@ module AngularMomentum
         end
     end
 
+
+    """
+    `JAC.AngularMomentum.kappa_j(kappa::Int64)`  ... calculates the j::AngularJ64 value of a given kappa.
+    """
+    function  kappa_j(kappa::Int64)  
+        j = AngularJ64( abs(kappa) - 1//2 )
+        return( j )
+    end
+
+
+    """
+    `JAC.AngularMomentum.kappa_l(kappa::Int64)`  ... calculates the l::AngularJ64 value of a given kappa.
+    """
+    function  kappa_l(kappa::Int64)  
+        if  kappa < 0    l  = abs(kappa) -1   else   l  = kappa   end
+        return( AngularJ64(l) )
+    end
+
+    
 
     """
     `JAC.AngularMomentum.oneJ(ja::AngularJ64)`  ... calculates ja; a (positive) value::Float64 is returned.
@@ -388,8 +418,8 @@ module AngularMomentum
     """
     function Wigner_9j(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, ee::AngularJ64, f::AngularJ64,
                        g::AngularJ64, h::AngularJ64, i::AngularJ64)
-        error("Here, we wish to call an external Julia package/interface.")
-        
+        JAC.warn(AddWarning, "JAC.AngularMomentum.Wigner_9j(): Here, we wish to call an external Julia package/interface; now set to 2.0")
+        w9j = 2.0
         return( w9j )
     end
 

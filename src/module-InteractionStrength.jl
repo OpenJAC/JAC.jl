@@ -49,6 +49,7 @@ module InteractionStrength
     function hamiltonian_nms(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)
         if  a.subshell.kappa != b.subshell.kappa   return( 0. )   end
         wa = JAC.RadialIntegrals.isotope_nms(a, b, nm.Z, grid) / (2 * nm.mass)
+        println("**  <$(a.subshell) || h^nms || $(b.subshell)>  = $wa" )
         return( wa )
     end
 
@@ -65,7 +66,7 @@ module InteractionStrength
         wc =   JAC.RadialIntegrals.rkNonDiagonal(-2, a, b, grid)
         wa =   wb * wc
         #
-        println("**  <$(a.subshell) || t1 || $(b.subshell)>  = $wa   = $wb * $wc" )
+        ##x println("**  <$(a.subshell) || t1 || $(b.subshell)>  = $wa   = $wb * $wc" )
         return( wa )
     end
 
@@ -81,7 +82,7 @@ module InteractionStrength
         wc =   JAC.RadialIntegrals.rkDiagonal(-3, a, b, grid)
         wa =   wb * wc
         #
-        println("**  <$(a.subshell) || t2 || $(b.subshell)>  = $wa   = $wb * $wc" )
+        ##x println("**  <$(a.subshell) || t2 || $(b.subshell)>  = $wa   = $wb * $wc" )
         return( wa )
     end
 
@@ -492,6 +493,8 @@ module InteractionStrength
     function X1_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)
         wa = JAC.AngularMomentum.CL_reduced_me(a.subshell, 1, c.subshell) * JAC.AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) *
              JAC.RadialIntegrals.Vinti(a, c, grid) * JAC.RadialIntegrals.Vinti(b, d, grid) / (2 * nm.mass)
+        ## println("**  <$(a.subshell) || Vinti || $(c.subshell)>  = $(JAC.RadialIntegrals.Vinti(a, c, grid)) " )
+        ## println("**  <$(b.subshell) || Vinti || $(d.subshell)>  = $(JAC.RadialIntegrals.Vinti(b, d, grid)) " )
         return( wa )
     end
 

@@ -119,35 +119,6 @@ function  projections(ja::AngularJ64)
 end
 
 
-"""
-`struct  Eigen`  ... defines a simple struct to communicate eigenvalues and eigenvectors if different diagonalization procedures are used.
-
-    + values   ::Array{Float64,1}            ... List of eigenvalues.
-    + vectors  ::Array{Vector{Float64},1}    ... List of eigenvectors.
-"""
-struct  Eigen
-    values     ::Array{Float64,1}
-    vectors    ::Array{Vector{Float64},1}
-end
-
-
-"""
-`JAC.isEqual(a::Eigen, b::Eigen, accuracy::Float64)`  ... determines whether a == b with the requested accuracy; a value::Bool is returned.
-                                                          The test is made element-wise on abs(a.number - b.number) > accuracy.
-"""
-function isEqual(a::Eigen, b::Eigen, accuracy::Float64)
-    # Check the dimensions
-    if  accuracy <= 0.                          error("Requires accuracy > 0.")                                    end
-    if  size(a.values) != size(b.values)   ||   size(a.vectors) != size(b.vectors)                return( false )  end
-    # Check the eigenvalues and vectors
-    for  i = 1:length(a.values)    
-        if  abs(a.values[i] - b.values[i]) > accuracy                                             return( false )  end    
-        for  j = 1:length(a.vectors[i])   if  abs(a.vectors[i][j] - b.vectors[i][j]) > accuracy   return( false )  end    end     
-    end
-    return( true )
-end
-
-
 abstract type  AngularM  end
 
 """
@@ -216,6 +187,47 @@ function Base.show(io::IO, m::JAC.AngularM64)
     elseif  m.den == 2    print(io, m.num, "/2")
     else    error("stop a")
     end
+end
+
+
+"""
+`JAC.add(ma::AngularM64, mb::AngularM64)`  
+    ... adds the projections of the angular momenta ma + mb and returns a mc::AngularM64.
+"""
+function  add(ma::AngularM64, mb::AngularM64)
+    if  ma.den == 1   ma2 = 2ma.num   else   ma2 = ma.num   end
+    if  mb.den == 1   mb2 = 2mb.num   else   mb2 = mb.num   end
+    return( AngularM64( (ma2+mb2)//2 ) )
+end
+
+
+
+"""
+`struct  Eigen`  ... defines a simple struct to communicate eigenvalues and eigenvectors if different diagonalization procedures are used.
+
+    + values   ::Array{Float64,1}            ... List of eigenvalues.
+    + vectors  ::Array{Vector{Float64},1}    ... List of eigenvectors.
+"""
+struct  Eigen
+    values     ::Array{Float64,1}
+    vectors    ::Array{Vector{Float64},1}
+end
+
+
+"""
+`JAC.isEqual(a::Eigen, b::Eigen, accuracy::Float64)`  ... determines whether a == b with the requested accuracy; a value::Bool is returned.
+                                                          The test is made element-wise on abs(a.number - b.number) > accuracy.
+"""
+function isEqual(a::Eigen, b::Eigen, accuracy::Float64)
+    # Check the dimensions
+    if  accuracy <= 0.                          error("Requires accuracy > 0.")                                    end
+    if  size(a.values) != size(b.values)   ||   size(a.vectors) != size(b.vectors)                return( false )  end
+    # Check the eigenvalues and vectors
+    for  i = 1:length(a.values)    
+        if  abs(a.values[i] - b.values[i]) > accuracy                                             return( false )  end    
+        for  j = 1:length(a.vectors[i])   if  abs(a.vectors[i][j] - b.vectors[i][j]) > accuracy   return( false )  end    end     
+    end
+    return( true )
 end
 
 

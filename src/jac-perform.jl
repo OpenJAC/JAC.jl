@@ -164,7 +164,7 @@ function perform(computation::Atomic.Computation; output::Bool=false)
             outcome = JAC.CoulombIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("Coulomb ionization lines:" => outcome) )               end
         elseif  computation.process == JAC.PhotoExcAuto   
-            outcome = JAC.PhotoExcitationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
+            outcome = JAC.PhotoExcitationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 
                                                                  computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("photo-excitation-autoionization pathways:" => outcome) )      end
         elseif  computation.process == JAC.PhotoExcFluor   

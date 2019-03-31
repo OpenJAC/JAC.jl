@@ -503,7 +503,7 @@ module Hfs
         end
         #
         im = Hfs.InteractionMatrix(calcT1, calcT2, matrixT1, matrixT2)
-        println("im = $im")
+        ##x println("im = $im")
         #
         return( im )
     end
