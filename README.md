@@ -1,9 +1,7 @@
 
 
 [![Build Status](https://travis-ci.com/OpenJAC/JAC.jl.svg?branch=master)](https://travis-ci.com/OpenJAC/JAC.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/v162jvq76dwifxdx/branch/master?svg=true)](https://ci.appveyor.com/project/OpenJAC/JAC-jl/branch/master)
 [![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)
-[![Coverage Status](https://coveralls.io/repos/github/OpenJAC/JAC.jl/badge.svg?branch=master)](https://coveralls.io/github/OpenJAC/JAC.jl?branch=master)
 
 
 
