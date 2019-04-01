@@ -1,7 +1,9 @@
 
 ## export  plot
 
-using Plots 
+using Plots
+pyplot()
+
 """
 `JAC.plot()`  ... plots various quantities, often in a new window.
 
