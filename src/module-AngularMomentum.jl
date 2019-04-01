@@ -6,7 +6,7 @@
 module AngularMomentum
 
     using SpecialFunctions, JAC
-    ## using WignerSymbols
+    using GSL: sf_coupling_3j, sf_coupling_6j, sf_coupling_9j
 
     """
     `JAC.AngularMomentum.allowedKappaSymmetries(syma::LevelSymmetry, symb::LevelSymmetry)`  ... to determine all allowed single-electron
@@ -391,6 +391,76 @@ module AngularMomentum
         error("Here, we wish to call an external Julia package/interface.")
         
         return( w9j )
+    end
+
+    """
+        clebschgordan(j₁, m₁, j₂, m₂, J, M)
+
+    Calculate the Clebsch–Gordan coefficient ``\\langle j_1 m_1 j_2 m_2 | J M \\rangle``. The
+    calculation uses the Wigner 3-j symbol from the GNU Scientific Library (cf.
+    [`wigner3j`](@ref)). The Condon–Shortley phase convention is employed.
+    """
+    function clebschgordan(j₁, m₁, j₂, m₂, J, M)
+        J₁ = HalfInt(j₁) # explicit conversion because AngularJ64 does not support arithmetic
+        J₂ = HalfInt(j₂) # explicit conversion because AngularJ64 does not support arithmetic
+        mM = -HalfInt(M) # explicit conversion because AngularM64 does not support arithmetic
+        exp = mM-J₁+J₂
+        isinteger(exp) || return 0.0
+        phase = ifelse(iseven(Integer(exp)), 1, -1)
+        phase * sqrt(JAC.twice(J)+1) * wigner3j(J₁, J₂, J, m₁, m₂, mM)
+    end
+
+    """
+        wigner3j(j₁, j₂, j₃, m₁, m₂, m₃)
+
+    Calculate the Wigner 3-j symbol
+    ```math
+    \\begin{pmatrix}
+        j_1 & j_2 & j_3 \\\\
+        m_1 & m_2 & m_3
+    \\end{pmatrix}
+    ```
+    by calling the corresponding function from the GNU Scientific Library.
+    """
+    function wigner3j(j₁, j₂, j₃, m₁, m₂, m₃)
+        sf_coupling_3j(JAC.twice(j₁), JAC.twice(j₂), JAC.twice(j₃),
+                       JAC.twice(m₁), JAC.twice(m₂), JAC.twice(m₃))
+    end
+
+    """
+        wigner6j(j₁, j₂, j₃, j₄, j₅, j₆)
+
+    Calculate the Wigner 6-j symbol
+    ```math
+    \\begin{Bmatrix}
+        j_1 & j_2 & j_3 \\\\
+        j_4 & j_5 & j_6
+    \\end{Bmatrix}
+    ```
+    by calling the corresponding function from the GNU Scientific Library.
+    """
+    function wigner6j(j₁, j₂, j₃, j₄, j₅, j₆)
+        sf_coupling_6j(JAC.twice(j₁), JAC.twice(j₂), JAC.twice(j₃),
+                       JAC.twice(j₄), JAC.twice(j₅), JAC.twice(j₆))
+    end
+
+    """
+        wigner9j(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)
+
+    Calculate the Wigner 9-j symbol
+    ```math
+    \\begin{Bmatrix}
+        j_1 & j_2 & j_3 \\\\
+        j_4 & j_5 & j_6 \\\\
+        j_7 & j_8 & j_9
+    \\end{Bmatrix}
+    ```
+    by calling the corresponding function from the GNU Scientific Library.
+    """
+    function wigner9j(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)
+        sf_coupling_9j(JAC.twice(j₁), JAC.twice(j₂), JAC.twice(j₃),
+                       JAC.twice(j₄), JAC.twice(j₅), JAC.twice(j₆),
+                       JAC.twice(j₇), JAC.twice(j₈), JAC.twice(j₉))
     end
 
 end # module

@@ -9,6 +9,7 @@ using JAC
     JAC.define("print test: open", pwd() * "/runtests.report")
 
     include("test-halfintegers.jl")
+    include("test-wignersymbols.jl")
 
     @test JAC.testMethods(short=short)
     @test JAC.testAmplitudes(short=short)
