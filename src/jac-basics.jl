@@ -69,6 +69,8 @@ end
 oplus(ja, jb) = oplus(HalfInt(ja), HalfInt(jb))
 oplus(ja::Union{HalfInt,Integer}, jb::Union{HalfInt,Integer}) = abs(ja-jb):ja+jb
 
+const ⊕ = oplus
+
 
 """
 `JAC.projections(ja::AngularJ64)`  ... returns all allowed projections of a given angular momenta ja as a list::Array{AngularM64,1} 

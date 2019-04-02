@@ -48,11 +48,11 @@ using JAC.AngularMomentum: clebschgordan, wigner3j, wigner6j, wigner9j
         @test clebschgordan(5/2, -3/2, 5/2,  3/2, 1,  0) ≈ -√(9/70)
         @test clebschgordan(5/2, -3/2, 5/2,  3/2, 0,  0) ≈ √(1/6)
         # Negative numbers as arguments for J
-        @info "The following 20 warnings from GSL.jl are expected (testing error handling)"
+        @info "The following 20 warnings (\"GSL Error 1\") are expected (testing error handling)"
         @test_throws DomainError clebschgordan(-5/2, 3/2, 0, 0, 5/2, 3/2)
         @test_throws DomainError clebschgordan(0, 0, -5/2, 3/2, 5/2, 3/2)
-        # In the following case, GSL.jl does not print a warning (sqrt(-4.0) throws
-        # DomainError before wigner3j is called)
+        # In the following case, GSL.jl does not print a warning since sqrt(-4.0) throws a
+        # DomainError before wigner3j is called
         @test_throws DomainError clebschgordan(0, 0, 5/2, 3/2, -5/2, 3/2)
         # Arguments that are not half-integers
         @test_throws InexactError clebschgordan(5/3, 3/2, 0, 0, 5/2, 3/2)

@@ -46,7 +46,7 @@ module JAC
 
 using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL   #, JLD
 
-export AlphaVariation, AnapoleMoment, AsfSettings, Atomic, Auger, Basis, Cascade, Configuration, ConfigurationR, Continuum, CsfR, Radial,
+export @racahsum, AlphaVariation, AnapoleMoment, AsfSettings, Atomic, Auger, Basis, Cascade, Configuration, ConfigurationR, Continuum, CsfR, Radial,
        CoulombExcitation, CoulombIonization,  
        DecayYield, Dielectronic, DoubleAuger,
        ElectricDipoleMoment, Einstein, 
@@ -133,6 +133,8 @@ include("module-Tools.jl")
 
 # include("module-ImpactIonization.jl")
 # include("module-Semiempirical.jl")
+
+include("macro-racahsum.jl")
 
 using  JAC.Radial, JAC.ManyElectron, JAC.Nuclear, JAC.RadialIntegrals, JAC.InteractionStrength, JAC.AngularMomentum
 

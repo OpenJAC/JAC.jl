@@ -10,6 +10,7 @@ using JAC
 
     include("test-halfintegers.jl")
     include("test-wignersymbols.jl")
+    include("test-racahsum.jl")
 
     @test JAC.testMethods(short=short)
     @test JAC.testAmplitudes(short=short)
