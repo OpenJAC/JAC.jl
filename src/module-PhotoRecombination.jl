@@ -151,12 +151,14 @@ module PhotoRecombination
 
 
     """
-    `JAC.PhotoRecombination.computeAmplitudesProperties(line::PhotoRecombination.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::PhotoRecombination.Settings)`  
-         ... to compute all amplitudes and properties of the given line; a line::PhotoRecombination.Line is returned for which the amplitudes 
-         and properties are now evaluated.
+    `JAC.PhotoRecombination.computeAmplitudesProperties(line::PhotoRecombination.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+                                                        settings::PhotoRecombination.Settings)`  
+        ... to compute all amplitudes and properties of the given line; a line::PhotoRecombination.Line is returned for which the amplitudes 
+            and properties are now evaluated.
     """
-    function  computeAmplitudesProperties(line::PhotoRecombination.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::PhotoRecombination.Settings)
-        newChannels = PhotoRecombination.Channel[];;   contSettings = JAC.Continuum.Settings(false, grid.nr-50);    csC = 0.;    csB = 0.
+    function  computeAmplitudesProperties(line::PhotoRecombination.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64,
+                                          settings::PhotoRecombination.Settings)
+        newChannels = PhotoRecombination.Channel[];;   contSettings = JAC.Continuum.Settings(false, nrContinuum);    csC = 0.;    csB = 0.
         for channel in line.channels
             newfLevel = JAC.generateLevelWithSymmetryReducedBasis(line.finalLevel)
             newfLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newfLevel)
@@ -175,9 +177,51 @@ module PhotoRecombination
         Ji2 = JAC.AngularMomentum.twoJ(line.initialLevel.J)
         csFactor     = 8 * pi^3 * JAC.give("alpha")^3 * line.photonEnergy / (Ji2 + 1)
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
-        newline = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, 
-                                           crossSection, true, newChannels)
-        return( line )
+        newLine = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, crossSection, true, newChannels)
+        return( newLine )
+    end
+
+
+
+    """
+    `JAC.PhotoRecombination.computeAnisotropyParameter(nu::Int64, gauge::EmGauge, line::PhotoRecombination.Line)`  
+        ... to compute the anisotropy parameter of the emitted photons for the photorecombination of an initially unpolarized ion. 
+            A value::ComplexF64 is returned.
+    """
+    function  computeAnisotropyParameter(nu::Int64, gauge::EmGauge, line::PhotoRecombination.Line)
+        if  !line.hasChannels   error("No channels are defined for the given PhotoRecombination.line.")         end
+        wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J   
+        wn = 0.;    
+        for  ch in line.channels   
+            if  gauge != ch.gauge  &&  gauge != JAC.Magnetic   continue    end
+            wn = wn + conj(ch.amplitude) * ch.amplitude   
+        end
+        
+        for  cha  in line.channels
+            if  gauge != cha.gauge  &&  gauge != JAC.Magnetic   continue    end
+            J = cha.symmetry.J;    L = cha.multipole.L;    if  cha.multipole.electric   p = 1   else    p = 0   end
+            j = JAC.AngularMomentum.kappa_j(cha.kappa);    l = JAC.AngularMomentum.kappa_l(cha.kappa)
+            #
+            for  chp  in line.channels  
+                if  gauge != chp.gauge  &&  gauge != JAC.Magnetic   continue    end
+                Jp = chp.symmetry.J;    Lp = chp.multipole.L;    if  chp.multipole.electric   pp = 1   else    pp = 0   end
+                jp = JAC.AngularMomentum.kappa_j(chp.kappa);     lp = JAC.AngularMomentum.kappa_l(chp.kappa)
+                #
+                if  1 + (-1)^(L + p + Lp + pp - nu) == 0    continue    end
+                wa = wa + 1.0im^(L + p - Lp - pp) * JAC.AngularMomentum.phaseFactor([Ji, -1, AngularJ64(1//2), -1, Jf]) *
+                                 sqrt( JAC.AngularMomentum.bracket([AngularJ64(L), AngularJ64(Lp), l, lp, j, jp, J, Jp]) ) *  
+                                 JAC.AngularMomentum.ClebschGordan( l, AngularM64(0), lp, AngularM64(0),  AngularJ64(nu),  AngularM64(0)) *
+                                 JAC.AngularMomentum.ClebschGordan( AngularJ64(L), AngularM64(1), AngularJ64(Lp), AngularM64(-1), 
+                                                                    AngularJ64(nu), AngularM64(0)) *
+                                 JAC.AngularMomentum.Wigner_6j(J, Jp, AngularJ64(nu), AngularJ64(Lp), AngularJ64(L), Jf) * 
+                                 JAC.AngularMomentum.Wigner_6j(J, Jp, AngularJ64(nu), jp, j, Ji) * 
+                                 JAC.AngularMomentum.Wigner_6j(j, jp, AngularJ64(nu), lp, l, AngularJ64(1//2)) * 
+                                 conj(cha.amplitude) * chp.amplitude
+            end
+        end
+        
+        value = - 0.5 * wa / wn
+        return( value )
     end
 
 
@@ -195,16 +239,19 @@ module PhotoRecombination
         lines = JAC.PhotoRecombination.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
         if  settings.printBeforeComputation    JAC.PhotoRecombination.displayLines(lines)    end
+        # Determine maximum energy and check for consistency of the grid
+        maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
+        nrContinuum = JAC.Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = PhotoRecombination.Line[]
         for  line in lines
-            newLine = JAC.PhotoRecombination.computeAmplitudesProperties(line, nm, grid, settings) 
+            newLine = JAC.PhotoRecombination.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        JAC.PhotoRecombination.displayResults(stdout, lines, settings)
+        JAC.PhotoRecombination.displayResults(stdout, newLines, settings)
         printSummary, iostream = JAC.give("summary flag/stream")
-        if  printSummary   JAC.PhotoRecombination.displayResults(iostream, lines, settings)    end
+        if  printSummary   JAC.PhotoRecombination.displayResults(iostream, newLines, settings)    end
         #
         if    output    return( lines )
         else            return( nothing )
@@ -339,9 +386,9 @@ module PhotoRecombination
         println(stream, "  Photorecombination cross sections for beta^2 * gamma^2 = 1:")
         println(stream, "  ")
         println(stream, "  ", JAC.TableStrings.hLine(133))
-        sa = " ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"   ; na=1);                       sb = sb * JAC.TableStrings.hBlank(20)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"   ; na=3);                       sb = sb * JAC.TableStrings.hBlank(21)
+        sa = "  ";   sb = "  "
+        sa = sa * JAC.TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * JAC.TableStrings.hBlank(20)
+        sa = sa * JAC.TableStrings.center(16, "i--J^P--f"   ; na=3);                       sb = sb * JAC.TableStrings.hBlank(19)
         sa = sa * JAC.TableStrings.center(12, "i--Energy--f"; na=4)               
         sb = sb * JAC.TableStrings.center(12,JAC.TableStrings.inUnits("energy"); na=4)
         sa = sa * JAC.TableStrings.center(12, "omega"     ; na=4)             
@@ -357,8 +404,8 @@ module PhotoRecombination
         for  line in lines
             sa  = " ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                           fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
+            sa = sa * JAC.TableStrings.center(17, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * JAC.TableStrings.center(17, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
             en = line.initialLevel.energy - line.finalLevel.energy
             sa = sa * @sprintf("%.6e", JAC.convert("energy: from atomic", en))                  * "    "
             sa = sa * @sprintf("%.6e", JAC.convert("energy: from atomic", line.photonEnergy))   * "    "
@@ -378,17 +425,58 @@ module PhotoRecombination
         #
         if  settings.calcAnisotropy  
             println(stream, " ")
-            println(stream, "  Anisotropy angular parameters beta_k for  ...  ")
+            println(stream, "  Anisotropy angular parameters beta_nu of the emitted photons for initially unpolarized ions:")
             println(stream, " ")
-            println(stream, "  Not yet implemented !!")
+            println(stream, "  ", JAC.TableStrings.hLine(133))
+            sa = "  ";   sb = "  "
+            sa = sa * JAC.TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * JAC.TableStrings.hBlank(20)
+            sa = sa * JAC.TableStrings.center(16, "i--J^P--f"   ; na=3);                       sb = sb * JAC.TableStrings.hBlank(19)
+            sa = sa * JAC.TableStrings.center(12, "i--Energy--f"; na=4)               
+            sb = sb * JAC.TableStrings.center(12,JAC.TableStrings.inUnits("energy"); na=4)
+            sa = sa * JAC.TableStrings.center(12, "omega"     ; na=4)             
+            sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=4)
+            sa = sa * JAC.TableStrings.center(12, "Energy e_p"; na=3)             
+            sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=3)
+            sa = sa * JAC.TableStrings.center(10, "Multipoles"; na=5);                         sb = sb * JAC.TableStrings.hBlank(15)
+            sa = sa * JAC.TableStrings.flushleft(57, "beta's"; na=4)  
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(133)) 
+            #   
+            for  line in lines
+                sa  = " ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                              fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+                sa = sa * JAC.TableStrings.center(17, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+                sa = sa * JAC.TableStrings.center(17, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
+                en = line.initialLevel.energy - line.finalLevel.energy
+                sa = sa * @sprintf("%.6e", JAC.convert("energy: from atomic", en))                  * "    "
+                sa = sa * @sprintf("%.6e", JAC.convert("energy: from atomic", line.photonEnergy))   * "    "
+                sa = sa * @sprintf("%.6e", JAC.convert("energy: from atomic", line.electronEnergy)) * "    "
+                multipoles = EmMultipole[]
+                for  ch in line.channels
+                    multipoles = push!( multipoles, ch.multipole)
+                end
+                multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
+                sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=3)
+                be = JAC.PhotoRecombination.computeAnisotropyParameter(1, JAC.Coulomb,   line);   sa = sa * @sprintf("%.4e", be.re) * " (1, C);  "
+                be = JAC.PhotoRecombination.computeAnisotropyParameter(1, JAC.Babushkin, line);   sa = sa * @sprintf("%.4e", be.re) * " (1, B);  "
+                println(stream, sa);   sa = JAC.TableStrings.hBlank(102)
+                be = JAC.PhotoRecombination.computeAnisotropyParameter(2, JAC.Coulomb,   line);   sa = sa * @sprintf("%.4e", be.re) * " (2, C);  "
+                be = JAC.PhotoRecombination.computeAnisotropyParameter(2, JAC.Babushkin, line);   sa = sa * @sprintf("%.4e", be.re) * " (2, B);  "
+                println(stream, sa);   sa = JAC.TableStrings.hBlank(102)
+                be = JAC.PhotoRecombination.computeAnisotropyParameter(3, JAC.Coulomb,   line);   sa = sa * @sprintf("%.4e", be.re) * " (3, C);  "
+                be = JAC.PhotoRecombination.computeAnisotropyParameter(3, JAC.Babushkin, line);   sa = sa * @sprintf("%.4e", be.re) * " (3, B);  "
+                println(stream, sa);   sa = JAC.TableStrings.hBlank(102)
+                be = JAC.PhotoRecombination.computeAnisotropyParameter(4, JAC.Coulomb,   line);   sa = sa * @sprintf("%.4e", be.re) * " (4, C);  "
+                be = JAC.PhotoRecombination.computeAnisotropyParameter(4, JAC.Babushkin, line);   sa = sa * @sprintf("%.4e", be.re) * " (4, B);  "
+                println(stream, sa);   sa = JAC.TableStrings.hBlank(102)
+            end
+            println(stream, "  ", JAC.TableStrings.hLine(133))
         end
         #
         #
         if  settings.calcTensors   
             println(stream, " ")
-            println(stream, "  Reduced statistical tensors of the recombined ion ...  ")
+            println(stream, "  Reduced statistical tensors of the recombined ion ... not yet implemented !!")
             println(stream, " ")
-            println(stream, "  Not yet implemented !!")
         end
         #
         return( nothing )

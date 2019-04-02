@@ -93,7 +93,7 @@ module TableStrings
     """
     function  levels_if(i::Int64, f::Int64)
         si = string(i);   ni = length(si);    sf = string(f);   nf = length(sf);    sa = repeat(" ", 5)
-        return( sa[1:5-ni] * si * " -- " * sa[1:5-nf] * sf )
+        return( sa[1:5-ni] * si * " -- " * sa[1:4-nf] * sf )
     end 
 
 

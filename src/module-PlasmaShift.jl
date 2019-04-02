@@ -10,6 +10,10 @@ module PlasmaShift
 
     """
     `@enum   PlasmaModel`  ... defines a enumeration for the (allowed) plasma models.
+
+        + NoPlasmaModel      ... No plasma model defined.
+        + DebyeHueckel       ... Debye-Hueckel plasma model.
+        + IonSphere          ... Ion-sphere (not yet supported).
     """
     @enum   PlasmaModel    NoPlasmaModel    DebyeHueckel    DebeyBox    IonSphere
 
@@ -70,7 +74,7 @@ module PlasmaShift
     `JAC.PlasmaShift.Settings()`  ... constructor for a standard instance of PlasmaShift.Settings.
     """
     function Settings()
-        Settings(NoPlasmaModel, 0., 0., 0)
+        Settings(DebyeHueckel, 0.25, 0., 0)
     end
 
 
@@ -82,6 +86,103 @@ module PlasmaShift
         println(io, "lambdaDebye:            $(settings.lambdaDebye)  ")
         println(io, "ionSphereR0:            $(settings.ionSphereR0)  ")
         println(io, "NoBoundElectrons:       $(settings.NoBoundElectrons)  ")
+    end
+
+
+    """
+    `struct  PlasmaShift.AugerSettings`  ... defines a type for the details and parameters of computing Auger rates with plasma interactions.
+
+        + plasmaModel            ::PlasmaModel                   ... Specified the particular type of plasma model; from {ion-sphere, debye}
+        + lambdaDebye            ::Float64                       ... The lambda parameter of different plasma models.
+        + ionSphereR0            ::Float64                       ... The effective radius of the ion-sphere model.
+        + NoBoundElectrons       ::Int64                         ... Effective number of bound electrons.
+        + printBeforeComputation ::Bool                          ... True, if all energies and lines are printed before their evaluation.
+        + selectLines            ::Bool                          ... True, if lines are selected individually for the computations.
+        + selectedLines          ::Array{Tuple{Int64,Int64},1}   ... List of lines, given by tupels (inital-level, final-level).
+    """
+    struct AugerSettings 
+        plasmaModel              ::PlasmaModel
+        lambdaDebye              ::Float64 
+        ionSphereR0              ::Float64
+        NoBoundElectrons         ::Int64
+        printBeforeComputation   ::Bool 
+        selectLines              ::Bool
+        selectedLines            ::Array{Tuple{Int64,Int64},1}
+    end 
+
+
+    """
+    `JAC.PlasmaShift.AugerSettings()`  ... constructor for a standard instance of PlasmaShift.AugerSettings.
+    """
+    function AugerSettings()
+        AugerSettings(DebyeHueckel, 0.25, 0., 0, true, false, Tuple{Int64,Int64}[])
+    end
+
+
+    """
+    `Base.show(io::IO, settings::PlasmaShift.AugerSettings)`  ... prepares a proper printout of the settings::PlasmaShift.AugerSettings.
+    """
+    function Base.show(io::IO, settings::PlasmaShift.AugerSettings)
+        println(io, "plasmaModel:             $(settings.plasmaModel)  ")
+        println(io, "lambdaDebye:             $(settings.lambdaDebye)  ")
+        println(io, "ionSphereR0:             $(settings.ionSphereR0)  ")
+        println(io, "NoBoundElectrons:        $(settings.NoBoundElectrons)  ")
+        println(io, "printBeforeComputation:  $(settings.printBeforeComputation)  ")
+        println(io, "selectLines:             $(settings.selectLines)  ")
+        println(io, "selectedLines:           $(settings.selectedLines)  ")
+    end
+
+
+    """
+    `struct  PlasmaShift.PhotoSettings`  ... defines a type for the details and parameters of computing photoionization rates with plasma interactions.
+
+        + plasmaModel            ::PlasmaModel                   ... Specified the particular type of plasma model; from {ion-sphere, debye}
+        + lambdaDebye            ::Float64                       ... The lambda parameter of different plasma models.
+        + ionSphereR0            ::Float64                       ... The effective radius of the ion-sphere model.
+        + NoBoundElectrons       ::Int64                         ... Effective number of bound electrons.
+        + multipoles             ::Array{EmMultipole}            ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges                 ::Array{UseGauge}               ... Specifies the gauges to be included into the computations.
+        + photonEnergies         ::Array{Float64,1}              ... List of photon energies.  
+        + printBeforeComputation ::Bool                          ... True, if all energies and lines are printed before their evaluation.
+        + selectLines            ::Bool                          ... True, if lines are selected individually for the computations.
+        + selectedLines          ::Array{Tuple{Int64,Int64},1}   ... List of lines, given by tupels (inital-level, final-level).
+    """
+    struct PhotoSettings 
+        plasmaModel              ::PlasmaModel
+        lambdaDebye              ::Float64 
+        ionSphereR0              ::Float64
+        NoBoundElectrons         ::Int64
+        multipoles               ::Array{EmMultipole}
+        gauges                   ::Array{UseGauge}  
+        photonEnergies           ::Array{Float64,1} 
+        printBeforeComputation   ::Bool 
+        selectLines              ::Bool
+        selectedLines            ::Array{Tuple{Int64,Int64},1}
+    end 
+
+
+    """
+    `JAC.PlasmaShift.PhotoSettings()`  ... constructor for a standard instance of PlasmaShift.PhotoSettings.
+    """
+    function PhotoSettings()
+        PhotoSettings(DebyeHueckel, 0.25, 0., 0, [E1], [JAC.UseCoulomb], Float64[], true, false, Tuple{Int64,Int64}[])
+    end
+
+
+    """
+    `Base.show(io::IO, settings::PlasmaShift.PhotoSettings)`  ... prepares a proper printout of the settings::PlasmaShift.PhotoSettings.
+    """
+    function Base.show(io::IO, settings::PlasmaShift.PhotoSettings)
+        println(io, "plasmaModel:             $(settings.plasmaModel)  ")
+        println(io, "lambdaDebye:             $(settings.lambdaDebye)  ")
+        println(io, "ionSphereR0:             $(settings.ionSphereR0)  ")
+        println(io, "NoBoundElectrons:        $(settings.NoBoundElectrons)  ")
+        println(io, "multipoles:              $(settings.multipoles)  ")
+        println(io, "gauges:                  $(settings.gauges)  ")
+        println(io, "photonEnergies:          $(settings.photonEnergies)  ")
+        println(io, "printBeforeComputation:  $(settings.printBeforeComputation)  ")
+        println(io, "selectLines:             $(settings.selectLines)  ")
+        println(io, "selectedLines:           $(settings.selectedLines)  ")
     end
 
 
@@ -121,7 +222,16 @@ module PlasmaShift
     """
     function  displayResults(stream::IO, multiplet::Multiplet, pMultiplet::Multiplet, settings::PlasmaShift.Settings)
         println(stream, " ")
+        println(stream, " ")
         println(stream, "  Plasma shifts for model $(settings.plasmaModel):")
+        
+        # Write out the relevant plasma parameters
+        if settings.plasmaModel == JAC.PlasmaShift.DebyeHueckel
+            println(stream, "\n     + lambda = $(settings.lambdaDebye)")
+            println(stream,   "     + Plasma screening included perturbatively in CI matrix but not in SCF field.")
+        else  error("Unsupported plasma model = $(plasmaSettings.plasmaModel)")
+        end
+        
         println(stream, " ")
         println(stream, "  ", JAC.TableStrings.hLine(64))
         sa = "  ";   sb = "  "

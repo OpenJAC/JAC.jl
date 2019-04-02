@@ -127,6 +127,63 @@ end
 
 
 """
+ + `("matrix: CI for plasma, J^P symmetry", JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
+                  settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
+    ... to compute the CI matrix for a given J^P symmetry block of basis and by making use of the nuclear model and the grid; 
+        a matrix::Array{Float64,2} is returned.
+"""
+function compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
+                             settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)    
+    !(sa == "matrix: CI for plasma, J^P symmetry")   &&   error("Not supported keystring")
+
+    # Determine the dimension of the CI matrix and the indices of the CSF with J^P symmetry in the basis
+    idx_csf = Int64[]
+    for  idx = 1:length(basis.csfs)
+        if  basis.csfs[idx].J == JP.J   &&   basis.csfs[idx].parity == JP.parity    push!(idx_csf, idx)    end
+    end
+    n = length(idx_csf)
+    
+    if  settings.breitCI  error("No Breit interaction supported for plasma computations; use breitCI=false  in the asfSettings.")   end   
+    if  settings.qedCI    error("No QED estimates supported for plasma computations; use qedCI=false  in the asfSettings.")   end   
+    
+    # Now distinguis the CI matrix for different plasma models
+    if  plasmaSettings.plasmaModel == JAC.PlasmaShift.DebyeHueckel
+        if printout    print("Compute DebyeHueckel-CI matrix of dimension $n x $n for the symmetry $(string(JP.J))^$(string(JP.parity)) ...")    end
+
+        # Generate an effective nuclear charge Z(r) for a screened Debye-Hueckel potential on the given grid
+        potential = JAC.Nuclear.nuclearPotentialDH(nuclearModel, grid, plasmaSettings.lambdaDebye)
+
+        matrix = zeros(Float64, n, n)
+        for  r = 1:n
+            for  s = 1:n
+                wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[idx_csf[r]], basis.csfs[idx_csf[s]])
+                me = 0.
+                for  coeff in wa[1]
+                    jj = subshell_2j(basis.orbitals[coeff.a].subshell)
+                    me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
+                end
+
+                for  coeff in wa[2]
+                    if  settings.coulombCI    
+                        me = me + coeff.V * JAC.InteractionStrength.XL_Coulomb_DH(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                            basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, 
+                                                                                            plasmaSettings.lambdaDebye)   end
+                end
+                matrix[r,s] = me
+            end
+        end 
+    else
+        error("Unsupported plasma model = $(plasmaSettings.plasmaModel)")
+    end
+    
+    if printout    println("   ... done.")    end
+
+    return( matrix )
+end
+
+
+
+"""
   + `("radial orbital: NR, Bunge (1993)", subshell::Subshell, Z::Int64)`  ... to compute a radial orbital::Orbital for the given subshell
                            and nuclear charge by using the Roothan-Hartree-Fock data by Bunge et al., Atomic Data and Nuclear Data Tables 
                            53 (1993) 113, as obtained for a non-relativistic RHF computation of the neutral atom. These functions are used 

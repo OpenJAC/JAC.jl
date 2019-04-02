@@ -26,7 +26,7 @@ module PhotoExcitation
         + mimimumPhotonEnergy     ::Float64                      ... minimum transition energy for which (photon) transitions are included into the
                                                                      computation.
         + maximumPhotonEnergy     ::Float64                      ... maximum transition energy for which (photon) transitions are included.
-        + stokes                  ::ExpStokes                    ... maximum transition energy for which (photon) transitions are included.
+        + stokes                  ::ExpStokes                    ... Stokes parameters of the incident radiation.
     """
     struct Settings 
         multipoles                ::Array{EmMultipole,1}

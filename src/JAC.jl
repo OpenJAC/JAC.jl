@@ -157,7 +157,7 @@ include("jac-merge.jl")
 include("jac-modify.jl")
 include("jac-perform.jl")
 include("jac-provide.jl")
-# include("jac-plot.jl")
+include("jac-plot.jl")
 include("jac-read.jl")
 include("jac-recast.jl")
 include("jac-sort.jl")
@@ -170,6 +170,12 @@ include("jac-document.jl")
 
 include("jac-test.jl")
 include("jac-tools.jl")
+
+function __init__()
+    # The following variables need to be initialized at runtime to enable precompilation
+    global JAC_SUMMARY_IOSTREAM = stdout
+    global JAC_TEST_IOSTREAM    = stdout
+end
 
 println("\nWelcome to JAC:  A fresh computational approach to atomic structures, processes, casacdes and time evolutions [(C) Copyright by Stephan Fritzsche, Jena (2019)].")
 

@@ -5,7 +5,7 @@ JAC.define("print summary: open", "zzz-Auger.sum")
 JAC.define("method: continuum, Galerkin")
 JAC.define("method: normalization, pure sine")   ## JAC.define("method: normalization, pure Coulomb")    JAC.define("method: normalization, pure sine")
 
-wa = Atomic.Computation("xx",  Nuclear.Model(10.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-6, h = 5.0e-2, hp = 1.0e-2, NoPoints = 600), 
+wa = Atomic.Computation("xx",  Nuclear.Model(10.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600), 
                         initialConfigs=[Configuration("1s 2s^2 2p^6")],
                         finalConfigs  =[Configuration("1s^2 2s^2 2p^4"), Configuration("1s^2 2s 2p^5"), Configuration("1s^2 2p^6")], process = JAC.AugerX,
                         processSettings = Auger.Settings(true, true, true, 

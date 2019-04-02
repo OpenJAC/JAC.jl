@@ -125,13 +125,13 @@ function testProcesses(; short::Bool=true, details::Bool=false)
     success = JAC.testModule_PhotoExcitation(short=short)                &&  success     
     success = JAC.testModule_PhotoIonization(short=short)                &&  success     
     success = JAC.testModule_PhotoRecombination(short=short)             &&  success     
-    success = JAC.testModule_Auger(short=short)                          &&  success  
-    success = JAC.testModule_Dielectronic(short=short)                   &&  success  
-    success = JAC.testModule_PhotoExcitationFluores(short=short)         &&  success     
-    success = JAC.testModule_PhotoExcitationAutoion(short=short)         &&  success     
-    success = JAC.testModule_RayleighCompton(short=short)                &&  success     
-    success = JAC.testModule_MultiPhotonDeExcitation(short=short)        &&  success     
-    success = JAC.testModule_CoulombExcitation(short=short)              &&  success     
+    ## success = JAC.testModule_Auger(short=short)                          &&  success  
+    ## success = JAC.testModule_Dielectronic(short=short)                   &&  success  
+    ## success = JAC.testModule_PhotoExcitationFluores(short=short)         &&  success     
+    ## success = JAC.testModule_PhotoExcitationAutoion(short=short)         &&  success     
+    ## success = JAC.testModule_RayleighCompton(short=short)                &&  success     
+    ## success = JAC.testModule_MultiPhotonDeExcitation(short=short)        &&  success     
+    ## success = JAC.testModule_CoulombExcitation(short=short)              &&  success     
     
     testPrint("testProcesses()::", success)
     printTest, iostream = JAC.give("test flag/stream");   println(iostream, " ")
@@ -261,7 +261,8 @@ function testModule_AlphaVariation(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-AlphaVariation-approved.sum", "test-AlphaVariation-new.sum", "Alpha variation parameters:", 1) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-AlphaVariation-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-AlphaVariation-new.sum"), "Alpha variation parameters:", 1) 
     testPrint("testModule_AlphaVariation()::", success)
     return(success)  
 end
@@ -275,7 +276,7 @@ function testModule_Auger(; short::Bool=true)
     JAC.define("print summary: open", "test-Auger-new.sum")
     printstyled("\n\nTest the module  Auger  ... \n", color=:cyan)
     ### Make the tests
-    wa = Atomic.Computation("xx",  Model(36.); 
+    wa = Atomic.Computation("xx",  Model(36.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 600),  
                             initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
                             finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = JAC.AugerX,
                             processSettings = Auger.Settings(true, true, true, 
@@ -288,7 +289,8 @@ function testModule_Auger(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-Auger-approved.sum", "test-Auger-new.sum", "Auger rates and intrinsic angular parameters:", 25) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Auger-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-Auger-new.sum"), "Auger rates and intrinsic angular parameters:", 25) 
     testPrint("testModule_Auger()::", success)
     return(success)  
 end
@@ -308,7 +310,8 @@ function testModule_CoulombExcitation(; short::Bool=true)
     printTest, iostream = JAC.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-CoulombExcitation-new.sum")
     success = true
-    ## success = testCompareFiles("../test/approved/test-CoulombExcitation-approved.sum", "test-CoulombExcitation-new.sum", "xxx", 100) 
+    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Auger-approved.sum"), 
+    ##                             joinpath(@__DIR__, "..", "test", "test-Auger-new.sum"), "Auger rates and intrinsic angular parameters:", 25) 
     testPrint("testModule_CoulombExcitation()::", success)
     return(success)  
 end
@@ -329,7 +332,8 @@ function testModule_DecayYield(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-DecayYield-approved.sum", "test-DecayYield-new.sum", "Fluorescence and Auger decay yields:", 6) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-DecayYield-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-DecayYield-new.sum"), "Fluorescence and Auger decay yields:", 6) 
     testPrint("testModule_DecayYield()::", success)
     return(success)  
 end
@@ -354,7 +358,8 @@ function testModule_Dielectronic(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-Dielectronic-approved.sum", "test-Dielectronic-new.sum", 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Dielectronic-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-Dielectronic-new.sum"), 
                                "Dielectronic recombination cross sections & angular and", 10) 
     testPrint("testModule_Dielectronic()::", success)
     return(success)  
@@ -378,7 +383,8 @@ function testModule_Einstein(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-Einstein-approved.sum", "test-Einstein-new.sum", "Einstein coefficients, t", 100) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Einstein-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-Einstein-new.sum"), "Einstein coefficients, t", 100) 
     testPrint("testModule_Einstein()::", success)
     return(success)  
 end
@@ -399,7 +405,8 @@ function testModule_FormFactor(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-FormFactor-approved.sum", "test-FormFactor-new.sum", "Form & scattering factors:", 6) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-FormFactor-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-FormFactor-new.sum"), "Form & scattering factors:", 6) 
     testPrint("testModule_FormFactor()::", success)
     return(success)  
 end
@@ -420,7 +427,8 @@ function testModule_GreenFunction(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-GreenFunction-approved.sum", "test-GreenFunction-new.sum", "Green's function summary:", 6) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-GreenFunction-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-GreenFunction-new.sum"), "Green's function summary:", 6) 
     testPrint("testModule_GreenFunction()::", success)
     return(success)  
 end
@@ -441,7 +449,8 @@ function testModule_IsotopeShift(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-IsotopeShift-approved.sum", "test-IsotopeShift-new.sum", "IsotopeShift parameters and amplitudes:", 15) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-IsotopeShift-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-IsotopeShift-new.sum"), "IsotopeShift parameters and amplitudes:", 15) 
     testPrint("testModule_IsotopeShift()::", success)
     return(success)  
 end
@@ -463,7 +472,8 @@ function testModule_Hfs(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-Hfs-b-approved.sum", "test-Hfs-b-new.sum", "HFS parameters and amplitudes:", 25) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Hfs-b-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-Hfs-b-new.sum"), "HFS parameters and amplitudes:", 25) 
     
     
     JAC.define("print summary: open", "test-Hfs-c-new.sum")
@@ -478,7 +488,8 @@ function testModule_Hfs(; short::Bool=true)
     printTest, iostream = JAC.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-Hfs-c-new.sum")
     success = true
-    ## success = testCompareFiles("../test/approved/test-Hfs-c-approved.sum", "test-Hfs-c-new.sum", "xxxx", 3)   &&  success
+    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Hfs-c-approved.sum"), 
+    ##                             joinpath(@__DIR__, "..", "test", "test-Hfs-c-new.sum"), "xxxx", 3)   &&  success
     testPrint("testModule_Hfs()::", success)
     return(success)  
 end
@@ -500,7 +511,8 @@ function testModule_LandeZeeman(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-LandeZeeman-approved.sum", "test-LandeZeeman-new.sum", "Lande g_J factors and Zeeman amplitudes:", 30) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-LandeZeeman-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-LandeZeeman-new.sum"), "Lande g_J factors and Zeeman amplitudes:", 30) 
     testPrint("testModule_LandeZeeman()::", success)
     return(success)  
 end
@@ -520,7 +532,8 @@ function testModule_MultiPhotonDeExcitation(; short::Bool=true)
     printTest, iostream = JAC.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-MultiPhotonDeExcitation-new.sum")
     success = true
-    ## success = testCompareFiles("../test/approved/test-MultiPhotonDeExcitation-approved.sum", "test-MultiPhotonDeExcitation-new.sum", "xxx", 100) 
+    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-MultiPhotonDeExcitation-approved.sum"), 
+    ##                             joinpath(@__DIR__, "..", "test", "test-MultiPhotonDeExcitation-new.sum"), "xxx", 100) 
     testPrint("testModule_MultiPhotonDeExcitation()::", success)
     return(success)  
 end
@@ -553,7 +566,8 @@ function testModule_MultipoleMoment(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-MultipoleMoment-approved.sum", "test-MultipoleMoment-new.sum", "Dipole amplitude", 6) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-MultipoleMoment-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-MultipoleMoment-new.sum"), "Dipole amplitude", 6) 
     testPrint("testModule_MultipoleMoment()::", success)
     return(success)  
 end
@@ -574,7 +588,8 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-MultipolePolarizibility-approved.sum", "test-MultipolePolarizibility-new.sum", 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-MultipolePolarizibility-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-MultipolePolarizibility-new.sum"), 
                                "Multipole polarizibilities and amplitudes:", 5) 
     testPrint("testModule_MultipolePolarizibility()::", success)
     return(success)  
@@ -610,7 +625,8 @@ function testModule_ParityNonConservation(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-ParityNonConservation-approved.sum", "test-ParityNonConservation-new.sum", "weak-charge amplitude", 12) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-ParityNonConservation-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-ParityNonConservation-new.sum"), "weak-charge amplitude", 12) 
     testPrint("testModule_ParityNonConservation()::", success)
     return(success)  
 end
@@ -631,7 +647,8 @@ function testModule_PlasmaShift(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-PlasmaShift-approved.sum", "test-PlasmaShift-new.sum", "Plasma shift parameters:", 5) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PlasmaShift-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-PlasmaShift-new.sum"), "Plasma screening", 3) 
     testPrint("testModule_PlasmaShift()::", success)
     return(success)  
 end
@@ -655,7 +672,8 @@ function testModule_PhotoExcitation(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-PhotoExcitation-approved.sum", "test-PhotoExcitation-new.sum", 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoExcitation-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-PhotoExcitation-new.sum"),  
                                "Photo-excitation cross sections for (completely)", 200) 
     testPrint("testModule_PhotoExcitation()::", success)
     return(success)  
@@ -676,7 +694,8 @@ function testModule_PhotoExcitationAutoion(; short::Bool=true)
     printTest, iostream = JAC.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-PhotoExcitationAutoion-new.sum")
     success = true
-    ## success = testCompareFiles("../test/approved/test-PhotoExcitationAutoion-approved.sum", "test-PhotoExcitationAutoion-new.sum", "xxx", 100) 
+    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoExcitationAutoion-approved.sum"), 
+    ##                             joinpath(@__DIR__, "..", "test", "test-PhotoExcitationAutoion-new.sum"), "xxx", 100) 
     testPrint("testModule_PhotoExcitationAutoion()::", success)
     return(success)  
 end
@@ -696,7 +715,8 @@ function testModule_PhotoExcitationFluores(; short::Bool=true)
     printTest, iostream = JAC.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-PhotoExcitationFluores-new.sum")
     success = true
-    ## success = testCompareFiles("../test/approved/test-PhotoExcitationFluores-approved.sum", "test-PhotoExcitationFluores-new.sum", "xxx", 100) 
+    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoExcitationFluores-approved.sum"), 
+    ##                             joinpath(@__DIR__, "..", "test", "test-PhotoExcitationFluores-new.sum"),  "xxx", 100) 
     testPrint("testModule_PhotoExcitationFluores()::", success)
     return(success)  
 end
@@ -710,17 +730,18 @@ function testModule_PhotoIonization(; short::Bool=true)
     JAC.define("print summary: open", "test-PhotoIonization-new.sum")
     printstyled("\n\nTest the module  PhotoIonization  ... \n", color=:cyan)
     ### Make the tests
-    wa = Atomic.Computation("xx",  Nuclear.Model(36.);
+    wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800),
                             initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                             finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
                             process = JAC.Photo, 
                             processSettings=PhotoIonization.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [3000., 4000.], false, true, true, true, 
-                                            false, Tuple{Int64,Int64}[]) )
+                                            false, Tuple{Int64,Int64}[], ExpStokes(1., 0., 0.)) )
     wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-PhotoIonization-approved.sum", "test-PhotoIonization-new.sum", "Photoionization cross sections:", 10) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoIonization-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-PhotoIonization-new.sum"), "Total photoionization c", 8) 
     testPrint("testModule_PhotoIonization()::", success)
     return(success)  
 end
@@ -734,17 +755,18 @@ function testModule_PhotoRecombination(; short::Bool=true)
     JAC.define("print summary: open", "test-PhotoRecombination-new.sum")
     printstyled("\n\nTest the module  PhotoRecombination  ... \n", color=:cyan)
     ### Make the tests
-    wa = Atomic.Computation("xx",  Nuclear.Model(36.);
+    wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-6, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600),
                             initialConfigs=[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ],
                             finalConfigs  =[Configuration("1s^2 2s^2 2p^6")], 
                             process = JAC.Rec, 
                             processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10., 20.], [0.], 
-                                            false, true, true, true, false, Tuple{Int64,Int64}[]) )
+                                            false, true, true, true, true, Tuple{Int64,Int64}[(1,1)]) )
     wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-PhotoRecombination-approved.sum", "test-PhotoRecombination-new.sum", "Photorecombination cross sections for ", 12) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoRecombination-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-PhotoRecombination-new.sum"), "Photorecombination cross sections for ", 12) 
     testPrint("testModule_PhotoRecombination()::", success)
     return(success)  
 end
@@ -772,7 +794,8 @@ function testModule_Radiative(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles("../test/approved/test-Radiative-approved.sum", "test-Radiative-new.sum", "Einstein coefficients, t", 100) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Radiative-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-Radiative-new.sum"), "Einstein coefficients, t", 100) 
     testPrint("testModule_Radiative()::", success)
     return(success)  
 end
@@ -792,7 +815,8 @@ function testModule_RayleighCompton(; short::Bool=true)
     printTest, iostream = JAC.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-RayleighCompton-new.sum")
     success = true
-    ## success = testCompareFiles("../test/approved/test-RayleighCompton-approved.sum", "test-RayleighCompton-new.sum", "xxx", 100) 
+    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-RayleighCompton-approved.sum"), 
+    ##                             joinpath(@__DIR__, "..", "test", "test-RayleighCompton-new.sum"), "xxx", 100) 
     testPrint("testModule_RayleighCompton()::", success)
     return(success)  
 end

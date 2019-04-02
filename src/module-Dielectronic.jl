@@ -15,11 +15,6 @@ module Dielectronic
 
         + multipoles              ::Array{EmMultipoles}   ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}       ... Specifies the gauges to be included into the computations.
-        + includeExchange         ::Bool                  ... True, if the exchange with the bound-state density is to be included for the 
-                                                              continuum orbitals, and false otherwise.
-        + useApproximateContinuum ::Bool                  ... True, if an approximate STO is used for the continuum orbitals.
-        + includeBreit            ::Bool                  ... True, if the (zero-frequency) Breit interaction is to be included into the
-                                                              evaluation of Auger and capture rates.
         + printBeforeComputation  ::Bool                  ... True, if all energies and pathways are printed before their evaluation.
         + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
@@ -35,9 +30,6 @@ module Dielectronic
     struct Settings 
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge}
-        includeExchange           ::Bool
-        useApproximateContinuum   ::Bool
-        includeBreit              ::Bool
         printBeforeComputation    ::Bool
         selectPathways            ::Bool
         selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
@@ -53,7 +45,7 @@ module Dielectronic
     `JAC.Dielectronic.Settings()`  ... constructor for the default values of dielectronic recombination pathway computations.
     """
     function Settings()
-        Settings([E1], UseGauge[], false, true, false, false, false, Tuple{Int64,Int64,Int64}[], 0., 0., 0., "Coulomb")
+        Settings([E1], UseGauge[], false, false, Tuple{Int64,Int64,Int64}[], 0., 0., 0., "Coulomb")
     end
 
 
@@ -63,9 +55,6 @@ module Dielectronic
     function Base.show(io::IO, settings::Dielectronic.Settings) 
         println(io, "multipoles:                 $(settings.multipoles)  ")
         println(io, "use-gauges:                 $(settings.gauges)  ")
-        println(io, "includeExchange:            $(settings.includeExchange)  ")
-        println(io, "useAppriximateContinuum:    $(settings.useAppriximateContinuum)  ")
-        println(io, "includeBreit:               $(settings.includeBreit)  ")
         println(io, "printBeforeComputation:     $(settings.printBeforeComputation)  ")
         println(io, "selectPathways:             $(settings.selectPathways)  ")
         println(io, "selectedPathways:           $(settings.selectedPathways)  ")
@@ -76,6 +65,7 @@ module Dielectronic
     end
 
 
+    #===
    """
     `struct  Dielectronic.Channel`  ... defines a type for a single dielectronic recombination channel that specifies all quantum numbers, 
                                         phases and amplitudes.
@@ -86,7 +76,7 @@ module Dielectronic
     struct  Channel
         augerChannel         ::JAC.Auger.Channel
         radiativeChannel     ::JAC.Radiative.Channel
-    end 
+    end   ==#
 
 
     """
@@ -101,12 +91,11 @@ module Dielectronic
         + captureRate       ::Float64                 ... rate for the electron capture (Auger rate)
         + photonRate        ::EmProperty              ... rate for the photon emission
         + angularBeta       ::EmProperty              ... beta parameter of the photon emission
-        + polarizationP0    ::EmProperty              ... P0 polarization parameter of the photon emission
-        + polarizationP2    ::EmProperty              ... P2 polarization parameter of the photon emission
-        + crossSection      ::EmProperty              ... Total cross section of this pathway.
+        + resonanceStrength ::EmProperty              ... partial resonance strength of this pathway
         + hasChannels       ::Bool                    ... Determines whether the individual channels are defined in terms of their possible
                                                           Auger and radiative channels, or not.
-        + channels          ::Array{Dielectronic.Channel,1}  ... List of |i> -->  |n> -->  |f> dielectronic recombination channels.
+        + captureChannels   ::Array{JAC.Auger.Channel,1}      ... List of |i> -->  |n>   dielectronic (Auger) capture channels.
+        + photonChannels    ::Array{JAC.Radiative.Channel,1}  ... List of |n> -->  |f>   radiative stabilization channels.
     """
     struct  Pathway
         initialLevel        ::Level
@@ -117,11 +106,10 @@ module Dielectronic
         captureRate         ::Float64
         photonRate          ::EmProperty
         angularBeta         ::EmProperty
-        polarizationP0      ::EmProperty
-        polarizationP2      ::EmProperty
-        crossSection        ::EmProperty
+        resonanceStrength   ::EmProperty
         hasChannels         ::Bool
-        channels            ::Array{Dielectronic.Channel,1}
+        captureChannels     ::Array{JAC.Auger.Channel,1} 
+        photonChannels      ::Array{JAC.Radiative.Channel,1} 
     end 
 
 
@@ -131,7 +119,7 @@ module Dielectronic
     """
     function Pathway()
         em = EmProperty(0., 0.)
-        Pathway(initialLevel, intermediateLevel, finalLevel, 0., 0., 0., em, em, em, em, em, false, Dielectronic.Channel[])
+        Pathway(initialLevel, intermediateLevel, finalLevel, 0., 0., 0., em, em, em, false, Auger.Channel[], Radiative.Channel[])
     end
 
 
@@ -147,11 +135,10 @@ module Dielectronic
         println(io, "captureRate:                $(pathway.captureRate)  ")
         println(io, "photonRate:                 $(pathway.photonRate)  ")
         println(io, "angularBeta:                $(pathway.angularBeta)  ")
-        println(io, "polarizationP0:             $(pathway.polarizationP0)  ")
-        println(io, "polarizationP2:             $(pathway.polarizationP2)  ")
-        println(io, "crossSection:               $(pathway.crossSection)  ")
+        println(io, "resonanceStrength:          $(pathway.resonanceStrength)  ")
         println(io, "hasChannels:                $(pathway.hasChannels)  ")
-        println(io, "channels:                   $(pathway.channels)  ")
+        println(io, "captureChannels:            $(pathway.captureChannels)  ")
+        println(io, "photonChannels:             $(pathway.photonChannels)  ")
     end
 
 
@@ -203,36 +190,38 @@ module Dielectronic
 
 
     """
-    `JAC.Dielectronic.computeAmplitudesProperties(pathway::Dielectronic.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Dielectronic.Settings)` ... to 
-         compute all amplitudes and properties of the given line; a line::Dielectronic.Line is returned for which the amplitudes and properties 
-         have now been evaluated.
+    `JAC.Dielectronic.computeAmplitudesProperties(pathway::Dielectronic.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+                                                  nrContinuum::Int64, settings::Dielectronic.Settings)` 
+        ... to compute all amplitudes and properties of the given line; a line::Dielectronic.Pathway is returned for which the amplitudes and 
+            properties have now been evaluated.
     """
-    function  computeAmplitudesProperties(pathway::Dielectronic.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Dielectronic.Settings)
-        newChannels = Dielectronic.Channel[];   contSettings = JAC.Continuum.Settings(false, 200)
-        for channel in pathway.channels
-            ##x println("Dielectronic.computeAmplitudesProperties: channel = $channel")
-            newnLevel = JAC.generateLevelWithSymmetryReducedBasis(pathway.intermediateLevel)
-            newnLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.augerChannel.kappa), newnLevel)
-            newiLevel = JAC.generateLevelWithSymmetryReducedBasis(pathway.initialLevel)
-            cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(pathway.electronEnergy, Subshell(101, channel.augerChannel.kappa), newiLevel, nm, grid, contSettings)
-            newcLevel = JAC.generateLevelWithExtraElectron(cOrbital, channel.augerChannel.symmetry, newiLevel)
-            aChannel  = Auger.Channel( channel.augerChannel.kappa, channel.augerChannel.symmetry, phase, Complex(0.))
-            amplitude = JAC.Auger.amplitude(settings.augerOperator, channel.augerChannel, newnLevel, newcLevel, grid)
-            ##x println("Dielectronic.computeAmplitudesProperties: Aamplitude = $amplitude")
-            aChannel  = Auger.Channel( channel.augerChannel.kappa, channel.augerChannel.symmetry, phase, amplitude)
-            #
-            amplitude = JAC.Radiative.amplitude("emission", channel.radiativeChannel.multipole, channel.radiativeChannel.gauge,
-                                                pathway.photonEnergy, pathway.finalLevel, pathway.intermediateLevel, grid)
-            ##x println("Dielectronic.computeAmplitudesProperties: Ramplitude = $amplitude")
-            rChannel  = Radiative.Channel( channel.radiativeChannel.multipole, channel.radiativeChannel.gauge, amplitude)
-            push!( newChannels, Dielectronic.Channel(aChannel, rChannel) )
+    function  computeAmplitudesProperties(pathway::Dielectronic.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+                                          settings::Dielectronic.Settings)
+        newcChannels = Auger.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum)
+        for cChannel in pathway.captureChannels
+            newnLevel   = JAC.generateLevelWithSymmetryReducedBasis(pathway.intermediateLevel)
+            newnLevel   = JAC.generateLevelWithExtraSubshell(Subshell(101, cChannel.kappa), newnLevel)
+            newiLevel   = JAC.generateLevelWithSymmetryReducedBasis(pathway.initialLevel)
+            cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(pathway.electronEnergy, Subshell(101, cChannel.kappa), newiLevel, nm, grid, contSettings)
+            newcLevel   = JAC.generateLevelWithExtraElectron(cOrbital, cChannel.symmetry, newiLevel)
+            newcChannel = Auger.Channel( cChannel.kappa, cChannel.symmetry, phase, Complex(0.))
+            amplitude   = JAC.Auger.amplitude(settings.augerOperator, cChannel, newnLevel, newcLevel, grid)
+            newcChannel = Auger.Channel( cChannel.kappa, cChannel.symmetry, phase, amplitude)
+            push!( newcChannels, newcChannel)
+        end
+        #
+        newpChannels = Radiative.Channel[]
+        for pChannel in pathway.photonChannels
+            amplitude   = JAC.Radiative.amplitude("emission", pChannel.multipole, pChannel.gauge, pathway.photonEnergy, 
+                                                  pathway.finalLevel, pathway.intermediateLevel, grid)
+            newpChannel = Radiative.Channel( pChannel.multipole, pChannel.gauge, amplitude)
+            push!( newpChannels, newpChannel)
         end
         captureRate = 1.0
         photonRate     = EmProperty(-1., -1.);   angularBeta    = EmProperty(-1., -1.)
-        polarizationP0 = EmProperty(-1., -1.);   polarizationP2 = EmProperty(-1., -1.);   crossSection = EmProperty(-1., -1.)
-        pathway = Dielectronic.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, 
-                                        pathway.electronEnergy, pathway.photonEnergy, captureRate, photonRate, angularBeta,
-                                        polarizationP0, polarizationP2, crossSection, true, newChannels)
+        polarizationP0 = EmProperty(-1., -1.);   polarizationP2 = EmProperty(-1., -1.);   resonanceStrength = EmProperty(-1., -1.)
+        pathway = Dielectronic.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, pathway.electronEnergy, 
+                                        pathway.photonEnergy, captureRate, photonRate, angularBeta, resonanceStrength, true, newcChannels, newpChannels)
         return( pathway )
     end
 
@@ -252,61 +241,100 @@ module Dielectronic
         pathways = JAC.Dielectronic.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
         # Display all selected pathways before the computations start
         if  settings.printBeforeComputation    JAC.Dielectronic.displayPathways(pathways)    end
+        # Determine maximum (electron) energy and check for consistency of the grid
+        maxEnergy = 0.;   for  pathway in pathways   maxEnergy = max(maxEnergy, pathway.electronEnergy)   end
+        nrContinuum = JAC.Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newPathways = Dielectronic.Pathway[]
-        ##x println("computePathways: NO-pathwayS = $(length(pathways)) ")
         for  pathway in pathways
-            ##x println("computePathways: pathway = $pathway ")
-            newPathway = JAC.Dielectronic.computeAmplitudesProperties(pathway, nm, grid, settings) 
+            newPathway = JAC.Dielectronic.computeAmplitudesProperties(pathway, nm, grid, nrContinuum, settings) 
             push!( newPathways, newPathway)
         end
+        # 
+        # Calculate all corresponding resonance
+        resonances = JAC.Dielectronic.computeResonances(newPathways, settings)
         # Print all results to screen
-        JAC.Dielectronic.displayResults(stdout, pathways, settings)
+        JAC.Dielectronic.displayResults(stdout, newPathways, settings)
+        JAC.Dielectronic.displayResults(stdout, resonances,  settings)
         printSummary, iostream = JAC.give("summary flag/stream")
-        if  printSummary   JAC.Dielectronic.displayResults(iostream, pathways, settings)     end
+        if  printSummary   JAC.Dielectronic.displayResults(iostream, newPathways, settings)
+                           JAC.Dielectronic.displayResults(iostream, resonances,  settings)    end
         #
-        if    output    return( pathways )
+        if    output    return( newPathways )
         else            return( nothing )
         end
     end
 
 
     """
-    `JAC.Dielectronic.determineChannels(finalLevel::Level, intermediateLevel::Level, initialLevel::Level, settings::Dielectronic.Settings)` 
-         ... to determine a list of Dielectronic.Channel for a transitions from the initial to an intermediate and to a final level, and by 
-         taking into account the particular settings of for this computation;  an Array{Dielectronic.Channel,1} is returned.
+    `JAC.Dielectronic.computeResonances(pathways::Array{Dielectronic.Pathway,1}, settings::Dielectronic.Settings)`  
+        ... to compute the data for all resonances (resonance lines) as defined by the given pathways and and settings. 
+            A list of resonances::Array{Dielectronic.Resonance,1} is returned.
     """
-    function determineChannels(finalLevel::Level, intermediateLevel::Level, initialLevel::Level, settings::Dielectronic.Settings)
-        channels = Dielectronic.Channel[];   
-        symi = LevelSymmetry(initialLevel.J, initialLevel.parity);          symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
-        symn = LevelSymmetry(intermediateLevel.J, intermediateLevel.parity)
-        #
-        # First determine the electron capture channels
-        aChannels = Auger.Channel[];   
+    function  computeResonances(pathways::Array{Dielectronic.Pathway,1}, settings::Dielectronic.Settings)
+        # Determine all pre-defined resonances in pathways
+        resonances = Dielectronic.Resonance[];    idxTuples = Tuple{Int64,Int64}[]
+        for  pathway in pathways    idxTuples = union(idxTuples, [(pathway.initialLevel.index, pathway.intermediateLevel.index)] )    end
+        ##x println("idxTuples = $idxTuples")
+        for  idxTuple in idxTuples
+            iLevel = Level();    nLevel = Level();    resonanceEnergy = 0.;    resonanceStrength = EmProperty(0., 0.)
+            captureRate = 0.;    augerRate = 0.;    photonRate =  EmProperty(0., 0.)
+            for  pathway in pathways    
+                ##x println("idxTuple = $idxTuple")
+                if  idxTuple == (pathway.initialLevel.index, pathway.intermediateLevel.index)
+                    iLevel            = pathway.initialLevel
+                    nLevel            = pathway.intermediateLevel
+                    resonanceEnergy   = pathway.intermediateLevel.energy - pathway.initialLevel.energy
+                    resonanceStrength = resonanceStrength ## + pathway.resonanceStrength 
+                    captureRate       = pathway.captureRate 
+                    augerRate         = augerRate  ## + pathway.captureRate 
+                    photonRate        = photonRate ## + pathway.photonRate
+                end
+            end
+            push!( resonances, Dielectronic.Resonance( iLevel, nLevel, resonanceEnergy, resonanceStrength, captureRate, augerRate, photonRate) )
+        end
+        
+        return( resonances )
+    end
+
+
+    """
+    `JAC.Dielectronic.determineCaptureChannels(intermediateLevel::Level, initialLevel::Level, settings::Dielectronic.Settings)` 
+        ... to determine a list of Auger.Channel for a (Auger) capture transitions from the initial to an intermediate level, and by 
+            taking into account the particular settings of for this computation;  an Array{Auger.Channel,1} is returned.
+    """
+    function determineCaptureChannels(intermediateLevel::Level, initialLevel::Level, settings::Dielectronic.Settings)
+        channels = Auger.Channel[];   
+        symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symn = LevelSymmetry(intermediateLevel.J, intermediateLevel.parity)
         kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symi, symn)
         for  kappa in kappaList
-            push!(aChannels, Auger.Channel(kappa, symn, 0., Complex(0.)) )
+            push!( channels, Auger.Channel(kappa, symn, 0., Complex(0.)) )
         end
-        # Next, determine the radiative channels
-        rChannels = Radiative.Channel[];   
+
+        return( channels )  
+    end
+
+
+    """
+    `JAC.Dielectronic.determinePhotonChannels(finalLevel::Level, intermediateLevel::Level, settings::Dielectronic.Settings)` 
+        ... to determine a list of Radiative.Channel for the photon transitions from the intermediate and to a final level, and by 
+            taking into account the particular settings of for this computation;  an Array{Radiative.Channel,1} is returned.
+    """
+    function determinePhotonChannels(finalLevel::Level, intermediateLevel::Level, settings::Dielectronic.Settings)
+        channels = Radiative.Channel[];   
+        symn = LevelSymmetry(intermediateLevel.J, intermediateLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
         for  mp in settings.multipoles
             if   JAC.AngularMomentum.isAllowedMultipole(symn, mp, symf)
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(rChannels, Radiative.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(rChannels, Radiative.Channel(mp, JAC.Babushkin, 0.) )  
-                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(rChannels, Radiative.Channel(mp, JAC.Magnetic,  0.) );
+                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(channels, Radiative.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(channels, Radiative.Channel(mp, JAC.Babushkin, 0.) )  
+                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, Radiative.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 
                 end
             end
-        end
-
-        # Now combine all these channels
-        channels  = Dielectronic.Channel[]; 
-        for    a in aChannels  
-            for    r in rChannels    push!(channels,  Dielectronic.Channel(a, r) )    end
         end
 
         return( channels )  
@@ -336,12 +364,11 @@ module Dielectronic
                     pEnergy = intermediateMultiplet.levels[n].energy - finalMultiplet.levels[f].energy
                     if  pEnergy < 0.   ||   eEnergy < 0.    continue    end
 
-                    channels = JAC.Dielectronic.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], 
-                                                                  initialMultiplet.levels[i], settings) 
-                    push!( pathways, Dielectronic.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[i], 
-                                                          finalMultiplet.levels[f], eEnergy, pEnergy, 0., EmProperty(0., 0.), 
-                                                          EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), 
-                                                          true, channels) )
+                    cChannels = JAC.Dielectronic.determineCaptureChannels(intermediateMultiplet.levels[n], initialMultiplet.levels[i], settings) 
+                    pChannels = JAC.Dielectronic.determinePhotonChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], settings) 
+                    push!( pathways, Dielectronic.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[n], finalMultiplet.levels[f], 
+                                                          eEnergy, pEnergy, 0., EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), 
+                                                          true, cChannels, pChannels) )
                 end
             end
         end
@@ -377,9 +404,10 @@ module Dielectronic
             sa = sa * @sprintf("%.6e", JAC.convert("energy: from atomic", pathway.electronEnergy)) * "   "
             sa = sa * @sprintf("%.6e", JAC.convert("energy: from atomic", pathway.photonEnergy))   * "    "
             kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
-            for  i in 1:length(pathway.channels)
-                rChannel = pathway.channels[i].radiativeChannel;    aChannel = pathway.channels[i].augerChannel;  
-                push!( kappaMultipoleSymmetryList, (aChannel.kappa, rChannel.multipole, rChannel.gauge, aChannel.symmetry) )
+            for  cChannel in pathway.captureChannels
+                for  pChannel in pathway.photonChannels
+                    push!( kappaMultipoleSymmetryList, (cChannel.kappa, pChannel.multipole, pChannel.gauge, cChannel.symmetry) )
+                end
             end
             wa = JAC.TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
             if  length(wa) > 0    sb = sa * wa[1];    println( sb )    end  
@@ -394,28 +422,24 @@ module Dielectronic
 
 
     """
-    `JAC.Dielectronic.displayResults(stream::IO, pathways::Array{Dielectronicn.Line,1}, settings::Dielectronic.Settings)`  
+    `JAC.Dielectronic.displayResults(stream::IO, pathways::Array{Dielectronic.Pathway,1}, settings::Dielectronic.Settings)`  
          ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing 
          is returned otherwise.
     """
     function  displayResults(stream::IO, pathways::Array{Dielectronic.Pathway,1}, settings::Dielectronic.Settings)
         println(stream, " ")
-        println(stream, "  Dielectronic recombination cross sections & angular and polarization parameters:")
+        println(stream, "  Partial (Auger) capture and radiative decay rates:")
         println(stream, " ")
-        println(stream, "  ", JAC.TableStrings.hLine(184))
+        println(stream, "  ", JAC.TableStrings.hLine(150))
         sa = "    ";   sb = "    "
         sa = sa * JAC.TableStrings.center(23, "Levels"; na=2);            sb = sb * JAC.TableStrings.center(23, "i  --  m  --  f"; na=2);          
-        sa = sa * JAC.TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * JAC.TableStrings.center(23, "i  --  m  --  f"; na=0);
-        sa = sa * JAC.TableStrings.center(38, "Energies  " * JAC.TableStrings.inUnits("energy"); na=0);              
-        sb = sb * JAC.TableStrings.center(38, " electron        m--i        photon"; na=0)
-        sa = sa * JAC.TableStrings.center(10, "Multipoles"; na=4);        sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center(32, "Rates  " * JAC.TableStrings.inUnits("rate"); na=2);              
-        sb = sb * JAC.TableStrings.center(32, "capture       Cou--photon--Bab"; na=5)
-        sa = sa * JAC.TableStrings.center(22, "Cou--Cross s.--Bab"; na=1);       
-        sb = sb * JAC.TableStrings.center(22, JAC.TableStrings.inUnits("cross section")*"      "*
-                                              JAC.TableStrings.inUnits("cross section"); na=0)
-        sa = sa * JAC.TableStrings.center(24, "Cou -- Beta -- Bab"; na=2);       
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(184)) 
+        sa = sa * JAC.TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * JAC.TableStrings.center(23, "i  --  m  --  f"; na=2);
+        sa = sa * JAC.TableStrings.center(38, "Energies  " * JAC.TableStrings.inUnits("energy"); na=4);              
+        sb = sb * JAC.TableStrings.center(38, "electron        m--i       photon  "; na=1)
+        sa = sa * JAC.TableStrings.center(10, "Multipoles"; na=6);        sb = sb * JAC.TableStrings.hBlank(17)
+        sa = sa * JAC.TableStrings.center(36, "Rates  " * JAC.TableStrings.inUnits("rate"); na=2);   
+        sb = sb * JAC.TableStrings.center(36, "(Auger) capture    Cou--photon--Bab";        na=2)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(150)) 
         #   
         for  pathway in pathways
             sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
@@ -425,25 +449,104 @@ module Dielectronic
                                                                               pathway.finalLevel.index); na=3)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
             en_mi = pathway.intermediateLevel.energy - pathway.initialLevel.energy
-            sa = sa * @sprintf("%.4e", JAC.convert("energy: from atomic", pathway.photonEnergy))   * "  "
-            sa = sa * @sprintf("%.4e", JAC.convert("energy: from atomic", en_mi))                  * "  "
-            sa = sa * @sprintf("%.4e", JAC.convert("energy: from atomic", pathway.electronEnergy)) * "  "
+            sa = sa * @sprintf("%.4e", JAC.convert("energy: from atomic", pathway.photonEnergy))   * "   "
+            sa = sa * @sprintf("%.4e", JAC.convert("energy: from atomic", en_mi))                  * "   "
+            sa = sa * @sprintf("%.4e", JAC.convert("energy: from atomic", pathway.electronEnergy)) * "    "
             multipoles = EmMultipole[]
-            for  ch in pathway.channels
-                multipoles = push!( multipoles, ch.radiativeChannel.multipole)
+            for  pch in pathway.photonChannels
+                multipoles = push!( multipoles, pch.multipole)
             end
-            multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "            "
-            sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=1)
-            sa = sa * @sprintf("%.4e", JAC.convert("cross section: from atomic", pathway.captureRate))            * "  "
-            sa = sa * @sprintf("%.4e", JAC.convert("cross section: from atomic", pathway.photonRate.Coulomb))     * "  "
-            sa = sa * @sprintf("%.4e", JAC.convert("cross section: from atomic", pathway.photonRate.Babushkin))   * "  "
-            sa = sa * @sprintf("%.4e", JAC.convert("cross section: from atomic", pathway.crossSection.Coulomb))   * "  "
-            sa = sa * @sprintf("%.4e", JAC.convert("cross section: from atomic", pathway.crossSection.Babushkin)) * "  "
-            sa = sa * @sprintf("%.4e", JAC.convert("cross section: from atomic", pathway.angularBeta.Coulomb))    * "  "
-            sa = sa * @sprintf("%.4e", JAC.convert("cross section: from atomic", pathway.angularBeta.Babushkin))  * "  "
+            multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles)     * "                   "
+            sa = sa * JAC.TableStrings.flushleft(16, mpString[1:16];  na=2)
+            sa = sa * @sprintf("%.4e", JAC.convert("rate: from atomic", pathway.captureRate))            * "     "
+            sa = sa * @sprintf("%.4e", JAC.convert("rate: from atomic", pathway.photonRate.Coulomb))     * "  "
+            sa = sa * @sprintf("%.4e", JAC.convert("rate: from atomic", pathway.photonRate.Babushkin))   * "  "
             println(stream, sa)
         end
-        println(stream, "  ", JAC.TableStrings.hLine(184))
+        println(stream, "  ", JAC.TableStrings.hLine(150))
+        #
+        #
+        #
+        println(stream, " ")
+        println(stream, "  Partial resonance strength:")
+        println(stream, " ")
+        println(stream, "  ", JAC.TableStrings.hLine(150))
+        sa = "    ";   sb = "    "
+        sa = sa * JAC.TableStrings.center(23, "Levels"; na=2);            sb = sb * JAC.TableStrings.center(23, "i  --  m  --  f"; na=2);          
+        sa = sa * JAC.TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * JAC.TableStrings.center(23, "i  --  m  --  f"; na=2);
+        sa = sa * JAC.TableStrings.center(38, "Energies  " * JAC.TableStrings.inUnits("energy"); na=4);              
+        sb = sb * JAC.TableStrings.center(38, "electron        m--i       photon  "; na=1)
+        sa = sa * JAC.TableStrings.center(10, "Multipoles"; na=6);        sb = sb * JAC.TableStrings.hBlank(17)
+        sa = sa * JAC.TableStrings.center(26, "resonance strength  " * JAC.TableStrings.inUnits("rate"); na=2);   
+        sb = sb * JAC.TableStrings.center(26, " Cou -- photon -- Bab";        na=2)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(150)) 
+        #   
+        for  pathway in pathways
+            sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
+                           msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
+                           fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
+            sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
+                                                                              pathway.finalLevel.index); na=3)
+            sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
+            en_mi = pathway.intermediateLevel.energy - pathway.initialLevel.energy
+            sa = sa * @sprintf("%.4e", JAC.convert("energy: from atomic", pathway.photonEnergy))   * "   "
+            sa = sa * @sprintf("%.4e", JAC.convert("energy: from atomic", en_mi))                  * "   "
+            sa = sa * @sprintf("%.4e", JAC.convert("energy: from atomic", pathway.electronEnergy)) * "    "
+            multipoles = EmMultipole[]
+            for  pch in pathway.photonChannels
+                multipoles = push!( multipoles, pch.multipole)
+            end
+            multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles)     * "                   "
+            sa = sa * JAC.TableStrings.flushleft(16, mpString[1:16];  na=1)
+            sa = sa * @sprintf("%.4e", JAC.convert("rate: from atomic", pathway.resonanceStrength.Coulomb))     * "     "
+            sa = sa * @sprintf("%.4e", JAC.convert("rate: from atomic", pathway.resonanceStrength.Babushkin))   * "     "
+            println(stream, sa)
+        end
+        println(stream, "  ", JAC.TableStrings.hLine(150))
+        #
+        return( nothing )
+    end
+
+
+    """
+        + (stream::IO, resonances::Array{Dielectronic.Resonance,1}, settings::Dielectronic.Settings)`  
+         ... to list all results for the resonances. A neat table is printed but nothing is returned otherwise.
+    """
+    function  displayResults(stream::IO, resonances::Array{Dielectronic.Resonance,1}, settings::Dielectronic.Settings)
+        println(stream, " ")
+        println(stream, "  Total Auger rates, radiative rates and resonance strengths:")
+        println(stream, " ")
+        println(stream, "  ", JAC.TableStrings.hLine(150))
+        sa = "  ";   sb = "  "
+        sa = sa * JAC.TableStrings.center(18, "i-level-m"; na=2);                         sb = sb * JAC.TableStrings.hBlank(20)
+        sa = sa * JAC.TableStrings.center(18, "i--J^P--m"; na=2);                         sb = sb * JAC.TableStrings.hBlank(20)
+        sa = sa * JAC.TableStrings.center(14, "Energy"   ; na=4);               
+        sb = sb * JAC.TableStrings.center(14,JAC.TableStrings.inUnits("energy"); na=4)
+        sa = sa * JAC.TableStrings.center(44, "Auger rate    Cou -- rad. rates -- Bab"; na=2);       
+        sb = sb * JAC.TableStrings.center(16, JAC.TableStrings.inUnits("rate"); na=2)
+        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("rate"); na=2)
+        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("rate"); na=2)
+        sa = sa * JAC.TableStrings.center(32, "Cou -- res. strength -- Bab"; na=2);       
+        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("rate"); na=2)
+        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("rate"); na=2)
+        sa = sa * JAC.TableStrings.center(18, "Widths Gamma_m"; na=2);       
+        sb = sb * JAC.TableStrings.center(18, JAC.TableStrings.inUnits("energy"); na=2)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(150)) 
+        #   
+        for  resonance in resonances
+            sa  = "";      isym = LevelSymmetry( resonance.initialLevel.J,      resonance.initialLevel.parity)
+                           msym = LevelSymmetry( resonance.intermediateLevel.J, resonance.intermediateLevel.parity)
+            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(resonance.initialLevel.index, resonance.intermediateLevel.index); na=4)
+            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, msym);  na=4)
+            sa = sa * @sprintf("%.4e", JAC.convert("energy: from atomic", resonance.resonanceEnergy))          * "       "
+            sa = sa * @sprintf("%.4e", JAC.convert("rate: from atomic", resonance.augerRate))                  * "     "
+            sa = sa * @sprintf("%.4e", JAC.convert("rate: from atomic", resonance.photonRate.Coulomb))         * "  "
+            sa = sa * @sprintf("%.4e", JAC.convert("rate: from atomic", resonance.photonRate.Babushkin))       * "        "
+            sa = sa * @sprintf("%.4e", JAC.convert("rate: from atomic", resonance.resonanceStrength.Coulomb))  * "  "
+            sa = sa * @sprintf("%.4e", JAC.convert("rate: from atomic", resonance.resonanceStrength.Coulomb))  * "     "
+            println(stream, sa)
+        end
+        println(stream, "  ", JAC.TableStrings.hLine(150))
         #
         return( nothing )
     end

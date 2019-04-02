@@ -273,7 +273,8 @@ module Atomic
         + zeemanSettings                 ::LandeZeeman.Settings          ... Settings for Lande-Zeeman coefficient calculations.
         + process                        ::JAC.AtomicProcess             ... An (additional) process for which the properties are to be evaluated 
                                                                              for the given initial- and final-state configurations.
-        + processSettings                ::Union{JAC.Radiative.Settings, JAC.Auger.Settings, JAC.PhotoIonization.Settings, 
+        + processSettings                ::Union{JAC.Radiative.Settings, JAC.Auger.Settings, JAC.PlasmaShift.AugerSettings, 
+                                                 JAC.PhotoIonization.Settings, JAC.PlasmaShift.PhotoSettings, 
                                                  JAC.PhotoExcitation.Settings, JAC.PhotoExcitationAutoion.Settings, JAC.PhotoRecombination.Settings, 
                                                  JAC.ImpactExcitation.Settings, JAC.Dielectronic.Settings, RadiativeAuger.Settings,
                                                  JAC.PairAnnihilation1Photon.Settings, JAC.ImpactExcitationAutoion.Settings, 
@@ -305,7 +306,8 @@ module Atomic
         yieldSettings                  ::DecayYield.Settings
         zeemanSettings                 ::LandeZeeman.Settings
         process                        ::JAC.AtomicProcess
-        processSettings                ::Union{JAC.Radiative.Settings, JAC.Auger.Settings, JAC.PhotoIonization.Settings,
+        processSettings                ::Union{JAC.Radiative.Settings, JAC.Auger.Settings, JAC.PlasmaShift.AugerSettings, 
+                                               JAC.PhotoIonization.Settings, JAC.PlasmaShift.PhotoSettings,
                                                JAC.PhotoRecombination.Settings, JAC.Dielectronic.Settings, JAC.ImpactExcitation.Settings,
                                                JAC.CoulombExcitation.Settings, JAC.CoulombIonization.Settings, 
                                                JAC.PhotoExcitation.Settings, JAC.PhotoExcitationFluores.Settings, 
@@ -375,12 +377,16 @@ module Atomic
         if      process == JAC.NoProcess         && typeof(processSettings) == Bool && processSettings             procSettings = Radiative.Settings()
         elseif  process == JAC.AugerX            && typeof(processSettings) == Bool && processSettings             procSettings = Auger.Settings()
         elseif  process == JAC.AugerX            && typeof(processSettings) == Auger.Settings                      procSettings = processSettings 
+        elseif  process == JAC.AugerInPlasma     && typeof(processSettings) == Bool && processSettings             procSettings = PlasmaShift.AugerSettings()
+        elseif  process == JAC.AugerInPlasma     && typeof(processSettings) == PlasmaShift.AugerSettings           procSettings = processSettings 
         elseif  process == JAC.RadiativeX        && typeof(processSettings) == Bool && processSettings             procSettings = Radiative.Settings()
         elseif  process == JAC.RadiativeX        && typeof(processSettings) == Radiative.Settings                  procSettings = processSettings 
         elseif  process == JAC.PhotoExc          && typeof(processSettings) == Bool && processSettings             procSettings = PhotoExcitation.Settings()
         elseif  process == JAC.PhotoExc          && typeof(processSettings) == PhotoExcitation.Settings            procSettings = processSettings 
         elseif  process == JAC.Photo             && typeof(processSettings) == Bool && processSettings             procSettings = PhotoIonization.Settings()
         elseif  process == JAC.Photo             && typeof(processSettings) == PhotoIonization.Settings            procSettings = processSettings 
+        elseif  process == JAC.PhotoInPlasma     && typeof(processSettings) == Bool && processSettings             procSettings = PlasmaShift.PhotoSettings()
+        elseif  process == JAC.PhotoInPlasma     && typeof(processSettings) == PlasmaShift.PhotoSettings           procSettings = processSettings 
         elseif  process == JAC.Rec               && typeof(processSettings) == Bool && processSettings             procSettings = PhotoRecombination.Settings()
         elseif  process == JAC.Rec               && typeof(processSettings) == PhotoRecombination.Settings         procSettings = processSettings 
         elseif  process == JAC.Dierec            && typeof(processSettings) == Bool && processSettings             procSettings = Dielectronic.Settings()

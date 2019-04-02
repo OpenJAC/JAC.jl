@@ -1,14 +1,11 @@
 
 
 [![Build Status](https://travis-ci.com/OpenJAC/JAC.jl.svg?branch=master)](https://travis-ci.com/OpenJAC/JAC.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/v162jvq76dwifxdx/branch/master?svg=true)](https://ci.appveyor.com/project/OpenJAC/JAC-jl/branch/master)
 [![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)
-[![Coverage Status](https://coveralls.io/repos/github/OpenJAC/JAC.jl/badge.svg?branch=master)](https://coveralls.io/github/OpenJAC/JAC.jl?branch=master)
 
 
 
 # Jena Atomic Calculator (JAC) for the computation of atomic structures, processes and cascades
-
 
 
 ## What is JAC?
@@ -92,6 +89,18 @@ Commons Attribution 4.0 International (CC BY 4.0) license.
 For reference, please, use the Computer Physics Communications publication on JAC:
 
 * S. Fritzsche, [Computer Physics Communications xx, yy (2019)](https://doi.org/10.1016/j.cpc.2019.01.012)
+
+
+
+## Installation
+
+For the installation of the JAC package, you need first to install **gfortran** to compile the Fortran code
+of the angular coeffients. Afterwards, you can install JAC by just entering the package manager (with <Alt> ]) 
+and by typing
+```
+pkg> add https://github.com/OpenJAC/JAC.jl
+```
+Moreover, to run the tutorials, yo need to have Jupyter notebooks running.
 
 
 
