@@ -204,10 +204,3 @@ julia> twice(HalfInt(1.5))
 """
 twice(x)          = x + x
 twice(x::HalfInt) = x.twice
-
-# Conversion from and to AngularJ64, AngularM64
-
-twice(x::Union{AngularJ64,AngularM64}) = ifelse(isone(x.den), twice(x.num), x.num)
-
-AngularJ64(x::HalfInt) = isinteger(x) ? AngularJ64(Integer(x)) : AngularJ64(twice(x), 2)
-AngularM64(x::HalfInt) = isinteger(x) ? AngularM64(Integer(x)) : AngularM64(twice(x), 2)

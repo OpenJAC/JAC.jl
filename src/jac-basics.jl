@@ -7,6 +7,9 @@ export  AngularJ64, AngularM64, HalfInt, HalfInteger, SolidAngle, Parity, LevelS
         EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, TensorComp
 
 
+include("halfintegers.jl")
+
+
 abstract type  AngularJ  end
 
 """
@@ -63,6 +66,9 @@ function  oplus(ja::AngularJ64, jb::AngularJ64)
     return( jList )
 end
 
+oplus(ja, jb) = oplus(HalfInt(ja), HalfInt(jb))
+oplus(ja::Union{HalfInt,Integer}, jb::Union{HalfInt,Integer}) = abs(ja-jb):ja+jb
+
 
 """
 `JAC.projections(ja::AngularJ64)`  ... returns all allowed projections of a given angular momenta ja as a list::Array{AngularM64,1} 
@@ -74,6 +80,10 @@ function  projections(ja::AngularJ64)
     for  m = -ja2:2:ja2    push!(mList, AngularM64(m//2) )    end
     return( mList )
 end
+
+projections(j) = projections(HalfInt(j))
+projections(j::Union{HalfInt,Integer}) =
+    j≥0 ? (-j:j) : throw(DomainError(j, "angular momentum j must be non-negative."))
 
 
 """
@@ -176,7 +186,12 @@ function Base.show(io::IO, m::JAC.AngularM64)
 end
 
 
-include("halfintegers.jl")
+# Conversion between HalfInt and AngularJ64, AngularM64
+
+twice(x::Union{AngularJ64,AngularM64}) = ifelse(isone(x.den), twice(x.num), x.num)
+
+AngularJ64(x::HalfInt) = isinteger(x) ? AngularJ64(Integer(x)) : AngularJ64(twice(x), 2)
+AngularM64(x::HalfInt) = isinteger(x) ? AngularM64(Integer(x)) : AngularM64(twice(x), 2)
 
 
 
