@@ -8,7 +8,6 @@
 # Jena Atomic Calculator (JAC) for the computation of atomic structures, processes and cascades
 
 
-
 ## What is JAC?
 
 We here provide a first public version of JAC, the Jena Atomic Calculator and an open-source Julia package for 
@@ -90,6 +89,18 @@ Commons Attribution 4.0 International (CC BY 4.0) license.
 For reference, please, use the Computer Physics Communications publication on JAC:
 
 * S. Fritzsche, [Computer Physics Communications xx, yy (2019)](https://doi.org/10.1016/j.cpc.2019.01.012)
+
+
+
+## Installation
+
+For the installation of the JAC package, you need first to install **gfortran** to compile the Fortran code
+of the angular coeffients. Afterwards, you can install JAC by just entering the package manager (with <Alt> ]) 
+and by typing
+```
+pkg> add https://github.com/OpenJAC/JAC.jl
+```
+Moreover, to run the tutorials, yo need to have Jupyter notebooks running.
 
 
 

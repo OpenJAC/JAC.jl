@@ -921,6 +921,10 @@ struct  EmProperty
     Babushkin         ::Float64
 end 
 
+Base.:+(a::EmProperty, b::EmProperty) = EmProperty(a.Coulomb + b.Coulomb, a.Babushkin + b.Babushkin)
+Base.:+(a::EmProperty, b) = EmProperty(a.Coulomb + b, a.Babushkin + b)
+Base.:+(a, b::EmProperty) = b + a
+
 
 """
 `Base.show(io::IO, property::EmProperty)`  ... prepares a proper printout of the variable property::EmProperty.

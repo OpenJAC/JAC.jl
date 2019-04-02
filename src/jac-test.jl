@@ -125,13 +125,13 @@ function testProcesses(; short::Bool=true, details::Bool=false)
     success = JAC.testModule_PhotoExcitation(short=short)                &&  success     
     success = JAC.testModule_PhotoIonization(short=short)                &&  success     
     success = JAC.testModule_PhotoRecombination(short=short)             &&  success     
-    success = JAC.testModule_Auger(short=short)                          &&  success  
-    success = JAC.testModule_Dielectronic(short=short)                   &&  success  
-    success = JAC.testModule_PhotoExcitationFluores(short=short)         &&  success     
-    success = JAC.testModule_PhotoExcitationAutoion(short=short)         &&  success     
-    success = JAC.testModule_RayleighCompton(short=short)                &&  success     
-    success = JAC.testModule_MultiPhotonDeExcitation(short=short)        &&  success     
-    success = JAC.testModule_CoulombExcitation(short=short)              &&  success     
+    ## success = JAC.testModule_Auger(short=short)                          &&  success  
+    ## success = JAC.testModule_Dielectronic(short=short)                   &&  success  
+    ## success = JAC.testModule_PhotoExcitationFluores(short=short)         &&  success     
+    ## success = JAC.testModule_PhotoExcitationAutoion(short=short)         &&  success     
+    ## success = JAC.testModule_RayleighCompton(short=short)                &&  success     
+    ## success = JAC.testModule_MultiPhotonDeExcitation(short=short)        &&  success     
+    ## success = JAC.testModule_CoulombExcitation(short=short)              &&  success     
     
     testPrint("testProcesses()::", success)
     printTest, iostream = JAC.give("test flag/stream");   println(iostream, " ")
@@ -276,7 +276,7 @@ function testModule_Auger(; short::Bool=true)
     JAC.define("print summary: open", "test-Auger-new.sum")
     printstyled("\n\nTest the module  Auger  ... \n", color=:cyan)
     ### Make the tests
-    wa = Atomic.Computation("xx",  Model(36.); 
+    wa = Atomic.Computation("xx",  Model(36.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 600),  
                             initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
                             finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = JAC.AugerX,
                             processSettings = Auger.Settings(true, true, true, 
@@ -648,7 +648,7 @@ function testModule_PlasmaShift(; short::Bool=true)
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PlasmaShift-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-PlasmaShift-new.sum"), "Plasma screening inc", 3) 
+                                joinpath(@__DIR__, "..", "test", "test-PlasmaShift-new.sum"), "Plasma screening", 3) 
     testPrint("testModule_PlasmaShift()::", success)
     return(success)  
 end
@@ -730,18 +730,18 @@ function testModule_PhotoIonization(; short::Bool=true)
     JAC.define("print summary: open", "test-PhotoIonization-new.sum")
     printstyled("\n\nTest the module  PhotoIonization  ... \n", color=:cyan)
     ### Make the tests
-    wa = Atomic.Computation("xx",  Nuclear.Model(36.);
+    wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800),
                             initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                             finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
                             process = JAC.Photo, 
                             processSettings=PhotoIonization.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [3000., 4000.], false, true, true, true, 
-                                            false, Tuple{Int64,Int64}[]) )
+                                            false, Tuple{Int64,Int64}[], ExpStokes(1., 0., 0.)) )
     wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoIonization-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-PhotoIonization-new.sum"), "Photoionization cross sections:", 10) 
+                                joinpath(@__DIR__, "..", "test", "test-PhotoIonization-new.sum"), "Total photoionization c", 8) 
     testPrint("testModule_PhotoIonization()::", success)
     return(success)  
 end
@@ -755,12 +755,12 @@ function testModule_PhotoRecombination(; short::Bool=true)
     JAC.define("print summary: open", "test-PhotoRecombination-new.sum")
     printstyled("\n\nTest the module  PhotoRecombination  ... \n", color=:cyan)
     ### Make the tests
-    wa = Atomic.Computation("xx",  Nuclear.Model(36.);
+    wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-6, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600),
                             initialConfigs=[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ],
                             finalConfigs  =[Configuration("1s^2 2s^2 2p^6")], 
                             process = JAC.Rec, 
                             processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10., 20.], [0.], 
-                                            false, true, true, true, false, Tuple{Int64,Int64}[]) )
+                                            false, true, true, true, true, Tuple{Int64,Int64}[(1,1)]) )
     wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
