@@ -3,6 +3,9 @@ uuid = "830ae420-d14d-11e8-2f94-6b071437414d"
 authors = ["Stephan Fritzsche <s.fritzsche@gsi.de>"]
 version = "0.1.0"
 
+[compat]
+julia = "≥1.0"
+
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 FortranFiles = "c58ffaec-ab22-586d-bfc5-781a99fd0b10"

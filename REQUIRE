@@ -1,7 +1,9 @@
-julia 0.7
+julia 1.0
 Interact
 SpecialFunctions
 FortranFiles
 GaussQuadrature
 GSL
 QuadGK
+MacroTools
+RecipesBase
