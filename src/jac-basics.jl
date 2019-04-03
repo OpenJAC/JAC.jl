@@ -3,51 +3,11 @@ Here, we define all basic types/struct that are specific to the JAC module; we s
 individual subcomponents of each type/struct definition
 =#
 
-export  AngularJ64, AngularM64, HalfInt64, HalfInteger, SolidAngle, Parity, LevelSymmetry, Shell, Subshell, 
+export  AngularJ64, AngularM64, HalfInt, HalfInteger, SolidAngle, Parity, LevelSymmetry, Shell, Subshell,
         EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, TensorComp
 
 
-abstract type  HalfInteger  end
-
-
-"""
-`struct  HalfInt64 <: HalfInteger`  ... defines a type for half-integer values.
-
-    + num  ::Int64                ... numerator
-    + den  ::Int64                ... denominator, must be 1 or 2
-"""
-struct  HalfInt64 <: HalfInteger
-    num      ::Int64
-    den      ::Int64
-end
-
-
-"""
-`JAC.HalfInt64(m::Integer)`  ... constructor for a given integer (numerator).
-"""
-function HalfInt64(m::Integer)
-    HalfInt64(m, 1)
-end
-
-
-"""
-`JAC.HalfInt64(rational::Rational{Int64})`  ... constructor for a given Rational{Int64}.
-"""
-function HalfInt64(rational::Rational{Int64})
-    !(rational.den in [1,2]) && error("Denominator must be 1 or 2.")
-    HalfInt64(rational.num, rational.den)
-end
-
-
-"""
-`Base.show(io::IO, wa::JAC.HalfInt64)`  ... prepares a proper printout of the variable wa::JAC.HalfInt64.
-"""
-function Base.show(io::IO, wa::JAC.HalfInt64) 
-    if      wa.den == 1    print(io, wa.num)
-    elseif  wa.den == 2    print(io, wa.num, "/2")
-    else    error("stop a")
-    end
-end
+include("halfintegers.jl")
 
 
 abstract type  AngularJ  end
@@ -106,6 +66,11 @@ function  oplus(ja::AngularJ64, jb::AngularJ64)
     return( jList )
 end
 
+oplus(ja, jb) = oplus(HalfInt(ja), HalfInt(jb))
+oplus(ja::Union{HalfInt,Integer}, jb::Union{HalfInt,Integer}) = abs(ja-jb):ja+jb
+
+const ⊕ = oplus
+
 
 """
 `JAC.projections(ja::AngularJ64)`  ... returns all allowed projections of a given angular momenta ja as a list::Array{AngularM64,1} 
@@ -117,6 +82,10 @@ function  projections(ja::AngularJ64)
     for  m = -ja2:2:ja2    push!(mList, AngularM64(m//2) )    end
     return( mList )
 end
+
+projections(j) = projections(HalfInt(j))
+projections(j::Union{HalfInt,Integer}) =
+    j≥0 ? (-j:j) : throw(DomainError(j, "angular momentum j must be non-negative."))
 
 
 abstract type  AngularM  end
@@ -199,6 +168,15 @@ function  add(ma::AngularM64, mb::AngularM64)
     if  mb.den == 1   mb2 = 2mb.num   else   mb2 = mb.num   end
     return( AngularM64( (ma2+mb2)//2 ) )
 end
+
+
+
+# Conversion between HalfInt and AngularJ64, AngularM64
+
+twice(x::Union{AngularJ64,AngularM64}) = ifelse(isone(x.den), twice(x.num), x.num)
+
+AngularJ64(x::HalfInt) = isinteger(x) ? AngularJ64(Integer(x)) : AngularJ64(twice(x), 2)
+AngularM64(x::HalfInt) = isinteger(x) ? AngularM64(Integer(x)) : AngularM64(twice(x), 2)
 
 
 
