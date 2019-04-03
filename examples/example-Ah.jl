@@ -1,3 +1,5 @@
+using Plots
+pyplot()
 
 println("Ag) Generate and normalize continuum orbitals in a local potential.")
 #
@@ -19,7 +21,7 @@ w1 = JAC.Nuclear.pointNucleus(5.0, grid)
 ## w2 = JAC.add(w1,w2)
 w2 = JAC.Nuclear.nuclearPotentialDH(Nuclear.Model(5.), grid, 0.9)
 w3 = JAC.Nuclear.nuclearPotentialDH(Nuclear.Model(5.), grid, 2.5)
-## JAC.plot("radial potentials", [w1, w2, w3], grid; N=500)
+plot("radial potentials", [w1, w2, w3], grid; N=500)
 
 settings = Continuum.Settings(false, grid.nr-500)
 JAC.define("method: continuum, Galerkin")
@@ -32,7 +34,7 @@ we       = JAC.Continuum.generateOrbitalLocalPotential(energy, sh, w3, settings)
 wavenb   = sqrt( 2energy + energy * JAC.give("alpha")^2 )
 wavelgth = 2pi / wavenb
 println("wavelength = $wavelgth")
-# JAC.plot("radial orbitals: large", [wc[1], wd[1], we[1]], grid; N=900)
+plot("radial orbitals: large", [wc[1], wd[1], we[1]], grid; N=900)
 
 error("stop here")
 
