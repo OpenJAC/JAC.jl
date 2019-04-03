@@ -1,8 +1,10 @@
 
 ## export  plot
 
-using Plots
-pyplot()
+# using Plots
+# pyplot()
+
+using RecipesBase
 
 """
 `JAC.plot()`  ... plots various quantities, often in a new window.
@@ -23,6 +25,21 @@ function plot(sa::String, potentials::Array{Radial.Potential,1}, grid::Radial.Gr
     Plots.plot(x, y, label = reshape(labels, (1,np)) )    
 end
 
+@recipe function f(sa::String, potentials::Array{Radial.Potential,1}, grid::Radial.Grid; N::Int64 = 0)
+    !(sa == "radial potentials")   &&   error("Unsupported keystring = $sa")
+    wa = Float64[];   wc = [NaN for i=1:N];   labels = String[];   np = length(potentials)
+    for  pot in potentials
+        wb = wc
+        nx = min(length(pot.Zr), N);   wb[1:nx] = pot.Zr[1:nx]
+        append!(wa, wb)
+        push!(labels, pot.name)
+    end
+    ##x print("labels = $labels ")
+    x = grid.r[1:N];     y = reshape(wa, (N, np))
+    label --> reshape(labels, (1,np))
+    x, y
+end
+
 
 
 """
@@ -33,7 +50,7 @@ end
   + `("radial orbitals: both",  orbitals::Array{Radial.Orbital,1}, grid::Radial.Grid; N::Int64 = 0)`  
                                 ... to plot the large and small component of one or more radial orbitals.
 """
-function plot(sa::String, orbitals::Array{Radial.Orbital,1}, grid::Radial.Grid; N::Int64 = 0)
+function plot(sa::String, orbitals::Array{Radial.Orbital,1}, grid::Radial.Grid; N = 0)
     wa = Float64[];   wc = [NaN for i=1:N];   labels = String[];   np = length(orbitals)
 
     if       sa == "radial orbitals: large"
@@ -71,6 +88,45 @@ function plot(sa::String, orbitals::Array{Radial.Orbital,1}, grid::Radial.Grid; 
     else   error("Unsupported keystring = $sa") 
     end 
 end
+
+@recipe function f(sa::String, orbitals::Array{Radial.Orbital,1}, grid::Radial.Grid; N = 0)
+    wa = Float64[];   wc = [NaN for i=1:N];   labels = String[];   np = length(orbitals)
+
+    if       sa == "radial orbitals: large"
+        for  orb in orbitals
+            wb = wc
+            nx = min(length(orb.P), N);   wb[1:nx] = orb.P[1:nx]
+            append!(wa, wb)
+            push!(labels, "$(orb.subshell):large")
+        end
+        ##x print("labels = $labels ")
+        x = grid.r[1:N];     y = reshape(wa, (N, np))
+
+    elseif   sa == "radial orbitals: small"
+        for  orb in orbitals
+            wb = wc
+            nx = min(length(orb.Q), N);   wb[1:nx] = orb.Q[1:nx]
+            append!(wa, wb)
+            push!(labels, "$(orb.subshell):small")
+        end
+        ##x print("labels = $labels ")
+        x = grid.r[1:N];     y = reshape(wa, (N, np))
+
+    elseif   sa == "radial orbitals: both"
+        for  orb in orbitals
+            wb = wc;    nx = min(length(orb.P), N);   wb[1:nx] = orb.P[1:nx];    append!(wa, wb)
+            wb = wc;    nx = min(length(orb.Q), N);   wb[1:nx] = orb.Q[1:nx];    append!(wa, wb)
+            push!(labels, "$(orb.subshell):large");   push!(labels, "$(orb.subshell):small")
+        end
+        ##x print("labels = $labels ")
+        x = grid.r[1:N];     y = reshape(wa, (N, 2np))
+
+    else   error("Unsupported keystring = $sa") 
+    end
+    label --> permutedims(labels)
+    x, y
+end
+
 
 
 """
