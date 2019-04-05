@@ -46,21 +46,22 @@ module JAC
 
 using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL   #, JLD
 
-export @racahsum, AlphaVariation, AnapoleMoment, AsfSettings, Atomic, Auger, Basis, Cascade, Configuration, ConfigurationR, Continuum, CsfR, Radial,
-       CoulombExcitation, CoulombIonization,  
+export @racahsum, 
+       AlphaVariation, AnapoleMoment, AsfSettings, Atomic, Auger, 
+       Basis, 
+       Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
        DecayYield, Dielectronic, DoubleAuger,
        ElectricDipoleMoment, Einstein, 
        FormFactor,
        GreenFunction,
        Hfs, HydrogenicIon,
        ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, LandeZeeman, Level, 
-       MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment,  MultipolePolarizibility, 
-       Multiplet, 
+       MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment,  MultipolePolarizibility, Multiplet, 
        NoAmplitude, NoProcess, Nuclear, Model,
        Orbital, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
        PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, 
-       Radiative, RadiativeAuger, RayleighCompton, REDA, READI,
+       Radial, Radiative, RadiativeAuger, RayleighCompton, REDA, READI,
        SchiffMoment, Shell, Subshell
     
 global JAC_counter = 0
@@ -129,7 +130,6 @@ include("module-MessageHandling.jl")
 include("module-RadialIntegrals.jl")
 include("module-TableStrings.jl")
 include("module-Tools.jl")
-##x include("module-Tutorials.jl")
 
 # include("module-ImpactIonization.jl")
 # include("module-Semiempirical.jl")

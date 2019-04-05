@@ -1,29 +1,6 @@
 
 ## export  test
 
-"""
-`JAC.test(; short::Bool=true)`  ... makes and reports about various tests on individual methods of the JAC module; 
-            these tests can be called also individually. For the optional parameters short = true, only a short [OK] is printed, if a test was
-            made successfully, and [Fail] otherwise. Further information about the failure is obtained for short = false. All details about the
-            last test are made to the file jac-test.details. A Boolian variable is returned which is true, if the test was made successful, 
-            and false otherwise.
-"""
-function test(; short::Bool=true) 
-    success = true
-    println("Perform tests on the JAC program; this may take a while ... \n")
-    JAC.define("print test: open", "../src/jac-test.report")
-
-    succ = testMethods(short=short);         success = success  &&  succ  
-    succ = testAmplitudes(short=short);      success = success  &&  succ  
-    succ = testProperties(short=short);      success = success  &&  succ  
-    succ = testProcesses(short=short);       success = success  &&  succ  
-    
-    testPrint("test()::", success)
-    JAC.define("print test: close", "")
-    return(success)  
-end
-
-
 function testCompareFiles(fold::String, fnew::String, sa::String, noLines::Int64) 
     success = true
     printTest, iostream = JAC.give("test flag/stream")
@@ -41,6 +18,7 @@ function testCompareFiles(fold::String, fnew::String, sa::String, noLines::Int64
     ii = inew + 1
     for  i = iold+2:iold+noLines
        ii = ii + 1
+       if   length(oldLines[i]) < 5    continue    end
        if   oldLines[i] != newLines[ii]    success = false
            if  printTest  println(iostream, "    *** Old::  " * oldLines[i]) 
                           println(iostream, "    *** New::  " * newLines[ii])
@@ -59,84 +37,6 @@ function testPrint(sa::String, success::Bool)
     return( nothing )
 end 
 
-
-
-
-
-"""
-`JAC.testMethods(; short::Bool=true)`  ... makes and reports about various tests on individual methods of the JAC module.
-"""
-function testMethods(; short::Bool=true) 
-    success = true
-    ## success = JAC.testMethod_integrate_ongrid(short=short)           &&  success   
-    success = JAC.testMethod_Wigner_3j(short=short)                  &&  success  
-    testPrint("testMethods()::", success)
-    printTest, iostream = JAC.give("test flag/stream");   println(iostream, " ")
-    return(success)  
-end
-
-
-"""
-`JAC.testAmplitudes(; short::Bool=true)`  ... makes and reports about various tests on individual amplitude computations of the JAC program.
-"""
-function testAmplitudes(; short::Bool=true, details::Bool=false) 
-    ##x streamDummy = open(pwd() * "/runtests.dummy", "w")
-    ##x redirect_stdout(streamDummy) do
-    success = true
-    success = JAC.testModule_MultipoleMoment(short=short)                &&  success  
-    success = JAC.testModule_ParityNonConservation(short=short)          &&  success  
-    ##x end
-    ##x close(streamDummy)
-    
-    testPrint("testAmplitudes()::", success)
-    printTest, iostream = JAC.give("test flag/stream");   println(iostream, " ")
-    return(success)  
-end
-
-
-"""
-`JAC.testProperties(; short::Bool=true)`  ... makes and reports about various tests on individual property computations of the JAC program.
-"""
-function testProperties(; short::Bool=true, details::Bool=false) 
-    success = true
-    success = JAC.testModule_Einstein(short=short)                       &&  success    
-    ## success = JAC.testModule_Hfs(short=short)                            &&  success  
-    success = JAC.testModule_LandeZeeman(short=short)                    &&  success  
-    ## success = JAC.testModule_IsotopeShift(short=short)                   &&  success  
-    success = JAC.testModule_AlphaVariation(short=short)                 &&  success  
-    ## success = JAC.testModule_FormFactor(short=short)                     &&  success  
-    success = JAC.testModule_DecayYield(short=short)                     &&  success  
-    success = JAC.testModule_GreenFunction(short=short)                  &&  success  
-    success = JAC.testModule_MultipolePolarizibility(short=short)        &&  success  
-    success = JAC.testModule_PlasmaShift(short=short)                    &&  success  
-    
-    testPrint("testProperties()::", success)
-    printTest, iostream = JAC.give("test flag/stream");   println(iostream, " ")
-    return(success)  
-end
-
-
-"""
-`JAC.testProcesses(; short::Bool=true)`  ... makes and reports about various tests on individual process computations of the JAC program.
-"""
-function testProcesses(; short::Bool=true, details::Bool=false) 
-    success = true
-    success = JAC.testModule_Radiative(short=short)                      &&  success     
-    success = JAC.testModule_PhotoExcitation(short=short)                &&  success     
-    success = JAC.testModule_PhotoIonization(short=short)                &&  success     
-    success = JAC.testModule_PhotoRecombination(short=short)             &&  success     
-    ## success = JAC.testModule_Auger(short=short)                          &&  success  
-    ## success = JAC.testModule_Dielectronic(short=short)                   &&  success  
-    ## success = JAC.testModule_PhotoExcitationFluores(short=short)         &&  success     
-    ## success = JAC.testModule_PhotoExcitationAutoion(short=short)         &&  success     
-    ## success = JAC.testModule_RayleighCompton(short=short)                &&  success     
-    ## success = JAC.testModule_MultiPhotonDeExcitation(short=short)        &&  success     
-    ## success = JAC.testModule_CoulombExcitation(short=short)              &&  success     
-    
-    testPrint("testProcesses()::", success)
-    printTest, iostream = JAC.give("test flag/stream");   println(iostream, " ")
-    return(success)  
-end
 
 
 """
@@ -279,18 +179,13 @@ function testModule_Auger(; short::Bool=true)
     wa = Atomic.Computation("xx",  Model(36.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 600),  
                             initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
                             finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = JAC.AugerX,
-                            processSettings = Auger.Settings(true, true, true, 
-                                            Tuple{Int64,Int64}[(3,1), (4,1), (5,1), (6,1), (7,1), (8,1), (9,1), (10,1)], 0., 1.0e6, 2, "Coulomb") )
-    ##x stream = open("testfile", "w")
-    ##xredirect_stdout(stream) do
+                            processSettings = Auger.Settings(true, true, true, Tuple{Int64,Int64}[(3,1), (4,1), (5,1), (6,1)], 0., 1.0e6, 2, "Coulomb") )
     wb = perform(wa)
-    ##x end
-    ##x close(stream)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Auger-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-Auger-new.sum"), "Auger rates and intrinsic angular parameters:", 25) 
+                                joinpath(@__DIR__, "..", "test", "test-Auger-new.sum"), "Auger rates and intr", 17) 
     testPrint("testModule_Auger()::", success)
     return(success)  
 end
@@ -347,20 +242,20 @@ function testModule_Dielectronic(; short::Bool=true)
     JAC.define("print summary: open", "test-Dielectronic-new.sum")
     printstyled("\n\nTest the module  Dielectronic  ... \n", color=:cyan)
     ### Make the tests
-    wa = Atomic.Computation("xx",  Nuclear.Model(26.), 
+    wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600), 
                             initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                             intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                             finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
                             process = JAC.Dierec, 
-                            processSettings=Dielectronic.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], false, false, false, true, 
-                                                              true, Tuple{Int64,Int64,Int64}[(1,1,0), (1,2,0), (1,2,0)], 0., 0., 0., "Coulomb")  )
+                            processSettings=Dielectronic.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], false, 
+                                                                true, Tuple{Int64,Int64,Int64}[(1,1,0)], 0., 0., 0., "Coulomb")  )
     wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Dielectronic-approved.sum"), 
                                 joinpath(@__DIR__, "..", "test", "test-Dielectronic-new.sum"), 
-                               "Dielectronic recombination cross sections & angular and", 10) 
+                               "Partial (Auger) capture", 10) 
     testPrint("testModule_Dielectronic()::", success)
     return(success)  
 end
@@ -400,13 +295,13 @@ function testModule_FormFactor(; short::Bool=true)
     ### Make the tests
     wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[JAC.FormF], 
                             configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                            formSettings=FormFactor.Settings(true, true, false, Int64[]) )
+                            formSettings=FormFactor.Settings([0.1], true, false, Int64[]) )
     wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-FormFactor-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-FormFactor-new.sum"), "Form & scattering factors:", 6) 
+                                joinpath(@__DIR__, "..", "test", "test-FormFactor-new.sum"), "Standard and modifi", 6) 
     testPrint("testModule_FormFactor()::", success)
     return(success)  
 end
@@ -436,28 +331,6 @@ end
 
 
 """
-`JAC.testModule_IsotopeShift(; short::Bool=true)`  ... tests on module JAC.IsotopeShift.
-"""
-function testModule_IsotopeShift(; short::Bool=true) 
-    JAC.define("print summary: open", "test-IsotopeShift-new.sum")
-    printstyled("\n\nTest the module  IsotopeShift  ... \n", color=:cyan)
-    ### Make the tests
-    wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[JAC.Isotope], 
-                            configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                            isotopeSettings=IsotopeShift.Settings(true, true, true, false, Int64[], "method-1") )
-    wb = perform(wa)
-    ###
-    JAC.define("print summary: close", "")
-    # Make the comparison with approved data
-    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-IsotopeShift-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-IsotopeShift-new.sum"), "IsotopeShift parameters and amplitudes:", 15) 
-    testPrint("testModule_IsotopeShift()::", success)
-    return(success)  
-end
-
-
-
-"""
 `JAC.testModule_Hfs(; short::Bool=true)`  ... tests on module JAC.Hfs.
 """
 function testModule_Hfs(; short::Bool=true) 
@@ -473,24 +346,30 @@ function testModule_Hfs(; short::Bool=true)
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Hfs-b-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-Hfs-b-new.sum"), "HFS parameters and amplitudes:", 25) 
-    
-    
-    JAC.define("print summary: open", "test-Hfs-c-new.sum")
+                                joinpath(@__DIR__, "..", "test", "test-Hfs-b-new.sum"), "Level        J^P           Energy", 20) 
+    testPrint("testModule_Hfs()::", success)
+    return(success)  
+end
+
+
+
+"""
+`JAC.testModule_IsotopeShift(; short::Bool=true)`  ... tests on module JAC.IsotopeShift.
+"""
+function testModule_IsotopeShift(; short::Bool=true) 
+    JAC.define("print summary: open", "test-IsotopeShift-new.sum")
+    printstyled("\n\nTest the module  IsotopeShift  ... \n", color=:cyan)
     ### Make the tests
-    wa = Atomic.Computation("xx",  Nuclear.Model(26., "Fermi", 58., 3.75, AngularJ64(5//2), 1.0, 2.0);  properties=[JAC.HFS], 
+    wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[JAC.Isotope], 
                             configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                            hfsSettings=Hfs.Settings(true, true, false, true, true, true, false, Int64[] ) )
+                            isotopeSettings=IsotopeShift.Settings(true, false, false, true, false, Int64[], "method-1") )
     wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    printTest, iostream = JAC.give("test flag/stream")
-    println(iostream, "Make the comparison with approved data for ... test-Hfs-c-new.sum")
-    success = true
-    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Hfs-c-approved.sum"), 
-    ##                             joinpath(@__DIR__, "..", "test", "test-Hfs-c-new.sum"), "xxxx", 3)   &&  success
-    testPrint("testModule_Hfs()::", success)
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-IsotopeShift-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-IsotopeShift-new.sum"), "IsotopeShift parameters and amplitudes:", 15) 
+    testPrint("testModule_IsotopeShift()::", success)
     return(success)  
 end
 
@@ -688,14 +567,22 @@ function testModule_PhotoExcitationAutoion(; short::Bool=true)
     JAC.define("print summary: open", "test-PhotoExcitationAutoion-new.sum")
     printstyled("\n\nTest the module  PhotoExcitationAutoion  ... \n", color=:cyan)
     ### Make the tests
+    wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 600), 
+                            initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
+                            intermediateConfigs=[Configuration("1s 2s^2"), Configuration("1s 2p^2")],
+                            finalConfigs=[Configuration("1s^2")], 
+                            process = JAC.PhotoExcAuto, 
+                            processSettings=PhotoExcitationAutoion.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, Tuple{Int64,Int64,Int64}[(1,1,1)], 2)  )
+
+wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
     printTest, iostream = JAC.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-PhotoExcitationAutoion-new.sum")
     success = true
-    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoExcitationAutoion-approved.sum"), 
-    ##                             joinpath(@__DIR__, "..", "test", "test-PhotoExcitationAutoion-new.sum"), "xxx", 100) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoExcitationAutoion-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-PhotoExcitationAutoion-new.sum"), "xxx", 10) 
     testPrint("testModule_PhotoExcitationAutoion()::", success)
     return(success)  
 end
@@ -709,14 +596,22 @@ function testModule_PhotoExcitationFluores(; short::Bool=true)
     JAC.define("print summary: open", "test-PhotoExcitationFluores-new.sum")
     printstyled("\n\nTest the module  PhotoExcitationFluores  ... \n", color=:cyan)
     ### Make the tests
+    wa = Atomic.Computation("xx",  Nuclear.Model(26.), 
+                            initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
+                            intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
+                            finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
+                            process = JAC.PhotoExcFluor, 
+                            processSettings=PhotoExcitationFluores.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], 
+                                                                            true, true, Tuple{Int64,Int64,Int64}[(1,1,1)])  )
+    wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
     printTest, iostream = JAC.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-PhotoExcitationFluores-new.sum")
     success = true
-    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoExcitationFluores-approved.sum"), 
-    ##                             joinpath(@__DIR__, "..", "test", "test-PhotoExcitationFluores-new.sum"),  "xxx", 100) 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoExcitationFluores-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-PhotoExcitationFluores-new.sum"),  "xxx", 10) 
     testPrint("testModule_PhotoExcitationFluores()::", success)
     return(success)  
 end
@@ -735,7 +630,7 @@ function testModule_PhotoIonization(; short::Bool=true)
                             finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
                             process = JAC.Photo, 
                             processSettings=PhotoIonization.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [3000., 4000.], false, true, true, true, 
-                                            false, Tuple{Int64,Int64}[], ExpStokes(1., 0., 0.)) )
+                                            true, Tuple{Int64,Int64}[(1,1), (1,2)], ExpStokes(1., 0., 0.)) )
     wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
