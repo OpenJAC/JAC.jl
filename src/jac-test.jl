@@ -446,7 +446,7 @@ function testModule_MultipoleMoment(; short::Bool=true)
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-MultipoleMoment-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-MultipoleMoment-new.sum"), "Dipole amplitude", 6) 
+                                joinpath(@__DIR__, "..", "test", "test-MultipoleMoment-new.sum"), "Dipole amplitude", 2) 
     testPrint("testModule_MultipoleMoment()::", success)
     return(success)  
 end

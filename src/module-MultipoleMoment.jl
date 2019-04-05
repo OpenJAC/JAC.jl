@@ -21,13 +21,14 @@ module MultipoleMoment
         amplitude = MultipoleMoment.transitionAmplitude(mp, gauge, omega, finalLevel, initialLevel, grid; display=false)
         #
         if  display
+            sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
             println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || Q^($mp) ($omega a.u., $gauge) ||" *
-                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             printSummary, iostream = JAC.give("summary flag/stream")
             if  printSummary
                 println(iostream, "    Multipole-moment amplitude:     " *
                                   " < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || Q^($mp) ($omega a.u., $gauge) ||" *
-                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             end
         end
         
@@ -44,7 +45,7 @@ module MultipoleMoment
     function dipoleAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)
         
         if     finalLevel.parity == initialLevel.parity   
-            amplitude = 0.
+            amplitude = 0.0 + 0.0 * im
         else
             nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
             printstyled("Compute dipole matrix of dimension $nf x $ni in the final- and initial-state bases " *
@@ -63,16 +64,17 @@ module MultipoleMoment
                 end
             end
             printstyled("done. \n", color=:light_green)
-            amplitude = transpose(finalLevel.mc) * matrix * initialLevel.mc 
+            amplitude::ComplexF64 = transpose(finalLevel.mc) * matrix * initialLevel.mc 
         end
         #
         if  display
+            sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
             println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || D ||" *
-                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             printSummary, iostream = JAC.give("summary flag/stream")
             if  printSummary
                 println(iostream, "    Dipole amplitude:  < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || D ||" *
-                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             end
         end
         
@@ -110,14 +112,15 @@ module MultipoleMoment
         amplitude = transpose(finalLevel.mc) * matrix * initialLevel.mc 
         #
         if  display
+            sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
             println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] ||" *
                     " T^($mp, absorption) ($omega a.u., $gauge) ||" *
-                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             printSummary, iostream = JAC.give("summary flag/stream")
             if  printSummary
                 println(iostream, "    Multipole-transition amplitude:      < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] ||" *
                                   " T^($mp, absorption) ($omega a.u., $gauge) ||" *
-                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             end
         end
         

@@ -33,14 +33,15 @@ module ParityNonConservation
         amplitude = transpose(finalLevel.mc) * matrix * initialLevel.mc 
         #
         if  display
+            sa = @sprintf("%.8e", amplitude.re) * @sprintf("%.8e", amplitude.im)
             println("   Schiff moment amplitude:   "                                                                               *
                     "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(Schiff) ($(nm.model)) ||"   *
-                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             printSummary, iostream = JAC.give("summary flag/stream")
             if  printSummary
                 println(iostream, "   Schiff moment amplitude:   "                                                                               *
                                   "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(Schiff) ($(nm.model)) ||"   *
-                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             end
         end
         
@@ -66,14 +67,15 @@ module ParityNonConservation
         amplitude = 3.0 + 3.0*im
         #
         if  display
+                sa = @sprintf("%.8e", amplitude.re) * @sprintf("%.8e", amplitude.im)
             println("   Anapole moment amplitude:  "                                                                  *
                     "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(anapole) ||"   *
-                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             printSummary, iostream = JAC.give("summary flag/stream")
             if  printSummary
                 println(iostream, "   Anapole moment amplitude:  "                                                                  *
                                   "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(anapole) ||"   *
-                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             end
         end
         
@@ -106,14 +108,15 @@ module ParityNonConservation
         amplitude = transpose(finalLevel.mc) * matrix * initialLevel.mc 
         #
         if  display
+            sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
             println("   weak-charge amplitude:     "                                                         *
                     "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(weak-charge) ($(nm.model)) ||"   *
-                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             printSummary, iostream = JAC.give("summary flag/stream")
             if  printSummary
                 println(iostream, "   weak-charge amplitude:     "                                                         *
                                   "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(weak-charge) ($(nm.model)) ||"   *
-                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+                                  " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
             end
         end
         

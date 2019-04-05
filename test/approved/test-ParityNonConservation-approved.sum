@@ -1,4 +1,4 @@
-Summary file opened at 2019-04-05T15:56: 
+Summary file opened at 2019-04-05T16:51: 
 ========================================   
 
 
@@ -62,21 +62,21 @@ Summary file opened at 2019-04-05T15:56:
     14    5/2 +     4.068515349384143e+00    1.107099417003871e+02    1.107099417003871e+02 
     15    3/2 +     4.540582853114188e+00    1.235555527718831e+02    1.235555527718831e+02 
     16    1/2 +     5.265600569923606e+00    1.432842897353233e+02    1.432842897353233e+02 
-   weak-charge amplitude:     < level=6 [J=3/2-] || H^(weak-charge) (Fermi) || 1 [1/2+] >  = -0.027224661986600174 - 0.05444932397320035im  
-   Schiff moment amplitude:   < level=6 [J=3/2-] || H^(Schiff) (Fermi) || 1 [1/2+] >  = -0.027224661986600174 - 0.05444932397320035im  
-   weak-charge amplitude:     < level=6 [J=3/2-] || H^(weak-charge) (Fermi) || 2 [1/2-] >  = 0.3781821689854322 + 0.7563643379708644im  
-   Schiff moment amplitude:   < level=6 [J=3/2-] || H^(Schiff) (Fermi) || 2 [1/2-] >  = 0.3781821689854322 + 0.7563643379708644im  
-   weak-charge amplitude:     < level=6 [J=3/2-] || H^(weak-charge) (Fermi) || 3 [3/2-] >  = -0.8073423972807615 - 1.614684794561523im  
-   Schiff moment amplitude:   < level=6 [J=3/2-] || H^(Schiff) (Fermi) || 3 [3/2-] >  = -0.8073423972807615 - 1.614684794561523im  
-   weak-charge amplitude:     < level=7 [J=1/2+] || H^(weak-charge) (Fermi) || 1 [1/2+] >  = -0.16018700631038887 - 0.32037401262077775im  
-   Schiff moment amplitude:   < level=7 [J=1/2+] || H^(Schiff) (Fermi) || 1 [1/2+] >  = -0.16018700631038887 - 0.32037401262077775im  
-   weak-charge amplitude:     < level=7 [J=1/2+] || H^(weak-charge) (Fermi) || 2 [1/2-] >  = 0.006056811680269447 + 0.012113623360538894im  
-   Schiff moment amplitude:   < level=7 [J=1/2+] || H^(Schiff) (Fermi) || 2 [1/2-] >  = 0.006056811680269447 + 0.012113623360538894im  
-   weak-charge amplitude:     < level=7 [J=1/2+] || H^(weak-charge) (Fermi) || 3 [3/2-] >  = 0.7179378444690236 + 1.4358756889380473im  
-   Schiff moment amplitude:   < level=7 [J=1/2+] || H^(Schiff) (Fermi) || 3 [3/2-] >  = 0.7179378444690236 + 1.4358756889380473im  
-   weak-charge amplitude:     < level=8 [J=1/2-] || H^(weak-charge) (Fermi) || 1 [1/2+] >  = 0.83524707840846 + 1.67049415681692im  
-   Schiff moment amplitude:   < level=8 [J=1/2-] || H^(Schiff) (Fermi) || 1 [1/2+] >  = 0.83524707840846 + 1.67049415681692im  
-   weak-charge amplitude:     < level=8 [J=1/2-] || H^(weak-charge) (Fermi) || 2 [1/2-] >  = 1.0647582927962334 + 2.1295165855924667im  
-   Schiff moment amplitude:   < level=8 [J=1/2-] || H^(Schiff) (Fermi) || 2 [1/2-] >  = 1.0647582927962334 + 2.1295165855924667im  
-   weak-charge amplitude:     < level=8 [J=1/2-] || H^(weak-charge) (Fermi) || 3 [3/2-] >  = -0.5634210363659835 - 1.126842072731967im  
-   Schiff moment amplitude:   < level=8 [J=1/2-] || H^(Schiff) (Fermi) || 3 [3/2-] >  = -0.5634210363659835 - 1.126842072731967im  
+   weak-charge amplitude:     < level=6 [J=3/2-] || H^(weak-charge) (Fermi) || 1 [1/2+] >  = -2.72247e-02  -5.44493e-02
+   Schiff moment amplitude:   < level=6 [J=3/2-] || H^(Schiff) (Fermi) || 1 [1/2+] >  = -2.72246620e-02-5.44493240e-02
+   weak-charge amplitude:     < level=6 [J=3/2-] || H^(weak-charge) (Fermi) || 2 [1/2-] >  = 3.78182e-01  7.56364e-01
+   Schiff moment amplitude:   < level=6 [J=3/2-] || H^(Schiff) (Fermi) || 2 [1/2-] >  = 3.78182169e-017.56364338e-01
+   weak-charge amplitude:     < level=6 [J=3/2-] || H^(weak-charge) (Fermi) || 3 [3/2-] >  = -8.07342e-01  -1.61468e+00
+   Schiff moment amplitude:   < level=6 [J=3/2-] || H^(Schiff) (Fermi) || 3 [3/2-] >  = -8.07342397e-01-1.61468479e+00
+   weak-charge amplitude:     < level=7 [J=1/2+] || H^(weak-charge) (Fermi) || 1 [1/2+] >  = -1.60187e-01  -3.20374e-01
+   Schiff moment amplitude:   < level=7 [J=1/2+] || H^(Schiff) (Fermi) || 1 [1/2+] >  = -1.60187006e-01-3.20374013e-01
+   weak-charge amplitude:     < level=7 [J=1/2+] || H^(weak-charge) (Fermi) || 2 [1/2-] >  = 6.05681e-03  1.21136e-02
+   Schiff moment amplitude:   < level=7 [J=1/2+] || H^(Schiff) (Fermi) || 2 [1/2-] >  = 6.05681168e-031.21136234e-02
+   weak-charge amplitude:     < level=7 [J=1/2+] || H^(weak-charge) (Fermi) || 3 [3/2-] >  = 7.17938e-01  1.43588e+00
+   Schiff moment amplitude:   < level=7 [J=1/2+] || H^(Schiff) (Fermi) || 3 [3/2-] >  = 7.17937844e-011.43587569e+00
+   weak-charge amplitude:     < level=8 [J=1/2-] || H^(weak-charge) (Fermi) || 1 [1/2+] >  = 8.35247e-01  1.67049e+00
+   Schiff moment amplitude:   < level=8 [J=1/2-] || H^(Schiff) (Fermi) || 1 [1/2+] >  = 8.35247078e-011.67049416e+00
+   weak-charge amplitude:     < level=8 [J=1/2-] || H^(weak-charge) (Fermi) || 2 [1/2-] >  = 1.06476e+00  2.12952e+00
+   Schiff moment amplitude:   < level=8 [J=1/2-] || H^(Schiff) (Fermi) || 2 [1/2-] >  = 1.06475829e+002.12951659e+00
+   weak-charge amplitude:     < level=8 [J=1/2-] || H^(weak-charge) (Fermi) || 3 [3/2-] >  = -5.63421e-01  -1.12684e+00
+   Schiff moment amplitude:   < level=8 [J=1/2-] || H^(Schiff) (Fermi) || 3 [3/2-] >  = -5.63421036e-01-1.12684207e+00

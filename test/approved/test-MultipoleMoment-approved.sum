@@ -1,4 +1,4 @@
-Summary file opened at 2019-04-05T15:59: 
+Summary file opened at 2019-04-05T16:51: 
 ========================================   
 
 
@@ -62,12 +62,12 @@ Summary file opened at 2019-04-05T15:59:
     14    5/2 +     4.068515349384143e+00    1.107099417003871e+02    1.107099417003871e+02 
     15    3/2 +     4.540582853114188e+00    1.235555527718831e+02    1.235555527718831e+02 
     16    1/2 +     5.265600569923606e+00    1.432842897353233e+02    1.432842897353233e+02 
-    Dipole amplitude:  < level=6 [J=3/2-] || D || 1 [1/2+] >  = -0.08903040557569798 + 0.0im  
-    Dipole amplitude:  < level=6 [J=3/2-] || D || 2 [1/2-] >  = 0.0  
-    Dipole amplitude:  < level=6 [J=3/2-] || D || 3 [3/2-] >  = 0.0  
-    Dipole amplitude:  < level=7 [J=1/2+] || D || 1 [1/2+] >  = 0.0  
-    Dipole amplitude:  < level=7 [J=1/2+] || D || 2 [1/2-] >  = 0.11724886415395504 + 0.0im  
-    Dipole amplitude:  < level=7 [J=1/2+] || D || 3 [3/2-] >  = 0.24225650030902707 + 0.0im  
-    Dipole amplitude:  < level=8 [J=1/2-] || D || 1 [1/2+] >  = -0.26246769977736 + 0.0im  
-    Dipole amplitude:  < level=8 [J=1/2-] || D || 2 [1/2-] >  = 0.0  
-    Dipole amplitude:  < level=8 [J=1/2-] || D || 3 [3/2-] >  = 0.0  
+    Dipole amplitude:  < level=6 [J=3/2-] || D || 1 [1/2+] >  = -8.90304e-02  0.00000e+00
+    Dipole amplitude:  < level=6 [J=3/2-] || D || 2 [1/2-] >  = 0.00000e+00  0.00000e+00
+    Dipole amplitude:  < level=6 [J=3/2-] || D || 3 [3/2-] >  = 0.00000e+00  0.00000e+00
+    Dipole amplitude:  < level=7 [J=1/2+] || D || 1 [1/2+] >  = 0.00000e+00  0.00000e+00
+    Dipole amplitude:  < level=7 [J=1/2+] || D || 2 [1/2-] >  = 1.17249e-01  0.00000e+00
+    Dipole amplitude:  < level=7 [J=1/2+] || D || 3 [3/2-] >  = 2.42257e-01  0.00000e+00
+    Dipole amplitude:  < level=8 [J=1/2-] || D || 1 [1/2+] >  = -2.62468e-01  0.00000e+00
+    Dipole amplitude:  < level=8 [J=1/2-] || D || 2 [1/2-] >  = 0.00000e+00  0.00000e+00
+    Dipole amplitude:  < level=8 [J=1/2-] || D || 3 [3/2-] >  = 0.00000e+00  0.00000e+00
