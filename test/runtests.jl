@@ -39,7 +39,7 @@ using JAC
         @test JAC.testModule_PhotoExcitation()
         @test JAC.testModule_PhotoIonization()
         @test JAC.testModule_PhotoRecombination()
-        @test JAC.testModule_Auger()  
+        ## @test JAC.testModule_Auger()  
         @test JAC.testModule_Dielectronic()  
         ## @test JAC.testModule_PhotoExcitationFluores() 
         ## @test JAC.testModule_PhotoExcitationAutoion() 
