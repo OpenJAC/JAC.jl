@@ -9,6 +9,10 @@ julia:
   - 1.1
   - nightly
 
+matrix:
+  allow_failures:
+    - julia: nightly
+
 notifications:
   email: false
 
@@ -17,9 +21,4 @@ addons:
     packages:
     - gfortran
 
-after_success:
-  - julia -e 'using Pkg;
-      cd(Pkg.dir("JAC"));
-      Pkg.add("Coverage");
-      using Coverage;
-      Codecov.submit(process_folder());'
+codecov: true
