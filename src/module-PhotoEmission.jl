@@ -1,16 +1,16 @@
 
 """
-`module  JAC.Radiative`  ... a submodel of JAC that contains all methods for computing Einstein coefficients, oscillator strength, etc. between 
+`module  JAC.PhotoEmission`  ... a submodel of JAC that contains all methods for computing Einstein coefficients, oscillator strength, etc. between 
                              some initial and final-state multiplets; it is using JAC, JAC.ManyElectron, JAC.Radial.
 """
-module Radiative
+module PhotoEmission
 
     using Printf, JAC, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
     """
-    `struct  Radiative.Settings`  ... defines a type for the details and parameters of computing radiative lines.
+    `struct  PhotoEmission.Settings`  ... defines a type for the details and parameters of computing radiative lines.
 
         + multipoles              ::Array{EmMultipoles}     ... Specifies the (radiat. field) multipoles to be included.
         + gauges                  ::Array{UseGauge}         ... Gauges to be included into the computations.
@@ -39,7 +39,7 @@ module Radiative
 
 
     """
-    `JAC.Radiative.Settings()`  ... constructor for the default values of radiative line computations
+    `JAC.PhotoEmission.Settings()`  ... constructor for the default values of radiative line computations
     """
     function Settings()
         Settings(EmMultipole[E1], UseGauge[JAC.UseCoulomb], false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0.)
@@ -47,10 +47,10 @@ module Radiative
 
 
     """
-    `Base.show(io::IO, settings::Radiative.Settings)`  ... prepares a proper printout of the variable settings::RadiativeSettings.
+    `Base.show(io::IO, settings::PhotoEmission.Settings)`  ... prepares a proper printout of the variable settings::PhotoEmissionSettings.
     """
-    function Base.show(io::IO, settings::Radiative.Settings) 
-        println(io, "Radiative.Settings(with multipoles = $(settings.multipoles), use-gauges = $(settings.gauges), "   *
+    function Base.show(io::IO, settings::PhotoEmission.Settings) 
+        println(io, "PhotoEmission.Settings(with multipoles = $(settings.multipoles), use-gauges = $(settings.gauges), "   *
                     "calcAnisotropy = $(settings.calcAnisotropy), " )
         println(io, "                 printBeforeComputation = $(settings.printBeforeComputation), selectLines = $(settings.selectLines), " *
                     "selectedLines = $(settings.selectedLines), photonEnergyShift = $(settings.photonEnergyShift) " )
@@ -74,10 +74,10 @@ module Radiative
 
 
     """
-    `Base.show(io::IO, channel::Radiative.Channel)`  ... prepares a proper printout of the variable channel::Radiative.Channel.
+    `Base.show(io::IO, channel::PhotoEmission.Channel)`  ... prepares a proper printout of the variable channel::PhotoEmission.Channel.
     """
-    function Base.show(io::IO, channel::Radiative.Channel) 
-        print(io, "Radiative.Channel($(channel.multipole), $(channel.gauge), amp = $(channel.amplitude)) ") 
+    function Base.show(io::IO, channel::PhotoEmission.Channel) 
+        print(io, "PhotoEmission.Channel($(channel.multipole), $(channel.gauge), amp = $(channel.amplitude)) ") 
     end
 
 
@@ -90,7 +90,7 @@ module Radiative
         + photonRate     ::EmProperty          ... Total rate of this line.
         + angularBeta    ::EmProperty          ... Angular beta_2 coefficient.
         + hasSublines    ::Bool                ... Determines whether the sublines are defined in terms of their multipolarity, amplitude, or not.
-        + channels       ::Array{Radiative.Channel,1}  ... List of radiative (photon) channels
+        + channels       ::Array{PhotoEmission.Channel,1}  ... List of radiative (photon) channels
     """
     struct  Line
         initialLevel     ::Level
@@ -99,23 +99,23 @@ module Radiative
         photonRate       ::EmProperty
         angularBeta      ::EmProperty
         hasSublines      ::Bool
-        channels         ::Array{Radiative.Channel,1}
+        channels         ::Array{PhotoEmission.Channel,1}
     end 
 
 
     """
-    `JAC.Radiative.Line(initialLevel::Level, finalLevel::Level, photonRate::Float64)`  ... constructor an radiative line between a
+    `JAC.PhotoEmission.Line(initialLevel::Level, finalLevel::Level, photonRate::Float64)`  ... constructor an radiative line between a
                                                                                            specified initial and final level.
     """
     function Line(initialLevel::Level, finalLevel::Level, omega::Float64, photonRate::EmProperty)
-       Line(initialLevel, finalLevel, omega, photonRate, EmProperty(0., 0.), false, 0, Radiative.Channel[])
+       Line(initialLevel, finalLevel, omega, photonRate, EmProperty(0., 0.), false, 0, PhotoEmission.Channel[])
     end
 
 
     """
-    `Base.show(io::IO, line::RadiativeLine)`  ... prepares a proper printout of the variable line::Radiative.Line.
+    `Base.show(io::IO, line::PhotoEmissionLine)`  ... prepares a proper printout of the variable line::PhotoEmission.Line.
     """
-    function Base.show(io::IO, line::Radiative.Line) 
+    function Base.show(io::IO, line::PhotoEmission.Line) 
         println(io, "initialLevel:         $(line.initialLevel)  ")
         println(io, "finalLevel:           $(line.finalLevel)  ")
         println(io, "omega:                $(line.omega)  ")
@@ -127,7 +127,7 @@ module Radiative
 
 
     """
-    `JAC.Radiative.amplitude(kind::String, Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
+    `JAC.PhotoEmission.amplitude(kind::String, Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
                              grid::Radial.Grid; display::Bool=false)`  ... to compute the kind = (absorption or emission) amplitude
                              <alpha_f J_f || O^(Mp, kind) || alpha_i J_i> for the interaction with  photon of multipolarity Mp and
                             for the given transition energy and gauge. A value::ComplexF64 is returned. The amplitude value is printed
@@ -167,7 +167,7 @@ module Radiative
         elseif  kind == "absorption"
         #---------------------------
             iLevel = finalLevel;   fLevel = initialLevel
-            amplitude = JAC.Radiative.amplitude("emission", Mp, gauge, omega, fLevel, iLevel, grid) 
+            amplitude = JAC.PhotoEmission.amplitude("emission", Mp, gauge, omega, fLevel, iLevel, grid) 
             amplitude = (amplitude)
         else    error("stop a")
         end
@@ -183,38 +183,38 @@ module Radiative
 
 
     """
-    `JAC.Radiative.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::Radiative.Settings; 
+    `JAC.PhotoEmission.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::PhotoEmission.Settings; 
                                 output=true)`  ... to compute the radiative transition amplitudes and all properties as requested by the 
-         given settings. A list of lines::Array{Radiative.Lines} is returned.
+         given settings. A list of lines::Array{PhotoEmission.Lines} is returned.
     """
-    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::Radiative.Settings; output=true) 
+    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::PhotoEmission.Settings; output=true) 
         # Define a common subshell list for both multiplets
         subshellList = JAC.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
         JAC.define("relativistic subshell list", subshellList; printout=true)
         ##x JAC.define("standard grid", grid)
         println("")
-        printstyled("JAC.Radiative.computeLines(): The computation of the transition amplitudes and properties starts now ... \n", color=:light_green)
+        printstyled("JAC.PhotoEmission.computeLines(): The computation of the transition amplitudes and properties starts now ... \n", color=:light_green)
         printstyled("-------------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
         ##x println("basis = $(finalMultiplet.levels[1].basis) ")
-        lines = JAC.Radiative.determineLines(finalMultiplet, initialMultiplet, settings)
+        lines = JAC.PhotoEmission.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.Radiative.displayLines(lines)    end
+        if  settings.printBeforeComputation    JAC.PhotoEmission.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
-        newLines = Radiative.Line[]
+        newLines = PhotoEmission.Line[]
         for  line in lines
-            newLine = JAC.Radiative.computeAmplitudesProperties(line, grid, settings) 
+            newLine = JAC.PhotoEmission.computeAmplitudesProperties(line, grid, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        JAC.Radiative.displayRates(stdout, newLines)
-        if  settings.calcAnisotropy    JAC.Radiative.displayAnisotropies(stdout, newLines)    end
-        JAC.Radiative.displayLifetimes(stdout, newLines)
+        JAC.PhotoEmission.displayRates(stdout, newLines)
+        if  settings.calcAnisotropy    JAC.PhotoEmission.displayAnisotropies(stdout, newLines)    end
+        JAC.PhotoEmission.displayLifetimes(stdout, newLines)
         #
         printSummary, iostream = JAC.give("summary flag/stream")
-        if  printSummary   JAC.Radiative.displayRates(iostream, newLines)       
-                           JAC.Radiative.displayAnisotropies(stdout, newLines)
-                           JAC.Radiative.displayLifetimes(iostream, newLines)
+        if  printSummary   JAC.PhotoEmission.displayRates(iostream, newLines)       
+                           JAC.PhotoEmission.displayAnisotropies(stdout, newLines)
+                           JAC.PhotoEmission.displayLifetimes(iostream, newLines)
         end
         #
         if    output    return( lines )
@@ -224,29 +224,29 @@ module Radiative
 
 
     """
-    `JAC.Radiative.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
-                                       settings::Radiative.Settings; output::Bool=true, printout::Bool=true)`  
+    `JAC.PhotoEmission.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+                                       settings::PhotoEmission.Settings; output::Bool=true, printout::Bool=true)`  
         ... to compute the radiative transition amplitudes and all properties as requested by the given settings. The computations
             and printout is adapted for larger cascade computations by including only lines with at least one channel and by sending
-            all printout to a summary file only. A list of lines::Array{Radiative.Lines} is returned.
+            all printout to a summary file only. A list of lines::Array{PhotoEmission.Lines} is returned.
     """
     function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
-                                  settings::Radiative.Settings; output=true, printout::Bool=true) 
+                                  settings::PhotoEmission.Settings; output=true, printout::Bool=true) 
         # Define a common subshell list for both multiplets
         subshellList = JAC.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
         JAC.define("relativistic subshell list", subshellList; printout=false)
-        lines = JAC.Radiative.determineLines(finalMultiplet, initialMultiplet, settings)
+        lines = JAC.PhotoEmission.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        # if  settings.printBeforeComputation    JAC.Radiative.displayLines(lines)    end
+        # if  settings.printBeforeComputation    JAC.PhotoEmission.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
-        newLines = Radiative.Line[]
+        newLines = PhotoEmission.Line[]
         for  line in lines
-            newLine = JAC.Radiative.computeAmplitudesProperties(line, grid, settings, printout=printout) 
+            newLine = JAC.PhotoEmission.computeAmplitudesProperties(line, grid, settings, printout=printout) 
             push!( newLines, newLine)
         end
         # Print all results to a summary file, if requested
         printSummary, iostream = JAC.give("summary flag/stream")
-        if  printSummary   JAC.Radiative.displayRates(iostream, newLines)    end
+        if  printSummary   JAC.PhotoEmission.displayRates(iostream, newLines)    end
         #
         if    output    return( lines )
         else            return( nothing )
@@ -256,19 +256,19 @@ module Radiative
 
 
     """
-    `JAC.Radiative.computeAmplitudesProperties(line::Radiative.Line, grid::Radial.Grid, settings::Einstein.Settings; printout::Bool=true)`  
+    `JAC.PhotoEmission.computeAmplitudesProperties(line::PhotoEmission.Line, grid::Radial.Grid, settings::Einstein.Settings; printout::Bool=true)`  
         ... to compute all amplitudes and properties of the given line; a line::Einstein.Line is returned for which the amplitudes and 
             properties are now evaluated.
     """
-    function  computeAmplitudesProperties(line::Radiative.Line, grid::Radial.Grid, settings::Radiative.Settings; printout::Bool=true)
+    function  computeAmplitudesProperties(line::PhotoEmission.Line, grid::Radial.Grid, settings::PhotoEmission.Settings; printout::Bool=true)
         global JAC_counter
-        newChannels = Radiative.Channel[];    rateC = 0.;    rateB = 0.
+        newChannels = PhotoEmission.Channel[];    rateC = 0.;    rateB = 0.
         for channel in line.channels
             #
-            amplitude = JAC.Radiative.amplitude("emission", channel.multipole, channel.gauge, line.omega, 
+            amplitude = JAC.PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, line.omega, 
                                                 line.finalLevel, line.initialLevel, grid, printout=printout)
             #
-            push!( newChannels, Radiative.Channel( channel.multipole, channel.gauge, amplitude) )
+            push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
             if       channel.gauge == JAC.Coulomb     rateC = rateC + abs(amplitude)^2
             elseif   channel.gauge == JAC.Babushkin   rateB = rateB + abs(amplitude)^2
             elseif   channel.gauge == JAC.Magnetic    rateB = rateB + abs(amplitude)^2;   rateC = rateC + abs(amplitude)^2
@@ -280,21 +280,21 @@ module Radiative
                                                       (JAC.AngularMomentum.twoJ(line.finalLevel.J) + 1)
         photonrate  = EmProperty(wa * rateC, wa * rateB)    
         angularBeta = EmProperty(-9., -9.)
-        line = Radiative.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, true, newChannels)
+        line = PhotoEmission.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, true, newChannels)
         return( line )
     end
 
 
     """
-    `JAC.Radiative.computeMatrix_obsolete(Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid,
-                                 settings::Radiative.Settings)`  ... to compute the transition matrix 
+    `JAC.PhotoEmission.computeMatrix_obsolete(Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid,
+                                 settings::PhotoEmission.Settings)`  ... to compute the transition matrix 
          (O^Mp_rs) = (<finalCSF_r|| O^Mp (omega; gauge) ||initialCSF_s>)   of the Mp multiplet field for the given transition energy and gauge, 
          and between the CSF_r from the basis of the finalLevel and the CSF_s from the basis of the initialLevel. A (non-quadratic) 
          matrix::Array{Float64,2} with dimensions [length(finalBasis.csfs) x length(initialBasis.csfs)] is returned. Note that this transition 
          matrix is specific to a particular transitions with the given multipolarity and omega.
     """
     function computeMatrix_obsolete(Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid, 
-                           settings::Radiative.Settings)
+                           settings::PhotoEmission.Settings)
         nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
   
         print("Compute radiative $(Mp) matrix of dimension $nf x $ni in the initial- and final-state bases for the transition " *
@@ -328,21 +328,21 @@ module Radiative
 
 
     """
-    `JAC.Radiative.determineChannels(finalLevel::Level, initialLevel::Level, settings::Radiative.Settings)`  ... to determine a list of 
-         Radiative.Channel for a transitions from the initial to final level and by taking into account the particular settings of for this 
-         computation; an Array{Radiative.Channel,1} is returned.
+    `JAC.PhotoEmission.determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoEmission.Settings)`  ... to determine a list of 
+         PhotoEmission.Channel for a transitions from the initial to final level and by taking into account the particular settings of for this 
+         computation; an Array{PhotoEmission.Channel,1} is returned.
     """
-    function determineChannels(finalLevel::Level, initialLevel::Level, settings::Radiative.Settings)
-        channels = Radiative.Channel[];   
+    function determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoEmission.Settings)
+        channels = PhotoEmission.Channel[];   
         symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
         for  mp in settings.multipoles
             if   JAC.AngularMomentum.isAllowedMultipole(symi, mp, symf)
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(channels, Radiative.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(channels, Radiative.Channel(mp, JAC.Babushkin, 0.) )  
-                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, Radiative.Channel(mp, JAC.Magnetic,  0.) );
+                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
+                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 
                 end
@@ -353,26 +353,26 @@ module Radiative
 
 
     """
-    `JAC.Radiative.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::Radiative.Settings)`  ... to determine a 
-         list of Radiative Line's for transitions between the levels from the given initial- and final-state multiplets and by taking into account 
-         the particular selections and settings for this computation; an Array{Radiative.Line,1} is returned. Apart from the level specification,
+    `JAC.PhotoEmission.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoEmission.Settings)`  ... to determine a 
+         list of PhotoEmission Line's for transitions between the levels from the given initial- and final-state multiplets and by taking into account 
+         the particular selections and settings for this computation; an Array{PhotoEmission.Line,1} is returned. Apart from the level specification,
          all physical properties are set to zero during the initialization process.  
     """
-    function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::Radiative.Settings)
+    function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoEmission.Settings)
         if    settings.selectLines    selectLines   = true
             selectedLines = JAC.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
         else                          selectLines   = false
         end
     
-        lines = Radiative.Line[]
+        lines = PhotoEmission.Line[]
         for  i = 1:length(initialMultiplet.levels)
             for  f = 1:length(finalMultiplet.levels)
                 if  selectLines  &&  !((i,f) in selectedLines )    continue   end
                 omega = initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy   + settings.photonEnergyShift
                 if  omega <= settings.mimimumPhotonEnergy  ||  omega > settings.maximumPhotonEnergy    continue   end  
 
-                channels = JAC.Radiative.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
-                push!( lines, Radiative.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], omega, EmProperty(0., 0.), EmProperty(0., 0.),
+                channels = JAC.PhotoEmission.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
+                push!( lines, PhotoEmission.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], omega, EmProperty(0., 0.), EmProperty(0., 0.),
                                              true, channels) )
             end
         end
@@ -381,10 +381,10 @@ module Radiative
 
 
     """
-    `JAC.Radiative.displayAnisotropies(stream::IO, lines::Array{Radiative.Line,1})`  ... to list all energies and anisotropy parameters of 
+    `JAC.PhotoEmission.displayAnisotropies(stream::IO, lines::Array{PhotoEmission.Line,1})`  ... to list all energies and anisotropy parameters of 
          the selected lines. A neat table is printed but nothing is returned otherwise.
     """
-    function  displayAnisotropies(stream::IO, lines::Array{Radiative.Line,1})
+    function  displayAnisotropies(stream::IO, lines::Array{PhotoEmission.Line,1})
         println(stream, " ")
         println(stream, "  Anisotropy (structure) functions:")
         println(stream, " ")
@@ -480,10 +480,10 @@ module Radiative
 
 
     """
-    `JAC.Radiative.displayLifetimes(stream::IO, lines::Array{Radiative.Line,1})`  ... to list all lifetimes as derived from the selected
+    `JAC.PhotoEmission.displayLifetimes(stream::IO, lines::Array{PhotoEmission.Line,1})`  ... to list all lifetimes as derived from the selected
          lines. A neat table is printed but nothing is returned otherwise.
     """
-    function  displayLifetimes(stream::IO, lines::Array{Radiative.Line,1})
+    function  displayLifetimes(stream::IO, lines::Array{PhotoEmission.Line,1})
         # Determine all initial levels (and their level information) for printing the lifetimes
         ilevels = Int64[];   istr = String[]
         for  i = 1:length(lines)
@@ -510,7 +510,7 @@ module Radiative
         end
         
         println(stream, " ")
-        println(stream, "  Radiative lifetimes (as derived from these computations):")
+        println(stream, "  PhotoEmission lifetimes (as derived from these computations):")
         println(stream, " ")
         println(stream, "  ", JAC.TableStrings.hLine(111))
         sa = "  ";   sb = "  "
@@ -544,10 +544,10 @@ module Radiative
 
 
     """
-    `JAC.Radiative.displayLines(lines::Array{Radiative.Line,1})`  ... to display a list of lines and channels that have been selected due to
+    `JAC.PhotoEmission.displayLines(lines::Array{PhotoEmission.Line,1})`  ... to display a list of lines and channels that have been selected due to
          the prior settings. A neat table of all selected transitions and energies is printed but nothing is returned otherwise.
     """
-    function  displayLines(lines::Array{Radiative.Line,1})
+    function  displayLines(lines::Array{PhotoEmission.Line,1})
         println(" ")
         println("  Selected radiative lines:")
         println(" ")
@@ -581,10 +581,10 @@ module Radiative
 
 
     """
-    `JAC.Radiative.displayRates(stream::IO, lines::Array{Radiative.Line,1})`  ... to list all results, energies, rates, etc. of the selected lines.
+    `JAC.PhotoEmission.displayRates(stream::IO, lines::Array{PhotoEmission.Line,1})`  ... to list all results, energies, rates, etc. of the selected lines.
          A neat table is printed but nothing is returned otherwise.
     """
-    function  displayRates(stream::IO, lines::Array{Radiative.Line,1})
+    function  displayRates(stream::IO, lines::Array{PhotoEmission.Line,1})
         println(stream, " ")
         println(stream, "  Einstein coefficients, transition rates and oscillator strengths:")
         println(stream, " ")

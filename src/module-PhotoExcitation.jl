@@ -1,11 +1,11 @@
 
 """
 `module  JAC.PhotoExcitation`  ... a submodel of JAC that contains all methods for computing photo-excitation properties between some initial 
-                                   and final-state multiplets; it is using JAC, JAC.ManyElectron, JAC.Radial and JAC.Radiative.
+                                   and final-state multiplets; it is using JAC, JAC.ManyElectron, JAC.Radial and JAC.PhotoEmission.
 """
 module PhotoExcitation
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative
+    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission
     global JAC_counter = 0
 
 
@@ -81,8 +81,8 @@ module PhotoExcitation
         + crossSection   ::EmProperty                  ... Total cross section of this line.
         + staTensor      ::Array{TensorComp,1}         ... Array of statistical tensor components rho_kq
         + hasSublines    ::Bool                        ... Determines whether the individual sublines are defined in terms of their 
-                                                           multipolarity, amplitude, or not; cf. JAC.Radiative.Channel
-        + channels       ::Array{JAC.Radiative.Channel,1}  ... List of radiative (photon) channels
+                                                           multipolarity, amplitude, or not; cf. JAC.PhotoEmission.Channel
+        + channels       ::Array{JAC.PhotoEmission.Channel,1}  ... List of radiative (photon) channels
     """
     struct  Line
         initialLevel     ::Level
@@ -91,7 +91,7 @@ module PhotoExcitation
         crossSection     ::EmProperty
         staTensor        ::Array{TensorComp,1}
         hasSublines      ::Bool
-        channels         ::Array{Radiative.Channel,1}
+        channels         ::Array{PhotoEmission.Channel,1}
     end 
 
 
@@ -100,7 +100,7 @@ module PhotoExcitation
                                                                                                  specified initial and final level.
     """
     function Line(initialLevel::Level, finalLevel::Level, omega::Float64, crossSection::EmProperty)
-       Line(initialLevel, finalLevel, omega, crossSection, EmProperty(0., 0.), false, Radiative.Channel[])
+       Line(initialLevel, finalLevel, omega, crossSection, EmProperty(0., 0.), false, PhotoEmission.Channel[])
     end
 
 
@@ -124,11 +124,11 @@ module PhotoExcitation
          properties have now been evaluated.
     """
     function  computeAmplitudesProperties(line::PhotoExcitation.Line, grid::Radial.Grid, settings::PhotoExcitation.Settings)
-        newChannels = Radiative.Channel[]
+        newChannels = PhotoEmission.Channel[]
         for  channel  in  line.channels
             ##x println("channel = $channel ")
-            amplitude = JAC.Radiative.amplitude("absorption", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
-            push!( newChannels, Radiative.Channel( channel.multipole, channel.gauge, amplitude) )
+            amplitude = JAC.PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
+            push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
         end
         # Calculate the crossSection and stastistical tensors if requested
         crossSection = EmProperty(-1., -1.)    # Cross sections for linear-polarized plane-wave photons
@@ -235,16 +235,16 @@ module PhotoExcitation
          for this computation; an Array{PhotoExcitation.Channel,1} is returned.
     """
     function determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoExcitation.Settings)
-        channels = Radiative.Channel[];   
+        channels = PhotoEmission.Channel[];   
         symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
         for  mp in settings.multipoles
             if   JAC.AngularMomentum.isAllowedMultipole(symi, mp, symf)
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(channels, Radiative.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(channels, Radiative.Channel(mp, JAC.Babushkin, 0.) )  
-                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, Radiative.Channel(mp, JAC.Magnetic,  0.) );
+                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
+                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 
                 end

@@ -140,7 +140,7 @@ module PhotoIonization
     function amplitude(kind::String, channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, initialLevel::Level, grid::Radial.Grid)
         if      kind in [ "photoionization"]
         #-----------------------------------
-            amplitude = JAC.Radiative.amplitude("absorption", channel.multipole, channel.gauge, energy, continuumLevel, initialLevel, grid)
+            amplitude = JAC.PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, energy, continuumLevel, initialLevel, grid)
             amplitude = im^JAC.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
         else    error("stop b")
         end

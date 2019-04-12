@@ -1,11 +1,11 @@
 
 """
 `module  JAC.PhotoExcitationAutoion`  ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross 
-                                          sections and rates; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.AutoIonization.
+                                          sections and rates; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization.
 """
 module PhotoExcitationAutoion 
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.AutoIonization
+    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -57,11 +57,11 @@ module PhotoExcitationAutoion
     `struct  JAC.PhotoExcitationAutoion.Channel`  ... defines a type for a photon-impact excitaton & autoionization channel that specifies 
                                                       all quantum numbers, phases and amplitudes.
 
-        + excitationChannel  ::JAC.Radiative.Channel       ... Channel that describes the photon-impact excitation process.
+        + excitationChannel  ::JAC.PhotoEmission.Channel       ... Channel that describes the photon-impact excitation process.
         + augerChannel       ::JAC.AutoIonization.Channel           ... Channel that describes the subsequent Auger/autoionization process.
     """
     struct  Channel
-        excitationChannel    ::JAC.Radiative.Channel
+        excitationChannel    ::JAC.PhotoEmission.Channel
         augerChannel         ::JAC.AutoIonization.Channel
     end ==#
 
@@ -79,7 +79,7 @@ module PhotoExcitationAutoion
         + hasChannels         ::Bool            ... Determines whether the individual excitation and autoionization channels are defined in terms of 
                                                     their multipole, gauge, free-electron kappa, phases and the total angular momentum/parity as well 
                                                     as the amplitude, or not.
-        + excitChannels       ::Array{JAC.Radiative.Channel,1}  ... List of excitation channels of this pathway.
+        + excitChannels       ::Array{JAC.PhotoEmission.Channel,1}  ... List of excitation channels of this pathway.
         + augerChannels       ::Array{JAC.AutoIonization.Channel,1}      ... List of Auger channels of this pathway.
     """
     struct  Pathway
@@ -90,7 +90,7 @@ module PhotoExcitationAutoion
         electronEnergy        ::Float64
         crossSection          ::EmProperty
         hasChannels           ::Bool
-        excitChannels         ::Array{JAC.Radiative.Channel,1}  
+        excitChannels         ::Array{JAC.PhotoEmission.Channel,1}  
         augerChannels         ::Array{JAC.AutoIonization.Channel,1}
     end 
 
@@ -100,7 +100,7 @@ module PhotoExcitationAutoion
                                                 initial, intermediate and final level.
     """
     function Pathway()
-        Pathway(Level(), Level(), Level(), 0., 0., EmProperty(0., 0.), false, Radiative.Channel[], AutoIonization.Channel[] )
+        Pathway(Level(), Level(), Level(), 0., 0., EmProperty(0., 0.), false, PhotoEmission.Channel[], AutoIonization.Channel[] )
     end
 
 
@@ -131,11 +131,11 @@ module PhotoExcitationAutoion
     function  computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64,
                                           settings::PhotoExcitationAutoion.Settings)
         # Compute all excitation channels
-        neweChannels = Radiative.Channel[]
+        neweChannels = PhotoEmission.Channel[]
         for eChannel in pathway.excitChannels
-            amplitude   = JAC.Radiative.amplitude("absorption", eChannel.multipole, eChannel.gauge, pathway.excitEnergy, 
+            amplitude   = JAC.PhotoEmission.amplitude("absorption", eChannel.multipole, eChannel.gauge, pathway.excitEnergy, 
                                                   pathway.intermediateLevel, pathway.initialLevel, grid)
-             push!( neweChannels, Radiative.Channel( eChannel.multipole, eChannel.gauge, amplitude))
+             push!( neweChannels, PhotoEmission.Channel( eChannel.multipole, eChannel.gauge, amplitude))
         end
         # Compute all AutoIonization decay channels
         newaChannels = AutoIonization.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum)
@@ -218,8 +218,8 @@ module PhotoExcitationAutoion
                     aEnergy = intermediateMultiplet.levels[n].energy - finalMultiplet.levels[f].energy
                     if  eEnergy < 0.   ||   aEnergy < 0    continue    end
 
-                    rSettings = JAC.Radiative.Settings( settings.multipoles, settings.gauges, false, false, false, Tuple{Int64,Int64}[], 0., 0., 0.)
-                    eChannels = JAC.Radiative.determineChannels(intermediateMultiplet.levels[n], initialMultiplet.levels[i], rSettings) 
+                    rSettings = JAC.PhotoEmission.Settings( settings.multipoles, settings.gauges, false, false, false, Tuple{Int64,Int64}[], 0., 0., 0.)
+                    eChannels = JAC.PhotoEmission.determineChannels(intermediateMultiplet.levels[n], initialMultiplet.levels[i], rSettings) 
                     aSettings = JAC.AutoIonization.Settings( false, false, false, Tuple{Int64,Int64}[], 0., 0., settings.maxKappa, "Coulomb")
                     aChannels = JAC.AutoIonization.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], aSettings) 
                     push!( pathways, PhotoExcitationAutoion.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[n], 
@@ -242,15 +242,15 @@ module PhotoExcitationAutoion
         symi      = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
         symn      = LevelSymmetry(intermediateLevel.J, intermediateLevel.parity)
         # Determine first the radiative channels
-        rChannels = Radiative.Channel[];   
+        rChannels = PhotoEmission.Channel[];   
         for  mp in settings.multipoles
             if   JAC.AngularMomentum.isAllowedMultipole(symi, mp, symn)
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(rChannels, Radiative.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(rChannels, Radiative.Channel(mp, JAC.Babushkin, 0.) )  
-                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(rChannels, Radiative.Channel(mp, JAC.Magnetic,  0.) );
+                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(rChannels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(rChannels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
+                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(rChannels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 
                 end

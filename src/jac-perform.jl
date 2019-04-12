@@ -125,7 +125,7 @@ function perform(computation::Atomic.Computation; output::Bool=false)
             ##x                                               "TestAuger/belike-ground-a-scf.out","TestAuger/belike-ground-a-relci.mix") 
             outcome = JAC.AutoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("AutoIonization lines:" => outcome) )                  end
-        elseif  computation.process == JAC.RadiativeX  
+        elseif  computation.process == JAC.Radiative  
             ##x println(" ")
             ##x for  i = 1:3   println("  perform-WARNING: Code modified to read in multiplets from Grasp computations and for testing integrals " *
             ##x                        "and radiative amplitudes !!") 
@@ -134,7 +134,7 @@ function perform(computation::Atomic.Computation; output::Bool=false)
             ##x                                               "TestRaditive/helike-resonance-a-scf.out","TestRaditive/helike-resonance-a-relci.mix")  
             ##x initialMultiplet = JAC.ManyElectron.Multiplet("from Grasp2013", "TestRaditive/helike-resonance-a-csl.inp",
             ##x                                               "TestRaditive/helike-resonance-a-scf.out","TestRaditive/helike-resonance-a-relci.mix") 
-            outcome = JAC.Radiative.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+            outcome = JAC.PhotoEmission.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("radiative lines:" => outcome) )              end
         elseif  computation.process == JAC.Photo   
             outcome = JAC.PhotoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
@@ -236,7 +236,7 @@ function perform(comp::Cascade.Computation; output::Bool=false)
     # Determine first all configuration 'blocks' and from them the individual steps of the cascade
     wc = JAC.Cascade.generateBlocks(comp, wb, basis.orbitals)
     JAC.Cascade.displayBlocks(wc)
-    # Determine, modify and compute the transition data for all steps, ie. the Radiative.Line's, the AutoIonization.Line's, etc.
+    # Determine, modify and compute the transition data for all steps, ie. the PhotoEmission.Line's, the AutoIonization.Line's, etc.
     wd = JAC.Cascade.determineSteps(comp, wc)
     JAC.Cascade.displaySteps(wd)
     we   = JAC.Cascade.modifySteps(wd)

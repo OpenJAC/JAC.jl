@@ -141,7 +141,7 @@ module PhotoRecombination
     function amplitude(kind::String, channel::PhotoRecombination.Channel, energy::Float64, finalLevel::Level, continuumLevel::Level, grid::Radial.Grid)
         if      kind in [ "photorecombination"]
         #-----------------------------------
-            amplitude = JAC.Radiative.amplitude("emission", channel.multipole, channel.gauge, energy, finalLevel, continuumLevel, grid)
+            amplitude = JAC.PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, energy, finalLevel, continuumLevel, grid)
             amplitude = im^JAC.subshell_l(Subshell(101, channel.kappa)) * exp( im*channel.phase ) * amplitude
         else    error("stop b")
         end

@@ -176,7 +176,7 @@ module Einstein
             ##x matrix    = JAC.Einstein.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid, settings)
             ##x amplitude = transpose(line.finalLevel.mc) * matrix * line.initialLevel.mc 
             #
-            amplitude = JAC.Radiative.amplitude("emission", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
+            amplitude = JAC.PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
             ##x JAC.warn(AddWarning, "amplitude = $amplitude,  testamp =  $testamp, Diff = $(amplitude-testamp) ")
             #
             push!( newChannels, Einstein.Channel( channel.multipole, channel.gauge, amplitude) )

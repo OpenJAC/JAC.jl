@@ -59,9 +59,9 @@ export @racahsum,
        MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment,  MultipolePolarizibility, Multiplet, 
        NoAmplitude, NoProcess, Nuclear, Model,
        Orbital, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
-       PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
+       PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, 
-       Radial, Radiative, RadiativeAuger, RayleighCompton, REDA, READI,
+       Radial, RadiativeAuger, RayleighCompton, REDA, READI,
        SchiffMoment, Shell, Subshell
     
 global JAC_counter = 0
@@ -88,7 +88,7 @@ include("module-PlasmaShift.jl")
 include("module-MultipoleMoment.jl")
 include("module-ParityNonConservation.jl")
 
-include("module-Radiative.jl")
+include("module-PhotoEmission.jl")
 include("module-PhotoExcitation.jl")
 include("module-PhotoIonization.jl")
 include("module-PhotoRecombination.jl")

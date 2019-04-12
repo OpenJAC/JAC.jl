@@ -649,16 +649,16 @@ end
     + PhotoInPlasma ... Photoionization processes but calculated for a specified plasma model.
     + PhotoIonFluor ... photoionization fluorescence rates and cross sections.
     + PhotoIonAuto  ... photoionization autoionization cross sections and collision strengths.
-    + RadiativeX    ... Radiative (multipole) transitions between bound-state levels of the same charge state.
+    + Radiative    ... Radiative (multipole) transitions between bound-state levels of the same charge state.
     + Rec           ... radiative electron capture, i.e. the capture of a free electron with the simultaneous emission of a photon.
     + Eimex         ... electron-impact excitation cross sections and collision strengths.
     + RAuger        ... Radiative Auger rates.
 """
 @enum   AtomicProcess  NoProcess  Auger  AugerInPlasma  Compton  Coulex  Dierec  Eimex  ImpactExcAuto  InternalConv  MultiPhotonDE  MultiPI  MultiPDI=
-                   20  Photo  PhotoExc  PhotoExcAuto  PhotoExcFluor  PhotoInPlasma  PhotoIonAuto  PhotoIonFluor   RadiativeX  RAuger=
+                   20  Photo  PhotoExc  PhotoExcAuto  PhotoExcFluor  PhotoInPlasma  PhotoIonAuto  PhotoIonFluor   Radiative  RAuger=
                    40  Rec  PairA1P  Coulion
 export  AtomicProcess, NoProcess, Auger, AugerInPlasma, Compton, Coulex, Dierec, Eimex, ImpactExcAuto, InternalConv, MultiPhotonDE, MultiPI, MultiPDI,
-                       Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoInPlasma, PhotoIonAuto, PhotoIonFluor,  RadiativeX, RAuger, 
+                       Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoInPlasma, PhotoIonAuto, PhotoIonFluor,  Radiative, RAuger, 
                        Rec, PairA1P, Coulion
 
 
@@ -685,7 +685,7 @@ function AtomicProcess(sa::String)
     elseif   sa in [ "photo-IA"]                                wa = PhotoIonAuto
     elseif   sa in [ "photo-IF"]                                wa = PhotoIonFluor
     elseif   sa in [ "photo-EF"]                                wa = PhotoExcFluor
-    elseif   sa in [ "radiative", "Radiative"]                  wa = RadiativeX
+    elseif   sa in [ "radiative", "Radiative"]                  wa = Radiative
     elseif   sa in [ "radiativeAuger", "RAuger"]                wa = RAuger
     elseif   sa in [ "rec", "Rec"]                              wa = Rec
     elseif   sa in [ "pair-annihilation-1-photon", "PA1P"]      wa = PairA1P
@@ -724,7 +724,7 @@ function Base.string(process::AtomicProcess)
     elseif  process == PhotoIonFluor   return( "Photo-Ionization-Fluoresence" )  
     elseif  process == PhotoIonAuto    return( "Photo-Ionization-Autoionization" )  
     elseif  process == PhotoExc        return( "Photo-Excitation" )  
-    elseif  process == RadiativeX      return( "Radiative" )  
+    elseif  process == Radiative      return( "Radiative" )  
     elseif  process == RAuger          return( "Radiative Auger" )  
     elseif  process == Rec             return( "Rec" )  
     else    error("stop a")

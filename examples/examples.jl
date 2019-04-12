@@ -35,7 +35,7 @@ println("Ck)  Test of the MultipolePolarizibility module with ASF from an intern
 println("")
 println("D)   Tests & development of atomic processes")
 println("--------------------------------------------")
-println("Da)  Test of the Radiative module with ASF from an internally generated initial- and final-state multiplet.")
+println("Da)  Test of the PhotoEmission module with ASF from an internally generated initial- and final-state multiplet.")
 println("Db)  Test of the PhotoExcitation module with ASF from an internally generated initial- and final-state multiplet.")
 println("Dc)  Test of the Photoionization module with ASF from an internally generated initial- and final-state multiplet.")
 println("Dcp) Test of the Photoionization and PlasmaShift module with ASF from an internally generated initial- and final-state multiplet.")

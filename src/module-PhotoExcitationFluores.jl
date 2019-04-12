@@ -1,11 +1,11 @@
 
 """
 `module  JAC.PhotoExcitationFluores`  ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross 
-                                          sections and rates; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.AutoIonization.
+                                          sections and rates; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization.
 """
 module PhotoExcitationFluores 
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.AutoIonization
+    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -54,11 +54,11 @@ module PhotoExcitationFluores
     `struct  JAC.PhotoExcitationFluores.Channel`  ... defines a type for a photon-impact excitaton & autoionization channel that specifies 
                                                       all quantum numbers, phases and amplitudes.
 
-        + excitationChannel  ::JAC.Radiative.Channel       ... Channel that describes the photon-impact excitation process.
+        + excitationChannel  ::JAC.PhotoEmission.Channel       ... Channel that describes the photon-impact excitation process.
         + augerChannel       ::JAC.AutoIonization.Channel           ... Channel that describes the subsequent Auger/autoionization process.
     """
     struct  Channel
-        excitationChannel    ::JAC.Radiative.Channel
+        excitationChannel    ::JAC.PhotoEmission.Channel
         augerChannel         ::JAC.AutoIonization.Channel
     end ==#
 
@@ -75,8 +75,8 @@ module PhotoExcitationFluores
         + crossSection        ::EmProperty             ... total cross section of this pathway
         + hasChannels         ::Bool                   ... Determines whether the individual excitation and fluorescence channels are defined 
                                                            in terms of their multipole, gauge as well as the amplitude, or not.
-        + excitChannels       ::Array{JAC.Radiative.Channel,1}  ... List of excitation channels of this pathway.
-        + fluorChannels       ::Array{JAC.Radiative.Channel,1}  ... List of fluorescence channels of this pathway.
+        + excitChannels       ::Array{JAC.PhotoEmission.Channel,1}  ... List of excitation channels of this pathway.
+        + fluorChannels       ::Array{JAC.PhotoEmission.Channel,1}  ... List of fluorescence channels of this pathway.
     """
     struct  Pathway
         initialLevel          ::Level
@@ -86,8 +86,8 @@ module PhotoExcitationFluores
         fluorEnergy           ::Float64
         crossSection          ::EmProperty
         hasChannels           ::Bool
-        excitChannels         ::Array{JAC.Radiative.Channel,1}
-        fluorChannels         ::Array{JAC.Radiative.Channel,1}
+        excitChannels         ::Array{JAC.PhotoEmission.Channel,1}
+        fluorChannels         ::Array{JAC.PhotoEmission.Channel,1}
     end 
 
 
@@ -125,18 +125,18 @@ module PhotoExcitationFluores
     """
     function  computeAmplitudesProperties(pathway::PhotoExcitationFluores.Pathway, grid::Radial.Grid, settings::PhotoExcitationFluores.Settings)
         # Compute all excitation channels
-        neweChannels = Radiative.Channel[]
+        neweChannels = PhotoEmission.Channel[]
         for eChannel in pathway.excitChannels
-            amplitude   = JAC.Radiative.amplitude("absorption", eChannel.multipole, eChannel.gauge, pathway.excitEnergy, 
+            amplitude   = JAC.PhotoEmission.amplitude("absorption", eChannel.multipole, eChannel.gauge, pathway.excitEnergy, 
                                                   pathway.intermediateLevel, pathway.initialLevel, grid)
-             push!( neweChannels, Radiative.Channel( eChannel.multipole, eChannel.gauge, amplitude))
+             push!( neweChannels, PhotoEmission.Channel( eChannel.multipole, eChannel.gauge, amplitude))
         end
         # Compute all fluorescence channels
-        newfChannels = Radiative.Channel[]
+        newfChannels = PhotoEmission.Channel[]
         for fChannel in pathway.fluorChannels
-            amplitude   = JAC.Radiative.amplitude("emission", fChannel.multipole, fChannel.gauge, pathway.fluorEnergy, 
+            amplitude   = JAC.PhotoEmission.amplitude("emission", fChannel.multipole, fChannel.gauge, pathway.fluorEnergy, 
                                                   pathway.finalLevel, pathway.intermediateLevel, grid)
-            push!( newfChannels, Radiative.Channel( fChannel.multipole, fChannel.gauge, amplitude))
+            push!( newfChannels, PhotoEmission.Channel( fChannel.multipole, fChannel.gauge, amplitude))
         end
         crossSection = EmProperty(-1., -1.)
         pathway = PhotoExcitationFluores.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, pathway.excitEnergy, 
@@ -204,9 +204,9 @@ module PhotoExcitationFluores
                     fEnergy = intermediateMultiplet.levels[n].energy - finalMultiplet.levels[f].energy
                     if  eEnergy < 0.   ||   fEnergy < 0.    continue    end
 
-                    rSettings = JAC.Radiative.Settings( settings.multipoles, settings.gauges, false, false, false, Tuple{Int64,Int64}[], 0., 0., 0.)
-                    eChannels = JAC.Radiative.determineChannels(intermediateMultiplet.levels[n], initialMultiplet.levels[i], rSettings) 
-                    fChannels = JAC.Radiative.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], rSettings) 
+                    rSettings = JAC.PhotoEmission.Settings( settings.multipoles, settings.gauges, false, false, false, Tuple{Int64,Int64}[], 0., 0., 0.)
+                    eChannels = JAC.PhotoEmission.determineChannels(intermediateMultiplet.levels[n], initialMultiplet.levels[i], rSettings) 
+                    fChannels = JAC.PhotoEmission.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], rSettings) 
                     push!( pathways, PhotoExcitationFluores.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[i], finalMultiplet.levels[f], 
                                                                     eEnergy, fEnergy, EmProperty(0., 0.), true, eChannels, fChannels) )
                 end

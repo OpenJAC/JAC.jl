@@ -2,11 +2,11 @@
 """
 `module  JAC.Dielectronic`  
     ... a submodel of JAC that contains all methods for computing dielectronic recombination properties between some initial, intermediate 
-        and final-state multiplets; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.Auge.
+        and final-state multiplets; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.Auge.
 """
 module Dielectronic
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.AutoIonization
+    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -71,11 +71,11 @@ module Dielectronic
                                         phases and amplitudes.
 
          + augerChannel      ::JAC.AutoIonization.Channel        ... Channel that describes the capture, i.e. inverse Auger process.
-         + radiativeChannel  ::JAC.Radiative.Channel    ... Channel that describes the stabilization, i.e. photon emission.
+         + radiativeChannel  ::JAC.PhotoEmission.Channel    ... Channel that describes the stabilization, i.e. photon emission.
     """
     struct  Channel
         augerChannel         ::JAC.AutoIonization.Channel
-        radiativeChannel     ::JAC.Radiative.Channel
+        radiativeChannel     ::JAC.PhotoEmission.Channel
     end   ==#
 
 
@@ -95,7 +95,7 @@ module Dielectronic
         + hasChannels       ::Bool                    ... Determines whether the individual channels are defined in terms of their possible
                                                           Auger and radiative channels, or not.
         + captureChannels   ::Array{JAC.AutoIonization.Channel,1}   ... List of |i> -->  |n>   dielectronic (Auger) capture channels.
-        + photonChannels    ::Array{JAC.Radiative.Channel,1}        ... List of |n> -->  |f>   radiative stabilization channels.
+        + photonChannels    ::Array{JAC.PhotoEmission.Channel,1}        ... List of |n> -->  |f>   radiative stabilization channels.
     """
     struct  Pathway
         initialLevel        ::Level
@@ -109,7 +109,7 @@ module Dielectronic
         resonanceStrength   ::EmProperty
         hasChannels         ::Bool
         captureChannels     ::Array{JAC.AutoIonization.Channel,1} 
-        photonChannels      ::Array{JAC.Radiative.Channel,1} 
+        photonChannels      ::Array{JAC.PhotoEmission.Channel,1} 
     end 
 
 
@@ -119,7 +119,7 @@ module Dielectronic
     """
     function Pathway()
         em = EmProperty(0., 0.)
-        Pathway(initialLevel, intermediateLevel, finalLevel, 0., 0., 0., em, em, em, false, AutoIonization.Channel[], Radiative.Channel[])
+        Pathway(initialLevel, intermediateLevel, finalLevel, 0., 0., 0., em, em, em, false, AutoIonization.Channel[], PhotoEmission.Channel[])
     end
 
 
@@ -210,11 +210,11 @@ module Dielectronic
             push!( newcChannels, newcChannel)
         end
         #
-        newpChannels = Radiative.Channel[]
+        newpChannels = PhotoEmission.Channel[]
         for pChannel in pathway.photonChannels
-            amplitude   = JAC.Radiative.amplitude("emission", pChannel.multipole, pChannel.gauge, pathway.photonEnergy, 
+            amplitude   = JAC.PhotoEmission.amplitude("emission", pChannel.multipole, pChannel.gauge, pathway.photonEnergy, 
                                                   pathway.finalLevel, pathway.intermediateLevel, grid)
-            newpChannel = Radiative.Channel( pChannel.multipole, pChannel.gauge, amplitude)
+            newpChannel = PhotoEmission.Channel( pChannel.multipole, pChannel.gauge, amplitude)
             push!( newpChannels, newpChannel)
         end
         captureRate = 1.0
@@ -317,20 +317,20 @@ module Dielectronic
 
     """
     `JAC.Dielectronic.determinePhotonChannels(finalLevel::Level, intermediateLevel::Level, settings::Dielectronic.Settings)` 
-        ... to determine a list of Radiative.Channel for the photon transitions from the intermediate and to a final level, and by 
-            taking into account the particular settings of for this computation;  an Array{Radiative.Channel,1} is returned.
+        ... to determine a list of PhotoEmission.Channel for the photon transitions from the intermediate and to a final level, and by 
+            taking into account the particular settings of for this computation;  an Array{PhotoEmission.Channel,1} is returned.
     """
     function determinePhotonChannels(finalLevel::Level, intermediateLevel::Level, settings::Dielectronic.Settings)
-        channels = Radiative.Channel[];   
+        channels = PhotoEmission.Channel[];   
         symn = LevelSymmetry(intermediateLevel.J, intermediateLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
         for  mp in settings.multipoles
             if   JAC.AngularMomentum.isAllowedMultipole(symn, mp, symf)
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(channels, Radiative.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(channels, Radiative.Channel(mp, JAC.Babushkin, 0.) )  
-                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, Radiative.Channel(mp, JAC.Magnetic,  0.) );
+                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
+                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 
                 end

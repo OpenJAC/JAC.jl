@@ -75,11 +75,11 @@ module Cascade
     """
     `struct  Cascade.Step`  
         ... defines a type for an individual step of an excitation and/or decay cascade. Such an individual step is given by a well-defined 
-            process, such as Auger, RadiativeX, or others and two lists of initial- and final-state configuration that are (each) treated 
+            process, such as Auger, PhotoEmission, or others and two lists of initial- and final-state configuration that are (each) treated 
             together in a multiplet to allow for configuration interaction but to avoid 'double counting' of individual levels.
 
         + process          ::JAC.AtomicProcess         ... Atomic process that 'acts' in this step of the cascade.
-        + settings         ::Union{JAC.Radiative.Settings, JAC.AutoIonization.Settings}        
+        + settings         ::Union{JAC.PhotoEmission.Settings, JAC.AutoIonization.Settings}        
                                                        ... Settings for this step of the cascade.
         + initialConfs     ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state multiplet.
         + finalConfs       ::Array{Configuration,1}    ... List of one or several configurations that define the final-state multiplet.
@@ -88,7 +88,7 @@ module Cascade
     """
     struct  Step
         process            ::JAC.AtomicProcess
-        settings           ::Union{JAC.Radiative.Settings, JAC.AutoIonization.Settings}
+        settings           ::Union{JAC.PhotoEmission.Settings, JAC.AutoIonization.Settings}
         initialConfs       ::Array{Configuration,1}
         finalConfs         ::Array{Configuration,1}
         initialMultiplet   ::Multiplet
@@ -100,7 +100,7 @@ module Cascade
     `JAC.Cascade.Step()`  ... constructor for an 'empty' instance of a Cascade.Step.
     """
     function Step()
-        Step( Jac.NoProcess, JAC.Radiative.Settings, Configuration[], Configuration[], Multiplet(), Multiplet())
+        Step( Jac.NoProcess, JAC.PhotoEmission.Settings, Configuration[], Configuration[], Multiplet(), Multiplet())
     end
 
 
@@ -192,13 +192,13 @@ module Cascade
     `struct  Cascade.Data`  ... defines a type for an atomic cascade, i.e. lists of radiative, Auger and photoionization lines.
 
         + name           ::String                               ... A name for the cascade.
-        + linesR         ::Array{Radiative.Line,1}              ... List of radiative lines.
+        + linesR         ::Array{PhotoEmission.Line,1}              ... List of radiative lines.
         + linesA         ::Array{AutoIonization.Line,1}         ... List of Auger lines.
         + linesP         ::Array{PhotoIonization.Line,1}        ... List of photoionization lines.
     """  
     struct  Data
         name             ::String
-        linesR           ::Array{Radiative.Line,1}
+        linesR           ::Array{PhotoEmission.Line,1}
         linesA           ::Array{AutoIonization.Line,1}
         linesP           ::Array{PhotoIonization.Line,1}
     end 
@@ -208,7 +208,7 @@ module Cascade
     `JAC.Cascade.Data()`  ... (simple) constructor for cascade data.
     """
     function Data()
-        Data("", Array{Radiative.Line,1}[], Array{AutoIonization.Line,1}[], Array{PhotoIonization.Line,1}[] )
+        Data("", Array{PhotoEmission.Line,1}[], Array{AutoIonization.Line,1}[], Array{PhotoIonization.Line,1}[] )
     end
 
 
@@ -391,15 +391,15 @@ module Cascade
 
     """
     `JAC.Cascade.computeSteps(comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
-        ... computes in turn all the requested transition amplitudes and Radiative.Line's, AutoIonization.Line's, etc. for all pre-specified decay
+        ... computes in turn all the requested transition amplitudes and PhotoEmission.Line's, AutoIonization.Line's, etc. for all pre-specified decay
             steps of the cascade. When compared with the standard atomic process computations, however, the amount of output is 
             largely reduced. A set of  data::Cascade.Data  is returned.
     """
     function computeSteps(comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
-        linesA = AutoIonization.Line[];    linesR = Radiative.Line[];    linesP = PhotoIonization.Line[]    
+        linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    linesP = PhotoIonization.Line[]    
         ##x println(" ")
         ##x println("  Perform transition amplitude and line computations for $(length(comp.steps)) individual steps of cascade:")
-        ##x println("  Adapt the present augerSettings, RadiativeSettings, etc. for real computations.")
+        ##x println("  Adapt the present augerSettings, PhotoEmissionSettings, etc. for real computations.")
         ##x print(  "  $augerSettings ")
         ##x print(  " $radiativeSettings ")
         ##x println(" ");    
@@ -412,8 +412,8 @@ module Cascade
                 newLines = JAC.AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
                                                          step.settings, output=true, printout=false) 
                 append!(linesA, newLines);    nt = length(linesA)
-            elseif  step.process == JAC.RadiativeX
-                newLines = JAC.Radiative.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
+            elseif  step.process == JAC.Radiative
+                newLines = JAC.PhotoEmission.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
                                                              step.settings, output=true, printout=false) 
                 append!(linesR, newLines);    nt = length(linesR)
             else   error("Unsupported atomic process for cascade computations.")
@@ -444,10 +444,10 @@ module Cascade
                         maxEn = max(maxEn, blockList[a].multiplet.levels[p].energy - blockList[b].multiplet.levels[q].energy)
                     end
                     for  process  in  comp.processes
-                        if      process == JAC.RadiativeX   
+                        if      process == JAC.Radiative   
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons
-                                settings = JAC.Radiative.Settings([E1, M1], [JAC.UseBabushkin], false, false, false, Tuple{Int64,Int64}[], 0., 0., 1.0e6)
+                                settings = JAC.PhotoEmission.Settings([E1, M1], [JAC.UseBabushkin], false, false, false, Tuple{Int64,Int64}[], 0., 0., 1.0e6)
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
                             end
@@ -901,7 +901,7 @@ module Cascade
                     for  p in levels[en].parents
                         idx = p.index
                         if      p.process == JAC.Auger         lev = data.linesA[idx].initialLevel
-                        elseif  p.process == JAC.RadiativeX    lev = data.linesR[idx].initialLevel
+                        elseif  p.process == JAC.Radiative    lev = data.linesR[idx].initialLevel
                         elseif  p.process == JAC.Photo         lev = data.linesP[idx].initialLevel
                         else    error("stop a")    end
                         push!( pProcessSymmetryEnergyList, (p.process, lev.basis.NoElectrons, LevelSymmetry(lev.J, lev.parity), lev.energy) )
@@ -909,7 +909,7 @@ module Cascade
                     for  d in levels[en].daugthers
                         idx = d.index
                         if      d.process == JAC.Auger         lev = data.linesA[idx].finalLevel
-                        elseif  d.process == JAC.RadiativeX    lev = data.linesR[idx].finalLevel
+                        elseif  d.process == JAC.Radiative    lev = data.linesR[idx].finalLevel
                         elseif  d.process == JAC.Photo         lev = data.linesP[idx].finalLevel
                         else    error("stop b")    end
                         push!( dProcessSymmetryEnergyList, (d.process, lev.basis.NoElectrons, LevelSymmetry(lev.J, lev.parity), lev.energy) )
@@ -951,7 +951,7 @@ module Cascade
                     level.relativeOcc = 0.
                     for  i = 1:length(level.daugthers)
                         idx = level.daugthers[i].index
-                        if      level.daugthers[i].process == JAC.RadiativeX    rate[i] = data.lineR[idx].photonRate.Babushkin
+                        if      level.daugthers[i].process == JAC.Radiative    rate[i] = data.lineR[idx].photonRate.Babushkin
                         elseif  level.daugthers[i].process == JAC.Auger         rate[i] = data.lineA[idx].totalRate
                         else    error("stop a; process = $(level.daugthers[i].process) ")
                         end
@@ -960,7 +960,7 @@ module Cascade
                     # Shift the relative occupation to the 'daugther' levels due to the different decay pathes
                     for  i = 1:length(level.daugthers)
                         idx = level.daugthers[i].index
-                        if      level.daugthers[i].process == JAC.RadiativeX    line = data.lineR[idx]
+                        if      level.daugthers[i].process == JAC.Radiative    line = data.lineR[idx]
                         elseif  level.daugthers[i].process == JAC.Auger         line = data.lineA[idx]
                         else    error("stop b; process = $(level.daugthers[i].process) ")
                         end
@@ -1009,10 +1009,10 @@ module Cascade
         for  i = 1:length(data.linesR)
             line = data.linesR[i]
             iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(JAC.RadiativeX, i)] ) 
+                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(JAC.PhotoEmission, i)] ) 
             Cascade.pushLevels!(levels, iLevel)  
             fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(JAC.RadiativeX, i)], Cascade.LineIndex[] ) 
+                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(JAC.PhotoEmission, i)], Cascade.LineIndex[] ) 
             Cascade.pushLevels!(levels, fLevel)  
         end
 

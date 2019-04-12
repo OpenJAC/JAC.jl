@@ -18,7 +18,7 @@ Furthermore, JAC supports the computation of the following (transition) amplitud
                                               free electron.
    + PhotoRecombination.amplitude()    ...... Photorecombination amplitudes for the emission of a photon due to the capture of a 
                                               free electron.
-   + Radiative.amplitude()             ...... Transition amplitude for the emission or absorption of an multipole photon.
+   + PhotoEmission.amplitude()             ...... Transition amplitude for the emission or absorption of an multipole photon.
 
 """
 function amplitudes()  end
@@ -365,7 +365,7 @@ better understand the structure and notations within the JAC program.
   + `Line`: atomic transition that is characterized in terms of a well-defined initial and final level as well as it occurs for the computation
      of various properties, such as cross sections or rates, angular distribution parameters. Typically, a line contains various channels
      (sublines),for instance, due to occurance of multiploles or partial waves in the decomposition of the many-electron matrix elements; 
-     cf. Auger.Line, Radiative.Line, PhotoExcitation.Line, PhotoRecombination.Line and elsewhere.
+     cf. Auger.Line, PhotoEmission.Line, PhotoExcitation.Line, PhotoRecombination.Line and elsewhere.
 
   + `Multiplet`: Atomic levels are naturally 'grouped together' into (so-called) mutiplets; most often, this term just stands for all fine-
      structure levels of a given configurations. More generally, multiplets may refer to any group of levels, for instance, to groups of the same
@@ -542,7 +542,7 @@ Following the Julia's standard conventions, all types (struct) are named in Came
                                               with (possible) subchannels.
       + PairProduction.Settings           ... settings for computing PEPP lines.
       + PhotoExcitation.Line              ... photoexcitation line between (two) specified initial- and final- state levels and with (possible
-                                              JAC.Radiative.Channel) subchannels.
+                                              JAC.PhotoEmission.Channel) subchannels.
       + PhotoExcitation.Settings          ... settings for computing photoexcitation lines.
       + PhotoExcitationAutoion.Channel    ... photo-excitation autoionization channel of well-defined energies of the incoming photon as well as 
                                               the partial wave and phase of the outgoing electron.
@@ -558,9 +558,9 @@ Following the Julia's standard conventions, all types (struct) are named in Came
       + PhotoRecombination.Line           ... radiative electron capture line between (two) specified initial- and final-state levels and with 
                                               (possible) subchannels.
       + PhotoRecombination.Settings       ... settings for computing radiative electron capture lines.
-      + Radiative.Channel                 ... radiative channel of well-defined multipolarity and gauge.
-      + Radiative.Line                    ... radiative line between (two) specified initial- and final-state levels and with (possible) sublines.
-      + Radiative.Settings                ... settings for computing radiative lines.
+      + PhotoEmission.Channel                 ... radiative channel of well-defined multipolarity and gauge.
+      + PhotoEmission.Line                    ... radiative line between (two) specified initial- and final-state levels and with (possible) sublines.
+      + PhotoEmission.Settings                ... settings for computing radiative lines.
       + RadiativeAuger.Channel            ... RadiativeAuger channel of a partial outgoing waves and one photon with well-defined energy.
       + RadiativeAuger.Line               ... RadiativeAuger line between (two) specified initial- and final-state levels and with (possible) 
                                               subchannels.
@@ -680,7 +680,7 @@ In addition, the computation of the following excitation, ionization and decay p
                                   |i(N)> + omega --> |m(N-1)> + e_p --> |f(N-1)>  + e_p + omega'.
    + PhotoIonAuto       ......... **Photoionization processes with subsequent autoionization**; 
                                   |i(N)> + omega --> |m(N-1)> + e_p --> |f(N-1)>  + e_p + e_a  (not yet).
-   + RadiativeX         ......... **Radiative (multipole) transitions** between bound-state levels of the same charge state;
+   + Radiative         ......... **Radiative (multipole) transitions** between bound-state levels of the same charge state;
                                   transition probabilities; |i(N)> --> |f(N)>  + omega.
    + RadAuger           ......... **Radiative Auger**; simultaneous photon emission and autoionization cross sections; 
                                   |i(N)> --> |f(N-1)> + e_A + omega.

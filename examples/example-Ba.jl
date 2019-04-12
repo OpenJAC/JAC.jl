@@ -20,12 +20,12 @@ for  finalLevel in wma.levels
 end
 
 
-println("\n\nElectromagnetic multipole-transition (absorption) amplitudes from Radiative.amplitude(..):\n")
+println("\n\nElectromagnetic multipole-transition (absorption) amplitudes from PhotoEmission.amplitude(..):\n")
 for  finalLevel in wma.levels
     for  initialLevel in wma.levels
         if  flow <= finalLevel.index <= fup   &&    ilow <= initialLevel.index <= iup
-            Radiative.amplitude("absorption", E1, Coulomb,  1.0, finalLevel, initialLevel, grid; display=true)
-            Radiative.amplitude("absorption", M1, Magnetic, 1.0, finalLevel, initialLevel, grid; display=true)
+            PhotoEmission.amplitude("absorption", E1, Coulomb,  1.0, finalLevel, initialLevel, grid; display=true)
+            PhotoEmission.amplitude("absorption", M1, Magnetic, 1.0, finalLevel, initialLevel, grid; display=true)
         end
     end
 end

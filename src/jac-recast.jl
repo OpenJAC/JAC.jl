@@ -16,7 +16,7 @@
   + `("rate: radiative, to g_f", value::Float64)`  ... to recast a given radiative rate (Einstein A in atomic units) into an oscillator 
                         strength g_f; a Float64 is returned.
 """
-function recast(sa::String, line::Union{Einstein.Line,Radiative.Line}, wa::Float64)
+function recast(sa::String, line::Union{Einstein.Line,PhotoEmission.Line}, wa::Float64)
     global  CONVERT_ENERGY_AU_TO_EV, CONVERT_ENERGY_AU_TO_KAYSERS, CONVERT_ENERGY_AU_TO_PER_SEC, CONVERT_TIME_AU_TO_SEC,
             CONVERT_CROSS_SECTION_AU_TO_BARN,  CONVERT_RATE_AU_TO_PER_SEC 
    

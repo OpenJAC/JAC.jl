@@ -90,29 +90,29 @@ end
 
 
 """
-    + `("spectrum: transition rates over energy", lines::Array{Radiative.Line,1})`  
+    + `("spectrum: transition rates over energy", lines::Array{PhotoEmission.Line,1})`  
         ... to plot the transition rates of all lines as function of their transition energies. The plot is shown in a new window but nothing 
             is returned otherwise. **Not yet implemented !**
 
-    + `("spectrum: oscillator strength over energy, emission", lines::Array{Radiative.Line,1})` or
-      `("spectrum: oscillator strength over energy, absorption", lines::Array{Radiative.Line,1})` 
+    + `("spectrum: oscillator strength over energy, emission", lines::Array{PhotoEmission.Line,1})` or
+      `("spectrum: oscillator strength over energy, absorption", lines::Array{PhotoEmission.Line,1})` 
         ... to plot the absorption oscillator strength of all lines as function of their transition energies. Again, a new window is opened but
             nothing returned by this method. **Not yet implemented !**
 """
-function plot(sa::String, lines::Array{Radiative.Line,1})
+function plot(sa::String, lines::Array{PhotoEmission.Line,1})
     error("call instead:  using Plots; pyplot()    ... to access this method simply by plot(...) ... not yet implemented !")
 end
 
 
 
 """
-    + `("spectrum: transition rates over energy, Gaussian", lines::Array{Radiative.Line,1}; widths=value::Float64)` or
-      `("spectrum: transition rates over energy, Lorentzian", lines::Array{Radiative.Line,1}; widths=value::Float64)`
+    + `("spectrum: transition rates over energy, Gaussian", lines::Array{PhotoEmission.Line,1}; widths=value::Float64)` or
+      `("spectrum: transition rates over energy, Lorentzian", lines::Array{PhotoEmission.Line,1}; widths=value::Float64)`
         ... to plot the transition rates of all lines as function of their transition energies but with a Gaussian or Lorentzian distribution. Again, 
             a new window is opened but nothing returned by this method. It still need to be decided how the widths (and, perhaps, other parameters) 
             will be communicated to the method. **Not yet implemented !**
 """
-function plot(sa::String, lines::Array{Radiative.Line,1}, widths::Float64)
+function plot(sa::String, lines::Array{PhotoEmission.Line,1}, widths::Float64)
     error("call instead:  using Plots; pyplot()    ... to access this method simply by plot(...) ... not yet implemented !")
 end
 

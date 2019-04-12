@@ -669,17 +669,17 @@ end
 
 
 """
-`JAC.testModule_Radiative(; short::Bool=true)`  ... tests on module JAC.Radiative.
+`JAC.testModule_PhotoEmission(; short::Bool=true)`  ... tests on module JAC.PhotoEmission.
 """
-function testModule_Radiative(; short::Bool=true) 
-    JAC.define("print summary: open", "test-Radiative-new.sum")
-    printstyled("\n\nTest the module  Radiative  ... \n", color=:cyan)
+function testModule_PhotoEmission(; short::Bool=true) 
+    JAC.define("print summary: open", "test-PhotoEmission-new.sum")
+    printstyled("\n\nTest the module  PhotoEmission  ... \n", color=:cyan)
     ### Make the tests
     wa = Atomic.Computation("xx",  Nuclear.Model(36.);
                             initialConfigs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                             finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
-                            process = JAC.RadiativeX, 
-                            processSettings=Radiative.Settings([E1, M1, E2, M2], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, 
+                            process = JAC.Radiative, 
+                            processSettings=PhotoEmission.Settings([E1, M1, E2, M2], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, 
                             true, Tuple{Int64,Int64}[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)], 0., 0., 10000. ) )
     ##x streamDummy = open(pwd() * "/runtests.dummy", "w")
     ##x redirect_stdout(streamDummy) do   
@@ -689,9 +689,9 @@ function testModule_Radiative(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Radiative-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-Radiative-new.sum"), "Einstein coefficients, t", 100) 
-    testPrint("testModule_Radiative()::", success)
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoEmission-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-PhotoEmission-new.sum"), "Einstein coefficients, t", 100) 
+    testPrint("testModule_PhotoEmission()::", success)
     return(success)  
 end
 
