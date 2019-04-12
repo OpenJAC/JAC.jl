@@ -62,7 +62,7 @@ end
 #
 # Global settings that can be (re-) defined by the user.
 JAC_FRAMEWORK               = "relativistic"
-JAC_CONT_SOLUTION           = ContBessel                ###  ContBessel    ContSine     AsymptoticCoulomb    NonrelativisticCoulomb    BsplineGalerkin
+JAC_CONT_SOLUTION           = AsymptoticCoulomb         ###  ContBessel    ContSine     AsymptoticCoulomb    NonrelativisticCoulomb    BsplineGalerkin
 JAC_CONT_NORMALIZATION      = PureSine                  ###  PureSine    CoulombSine    OngRussek
 JAC_QED_HYDROGENIC_LAMBDAC  = [1.0,  1.0,  1.0,  1.0,  1.0]
 JAC_QED_NUCLEAR_CHARGE      = 0.1
@@ -81,6 +81,7 @@ JAC_TIME_UNIT               = "sec"
 
 JAC_PRINT_SUMMARY           = false
 JAC_PRINT_TEST              = false
+PRINT_DEBUG                 = false
 
 # global JAC_STANDARD_SUBSHELL_LIST  = nothing
 # JAC_STANDARD_GRID           = Radial.Grid("grid: exponential")

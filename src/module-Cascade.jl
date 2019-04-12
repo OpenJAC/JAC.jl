@@ -1,39 +1,57 @@
 
 """
-`module  JAC.Atomic`  ... a submodel of JAC that contains all methods to set-up and process (simple) atomic cascade computations; it is 
-                          using JAC, JAC.Radial, JAC.ManyElectron, JAC.Nuclear.
+`module  JAC.Atomic`  
+    ... a submodel of JAC that contains all methods to set-up and process (simple) atomic cascade computations; 
+        it is using JAC, JAC.Radial, JAC.ManyElectron, JAC.Nuclear.
 """
 module Cascade
 
     using Printf, JAC, JAC.Radial, JAC.ManyElectron, JAC.Nuclear
 
-
+    #==
     """
     `@enum   Cascade.Approach`  ... defines a enumeration for the computational approach/model that is applied to generate and evaluate a cascade.
 
-        + averageSCA   ... to evaluate the level structure and transitions of all involved levels in single-configuration approximation.
+        + AverageSCA   ... to evaluate the level structure and transitions of all involved levels in single-configuration approximation.
                            In this approach, moreover, ... now tell further limitations.
     """
-    @enum   Approach    averageSCA
+    @enum   Approach    averageSCA  ==#
+
+    
+    """
+    `abstract type Cascade.Approach` 
+        ... defines an abstract and a number of singleton types for the computational approach/model that is applied to generate and evaluate 
+            a cascade.
+
+        + struct AverageSCA         ... to evaluate the level structure and transitions of all involved levels in single-configuration 
+                                        approach but without configuration interaction and from just a single orbital set.
+        + struct SCA                ... to evaluate the level structure and transitions of all involved levels in single-configuration 
+                                        approach but by calculating all fine-structure resolved transitions.
+    """
+    abstract type  Approach                   end
+    struct         AverageSCA  <:  Approach   end
+    struct         SCA         <:  Approach   end
+    struct         UserMCA     <:  Approach   end
+    
 
 
     """
-    `struct  Cascade.Block`  ... defines a type for an individual block of configurations that are treatet together within the cascade. 
-                                 Such an block is given by a list of configurations that may occur as initial- or final-state configurations in some
-                                 step of the canscade and that are treated together in a single multiplet to allow for configuration interaction 
-                                 but to avoid 'double counting' of individual levels.
+    `struct  Cascade.Block`  
+        ... defines a type for an individual block of configurations that are treatet together within the cascade. Such an block is given 
+            by a list of configurations that may occur as initial- or final-state configurations in some step of the canscade and that are 
+            treated together in a single multiplet to allow for configuration interaction but to avoid 'double counting' of individual levels.
 
         + NoElectrons     ::Int64                     ... Number of electrons in this block.
         + confs           ::Array{Configuration,1}    ... List of one or several configurations that define the multiplet.
         + hasMultiplet    ::Bool                      ... true if the (level representation in the) multiplet has already been computed and
-                                                          and false otherwise.
+                                                          false otherwise.
         + multiplet       ::Multiplet                 ... Multiplet of the this block.
     """
     struct  Block
         NoElectrons       ::Int64
         confs             ::Array{Configuration,1} 
         hasMultiplet      ::Bool
-        multiplet
+        multiplet         ::Multiplet  
     end 
 
 
@@ -45,9 +63,7 @@ module Cascade
     end
 
 
-    """
-    `Base.show(io::IO, block::Cascade.Block)`  ... prepares a proper printout of the variable block::Cascade.Block.
-    """
+    # `Base.show(io::IO, block::Cascade.Block)`  ... prepares a proper printout of the variable block::Cascade.Block.
     function Base.show(io::IO, block::Cascade.Block) 
         println(io, "NoElectrons:        $(block.NoElectrons)  ")
         println(io, "confs :             $(block.confs )  ")
@@ -57,25 +73,24 @@ module Cascade
 
 
     """
-    `struct  Cascade.Step`  ... defines a type for an individual step of an excitation and/or decay cascade. Such an individual step is given
-                                by a well-defined process, such as AugerX, RadiativeX, or others and two lists of initial- and final-state 
-                                configuration that are (each) treated together in a multiplet to allow for configuration interaction but 
-                                to avoid 'double counting' of individual levels.
+    `struct  Cascade.Step`  
+        ... defines a type for an individual step of an excitation and/or decay cascade. Such an individual step is given by a well-defined 
+            process, such as Auger, RadiativeX, or others and two lists of initial- and final-state configuration that are (each) treated 
+            together in a multiplet to allow for configuration interaction but to avoid 'double counting' of individual levels.
 
         + process          ::JAC.AtomicProcess         ... Atomic process that 'acts' in this step of the cascade.
-        + initialConfs     ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state 
-                                                           multiplet of this step.
+        + settings         ::Union{JAC.Radiative.Settings, JAC.AutoIonization.Settings}        
+                                                       ... Settings for this step of the cascade.
+        + initialConfs     ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state multiplet.
         + finalConfs       ::Array{Configuration,1}    ... List of one or several configurations that define the final-state multiplet.
-        + hasMultiplets    ::Bool                      ... true if the (level represenation in the) multiplets are already computed/included,
-                                                           and false otherwise (usually during the set-up and refinement of a cascade).
         + initialMultiplet ::Multiplet                 ... Multiplet of the initial-state levels of this step of the cascade.
         + finalMultiplet   ::Multiplet                 ... Multiplet of the final-state levels of this step of the cascade.
     """
     struct  Step
         process            ::JAC.AtomicProcess
+        settings           ::Union{JAC.Radiative.Settings, JAC.AutoIonization.Settings}
         initialConfs       ::Array{Configuration,1}
         finalConfs         ::Array{Configuration,1}
-        hasMultiplets      ::Bool
         initialMultiplet   ::Multiplet
         finalMultiplet     ::Multiplet
     end 
@@ -85,32 +100,30 @@ module Cascade
     `JAC.Cascade.Step()`  ... constructor for an 'empty' instance of a Cascade.Step.
     """
     function Step()
-        Step( )
+        Step( Jac.NoProcess, JAC.Radiative.Settings, Configuration[], Configuration[], Multiplet(), Multiplet())
     end
 
 
-    """
-    `Base.show(io::IO, step::Cascade.Step)`  ... prepares a proper printout of the variable step::Cascade.Step.
-    """
+    # `Base.show(io::IO, step::Cascade.Step)`  ... prepares a proper printout of the variable step::Cascade.Step.
     function Base.show(io::IO, step::Cascade.Step) 
         println(io, "process:                $(step.process)  ")
+        println(io, "settings:               $(step.settings)  ")
         println(io, "initialConfs:           $(step.initialConfs)  ")
         println(io, "finalConfs:             $(step.finalConfs)  ")
-        println(io, "hasMultiplets:          $(step.hasMultiplets)  ")
         println(io, "initialMultiplet :      $(step.initialMultiplet )  ")
         println(io, "finalMultiplet:         $(step.finalMultiplet)  ")
     end
 
 
     """
-    `struct  Cascade.Computation`  ... defines a type for a cascade computation, i.e. for the computation of a whole excitation and/or decay 
-                                       cascade. The data from this computation can be modified, adapted and refined to the practical needs 
-                                       before the actual computations are carried out. Initially, this struct contains the physical metadata 
-                                       about the cascade to be calculated but gets enlarged in course of the computation to keep also wave 
-                                       functions, level multiplets, etc.
+    `struct  Cascade.Computation`  
+        ... defines a type for a cascade computation, i.e. for the computation of a whole excitation and/or decay cascade. The data 
+            from this computation can be modified, adapted and refined to the practical needs before the actual computations are 
+            carried out. Initially, this struct contains the physical metadata about the cascade to be calculated but gets enlarged 
+            in course of the computation to keep also wave functions, level multiplets, etc.
 
         + name               ::String                         ... A name for the cascade
-        + nuclearModel       ::Nuclear.Model           ... Model, charge and parameters of the nucleus.
+        + nuclearModel       ::Nuclear.Model                  ... Model, charge and parameters of the nucleus.
         + grid               ::Radial.Grid                    ... The radial grid to be used for the computation.
         + asfSettings        ::AsfSettings                    ... Provides the settings for the SCF process.
         + approach           ::Cascade.Approach               ... Computational approach/model that is applied to generate and evaluate the 
@@ -136,7 +149,7 @@ module Cascade
         nuclearModel         ::Nuclear.Model
         grid                 ::Radial.Grid
         asfSettings          ::AsfSettings
-        approach             ::Cascade.Approach
+        approach             ::Union{Cascade.Approach}
         processes            ::Array{JAC.AtomicProcess,1}
         initialConfs         ::Array{Configuration,1}
         initialLevels        ::Array{Tuple{Int64,Float64},1}
@@ -152,14 +165,12 @@ module Cascade
     `JAC.Cascade.Computation()`  ... constructor for an 'empty' instance of a Cascade.Computation.
     """
     function Computation()
-        Computation("",  Nuclear.Model(0.), Radial.Grid(), AsfSettings(), averageSCA, [AugerX], 
+        Computation("",  Nuclear.Model(0.), Radial.Grid(), AsfSettings(), averageSCA, [Auger], 
                     Configuration[], [(0, 0.)], 0, 0, Shell[], Shell[], CascadeComputationStep[] )
     end
 
 
-    """
-    `Base.show(io::IO, computation::Cascade.Computation)`  ... prepares a proper printout of the variable computation::Cascade.Computation.
-    """
+    # `Base.show(io::IO, computation::Cascade.Computation)`  ... prepares a proper printout of the variable computation::Cascade.Computation.
     function Base.show(io::IO, computation::Cascade.Computation) 
         println(io, "name:                     $(computation.name)  ")
         println(io, "nuclearModel:             $(computation.nuclearModel)  ")
@@ -182,13 +193,13 @@ module Cascade
 
         + name           ::String                               ... A name for the cascade.
         + linesR         ::Array{Radiative.Line,1}              ... List of radiative lines.
-        + linesA         ::Array{Auger.Line,1}                  ... List of Auger lines.
+        + linesA         ::Array{AutoIonization.Line,1}         ... List of Auger lines.
         + linesP         ::Array{PhotoIonization.Line,1}        ... List of photoionization lines.
     """  
     struct  Data
         name             ::String
         linesR           ::Array{Radiative.Line,1}
-        linesA           ::Array{Auger.Line,1}
+        linesA           ::Array{AutoIonization.Line,1}
         linesP           ::Array{PhotoIonization.Line,1}
     end 
 
@@ -197,13 +208,11 @@ module Cascade
     `JAC.Cascade.Data()`  ... (simple) constructor for cascade data.
     """
     function Data()
-        Data("", Array{Radiative.Line,1}[], Array{Auger.Line,1}[], Array{PhotoIonization.Line,1}[] )
+        Data("", Array{Radiative.Line,1}[], Array{AutoIonization.Line,1}[], Array{PhotoIonization.Line,1}[] )
     end
 
 
-    """
-    `Base.show(io::IO, data::Cascade.Data)`  ... prepares a proper printout of the variable data::Cascade.Data.
-    """
+    # `Base.show(io::IO, data::Cascade.Data)`  ... prepares a proper printout of the variable data::Cascade.Data.
     function Base.show(io::IO, data::Cascade.Data) 
         println(io, "name:                    $(data.name)  ")
         println(io, "linesR:                  $(data.linesR)  ")
@@ -211,7 +220,8 @@ module Cascade
         println(io, "linesP:                  $(data.linesP)  ")
     end
 
-
+    
+    #==
     """
     `@enum   Cascade.Property`  ... defines a enumeration for the various properties that can be obtained from the simulation of cascade data.
 
@@ -232,7 +242,42 @@ module Cascade
         + MonteCarlo          ... to simulate the cascade decay by a Monte-Carlo approach of possible pathes (not yet considered).
         + RateEquations       ... to solve the cascade by a set of rate equations (not yet considered).
     """
-    @enum   SimulationMethod    ProbPropagation   MonteCarlo  RateEquations
+    @enum   SimulationMethod    ProbPropagation   MonteCarlo  RateEquations   ==#
+
+    
+    
+    """
+    `abstract type  Cascade.Property`  
+        ... defines an abstract and various singleton types for the different properties that can be obtained from the simulation of cascade data.
+
+        + struct IonDist               ... simulate the 'ion distribution' as it is found after all cascade processes are completed.
+        + struct FinalDist             ... simulate the 'final-level distribution' as it is found after all cascade processes are completed.
+        + struct DecayPathes           ... determine the major 'decay pathes' of the cascade.
+        + struct ElectronIntensity     ... simulate the electron-line intensities as function of electron energy.
+        + struct PhotonIntensity       ... simulate  the photon-line intensities as function of electron energy. 
+        + struct ElectronCoincidence   ... simulate electron-coincidence spectra.
+    """
+    abstract type  Property                      end
+    struct   IonDist              <:  Property   end
+    struct   FinalDist            <:  Property   end
+    struct   DecayPathes          <:  Property   end
+    struct   ElectronIntensity    <:  Property   end
+    struct   PhotonIntensity      <:  Property   end
+    struct   ElectronCoincidence  <:  Property   end
+
+
+    """
+    abstract type  Cascade.SimulationMethod`  
+        ... defines a enumeration for the various methods that can be used to run the simulation of cascade data.
+
+        + struct ProbPropagation     ... to propagate the (occupation) probabilites of the levels until no further changes occur.
+        + struct MonteCarlo          ... to simulate the cascade decay by a Monte-Carlo approach of possible pathes (not yet considered).
+        + struct RateEquations       ... to solve the cascade by a set of rate equations (not yet considered).
+    """
+    abstract type  SimulationMethod          end
+    struct   ProbPropagation  <:  Property   end
+    struct   MonteCarlo       <:  Property   end
+    struct   RateEquations    <:  Property   end
 
 
     """
@@ -259,9 +304,7 @@ module Cascade
     end
 
 
-    """
-    `Base.show(io::IO, settings::SimulationSettings)`  ... prepares a proper printout of the variable settings::SimulationSettings.
-    """
+    # `Base.show(io::IO, settings::SimulationSettings)`  ... prepares a proper printout of the variable settings::SimulationSettings.
     function Base.show(io::IO, settings::SimulationSettings) 
         println(io, "minElectronEnergy:        $(settings.minElectronEnergy)  ")
         println(io, "maxElectronEnergy:        $(settings.maxElectronEnergy)  ")
@@ -284,9 +327,7 @@ module Cascade
     end 
 
 
-    """
-    `Base.show(io::IO, simulation::Cascade.Simulation)`  ... prepares a proper printout of the variable simulation::Cascade.Simulation.
-    """
+    # `Base.show(io::IO, simulation::Cascade.Simulation)`  ... prepares a proper printout of the variable simulation::Cascade.Simulation.
     function Base.show(io::IO, simulation::Cascade.Simulation) 
         println(io, "properties:        $(simulation.properties)  ")
         println(io, "method:            $(simulation.method)  ")
@@ -306,9 +347,7 @@ module Cascade
     end 
 
 
-    """
-    `Base.show(io::IO, index::Cascade.LineIndex)`  ... prepares a proper printout of the variable index::Cascade.LineIndex.
-    """
+    # `Base.show(io::IO, index::Cascade.LineIndex)`  ... prepares a proper printout of the variable index::Cascade.LineIndex.
     function Base.show(io::IO, index::Cascade.LineIndex) 
         println(io, "process:        $(index.process)  ")
         println(io, "index:          $(index.index)  ")
@@ -338,9 +377,7 @@ module Cascade
 
 
 
-    """
-    `Base.show(io::IO, level::Cascade.Level)`  ... prepares a proper printout of the variable level::Cascade.Level.
-    """
+    # `Base.show(io::IO, level::Cascade.Level)`  ... prepares a proper printout of the variable level::Cascade.Level.
     function Base.show(io::IO, level::Cascade.Level) 
         println(io, "energy:        $(level.energy)  ")
         println(io, "J:             $(level.J)  ")
@@ -353,115 +390,52 @@ module Cascade
 
 
     """
-    `JAC.Cascade.computeTransitionLines(comp::Cascade.Computation)` ... computes in turn all the requested transition amplitudes and 
-         Radiative.Line's, Auger.Line's, etc. as specified by the (list of) steps of the given cascade computationa. When compared with the 
-         standard atomic process computations, the amount of output is largely reduced. A data::Cascade.Data is returned
+    `JAC.Cascade.computeSteps(comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
+        ... computes in turn all the requested transition amplitudes and Radiative.Line's, AutoIonization.Line's, etc. for all pre-specified decay
+            steps of the cascade. When compared with the standard atomic process computations, however, the amount of output is 
+            largely reduced. A set of  data::Cascade.Data  is returned.
     """
-    function computeTransitionLines(comp::Cascade.Computation)
-        linesA = Auger.Line[];    linesR = Radiative.Line[];    linesP = PhotoIonization.Line[]    
-        augerSettings     = Auger.Settings(false, false, Tuple{Int64,Int64}[], 0., 1.0e6, 4, false)
-        radiativeSettings = Radiative.Settings([E1], [JAC.UseBabushkin], false, false, false, false, Tuple{Int64,Int64}[], 0., 0., 1.0e6)
-        println(" ")
-        println("  Perform transition amplitude and line computations for $(length(comp.steps)) individual steps of cascade:")
-        println("  Adapt the present augerSettings, RadiativeSettings, etc. for real computations.")
-        print(  "  $augerSettings ")
-        print(  " $radiativeSettings ")
-        println(" ");    nt = 0
-        for  st = 1:length(comp.steps)
-            nc = length(comp.steps[st].initialMultiplet.levels) * length(comp.steps[st].finalMultiplet.levels) 
-            println("  $st) Perform $(string(comp.steps[st].process)) amplitude computations for up to $nc lines (without selection rules):")
-            println(" ")
-            if      JAC.AugerX     == comp.steps[st].process  
-                newLines = JAC.Auger.computeLines(comp.steps[st].finalMultiplet, comp.steps[st].initialMultiplet, comp.grid, augerSettings) 
+    function computeSteps(comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
+        linesA = AutoIonization.Line[];    linesR = Radiative.Line[];    linesP = PhotoIonization.Line[]    
+        ##x println(" ")
+        ##x println("  Perform transition amplitude and line computations for $(length(comp.steps)) individual steps of cascade:")
+        ##x println("  Adapt the present augerSettings, RadiativeSettings, etc. for real computations.")
+        ##x print(  "  $augerSettings ")
+        ##x print(  " $radiativeSettings ")
+        ##x println(" ");    
+        nt = 0;   st = 0
+        for  step  in  stepList
+            st = st + 1
+            nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels) 
+            println("\n  $st) Perform $(string(step.process)) amplitude computations for up to $nc lines (without selection rules): ")
+            if      step.process == JAC.Auger 
+                newLines = JAC.AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
+                                                         step.settings, output=true, printout=false) 
                 append!(linesA, newLines);    nt = length(linesA)
-            elseif  JAC.RadiativeX == comp.steps[st].process   
-                newLines = JAC.Radiative.computeLines(comp.steps[st].finalMultiplet, comp.steps[st].initialMultiplet, comp.grid, radiativeSettings) 
+            elseif  step.process == JAC.RadiativeX
+                newLines = JAC.Radiative.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
+                                                             step.settings, output=true, printout=false) 
                 append!(linesR, newLines);    nt = length(linesR)
-            else   error("Unsupported atomic process in cascade computations.")
+            else   error("Unsupported atomic process for cascade computations.")
             end
-            println("\n  Step $st:: A total of $(length(newLines)) $(string(comp.steps[st].process)) lines are calculated, giving now rise " *
-                    "to a total of $nt $(string(comp.steps[st].process)) lines." )
+            println("     Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, giving now rise " *
+                    "to a total of $nt $(string(step.process)) lines." )
         end
         #
         data = Cascade.Data(comp.name, linesR, linesA, linesP)
     end
 
-    
-    """
-    `JAC.Cascade.determineBlocks(comp::Cascade.Computation, confs::Array{Configuration,1})`  ... determines all block::Cascade.Block that need 
-         to be computed for this cascade. The different cascade approches follow different strategies in defining these blocks. 
-         A blockList::Array{Cascade.Block,1} is returned.
-    """
-    function determineBlocks(comp::Cascade.Computation, confs::Array{Configuration,1})
-        blockList = Cascade.Block[]
-        #
-        # In the averageSCA approach, use every configuration as an individual block
-        if    comp.approach == averageSCA
-            for  confa  in confs
-                push!( blockList, Cascade.Block(confa.NoElectrons, [confa], false, JAC.Multiplet()) )
-            end
-        else  stop("Unsupported cascade approach.")
-        end
-        #
-        # Calculate the multiplets for all blocks
-        println(" ")
-        println("  Cascade.determineBlocks-WARNING: " *
-                "A total of $(length(blockList)) blocks have been determined ... but are now restricted to 5 blocks:\n")
-        newBlockList  = Cascade.Block[]
-        for i = 3:7  # 1:length(blockList) 
-            sa = "";   na = 0;    for conf in blockList[i].confs   sa = sa * string(conf) * ", ";   na = na + conf.NoElectrons    end
-            print("  Multiplet computations for $(sa[1:end-2]) with $na electrons ... ")
-            basis     = perform("computation: SCF", blockList[i].confs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
-            multiplet = perform("computation: CI", basis, comp.nuclearModel, comp.grid, comp.multipletSettings; printout=false)
-            push!( newBlockList, Cascade.Block(blockList[i].NoElectrons, blockList[i].confs, true, multiplet) )
-            println(" and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
-        end
-        #
-        blockList = newBlockList
-        #
-        # Display all blocks
-        println(" ")
-        println("  Predefined configuration 'blocks' in the given cascade model:")
-        println(" ")
-        println("  ", JAC.TableStrings.hLine(134))
-        println("      No.   Configurations                                                                       " *
-                "      Range of total energies " * JAC.TableStrings.inUnits("energy") ) 
-        println("  ", JAC.TableStrings.hLine(134))
-        for  i = 1:length(blockList)
-            sa = "   " * JAC.TableStrings.flushright( 6, string(i); na=2)
-            sb = " ";  for conf in blockList[i].confs   sb = sb * string(conf) * ", "    end
-            en = Float64[];   for j = 1:length(blockList[i].multiplet.levels)    push!(en, blockList[i].multiplet.levels[j].energy)    end
-            minEn = minimum(en);   minEn = JAC.convert("energy: from atomic", minEn)
-            maxEn = maximum(en);   maxEn = JAC.convert("energy: from atomic", maxEn)
-            sa = sa * JAC.TableStrings.flushleft(90, sb[1:end-2]; na=2) 
-            sa = sa * JAC.TableStrings.flushleft(30, string( round(minEn)) * " ... " * string( round(maxEn)); na=2)
-            println(sa)
-        end
-        println("  ", JAC.TableStrings.hLine(134))
-        #
-        # If needeed, support their modification, for instance, by combining two or more blocks
-        println(" ")
-        println("  Modify individual blocks by given rules ? [currently No]")
-        yes = false   # JAC.yesno("Modify individual blocks by given rules ?  [N|y]", "N")
-        if  yes
-            println("  The following rules can be applied to merge 'blocks'; give one instruction after the other -- not yet implemented:")
-            println("    Rule:        ... to merge two or more blocks into a single one.")
-            # printout again all new constructed blocks
-        end
-
-        return( blockList )
-    end
-
 
     """
-    `JAC.Cascade.determineSteps(comp::Cascade.Computation, blockList::Array{Cascade.Block,1})`  ... determines all steps::Cascade.Step that need 
-         to be computed for this cascade. It cycles through the given processes and distinguished between the different cascade approaches. 
-         It also checks that the averaged energies of the configuration allows such a step energetically. A stepList::Array{Cascade.Step,1} is 
-         returned
+    `JAC.Cascade.determineSteps(comp::Cascade.Computation, blockList::Array{Cascade.Block,1})`  
+        ... determines all steps::Cascade.Step that need to be computed for this cascade. It cycles through the given processes and 
+            distinguished between the different cascade approaches. It also checks that the averaged energies of the configuration 
+            allows such a step energetically. A stepList::Array{Cascade.Step,1} is returned
     """
     function determineSteps(comp::Cascade.Computation, blockList::Array{Cascade.Block,1})
         stepList = Cascade.Step[]
-        if    comp.approach == averageSCA
+        println("comp.approach = $(comp.approach)")
+        if  comp.approach  in  [JAC.Cascade.AverageSCA(), JAC.Cascade.SCA()]
             for  a = 1:length(blockList)
                 for  b = 1:length(blockList)
                     minEn = 100000.;   maxEn = -100000.
@@ -473,34 +447,67 @@ module Cascade
                         if      process == JAC.RadiativeX   
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons
-                                push!( stepList, Cascade.Step(process, blockList[a].confs, blockList[b].confs, 
-                                                              true, blockList[a].multiplet, blockList[b].multiplet) )
+                                settings = JAC.Radiative.Settings([E1, M1], [JAC.UseBabushkin], false, false, false, Tuple{Int64,Int64}[], 0., 0., 1.0e6)
+                                push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
+                                                              blockList[a].multiplet, blockList[b].multiplet) )
                             end
-                        elseif  process == JAC.AugerX       
+                        elseif  process == JAC.Auger       
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons + 1
-                                push!( stepList, Cascade.Step(process, blockList[a].confs, blockList[b].confs, 
-                                                              true, blockList[a].multiplet, blockList[b].multiplet) )
+                                settings = AutoIonization.Settings(false, false, false, Tuple{Int64,Int64}[], 0., 1.0e6, 2, "Coulomb")
+                                push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
+                                                              blockList[a].multiplet, blockList[b].multiplet) )
                             end
                         else    error("stop a")
                         end
                     end
                 end
             end
-        #
-        else  stop("Unsupported cascade approach.")
+            #
+        else  error("Unsupported cascade approach.")
         end
         return( stepList )
+    end
+
+
+
+    """
+    `JAC.Cascade.displayBlocks(blockList::Array{Cascade.Block,1})` 
+        ... group & display the blocks of the cascade with same No. of electrons; this blocks are displayed with the
+            minimum and maximum energy of each multiplet.
+    """
+    function displayBlocks(blockList::Array{Cascade.Block,1})
+        #
+        println("\n  Configuration 'blocks' (multiplets) in the given cascade model: \n")
+        println("  ", JAC.TableStrings.hLine(134))
+        println("      No.   Configurations                                                                       " *
+                "      Range of total energies " * JAC.TableStrings.inUnits("energy") ) 
+        println("  ", JAC.TableStrings.hLine(134))
+        i = 0
+        for  block  in  blockList
+            i = i + 1;    
+            sa = "   " * JAC.TableStrings.flushright( 6, string(i); na=2)
+            sb = " ";         for conf  in blockList[i].confs   sb = sb * string(conf) * ", "    end
+            en = Float64[];   for level in  block.multiplet.levels    push!(en, level.energy)    end
+            minEn = minimum(en);   minEn = JAC.convert("energy: from atomic", minEn)
+            maxEn = maximum(en);   maxEn = JAC.convert("energy: from atomic", maxEn)
+            sa = sa * JAC.TableStrings.flushleft(90, sb[1:end-2]; na=2) 
+            sa = sa * JAC.TableStrings.flushleft(30, string( round(minEn)) * " ... " * string( round(maxEn)); na=2)
+            println(sa)
+        end
+        println("  ", JAC.TableStrings.hLine(134))
+
+        return( nothing )
     end
    
 
     """
-    `JAC.Cascade.displayInitialLevels(multiplet::Multiplet, initialLevels::Array{Tuple{Int64,Float64},1})`  ... display the calculated initial 
-         levels to screen together with their given relative occupation
+    `JAC.Cascade.displayInitialLevels(multiplet::Multiplet, initialLevels::Array{Tuple{Int64,Float64},1})`  
+        ... display the calculated initial levels to screen together with their given relative occupation.
     """
     function displayInitialLevels(multiplet::Multiplet, initialLevels::Array{Tuple{Int64,Float64},1})
         println(" ")
-        println("  Initial levels, relative to the lowest, and their given occupation:")
+        println("  Initial levels of the given cascade, relative to the lowest, and their given occupation:")
         println(" ")
         println("  ", JAC.TableStrings.hLine(64))
         println("    Level  J Parity          Energy " * JAC.TableStrings.inUnits("energy") * "         rel. occupation ") 
@@ -522,8 +529,8 @@ module Cascade
    
 
     """
-    `JAC.Cascade.displaySteps(steps::Array{Cascade.Step,1})` ... displays all predefined steps in a neat table and supports to delete
-         individual steps from the list.
+    `JAC.Cascade.displaySteps(steps::Array{Cascade.Step,1})` 
+        ... displays all predefined steps in a neat table and supports to delete individual steps from the list.
     """
     function displaySteps(steps::Array{Cascade.Step,1})
         println(" ")
@@ -559,14 +566,56 @@ module Cascade
         end
         println("  ", JAC.TableStrings.hLine(170))
     end
+    
+    
+    
+    """
+    `JAC.Cascade.generateBlocks(comp::Cascade.Computation, confs::Array{Configuration,1})`  
+        ... generate all block::Cascade.Block that need to be computed for this cascade and compute the corresponding multiplets.
+            The different cascade approches follow different strategies in defining and computing these blocks. 
+            A blockList::Array{Cascade.Block,1} is returned.
+    """
+    function generateBlocks(comp::Cascade.Computation, confs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital})
+        blockList = Cascade.Block[]
+        #
+        if    comp.approach == AverageSCA()
+            # In the AverageSCA() approach, every configuration form an individual block of the cascade whose basis is constructed from
+            # a common set of radial orbitals and whose representation does not include configuration mixing
+            for  confa  in confs
+                print("  Multiplet computations for $(string(confa)[1:end-2]) with $(confa.NoElectrons) electrons ... ")
+                multiplet = perform("computation: mutiplet from orbitals, no CI",  initalOrbitals, comp.nuclearModel, 
+                                    comp.grid, comp.asfSettings; printout=false)
+                push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
+                println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
+                push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
+            end
+        elseif    comp.approach == SCA()
+            # In the SCA() approach, every configuration form an individual block of the cascade for which an independent SCF and CI
+            # computation is then carried out
+            i = 0
+            for  confa  in confs
+                i = i + 1;    if   i in [1,2,3,4,5, 7,8,9,10]  ||  i > 11   println("  Block $i omitted.");    continue    end
+                ## i = i + 1;    if   i < 11  ||  i > 11   println("  Block $i omitted.");    continue    end
+                print("  Multiplet computations for $(string(confa)[1:end-2]) with $(confa.NoElectrons) electrons ... ")
+                basis     = perform("computation: SCF", [confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                multiplet = perform("computation: CI",  basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
+                println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
+            end
+        else  error("Unsupported cascade approach.")
+        end
 
+        return( blockList )
+    end
+    
+    
 
     """
-    `JAC.Cascade.generateConfigurationList(initialConfs::Array{Configuration,1}, further::Int64, NoShake::Int64)`  ... generates all possible 
-         (decay) configurations with up to further holes and with NoShake displacements. First, all configuratons are generated for which the 
-         hole is either moved 'outwards' or is moved and a second 'outer' hole is created; this step is repated further + 2 times. From this 
-         generated list, only those configurations are kept with up to further holes, when compared with the initial configuration. 
-         A confList::Array{Configuration,1} is returned.
+    `JAC.Cascade.generateConfigurationList(initialConfs::Array{Configuration,1}, further::Int64, NoShake::Int64)`  
+        ... generates all possible (decay) configurations with up to further holes and with NoShake displacements. First, all 
+            configuratons are generated for which the hole is either moved 'outwards' or is moved and a second 'outer' hole is 
+            created; this step is repated further + 2 times. From the generated list, only those configurations are kept with 
+            up to further holes, when compared with the initial configuration. A confList::Array{Configuration,1} is returned.
     """
     function generateConfigurationList(initialConfs::Array{Configuration,1}, further::Int64, NoShake::Int64)
         confList = copy(initialConfs);    cList = copy(initialConfs);   initialNoElectrons = initialConfs[1].NoElectrons
@@ -596,8 +645,9 @@ module Cascade
 
 
     """
-    `JAC.Cascade.generateConfigurationsWith1OuterHole(conf,  holeShell)`  ... generates all possible (decay) configurations where the hole in 
-         holeShell is moved 'outwards'. A confList::Array{Configuration,1} is returned.
+    `JAC.Cascade.generateConfigurationsWith1OuterHole(conf,  holeShell)`  
+        ... generates all possible (decay) configurations where the hole in holeShell is moved 'outwards'. 
+            A confList::Array{Configuration,1} is returned.
     """
     function generateConfigurationsWith1OuterHole(conf::Configuration,  holeShell::Shell)
          shList = JAC.generate("shells: ordered list for NR configurations", [conf]);   i0 = 0
@@ -621,8 +671,9 @@ module Cascade
 
 
     """
-    `JAC.Cascade.generateConfigurationsWith2OuterHoles(conf,  holeShell)`  ... generates all possible (decay) configurations where the hole 
-         in holeShell is moved 'outwards'. A confList::Array{Configuration,1} is returned.
+    `JAC.Cascade.generateConfigurationsWith2OuterHoles(conf,  holeShell)`  
+        ... generates all possible (decay) configurations where the hole in holeShell is moved 'outwards'. 
+            A confList::Array{Configuration,1} is returned.
     """
     function generateConfigurationsWith2OuterHoles(conf::Configuration,  holeShell::Shell)
          shList = JAC.generate("shells: ordered list for NR configurations", [conf]);   i0 = 0
@@ -658,10 +709,11 @@ module Cascade
 
 
     """
-    `JAC.Cascade.groupConfigurationList(Z::Float64, confs::Array{Configuration,1})` ... group & display the configuration list into sublists 
-         with the same No. of electrons; this lists are displayed together with an estimated total energy.
+    `JAC.Cascade.groupDisplayConfigurationList(Z::Float64, confs::Array{Configuration,1})` 
+        ... group & display the configuration list into sublists with the same No. of electrons; this lists are displayed together 
+            with an estimated total energy.
     """
-    function groupConfigurationList(Z::Float64, confs::Array{Configuration,1})
+    function groupDisplayConfigurationList(Z::Float64, confs::Array{Configuration,1})
         minNoElectrons = 1000;   maxNoElectrons = 0  
         for  conf in confs
             minNoElectrons = min(minNoElectrons, conf.NoElectrons)
@@ -669,52 +721,65 @@ module Cascade
         end
         #
         println(" ")
-        println("  Configuration used in the cascade:")
-        confList = Configuration[]
+        println("  Electron configuration used in the cascade:")
+        confList = Configuration[];   nc = 0
         for  n = maxNoElectrons:-1:minNoElectrons
             println("\n    Configuration(s) with $n electrons:")
             for  conf in confs
                 if n == conf.NoElectrons   
+                    nc = nc + 1
                     push!(confList, conf ) 
                     wa = JAC.provide("binding energy", round(Int64, Z), conf);    wa = JAC.convert("energy: from atomic", wa)
                     sa = "   av. BE = "  * string( round(-wa) ) * "  " * JAC.TableStrings.inUnits("energy")
-                    println("      " * string(conf) * sa )
+                    println("      " * string(conf) * sa * "      ($nc)" )
                 end  
             end
         end
+        
+        println("\n  A total of $nc configuration have been defined for this cascade, and selected configurations could be " *
+                "removed here:  [currently not supported] \n")
         return( confList )
     end
 
 
     """
-    `JAC.Cascade.modifySteps(comp::Cascade.Computation, steps::Array{Cascade.Step,1})` ... allows the user to modify the steps, for instance, 
-         by deleting selected steps. A newComp::Cascade.Computation is returned which, in addition to the data of comp, now contains also all 
-         steps of the cascade.
+    `JAC.Cascade.modifySteps(stepList::Array{Cascade.Step,1})` 
+        ... allows the user to modify the steps, for instance, by deleting selected steps of the cascade or by modifying the settings of
+            one or several steps. A newStepList::Array{Cascade.Step,1} for which the transition data are eventually computed.
     """
-    function modifySteps(comp::Cascade.Computation, steps::Array{Cascade.Step,1})
+    function modifySteps(stepList::Array{Cascade.Step,1})
         #
-        # if needeed, support their modificationof the predefined steps, for instance, by deleting one or more steps or ...
-        println(" ")
-        println("  Modify the predefined list of cascade steps by given rules ? [currently No]")
-        yes = false   # JAC.yesno("  Modify the predefined list of cascade steps by given rules ?  [N|y]", "N")
-        if  yes
-            println("  The following rules can be applied to delete steps or ...; give one instruction after the other -- not yet implemented:")
-            println("    Rule:        ... to delete one or several steps from the list.")
-            # printout again the new constructed step list.
+        newStepList = Cascade.Step[]
+        #
+        println("\n  Here, modify the individual steps explicitly in the code, if needed, ...... and just do it !!")
+        # 
+        #  Delete individual steps from stepList
+        #  if  i in [1,2,5, ...] modify the particular settings, etc.
+        for  i = 1:length(stepList)
+            step = stepList[i]
+            #
+            if  i in []
+                println("  Modify step $i :")
+                newStep = Cascade.Step(step.process, step.settings, step.initialConfs, step.finalConfs, step.initialMultiplet, step.initialMultiplet)
+                push!(newStepList, newStep)
+            else
+                push!(newStepList, step)
+            end
         end
-        
-        newComp = Cascade.Computation(comp.name, comp.nuclearModel, comp.grid, comp.asfSettings, comp.approach,
-                                      comp.processes, comp.initialConfs, comp.initialLevels, comp.maxElectronLoss, comp.NoShakeDisplacements,
-                                      comp.shakeFromShells, comp.shakeToShells, steps)
-        return( newComp )
+        #
+        # wa = [1,2,3]
+        # delete from list
+        #
+        println("\n  A total of $(length(newStepList)) are still defined in the cascade.")
+        return( newStepList )
     end
 
 
     """
-    `JAC.Cascade.simulateLevelDistribution(simulation::Cascade.Simulation, data::Cascade.Data)` ... sorts all levels as given by data
-         and propagates their (occupation) probability until no further changes occur. For this propagation, it runs through all levels and 
-         propagates the probabilty until no level probability changes anymore. The final level distribution is then used to derive the ion 
-         distribution or the level distribution, if appropriate. Nothing is returned.
+    `JAC.Cascade.simulateLevelDistribution(simulation::Cascade.Simulation, data::Cascade.Data)` 
+        ... sorts all levels as given by data and propagates their (occupation) probability until no further changes occur. For this 
+            propagation, it runs through all levels and propagates the probabilty until no level probability changes anymore. The final 
+            level distribution is then used to derive the ion distribution or the level distribution, if appropriate. Nothing is returned.
     """
     function simulateLevelDistribution(simulation::Cascade.Simulation, data::Cascade.Data)
         levels = JAC.Cascade.extractLevels(data)
@@ -728,8 +793,8 @@ module Cascade
 
 
     """
-    `JAC.Cascade.displayIonDistribution(sc::String, levels::Array{Cascade.Level,1})` ... displays the (current or final) ion distribution 
-         in a neat table. Nothing is returned.
+    `JAC.Cascade.displayIonDistribution(sc::String, levels::Array{Cascade.Level,1})` 
+        ... displays the (current or final) ion distribution in a neat table. Nothing is returned.
     """
     function displayIonDistribution(sc::String, levels::Array{Cascade.Level,1})
         minElectrons = 1000;   maxElectrons = 0
@@ -756,8 +821,9 @@ module Cascade
 
 
     """
-    `JAC.Cascade.displayLevelDistribution(sc::String, levels::Array{Cascade.Level,1})` ... displays the (current or final) level distribution 
-         in a neat table. Only those levels with a non-zero occupation are displayed here. Nothing is returned.
+    `JAC.Cascade.displayLevelDistribution(sc::String, levels::Array{Cascade.Level,1})` 
+        ... displays the (current or final) level distribution in a neat table. Only those levels with a non-zero 
+            occupation are displayed here. Nothing is returned.
     """
     function displayLevelDistribution(sc::String, levels::Array{Cascade.Level,1})
         minElectrons = 1000;   maxElectrons = 0;   energies = zeros(length(levels))
@@ -797,10 +863,10 @@ module Cascade
 
 
     """
-    `JAC.Cascade.displayLevelTree(sc::String, levels::Array{Cascade.Level,1}, data::Cascade.Data)` ... displays all defined levels  in a neat 
-         table, together with their No. of electrons, symmetry, level energy, current (relative) population as well as analogue information about 
-         their parents and daugther levels. This enables one to recognize (and perhaps later add) missing parent and daughter levels. 
-         Nothing is returned.
+    `JAC.Cascade.displayLevelTree(sc::String, levels::Array{Cascade.Level,1}, data::Cascade.Data)` 
+        ... displays all defined levels  in a neat table, together with their No. of electrons, symmetry, level energy, 
+            current (relative) population as well as analogue information about their parents and daugther levels. This 
+            enables one to recognize (and perhaps later add) missing parent and daughter levels. Nothing is returned.
     """
     function displayLevelTree(sc::String, levels::Array{Cascade.Level,1}, data::Cascade.Data)
         minElectrons = 1000;   maxElectrons = 0;   energies = zeros(length(levels))
@@ -834,7 +900,7 @@ module Cascade
                     dProcessSymmetryEnergyList = Tuple{JAC.AtomicProcess,Int64,LevelSymmetry,Float64}[]
                     for  p in levels[en].parents
                         idx = p.index
-                        if      p.process == JAC.AugerX        lev = data.linesA[idx].initialLevel
+                        if      p.process == JAC.Auger         lev = data.linesA[idx].initialLevel
                         elseif  p.process == JAC.RadiativeX    lev = data.linesR[idx].initialLevel
                         elseif  p.process == JAC.Photo         lev = data.linesP[idx].initialLevel
                         else    error("stop a")    end
@@ -842,7 +908,7 @@ module Cascade
                     end
                     for  d in levels[en].daugthers
                         idx = d.index
-                        if      d.process == JAC.AugerX        lev = data.linesA[idx].finalLevel
+                        if      d.process == JAC.Auger         lev = data.linesA[idx].finalLevel
                         elseif  d.process == JAC.RadiativeX    lev = data.linesR[idx].finalLevel
                         elseif  d.process == JAC.Photo         lev = data.linesP[idx].finalLevel
                         else    error("stop b")    end
@@ -868,9 +934,9 @@ module Cascade
 
 
     """
-    `JAC.Cascade.propagateProbability!(levels::Array{Cascade.Level,1}, data::Cascade.Data)` ... propagates the relative level occupation through 
-         the levels of the cascade until no further change occur in the relative level occupation. The argument levels is modified during the 
-         propagation, but nothing is returned otherwise.
+    `JAC.Cascade.propagateProbability!(levels::Array{Cascade.Level,1}, data::Cascade.Data)` 
+        ... propagates the relative level occupation through the levels of the cascade until no further change occur in the 
+            relative level occupation. The argument levels is modified during the propagation, but nothing is returned otherwise.
     """
     function propagateProbability!(levels::Array{Cascade.Level,1}, data::Cascade.Data)
         n = 0
@@ -886,7 +952,7 @@ module Cascade
                     for  i = 1:length(level.daugthers)
                         idx = level.daugthers[i].index
                         if      level.daugthers[i].process == JAC.RadiativeX    rate[i] = data.lineR[idx].photonRate.Babushkin
-                        elseif  level.daugthers[i].process == JAC.AugerX        rate[i] = data.lineA[idx].totalRate
+                        elseif  level.daugthers[i].process == JAC.Auger         rate[i] = data.lineA[idx].totalRate
                         else    error("stop a; process = $(level.daugthers[i].process) ")
                         end
                     end
@@ -895,7 +961,7 @@ module Cascade
                     for  i = 1:length(level.daugthers)
                         idx = level.daugthers[i].index
                         if      level.daugthers[i].process == JAC.RadiativeX    line = data.lineR[idx]
-                        elseif  level.daugthers[i].process == JAC.AugerX        line = data.lineA[idx]
+                        elseif  level.daugthers[i].process == JAC.Auger         line = data.lineA[idx]
                         else    error("stop b; process = $(level.daugthers[i].process) ")
                         end
                         level = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, 
@@ -915,8 +981,9 @@ module Cascade
 
 
     """
-    `JAC.Cascade.findLevelIndex(level::Cascade.Level, levels::Array{Cascade.Level,1})` ... find the index of the given level within the given
-         list of levels; an idx::Int64 is returned and an error message is issued if the level is not found in the list.
+    `JAC.Cascade.findLevelIndex(level::Cascade.Level, levels::Array{Cascade.Level,1})` 
+        ... find the index of the given level within the given list of levels; an idx::Int64 is returned and an error message is 
+            issued if the level is not found in the list.
     """
     function findLevelIndex(level::Cascade.Level, levels::Array{Cascade.Level,1})
         for  k = 1:length(levels)
@@ -930,10 +997,11 @@ module Cascade
 
 
     """
-    `JAC.Cascade.extractLevels(data::Cascade.Data)` ... extracts and sorts all levels from the given cascade data into a new 
-         levelList::Array{Cascade.Level,1} to simplify the propagation of the probabilities. In this list, every level of the overall cascade 
-         just occurs just once, together with its parent lines (which may populate the level) and the daugther lines (to which the pobability 
-         may decay). A levelList::Array{Cascade.Level,1} is returned.
+    `JAC.Cascade.extractLevels(data::Cascade.Data)` 
+        ... extracts and sorts all levels from the given cascade data into a new levelList::Array{Cascade.Level,1} to simplify the 
+            propagation of the probabilities. In this list, every level of the overall cascade just occurs just once, together 
+            with its parent lines (which may populate the level) and the daugther lines (to which the pobability may decay). 
+            A levelList::Array{Cascade.Level,1} is returned.
     """
     function extractLevels(data::Cascade.Data)
         levels = Cascade.Level[]
@@ -951,10 +1019,10 @@ module Cascade
         for  i = 1:length(data.linesA)
             line = data.linesA[i]
             iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(JAC.AugerX, i)] ) 
+                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(JAC.Auger, i)] ) 
             Cascade.pushLevels!(levels, iLevel)  
             fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(JAC.AugerX, i)], Cascade.LineIndex[] ) 
+                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(JAC.Auger, i)], Cascade.LineIndex[] ) 
             Cascade.pushLevels!(levels, fLevel)  
         end
 
@@ -974,9 +1042,10 @@ module Cascade
 
 
     """
-    `JAC.Cascade.pushLevels!(levels::Array{Cascade.Level,1}, newLevel::Cascade.Level)` ... push's the information of newLevel of levels.
-         This is the standard 'push!(levels, newLevel)' if newLevel is not yet including in levels, and the proper modification of the parent 
-         and daugther lines of this level otherwise. The argument levels::Array{Cascade.Level,1} is modified and nothing is returned otherwise.
+    `JAC.Cascade.pushLevels!(levels::Array{Cascade.Level,1}, newLevel::Cascade.Level)` 
+        ... push's the information of newLevel of levels. This is the standard 'push!(levels, newLevel)' if newLevel is not yet 
+            including in levels, and the proper modification of the parent and daugther lines of this level otherwise. The argument 
+            levels::Array{Cascade.Level,1} is modified and nothing is returned otherwise.
     """
     function pushLevels!(levels::Array{Cascade.Level,1}, newLevel::Cascade.Level)
         for  i = 1:length(levels)

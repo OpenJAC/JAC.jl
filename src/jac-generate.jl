@@ -276,7 +276,7 @@ function generate(sa::String, basisA::Basis,  basisB::Basis)
     elseif   length(basisB.subshells) > nx   
         for  i = nx+1:length(basisB.subshells)    push!(subshells, basisB.subshells[i])    end
     end
-    println("subshells from two basis = $subshells")
+    ##x println("subshells from two basis = $subshells")
 
     return( subshells )
 end

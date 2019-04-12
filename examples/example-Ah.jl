@@ -3,7 +3,7 @@ pyplot()
 
 println("Ag) Generate and normalize continuum orbitals in a local potential.")
 #
-wa = Atomic.Computation("xx",  Nuclear.Model(3.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-6, h = 5.0e-2, hp = 2.0e-2, NoPoints = 1200),
+wa = Atomic.Computation("xx",  Nuclear.Model(3.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800),
                         configs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")], 
                         asfSettings=AsfSettings(true, false, "meanDFS", "hydrogenic", "xxx", [1], 40, 1.0e-6, JAC.Subshell[], 
                                                 true, false, false, "no-file", false, [1,2,3,4], false, JAC.LevelSymmetry[] ) )
@@ -23,11 +23,11 @@ w2 = JAC.Nuclear.nuclearPotentialDH(Nuclear.Model(5.), grid, 0.9)
 w3 = JAC.Nuclear.nuclearPotentialDH(Nuclear.Model(5.), grid, 2.5)
 plot("radial potentials", [w1, w2, w3], grid; N=500)
 
-settings = Continuum.Settings(false, grid.nr-500)
+settings = Continuum.Settings(false, grid.nr-100)
 JAC.define("method: continuum, Galerkin")
 ## JAC.define("method: normalization, pure sine")
 JAC.define("method: normalization, pure Coulomb")
-energy   = 30.;   sh = Subshell("3s_1/2")
+energy   = 30.;   sh = Subshell("3f_5/2")
 wc       = JAC.Continuum.generateOrbitalLocalPotential(energy, sh, w1, settings)
 wd       = JAC.Continuum.generateOrbitalLocalPotential(energy, sh, w2, settings)
 we       = JAC.Continuum.generateOrbitalLocalPotential(energy, sh, w3, settings)

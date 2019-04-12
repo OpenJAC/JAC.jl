@@ -134,9 +134,9 @@ module PhotoRecombination
     """
     `JAC.PhotoRecombination.amplitude(kind::String, channel::PhotoRecombination.Channel, energy::Float64, finalLevel::Level, 
                                       continuumLevel::Level, grid::Radial.Grid)`  
-         ... to compute the kind = (photorecombination) amplitude  < alpha_f J_f || O^(photorecombination) || (alpha_i J_i, epsilon kappa) J_t>  
-         due to the electron-photon interaction for the given final and continuum level, the partial wave of the outgoing electron as well as 
-         the given multipole and gauge. A value::ComplexF64 is returned.
+        ... to compute the kind = (photorecombination) amplitude  < alpha_f J_f || O^(photorecombination) || (alpha_i J_i, epsilon kappa) J_t>  
+            due to the electron-photon interaction for the given final and continuum level, the partial wave of the outgoing electron as well as 
+            the given multipole and gauge. A value::ComplexF64 is returned.
     """
     function amplitude(kind::String, channel::PhotoRecombination.Channel, energy::Float64, finalLevel::Level, continuumLevel::Level, grid::Radial.Grid)
         if      kind in [ "photorecombination"]
@@ -227,11 +227,12 @@ module PhotoRecombination
 
     """
     `JAC.PhotoRecombination.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
-                                         settings::PhotoRecombination.Settings; output::Bool=true)` ... to compute the photo recombination 
-         transition amplitudes and all properties as requested by the given settings. A list of lines::Array{PhotoRecombination.Lines} is returned.
+                                         settings::PhotoRecombination.Settings; output::Bool=true)` 
+        ... to compute the photo recombination transition amplitudes and all properties as requested by the given settings. 
+            A list of lines::Array{PhotoRecombination.Lines} is returned.
     """
-    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::PhotoRecombination.Settings; 
-                           output::Bool=true)
+    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+                           settings::PhotoRecombination.Settings; output::Bool=true)
         println("")
         printstyled("JACPhotoRecombination.computeLines(): The computation of photo-recombination properties starts now ... \n", color=:light_green)
         printstyled("------------------------------------------------------------------------------------------------------ \n", color=:light_green)
@@ -261,9 +262,9 @@ module PhotoRecombination
     
 
     """
-    `JAC.PhotoRecombination.determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoRecombination.Settings)`  ... to 
-         determine a list of RecChannel for a transitions from the initial to final level and by taking into account the particular settings 
-         of for this computation; an Array{PhotoRecombination.Channel,1} is returned.
+    `JAC.PhotoRecombination.determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoRecombination.Settings)`  
+        ... to determine a list of RecChannel for a transitions from the initial to final level and by taking into account the particular 
+            settings of for this computation; an Array{PhotoRecombination.Channel,1} is returned.
     """
     function determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoRecombination.Settings)
         channels = PhotoRecombination.Channel[];   
@@ -292,9 +293,9 @@ module PhotoRecombination
 
     """
     `JAC.PhotoRecombination.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoRecombination.Settings)`  
-         ... to determine a list of PhotoRecombination.Line's for transitions between levels from the initial- and final-state multiplets, and  
-         by taking into account the particular selections and settings for this computation; an Array{PhotoRecombination.Line,1} is returned. 
-         Apart from the level specification, all physical properties are set to zero during the initialization process.
+        ... to determine a list of PhotoRecombination.Line's for transitions between levels from the initial- and final-state multiplets, and  
+            by taking into account the particular selections and settings for this computation; an Array{PhotoRecombination.Line,1} is returned. 
+            Apart from the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoRecombination.Settings)
         if    settings.selectLines    selectLines   = true;   
@@ -329,8 +330,9 @@ module PhotoRecombination
 
 
     """
-    `JAC.PhotoRecombination.displayLines(lines::Array{PhotoRecombination.Line,1})`  ... to display a list of lines and channels that have been 
-         selected due to the prior settings. A neat table of all selected transitions and energies is printed but nothing is returned otherwise.
+    `JAC.PhotoRecombination.displayLines(lines::Array{PhotoRecombination.Line,1})`  
+        ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all selected 
+            transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{PhotoRecombination.Line,1})
         println(" ")
@@ -378,8 +380,8 @@ module PhotoRecombination
 
     """
     `JAC.PhotoRecombination.displayResults(stream::IO, lines::Array{PhotoRecombination.Line,1}, settings::PhotoRecombination.Settings)`  
-         ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing is 
-         returned otherwise.
+        ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing is 
+            returned otherwise.
     """
     function  displayResults(stream::IO, lines::Array{PhotoRecombination.Line,1}, settings::PhotoRecombination.Settings)
         println(stream, " ")

@@ -134,13 +134,13 @@ module Radiative
                             to screen if display=true.
     """
     function amplitude(kind::String, Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
-                       grid::Radial.Grid; display::Bool=false)
+                       grid::Radial.Grid; display::Bool=false, printout::Bool=true)
         
         if      kind == "emission"
         #-------------------------
             nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
-            printstyled("Compute radiative $(Mp) matrix of dimension $nf x $ni in the initial- and final-state bases for the transition " *
-                        "[$(initialLevel.index)-$(finalLevel.index)] ... ", color=:light_green)
+            if  printout   printstyled("Compute radiative $(Mp) matrix of dimension $nf x $ni in the initial- and final-state bases " *
+                                       "for the transition [$(initialLevel.index)-$(finalLevel.index)] ... ", color=:light_green)    end
             matrix = zeros(ComplexF64, nf, ni)
             #
             for  r = 1:nf
@@ -160,7 +160,7 @@ module Radiative
                     matrix[r,s] = me
                 end
             end 
-            printstyled("done. \n", color=:light_green)
+            if  printout   printstyled("done. \n", color=:light_green)    end
             amplitude = transpose(finalLevel.mc) * matrix * initialLevel.mc 
             #
             #
@@ -223,20 +223,50 @@ module Radiative
     end
 
 
+    """
+    `JAC.Radiative.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+                                       settings::Radiative.Settings; output::Bool=true, printout::Bool=true)`  
+        ... to compute the radiative transition amplitudes and all properties as requested by the given settings. The computations
+            and printout is adapted for larger cascade computations by including only lines with at least one channel and by sending
+            all printout to a summary file only. A list of lines::Array{Radiative.Lines} is returned.
+    """
+    function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+                                  settings::Radiative.Settings; output=true, printout::Bool=true) 
+        # Define a common subshell list for both multiplets
+        subshellList = JAC.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
+        JAC.define("relativistic subshell list", subshellList; printout=false)
+        lines = JAC.Radiative.determineLines(finalMultiplet, initialMultiplet, settings)
+        # Display all selected lines before the computations start
+        # if  settings.printBeforeComputation    JAC.Radiative.displayLines(lines)    end
+        # Calculate all amplitudes and requested properties
+        newLines = Radiative.Line[]
+        for  line in lines
+            newLine = JAC.Radiative.computeAmplitudesProperties(line, grid, settings, printout=printout) 
+            push!( newLines, newLine)
+        end
+        # Print all results to a summary file, if requested
+        printSummary, iostream = JAC.give("summary flag/stream")
+        if  printSummary   JAC.Radiative.displayRates(iostream, newLines)    end
+        #
+        if    output    return( lines )
+        else            return( nothing )
+        end
+    end
+
+
 
     """
-    `JAC.Radiative.computeAmplitudesProperties(line::Radiative.Line, grid::Radial.Grid, settings::Einstein.Settings)`  ... to compute all 
-         amplitudes and properties of the given line; a line::Einstein.Line is returned for which the amplitudes and properties are now evaluated.
+    `JAC.Radiative.computeAmplitudesProperties(line::Radiative.Line, grid::Radial.Grid, settings::Einstein.Settings; printout::Bool=true)`  
+        ... to compute all amplitudes and properties of the given line; a line::Einstein.Line is returned for which the amplitudes and 
+            properties are now evaluated.
     """
-    function  computeAmplitudesProperties(line::Radiative.Line, grid::Radial.Grid, settings::Radiative.Settings)
+    function  computeAmplitudesProperties(line::Radiative.Line, grid::Radial.Grid, settings::Radiative.Settings; printout::Bool=true)
         global JAC_counter
         newChannels = Radiative.Channel[];    rateC = 0.;    rateB = 0.
         for channel in line.channels
-            ## matrix = JAC.Radiative.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid, settings)
-            ## amplitude = transpose(line.finalLevel.mc) * matrix * line.initialLevel.mc 
             #
-            amplitude = JAC.Radiative.amplitude("emission", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
-            ## JAC.warn(AddWarning, "amplitude = $amplitude,  testamp =  $testamp, Diff = $(amplitude-testamp) ")
+            amplitude = JAC.Radiative.amplitude("emission", channel.multipole, channel.gauge, line.omega, 
+                                                line.finalLevel, line.initialLevel, grid, printout=printout)
             #
             push!( newChannels, Radiative.Channel( channel.multipole, channel.gauge, amplitude) )
             if       channel.gauge == JAC.Coulomb     rateC = rateC + abs(amplitude)^2

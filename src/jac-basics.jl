@@ -7,7 +7,7 @@ export  AngularJ64, AngularM64, HalfInt, HalfInteger, SolidAngle, Parity, LevelS
         EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, TensorComp
 
 
-include("halfintegers.jl")
+include("inc-halfintegers.jl")
 
 
 abstract type  AngularJ  end
@@ -633,7 +633,7 @@ end
 `@enum   AtomicProcess`  ... defines a enumeration for the atomic processes that are supported in the JAC program in the computation 
                              of transition arrays or whole excitation/decay cascades.
 
-    + AugerX        ... Auger transitions, i.e. single autoionization or the emission of a single free electron into the continuum.
+    + Auger         ... Auger transitions, i.e. single autoionization or the emission of a single free electron into the continuum.
     + AugerInPlasma ... Auger transitions but calculated for a specified plasma model.
     + Compton       ... Rayleigh-Compton scattering cross sections.
     + Coulex        ... Coulomb-excitation of target or projeticle electrons by fast, heavy ions.
@@ -654,10 +654,10 @@ end
     + Eimex         ... electron-impact excitation cross sections and collision strengths.
     + RAuger        ... Radiative Auger rates.
 """
-@enum   AtomicProcess  NoProcess  AugerX  AugerInPlasma  Compton  Coulex  Dierec  Eimex  ImpactExcAuto  InternalConv  MultiPhotonDE  MultiPI  MultiPDI=
+@enum   AtomicProcess  NoProcess  Auger  AugerInPlasma  Compton  Coulex  Dierec  Eimex  ImpactExcAuto  InternalConv  MultiPhotonDE  MultiPI  MultiPDI=
                    20  Photo  PhotoExc  PhotoExcAuto  PhotoExcFluor  PhotoInPlasma  PhotoIonAuto  PhotoIonFluor   RadiativeX  RAuger=
                    40  Rec  PairA1P  Coulion
-export  AtomicProcess, NoProcess, AugerX, AugerInPlasma, Compton, Coulex, Dierec, Eimex, ImpactExcAuto, InternalConv, MultiPhotonDE, MultiPI, MultiPDI,
+export  AtomicProcess, NoProcess, Auger, AugerInPlasma, Compton, Coulex, Dierec, Eimex, ImpactExcAuto, InternalConv, MultiPhotonDE, MultiPI, MultiPDI,
                        Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoInPlasma, PhotoIonAuto, PhotoIonFluor,  RadiativeX, RAuger, 
                        Rec, PairA1P, Coulion
 
@@ -667,7 +667,7 @@ export  AtomicProcess, NoProcess, AugerX, AugerInPlasma, Compton, Coulex, Dierec
 """
 function AtomicProcess(sa::String)
     if       sa in [ "none", "NoProcess"]                       wa = NoProcess
-    elseif   sa in [ "Auger"]                                   wa = AugerX
+    elseif   sa in [ "Auger"]                                   wa = Auger
     elseif   sa in [ "Auger in plasma"]                         wa = AugerInPlasma
     elseif   sa in [ "Compton", "Rayleigh"]                     wa = Compton
     elseif   sa in [ "Coulex", "Coulomb excitation"]            wa = Coulex
@@ -711,7 +711,7 @@ end
 """
 function Base.string(process::AtomicProcess) 
     if      process == NoProcess       return( "no process" )
-    elseif  process == AugerX          return( "Auger" )  
+    elseif  process == Auger           return( "Auger" )  
     elseif  process == AugerInPlasma   return( "Auger in plasma" )  
     elseif  process == Compton         return( "Rayleigh-Compton" )  
     elseif  process == Dierec          return( "Dielectronic recombination" )  

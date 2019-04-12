@@ -104,7 +104,7 @@ end
 
 """
   + `("relativistic subshell list", subshells::Array{Subshell,1}; printout::Bool=true)`  
-                    ... to (pre-) define internally the standard relativistic subshell list on which the standard order of orbitals is based.
+        ... to (pre-) define internally the standard relativistic subshell list on which the standard order of orbitals is based.
 """
 function define(sa::String, subshells::Array{Subshell,1}; printout::Bool=true)
     if        sa == "relativistic subshell list"
@@ -119,13 +119,14 @@ end
 
 
 """
-  + `("standard grid", grid::Radial.Grid)`  ... to (pre-) define internally the standard radial grid which is used to represent most orbitals.
+  + `("standard grid", grid::Radial.Grid; printout::Bool=true)`  
+        ... to (pre-) define internally the standard radial grid which is used to represent most orbitals.
 """
-function define(sa::String, grid::Radial.Grid)
+function define(sa::String, grid::Radial.Grid; printout::Bool=true)
     global JAC_STANDARD_GRID
 
     if        sa == "standard grid"
-        println("Re-define the standard grid with $(grid.NoPoints) grid points.")
+        if  printout    println("Re-define the standard grid with $(grid.NoPoints) grid points.")    end
         JAC_STANDARD_GRID = grid
     else
        error("Unsupported keystring:: $sa")

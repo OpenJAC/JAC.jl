@@ -580,8 +580,8 @@ module Radial
         end
         mZbar   = sum(meanZbar) / nx;   for  i = 1:nx    devsZbar[i] = (meanZbar[i] - mZbar)^2    end
         stdZbar = sqrt( sum(devsZbar) / nx )
-        println("Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
-                " (Delta-Zbar=" * @sprintf("%.4e",stdZbar) * ")." )
+        if  JAC.PRINT_DEBUG  println("Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
+                                     " (Delta-Zbar=" * @sprintf("%.4e",stdZbar) * ")." )    end
         
         return( mZbar )
     end

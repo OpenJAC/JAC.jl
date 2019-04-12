@@ -170,23 +170,23 @@ end
 
 
 """
-`JAC.testModule_Auger(; short::Bool=true)`  ... tests on module JAC.Auger.
+`JAC.testModule_AutoIonization(; short::Bool=true)`  ... tests on module JAC.AutoIonization.
 """
-function testModule_Auger(; short::Bool=true) 
-    JAC.define("print summary: open", "test-Auger-new.sum")
-    printstyled("\n\nTest the module  Auger  ... \n", color=:cyan)
+function testModule_AutoIonization(; short::Bool=true) 
+    JAC.define("print summary: open", "test-AutoIonization-new.sum")
+    printstyled("\n\nTest the module  AutoIonization  ... \n", color=:cyan)
     ### Make the tests
     wa = Atomic.Computation("xx",  Model(36.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 600),  
                             initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
-                            finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = JAC.AugerX,
-                            processSettings = Auger.Settings(true, true, true, Tuple{Int64,Int64}[(3,1), (4,1), (5,1), (6,1)], 0., 1.0e6, 2, "Coulomb") )
+                            finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = JAC.Auger,
+                            processSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(3,1), (4,1), (5,1), (6,1)], 0., 1.0e6, 2, "Coulomb") )
     wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Auger-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-Auger-new.sum"), "Auger rates and intr", 17) 
-    testPrint("testModule_Auger()::", success)
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-AutoIonization-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-AutoIonization-new.sum"), "AutoIonization rates and intr", 17) 
+    testPrint("testModule_AutoIonization()::", success)
     return(success)  
 end
 
@@ -205,8 +205,8 @@ function testModule_CoulombExcitation(; short::Bool=true)
     printTest, iostream = JAC.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-CoulombExcitation-new.sum")
     success = true
-    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Auger-approved.sum"), 
-    ##                             joinpath(@__DIR__, "..", "test", "test-Auger-new.sum"), "Auger rates and intrinsic angular parameters:", 25) 
+    ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-AutoIonization-approved.sum"), 
+    ##                             joinpath(@__DIR__, "..", "test", "test-AutoIonization-new.sum"), "AutoIonization rates and intrinsic angular parameters:", 25) 
     testPrint("testModule_CoulombExcitation()::", success)
     return(success)  
 end

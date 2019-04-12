@@ -1,11 +1,11 @@
 
 """
 `module  JAC.PhotoExcitationAutoion`  ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross 
-                                          sections and rates; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.Auger.
+                                          sections and rates; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.AutoIonization.
 """
 module PhotoExcitationAutoion 
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.Auger
+    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -58,11 +58,11 @@ module PhotoExcitationAutoion
                                                       all quantum numbers, phases and amplitudes.
 
         + excitationChannel  ::JAC.Radiative.Channel       ... Channel that describes the photon-impact excitation process.
-        + augerChannel       ::JAC.Auger.Channel           ... Channel that describes the subsequent Auger/autoionization process.
+        + augerChannel       ::JAC.AutoIonization.Channel           ... Channel that describes the subsequent Auger/autoionization process.
     """
     struct  Channel
         excitationChannel    ::JAC.Radiative.Channel
-        augerChannel         ::JAC.Auger.Channel
+        augerChannel         ::JAC.AutoIonization.Channel
     end ==#
 
 
@@ -80,7 +80,7 @@ module PhotoExcitationAutoion
                                                     their multipole, gauge, free-electron kappa, phases and the total angular momentum/parity as well 
                                                     as the amplitude, or not.
         + excitChannels       ::Array{JAC.Radiative.Channel,1}  ... List of excitation channels of this pathway.
-        + augerChannels       ::Array{JAC.Auger.Channel,1}      ... List of Auger channels of this pathway.
+        + augerChannels       ::Array{JAC.AutoIonization.Channel,1}      ... List of Auger channels of this pathway.
     """
     struct  Pathway
         initialLevel          ::Level
@@ -91,7 +91,7 @@ module PhotoExcitationAutoion
         crossSection          ::EmProperty
         hasChannels           ::Bool
         excitChannels         ::Array{JAC.Radiative.Channel,1}  
-        augerChannels         ::Array{JAC.Auger.Channel,1}
+        augerChannels         ::Array{JAC.AutoIonization.Channel,1}
     end 
 
 
@@ -100,7 +100,7 @@ module PhotoExcitationAutoion
                                                 initial, intermediate and final level.
     """
     function Pathway()
-        Pathway(Level(), Level(), Level(), 0., 0., EmProperty(0., 0.), false, Radiative.Channel[], Auger.Channel[] )
+        Pathway(Level(), Level(), Level(), 0., 0., EmProperty(0., 0.), false, Radiative.Channel[], AutoIonization.Channel[] )
     end
 
 
@@ -137,18 +137,18 @@ module PhotoExcitationAutoion
                                                   pathway.intermediateLevel, pathway.initialLevel, grid)
              push!( neweChannels, Radiative.Channel( eChannel.multipole, eChannel.gauge, amplitude))
         end
-        # Compute all Auger decay channels
-        newaChannels = Auger.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum)
+        # Compute all AutoIonization decay channels
+        newaChannels = AutoIonization.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum)
         for aChannel in pathway.augerChannels
             newnLevel   = JAC.generateLevelWithSymmetryReducedBasis(pathway.intermediateLevel)
             newnLevel   = JAC.generateLevelWithExtraSubshell(Subshell(101, aChannel.kappa), newnLevel)
             newfLevel   = JAC.generateLevelWithSymmetryReducedBasis(pathway.finalLevel)
             cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(pathway.electronEnergy, Subshell(101, aChannel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel   = JAC.generateLevelWithExtraElectron(cOrbital, aChannel.symmetry, newfLevel)
-            newcChannel = Auger.Channel( aChannel.kappa, aChannel.symmetry, phase, Complex(0.))
+            newcChannel = AutoIonization.Channel( aChannel.kappa, aChannel.symmetry, phase, Complex(0.))
             amplitude = 1.0
-            ## amplitude   = JAC.Auger.amplitude("Coulomb", aChannel, newnLevel, newcLevel, grid)
-            push!( newaChannels, Auger.Channel( aChannel.kappa, aChannel.symmetry, phase, amplitude))
+            ## amplitude   = JAC.AutoIonization.amplitude("Coulomb", aChannel, newnLevel, newcLevel, grid)
+            push!( newaChannels, AutoIonization.Channel( aChannel.kappa, aChannel.symmetry, phase, amplitude))
         end
         #
         crossSection = EmProperty(-1., -1.)
@@ -220,8 +220,8 @@ module PhotoExcitationAutoion
 
                     rSettings = JAC.Radiative.Settings( settings.multipoles, settings.gauges, false, false, false, Tuple{Int64,Int64}[], 0., 0., 0.)
                     eChannels = JAC.Radiative.determineChannels(intermediateMultiplet.levels[n], initialMultiplet.levels[i], rSettings) 
-                    aSettings = JAC.Auger.Settings( false, false, false, Tuple{Int64,Int64}[], 0., 0., settings.maxKappa, "Coulomb")
-                    aChannels = JAC.Auger.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], aSettings) 
+                    aSettings = JAC.AutoIonization.Settings( false, false, false, Tuple{Int64,Int64}[], 0., 0., settings.maxKappa, "Coulomb")
+                    aChannels = JAC.AutoIonization.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], aSettings) 
                     push!( pathways, PhotoExcitationAutoion.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[n], 
                                             finalMultiplet.levels[f], eEnergy, aEnergy, EmProperty(0., 0.), true, eChannels, aChannels) )
                 end
@@ -257,11 +257,11 @@ module PhotoExcitationAutoion
             end
         end
 
-        # Determine next the Auger channels
-        aChannels = Auger.Channel[];   
+        # Determine next the AutoIonization channels
+        aChannels = AutoIonization.Channel[];   
         kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symn, symf)
         for  kappa in kappaList
-            push!(aChannels, Auger.Channel(kappa, symi, 0., Complex(0.)) )
+            push!(aChannels, AutoIonization.Channel(kappa, symi, 0., Complex(0.)) )
         end
 
         # Now combine all these channels

@@ -64,7 +64,7 @@ function perform(computation::Atomic.Computation; output::Bool=false)
         end
         if  JAC.Yields         in computation.properties   
             outcome = JAC.DecayYield.computeOutcomes(multiplet, nModel, computation.grid, computation.yieldSettings)         
-            if output    results = Base.merge( results, Dict("Fluorescence and Auger yield outcomes:" => outcome) )   end
+            if output    results = Base.merge( results, Dict("Fluorescence and AutoIonization yield outcomes:" => outcome) )   end
         end
         if  JAC.Green          in computation.properties   
             outcome = JAC.GreenFunction.computeOutcomes(multiplet, nModel, computation.grid, computation.greenSettings)         
@@ -92,8 +92,8 @@ function perform(computation::Atomic.Computation; output::Bool=false)
                                                                   plasmaSettings)
         #
         if      computation.process == JAC.AugerInPlasma   
-            outcome = JAC.Auger.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
-            if output    results = Base.merge( results, Dict("Auger lines in plasma:" => outcome) )                  end
+            outcome = JAC.AutoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+            if output    results = Base.merge( results, Dict("AutoIonization lines in plasma:" => outcome) )         end
         elseif  computation.process == JAC.PhotoInPlasma   
             outcome = JAC.PhotoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("Photo lines in plasma:" => outcome) )                  end
@@ -114,7 +114,7 @@ function perform(computation::Atomic.Computation; output::Bool=false)
                                                                 computation.intermediateAsfSettings)
         end
         #
-        if      computation.process == JAC.AugerX   
+        if      computation.process == JAC.Auger   
             ##x println(" ")
             ##x for  i = 1:3   println("  perform-WARNING: Code modified to read in multiplets from Grasp computations and for testing integrals " *
             ##x                        "and Auger amplitudes !!") 
@@ -123,8 +123,8 @@ function perform(computation::Atomic.Computation; output::Bool=false)
             ##x                                               "TestAuger/belike-resonance-a-scf.out","TestAuger/belike-resonance-a-relci.mix")  
             ##x finalMultiplet   = JAC.ManyElectron.Multiplet("from Grasp2013", "TestAuger/belike-ground-a-csl.inp",
             ##x                                               "TestAuger/belike-ground-a-scf.out","TestAuger/belike-ground-a-relci.mix") 
-            outcome = JAC.Auger.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
-            if output    results = Base.merge( results, Dict("Auger lines:" => outcome) )                  end
+            outcome = JAC.AutoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+            if output    results = Base.merge( results, Dict("AutoIonization lines:" => outcome) )                  end
         elseif  computation.process == JAC.RadiativeX  
             ##x println(" ")
             ##x for  i = 1:3   println("  perform-WARNING: Code modified to read in multiplets from Grasp computations and for testing integrals " *
@@ -231,16 +231,16 @@ function perform(comp::Cascade.Computation; output::Bool=false)
     #
     # Generate subsequent cascade configurations as well as display and group them together
     wa = JAC.Cascade.generateConfigurationList(comp.initialConfs, comp.maxElectronLoss, comp.NoShakeDisplacements)
-    wb = JAC.Cascade.groupConfigurationList(comp.nuclearModel.Z, wa)
+    wb = JAC.Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa)
     #
     # Determine first all configuration 'blocks' and from them the individual steps of the cascade
-    wc = JAC.Cascade.determineBlocks(comp, wb)
+    wc = JAC.Cascade.generateBlocks(comp, wb, basis.orbitals)
+    JAC.Cascade.displayBlocks(wc)
+    # Determine, modify and compute the transition data for all steps, ie. the Radiative.Line's, the AutoIonization.Line's, etc.
     wd = JAC.Cascade.determineSteps(comp, wc)
     JAC.Cascade.displaySteps(wd)
-    newComp = JAC.Cascade.modifySteps(comp, wd)
-    #
-    # Calculate, display and store all requested cascade data, ie. the Radiative.Line's, the Auger.Line's, etc.
-    data = JAC.Cascade.computeTransitionLines(newComp)
+    we   = JAC.Cascade.modifySteps(wd)
+    data = JAC.Cascade.computeSteps(comp, we)
     if output    
         results = Base.merge( results, Dict("cascade data:" => data) )
         #
@@ -352,7 +352,7 @@ function perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nucl
     if  settings.startScf == "hydrogenic"
         # Generate start orbitals for the SCF field by using B-splines
         ##x orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(waL, nsL, waS, nsS, nuclearModel, subshellList)
-        orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(wa, nuclearModel, subshellList)
+        orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(wa, nuclearModel, subshellList; printout=printout)
     elseif  settings.startScf == "fromNRorbitals"
         # Generate starting orbitals for this csfList by adapting non-relativistic orbitals with a proper nuclear charge
         orbitals = Dict{Subshell, Orbital}()
@@ -369,10 +369,10 @@ function perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nucl
     basis    = Basis(true, NoElectrons, subshellList, csfList, coreSubshellList, orbitals)
     if   settings.methodScf in ["meanDFS", "meanHS"]
         ##x newBasis = JAC.Bsplines.solveSelfConsistentFieldMean(waL, nsL, waS, nsS, nuclearModel, basis, settings) 
-        newBasis = JAC.Bsplines.solveSelfConsistentFieldMean(wa, nuclearModel, basis, settings) 
+        newBasis = JAC.Bsplines.solveSelfConsistentFieldMean(wa, nuclearModel, basis, settings; printout=printout) 
     elseif   settings.methodScf in ["AL", "OL"] 
         ##x newBasis = JAC.Bsplines.solveSelfConsistentFieldOptimized(waL, nsL, waS, nsS, nuclearModel, basis, settings)
-        newBasis = JAC.Bsplines.solveSelfConsistentFieldOptimized(wa, nuclearModel, basis, settings)
+        newBasis = JAC.Bsplines.solveSelfConsistentFieldOptimized(wa, nuclearModel, basis, settings; printout=printout)
     else  error("stop b")
     end
     

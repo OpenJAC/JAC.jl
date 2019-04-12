@@ -1,11 +1,11 @@
 
 """
 `module  JAC.PhotoIonizationFluores`  ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross 
-                                          sections and rates; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.Auger.
+                                          sections and rates; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.AutoIonization.
 """
 module PhotoIonizationFluores 
 
-    using JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.Auger
+    using JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -58,11 +58,11 @@ module PhotoIonizationFluores
                                                       all quantum numbers, phases and amplitudes.
 
         + excitationChannel  ::JAC.Radiative.Channel       ... Channel that describes the photon-impact excitation process.
-        + augerChannel       ::JAC.Auger.Channel           ... Channel that describes the subsequent Auger/autoionization process.
+        + augerChannel       ::JAC.AutoIonization.Channel           ... Channel that describes the subsequent Auger/autoionization process.
     """
     struct  Channel
         excitationChannel    ::JAC.Radiative.Channel
-        augerChannel         ::JAC.Auger.Channel
+        augerChannel         ::JAC.AutoIonization.Channel
     end 
 
 

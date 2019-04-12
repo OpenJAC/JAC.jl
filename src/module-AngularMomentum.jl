@@ -123,11 +123,25 @@ module AngularMomentum
 
 
     """
-    `JAC.AngularMomentum.ClebschGordan(ja::AngularJ64, ma::AngularM64, jb::AngularJ64, mb::AngularM64, Jab::AngularJ64, Mab::AngularM64)`  
-                                       ... calculates the Clebsch-Gordan coefficient  <ja, ma, jb, mb; Jab, Mab> for given quantum numbers by 
-                                           a proper call to a Wigner 3-j symbol; a value::Float64 is returned.
+    `JAC.AngularMomentum.ClebschGordan(ja, ma, jb, mb, Jab, Mab)`  
+        ... calculates the Clebsch-Gordan coefficient  <ja, ma, jb, mb; Jab, Mab> for given quantum numbers by 
+            a proper call to a Wigner 3-j symbol. A value::Float64 is returned.
     """
-    function ClebschGordan(ja::AngularJ64, ma::AngularM64, jb::AngularJ64, mb::AngularM64, Jab::AngularJ64, Mab::AngularM64)
+    function ClebschGordan(ja, ma, jb, mb, Jab, Mab)
+        mab = - JAC.twice(Mab) / 2
+        pp  = (JAC.twice(ja) - JAC.twice(jb) + JAC.twice(Jab))/2
+        cg  = (-1)^pp * sqrt(JAC.twice(Jab) + 1) * sf_coupling_3j(JAC.twice(ja), JAC.twice(jb), JAC.twice(Jab),
+                                                                  JAC.twice(ma), JAC.twice(mb), JAC.twice(mab))
+        return( cg )
+    end
+
+
+    """
+    `JAC.AngularMomentum.ClebschGordan_old(ja::AngularJ64, ma::AngularM64, jb::AngularJ64, mb::AngularM64, Jab::AngularJ64, Mab::AngularM64)`  
+        ... calculates the Clebsch-Gordan coefficient  <ja, ma, jb, mb; Jab, Mab> for given quantum numbers by 
+            a proper call to a Wigner 3-j symbol; a value::Float64 is returned.
+    """
+    function ClebschGordan_old(ja::AngularJ64, ma::AngularM64, jb::AngularJ64, mb::AngularM64, Jab::AngularJ64, Mab::AngularM64)
         cg = 0.   ## ja-jb+Mab must be integer
         mab = AngularM64(-Mab.num, Mab.den)
         cg = AngularMomentum.phaseFactor([ja, -1, jb, +1, Mab]) * sqrt( (twoJ(Jab)+1) ) * 
@@ -316,12 +330,24 @@ module AngularMomentum
 
 
     """
-    `JAC.AngularMomentum.Wigner_3j(a::AngularJ64, b::AngularJ64, c::AngularJ64, m_a::AngularM64, m_b::AngularM64, m_c::AngularM64)`  
+    `JAC.AngularMomentum.Wigner_3j(a, b, c, m_a, m_b, m_c)`  
+        ... calculates the value of a Wigner 3-j symbol for given quantum numbers as displayed in many texts on the theory of 
+            angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, p. 142); 
+            it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
+    """
+    function Wigner_3j(a, b, c, m_a, m_b, m_c)
+        sf_coupling_3j(JAC.twice(a),   JAC.twice(b),   JAC.twice(c),
+                       JAC.twice(m_a), JAC.twice(m_b), JAC.twice(m_c))
+    end
+
+
+    """
+    `JAC.AngularMomentum.Wigner_3j_old(a::AngularJ64, b::AngularJ64, c::AngularJ64, m_a::AngularM64, m_b::AngularM64, m_c::AngularM64)`  
          ... calculates the value of a Wigner 3-j symbol  for given quantum numbers by its algebraic formulae as displayed in many texts on the 
              theory of angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, 
              p. 142); a value::Float64 is returned.
     """
-    function Wigner_3j(a::AngularJ64, b::AngularJ64, c::AngularJ64, m_a::AngularM64, m_b::AngularM64, m_c::AngularM64)
+    function Wigner_3j_old(a::AngularJ64, b::AngularJ64, c::AngularJ64, m_a::AngularM64, m_b::AngularM64, m_c::AngularM64)
         # Use twice the given arguments and integer arithmetik throughout.
         if  a.den == 1      ja = a.num + a.num    else    ja = a.num      end
         if  b.den == 1      jb = b.num + b.num    else    jb = b.num      end
@@ -362,12 +388,24 @@ module AngularMomentum
 
 
     """
-    `JAC.AngularMomentum.Wigner_6j(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, e::AngularJ64, f::AngularJ64)`  
+    `JAC.AngularMomentum.Wigner_6j(a, b, c, d, e, f)`  
+        ... calculates the value of a Wigner 6-j symbol for given quantum numbers as displayed in many texts on the theory of 
+            angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, p. 142); 
+            it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
+    """
+    function Wigner_6j(a, b, c, d, e, f)
+        sf_coupling_6j(JAC.twice(a), JAC.twice(b), JAC.twice(c),
+                       JAC.twice(d), JAC.twice(e), JAC.twice(f))
+    end
+
+
+    """
+    `JAC.AngularMomentum.Wigner_6j_old(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, e::AngularJ64, f::AngularJ64)`  
          ... calculates the value of a Wigner 6-j symbol  for given quantum numbers by its algebraic formulae as displayed in many texts on the 
              theory of angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, 
              p. 142); a value::Float64 is returned.
     """
-    function Wigner_6j(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, ee::AngularJ64, f::AngularJ64)
+    function Wigner_6j_old(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, ee::AngularJ64, f::AngularJ64)
         # Use twice the given arguments and integer arithmetik throughout.
         if  a.den == 1       ja = a.num + a.num    else    ja = a.num      end
         if  b.den == 1       jb = b.num + b.num    else    jb = b.num      end
@@ -410,18 +448,33 @@ module AngularMomentum
 
 
     """
-    `JAC.AngularMomentum.Wigner_9j(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, e::AngularJ64, f::AngularJ64,
+    `JAC.AngularMomentum.Wigner_3j(a, b, c, d, e, f, g, h, i)`  
+        ... calculates the value of a Wigner 3-j symbol for given quantum numbers as displayed in many texts on the theory of 
+            angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, p. 142); 
+            it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
+    """
+    function Wigner_9j(a, b, c, d, e, f, g, h, i)
+        sf_coupling_9j(JAC.twice(a), JAC.twice(b), JAC.twice(c),
+                       JAC.twice(d), JAC.twice(e), JAC.twice(f),
+                       JAC.twice(g), JAC.twice(h), JAC.twice(i))
+    end
+
+
+    """
+    `JAC.AngularMomentum.Wigner_9j_old(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, e::AngularJ64, f::AngularJ64,
                                    g::AngularJ64, h::AngularJ64, i::AngularJ64)`  
          ... calculates the value of a Wigner 6-j symbol  for given quantum numbers by its algebraic formulae as displayed in many texts on the 
              theory of angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, 
              p. 142); a value::Float64 is returned.
     """
-    function Wigner_9j(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, ee::AngularJ64, f::AngularJ64,
+    function Wigner_9j_old(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, ee::AngularJ64, f::AngularJ64,
                        g::AngularJ64, h::AngularJ64, i::AngularJ64)
         JAC.warn(AddWarning, "JAC.AngularMomentum.Wigner_9j(): Here, we wish to call an external Julia package/interface; now set to 2.0")
         w9j = 2.0
         return( w9j )
     end
+    
+    
 
     """
         clebschgordan(j₁, m₁, j₂, m₂, J, M)

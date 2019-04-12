@@ -5,7 +5,7 @@
 """
 module RadiativeAuger
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, JAC.Auger
+    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, JAC.AutoIonization
     global JAC_counter = 0
 
 

@@ -2,11 +2,11 @@
 """
 `module  JAC.ImpactExcitationAutoion`  ... a submodel of JAC that contains all methods for computing electron impact excitation cross 
                                            sections and collision strengths; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, 
-                                           JAC.Auger.
+                                           JAC.AutoIonization.
 """
 module ImpactExcitationAutoion 
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, JAC.Auger
+    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -55,11 +55,11 @@ module ImpactExcitationAutoion
                                                    all quantum numbers, phases and amplitudes.
 
         + excitationChannel  ::JAC.ImpactExcitation.Channel      ... Channel that describes the electron-impact excitation process.
-        + augerChannel       ::JAC.Auger.Channel                 ... Channel that describes the subsequent Auger/autoionization process.
+        + augerChannel       ::JAC.AutoIonization.Channel                 ... Channel that describes the subsequent Auger/autoionization process.
     """
     struct  Channel
         excitationChannel    ::JAC.ImpactExcitation.Channel
-        augerChannel         ::JAC.Auger.Channel
+        augerChannel         ::JAC.AutoIonization.Channel
     end 
 
 
@@ -145,7 +145,7 @@ module ImpactExcitationAutoion
             exChannel = channel.excitationChannel
             eChannel  = ImpactExcitation.Channel( exChannel.initialKappa, exChannel.finalKappa, exChannel.symmetry, 
                                                   initialPhase, finalPhase, Complex(0.))
-            aChannel  = Auger.Channel( channel.augerChannel.kappa, channel.augerChannel.symmetry, augerPhase, Complex(0.))
+            aChannel  = AutoIonization.Channel( channel.augerChannel.kappa, channel.augerChannel.symmetry, augerPhase, Complex(0.))
             push!( newChannels, ImpactExcitationAutoion.Channel(eChannel, aChannel) )
         end
         # Calculate the totalRate 
@@ -250,11 +250,11 @@ module ImpactExcitationAutoion
             end
         end
 
-        # Determine next the Auger channels
-        aChannels = Auger.Channel[];   
+        # Determine next the AutoIonization channels
+        aChannels = AutoIonization.Channel[];   
         kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symn, symf)
         for  kappa in kappaList
-            push!(aChannels, Auger.Channel(kappa, symn, 0., Complex(0.)) )
+            push!(aChannels, AutoIonization.Channel(kappa, symn, 0., Complex(0.)) )
         end
 
         # Now combine all these channels

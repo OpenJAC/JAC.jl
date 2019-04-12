@@ -57,8 +57,8 @@ function provide(sa::String, sh::Subshell, occ::Int64)
                                             push!( wb, SubshellStateR( sh, occ, 4,16) );       return(wb)
         end
     elseif   subshell_2j(sh) in [ 9, 11, 13, 15]
-        if       occ == 0                   push!( wb, SubshellStateR( sh, occ, 0, 0) );       return(wb)
-        elseif   occ == 1                   push!( wb, SubshellStateR( sh, occ, 1, wa[4]) );   return(wb)
+        if       occ == 0                   push!( wb, SubshellStateR( sh, occ, 0, 0) );                 return(wb)
+        elseif   occ == 1                   push!( wb, SubshellStateR( sh, occ, 1, subshell_2j(sh)) );   return(wb)
         else     error("stop b")
         end
 

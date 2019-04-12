@@ -651,7 +651,7 @@ function interactive()  end
 
 In addition, the computation of the following excitation, ionization and decay processes is supported for atoms and ions with N electrons:
 
-   + AugerX             ......... **Auger transitions**, i.e. the autoionization or emission of a (free) electron into 
+   + Auger              ......... **Auger transitions**, i.e. the autoionization or emission of a (free) electron into 
                                   the continuum; |i(N)> --> |f(N-1)> + e_A. 
    + Compton            ......... **Rayleigh and Compton** elastic and inelastic photon scattering cross sections; 
                                   |i(N)> + omega --> |f(N)> + omega'.

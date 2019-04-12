@@ -47,7 +47,7 @@ module JAC
 using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL   #, JLD
 
 export @racahsum, 
-       AlphaVariation, AnapoleMoment, AsfSettings, Atomic, Auger, 
+       AlphaVariation, AnapoleMoment, AsfSettings, Atomic, AutoIonization, 
        Basis, 
        Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
        DecayYield, Dielectronic, DoubleAuger,
@@ -72,6 +72,7 @@ include("module-ManyElectron.jl")
 include("module-Nuclear.jl")
 include("module-Bsplines.jl")
 include("module-Continuum.jl")
+include("module-PeriodicTable.jl")
 
 include("module-Einstein.jl")
 include("module-Hfs.jl")
@@ -91,7 +92,7 @@ include("module-Radiative.jl")
 include("module-PhotoExcitation.jl")
 include("module-PhotoIonization.jl")
 include("module-PhotoRecombination.jl")
-include("module-Auger.jl")
+include("module-AutoIonization.jl")
 include("module-Dielectronic.jl")
 include("module-PhotoExcitationFluores.jl")
 include("module-PhotoExcitationAutoion.jl")
@@ -161,7 +162,6 @@ include("jac-plot.jl")
 include("jac-read.jl")
 include("jac-recast.jl")
 include("jac-sort.jl")
-include("jac-store.jl")
 include("jac-tabulate.jl")
 include("jac-warn.jl")
 

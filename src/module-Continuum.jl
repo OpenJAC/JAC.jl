@@ -41,7 +41,7 @@ module Continuum
         NP   = sqrt( (energy + 2*wc^2)/(pi*wc^2*q) );   NQ = -sqrt( energy / (pi*wc^2*q) )
         
         ## println("Continuum-asymptotic Coulomb orbital for q = $q,  kappa = $kappa,  Zbar=$Zbar  y = $y,   gammaBar = $gammaBar,  eta = $eta")
-        println("Continuum-asymptotic Coulomb orbital for q = $q,  kappa = $kappa,  Zbar=$Zbar,  eta = $eta")
+        if  JAC.PRINT_DEBUG  println("Continuum-asymptotic Coulomb orbital for q = $q,  kappa = $kappa,  Zbar=$Zbar,  eta = $eta")    end
 
         
         for  i = 2:settings.mtp  
@@ -77,6 +77,7 @@ module Continuum
         JAC.warn(AddWarning, "All continuum orbitals are generated in a local (DFS) potential.")  
         
         # Generate a continuum orbital due to the given solution method
+        ##x println("JAC.JAC_CONT_SOLUTION = $(JAC.JAC_CONT_SOLUTION)")
         if      JAC.JAC_CONT_SOLUTION  ==  ContBessel 
             cOrbital = JAC.Continuum.generateOrbitalBessel(energy, sh, grid::Radial.Grid, settings)
         elseif  JAC.JAC_CONT_SOLUTION  ==  AsymptoticCoulomb 
@@ -179,6 +180,8 @@ module Continuum
         wb = JAC.Bsplines.generateGalerkinMatrix(wa, energy, sh, pot)
         wc = wb * adjoint(wb)
         wd  = JAC.diagonalize("matrix: Julia, eigfact", wc)
+        wx  =  adjoint(wd.vectors[1]) * wd.vectors[1]
+        println("*** wx-norm = $wx")
         ##x println("Galerkin: A-eigenvalues = $(wd.values)")
         
         cOrbital = JAC.Bsplines.generateOrbitalFromPrimitives(energy, sh, settings.mtp, wd.vectors[1], wa)  
@@ -300,7 +303,8 @@ module Continuum
             PPprime = cOrbital.P[i] / cOrbital.Pprime[i];    kr  = q * grid.r[i];   at = atan( PPprime * q )
             phi = atan( PPprime * q ) - kr + l*pi/2;         phi = rem(phi, pi) + pi   # to bring phi in the intervaö 0 <= phi < pi
             A   = cOrbital.P[i] / sin(kr - l*pi/2 + phi);    N   = sqrt(2/(pi*q)) / A
-            if  abs(N) > 1.0e1   println("**Skip normalization at i = i, r[i] = $(grid.r[i])");   continue   end
+            if  abs(N) > 1.0e1
+                println("**Skip normalization at i = i, r[i] = $(grid.r[i])  A = $A   phi = $phi  corbital = $(cOrbital.P[i])");   continue   end
             ## println("kr=" * @sprintf("%.4e",kr) * ",  PPprime=" * @sprintf("%.4e",PPprime) * ",  at=" * @sprintf("%.4e",at) * 
             ##         ",  phi=" * @sprintf("%.4e",phi) * ",  A=" * @sprintf("%.4e",A) * ",  N=" * @sprintf("%.4e",N) )
             #
@@ -312,10 +316,10 @@ module Continuum
         mPhi = sum(meanPhi) / nx;    mN = sum(meanN) / nx
         for  i = 1:nx    devsPhi[i] = (meanPhi[i] - mPhi)^2;    devsN[i] = (meanN[i] - mN)^2    end
         stdPhi = sqrt( sum(devsPhi) / nx );   stdN = sqrt( sum(devsN) / nx );
-        println("Pure-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",mN) *
-                " (Delta-N=" * @sprintf("%.4e",stdN) *
-                ") and phase phi=" * @sprintf("%.4e",mPhi) *
-                " (Delta-N=" * @sprintf("%.4e",stdPhi) * ")." )
+         if  JAC.PRINT_DEBUG  println("Pure-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",mN) *
+                                      " (Delta-N=" * @sprintf("%.4e",stdN) *
+                                      ") and phase phi=" * @sprintf("%.4e",mPhi) *
+                                      " (Delta-N=" * @sprintf("%.4e",stdPhi) * ")." )    end
         
         P = mN .* cOrbital.P;   Q = mN .* cOrbital.Q;   Pprime = mN .* cOrbital.Pprime;   Qprime = mN .* cOrbital.Qprime;   
         newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
@@ -350,7 +354,8 @@ module Continuum
             theta = q * pot.grid.r[i]  +  y * log(2q * pot.grid.r[i])  - angle( SpecialFunctions.gamma(gammaBar + im*y) )  -  pi*gammaBar/2  +  eta.re
             phi = at - theta;       phi = rem(phi, pi) + pi   # to bring phi in the interval 0 <= phi < pi
             A   = cOrbital.P[i] / cos(theta + phi);             N   = NP / A
-            if  abs(N) > 1.0e1   println("**Skip normalization at i = i, r[i] = $(pot.grid.r[i])");   continue   end
+            if  abs(N) > 1.0e1   
+                println("**Skip normalization at i = i, r[i] = $(pot.grid.r[i])  A = $A   phi = $phi  corbital $(cOrbital.P[i])");   continue   end
             ## println("theta=" * @sprintf("%.4e",theta) * ",  PprimeP=" * @sprintf("%.4e",PprimeP) * ",  at=" * @sprintf("%.4e",at) * 
             ##         ",  phi=" * @sprintf("%.4e",phi) * ",  A=" * @sprintf("%.4e",A) * ",  N=" * @sprintf("%.4e",N) ) 
             #

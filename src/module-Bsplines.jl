@@ -47,7 +47,9 @@ module Bsplines
     `Base.show(io::IO, primitives::Bsplines.Primitives)`  ... prepares a proper printout of the variable Bsplines.Primitives.
     """
     function Base.show(io::IO, primitives::Bsplines.Primitives) 
-        error("stop a")
+        println(io, "grid:               $(primitives.grid)  ")
+        println(io, "bsplinesL:          $(primitives.bsplinesL)  ")
+        println(io, "bsplinesS:          $(primitives.bsplinesS)  ")
     end
 
 
@@ -400,14 +402,16 @@ module Bsplines
 
     """
     `JAC.Bsplines.generateOrbitalsHydrogenic(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Nuclear.Model, 
-                                             subshells::Array{Subshell,1})`  ... generates the hydrogenic 
-         orbitals for the nuclear model and for the given subshells. A set of orbitals::Dict{Subshell, Orbital}() is returned.
+                                             subshells::Array{Subshell,1}; printout::Bool=true)`  
+        ... generates the hydrogenic orbitals for the nuclear model and for the given subshells. A set of 
+            orbitals::Dict{Subshell, Orbital}() is returned.
     """
-    function generateOrbitalsHydrogenic(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, subshells::Array{Subshell,1}) 
+    function generateOrbitalsHydrogenic(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, subshells::Array{Subshell,1}; 
+                                        printout::Bool=true) 
 
         newOrbitals = Dict{Subshell, Orbital}()
         # Define the storage for the calculations of matrices; this is necessary to use the Bsplines.generateMatrix!() function
-        println("(Re-) Define a storage array for various B-spline matrices:")
+        if  printout    println("(Re-) Define a storage array for various B-spline matrices:")    end
         storage  = Dict{Array{Any,1},Array{Float64,2}}()
         # Set-up the overlap matrix
         nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
@@ -428,7 +432,7 @@ module Bsplines
         end
         
         # Define the nuclear potential for the give nuclear model
-        println("Nuclear model = $(nuclearModel) ")
+        if  printout    println("Nuclear model = $(nuclearModel) ")    end
         if       nuclearModel.model == "point"
             pot = JAC.Nuclear.pointNucleus(nuclearModel.Z, primitives.grid)
         elseif   nuclearModel.model == "Fermi"
@@ -444,18 +448,18 @@ module Bsplines
             if  alreadyDone[i]   continue   end
             # 
             sh = subshells[i]
-            println("Generate hydrogenic orbital for subshell $sh ")
+            if  printout    println("Generate hydrogenic orbital for subshell $sh ")    end
             wa = JAC.Bsplines.setupLocalMatrix(sh.kappa, primitives, pot, storage)
             w2 = JAC.diagonalize("generalized eigenvalues: Julia, eigfact", wa, wb)
             nsi = nsS;    if sh.kappa > 0   nsi = nsi + 1   end
-            JAC.tabulateKappaSymmetryEnergiesDirac(sh.kappa, w2.values, nsi, nuclearModel)
+            if  printout    JAC.tabulateKappaSymmetryEnergiesDirac(sh.kappa, w2.values, nsi, nuclearModel)    end
             newOrbitals[sh] = generateOrbitalFromPrimitives(sh, w2, primitives)
             # Take over orbitals of the same symmetry
             for  j = 1:length(subshells)
                 if  alreadyDone[j]   continue
                 elseif  sh.kappa == subshells[j].kappa   
                     newOrbitals[subshells[j]] = generateOrbitalFromPrimitives(subshells[j], w2, primitives)
-                    println("Use hydrogenic orbital from this symmetriy block also for $(subshells[j]).")
+                    if  printout   println("Use hydrogenic orbital from this symmetriy block also for $(subshells[j]).")    end
                     alreadyDone[j] = true
                 end
             end
@@ -467,11 +471,11 @@ module Bsplines
 
     """
     `JAC.Bsplines.solveSelfConsistentFieldOptimized(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis,
-                                                    settings::AsfSettings)` ... solves the self-consistent field for ... 
-                                                    A basis::Basis is returned.
+                                                    settings::AsfSettings; printout::Bool=true)` 
+        ... solves the self-consistent field for ...     A basis::Basis is returned.
     """
     function solveSelfConsistentFieldOptimized(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
-                                               settings::AsfSettings) 
+                                               settings::AsfSettings; printout::Bool=true) 
         JAC.define("standard grid", primitives.grid)
         
         #
@@ -486,13 +490,15 @@ module Bsplines
 
     """
     `JAC.Bsplines.solveSelfConsistentFieldMean(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
-                                               settings::AsfSettings)`  ... solves the self-consistent field for a given local
-        mean-field potential as specified by the settings::AsfSettings. A basis::Basis is returned.
+                                               settings::AsfSettings; printout::Bool=true)` 
+        ... solves the self-consistent field for a given local mean-field potential as specified by the settings::AsfSettings. 
+            A basis::Basis is returned.
     """
-    function solveSelfConsistentFieldMean(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, settings::AsfSettings) 
-        JAC.define("standard grid", primitives.grid)
+    function solveSelfConsistentFieldMean(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
+                                          settings::AsfSettings; printout::Bool=true) 
+        JAC.define("standard grid", primitives.grid; printout=printout)
         # Define the storage for the calculations of matrices
-        println("(Re-) Define a storage array for various B-spline matrices:")
+        if  printout    println("(Re-) Define a storage array for various B-spline matrices:")    end
         storage  = Dict{Array{Any,1},Array{Float64,2}}()
         
         # Set-up the overlap matrix; compute or fetch the diagonal 'overlap' blocks
@@ -522,7 +528,7 @@ module Bsplines
                 println("*** Maximum No. of iterations exceeded. ***")
                 break
             end
-            println("\nIteration $NoIteration for symmetries ... ")
+            if  printout    println("\nIteration $NoIteration for symmetries ... ")    end
             #
             for kappa in kappas
                 # (1) First re-define an (arbitrary) 'level' that represents the mean occupation for the local potential
@@ -561,7 +567,7 @@ module Bsplines
                            sa = "  $sh::  en [a.u.] = " * @sprintf("%.8e", newOrbital.energy) * ";   self-consistency = "  
                            sa = sa * @sprintf("%.6e", wcOrbital)   * "  ["
                            sa = sa * @sprintf("%.6e", wcBlock)             * " for symmetry block kappa = $kappa]"
-                           println(sa)
+                           if  printout    println(sa)    end
                         ## println("  $sh  en [a.u.] = $(newOrbital.energy)   self-consistency = $(wcOrbital), $(wcBlock) [kappa=$kappa] ") 
                         previousOrbitals[sh] = newOrbital
                     end

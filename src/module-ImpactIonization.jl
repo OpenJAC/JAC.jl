@@ -1,11 +1,11 @@
 
 """
 `module  JAC.ImpactIonization`  ... a submodel of JAC that contains all methods for computing electron impact ionization cross sections; 
-                                    it is using JAC, JAC.ManyElectron, JAC.ImpactExcitation, JAC.Auger.
+                                    it is using JAC, JAC.ManyElectron, JAC.ImpactExcitation, JAC.AutoIonization.
 """
 module ImpactIonization
 
-    using JAC, JAC.ManyElectron, JAC.ImpactExcitation, JAC.Auger
+    using JAC, JAC.ManyElectron, JAC.ImpactExcitation, JAC.AutoIonization
 
 
     """

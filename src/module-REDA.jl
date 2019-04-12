@@ -1,11 +1,11 @@
 
 """
 `module  JAC.REDA`  ... a submodel of JAC that contains all methods for computing resonant-excitation (sequential) double-autoionization 
-                        cross sections and rates; it is using JAC, JAC.ManyElectron, JAC.Auger, JAC.ImpactExcitation.
+                        cross sections and rates; it is using JAC, JAC.ManyElectron, JAC.AutoIonization, JAC.ImpactExcitation.
 """
 module REDA 
 
-    using JAC, JAC.ManyElectron, JAC.Auger, JAC.ImpactExcitation
+    using JAC, JAC.ManyElectron, JAC.AutoIonization, JAC.ImpactExcitation
 
 
     """
@@ -50,13 +50,13 @@ module REDA
              all quantum numbers, phases and amplitudes.
 
         + excitationChannel  ::JAC.ImpactExcitation.Channel      ... Channel that describes the electron-impact excitation process.
-        + augerChannel1      ::JAC.Auger.Channel                 ... Channel that describes the first subsequent Auger/autoionization process.
-        + augerChannel2      ::JAC.Auger.Channel                 ... Channel that describes the second Auger/autoionization process.
+        + augerChannel1      ::JAC.AutoIonization.Channel        ... Channel that describes the first subsequent Auger/autoionization process.
+        + augerChannel2      ::JAC.AutoIonization.Channel        ... Channel that describes the second Auger/autoionization process.
     """
     struct  Channel
         excitationChannel    ::JAC.ImpactExcitation.Channel
-        augerChannel1        ::JAC.Auger.Channel
-        augerChannel2        ::JAC.Auger.Channel
+        augerChannel1        ::JAC.AutoIonization.Channel
+        augerChannel2        ::JAC.AutoIonization.Channel
     end 
 
 

@@ -3,15 +3,13 @@ uuid = "830ae420-d14d-11e8-2f94-6b071437414d"
 authors = ["Stephan Fritzsche <s.fritzsche@gsi.de>"]
 version = "0.1.0"
 
-[compat]
-julia = "≥1.0"
-
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 FortranFiles = "c58ffaec-ab22-586d-bfc5-781a99fd0b10"
 GSL = "92c85e6c-cbff-5e0c-80f7-495c94daaecd"
 GaussQuadrature = "d54b0c1a-921d-58e0-8e36-89d8069c0969"
 Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
+JLD = "4138dd39-2aa7-5051-a626-17a0bb65d9c8"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
@@ -19,6 +17,9 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+
+[compat]
+julia = "≥1.0"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

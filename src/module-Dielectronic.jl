@@ -1,12 +1,12 @@
 
 """
-`module  JAC.Dielectronic`  ... a submodel of JAC that contains all methods for computing dielectronic recombination properties between 
-                                some initial, intermediate and final-state multiplets; it is using JAC, JAC.ManyElectron, JAC.Radial, 
-                                JAC.Radiative, JAC.Auge.
+`module  JAC.Dielectronic`  
+    ... a submodel of JAC that contains all methods for computing dielectronic recombination properties between some initial, intermediate 
+        and final-state multiplets; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.Auge.
 """
 module Dielectronic
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.Auger
+    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.Radiative, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -70,11 +70,11 @@ module Dielectronic
     `struct  Dielectronic.Channel`  ... defines a type for a single dielectronic recombination channel that specifies all quantum numbers, 
                                         phases and amplitudes.
 
-         + augerChannel      ::JAC.Auger.Channel        ... Channel that describes the capture, i.e. inverse Auger process.
+         + augerChannel      ::JAC.AutoIonization.Channel        ... Channel that describes the capture, i.e. inverse Auger process.
          + radiativeChannel  ::JAC.Radiative.Channel    ... Channel that describes the stabilization, i.e. photon emission.
     """
     struct  Channel
-        augerChannel         ::JAC.Auger.Channel
+        augerChannel         ::JAC.AutoIonization.Channel
         radiativeChannel     ::JAC.Radiative.Channel
     end   ==#
 
@@ -94,8 +94,8 @@ module Dielectronic
         + resonanceStrength ::EmProperty              ... partial resonance strength of this pathway
         + hasChannels       ::Bool                    ... Determines whether the individual channels are defined in terms of their possible
                                                           Auger and radiative channels, or not.
-        + captureChannels   ::Array{JAC.Auger.Channel,1}      ... List of |i> -->  |n>   dielectronic (Auger) capture channels.
-        + photonChannels    ::Array{JAC.Radiative.Channel,1}  ... List of |n> -->  |f>   radiative stabilization channels.
+        + captureChannels   ::Array{JAC.AutoIonization.Channel,1}   ... List of |i> -->  |n>   dielectronic (Auger) capture channels.
+        + photonChannels    ::Array{JAC.Radiative.Channel,1}        ... List of |n> -->  |f>   radiative stabilization channels.
     """
     struct  Pathway
         initialLevel        ::Level
@@ -108,7 +108,7 @@ module Dielectronic
         angularBeta         ::EmProperty
         resonanceStrength   ::EmProperty
         hasChannels         ::Bool
-        captureChannels     ::Array{JAC.Auger.Channel,1} 
+        captureChannels     ::Array{JAC.AutoIonization.Channel,1} 
         photonChannels      ::Array{JAC.Radiative.Channel,1} 
     end 
 
@@ -119,7 +119,7 @@ module Dielectronic
     """
     function Pathway()
         em = EmProperty(0., 0.)
-        Pathway(initialLevel, intermediateLevel, finalLevel, 0., 0., 0., em, em, em, false, Auger.Channel[], Radiative.Channel[])
+        Pathway(initialLevel, intermediateLevel, finalLevel, 0., 0., 0., em, em, em, false, AutoIonization.Channel[], Radiative.Channel[])
     end
 
 
@@ -143,8 +143,8 @@ module Dielectronic
 
 
     """
-    `struct  Dielectronic.Resonance`  ... defines a type for a dielectronic resonance as defined by a given initial and resonance level but 
-                                          by summing over all final levels
+    `struct  Dielectronic.Resonance`  
+        ... defines a type for a dielectronic resonance as defined by a given initial and resonance level but by summing over all final levels
 
         + initialLevel      ::Level             ... initial-(state) level
         + intermediateLevel ::Level             ... intermediate-(state) level
@@ -197,16 +197,16 @@ module Dielectronic
     """
     function  computeAmplitudesProperties(pathway::Dielectronic.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                           settings::Dielectronic.Settings)
-        newcChannels = Auger.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum)
+        newcChannels = AutoIonization.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum)
         for cChannel in pathway.captureChannels
             newnLevel   = JAC.generateLevelWithSymmetryReducedBasis(pathway.intermediateLevel)
             newnLevel   = JAC.generateLevelWithExtraSubshell(Subshell(101, cChannel.kappa), newnLevel)
             newiLevel   = JAC.generateLevelWithSymmetryReducedBasis(pathway.initialLevel)
             cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(pathway.electronEnergy, Subshell(101, cChannel.kappa), newiLevel, nm, grid, contSettings)
             newcLevel   = JAC.generateLevelWithExtraElectron(cOrbital, cChannel.symmetry, newiLevel)
-            newcChannel = Auger.Channel( cChannel.kappa, cChannel.symmetry, phase, Complex(0.))
-            amplitude   = JAC.Auger.amplitude(settings.augerOperator, cChannel, newnLevel, newcLevel, grid)
-            newcChannel = Auger.Channel( cChannel.kappa, cChannel.symmetry, phase, amplitude)
+            newcChannel = AutoIonization.Channel( cChannel.kappa, cChannel.symmetry, phase, Complex(0.))
+            amplitude   = JAC.AutoIonization.amplitude(settings.augerOperator, cChannel, newnLevel, newcLevel, grid)
+            newcChannel = AutoIonization.Channel( cChannel.kappa, cChannel.symmetry, phase, amplitude)
             push!( newcChannels, newcChannel)
         end
         #
@@ -228,12 +228,12 @@ module Dielectronic
 
     """
     `JAC.Dielectronic.computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, 
-                                      grid::Radial.Grid, settings::Dielectronic.Settings; output=true)`  ... to compute the dielectronic 
-         recombination amplitudes and all properties as requested by the given settings. A list of pathways::Array{Dielectronic.Pathway,1} is 
-         returned.
+                                      grid::Radial.Grid, settings::Dielectronic.Settings; output=true)`  
+        ... to compute the dielectronic recombination amplitudes and all properties as requested by the given settings. 
+            A list of pathways::Array{Dielectronic.Pathway,1} is returned.
     """
-    function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
-                              settings::Dielectronic.Settings; output=true)
+    function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, 
+                              grid::Radial.Grid, settings::Dielectronic.Settings; output=true)
         println("")
         printstyled("JAC.Dielectronic.computePathways(): The computation of dielectronic resonance strength, etc. starts now ... \n", color=:light_green)
         printstyled("----------------------------------------------------------------------------------------------------------- \n", color=:light_green)
@@ -300,15 +300,15 @@ module Dielectronic
 
     """
     `JAC.Dielectronic.determineCaptureChannels(intermediateLevel::Level, initialLevel::Level, settings::Dielectronic.Settings)` 
-        ... to determine a list of Auger.Channel for a (Auger) capture transitions from the initial to an intermediate level, and by 
-            taking into account the particular settings of for this computation;  an Array{Auger.Channel,1} is returned.
+        ... to determine a list of AutoIonization.Channel for a (Auger) capture transitions from the initial to an intermediate level, and by 
+            taking into account the particular settings of for this computation;  an Array{AutoIonization.Channel,1} is returned.
     """
     function determineCaptureChannels(intermediateLevel::Level, initialLevel::Level, settings::Dielectronic.Settings)
-        channels = Auger.Channel[];   
+        channels = AutoIonization.Channel[];   
         symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symn = LevelSymmetry(intermediateLevel.J, intermediateLevel.parity)
         kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symi, symn)
         for  kappa in kappaList
-            push!( channels, Auger.Channel(kappa, symn, 0., Complex(0.)) )
+            push!( channels, AutoIonization.Channel(kappa, symn, 0., Complex(0.)) )
         end
 
         return( channels )  
@@ -343,10 +343,11 @@ module Dielectronic
 
     """
     `JAC.Dielectronic.determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
-                                        settings::Dielectronic.Settings)`  ... to determine a list of dielectronic-recombination pathways 
-         between the levels from the given initial-, intermediate- and final-state multiplets and by taking into account the particular 
-         selections and settings for this computation; an Array{Dielectronic.Pathway,1} is returned. Apart from the level specification, 
-         all physical properties are set to zero during the initialization process.  
+                                        settings::Dielectronic.Settings)`  
+        ... to determine a list of dielectronic-recombination pathways between the levels from the given initial-, intermediate- and 
+            final-state multiplets and by taking into account the particular selections and settings for this computation; 
+            an Array{Dielectronic.Pathway,1} is returned. Apart from the level specification, all physical properties are set to zero 
+            during the initialization process.  
     """
     function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                 settings::Dielectronic.Settings)
@@ -377,8 +378,9 @@ module Dielectronic
 
 
     """
-    `JAC.Dielectronic.displayPathways(pathways::Array{Dielectronic.Pathway,1})`  ... to display a list of pathways and channels that have been 
-         selected due to the prior settings. A neat table of all selected transitions and energies is printed but nothing is returned otherwise.
+    `JAC.Dielectronic.displayPathways(pathways::Array{Dielectronic.Pathway,1})`  
+        ... to display a list of pathways and channels that have been selected due to the prior settings. A neat table of all selected 
+            transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayPathways(pathways::Array{Dielectronic.Pathway,1})
         println(" ")
@@ -423,8 +425,7 @@ module Dielectronic
 
     """
     `JAC.Dielectronic.displayResults(stream::IO, pathways::Array{Dielectronic.Pathway,1}, settings::Dielectronic.Settings)`  
-         ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing 
-         is returned otherwise.
+        ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
     """
     function  displayResults(stream::IO, pathways::Array{Dielectronic.Pathway,1}, settings::Dielectronic.Settings)
         println(stream, " ")
@@ -510,7 +511,7 @@ module Dielectronic
 
     """
         + (stream::IO, resonances::Array{Dielectronic.Resonance,1}, settings::Dielectronic.Settings)`  
-         ... to list all results for the resonances. A neat table is printed but nothing is returned otherwise.
+        ... to list all results for the resonances. A neat table is printed but nothing is returned otherwise.
     """
     function  displayResults(stream::IO, resonances::Array{Dielectronic.Resonance,1}, settings::Dielectronic.Settings)
         println(stream, " ")
