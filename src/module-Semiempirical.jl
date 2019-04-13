@@ -29,17 +29,13 @@ module Semiempirical
     end  
 
 
-    """
-    `Base.show(io::IO, cs::AtomicCrossSection)`  ... prepares a proper printout of the variable cs::AtomicCrossSection.
-    """
+    # `Base.show(io::IO, cs::AtomicCrossSection)`  ... prepares a proper printout of the variable cs::AtomicCrossSection.
     function Base.show(io::IO, cs::AtomicCrossSection) 
         print(io, string(cs) )
     end
 
 
-    """
-    `Base.string(cs::AtomicCrossSection)`  ... provides a proper printout of the variable cs::AtomicCrossSection.
-    """
+    # `Base.string(cs::AtomicCrossSection)`  ... provides a proper printout of the variable cs::AtomicCrossSection.
     function Base.string(cs::AtomicCrossSection) 
         if       cs == NoCrossSection       return("No cross section")
         elseif   cs == ImpactIonizationCS   return("impact-ionization cross section")
@@ -73,9 +69,7 @@ module Semiempirical
     end
 
 
-    """
-    `Base.show(io::IO, estimation::Semiempirical.Estimation)`  ... prepares a proper printout of the variable estimation::Semiempirical.Estimation.
-    """
+    # `Base.show(io::IO, estimation::Semiempirical.Estimation)`  ... prepares a proper printout of the variable estimation::Semiempirical.Estimation.
     function Base.show(io::IO, estimation::Semiempirical.Estimation) 
         println(io, "calcCrossSections:        $(estimation.calcCrossSections)  ")
         println(io, "crossSection:             $(estimation.crossSection)  ")

@@ -33,9 +33,7 @@ module Statistical
     end
 
 
-    """
-    `Base.show(io::IO, resonance::Statistical.ResonanceR)`  ... prepares a proper printout of the variable resonance::Statistical.ResonanceR.
-    """
+    # `Base.show(io::IO, resonance::Statistical.ResonanceR)`  ... prepares a proper printout of the variable resonance::Statistical.ResonanceR.
     function Base.show(io::IO, resonance::Statistical.ResonanceR) 
         println(io, "isBound:              $(resonance.isBound)  ")
         println(io, "ionLevel:             $(resonance.ionLevel)  ")
@@ -70,9 +68,7 @@ module Statistical
     end
 
 
-    """
-    `Base.show(io::IO, tensor::Statistical.Tensor)`  ... prepares a proper printout of the variable tensor::Statistical.Tensor.
-    """
+    # `Base.show(io::IO, tensor::Statistical.Tensor)`  ... prepares a proper printout of the variable tensor::Statistical.Tensor.
     function Base.show(io::IO, tensor::Statistical.Tensor) 
         println(io, "k:              $(tensor.k)  ")
         println(io, "q:              $(tensor.q)  ")

@@ -81,9 +81,7 @@ module Atomic
     end
 
 
-    """
-    `Base.show(io::IO, step::Atomic.CasStep)`  ... prepares a proper printout of the (individual step of computations) step::Atomic.CasStep.
-    """
+    # `Base.show(io::IO, step::Atomic.CasStep)`  ... prepares a proper printout of the (individual step of computations) step::Atomic.CasStep.
     function Base.show(io::IO, step::Atomic.CasStep)
         sa = Base.string(step);                print(io, sa, "\n")
         sa = "Reference configurations: ";     print(io, sa, "\n")   
@@ -113,9 +111,7 @@ module Atomic
     end
 
 
-    """
-    `Base.string(step::Atomic.CasStep)`  ... provides a String notation for the variable step::Atomic.CasStep.
-    """
+    # `Base.string(step::Atomic.CasStep)`  ... provides a String notation for the variable step::Atomic.CasStep.
     function Base.string(step::Atomic.CasStep)
         sa = "Step: Computational model for $(step.name) with $(step.NoElectrons) electrons and with (step.NoCoreShells) "
         sa = sa * "core shells:"
@@ -166,18 +162,14 @@ module Atomic
     end
 
 
-    """
-    `Base.show(io::IO, model::CasComputation)`  ... prepares a proper printout of the (individual step of computations) model::CasComputation.
-    """
+    # `Base.show(io::IO, model::CasComputation)`  ... prepares a proper printout of the (individual step of computations) model::CasComputation.
     function Base.show(io::IO, model::CasComputation)
         sa = Base.string(model)
         print(io, sa)
     end
 
 
-    """
-    `Base.string(model::CasComputation)`  ... provides a String notation for the variable model::CasComputation.
-    """
+    # `Base.string(model::CasComputation)`  ... provides a String notation for the variable model::CasComputation.
     function Base.string(model::CasComputation)
         sa = "Model: $(model.name) includes $(length(model.steps)) steps and has been calculated up to the step $(model.previousStep)."
         return( sa )
@@ -218,9 +210,7 @@ module Atomic
     end
 
 
-    """
-    `Base.show(io::IO, settings::Atomic.CasSettings)`  ... prepares a proper printout of the settings::Atomic.CasSettings.
-    """
+    # `Base.show(io::IO, settings::Atomic.CasSettings)`  ... prepares a proper printout of the settings::Atomic.CasSettings.
     function Base.show(io::IO, settings::Atomic.CasSettings)
         println(io, "generateScf:        $(settings.generateScf)  ")
         println(io, "startOrbitals:      $(settings.startOrbitals)  ")
@@ -233,9 +223,7 @@ module Atomic
     end
 
 
-    """
-    `Base.string(settings::Atomic.CasSettings)`  ... provides a String notation for the variable settings::Atomic.CasSettings.
-    """
+    # `Base.string(settings::Atomic.CasSettings)`  ... provides a String notation for the variable settings::Atomic.CasSettings.
     function Base.string(settings::Atomic.CasSettings)
         error("Not yet implemented.")
         sa = "Cas settings: maximum No. of iterations = $(settings.maxIterations), accuracy = (settings.scfAccuracy)"
@@ -433,9 +421,7 @@ module Atomic
     end
 
 
-    """
-    `Base.show(io::IO, computation::Atomic.Computation)`  ... prepares a proper printout of the variable computation::Atomic.Computation.
-    """
+    # `Base.show(io::IO, computation::Atomic.Computation)`  ... prepares a proper printout of the variable computation::Atomic.Computation.
     function Base.show(io::IO, computation::Atomic.Computation) 
         println(io, "name:                           $(computation.name)  ")
         println(io, "nuclearModel:                   $(computation.nuclearModel)  ")

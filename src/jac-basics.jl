@@ -445,8 +445,8 @@ function shellSplitOccupation(sh::Shell, occ::Int64)
                     if  k1 <= j2_1 + 1   &&    k2 <= j2_2 + 1    
                        wb = Dict( subshells[1] => k1, subshells[2] => k2 )
                        # Delete contributions with zero occupation
-                       if  k1 == 0    delete!(wb, subshells[1])   end
-                       if  k2 == 0    delete!(wb, subshells[2])   end
+                       ## if  k1 == 0    delete!(wb, subshells[1])   end
+                       ## if  k2 == 0    delete!(wb, subshells[2])   end
                        push!(wa, wb)
                     end
                 else    error("stop a") 

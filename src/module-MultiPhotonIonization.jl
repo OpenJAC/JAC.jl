@@ -37,10 +37,8 @@ module MultiPhotonIonization
     end
 
 
-    """
-    `Base.show(io::IO, settings::MultiPhotonIonization.Settings)`  ... prepares a proper printout of the variable 
-                                                                       settings::MultiPhotonIonization.Settings.
-    """
+    # `Base.show(io::IO, settings::MultiPhotonIonization.Settings)`  
+    # 	... prepares a proper printout of the variable settings::MultiPhotonIonization.Settings.
     function Base.show(io::IO, settings::MultiPhotonIonization.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -95,9 +93,7 @@ module MultiPhotonIonization
     end
 
 
-    """
-    `Base.show(io::IO, line::MultiPhotonIonization.Line)`  ... prepares a proper printout of the variable line::MultiPhotonIonization.Line.
-    """
+    # `Base.show(io::IO, line::MultiPhotonIonization.Line)`  ... prepares a proper printout of the variable line::MultiPhotonIonization.Line.
     function Base.show(io::IO, line::MultiPhotonIonization.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

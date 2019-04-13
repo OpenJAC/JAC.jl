@@ -247,10 +247,12 @@ function generate(sa::String, confs::Array{ConfigurationR,1})
     for  a in wa
         for  cf in 1:length(confs)
             ks = keys(confs[cf].subshells)
-            if  a in ks   &&   confs[cf].subshells[a]  !=  0     push!(subshells, a);    break    end
+            ## Do include 'empty' subshells into the subshell list if they are specified by the given configurations
+            ## if  a in ks   &&   confs[cf].subshells[a]  !=  0     push!(subshells, a);    break    end
+            if  a in ks     push!(subshells, a);    break    end
         end 
     end
-
+    println("***subshells = $subshells")
     return( subshells )
 end
 
@@ -260,21 +262,54 @@ end
                   list for the two basis A and B; a list::Array{Subshell,1} is returned.
 """
 function generate(sa::String, basisA::Basis,  basisB::Basis)
+    function areEqual(nn::Int64, sha::Array{Subshell,1}, shb::Array{Subshell,1})
+        # Determines whether the first nn subshells are equal in sha and shb (true) or not (false)
+        for  i = 1:nx   
+            if    sha[i] != shb[i]    return( false )   end
+        end
+        return( true )
+    end
+        
     subshells = Subshell[]   
 
     !(sa == "subshells: ordered list for two bases")  &&   error("Unsupported keystring = $sa")
 
     nx = min(length(basisA.subshells), length(basisB.subshells))
-    for  i = 1:nx   
-        if    basisA.subshells[i] != basisB.subshells[i]   error("Inconsistent subshells of two bases.")
-        else  push!( subshells, basisA.subshells[i])
+    if  areEqual(nx, basisA.subshells, basisB.subshells)
+        # If subshell order is equal, any subshell order is accepted for those subshells that occur in both basis
+        for  i = 1:nx   
+            if    basisA.subshells[i] != basisB.subshells[i]   error("Inconsistent subshells of two bases.")
+            else  push!( subshells, basisA.subshells[i])
+            end
         end
-    end
-    #
-    if       length(basisA.subshells) > nx   
-        for  i = nx+1:length(basisA.subshells)    push!(subshells, basisA.subshells[i])    end
-    elseif   length(basisB.subshells) > nx   
-        for  i = nx+1:length(basisB.subshells)    push!(subshells, basisB.subshells[i])    end
+        #
+        if       length(basisA.subshells) > nx   
+            for  i = nx+1:length(basisA.subshells)    push!(subshells, basisA.subshells[i])    end
+        elseif   length(basisB.subshells) > nx   
+            for  i = nx+1:length(basisB.subshells)    push!(subshells, basisB.subshells[i])    end
+        end
+    else
+        println("basisA.subshells = $(basisA.subshells)")
+        println("basisB.subshells = $(basisB.subshells)")
+        # If subshell order is NOT equal, all subshell in basisA and basisB must follow standard order
+        standardList = JAC.give("ordered subshell list: relativistic", 7)
+        na = 0;  nb = 0
+        for  sh in standardList   
+            if  sh in basisA.subshells  ||   sh in basisB.subshells   push!( subshells, sh)    end    
+        end
+        nn = 0;   
+        for sh in basisA.subshells   
+            if    !(sh in subshells) push!( subshells, sh)    
+            else  wb = findall(x->x==sh, subshells);    if wb[1] <= nn   error("stop a")   else   nn = wb[1]  end    
+            end
+        end
+        nn = 0;   
+        for sh in basisB.subshells   
+            if    !(sh in subshells) push!( subshells, sh)    
+            else  wb = findall(x->x==sh, subshells);    if wb[1] <= nn   error("stop a")   else   nn = wb[1]  end    
+            end
+        end
+        println("*** extended subshells from two basis = $subshells")
     end
     ##x println("subshells from two basis = $subshells")
 

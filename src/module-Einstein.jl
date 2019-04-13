@@ -53,9 +53,7 @@ module Einstein
     end
 
 
-    """
-    `Base.show(io::IO, settings::Einstein.Settings)`  ... prepares a proper printout of the variable settings::Einstein.Settings.
-    """
+    # `Base.show(io::IO, settings::Einstein.Settings)`  ... prepares a proper printout of the variable settings::Einstein.Settings.
     function Base.show(io::IO, settings::Einstein.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
@@ -81,9 +79,7 @@ module Einstein
     end 
 
 
-    """
-    `Base.show(io::IO, channel::Einstein.Channel)`  ... prepares a proper printout of the variable channel::EinsteinChannel.
-    """
+    # `Base.show(io::IO, channel::Einstein.Channel)`  ... prepares a proper printout of the variable channel::EinsteinChannel.
     function Base.show(io::IO, channel::Einstein.Channel) 
         print(io, "$(channel.multipole) [$(channel.gauge); $(channel.amplitude)") 
     end
@@ -121,9 +117,7 @@ module Einstein
    end
 
 
-    """
-    `Base.show(io::IO, line::Einstein.Line)`  ... prepares a proper printout of the variable line::Einstein.Line.
-    """
+    # `Base.show(io::IO, line::Einstein.Line)`  ... prepares a proper printout of the variable line::Einstein.Line.
     function Base.show(io::IO, line::Einstein.Line) 
         println(io, "initialLevel:         $(line.initialLevel)  ")
         println(io, "finalLevel:           $(line.finalLevel)  ")

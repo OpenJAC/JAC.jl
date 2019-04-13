@@ -39,9 +39,7 @@ module ImpactExcitation
     end
 
 
-    """
-    `Base.show(io::IO, settings::ImpactExcitation.Settings)`  ... prepares a proper printout of the variable settings::ImpactExcitation.Settings.
-    """
+    # `Base.show(io::IO, settings::ImpactExcitation.Settings)`  ... prepares a proper printout of the variable settings::ImpactExcitation.Settings.
     function Base.show(io::IO, settings::ImpactExcitation.Settings) 
         println(io, "electronEnergies:           $(settings.electronEnergies)  ")
         println(io, "includeBreit:               $(settings.includeBreit)  ")
@@ -74,9 +72,7 @@ module ImpactExcitation
     end
 
 
-    """
-    `Base.show(io::IO, channel::ImpactExcitation.Channel)`  ... prepares a proper printout of the variable channel::ImpactExcitation.Channel.
-    """
+    # `Base.show(io::IO, channel::ImpactExcitation.Channel)`  ... prepares a proper printout of the variable channel::ImpactExcitation.Channel.
     function Base.show(io::IO, channel::ImpactExcitation.Channel) 
         println(io, "initialKappa:       $(channel.initialKappa)  ")
         println(io, "finalKappa:         $(channel.finalKappa)  ")
@@ -128,9 +124,7 @@ module ImpactExcitation
     end
 
 
-    """
-    `Base.show(io::IO, line::ImpactExcitation.Line)`  ... prepares a proper printout of the variable line::ImpactExcitation.Line.
-    """
+    # `Base.show(io::IO, line::ImpactExcitation.Line)`  ... prepares a proper printout of the variable line::ImpactExcitation.Line.
     function Base.show(io::IO, line::ImpactExcitation.Line) 
         println(io, "initialLevel:            $(line.initialLevel)  ")
         println(io, "finalLevel:              $(line.finalLevel)  ")

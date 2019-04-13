@@ -39,9 +39,7 @@ module IsotopeShift
     end
 
 
-    """
-    `Base.show(io::IO, settings::IsotopeShift.Settings)`  ... prepares a proper printout of the variable settings::IsotopeShift.Settings.
-   """
+    # `Base.show(io::IO, settings::IsotopeShift.Settings)`  ... prepares a proper printout of the variable settings::IsotopeShift.Settings.
     function Base.show(io::IO, settings::IsotopeShift.Settings) 
         println(io, "calcNMS:                  $(settings.calcNMS)  ")
         println(io, "calcSMS:                  $(settings.calcSMS)  ")
@@ -87,9 +85,7 @@ module IsotopeShift
     end
 
 
-    """
-    `Base.show(io::IO, outcome::IsotopeShift.Outcome)`  ... prepares a proper printout of the variable outcome::IsotopeShift.Outcome.
-    """
+    # `Base.show(io::IO, outcome::IsotopeShift.Outcome)`  ... prepares a proper printout of the variable outcome::IsotopeShift.Outcome.
     function Base.show(io::IO, outcome::IsotopeShift.Outcome) 
         println(io, "level:                   $(outcome.level)  ")
         println(io, "Knms:                    $(outcome.Knms)  ")

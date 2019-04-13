@@ -34,9 +34,7 @@ module REDA
     end
 
 
-    """
-    `Base.show(io::IO, settings::REDA.Settings)`  ... prepares a proper printout of the variable settings::REDA.Settings.  
-    """
+    # `Base.show(io::IO, settings::REDA.Settings)`  ... prepares a proper printout of the variable settings::REDA.Settings.  
     function Base.show(io::IO, settings::REDA.Settings) 
         println(io, "electronEnergies:     $(settings.electronEnergies)  ")
         println(io, "selectPathways:       $(settings.selectPathways)  ")
@@ -102,9 +100,7 @@ module REDA
     end
 
 
-    """
-    `Base.show(io::IO, pathway::REDA.Pathway)`  ... prepares a proper printout of the variable pathway::REDA.Pathway.
-    """
+    # `Base.show(io::IO, pathway::REDA.Pathway)`  ... prepares a proper printout of the variable pathway::REDA.Pathway.
     function Base.show(io::IO, pathway::REDA.Pathway) 
         println(io, "initialLevel:               $(pathway.initialLevel)  ")
         println(io, "intermediateLevelm:         $(pathway.intermediateLevelm)  ")

@@ -52,9 +52,7 @@ module PhotoExcitation
     end
 
 
-    """
-    `Base.show(io::IO, settings::PhotoExcitation.Settings)`  ... prepares a proper printout of the variable settings::PhotoExcitation.Settings.
-    """
+    # `Base.show(io::IO, settings::PhotoExcitation.Settings)`  ... prepares a proper printout of the variable settings::PhotoExcitation.Settings.
     function Base.show(io::IO, settings::PhotoExcitation.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "use-gauges:               $(settings.gauges)  ")
@@ -104,9 +102,7 @@ module PhotoExcitation
     end
 
 
-    """
-    `Base.show(io::IO, line::PhotoExcitation.Line)`  ... prepares a proper printout of the variable line::PhotoExcitation.Line.
-    """
+    # `Base.show(io::IO, line::PhotoExcitation.Line)`  ... prepares a proper printout of the variable line::PhotoExcitation.Line.
     function Base.show(io::IO, line::PhotoExcitation.Line) 
         println(io, "initialLevel:         $(line.initialLevel)  ")
         println(io, "finalLevel:           $(line.finalLevel)  ")

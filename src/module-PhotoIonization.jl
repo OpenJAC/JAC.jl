@@ -48,9 +48,7 @@ module PhotoIonization
     end
 
 
-    """
-    `Base.show(io::IO, settings::PhotoIonization.Settings)`  ... prepares a proper printout of the variable settings::PhotoIonization.Settings.
-    """
+    # `Base.show(io::IO, settings::PhotoIonization.Settings)`  ... prepares a proper printout of the variable settings::PhotoIonization.Settings.
     function Base.show(io::IO, settings::PhotoIonization.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -118,9 +116,7 @@ module PhotoIonization
     end
 
 
-    """
-    `Base.show(io::IO, line::PhotoIonization.Line)`  ... prepares a proper printout of the variable line::PhotoIonization.Line.
-    """
+    # `Base.show(io::IO, line::PhotoIonization.Line)`  ... prepares a proper printout of the variable line::PhotoIonization.Line.
     function Base.show(io::IO, line::PhotoIonization.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

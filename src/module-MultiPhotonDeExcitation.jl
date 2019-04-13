@@ -38,11 +38,9 @@ module MultiPhotonDeExcitation
     end
 
 
-    """
-    `Base.show(io::IO, settings::MultiPhotonDeExcitation.Settings)`  ... prepares a proper printout of the variable 
-                                                                         settings::MultiPhotonDeExcitation.Settings.
-    """
-    function Base.show(io::IO, settings::MultiPhotonDeExcitation.Settings) 
+    # `Base.show(io::IO, settings::MultiPhotonDeExcitation.Settings)`  
+    #		... prepares a proper printout of the variable settings::MultiPhotonDeExcitation.Settings.
+     function Base.show(io::IO, settings::MultiPhotonDeExcitation.Settings) 
         println(io, "NoPhotons:                $(settings.NoPhotons)  ")
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -88,9 +86,7 @@ module MultiPhotonDeExcitation
     end
 
 
-    """
-    `Base.show(io::IO, line::MultiPhotonDeExcitation.Line)`  ... prepares a proper printout of the variable line::MultiPhotonDeExcitation.Line.
-    """
+    # `Base.show(io::IO, line::MultiPhotonDeExcitation.Line)`  ... prepares a proper printout of the variable line::MultiPhotonDeExcitation.Line.
     function Base.show(io::IO, line::MultiPhotonDeExcitation.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

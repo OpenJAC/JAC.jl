@@ -75,10 +75,8 @@ module Nuclear
     end
 
 
-    """
-    `Base.show(io::IO, m::Model)`  ... prepares a proper printout of the variable  m::Model.
-    """
-    function Base.show(io::IO, m::Model) 
+    # `Base.show(io::IO, m::Model)`  ... prepares a proper printout of the variable  m::Model.
+     function Base.show(io::IO, m::Model) 
         if      m.model == "Fermi"   
             print(io, "Fermi nuclear model for Z = $(m.Z) with mass = $(m.mass), radius R = $(m.radius) fm and ")
         elseif  m.model == "point"   

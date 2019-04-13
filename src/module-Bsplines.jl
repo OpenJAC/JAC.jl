@@ -43,9 +43,7 @@ module Bsplines
     end
 
 
-    """
-    `Base.show(io::IO, primitives::Bsplines.Primitives)`  ... prepares a proper printout of the variable Bsplines.Primitives.
-    """
+    # `Base.show(io::IO, primitives::Bsplines.Primitives)`  ... prepares a proper printout of the variable Bsplines.Primitives.
     function Base.show(io::IO, primitives::Bsplines.Primitives) 
         println(io, "grid:               $(primitives.grid)  ")
         println(io, "bsplinesL:          $(primitives.bsplinesL)  ")

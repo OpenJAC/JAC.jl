@@ -46,10 +46,8 @@ module PhotoRecombination
     end
 
 
-    """
-    `Base.show(io::IO, settings::PhotoRecombination.Settings)`  ... prepares a proper printout of the variable 
-                                                                    settings::PhotoRecombination.Settings.
-    """
+    # `Base.show(io::IO, settings::PhotoRecombination.Settings)`  
+    #		... prepares a proper printout of the variable settings::PhotoRecombination.Settings.
     function Base.show(io::IO, settings::PhotoRecombination.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -117,9 +115,7 @@ module PhotoRecombination
     end
 
 
-    """
-    `Base.show(io::IO, line::PhotoRecombination.Line)`  ... prepares a proper printout of the variable line::PhotoRecombination.Line.
-    """
+    # `Base.show(io::IO, line::PhotoRecombination.Line)`  ... prepares a proper printout of the variable line::PhotoRecombination.Line.
     function Base.show(io::IO, line::PhotoRecombination.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

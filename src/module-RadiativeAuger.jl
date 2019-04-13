@@ -43,9 +43,7 @@ module RadiativeAuger
     end
 
 
-    """
-    `Base.show(io::IO, settings::RadiativeAuger.Settings)`  ... prepares a proper printout of the variable settings::RadiativeAuger.Settings.
-    """
+    # `Base.show(io::IO, settings::RadiativeAuger.Settings)`  ... prepares a proper printout of the variable settings::RadiativeAuger.Settings.
     function Base.show(io::IO, settings::RadiativeAuger.Settings) 
         println(io, "multipoles:                   $(settings.multipoles)  ")
         println(io, "gauges:                       $(settings.gauges)  ")
@@ -122,10 +120,8 @@ module RadiativeAuger
     end 
 
 
-    """
-    `Base.show(io::IO, line::RadiativeAuger.Line)`  ... prepares a proper printout of the variable line::RadiativeAuger.Line.
-    """
-    function Base.show(io::IO, line::RadiativeAuger.Line) 
+    # `Base.show(io::IO, line::RadiativeAuger.Line)`  ... prepares a proper printout of the variable line::RadiativeAuger.Line.
+     function Base.show(io::IO, line::RadiativeAuger.Line) 
         println(io, "initialLevel:           $(line.initialLevel)  ")
         println(io, "finalLevel:             $(line.finalLevel)  ")
         println(io, "totalRate:              $(line.totalRate)  ")

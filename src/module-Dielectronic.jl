@@ -49,9 +49,7 @@ module Dielectronic
     end
 
 
-    """
-    `Base.show(io::IO, settings::Dielectronic.Settings)`  ... prepares a proper printout of the variable settings::Dielectronic.Settings.
-    """
+    # `Base.show(io::IO, settings::Dielectronic.Settings)`  ... prepares a proper printout of the variable settings::Dielectronic.Settings.
     function Base.show(io::IO, settings::Dielectronic.Settings) 
         println(io, "multipoles:                 $(settings.multipoles)  ")
         println(io, "use-gauges:                 $(settings.gauges)  ")
@@ -123,9 +121,7 @@ module Dielectronic
     end
 
 
-    """
-    `Base.show(io::IO, pathway::Dielectronic.Pathway)`  ... prepares a proper printout of the variable pathway::Dielectronic.Pathway.
-    """
+    # `Base.show(io::IO, pathway::Dielectronic.Pathway)`  ... prepares a proper printout of the variable pathway::Dielectronic.Pathway.
     function Base.show(io::IO, pathway::Dielectronic.Pathway) 
         println(io, "initialLevel:               $(pathway.initialLevel)  ")
         println(io, "intermediateLevel:          $(pathway.intermediateLevel)  ")
@@ -175,9 +171,7 @@ module Dielectronic
     end
 
 
-    """
-    `Base.show(io::IO, resonance::Dielectronic.Resonance)`  ... prepares a proper printout of the variable resonance::Dielectronic.Resonance.
-    """
+    # `Base.show(io::IO, resonance::Dielectronic.Resonance)`  ... prepares a proper printout of the variable resonance::Dielectronic.Resonance.
     function Base.show(io::IO, resonance::Dielectronic.Resonance) 
         println(io, "initialLevel:               $(resonance.initialLevel)  ")
         println(io, "intermediateLevel:          $(resonance.intermediateLevel)  ")

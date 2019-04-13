@@ -434,7 +434,7 @@ module Cascade
     """
     function determineSteps(comp::Cascade.Computation, blockList::Array{Cascade.Block,1})
         stepList = Cascade.Step[]
-        println("comp.approach = $(comp.approach)")
+        ##x println("comp.approach = $(comp.approach)")
         if  comp.approach  in  [JAC.Cascade.AverageSCA(), JAC.Cascade.SCA()]
             for  a = 1:length(blockList)
                 for  b = 1:length(blockList)
@@ -594,9 +594,9 @@ module Cascade
             # computation is then carried out
             i = 0
             for  confa  in confs
-                i = i + 1;    if   i in [1,2,3,4,5, 7,8,9,10]  ||  i > 11   println("  Block $i omitted.");    continue    end
+                ## i = i + 1;    if   i in [1,2, 4,5,6,7,8,9,10,11,12,13,14]  ||  i > 15   println("  Block $i omitted.");    continue    end
                 ## i = i + 1;    if   i < 11  ||  i > 11   println("  Block $i omitted.");    continue    end
-                print("  Multiplet computations for $(string(confa)[1:end-2]) with $(confa.NoElectrons) electrons ... ")
+                print("  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")
                 basis     = perform("computation: SCF", [confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 multiplet = perform("computation: CI",  basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
@@ -770,7 +770,7 @@ module Cascade
         # wa = [1,2,3]
         # delete from list
         #
-        println("\n  A total of $(length(newStepList)) are still defined in the cascade.")
+        println("\n  A total of $(length(newStepList)) steps are still defined in the cascade.")
         return( newStepList )
     end
 

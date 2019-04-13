@@ -33,17 +33,13 @@ module PlasmaShift
     end  
 
 
-    """
-    `Base.show(io::IO, model::PlasmaModel)`  ... prepares a proper printout of the variable model::PlasmaModel.
-    """
+    # `Base.show(io::IO, model::PlasmaModel)`  ... prepares a proper printout of the variable model::PlasmaModel.
     function Base.show(io::IO, model::PlasmaModel) 
         print(io, string(model) )
     end
 
 
-    """
-    `Base.string(model::PlasmaModel)`  ... provides a proper printout of the variable model::PlasmaModel.
-    """
+    # `Base.string(model::PlasmaModel)`  ... provides a proper printout of the variable model::PlasmaModel.
     function Base.string(model::PlasmaModel) 
         if       model == NoPlasmaModel     return("No plasma model")
         elseif   model == DebyeHueckel      return("Debye-Hueckel model")
@@ -78,9 +74,7 @@ module PlasmaShift
     end
 
 
-    """
-    `Base.show(io::IO, settings::PlasmaShift.Settings)`  ... prepares a proper printout of the settings::PlasmaShift.Settings.
-    """
+    # `Base.show(io::IO, settings::PlasmaShift.Settings)`  ... prepares a proper printout of the settings::PlasmaShift.Settings.
     function Base.show(io::IO, settings::PlasmaShift.Settings)
         println(io, "plasmaModel:            $(settings.plasmaModel)  ")
         println(io, "lambdaDebye:            $(settings.lambdaDebye)  ")
@@ -119,9 +113,7 @@ module PlasmaShift
     end
 
 
-    """
-    `Base.show(io::IO, settings::PlasmaShift.AugerSettings)`  ... prepares a proper printout of the settings::PlasmaShift.AugerSettings.
-    """
+    # `Base.show(io::IO, settings::PlasmaShift.AugerSettings)`  ... prepares a proper printout of the settings::PlasmaShift.AugerSettings.
     function Base.show(io::IO, settings::PlasmaShift.AugerSettings)
         println(io, "plasmaModel:             $(settings.plasmaModel)  ")
         println(io, "lambdaDebye:             $(settings.lambdaDebye)  ")
@@ -169,9 +161,7 @@ module PlasmaShift
     end
 
 
-    """
-    `Base.show(io::IO, settings::PlasmaShift.PhotoSettings)`  ... prepares a proper printout of the settings::PlasmaShift.PhotoSettings.
-    """
+    # `Base.show(io::IO, settings::PlasmaShift.PhotoSettings)`  ... prepares a proper printout of the settings::PlasmaShift.PhotoSettings.
     function Base.show(io::IO, settings::PlasmaShift.PhotoSettings)
         println(io, "plasmaModel:             $(settings.plasmaModel)  ")
         println(io, "lambdaDebye:             $(settings.lambdaDebye)  ")

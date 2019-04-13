@@ -109,7 +109,7 @@ end
 """
 function provide(sa::String, Z::Int64, conf::Configuration)
     if     sa == "binding energy"
-        wa = JAC.store_Williams2000(Z);    wb = 0.
+        wa = JAC.PeriodicTable.bindingEnergies_Williams2000(Z);    wb = 0.
         for (sh,v) in  conf.shells
             if      sh == Shell("1s")    wb = wb + v * wa[1];    if wa[1]  == -1.   error("stop aa")   end
             elseif  sh == Shell("2s")    wb = wb + v * wa[2];    if wa[2]  == -1.   error("stop ab")   end

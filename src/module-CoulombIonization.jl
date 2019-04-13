@@ -40,9 +40,7 @@ module CoulombIonization
     end
 
 
-    """
-    `Base.show(io::IO, settings::CoulombIonization.Settings)`  ... prepares a proper printout of the variable settings::CoulombIonization.Settings.
-    """
+    # `Base.show(io::IO, settings::CoulombIonization.Settings)`  ... prepares a proper printout of the variable settings::CoulombIonization.Settings.
     function Base.show(io::IO, settings::CoulombIonization.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -96,9 +94,7 @@ module CoulombIonization
     end
 
 
-    """
-    `Base.show(io::IO, line::CoulombIonization.Line)`  ... prepares a proper printout of the variable line::CoulombIonization.Line.
-    """
+    # `Base.show(io::IO, line::CoulombIonization.Line)`  ... prepares a proper printout of the variable line::CoulombIonization.Line.
     function Base.show(io::IO, line::CoulombIonization.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

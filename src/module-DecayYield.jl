@@ -33,9 +33,7 @@ module DecayYield
     end
 
 
-    """
-    `Base.show(io::IO, settings::DecayYield.Settings)`  ... prepares a proper printout of the variable settings::DecayYield.Settings.
-   """
+    # `Base.show(io::IO, settings::DecayYield.Settings)`  ... prepares a proper printout of the variable settings::DecayYield.Settings.
     function Base.show(io::IO, settings::DecayYield.Settings) 
         println(io, "calcX:                    $(settings.calcX)  ")
         println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
@@ -66,9 +64,7 @@ module DecayYield
     end
 
 
-    """
-    `Base.show(io::IO, outcome::DecayYield.Outcome)`  ... prepares a proper printout of the variable outcome::DecayYield.Outcome.
-    """
+    # `Base.show(io::IO, outcome::DecayYield.Outcome)`  ... prepares a proper printout of the variable outcome::DecayYield.Outcome.
     function Base.show(io::IO, outcome::DecayYield.Outcome) 
         println(io, "level:                   $(outcome.level)  ")
         println(io, "K:                       $(outcome.K)  ")

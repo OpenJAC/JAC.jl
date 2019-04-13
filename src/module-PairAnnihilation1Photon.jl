@@ -39,10 +39,8 @@ module PairAnnihilation1Photon
     end
 
 
-    """
-    `Base.show(io::IO, settings::PairAnnihilation1Photon.Settings)`  ... prepares a proper printout of the variable 
-                                                                         settings::PairAnnihilation1Photon.Settings.
-    """
+     # `Base.show(io::IO, settings::PairAnnihilation1Photon.Settings)`  
+     #		... prepares a proper printout of the variable settings::PairAnnihilation1Photon.Settings.
     function Base.show(io::IO, settings::PairAnnihilation1Photon.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -107,9 +105,7 @@ module PairAnnihilation1Photon
     end
 
 
-    """
-    `Base.show(io::IO, line::PairAnnihilation1Photon.Line)`  ... prepares a proper printout of the variable line::PairAnnihilation1Photon.Line.
-    """
+    # `Base.show(io::IO, line::PairAnnihilation1Photon.Line)`  ... prepares a proper printout of the variable line::PairAnnihilation1Photon.Line.
     function Base.show(io::IO, line::PairAnnihilation1Photon.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

@@ -33,9 +33,7 @@ module AlphaVariation
     end
 
 
-    """
-    `Base.show(io::IO, settings::AlphaVariation.Settings)`  ... prepares a proper printout of the variable settings::AlphaVariation.Settings.
-   """
+    # `Base.show(io::IO, settings::AlphaVariation.Settings)`  ... prepares a proper printout of the variable settings::AlphaVariation.Settings.
     function Base.show(io::IO, settings::AlphaVariation.Settings) 
         println(io, "calcK:                    $(settings.calcM)  ")
         println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
@@ -66,9 +64,7 @@ module AlphaVariation
     end
 
 
-    """
-    `Base.show(io::IO, outcome::AlphaVariation.Outcome)`  ... prepares a proper printout of the variable outcome::AlphaVariation.Outcome.
-    """
+    # `Base.show(io::IO, outcome::AlphaVariation.Outcome)`  ... prepares a proper printout of the variable outcome::AlphaVariation.Outcome.
     function Base.show(io::IO, outcome::AlphaVariation.Outcome) 
         println(io, "level:                   $(outcome.level)  ")
         println(io, "K:                       $(outcome.K)  ")

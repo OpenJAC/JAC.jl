@@ -33,9 +33,7 @@ module FormFactor
     end
 
 
-    """
-    `Base.show(io::IO, settings::FormFactor.Settings)`  ... prepares a proper printout of the variable settings::FormFactor.Settings.
-   """
+    # `Base.show(io::IO, settings::FormFactor.Settings)`  ... prepares a proper printout of the variable settings::FormFactor.Settings.
     function Base.show(io::IO, settings::FormFactor.Settings) 
         println(io, "qList:                    $(settings.qList)  ")
         println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
@@ -70,9 +68,7 @@ module FormFactor
     end
 
 
-    """
-    `Base.show(io::IO, outcome::FormFactor.Outcome)`  ... prepares a proper printout of the variable outcome::FormFactor.Outcome.
-    """
+    # `Base.show(io::IO, outcome::FormFactor.Outcome)`  ... prepares a proper printout of the variable outcome::FormFactor.Outcome.
     function Base.show(io::IO, outcome::FormFactor.Outcome) 
         println(io, "level:                   $(outcome.level)  ")
         println(io, "qValues:                 $(outcome.qValues)  ")

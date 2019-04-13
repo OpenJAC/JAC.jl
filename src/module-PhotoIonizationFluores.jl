@@ -38,10 +38,8 @@ module PhotoIonizationFluores
     end
 
 
-    """
-    `Base.show(io::IO, settings::PhotoIonizationFluores.Settings)`  ... prepares a proper printout of the variable 
-                                                                        settings::PhotoIonizationFluores.Settings.  
-    """
+    # `Base.show(io::IO, settings::PhotoIonizationFluores.Settings)`  
+    #		... prepares a proper printout of the variable settings::PhotoIonizationFluores.Settings.  
     function Base.show(io::IO, settings::PhotoIonizationFluores.Settings) 
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
@@ -102,10 +100,8 @@ module PhotoIonizationFluores
     end
 
 
-    """
-    `Base.show(io::IO, pathway::PhotoIonizationFluores.Pathway)`  ... prepares a proper printout of the variable 
-                                                                      pathway::PhotoIonizationFluores.Pathway.
-    """
+    # `Base.show(io::IO, pathway::PhotoIonizationFluores.Pathway)`  
+    #		... prepares a proper printout of the variable pathway::PhotoIonizationFluores.Pathway.
     function Base.show(io::IO, pathway::PhotoIonizationFluores.Pathway) 
         println(io, "initialLevel:               $(pathway.initialLevel)  ")
         println(io, "intermediateLevel:          $(pathway.intermediateLevel)  ")

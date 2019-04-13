@@ -38,9 +38,7 @@ module PairProduction
     end
 
 
-    """
-    `Base.show(io::IO, settings::PairProduction.Settings)`  ... prepares a proper printout of the variable settings::PairProduction.Settings.
-    """
+    # `Base.show(io::IO, settings::PairProduction.Settings)`  ... prepares a proper printout of the variable settings::PairProduction.Settings.
     function Base.show(io::IO, settings::PairProduction.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -103,9 +101,7 @@ module PairProduction
     end
 
 
-    """
-    `Base.show(io::IO, line::PairProduction.Line)`  ... prepares a proper printout of the variable line::PairProduction.Line.
-    """
+    # `Base.show(io::IO, line::PairProduction.Line)`  ... prepares a proper printout of the variable line::PairProduction.Line.
     function Base.show(io::IO, line::PairProduction.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

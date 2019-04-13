@@ -30,9 +30,7 @@ module ImpactIonization
     end
 
 
-    """
-    `Base.show(io::IO, settings::ImpactIonization.Settings)`  ... prepares a proper printout of the variable settings::ImpactIonization.Settings.
-    """
+    ## `Base.show(io::IO, settings::ImpactIonization.Settings)`  ... prepares a proper printout of the variable settings::ImpactIonization.Settings.
     function Base.show(io::IO, settings::ImpactIonization.Settings) 
         println(io, "electronEnergies:       $(settings.electronEnergies)  ")
         println(io, "calcShellDependent:     $(settings.calcShellDependent)  ")
@@ -71,9 +69,7 @@ module ImpactIonization
     end
 
 
-    """
-    `Base.show(io::IO, channel::ImpactIonization.Channel)`  ... prepares a proper printout of the variable channel::ImpactIonization.Channel.
-    """
+    # `Base.show(io::IO, channel::ImpactIonization.Channel)`  ... prepares a proper printout of the variable channel::ImpactIonization.Channel.
     function Base.show(io::IO, channel::ImpactIonization.Channel) 
         println(io, "initialEpsilon:     $(channel.initialEpsilon)  ")
         println(io, "finalEpsilon:       $(channel.finalEpsilon)  ")
@@ -110,9 +106,7 @@ module ImpactIonization
     end 
 
 
-    """
-    `Base.show(io::IO, line::ImpactIonization.Line)`  ... prepares a proper printout of the variable line::ImpactIonization.Line.
-    """
+    # `Base.show(io::IO, line::ImpactIonization.Line)`  ... prepares a proper printout of the variable line::ImpactIonization.Line.
     function Base.show(io::IO, line::ImpactIonization.Line) 
         println(io, "initialLevel:     $(line.initialLevel)  ")
         println(io, "finalLevel:       $(line.finalLevel)  ")

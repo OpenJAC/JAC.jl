@@ -33,9 +33,7 @@ module MultipolePolarizibility
     end
 
 
-    """
-    `Base.show(io::IO, amplitude::MultipolePolarizibility.Amplitude)`  ... prepares a proper printout of the variable amplitude.
-    """
+    # `Base.show(io::IO, amplitude::MultipolePolarizibility.Amplitude)`  ... prepares a proper printout of the variable amplitude.
     function Base.show(io::IO, amplitude::MultipolePolarizibility.Amplitude) 
         println(io, "multipole :       $(amplitude.multipole)  ")
         println(io, "omega:            $(amplitude.omega)  ")
@@ -64,10 +62,8 @@ module MultipolePolarizibility
     end
 
 
-    """
-    `Base.show(io::IO, outcome::MultipolePolarizibility.Outcome)`  ... prepares a proper printout of the variable 
-                                                                     outcome::MultipolePolarizibility.Outcome.
-    """
+    # `Base.show(io::IO, outcome::MultipolePolarizibility.Outcome)` 
+    #		 ... prepares a proper printout of the variable outcome::MultipolePolarizibility.Outcome.
     function Base.show(io::IO, outcome::MultipolePolarizibility.Outcome) 
         println(io, "level:                     $(outcome.level)  ")
         println(io, "amplitudes:                $(outcome.amplitudes)  ")
@@ -105,10 +101,8 @@ module MultipolePolarizibility
     end
 
 
-    """
-    `Base.show(io::IO, settings:MultipolePolarizibility.Settings)`  ... prepares a proper printout of the variable 
-                                                                      settings::MultipolePolarizibility.Settings.
-    """
+    # `Base.show(io::IO, settings:MultipolePolarizibility.Settings)`  
+    #		... prepares a proper printout of the variable settings::MultipolePolarizibility.Settings.
     function Base.show(io::IO, settings::MultipolePolarizibility.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "nLower:                   $(settings.nLower)  ")

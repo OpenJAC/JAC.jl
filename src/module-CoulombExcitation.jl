@@ -40,9 +40,7 @@ module CoulombExcitation
     end
 
 
-    """
-    `Base.show(io::IO, settings::CoulombExcitation.Settings)`  ... prepares a proper printout of the variable settings::CoulombExcitation.Settings.
-    """
+    # `Base.show(io::IO, settings::CoulombExcitation.Settings)`  ... prepares a proper printout of the variable settings::CoulombExcitation.Settings.
     function Base.show(io::IO, settings::CoulombExcitation.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -96,9 +94,7 @@ module CoulombExcitation
     end
 
 
-    """
-    `Base.show(io::IO, line::CoulombExcitation.Line)`  ... prepares a proper printout of the variable line::CoulombExcitation.Line.
-    """
+    # `Base.show(io::IO, line::CoulombExcitation.Line)`  ... prepares a proper printout of the variable line::CoulombExcitation.Line.
     function Base.show(io::IO, line::CoulombExcitation.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

@@ -35,9 +35,7 @@ module  LSjjTransformation
     end
     
     
-    """
-    `Base.string(csf::CsfR)`  ... provides a String notation for csf::CsfR.
-    """
+    # `Base.string(csf::CsfR)`  ... provides a String notation for csf::CsfR.
     function Base.string(csf::CsfR) 
     	  sa = "\n   CSF: "
         if    csf.useStandardSubshells

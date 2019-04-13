@@ -162,10 +162,8 @@ module Radial
     end
 
 
-    """
-    `Base.show(io::IO, grid::Radial.Grid)`  ... prepares a proper printout of the variable grid::Radial.Grid.
-    """
-    function Base.show(io::IO, grid::Radial.Grid) 
+    # `Base.show(io::IO, grid::Radial.Grid)`  ... prepares a proper printout of the variable grid::Radial.Grid.
+     function Base.show(io::IO, grid::Radial.Grid) 
     
         sa = Base.string(grid::Radial.Grid);    print(io, sa * "\n")
     
@@ -180,9 +178,7 @@ module Radial
     end
 
 
-    """
-    `Base.string(grid::Radial.Grid)`  ... provides a String notation for the variable grid::Radial.Grid.
-    """
+    # `Base.string(grid::Radial.Grid)`  ... provides a String notation for the variable grid::Radial.Grid.
     function Base.string(grid::Radial.Grid) 
         if   grid.NoPoints == 0
             sa = "Radial grid not defined;  NoPoints = $(grid.NoPoints) ..."
@@ -232,9 +228,7 @@ module Radial
     end
 
 
-    """
-    `Base.show(io::IO, grid::GridGL)`  ... prepares a proper printout of the variable grid::GridGL.
-    """
+    # `Base.show(io::IO, grid::GridGL)`  ... prepares a proper printout of the variable grid::GridGL.
     function Base.show(io::IO, grid::GridGL) 
         print(io, "Gauss-Legendre grid with $(grid.nt) mesh points: \n")
         print(io, "t:   ", grid.t[1:5],    "  ...  ", grid.t[grid.nt-4:grid.nt],    "\n") 
@@ -265,9 +259,7 @@ module Radial
     end
 
 
-    """
-    `Base.show(io::IO, potential::Radial.Potential)`  ... prepares a proper printout of the variable potential::Radial.Potential.
-    """
+    # `Base.show(io::IO, potential::Radial.Potential)`  ... prepares a proper printout of the variable potential::Radial.Potential.
     function Base.show(io::IO, potential::Radial.Potential) 
     
         sa = Base.string(potential);    print(io, sa * "\n")
@@ -278,9 +270,7 @@ module Radial
     end
 
 
-    """
-    `Base.string(potential::Radial.Potential)`  ... provides a String notation for the variable potential::Radial.Potential.
-    """
+    # `Base.string(potential::Radial.Potential)`  ... provides a String notation for the variable potential::Radial.Potential.
     function Base.string(potential::Radial.Potential) 
         if  length(potential.Zr)  == 0
             sa = "Radial potential not yet defined; kind = $(potential.name) ..."
@@ -346,9 +336,7 @@ module Radial
     end
 
 
-    """
-    `Base.show(io::IO, orbital::Orbital)`  ... prepares a proper printout of the variable orbital::Orbital.
-    """
+    # `Base.show(io::IO, orbital::Orbital)`  ... prepares a proper printout of the variable orbital::Orbital.
     function Base.show(io::IO, orbital::Orbital) 
         n = length(orbital.P)
 
@@ -383,9 +371,7 @@ module Radial
     end
 
 
-    """
-    `Base.string(orbital::Orbital)`  ... provides a String notation for the variable orbital::Orbital with just basic information.
-    """
+    # `Base.string(orbital::Orbital)`  ... provides a String notation for the variable orbital::Orbital with just basic information.
     function Base.string(orbital::Orbital) 
         if  orbital.isBound           sa = "Bound-state orbital "     else    sa = "Free-electron orbital "         end
         if  orbital.useStandardGrid   sb = "the standard grid: "      else    sb = "an explicitly-defined grid: "   end
@@ -427,9 +413,7 @@ module Radial
     end
 
 
-    """
-    `Base.show(io::IO, spectrum::SingleElecSpectrum)`  ... prepares a proper printout of the variable spectrum::SingleElecSpectrum.
-    """
+    # `Base.show(io::IO, spectrum::SingleElecSpectrum)`  ... prepares a proper printout of the variable spectrum::SingleElecSpectrum.
     function Base.show(io::IO, spectrum::SingleSymOrbitals) 
         sa = "Single-electron spectrum $(spectrum.name) for symmetry kappa=$(spectrum.kappa) with $(spectrum.NoStates) states "
         if  spectrum.onlyPositive   sa = sa * "from just the positive spectrum."

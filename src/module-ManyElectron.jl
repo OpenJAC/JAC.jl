@@ -59,18 +59,14 @@ module ManyElectron
     end
 
 
-    """
-    `Base.show(io::IO, conf::Configuration)`  ... prepares a proper printout of the non-relativistic configuration conf::Configuration.
-    """
+    # `Base.show(io::IO, conf::Configuration)`  ... prepares a proper printout of the non-relativistic configuration conf::Configuration.
     function Base.show(io::IO, conf::Configuration)
         sa = "Configuration: " * string(conf)
         print(io, sa)
     end
 
 
-    """
-    `Base.string(conf::Configuration)`  ... provides a String notation for the variable conf::Configuration.
-    """
+    # `Base.string(conf::Configuration)`  ... provides a String notation for the variable conf::Configuration.
     function Base.string(conf::Configuration)
         wa = keys(conf.shells);   va = values(conf.shells)
         wb = JAC.give("ordered shell list: non-relativistic", 7)
@@ -117,18 +113,14 @@ module ManyElectron
     end
 
 
-    """
-    `Base.show(io::IO, conf::ConfigurationR)`  ... prepares a proper printout of the relativistic configuration conf::ConfigurationR.
-    """
+    # `Base.show(io::IO, conf::ConfigurationR)`  ... prepares a proper printout of the relativistic configuration conf::ConfigurationR.
     function Base.show(io::IO, conf::ConfigurationR)
         sa = "Configuration: " * string(conf)
         print(io, sa)
     end
 
 
-    """
-    `Base.string(conf::ConfigurationR)`  ... provides a String notation for the variable conf::ConfigurationR.
-    """
+    # `Base.string(conf::ConfigurationR)`  ... provides a String notation for the variable conf::ConfigurationR.
     function Base.string(conf::ConfigurationR)
         wa = keys(conf.subshells);   va = values(conf.subshells)
         wb = JAC.give("ordered subshell list: relativistic", 7)
@@ -213,9 +205,7 @@ module ManyElectron
     end
     
     
-    """
-    `Base.show(io::IO, settings::AsfSettings)`  ... prepares a proper printout of the settings::AsfSettings.
-    """
+    # `Base.show(io::IO, settings::AsfSettings)`  ... prepares a proper printout of the settings::AsfSettings.
     function Base.show(io::IO, settings::AsfSettings)
     	  println(io, "generateScf:          $(settings.generateScf)  ")
     	  println(io, "breitScf:             $(settings.breitScf)  ")
@@ -239,9 +229,7 @@ module ManyElectron
     end
     
     
-    """
-    `Base.string(settings::AsfSettings)`  ... provides a String notation for the variable settings::AsfSettings.
-    """
+    # `Base.string(settings::AsfSettings)`  ... provides a String notation for the variable settings::AsfSettings.
     function Base.string(settings::AsfSettings)
     	  error("Not yet implemented.")
     	  sa = "Asf settings: maximum No. of iterations = $(settings.maxIterationsScf), accuracy = (settings.accuracyScf)"
@@ -282,9 +270,7 @@ module ManyElectron
     end
     
     
-    """
-    `Base.show(io::IO, settings::ScfSettings)`  ... prepares a proper printout of the settings::ScfSettings.
-    """
+    # `Base.show(io::IO, settings::ScfSettings)`  ... prepares a proper printout of the settings::ScfSettings.
     function Base.show(io::IO, settings::ScfSettings)
     	  println(io, "generateScf:	 $(settings.generateScf)  ")
     	  println(io, "startOrbitals:	 $(settings.startOrbitals)  ")
@@ -297,9 +283,7 @@ module ManyElectron
     end
     
     
-    """
-    `Base.string(settings::ScfSettings)`  ... provides a String notation for the variable settings::ScfSettings.
-    """
+    # `Base.string(settings::ScfSettings)`  ... provides a String notation for the variable settings::ScfSettings.
     function Base.string(settings::ScfSettings)
     	  error("Not yet implemented.")
     	  sa = "SCF settings: maximum No. of iterations = $(settings.maxIterations), accuracy = (settings.scfAccuracy)"
@@ -365,17 +349,13 @@ module ManyElectron
     end
     
     
-    """
-    `Base.show(io::IO, csf::CsfR)`  ... prepares a proper printout of the variable orbital::CsfR.
-    """
+    # `Base.show(io::IO, csf::CsfR)`  ... prepares a proper printout of the variable orbital::CsfR.
     function Base.show(io::IO, csf::CsfR) 
     	  print(io, string(csf) ) 
     end
     
     
-    """
-    `Base.string(csf::CsfR)`  ... provides a String notation for csf::CsfR.
-    """
+    # `Base.string(csf::CsfR)`  ... provides a String notation for csf::CsfR.
     function Base.string(csf::CsfR) 
     	  sa = "\n   CSF: "
         if    csf.useStandardSubshells
@@ -597,9 +577,7 @@ module ManyElectron
     end
     
    
-    """
-    `Base.string(basis::Basis)`  ... provides a String notation for variable basis::Basis.
-    """
+    # `Base.string(basis::Basis)`  ... provides a String notation for variable basis::Basis.
     function Base.string(basis::Basis) 
     	if  basis.isDefined
     	    sa = "Atomic basis:  $(length(basis.csfs)) CSF defined for $(basis.NoElectrons) elecrons."
@@ -654,9 +632,7 @@ module ManyElectron
     end
     
     
-    """
-    `Base.show(io::IO, level::Level)`  ... prepares a proper printout of the variable level::Level.
-    """
+    # `Base.show(io::IO, level::Level)`  ... prepares a proper printout of the variable level::Level.
     function Base.show(io::IO, level::Level) 
         println(io, "Level: J = $(level.J), M = $(level.M), parity = $(level.parity), index = $(level.index) ")
         println(io, "energy:         $(level.energy)  ")
@@ -706,9 +682,7 @@ module ManyElectron
     end
     
     
-    """
-    `Base.show(io::IO, multiplet::Multiplet)`  ... prepares a proper printout of the variable multiplet::Multiplet.
-    """
+    # `Base.show(io::IO, multiplet::Multiplet)`  ... prepares a proper printout of the variable multiplet::Multiplet.
     function Base.show(io::IO, multiplet::Multiplet) 
         println(io, "name:        $(multiplet.name)  ")
         println(io, "levels:      $(multiplet.levels)  ")
@@ -761,9 +735,7 @@ module ManyElectron
     end
 
 
-    """
-    `Base.show(io::IO, settings::MultipletSettings)`  ... prepares a proper printout of the settings::MultipletSettings.
-    """
+    # `Base.show(io::IO, settings::MultipletSettings)`  ... prepares a proper printout of the settings::MultipletSettings.
     function Base.show(io::IO, settings::MultipletSettings)
     	println(io, "Coulomb:		       $(settings.Coulomb)  ")
     	println(io, "Breit:		       $(settings.Breit)  ")
@@ -776,9 +748,7 @@ module ManyElectron
     end
     
     
-    """
-    `Base.string(settings::MultipletSettings)`  ... provides a String notation for the variable settings::MultipletSettings.
-    """
+    # `Base.string(settings::MultipletSettings)`  ... provides a String notation for the variable settings::MultipletSettings.
     function Base.string(settings::MultipletSettings)
     	error("Not yet implemented.")
     	sa = " "

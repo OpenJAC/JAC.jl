@@ -46,9 +46,7 @@ module PhotoEmission
     end
 
 
-    """
-    `Base.show(io::IO, settings::PhotoEmission.Settings)`  ... prepares a proper printout of the variable settings::PhotoEmissionSettings.
-    """
+    # `Base.show(io::IO, settings::PhotoEmission.Settings)`  ... prepares a proper printout of the variable settings::PhotoEmissionSettings.
     function Base.show(io::IO, settings::PhotoEmission.Settings) 
         println(io, "PhotoEmission.Settings(with multipoles = $(settings.multipoles), use-gauges = $(settings.gauges), "   *
                     "calcAnisotropy = $(settings.calcAnisotropy), " )
@@ -73,9 +71,7 @@ module PhotoEmission
     end 
 
 
-    """
-    `Base.show(io::IO, channel::PhotoEmission.Channel)`  ... prepares a proper printout of the variable channel::PhotoEmission.Channel.
-    """
+    # `Base.show(io::IO, channel::PhotoEmission.Channel)`  ... prepares a proper printout of the variable channel::PhotoEmission.Channel.
     function Base.show(io::IO, channel::PhotoEmission.Channel) 
         print(io, "PhotoEmission.Channel($(channel.multipole), $(channel.gauge), amp = $(channel.amplitude)) ") 
     end
@@ -112,9 +108,7 @@ module PhotoEmission
     end
 
 
-    """
-    `Base.show(io::IO, line::PhotoEmissionLine)`  ... prepares a proper printout of the variable line::PhotoEmission.Line.
-    """
+    # `Base.show(io::IO, line::PhotoEmissionLine)`  ... prepares a proper printout of the variable line::PhotoEmission.Line.
     function Base.show(io::IO, line::PhotoEmission.Line) 
         println(io, "initialLevel:         $(line.initialLevel)  ")
         println(io, "finalLevel:           $(line.finalLevel)  ")

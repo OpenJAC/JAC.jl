@@ -114,9 +114,7 @@ module AngularCoefficientsRatip2013
     end
 
 
-    """
-    `Base.show(io::IO, coeff::AngularTcoeff)`  ... prepares a proper printout of the variable coeff::AngularTcoeff.
-    """
+    # `Base.show(io::IO, coeff::AngularTcoeff)`  ... prepares a proper printout of the variable coeff::AngularTcoeff.
     function Base.show(io::IO, coeff::AngularTcoeff) 
         sa = " T^$(coeff.nu)[" * string(coeff.a) * "," * string(coeff.b) * "] = $(coeff.T)"
         print(io, sa )
@@ -148,9 +146,7 @@ module AngularCoefficientsRatip2013
     end
 
 
-    """
-    `Base.show(io::IO, coeff::AngularVcoeff)`  ... prepares a proper printout of the variable coeff::AngularVcoeff.
-    """
+    # `Base.show(io::IO, coeff::AngularVcoeff)`  ... prepares a proper printout of the variable coeff::AngularVcoeff.
     function Base.show(io::IO, coeff::AngularVcoeff) 
         sa = " V^$(coeff.nu)[" * string(coeff.a) * "," * string(coeff.b) * ";" * string(coeff.c) * "," * string(coeff.d) * "] = $(coeff.V)"
         print(io, sa )

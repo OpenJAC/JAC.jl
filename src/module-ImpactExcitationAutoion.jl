@@ -37,10 +37,8 @@ module ImpactExcitationAutoion
     end
 
 
-    """
-    `Base.show(io::IO, settings::ImpactExcitationAutoion.Settings)`  ... prepares a proper printout of the variable 
-                                                                         settings::ImpactExcitationAutoion.Settings.  
-    """
+    # `Base.show(io::IO, settings::ImpactExcitationAutoion.Settings)`  
+    #   ... prepares a proper printout of the variable settings::ImpactExcitationAutoion.Settings.  
     function Base.show(io::IO, settings::ImpactExcitationAutoion.Settings) 
         println(io, "electronEnergies:         $(settings.electronEnergies)  ")
         println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
@@ -101,10 +99,8 @@ module ImpactExcitationAutoion
     end
 
 
-    """
-    `Base.show(io::IO, pathway::ImpactExcitationAutoion.Pathway)`  ... prepares a proper printout of the variable 
-                                                                       pathway::ImpactExcitationAutoion.Pathway.
-    """
+    # `Base.show(io::IO, pathway::ImpactExcitationAutoion.Pathway)`  
+    #   ... prepares a proper printout of the variable pathway::ImpactExcitationAutoion.Pathway.
     function Base.show(io::IO, pathway::ImpactExcitationAutoion.Pathway) 
         println(io, "initialLevel:               $(pathway.initialLevel)  ")
         println(io, "intermediateLevel:          $(pathway.intermediateLevel)  ")

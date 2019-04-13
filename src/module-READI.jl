@@ -33,9 +33,7 @@ module READI
     end
 
 
-    """
-    `Base.show(io::IO, settings::READI.Settings)`  ... prepares a proper printout of the variable settings::READI.Settings.  
-    """
+    # `Base.show(io::IO, settings::READI.Settings)`  ... prepares a proper printout of the variable settings::READI.Settings.  
     function Base.show(io::IO, settings::READI.Settings) 
         println(io, "electronEnergies:     $(settings.electronEnergies)  ")
         println(io, "selectPathways:       $(settings.selectPathways)  ")
@@ -98,9 +96,7 @@ module READI
     end
 
 
-    """
-    `Base.show(io::IO, pathway::READI.Pathway)`  ... prepares a proper printout of the variable pathway::READI.Pathway.
-    """
+    # `Base.show(io::IO, pathway::READI.Pathway)`  ... prepares a proper printout of the variable pathway::READI.Pathway.
     function Base.show(io::IO, pathway::READI.Pathway) 
         println(io, "initialLevel:               $(pathway.initialLevel)  ")
         println(io, "intermediateLevel:          $(pathway.intermediateLevel)  ")

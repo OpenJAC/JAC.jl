@@ -38,10 +38,8 @@ module PhotoIonizationAutoion
     end
 
 
-    """
-    `Base.show(io::IO, settings::PhotoIonizationAutoion.Settings)`  ... prepares a proper printout of the variable 
-                                                                        settings::PhotoIonizationAutoion.Settings.  
-    """
+    # `Base.show(io::IO, settings::PhotoIonizationAutoion.Settings)` 
+    #		 ... prepares a proper printout of the variable settings::PhotoIonizationAutoion.Settings.  
     function Base.show(io::IO, settings::PhotoIonizationAutoion.Settings) 
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
@@ -102,10 +100,8 @@ module PhotoIonizationAutoion
     end
 
 
-    """
-    `Base.show(io::IO, pathway::PhotoIonizationAutoion.Pathway)`  ... prepares a proper printout of the variable 
-                                                                      pathway::PhotoIonizationAutoion.Pathway.
-    """
+    # `Base.show(io::IO, pathway::PhotoIonizationAutoion.Pathway)` 
+    #		 ... prepares a proper printout of the variable pathway::PhotoIonizationAutoion.Pathway.
     function Base.show(io::IO, pathway::PhotoIonizationAutoion.Pathway) 
         println(io, "initialLevel:               $(pathway.initialLevel)  ")
         println(io, "intermediateLevel:          $(pathway.intermediateLevel)  ")

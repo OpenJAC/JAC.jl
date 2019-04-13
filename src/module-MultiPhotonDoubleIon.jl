@@ -40,10 +40,8 @@ module MultiPhotonDoubleIon
     end
 
 
-    """
-    `Base.show(io::IO, settings::MultiPhotonDoubleIon.Settings)`  ... prepares a proper printout of the variable 
-                                                                      settings::MultiPhotonDoubleIon.Settings.
-    """
+    # `Base.show(io::IO, settings::MultiPhotonDoubleIon.Settings)`  
+    #		... prepares a proper printout of the variable settings::MultiPhotonDoubleIon.Settings.
     function Base.show(io::IO, settings::MultiPhotonDoubleIon.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -110,9 +108,7 @@ module MultiPhotonDoubleIon
     end
 
 
-    """
-    `Base.show(io::IO, line::MultiPhotonDoubleIon.Line)`  ... prepares a proper printout of the variable line::MultiPhotonDoubleIon.Line.
-    """
+    # `Base.show(io::IO, line::MultiPhotonDoubleIon.Line)`  ... prepares a proper printout of the variable line::MultiPhotonDoubleIon.Line.
     function Base.show(io::IO, line::MultiPhotonDoubleIon.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

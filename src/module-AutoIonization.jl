@@ -44,9 +44,7 @@ module AutoIonization
     end
 
 
-    """
-    `Base.show(io::IO, settings::AutoIonization.Settings)`  ... prepares a proper printout of the variable settings::AutoIonization.Settings.
-    """
+    # `Base.show(io::IO, settings::AutoIonization.Settings)`  ... prepares a proper printout of the variable settings::AutoIonization.Settings.
     function Base.show(io::IO, settings::AutoIonization.Settings) 
         println(io, "AutoIonization.Settings(with printBeforeComputation = $(settings.printBeforeComputation), selectLines = $(settings.selectLines), " *
                     "selectedLines = $(settings.selectedLines), ")
@@ -104,9 +102,7 @@ module AutoIonization
     end
 
 
-    """
-    `Base.show(io::IO, line::AutoIonization.Line)`  ... prepares a proper printout of the variable line::AutoIonization.Line.
-    """
+    # `Base.show(io::IO, line::AutoIonization.Line)`  ... prepares a proper printout of the variable line::AutoIonization.Line.
     function Base.show(io::IO, line::AutoIonization.Line) 
         println(io, "initialLevel:           $(line.initialLevel)  ")
         println(io, "finalLevel:             $(line.finalLevel)  ")

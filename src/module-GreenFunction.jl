@@ -33,9 +33,7 @@ module GreenFunction
     end
 
 
-    """
-    `Base.show(io::IO, settings::GreenFunction.Settings)`  ... prepares a proper printout of the variable settings::GreenFunction.Settings.
-   """
+    # `Base.show(io::IO, settings::GreenFunction.Settings)`  ... prepares a proper printout of the variable settings::GreenFunction.Settings.
     function Base.show(io::IO, settings::GreenFunction.Settings) 
         println(io, "calcX:                    $(settings.calcX)  ")
         println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
@@ -66,9 +64,7 @@ module GreenFunction
     end
 
 
-    """
-    `Base.show(io::IO, outcome::GreenFunction.Outcome)`  ... prepares a proper printout of the variable outcome::GreenFunction.Outcome.
-    """
+    # `Base.show(io::IO, outcome::GreenFunction.Outcome)`  ... prepares a proper printout of the variable outcome::GreenFunction.Outcome.
     function Base.show(io::IO, outcome::GreenFunction.Outcome) 
         println(io, "level:                   $(outcome.level)  ")
         println(io, "K:                       $(outcome.K)  ")

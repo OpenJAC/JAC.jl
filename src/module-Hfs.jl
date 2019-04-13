@@ -34,9 +34,7 @@ module Hfs
     end
 
 
-    """
-    `Base.show(io::IO, im::Hfs.InteractionMatrix)`  ... prepares a proper printout of the variable InteractionMatrix.
-    """
+    # `Base.show(io::IO, im::Hfs.InteractionMatrix)`  ... prepares a proper printout of the variable InteractionMatrix.
     function Base.show(io::IO, im::Hfs.InteractionMatrix) 
         println(io, "calcT1:           $(im.calcT1)  ")
         println(io, "calcT1:           $(im.calcT1)  ")
@@ -68,9 +66,7 @@ module Hfs
     end
 
 
-    """
-    `Base.show(io::IO, ijfVector::Hfs.IJF_Vector)`  ... prepares a proper printout of the variable ijfVector.
-    """
+    # `Base.show(io::IO, ijfVector::Hfs.IJF_Vector)`  ... prepares a proper printout of the variable ijfVector.
     function Base.show(io::IO, ijfVector::Hfs.IJF_Vector) 
         println(io, "I:           $(ijfVector.I)  ")
         println(io, "F:           $(ijfVector.F)  ")
@@ -98,9 +94,7 @@ module Hfs
     end
 
 
-    """
-    `Base.show(io::IO, ijfBasis::Hfs.IJF_Basis)`  ... prepares a proper printout of the variable ijfBasis.
-    """
+    # `Base.show(io::IO, ijfBasis::Hfs.IJF_Basis)`  ... prepares a proper printout of the variable ijfBasis.
     function Base.show(io::IO, ijfBasis::Hfs.IJF_Basis) 
         println(io, "levelFs:           $(ijfBasis.levelFs)  ")
         println(io, "basisJ:            $(ijfBasis.basisJ)  ")
@@ -140,9 +134,7 @@ module Hfs
     end
 
 
-    """
-    `Base.show(io::IO, ijfLevel::Hfs.IJF_Level)`  ... prepares a proper printout of the variable ijfLevel::Hfs.IJF_Level.
-    """
+    # `Base.show(io::IO, ijfLevel::Hfs.IJF_Level)`  ... prepares a proper printout of the variable ijfLevel::Hfs.IJF_Level.
     function Base.show(io::IO, ijfLevel::Hfs.IJF_Level) 
         println(io, "I:              $(ijfLevel.I)  ")
         println(io, "J:              $(ijfLevel.J)  ")
@@ -177,9 +169,7 @@ module Hfs
     end
 
 
-    """
-    `Base.show(io::IO, ijfMultiplet::Hfs.IJF_Multiplet)`  ... prepares a proper printout of the variable ijfMultiplet::Hfs.IJF_Multiplet.
-    """
+    # `Base.show(io::IO, ijfMultiplet::Hfs.IJF_Multiplet)`  ... prepares a proper printout of the variable ijfMultiplet::Hfs.IJF_Multiplet.
     function Base.show(io::IO, ijfMultiplet::Hfs.IJF_Multiplet) 
         println(io, "name:           $(ijfMultiplet.name)  ")
         println(io, "levelFs:        $(ijfMultiplet.levelFs)  ")
@@ -218,9 +208,7 @@ module Hfs
     end
 
 
-    """
-    `Base.show(io::IO, outcome::Hfs.Outcome)`  ... prepares a proper printout of the variable outcome::Hfs.Outcome.
-    """
+    # `Base.show(io::IO, outcome::Hfs.Outcome)`  ... prepares a proper printout of the variable outcome::Hfs.Outcome.
     function Base.show(io::IO, outcome::Hfs.Outcome) 
         println(io, "Jlevel:                    $(outcome.Jlevel)  ")
         println(io, "AIoverMu:                  $(outcome.AIoverMu)  ")
@@ -272,9 +260,7 @@ module Hfs
     end
 
 
-    """
-    `Base.show(io::IO, settings::Hfs.Settings)`  ... prepares a proper printout of the variable settings::Hfs.Settings.
-    """
+    # `Base.show(io::IO, settings::Hfs.Settings)`  ... prepares a proper printout of the variable settings::Hfs.Settings.
     function Base.show(io::IO, settings::Hfs.Settings) 
         println(io, "calcT1:                   $(settings.calcT1)  ")
         println(io, "calcT2:                   $(settings.calcT2)  ")

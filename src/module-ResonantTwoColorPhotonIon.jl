@@ -38,10 +38,8 @@ module ResonantTwoColorPhotonIon
     end
 
 
-    """
-    `Base.show(io::IO, settings::ResonantTwoColorPhotonIon.Settings)`  ... prepares a proper printout of the variable 
-                                                                           settings::ResonantTwoColorPhotonIon.Settings.
-    """
+    # `Base.show(io::IO, settings::ResonantTwoColorPhotonIon.Settings)`  
+    #		... prepares a proper printout of the variable settings::ResonantTwoColorPhotonIon.Settings.
     function Base.show(io::IO, settings::ResonantTwoColorPhotonIon.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -95,9 +93,7 @@ module ResonantTwoColorPhotonIon
     end
 
 
-    """
-    `Base.show(io::IO, line::ResonantTwoColorPhotonIon.Line)`  ... prepares a proper printout of the variable line::ResonantTwoColorPhotonIon.Line.
-    """
+    # `Base.show(io::IO, line::ResonantTwoColorPhotonIon.Line)`  ... prepares a proper printout of the variable line::ResonantTwoColorPhotonIon.Line.
     function Base.show(io::IO, line::ResonantTwoColorPhotonIon.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

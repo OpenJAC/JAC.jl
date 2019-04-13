@@ -38,10 +38,8 @@ module InternalConversion
     end
 
 
-    """
-    `Base.show(io::IO, settings::InternalConversion.Settings)`  ... prepares a proper printout of the variable 
-                                                                        settings::InternalConversion.Settings.  
-    """
+    # `Base.show(io::IO, settings::InternalConversion.Settings)`  
+    #   ... prepares a proper printout of the variable settings::InternalConversion.Settings.  
     function Base.show(io::IO, settings::InternalConversion.Settings) 
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
@@ -102,10 +100,8 @@ module InternalConversion
     end
 
 
-    """
-    `Base.show(io::IO, pathway::InternalConversion.Pathway)`  ... prepares a proper printout of the variable 
-                                                                      pathway::InternalConversion.Pathway.
-    """
+    # `Base.show(io::IO, pathway::InternalConversion.Pathway)`  
+    # ... prepares a proper printout of the variable pathway::InternalConversion.Pathway.
     function Base.show(io::IO, pathway::InternalConversion.Pathway) 
         println(io, "initialLevel:               $(pathway.initialLevel)  ")
         println(io, "intermediateLevel:          $(pathway.intermediateLevel)  ")

@@ -30,9 +30,7 @@ module Pulse
     end
 
 
-    """
-    `Base.show(io::IO, envelope::Pulse.Envelope)`  ... prepares a proper printout of the variable envelope::Pulse.Envelope.
-    """
+    # `Base.show(io::IO, envelope::Pulse.Envelope)`  ... prepares a proper printout of the variable envelope::Pulse.Envelope.
     function Base.show(io::IO, envelope::Pulse.Envelope) 
         println(io, "timeDelay:             $(envelope.timeDelay)  ")
         println(io, "f0:                    $(envelope.f0)  ")
@@ -63,9 +61,7 @@ module Pulse
     end
 
 
-    """
-    `Base.show(io::IO, ptyp::Pulse.PolarizationType)`  ... prepares a proper printout of the variable ptyp::Pulse.PolarizationType.
-    """
+    # `Base.show(io::IO, ptyp::Pulse.PolarizationType)`  ... prepares a proper printout of the variable ptyp::Pulse.PolarizationType.
     function Base.show(io::IO, ptyp::Pulse.PolarizationType) 
         print(io, string(ptyp) )
     end
@@ -108,9 +104,7 @@ module Pulse
     end
 
 
-    """
-    `Base.show(io::IO, shape:Pulse.Shape)`  ... prepares a proper printout of the variable shape::Pulse.Shape.
-    """
+    # `Base.show(io::IO, shape:Pulse.Shape)`  ... prepares a proper printout of the variable shape::Pulse.Shape.
     function Base.show(io::IO, shape::Pulse.Shape) 
         print(io, string(shape) )
     end
@@ -160,9 +154,7 @@ module Pulse
     end
 
 
-    """
-    `Base.show(io::IO, polarization::Pulse.Polarization)`  ... prepares a proper printout of the variable polarization::Pulse.Polarization.
-    """
+    # `Base.show(io::IO, polarization::Pulse.Polarization)`  ... prepares a proper printout of the variable polarization::Pulse.Polarization.
     function Base.show(io::IO, polarization::Pulse.Polarization) 
         println(io, "type:                    $(polarization.typ)  ")
         println(io, "circularDegree:          $(polarization.circularDegree)  ")
@@ -210,10 +202,8 @@ module Pulse
     end
 
 
-    """
-    `Base.show(io::IO, chz::Pulse.ExperimentalCharacterization)`  ... prepares a proper printout of the variable
-                                                                      chz::Pulse.ExperimentalCharacterization.
-    """
+    # `Base.show(io::IO, chz::Pulse.ExperimentalCharacterization)`  
+    #		... prepares a proper printout of the variable  chz::Pulse.ExperimentalCharacterization.
     function Base.show(io::IO, characterization::Pulse.ExperimentalCharacterization) 
         println(io, "kind:              $(chz.kind)  ")
         println(io, "propagation:       $(chz.propagation)  ")
@@ -253,9 +243,7 @@ module Pulse
     end
 
 
-    """
-    `Base.show(io::IO, gaussian::Pulse.Gaussian)`  ... prepares a proper printout of the variable gaussian::Pulse.Gaussian.
-    """
+    # `Base.show(io::IO, gaussian::Pulse.Gaussian)`  ... prepares a proper printout of the variable gaussian::Pulse.Gaussian.
     function Base.show(io::IO, gaussian::Pulse.Gaussian) 
         println(io, "propagation:        $(gaussian.propagation)  ")
         println(io, "omega:              $(gaussian.omega)  ")

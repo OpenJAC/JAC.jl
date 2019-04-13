@@ -36,9 +36,7 @@ module DoubleAuger
     end
 
 
-    """
-    `Base.show(io::IO, settings::DoubleAuger.Settings)`  ... prepares a proper printout of the variable settings::DoubleAuger.Settings.
-    """
+    # `Base.show(io::IO, settings::DoubleAuger.Settings)`  ... prepares a proper printout of the variable settings::DoubleAuger.Settings.
     function Base.show(io::IO, settings::DoubleAuger.Settings) 
         println(io, "printBeforeComputation:       $(settings.printBeforeComputation)  ")
         println(io, "selectLines:                  $(settings.selectLines)  ")
@@ -91,9 +89,7 @@ module DoubleAuger
     end 
 
 
-    """
-    `Base.show(io::IO, line::DoubleAuger.Line)`  ... prepares a proper printout of the variable line::DoubleAuger.Line.
-    """
+    # `Base.show(io::IO, line::DoubleAuger.Line)`  ... prepares a proper printout of the variable line::DoubleAuger.Line.
     function Base.show(io::IO, line::DoubleAuger.Line) 
         println(io, "initialLevel:           $(line.initialLevel)  ")
         println(io, "finalLevel:             $(line.finalLevel)  ")

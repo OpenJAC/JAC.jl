@@ -39,10 +39,8 @@ module NonresonantTwoColorPhotonIon
     end
 
 
-    """
-    `Base.show(io::IO, settings::NonresonantTwoColorPhotonIon.Settings)`  ... prepares a proper printout of the variable 
-                                                                              settings::NonresonantTwoColorPhotonIon.Settings.
-    """
+    # `Base.show(io::IO, settings::NonresonantTwoColorPhotonIon.Settings)`  
+    #		... prepares a proper printout of the variable settings::NonresonantTwoColorPhotonIon.Settings.
     function Base.show(io::IO, settings::NonresonantTwoColorPhotonIon.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
@@ -95,10 +93,8 @@ module NonresonantTwoColorPhotonIon
     end
 
 
-    """
-    `Base.show(io::IO, line::NonresonantTwoColorPhotonIon.Line)`  ... prepares a proper printout of the variable 
-                                                                      line::NonresonantTwoColorPhotonIon.Line.
-    """
+    # `Base.show(io::IO, line::NonresonantTwoColorPhotonIon.Line)`  
+    #		... prepares a proper printout of the variable  line::NonresonantTwoColorPhotonIon.Line.
     function Base.show(io::IO, line::NonresonantTwoColorPhotonIon.Line) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")

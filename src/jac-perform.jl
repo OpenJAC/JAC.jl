@@ -322,7 +322,7 @@ function perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nucl
         wa = JAC.generate("configuration list: relativistic", conf)
         append!( relconfList, wa)
     end
-    if  printout    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
+    if  true    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
     subshellList = JAC.generate("subshells: ordered list for relativistic configurations", relconfList)
     JAC.define("relativistic subshell list", subshellList; printout=printout)
 
