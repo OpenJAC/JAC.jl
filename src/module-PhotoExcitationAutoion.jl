@@ -5,7 +5,7 @@
 """
 module PhotoExcitationAutoion 
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
+    using Printf, JAC.BasicTypes, JAC.Radial, JAC.Nuclear, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -13,16 +13,16 @@ module PhotoExcitationAutoion
     `struct  PhotoExcitationAutoion.Settings`  ... defines a type for the details and parameters of computing photon-impact 
                                                    excitation-autoionization pathways |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
-        + multipoles              ::Array{JAC.EmMultipole,1}           ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges                  ::Array{JAC.UseGauge,1}              ... Specifies the gauges to be included into the computations.
+        + multipoles              ::Array{BasicTypes.EmMultipole,1}    ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges                  ::Array{BasicTypes.UseGauge,1}       ... Specifies the gauges to be included into the computations.
         + printBeforeComputation  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
         + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
         + maxKappa                ::Int64                              ... Maximum kappa value of partial waves to be included.
     """
     struct Settings
-        multipoles                ::Array{JAC.EmMultipole,1}
-        gauges                    ::Array{JAC.UseGauge,1} 
+        multipoles                ::Array{BasicTypes.EmMultipole,1}
+        gauges                    ::Array{BasicTypes.UseGauge,1} 
         printBeforeComputation    ::Bool
         selectPathways            ::Bool
         selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
@@ -77,8 +77,8 @@ module PhotoExcitationAutoion
         + hasChannels         ::Bool            ... Determines whether the individual excitation and autoionization channels are defined in terms of 
                                                     their multipole, gauge, free-electron kappa, phases and the total angular momentum/parity as well 
                                                     as the amplitude, or not.
-        + excitChannels       ::Array{JAC.PhotoEmission.Channel,1}  ... List of excitation channels of this pathway.
-        + augerChannels       ::Array{JAC.AutoIonization.Channel,1}      ... List of Auger channels of this pathway.
+        + excitChannels       ::Array{PhotoEmission.Channel,1}  ... List of excitation channels of this pathway.
+        + augerChannels       ::Array{AutoIonization.Channel,1}      ... List of Auger channels of this pathway.
     """
     struct  Pathway
         initialLevel          ::Level
@@ -88,8 +88,8 @@ module PhotoExcitationAutoion
         electronEnergy        ::Float64
         crossSection          ::EmProperty
         hasChannels           ::Bool
-        excitChannels         ::Array{JAC.PhotoEmission.Channel,1}  
-        augerChannels         ::Array{JAC.AutoIonization.Channel,1}
+        excitChannels         ::Array{PhotoEmission.Channel,1}  
+        augerChannels         ::Array{AutoIonization.Channel,1}
     end 
 
 
@@ -119,12 +119,12 @@ module PhotoExcitationAutoion
 
 
     """
-    `JAC.PhotoExcitationAutoion.computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.PhotoExcitationAutoion.computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, nm::Nuclear.Model, grid::Radial.Grid, 
                                                             nrContinuum::Int64, settings::PhotoExcitationAutoion.Settings)` 
         ... to compute all amplitudes and properties of the given pathway; a line::PhotoExcitationAutoion.Pathway is returned for which 
             the amplitudes and properties have now been evaluated.
     """
-    function  computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64,
+    function  computeAmplitudesProperties(pathway::PhotoExcitationAutoion.Pathway, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64,
                                           settings::PhotoExcitationAutoion.Settings)
         # Compute all excitation channels
         neweChannels = PhotoEmission.Channel[]
@@ -157,11 +157,11 @@ module PhotoExcitationAutoion
 
     """
     `JAC.PhotoExcitationAutoion.computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
-                                                nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::PhotoExcitation.Settings; output=true)`  
+                                                nm::Nuclear.Model, grid::Radial.Grid, settings::PhotoExcitation.Settings; output=true)`  
         ... to compute the photo-excitation-autoionization amplitudes and all properties as requested by the given settings. A list of 
             lines::Array{PhotoExcitationAutoion.Lines} is returned.
     """
-    function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, 
+    function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, 
                               grid::Radial.Grid, settings::PhotoExcitationAutoion.Settings; output=true)
         println("")
         printstyled("JAC.PhotoExcitationAutoion.computePathways(): The computation of photo-excitation-autoionization amplitudes starts now ... \n", color=:light_green)
@@ -244,8 +244,8 @@ module PhotoExcitationAutoion
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(rChannels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(rChannels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
+                    if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      push!(rChannels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    push!(rChannels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
                     elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(rChannels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 

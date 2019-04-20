@@ -5,7 +5,7 @@
 """
 module RadiativeAuger
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, JAC.AutoIonization
+    using Printf, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -242,9 +242,9 @@ module RadiativeAuger
                         kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symt, symf)
                         for  kappa in kappaList
                             # Include further restrictions if appropriate
-                            if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      
+                            if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      
                                 push!(channels, RadiativeAuger.Channel(mp, JAC.Coulomb,   kappa, symt, 0., Complex(0.)) )
-                            elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    
+                            elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    
                                 push!(channels, RadiativeAuger.Channel(mp, JAC.Babushkin, kappa, symt, 0., Complex(0.)) )  
                             elseif string(mp)[1] == 'M'                                
                                 push!(channels, RadiativeAuger.Channel(mp, JAC.Magnetic,  kappa, symt, 0., Complex(0.)) ) 

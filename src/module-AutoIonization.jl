@@ -2,11 +2,11 @@
 """
 `module  JAC.AutoIonization`  
     ... a submodel of JAC that contains all methods for computing Auger properties between some initial and final-state 
-        multiplets; it is using JAC, JAC.Radial.
+        multiplets; it is using JAC.BasicTypes, JAC.Radial, JAC.Nuclear, JAC.PlasmaShift.
 """
 module AutoIonization
 
-    using  Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using  Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear, JAC.PlasmaShift
     global JAC_counter = 0
 
     
@@ -152,7 +152,7 @@ module AutoIonization
             end 
             if  printout  printstyled("done. \n", color=:light_green)    end
             amplitude = transpose(continuumLevel.mc) * matrix * initialLevel.mc 
-            amplitude = im^JAC.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
+            amplitude = im^BasicTypes.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
             #
             #
          elseif  kind == "H-E"
@@ -187,12 +187,12 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeAmplitudesProperties(line::AutoIonization.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+    `JAC.AutoIonization.computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                            settings::AutoIonization.Settings; printout::Bool=true)` 
         ... to compute all amplitudes and properties of the given line; a line::Euer.Line is returned for which the amplitudes and properties 
             are now evaluated.
     """
-    function computeAmplitudesProperties(line::AutoIonization.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+    function computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                          settings::AutoIonization.Settings; printout::Bool=true) 
         newChannels = AutoIonization.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
@@ -218,12 +218,12 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeAmplitudesPropertiesPlasma(line::AutoIonization.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+    `JAC.AutoIonization.computeAmplitudesPropertiesPlasma(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                                  settings::PlasmaShift.AugerSettings; printout::Bool=true)`  
         ... to compute all amplitudes and properties of the given line but for the given plasma model; a line::AutoIonization.Line is returned 
             for which the amplitudes and properties are now evaluated.
     """
-    function computeAmplitudesPropertiesPlasma(line::AutoIonization.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+    function computeAmplitudesPropertiesPlasma(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                                settings::PlasmaShift.AugerSettings; printout::Bool=true) 
         newChannels = AutoIonization.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
@@ -284,12 +284,12 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.AutoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                             settings::AutoIonization.Settings; output=true, printout::Bool=true)`  
         ... to compute the Auger transition amplitudes and all properties as requested by the given settings. A list of 
             lines::Array{AutoIonization.Lines} is returned.
     """
-    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                            settings::AutoIonization.Settings; output=true, printout::Bool=true)
         println("")
         printstyled("JAC.AutoIonization.computeLines(): The computation of Auger rates and properties starts now ... \n", color=:light_green)
@@ -321,13 +321,13 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.AutoIonization.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                             settings::AutoIonization.Settings; output=true, printout::Bool=true)`  
         ... to compute the Auger transition amplitudes and all properties as requested by the given settings. The computations
             and printout is adapted for large cascade computations by including only lines with at least one channel and by sending
             all printout to a summary file only. A list of lines::Array{AutoIonization.Lines} is returned.
     """
-    function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                   settings::AutoIonization.Settings; output=true, printout::Bool=true)
         
         lines = JAC.AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
@@ -354,12 +354,12 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.AutoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                   settings::PlasmaShift.AugerSettings; output=true)`  
         ... to compute the Auger transition amplitudes and all properties as requested by the given settings. A list of 
             lines::Array{AutoIonization.Lines} is returned.
     """
-    function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                  settings::PlasmaShift.AugerSettings; output=true)
         println("")
         printstyled("JAC.AutoIonization.computeLinesPlasma(): The computation of Auger rates starts now ... \n", color=:light_green)

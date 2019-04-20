@@ -6,7 +6,7 @@
 """
 module  RadialIntegrals
 
-    using  JAC, JAC.Radial, JAC.Math, GSL, QuadGK
+    using  JAC, JAC.BasicTypes, JAC.Radial, JAC.Math, GSL, QuadGK
     global JAC_counter = 0
   
   
@@ -146,7 +146,7 @@ module  RadialIntegrals
          radial integral int_o^infty ... A value::Float64 is returned.
     """
     function isotope_nms(a::Orbital, b::Orbital, Z::Float64, grid::Radial.Grid)
-        mtp = min(size(a.P, 1), size(b.P, 1));   lb = JAC.subshell_l(b.subshell);    jb2   = JAC.subshell_2j(b.subshell)
+        mtp = min(size(a.P, 1), size(b.P, 1));   lb = BasicTypes.subshell_l(b.subshell);    jb2   = BasicTypes.subshell_2j(b.subshell)
         alphaZ = JAC.give("alpha") * Z
         
         # Distinguish the radial integration for different grid definitions
@@ -292,7 +292,7 @@ module  RadialIntegrals
     function overlap(bspline1::JAC.Bsplines.Bspline, bspline2::JAC.Bsplines.Bspline, grid::Radial.Grid)
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.mesh == BasicTypes.MeshGrasp
             if  bspline1.upper <= bspline2.lower  ||  bspline2.upper <= bspline1.lower    return( 0. )   end
             mtp = min( bspline1.upper, bspline2.upper)
             n0  = max( bspline1.lower, bspline2.lower)
@@ -355,11 +355,11 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.qedLowFrequency(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, nm::JAC.Nuclear.Model,
+    `JAC.RadialIntegrals.qedLowFrequency(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, nm::Nuclear.Model,
                                          grid::Radial.Grid, qgrid::Radial.GridGL)` ... computes the (radial) integral for the
          low-frequency QED potential for the radial orbitals a, b on the given grid. A value::Float64 is returned.
     """
-    function qedLowFrequency(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid, qgrid::Radial.GridGL)
+    function qedLowFrequency(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, nm::Nuclear.Model, grid::Radial.Grid, qgrid::Radial.GridGL)
         alpha = JAC.give("alpha");    BZ = 0.074 + 0.035 * nm.Z * alpha
         mtp = min(size(a.P, 1), size(b.P, 1))
         # Distinguish the radial integration for different grid definitions

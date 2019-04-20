@@ -5,7 +5,7 @@
 """
 module InteractionStrength
 
-    using  GSL, JAC, JAC.Radial, JAC.ManyElectron
+    using  GSL, JAC, JAC.BasicTypes, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
     global JAC_counter = 0
 
 
@@ -42,11 +42,11 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.hamiltonian_nms(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)`  ... computes the  <a|| h_nms ||b>  reduced 
+    `JAC.InteractionStrength.hamiltonian_nms(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  ... computes the  <a|| h_nms ||b>  reduced 
          matrix element of the normal-mass-shift Hamiltonian for orbital functions a, b. A value::Float64 is returned.  For details, 
          see Naze et al., CPC 184 (2013) 2187, Eq. (37).
     """
-    function hamiltonian_nms(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)
+    function hamiltonian_nms(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
         if  a.subshell.kappa != b.subshell.kappa   return( 0. )   end
         wa = JAC.RadialIntegrals.isotope_nms(a, b, nm.Z, grid) / (2 * nm.mass)
         println("**  <$(a.subshell) || h^nms || $(b.subshell)>  = $wa" )
@@ -216,11 +216,11 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.schiffMoment(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)`  
+    `JAC.InteractionStrength.schiffMoment(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
          ... computes the  <a|| h^(Schiff-moment) ||b>  reduced matrix element of the Schiff-moment Hamiltonian for orbital functions 
          a, b and for the nuclear density as given by the nuclear model. A value::Float64 is returned.  
     """
-    function schiffMoment(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)
+    function schiffMoment(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
         printstyled("\nWarning -- InteractionStrength.schiffMoment():: Not yet implemented.", color=:cyan)
         wb = 1.0 + 2.0im
         return( wb )
@@ -228,11 +228,11 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.weakCharge(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)`  
+    `JAC.InteractionStrength.weakCharge(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
          ... computes the  <a|| h^(weak-charge) ||b>  reduced matrix element of the weak-charge Hamiltonian for orbital functions 
          a, b and for the nuclear density as given by the nuclear model. A value::Float64 is returned.  
     """
-    function weakCharge(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)
+    function weakCharge(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
         printstyled("\nWarning -- InteractionStrength.weakCharge():: Not yet implemented.", color=:cyan)
         wb = 1.0 + 2.0im
         return( wb )
@@ -430,10 +430,10 @@ module InteractionStrength
     """
     function XL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
         # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
-        la = JAC.subshell_l(a.subshell);    ja2 = JAC.subshell_2j(a.subshell)
-        lb = JAC.subshell_l(b.subshell);    jb2 = JAC.subshell_2j(b.subshell)
-        lc = JAC.subshell_l(c.subshell);    jc2 = JAC.subshell_2j(c.subshell)
-        ld = JAC.subshell_l(d.subshell);    jd2 = JAC.subshell_2j(d.subshell)
+        la = BasicTypes.subshell_l(a.subshell);    ja2 = BasicTypes.subshell_2j(a.subshell)
+        lb = BasicTypes.subshell_l(b.subshell);    jb2 = BasicTypes.subshell_2j(b.subshell)
+        lc = BasicTypes.subshell_l(c.subshell);    jc2 = BasicTypes.subshell_2j(c.subshell)
+        ld = BasicTypes.subshell_l(d.subshell);    jd2 = BasicTypes.subshell_2j(d.subshell)
 
         if  JAC.AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * JAC.AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
             rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
@@ -458,10 +458,10 @@ module InteractionStrength
     """
     function XL_Coulomb_DH(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid, lambda::Float64)
         # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
-        la = JAC.subshell_l(a.subshell);    ja2 = JAC.subshell_2j(a.subshell)
-        lb = JAC.subshell_l(b.subshell);    jb2 = JAC.subshell_2j(b.subshell)
-        lc = JAC.subshell_l(c.subshell);    jc2 = JAC.subshell_2j(c.subshell)
-        ld = JAC.subshell_l(d.subshell);    jd2 = JAC.subshell_2j(d.subshell)
+        la = BasicTypes.subshell_l(a.subshell);    ja2 = BasicTypes.subshell_2j(a.subshell)
+        lb = BasicTypes.subshell_l(b.subshell);    jb2 = BasicTypes.subshell_2j(b.subshell)
+        lc = BasicTypes.subshell_l(c.subshell);    jc2 = BasicTypes.subshell_2j(c.subshell)
+        ld = BasicTypes.subshell_l(d.subshell);    jd2 = BasicTypes.subshell_2j(d.subshell)
 
         if  JAC.AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * JAC.AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
             rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
@@ -486,11 +486,11 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.X1_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)`  ... computes the the effective
+    `JAC.InteractionStrength.X1_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  ... computes the the effective
          interaction strengths X^1_sms,A (abcd) for fixed rank 1 and orbital functions a, b, c and d at the given grid. A value::Float64 is 
          returned.
     """
-    function X1_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)
+    function X1_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
         wa = JAC.AngularMomentum.CL_reduced_me(a.subshell, 1, c.subshell) * JAC.AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) *
              JAC.RadialIntegrals.Vinti(a, c, grid) * JAC.RadialIntegrals.Vinti(b, d, grid) / (2 * nm.mass)
         ## println("**  <$(a.subshell) || Vinti || $(c.subshell)>  = $(JAC.RadialIntegrals.Vinti(a, c, grid)) " )
@@ -500,11 +500,11 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.X1_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)`  ... computes the the effective 
+    `JAC.InteractionStrength.X1_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  ... computes the the effective 
          interaction strengths X^1_sms,B (abcd) for fixed rank 1 and orbital functions a, b, c and d at the given grid. A value::Float64 is 
          returned.
     """
-    function X1_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)
+    function X1_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
         wa = - JAC.AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) * JAC.RadialIntegrals.Vinti(b, d, grid) *
                JAC.RadialIntegrals.isotope_smsB(a, c, nm.Z, grid) / (2 * nm.mass) 
         return( wa )
@@ -512,11 +512,11 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.X1_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)` ... computes the the effective 
+    `JAC.InteractionStrength.X1_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)` ... computes the the effective 
          interaction strengths X^1_sms,C (abcd) for fixed rank 1 and orbital functions a, b, c and d at the given grid. A value::Float64 is 
          returned.
     """
-    function X1_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::JAC.Nuclear.Model, grid::Radial.Grid)
+    function X1_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
         wa = - JAC.AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) * JAC.AngularMomentum.CL_reduced_me(a.subshell, 1, c.subshell) * 
                JAC.RadialIntegrals.Vinti(b, d, grid) * JAC.RadialIntegrals.isotope_smsC(a, c, nm.Z, grid) / (2 * nm.mass) 
         return( wa )

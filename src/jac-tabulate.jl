@@ -1,4 +1,4 @@
-
+using JAC, JAC.BasicTypes
 ## export  tabulate
 
 """
@@ -103,7 +103,7 @@ end
 function tabulateKappaSymmetryEnergiesDirac(kappa::Int64, evalues::Array{Float64,1}, ns::Int64, nuclearModel::Nuclear.Model)
     Z = nuclearModel.Z
     # Determine the allowed principal quantum numbers n
-    l = JAC.subshell_l(Subshell(101,kappa))
+    l = BasicTypes.subshell_l(Subshell(101,kappa))
     println("  ", JAC.TableStrings.hLine(77))
     sa = "  "
     sa = sa * JAC.TableStrings.center( 7, "Index";            na=2)

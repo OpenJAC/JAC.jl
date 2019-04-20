@@ -5,7 +5,7 @@
 """
 module Hfs
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
     
 
@@ -360,11 +360,11 @@ module Hfs
 
 
     """
-    `JAC.Hfs.computeHyperfineMultiplet(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings; output=true)`  
+    `JAC.Hfs.computeHyperfineMultiplet(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings; output=true)`  
          ... to compute a hyperfine multiplet, i.e. a representation of hyperfine levels within a hyperfine-coupled basis as defined by the
          given (electronic) multiplet; a hfsMultiplet::IJF_Multiplet is returned.
     """
-    function computeHyperfineMultiplet(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings; output=true)
+    function computeHyperfineMultiplet(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings; output=true)
         println("")
         printstyled("JAC.Hfs.computeHyperfineMultiplet(): The computation of the hyperfine multiplet starts now ... \n", color=:light_green)
         printstyled("---------------------------------------------------------------------------------------------- \n", color=:light_green)
@@ -388,11 +388,11 @@ module Hfs
 
 
     """
-    `JAC.Hfs.computeHyperfineRepresentation(hfsBasis::IJF_Basis, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings)`  
+    `JAC.Hfs.computeHyperfineRepresentation(hfsBasis::IJF_Basis, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings)`  
          ... to set-up and diagonalized the Hamiltonian matrix of H^(DFB) + H^(hfs) within the atomic hyperfine (IJF-coupled) basis;
          a hfsMultiplet::IJF_Multiplet is returned.
     """
-    function computeHyperfineRepresentation(hfsBasis::IJF_Basis, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings)
+    function computeHyperfineRepresentation(hfsBasis::IJF_Basis, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings)
         n = length(hfsBasis.vectors);   matrix = zeros(n,n)
         for  r = 1:n
             for  s = 1:n
@@ -425,7 +425,7 @@ module Hfs
         for  ev = 1:length(eigen.values)
             # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)
             evector   = eigen.vectors[ev];    en = eigen.values[ev]
-            parity    = JAC.plus;    F = AngularJ64(0);     MF = AngularM64(0)
+            parity    = JAC.BasicTypes.plus;    F = AngularJ64(0);     MF = AngularM64(0)
             ##x println("len = $(length(hfsBasis.vectors))  evector = $evector   ")
             for  r = 1:length(hfsBasis.vectors)
                 if  abs(evector[r]) > 1.0e-6    
@@ -497,34 +497,34 @@ module Hfs
 
 
     """
-    `JAC.Hfs.computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings; output=true)`  
+    `JAC.Hfs.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings; output=true)`  
          ... to compute (as selected) the HFS A and B parameters as well as hyperfine energy splittings for the levels of the given 
          multiplet and as specified by the given settings. The results are printed in neat tables to screen and, if requested, 
          an arrays{Hfs.Outcome,1} with all the results are returned.
     """
-    function computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings; output=true)
+    function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings; output=true)
         println("")
         printstyled("JAC.Hfs.computeOutcomes(): The computation of the Hyperfine amplitudes and parameters starts now ... \n", color=:light_green)
         printstyled("---------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        outcomes = JAC.Hfs.determineOutcomes(multiplet, settings)
+        outcomes = Hfs.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    JAC.Hfs.displayOutcomes(outcomes)    end
+        if  settings.printBeforeComputation    Hfs.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         im = computeInteractionMatrix(multiplet.levels[1].basis, grid, settings)
         newOutcomes = Hfs.Outcome[]
         for  outcome in outcomes
-            newOutcome = JAC.Hfs.computeAmplitudesProperties(outcome, grid, settings, im) 
+            newOutcome = Hfs.computeAmplitudesProperties(outcome, grid, settings, im) 
             push!( newOutcomes, newOutcome)
         end
         # Print all results to screen
-        JAC.Hfs.displayResults(stdout, newOutcomes, nm, settings)
+        Hfs.displayResults(stdout, newOutcomes, nm, settings)
         # Compute and display the non-diagonal hyperfine amplitudes, if requested
-        if  settings.calcNondiagonal    JAC.Hfs.displayNondiagonal(stdout, multiplet, grid, settings)   end
+        if  settings.calcNondiagonal    Hfs.displayNondiagonal(stdout, multiplet, grid, settings)   end
         printSummary, iostream = JAC.give("summary flag/stream")
         if  printSummary    
-            JAC.Hfs.displayResults(iostream, newOutcomes, nm, settings) 
-            if  settings.calcNondiagonal    JAC.Hfs.displayNondiagonal(iostream, multiplet, grid, settings)   end
+            Hfs.displayResults(iostream, newOutcomes, nm, settings) 
+            if  settings.calcNondiagonal    Hfs.displayNondiagonal(iostream, multiplet, grid, settings)   end
         end
         #
         if    output    return( newOutcomes )
@@ -591,10 +591,10 @@ module Hfs
 
 
     """
-    `JAC.Hfs.defineHyperfineBasis(multiplet::Multiplet, nm::JAC.Nuclear.Model, settings::Hfs.Settings)`  ... to define/set-up
+    `JAC.Hfs.defineHyperfineBasis(multiplet::Multiplet, nm::Nuclear.Model, settings::Hfs.Settings)`  ... to define/set-up
          an atomic hyperfine (IJF-coupled) basis for the given electronic multipet; a hfsBasis::IJF_Basis is returned.
     """
-    function  defineHyperfineBasis(multiplet::Multiplet, nm::JAC.Nuclear.Model, settings::Hfs.Settings)
+    function  defineHyperfineBasis(multiplet::Multiplet, nm::Nuclear.Model, settings::Hfs.Settings)
         vectors = IJF_Vector[]
         #
         for i = 1:length(multiplet.levels)
@@ -723,11 +723,11 @@ module Hfs
 
 
     """
-    `JAC.Hfs.displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1}, nm::JAC.Nuclear.Model, settings::Hfs.Settings)`  
+    `JAC.Hfs.displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1}, nm::Nuclear.Model, settings::Hfs.Settings)`  
         ... to display the energies, A- and B-values, Delta E_F energy shifts, etc. for the selected levels. All nuclear parameters are taken 
         from the nuclear model. A neat table is printed but nothing is returned otherwise.
     """
-    function  displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1}, nm::JAC.Nuclear.Model, settings::Hfs.Settings)
+    function  displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1}, nm::Nuclear.Model, settings::Hfs.Settings)
         println(stream, " ")
         println(stream, "  HFS parameters and amplitudes:")
         println(stream, " ")

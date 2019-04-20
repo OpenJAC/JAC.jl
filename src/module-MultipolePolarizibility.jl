@@ -6,7 +6,7 @@
 """
 module MultipolePolarizibility
 
-    using Printf,  JAC, JAC.ManyElectron, JAC.Radial
+    using Printf,  JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
     
 
@@ -126,12 +126,12 @@ module MultipolePolarizibility
 
 
     """
-    `JAC.MultipolePolarizibility.computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.MultipolePolarizibility.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                                  settings::MultipolePolarizibility.Settings; output=true)` 
          ... to compute (as selected) the alpha-variation parameters for the levels of the given multiplet and as specified by the given settings. 
          The results are printed in neat tables to screen but nothing is returned otherwise.
     """
-    function computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
              settings::MultipolePolarizibility.Settings; output=true)
         println("")
         printstyled("JAC.MultipolePolarizibility.computeOutcomes(): The computation of multipole polarizibilities starts now ... \n", color=:light_green)

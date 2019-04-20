@@ -5,7 +5,7 @@
 """
 module LandeZeeman
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
 
 
@@ -221,16 +221,16 @@ module LandeZeeman
 
 
     """
-    `JAC.LandeZeeman.computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::LandeZeeman.Settings; output=true)`  
+    `JAC.LandeZeeman.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::LandeZeeman.Settings; output=true)`  
          ... to compute (as selected) the Lande J or F factors for the levels of the given multiplet and as specified by the given settings. The 
              results are printed in neat tables to screen but nothing is returned otherwise.
     """
-    function computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::LandeZeeman.Settings; output=true)
+    function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::LandeZeeman.Settings; output=true)
         println("")
         printstyled("JAC.LandeZeeman.computeOutcomes(): The computation of the Zeeman amplitudes and Lande factors starts now ... \n", color=:light_green)
         printstyled("------------------------------------------------------------------------------------------------------------ \n", color=:light_green)
         println("")
-        outcomes = JAC.LandeZeeman.determineOutcomes(multiplet, settings)
+        outcomes = LandeZeeman.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
         if  settings.printBeforeComputation    JAC.LandeZeeman.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
@@ -305,11 +305,11 @@ module LandeZeeman
 
 
     """
-    `JAC.LandeZeeman.displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm::JAC.Nuclear.Model, settings::LandeZeeman.Settings)`  
+    `JAC.LandeZeeman.displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm::Nuclear.Model, settings::LandeZeeman.Settings)`  
          ... to display the energies, Lande factors, Zeeman amplitudes etc. for the selected levels. A neat table is printed but nothing is 
              returned otherwise.
     """
-    function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm::JAC.Nuclear.Model, settings::LandeZeeman.Settings)
+    function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm::Nuclear.Model, settings::LandeZeeman.Settings)
         #
         if  settings.calcLandeJ
             println(stream, " ")

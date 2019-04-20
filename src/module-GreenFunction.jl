@@ -72,11 +72,11 @@ module GreenFunction
 
 
     """
-    `JAC.GreenFunction.computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::GreenFunction.Settings; output=true)` 
+    `JAC.GreenFunction.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::GreenFunction.Settings; output=true)` 
          ... to compute (as selected) the alpha-variation parameters for the levels of the given multiplet and as specified by the given settings. 
          The results are printed in neat tables to screen but nothing is returned otherwise.
     """
-    function computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::GreenFunction.Settings; output=true)
+    function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::GreenFunction.Settings; output=true)
         println("")
         printstyled("JAC.GreenFunction.computeOutcomes(): The computation of approximate Green functions starts now ... \n", color=:light_green)
         printstyled("-------------------------------------------------------------------------------------------------- \n", color=:light_green)

@@ -5,7 +5,7 @@
 """
 module PhotoIonizationFluores 
 
-    using JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
+    using JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -13,16 +13,16 @@ module PhotoIonizationFluores
     `struct  PhotoIonizationFluores.Settings`  ... defines a type for the details and parameters of computing photon-impact 
                                                    excitation-autoionization pathways |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
-        + multipoles              ::Array{JAC.EmMultipole,1}           ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges                  ::Array{JAC.UseGauge,1}              ... Specifies the gauges to be included into the computations.
+        + multipoles              ::Array{EmMultipole,1}               ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges                  ::Array{UseGauge,1}                  ... Specifies the gauges to be included into the computations.
         + printBeforeComputation  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
         + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
         + maxKappa                ::Int64                              ... Maximum kappa value of partial waves to be included.
     """
     struct Settings
-        multipoles                ::Array{JAC.EmMultipole,1}
-        gauges                    ::Array{JAC.UseGauge,1} 
+        multipoles                ::Array{EmMultipole,1}
+        gauges                    ::Array{UseGauge,1} 
         printBeforeComputation    ::Bool
         selectPathways            ::Bool
         selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
@@ -55,12 +55,12 @@ module PhotoIonizationFluores
     `struct  JAC.PhotoIonizationFluores.Channel`  ... defines a type for a photon-impact excitaton & autoionization channel that specifies 
                                                       all quantum numbers, phases and amplitudes.
 
-        + excitationChannel  ::JAC.PhotoEmission.Channel       ... Channel that describes the photon-impact excitation process.
-        + augerChannel       ::JAC.AutoIonization.Channel           ... Channel that describes the subsequent Auger/autoionization process.
+        + excitationChannel  ::PhotoEmission.Channel       ... Channel that describes the photon-impact excitation process.
+        + augerChannel       ::AutoIonization.Channel      ... Channel that describes the subsequent Auger/autoionization process.
     """
     struct  Channel
-        excitationChannel    ::JAC.PhotoEmission.Channel
-        augerChannel         ::JAC.AutoIonization.Channel
+        excitationChannel    ::PhotoEmission.Channel
+        augerChannel         ::AutoIonization.Channel
     end 
 
 

@@ -157,10 +157,10 @@ module FormFactor
 
 
     """
-    `JAC.FormFactor.computeAmplitudesProperties(outcome::FormFactor.Outcome, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings)`  
+    `JAC.FormFactor.computeAmplitudesProperties(outcome::FormFactor.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings)`  
          ... to compute all form factors, etc. for the given outcome; a newOutcome::FormFactor.Outcome is returned.
     """
-    function computeAmplitudesProperties(outcome::FormFactor.Outcome, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings)
+    function computeAmplitudesProperties(outcome::FormFactor.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings)
         standardFs = Float64[];    modifiedFs = Float64[]
         for  i = 1:length(outcome.qValues)
             sF = FormFactor.standardF(outcome.qValues[i]::Float64, outcome.level::Level, grid::Radial.Grid)
@@ -173,11 +173,11 @@ module FormFactor
 
 
     """
-    `JAC.FormFactor.computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings; output=true)` 
+    `JAC.FormFactor.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings; output=true)` 
          ... to compute (as selected) the alpha-variation parameters for the levels of the given multiplet and as specified by the given settings. 
          The results are printed in neat tables to screen but nothing is returned otherwise.
     """
-    function computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings; output=true)
+    function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings; output=true)
         println("")
         printstyled("JAC.FormFactor.computeOutcomes(): The computation of the atomic form factors starts now ... \n", color=:light_green)
         printstyled("------------------------------------------------------------------------------------------- \n", color=:light_green)

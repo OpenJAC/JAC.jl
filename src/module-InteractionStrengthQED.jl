@@ -5,16 +5,16 @@
 """
 module InteractionStrengthQED
 
-    using Printf, JAC, JAC.Radial
+    using Printf, JAC.BasicTypes, JAC.Radial, JAC.Nuclear
 
 
     """
-    `JAC.InteractionStrengthQED.qedLocal(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid)`  
+    `JAC.InteractionStrengthQED.qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid)`  
         ... to calculate the local, single-electron QED correction due to a chosen QedModel.  The function also determines whether 
             the 'stored' hydrogenic values for the lambda_C-dampled overlap integrals belong the given Z-value, and re-calculates 
             these overlap integrals whenever necessary.  A single-electron amplitud wa::Float64 is returned.
     """
-    function qedLocal(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid)
+    function qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid)
         global  JAC_QED_MODEL,  JAC_QED_NUCLEAR_CHARGE,  JAC_QED_HYDROGENIC_LAMBDAC
         # Define a grid for the t-integration
         qgrid = JAC.Radial.GridGL("QED",  7)
@@ -46,14 +46,14 @@ module InteractionStrengthQED
 
 
     """
-    `JAC.InteractionStrengthQED.selfEnergyVolotka(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, 
+    `JAC.InteractionStrengthQED.selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, 
                                                   pot::Radial.Potential, grid::Radial.Grid,qgrid::Radial.GridGL)`
         ... to calculate the local, single-electron self-energy contribution due to the Petersburg model (PRA, 2013), further
         simplified by Andrey Volotka. A non-zero self-energy contribution is returned only for orbitals with 1 <= n <= 4 and 
         kappa = -1, 1, -2, 2, -3, since the method appears rather inaccurate for higher (n, kappa). 
         A single-electron self-energy amplitude wa::Float64 is returned.
     """
-    function selfEnergyVolotka(a::Orbital, b::Orbital, nm::JAC.Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid,qgrid::Radial.GridGL)
+    function selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid,qgrid::Radial.GridGL)
         # Non-zero local amplitudes only for kappa_a = kappa_b
         if      a.subshell != b.subshell  ||  a.subshell.n > 4   return( 0. )    end
         

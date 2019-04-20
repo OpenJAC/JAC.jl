@@ -1,5 +1,5 @@
 
-
+using   JAC.BasicTypes
 export  diagonalize
 
 """
@@ -17,7 +17,7 @@ function diagonalize(sa::String, matrix::Array{Float64,2})
         ##x println("diagonalize-ac: vectors = ", wa[:vectors] )
         vectors = Vector{Float64}[];    wb = wa.vectors;    d = size(wb)[1]
         for  i = 0:d-1    push!(vectors, wb[i*d+1:i*d+d])    end
-        wc = JAC.Eigen( wa.values, vectors )
+        wc = BasicTypes.Eigen( wa.values, vectors )
         return( wc )
     elseif   sa == "matrix: Julia method B"     error("Not yet implemented")
     else     error("Unsupported keystring = $sa")
@@ -42,7 +42,7 @@ function diagonalize(sa::String, matrixA::Array{Float64,2}, matrixB::Array{Float
         for  i = 0:d-1    push!(vectors, wb[i*d+1:i*d+d] )    end
         ##x wc = JAC.Eigen( wa[:values], vectors )
         # wc = JAC.Eigen( real(wa.values), vectors )
-        wc = JAC.Eigen( wa.values, vectors )
+        wc = BasicTypes.Eigen( wa.values, vectors )
         return( wc )
     else     error("Unsupported keystring = $sa")
     end

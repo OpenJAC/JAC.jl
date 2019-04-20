@@ -195,9 +195,9 @@ module PairAnnihilation1Photon
                     kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symt, symf)
                     for  kappa in kappaList
                         # Include further restrictions if appropriate
-                        if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      
+                        if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      
                             push!(channels, PairAnnihilation1Photon.Channel(mp, JAC.Coulomb,   kappa, symt, 0., Complex(0.)) )
-                        elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    
+                        elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    
                             push!(channels, PairAnnihilation1Photon.Channel(mp, JAC.Babushkin, kappa, symt, 0., Complex(0.)) )  
                         elseif string(mp)[1] == 'M'                                
                             push!(channels, PairAnnihilation1Photon.Channel(mp, JAC.Magnetic,  kappa, symt, 0., Complex(0.)) ) 

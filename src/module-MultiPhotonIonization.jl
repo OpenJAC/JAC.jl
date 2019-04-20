@@ -1,11 +1,11 @@
 
 """
 `module  JAC.MultiPhotonIonization`  ... a submodel of JAC that contains all methods for computing multi-photon (single-electron) ionization  
-                                         cross sections; it is using JAC, JAC.ManyElectron.
+                                         cross sections; it is using JAC.BasicTypes, JAC.ManyElectron.
 """
 module MultiPhotonIonization
 
-    using JAC, JAC.ManyElectron
+    using JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
 
     """
     `struct  MultiPhotonIonization.Settings`  ... defines a type for the settings in estimating multi-photon (single-electron) ionization 

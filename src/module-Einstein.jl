@@ -5,7 +5,7 @@
 """
 module Einstein
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 

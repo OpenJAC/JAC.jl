@@ -1,12 +1,12 @@
 
 """
 `module  JAC.CoulombExcitation`  ... a submodel of JAC that contains all methods for computing Coulomb excitation cross sections and alignment
-                                     parameters for the excitation of target or projectile electrons by fast ion impact; it is using JAC, 
+                                     parameters for the excitation of target or projectile electrons by fast ion impact; it is using JAC.BasicTypes, 
                                      JAC.ManyElectron, JAC.Radial.
 """
 module CoulombExcitation
 
-    using JAC, JAC.ManyElectron, JAC.Radial
+    using JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 

@@ -238,8 +238,7 @@ end
 """
 `JAC.testModule_Dielectronic(; short::Bool=true)`  ... tests on module JAC.Dielectronic.
 """
-function testModule_Dielectronic(; short::Bool=true) 
-    JAC.define("print summary: open", "test-Dielectronic-new.sum")
+function testModule_Dielectronic(; short::Bool=true)     JAC.define("print summary: open", "test-Dielectronic-new.sum")
     printstyled("\n\nTest the module  Dielectronic  ... \n", color=:cyan)
     ### Make the tests
     wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600), 
@@ -247,7 +246,7 @@ function testModule_Dielectronic(; short::Bool=true)
                             intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                             finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
                             process = JAC.Dierec, 
-                            processSettings=Dielectronic.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], false, 
+                            processSettings=Dielectronic.Settings([E1, M1], [UseCoulomb, UseBabushkin], false, 
                                                                 true, Tuple{Int64,Int64,Int64}[(1,1,0)], 0., 0., 0., "Coulomb")  )
     wb = perform(wa)
     ###
@@ -545,7 +544,7 @@ function testModule_PhotoExcitation(; short::Bool=true)
                             initialConfigs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                             finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
                             process = JAC.PhotoExc, 
-                            processSettings=PhotoExcitation.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, true, true, 
+                            processSettings=PhotoExcitation.Settings([E1, M1], [UseCoulomb, UseBabushkin], true, true, true, true, 
                                                                  false, Tuple{Int64,Int64}[], 0., 0., 1.0e6, JAC.ExpStokes(0., 0., 0.) ) )
     wb = perform(wa)
     ###
@@ -572,7 +571,7 @@ function testModule_PhotoExcitationAutoion(; short::Bool=true)
                             intermediateConfigs=[Configuration("1s 2s^2"), Configuration("1s 2p^2")],
                             finalConfigs=[Configuration("1s^2")], 
                             process = JAC.PhotoExcAuto, 
-                            processSettings=PhotoExcitationAutoion.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, Tuple{Int64,Int64,Int64}[(1,1,1)], 2)  )
+                            processSettings=PhotoExcitationAutoion.Settings([E1, M1], [UseCoulomb, UseBabushkin], true, true, Tuple{Int64,Int64,Int64}[(1,1,1)], 2)  )
 
 wb = perform(wa)
     ###
@@ -601,7 +600,7 @@ function testModule_PhotoExcitationFluores(; short::Bool=true)
                             intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                             finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
                             process = JAC.PhotoExcFluor, 
-                            processSettings=PhotoExcitationFluores.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], 
+                            processSettings=PhotoExcitationFluores.Settings([E1, M1], [UseCoulomb, UseBabushkin], 
                                                                             true, true, Tuple{Int64,Int64,Int64}[(1,1,1)])  )
     wb = perform(wa)
     ###
@@ -629,7 +628,7 @@ function testModule_PhotoIonization(; short::Bool=true)
                             initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                             finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
                             process = JAC.Photo, 
-                            processSettings=PhotoIonization.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [3000., 4000.], false, true, true, true, 
+                            processSettings=PhotoIonization.Settings([E1, M1], [UseCoulomb, UseBabushkin], [3000., 4000.], false, true, true, true, 
                                             true, Tuple{Int64,Int64}[(1,1), (1,2)], ExpStokes(1., 0., 0.)) )
     wb = perform(wa)
     ###
@@ -654,7 +653,7 @@ function testModule_PhotoRecombination(; short::Bool=true)
                             initialConfigs=[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ],
                             finalConfigs  =[Configuration("1s^2 2s^2 2p^6")], 
                             process = JAC.Rec, 
-                            processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10., 20.], [0.], 
+                            processSettings=PhotoRecombination.Settings([E1, M1], [UseCoulomb, UseBabushkin], [10., 20.], [0.], 
                                             false, true, true, true, true, Tuple{Int64,Int64}[(1,1)]) )
     wb = perform(wa)
     ###
@@ -679,7 +678,7 @@ function testModule_PhotoEmission(; short::Bool=true)
                             initialConfigs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                             finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
                             process = JAC.Radiative, 
-                            processSettings=PhotoEmission.Settings([E1, M1, E2, M2], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, 
+                            processSettings=PhotoEmission.Settings([E1, M1, E2, M2], [UseCoulomb, UseBabushkin], true, true, 
                             true, Tuple{Int64,Int64}[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)], 0., 0., 10000. ) )
     ##x streamDummy = open(pwd() * "/runtests.dummy", "w")
     ##x redirect_stdout(streamDummy) do   

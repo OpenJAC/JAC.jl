@@ -47,28 +47,32 @@ module JAC
 using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL   #, JLD
 
 export @racahsum, 
-       AlphaVariation, AnapoleMoment, AsfSettings, Atomic, AutoIonization, 
+       AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AsfSettings, Atomic, AutoIonization, 
        Basis, 
        Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
        DecayYield, Dielectronic, DoubleAuger,
-       ElectricDipoleMoment, Einstein, 
+       ElectricDipoleMoment, Einstein, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor,
        GreenFunction,
        Hfs, HydrogenicIon,
-       ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, LandeZeeman, Level, 
+       ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, 
+       LandeZeeman, Level, LevelSymmetry,
        MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment,  MultipolePolarizibility, Multiplet, 
        NoAmplitude, NoProcess, Nuclear, Model,
        Orbital, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
        PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
-       PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, 
+       PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, perform,
        Radial, RadiativeAuger, RayleighCompton, REDA, READI,
-       SchiffMoment, Shell, Subshell
+       SchiffMoment, Shell, Subshell,
+       UseCoulomb, UseBabushkin
     
 global JAC_counter = 0
 
-include("jac-basics.jl")
+## include("jac-basics.jl")
+include("module-BasicTypes.jl")
 include("module-Radial.jl")
 include("module-ManyElectron.jl")
+include("module-Math.jl")
 include("module-Nuclear.jl")
 include("module-Bsplines.jl")
 include("module-Continuum.jl")
@@ -126,7 +130,6 @@ include("module-AngularMomentum.jl")
 include("module-AngularCoefficients-Ratip2013.jl")
 include("module-InteractionStrength.jl")
 include("module-InteractionStrengthQED.jl")
-include("module-Math.jl")
 include("module-MessageHandling.jl")
 include("module-RadialIntegrals.jl")
 include("module-TableStrings.jl")

@@ -72,11 +72,11 @@ module DecayYield
 
 
     """
-    `JAC.DecayYield.computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::DecayYield.Settings; output=true)` 
+    `JAC.DecayYield.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::DecayYield.Settings; output=true)` 
          ... to compute (as selected) the alpha-variation parameters for the levels of the given multiplet and as specified by the given settings. 
          The results are printed in neat tables to screen but nothing is returned otherwise.
     """
-    function computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::DecayYield.Settings; output=true)
+    function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::DecayYield.Settings; output=true)
         println("")
         printstyled("JAC.DecayYield.computeOutcomes(): The computation of the fluorescence & Auger yields starts now ... \n", color=:light_green)
         printstyled("--------------------------------------------------------------------------------------------------- \n", color=:light_green)

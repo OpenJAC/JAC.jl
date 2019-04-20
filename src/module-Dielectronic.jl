@@ -6,7 +6,7 @@
 """
 module Dielectronic
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
+    using Printf, JAC, JAC.BasicTypes, JAC.Radial, JAC.Nuclear, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -92,8 +92,8 @@ module Dielectronic
         + resonanceStrength ::EmProperty              ... partial resonance strength of this pathway
         + hasChannels       ::Bool                    ... Determines whether the individual channels are defined in terms of their possible
                                                           Auger and radiative channels, or not.
-        + captureChannels   ::Array{JAC.AutoIonization.Channel,1}   ... List of |i> -->  |n>   dielectronic (Auger) capture channels.
-        + photonChannels    ::Array{JAC.PhotoEmission.Channel,1}        ... List of |n> -->  |f>   radiative stabilization channels.
+        + captureChannels   ::Array{AutoIonization.Channel,1}   ... List of |i> -->  |n>   dielectronic (Auger) capture channels.
+        + photonChannels    ::Array{PhotoEmission.Channel,1}        ... List of |n> -->  |f>   radiative stabilization channels.
     """
     struct  Pathway
         initialLevel        ::Level
@@ -106,8 +106,8 @@ module Dielectronic
         angularBeta         ::EmProperty
         resonanceStrength   ::EmProperty
         hasChannels         ::Bool
-        captureChannels     ::Array{JAC.AutoIonization.Channel,1} 
-        photonChannels      ::Array{JAC.PhotoEmission.Channel,1} 
+        captureChannels     ::Array{AutoIonization.Channel,1} 
+        photonChannels      ::Array{PhotoEmission.Channel,1} 
     end 
 
 
@@ -184,12 +184,12 @@ module Dielectronic
 
 
     """
-    `JAC.Dielectronic.computeAmplitudesProperties(pathway::Dielectronic.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.Dielectronic.computeAmplitudesProperties(pathway::Dielectronic.Pathway, nm::Nuclear.Model, grid::Radial.Grid, 
                                                   nrContinuum::Int64, settings::Dielectronic.Settings)` 
         ... to compute all amplitudes and properties of the given line; a line::Dielectronic.Pathway is returned for which the amplitudes and 
             properties have now been evaluated.
     """
-    function  computeAmplitudesProperties(pathway::Dielectronic.Pathway, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+    function  computeAmplitudesProperties(pathway::Dielectronic.Pathway, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                           settings::Dielectronic.Settings)
         newcChannels = AutoIonization.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum)
         for cChannel in pathway.captureChannels
@@ -221,12 +221,12 @@ module Dielectronic
 
 
     """
-    `JAC.Dielectronic.computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, 
+    `JAC.Dielectronic.computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, 
                                       grid::Radial.Grid, settings::Dielectronic.Settings; output=true)`  
         ... to compute the dielectronic recombination amplitudes and all properties as requested by the given settings. 
             A list of pathways::Array{Dielectronic.Pathway,1} is returned.
     """
-    function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, 
+    function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, 
                               grid::Radial.Grid, settings::Dielectronic.Settings; output=true)
         println("")
         printstyled("JAC.Dielectronic.computePathways(): The computation of dielectronic resonance strength, etc. starts now ... \n", color=:light_green)
@@ -322,8 +322,8 @@ module Dielectronic
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
+                    if     string(mp)[1] == 'E'  &&   gauge == UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
                     elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 

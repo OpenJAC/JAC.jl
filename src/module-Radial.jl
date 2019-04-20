@@ -5,7 +5,7 @@
 """
 module Radial
 
-    using  JAC, QuadGK, Printf
+    using  JAC, JAC.BasicTypes, QuadGK, Printf
     export Grid, Potential, Orbital, SingleElecSpectrum
 
 

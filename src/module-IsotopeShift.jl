@@ -5,7 +5,7 @@
 """
 module IsotopeShift
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
@@ -99,11 +99,11 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.amplitude(kind::String, rLevel::Level, sLevel::Level, nm::JAC.Nuclear.Model, grid::Radial.Grid)` 
+    `JAC.IsotopeShift.amplitude(kind::String, rLevel::Level, sLevel::Level, nm::Nuclear.Model, grid::Radial.Grid)` 
          ... to compute either the  H^(NMS),  H^(SMS,A),  H^(SMS,B) or  H^(SMS,C) normal and specific mass-shift amplitudes
              <alpha_r J_r || H^(A)) || alpha_s J_s>  for a given pair of levels. A value::ComplexF64 is returned.
     """
-    function  amplitude(kind::String, rLevel::Level, sLevel::Level, nm::JAC.Nuclear.Model, grid::Radial.Grid)
+    function  amplitude(kind::String, rLevel::Level, sLevel::Level, nm::Nuclear.Model, grid::Radial.Grid)
         nr = length(rLevel.basis.csfs);    ns = length(sLevel.basis.csfs);    matrix = zeros(ComplexF64, nr, ns)
         printstyled("Compute mass-shift $(kind[1:9]) matrix of dimension $nr x $ns ... ", color=:light_green)
         #
@@ -177,12 +177,12 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.IsotopeShift.computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::Nuclear.Model, grid::Radial.Grid, 
                                                   settings::IsotopeShift.Settings) 
          ... to compute all amplitudes and properties for a given level; an outcome::IsotopeShift.Outcome is returned for which the amplitudes 
          and properties are now evaluated explicitly.
     """
-    function  computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings)
+    function  computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings)
         global JAC_counter
         Knms  = 0.0;    Ksms  = 0.0;    F  = 0.0;    
         amplitudeKnms  = 0.0;    amplitudeKsmsA  = 0.0;   amplitudeKsmsB  = 0.0;  amplitudeKsmsC  = 0.0;
@@ -275,11 +275,11 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings; output=true)` 
+    `JAC.IsotopeShift.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings; output=true)` 
          ... to compute (as selected) the isotope-shift M and F parameters for the levels of the given multiplet and as specified by the given settings. 
          The results are printed in neat tables to screen but nothing is returned otherwise.
     """
-    function computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings; output=true)
+    function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings; output=true)
         println("")
         printstyled("JAC.IsotopeShift.computeOutcomes(): The computation of the isotope-shift parameters starts now ... \n", color=:light_green)
         printstyled("-------------------------------------------------------------------------------------------------- \n", color=:light_green)
@@ -341,7 +341,7 @@ module IsotopeShift
         println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(43)) 
         #  
         for  outcome in outcomes
-            sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
+            sa  = "  ";    sym = BasicTypes.LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
             sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", outcome.level.energy)) * "    "

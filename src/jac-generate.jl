@@ -1,4 +1,4 @@
-
+using   JAC.BasicTypes
 export  generate
 
 """
@@ -142,7 +142,7 @@ function generate(sa::String, conf::Configuration)
     initialize = true;    NoElectrons = 0
     for (k, occ)  in conf.shells
         NoElectrons     = NoElectrons + occ
-        wa              = shellSplitOccupation(k, occ)
+        wa              = JAC.BasicTypes.shellSplitOccupation(k, occ)
         subshellListNew = Dict{JAC.Subshell,Int64}[]
 
         if  initialize
@@ -364,8 +364,8 @@ function generateLevelWithExtraElectron(newOrbital, symt::LevelSymmetry, level::
         stateList   = provide("subshell states: antisymmetric, seniority", newOrbital.subshell, 1)
         if  basis.csfs[i].J != J   ||   basis.csfs[i].parity != parity    error("Improper symmetry of CSF.")   end
         if  length(stateList) != 1                                        error("Improper number of subshell states.")   end
-        if  JAC.AngularMomentum.triangularDelta(J, JAC.subshell_j(newOrbital.subshell), symt.J) != 1    
-                                                                          error("Improper coupling of (new) subshell & total J.")   end
+        if  JAC.AngularMomentum.triangularDelta(J, BasicTypes.subshell_j(newOrbital.subshell), symt.J) != 1    
+                                                                         error("Improper coupling of (new) subshell & total J.")   end
         substate   = stateList[1]
         occupation = copy(basis.csfs[i].occupation);    push!(occupation, substate.occ)
         seniority  = copy(basis.csfs[i].seniority);     push!(seniority,  substate.nu)

@@ -1,4 +1,4 @@
-
+using JAC.BasicTypes
 # export  determine
 
 """
@@ -59,13 +59,13 @@ function determineParity(conf::ConfigurationR)
 
     par = 1
     for  (k,v) in conf.subshells
-       l = JAC.subshell_l(k)
+       l = JAC.BasicTypes.subshell_l(k)
        if   iseven(l)    p = 1   else   p = -1    end    
        par = par * (p^v)
     end
 
-    if       par == 1    return( JAC.plus )  
-    elseif   par == -1   return( JAC.minus )
+    if       par == 1    return( JAC.BasicTypes.plus )  
+    elseif   par == -1   return( JAC.BasicTypes.minus )
     else     error("stop b")
     end  
 end

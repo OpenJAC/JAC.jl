@@ -6,7 +6,7 @@
 """
 module Nuclear
   
-    using Interact, QuadGK, JAC, JAC.Radial
+    using Interact, QuadGK, JAC, JAC.BasicTypes, JAC.Radial, JAC.Math
     ##x const LIBNUC = joinpath(@__DIR__, "..", "deps", "bin", "libnuc.so")
 
 
@@ -43,7 +43,7 @@ module Nuclear
         Z < 0.1  &&  error("Z must be >= 0.1")
         model    = "Fermi"
         mass     = 2*Z + 0.005*Z^2
-        radius   = JAC.Nuclear.Rrms(mass)
+        radius   = Nuclear.Rrms(mass)
         spinI    = AngularJ64(0)
         mu       = 0.
         Q        = 0.
@@ -152,7 +152,7 @@ module Nuclear
     """
     function fermiRrms(b::Float64)
     
-        return( sqrt(12 * fermiA^2 * JAC.Math.polylogExp(b/fermiA, 5) / JAC.Math.polylogExp(b/fermiA, 3)) )
+        return( sqrt(12 * fermiA^2 * Math.polylogExp(b/fermiA, 5) / Math.polylogExp(b/fermiA, 3)) )
     end
   
 

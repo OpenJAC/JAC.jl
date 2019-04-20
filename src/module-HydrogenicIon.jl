@@ -5,7 +5,7 @@
 """
 module HydrogenicIon 
 
-    using Printf, JAC, GSL
+    using Printf, JAC.BasicTypes, JAC.Radial, GSL
 
 
     """

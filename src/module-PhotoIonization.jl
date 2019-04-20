@@ -6,7 +6,7 @@
 """
 module PhotoIonization
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, JAC.BasicTypes, JAC.Radial, JAC.Nuclear, JAC.ManyElectron, JAC.PlasmaShift
     
     global JAC_counter = 0
 
@@ -44,7 +44,7 @@ module PhotoIonization
     `JAC.PhotoIonization.Settings()`  ... constructor for the default values of photoionization line computations
     """
     function Settings()
-        Settings(EmMultipole[E1], UseGauge[JAC.UseCoulomb], Float64[], false, false, false, false, false, Tuple{Int64,Int64}[])
+        Settings(EmMultipole[E1], UseGauge[BasicTypes.UseCoulomb], Float64[], false, false, false, false, false, Tuple{Int64,Int64}[])
     end
 
 
@@ -137,7 +137,7 @@ module PhotoIonization
         if      kind in [ "photoionization"]
         #-----------------------------------
             amplitude = JAC.PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, energy, continuumLevel, initialLevel, grid)
-            amplitude = im^JAC.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
+            amplitude = im^BasicTypes.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
         else    error("stop b")
         end
         
@@ -148,12 +148,12 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.computeAmplitudesProperties(line::PhotoIonization.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+    `JAC.PhotoIonization.computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                                      settings::PhotoIonization.Settings)`  
         ... to compute all amplitudes and properties of the given line; a line::PhotoIonization.Line is returned for which the amplitudes and 
             properties are now evaluated.
     """
-    function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+    function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                           settings::PhotoIonization.Settings)
         newChannels = PhotoIonization.Channel[];;   contSettings = JAC.Continuum.Settings(false, nrContinuum);    csC = 0.;    csB = 0.
         for channel in line.channels
@@ -184,12 +184,12 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.PhotoIonization.computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
                                                            settings::PlasmaShift.PhotoSettings)`  
         ... to compute all amplitudes and properties of the given line but for the given plasma model; 
             a line::PhotoIonization.Line is returned for which the amplitudes and properties are now evaluated.
     """
-    function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::PlasmaShift.PhotoSettings)
+    function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, settings::PlasmaShift.PhotoSettings)
         newChannels = PhotoIonization.Channel[];;   contSettings = JAC.Continuum.Settings(false, grid.nr-50);    csC = 0.;    csB = 0.
         for channel in line.channels
             newiLevel = JAC.generateLevelWithSymmetryReducedBasis(line.initialLevel)
@@ -219,12 +219,12 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.PhotoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                       settings::PhotoIonization.Settings; output::Bool=true)`  
         ... to compute the photoIonization transition amplitudes and all properties as requested by the given settings. 
             A list of lines::Array{PhotoIonization.Lines} is returned.
     """
-    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                            settings::PhotoIonization.Settings; output::Bool=true)
         println("")
         printstyled("JAC.PhotoIonization.computeLines(): The computation of photo-ionization and properties starts now ... \n", color=:light_green)
@@ -254,12 +254,12 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.PhotoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                             settings::PlasmaShift.PhotoSettings; output::Bool=true)`  
         ... to compute the photoIonization transition amplitudes and all properties as requested by the given settings. 
             A list of lines::Array{PhotoIonization.Lines} is returned.
     """
-    function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                  settings::PlasmaShift.PhotoSettings; output::Bool=true)
         println("")
         printstyled("JAC.PhotoIonization.computeLinesPlasma(): The computation of photo-ionization cross sections starts now ... \n", color=:light_green)
@@ -303,7 +303,7 @@ module PhotoIonization
             wb = 0.
             for  t  in tList
                 for  lambda = -1:2:1
-                    j = JAC.AngularMomentum.kappa_j(kappa);   Mf_lambda = JAC.add(AngularM64(lambda), Mf)
+                    j = JAC.AngularMomentum.kappa_j(kappa);   Mf_lambda = BasicTypes.add(AngularM64(lambda), Mf)
                     wb = wb + (1.0im * lambda)^p * (-1.0im * lambda)^pp * 
                          JAC.AngularMomentum.ClebschGordan( AngularJ64(Lp), AngularM64(lambda), Jf, Mf, t, Mf_lambda) *
                          JAC.AngularMomentum.ClebschGordan( AngularJ64(L),  AngularM64(lambda), Jf, Mf, t, Mf_lambda) *
@@ -388,7 +388,7 @@ module PhotoIonization
     function determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoIonization.Settings)
         channels = PhotoIonization.Channel[];   
         symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
-        if  JAC.UseCoulomb  in  settings.gauges   gaugeM = JAC.UseCoulomb    else   gaugeM = JAC.UseBabushkin    end
+        if  BasicTypes.UseCoulomb  in  settings.gauges   gaugeM = BasicTypes.UseCoulomb    else   gaugeM = BasicTypes.UseBabushkin    end
         for  mp in settings.multipoles
             for  gauge in settings.gauges
                 symList = JAC.AngularMomentum.allowedMultipoleSymmetries(symi, mp)
@@ -397,9 +397,9 @@ module PhotoIonization
                     kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symt, symf)
                     for  kappa in kappaList
                         # Include further restrictions if appropriate
-                        if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      
+                        if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      
                             push!(channels, PhotoIonization.Channel(mp, JAC.Coulomb,   kappa, symt, 0., Complex(0.)) )
-                        elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    
+                        elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    
                             push!(channels, PhotoIonization.Channel(mp, JAC.Babushkin, kappa, symt, 0., Complex(0.)) )  
                         elseif string(mp)[1] == 'M'  &&   gauge == gaugeM                               
                             push!(channels, PhotoIonization.Channel(mp, JAC.Magnetic,  kappa, symt, 0., Complex(0.)) ) 
@@ -580,7 +580,7 @@ module PhotoIonization
                 multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
                 sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=2)
                 println(stream, sa)
-                MfList = JAC.projections(line.finalLevel.J)
+                MfList = BasicTypes.projections(line.finalLevel.J)
                 for  Mf in MfList
                     sb  = JAC.TableStrings.hBlank(97)
                     wac = JAC.PhotoIonization.computePartialCrossSectionUnpolarized(JAC.Coulomb, Mf, line)

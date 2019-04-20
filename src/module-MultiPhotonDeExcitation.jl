@@ -5,7 +5,7 @@
 """
 module MultiPhotonDeExcitation
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
@@ -245,7 +245,7 @@ module MultiPhotonDeExcitation
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
             sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.photonEnergy)) * "    "
-            mpGaugeList = Tuple{JAC.UseGauge, Array{JAC.EmMultipole,1}}[]
+            mpGaugeList = Tuple{UseGauge, Array{JAC.EmMultipole,1}}[]
             for  i in 1:length(line.channels)
                 push!( mpGaugeList, (line.channels[i].gauge, line.channels[i].multipoles) )
             end

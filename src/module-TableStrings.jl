@@ -5,7 +5,7 @@
 """
 module TableStrings
 
-    using Printf, JAC
+    using Printf, JAC, JAC.BasicTypes, JAC.Hfs
 
 
     """
@@ -57,9 +57,9 @@ module TableStrings
 
 
     """
-    `JAC.TableStrings.ijfVector(i::Int64, vector::JAC.Hfs.IJF_Vector)`  ... a string of "....i)  (J^P) F" is returned.
+    `JAC.TableStrings.ijfVector(i::Int64, vector::Hfs.IJF_Vector)`  ... a string of "....i)  (J^P) F" is returned.
     """
-    function  ijfVector(i::Int64, vector::JAC.Hfs.IJF_Vector) 
+    function  ijfVector(i::Int64, vector::Hfs.IJF_Vector) 
         si = string(i);   ni = length(si);    sa = repeat(" ", 5);    sa = sa[1:5-ni] * si * ")  "
         sa = sa * "[" * string( LevelSymmetry(vector.levelJ.J, vector.levelJ.parity) ) * "] " * string(vector.F) * repeat(" ", 4)
         return( sa )
@@ -108,10 +108,10 @@ module TableStrings
 
 
     """
-    `JAC.TableStrings.gaugeMultipolesTupels(n::Int64, mpList::Array{Tuple{JAC.UseGauge,Array{JAC.EmMultipole,1}},1})`  ... a string of tupels 
-         Used gauge[E1,M1,E2,E1, ...] is returned.
+    `JAC.TableStrings.gaugeMultipolesTupels(n::Int64, mpList::Array{Tuple{BasicTypes.UseGauge,Array{BasicTypes.EmMultipole,1}},1})`  
+        ... a string of tupels Used gauge[E1,M1,E2,E1, ...] is returned.
     """
-    function  gaugeMultipolesTupels(n::Int64, mpList::Array{Tuple{JAC.UseGauge,Array{JAC.EmMultipole,1}},1}) 
+    function  gaugeMultipolesTupels(n::Int64, mpList::Array{Tuple{BasicTypes.UseGauge,Array{BasicTypes.EmMultipole,1}},1}) 
         sa = "";   wa = String[]
         for tt in mpList
            sa = sa * string(tt[1])[1:3] * "[" 
@@ -175,11 +175,11 @@ module TableStrings
 
 
     """
-    `JAC.TableStrings.processSymmetryEnergyTupels(n::Int64, pList::Array{Tuple{JAC.AtomicProcess, Int64, LevelSymmetry, Float64},1}, sc::String)`  
+    `JAC.TableStrings.processSymmetryEnergyTupels(n::Int64, pList::Array{Tuple{BasicTypes.AtomicProcess, Int64, LevelSymmetry, Float64},1}, sc::String)`  
          ... a list of Strings with maximal length n is returned; each string in this list comprises a number of 
          'sc(process: NoElectrons, symmetry, energy),  ' descriptors.
     """
-    function  processSymmetryEnergyTupels(n::Int64, pList::Array{Tuple{JAC.AtomicProcess, Int64, LevelSymmetry, Float64},1}, sc::String)
+    function  processSymmetryEnergyTupels(n::Int64, pList::Array{Tuple{BasicTypes.AtomicProcess, Int64, LevelSymmetry, Float64},1}, sc::String)
         sa = "";   wa = String[]
         for p in pList
            sa = sa * sc * "[" * string(p[1])[1:1] * ": " * string(p[2]) * ", " * string(p[3]) * ", " 
@@ -206,10 +206,10 @@ module TableStrings
 
 
     """
-    `JAC.TableStrings.multipoleGaugeTupels(n::Int64, mpList::Array{Tuple{JAC.EmMultipole,JAC.EmGauge},1})`  ... a string of tupels 
-         E1(Gauge), M1(Gauge) is returned.
+    `JAC.TableStrings.multipoleGaugeTupels(n::Int64, mpList::Array{Tuple{BasicTypes.EmMultipole,BasicTypes.EmGauge},1})`  
+        ... a string of tupels E1(Gauge), M1(Gauge) is returned.
     """
-    function  multipoleGaugeTupels(n::Int64, mpList::Array{Tuple{JAC.EmMultipole,JAC.EmGauge},1})
+    function  multipoleGaugeTupels(n::Int64, mpList::Array{Tuple{BasicTypes.EmMultipole,BasicTypes.EmGauge},1})
         sa = ""
         for mp in mpList
            sa = sa * string(mp[1]) * "(" * string(mp[2]) * "), "

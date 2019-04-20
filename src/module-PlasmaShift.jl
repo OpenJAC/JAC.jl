@@ -5,7 +5,7 @@
 """
 module PlasmaShift
 
-    using Printf, JAC, JAC.ManyElectron
+    using Printf, JAC, JAC.BasicTypes, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
 
 
     """
@@ -132,8 +132,8 @@ module PlasmaShift
         + lambdaDebye            ::Float64                       ... The lambda parameter of different plasma models.
         + ionSphereR0            ::Float64                       ... The effective radius of the ion-sphere model.
         + NoBoundElectrons       ::Int64                         ... Effective number of bound electrons.
-        + multipoles             ::Array{EmMultipole}            ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges                 ::Array{UseGauge}               ... Specifies the gauges to be included into the computations.
+        + multipoles             ::Array{BasicTypes.EmMultipole}            ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges                 ::Array{BasicTypes.UseGauge}               ... Specifies the gauges to be included into the computations.
         + photonEnergies         ::Array{Float64,1}              ... List of photon energies.  
         + printBeforeComputation ::Bool                          ... True, if all energies and lines are printed before their evaluation.
         + selectLines            ::Bool                          ... True, if lines are selected individually for the computations.
@@ -144,8 +144,8 @@ module PlasmaShift
         lambdaDebye              ::Float64 
         ionSphereR0              ::Float64
         NoBoundElectrons         ::Int64
-        multipoles               ::Array{EmMultipole}
-        gauges                   ::Array{UseGauge}  
+        multipoles               ::Array{BasicTypes.EmMultipole}
+        gauges                   ::Array{BasicTypes.UseGauge}  
         photonEnergies           ::Array{Float64,1} 
         printBeforeComputation   ::Bool 
         selectLines              ::Bool
@@ -157,7 +157,7 @@ module PlasmaShift
     `JAC.PlasmaShift.PhotoSettings()`  ... constructor for a standard instance of PlasmaShift.PhotoSettings.
     """
     function PhotoSettings()
-        PhotoSettings(DebyeHueckel, 0.25, 0., 0, [E1], [JAC.UseCoulomb], Float64[], true, false, Tuple{Int64,Int64}[])
+        PhotoSettings(DebyeHueckel, 0.25, 0., 0, [E1], [BasicTypes.UseCoulomb], Float64[], true, false, Tuple{Int64,Int64}[])
     end
 
 
@@ -177,7 +177,7 @@ module PlasmaShift
 
 
     """
-    `JAC.PlasmaShift.computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.PlasmaShift.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                      asfSettings::AsfSettings, settings::PlasmaShift.Settings; output=true)` 
          ... to compute a new multiplet from the plasma-modified Hamiltonian matrix as specified by the given 
              settings. The diagonalization of the (plasma-modified) Hamiltonian matrix follows the asfSettings that
@@ -186,14 +186,14 @@ module PlasmaShift
              The energies and plasma shifts (with regard to the unperturbed multiplet) are printed to screen 
              and into the summary file. The generated (plasma) multiplet is returned if output=true and nothing otherwise,
     """
-    function computeOutcomes(multiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                              asfSettings::AsfSettings, settings::PlasmaShift.Settings; output=true)
         println("")
         printstyled("JAC.PlasmaShift.computeOutcomes(): The computation of plasma-shifts starts now ... \n", color=:light_green)
         printstyled("---------------------------------------------------------------------------------- \n", color=:light_green)
         #
         basis        = multiplet.levels[1].basis
-        newMultiplet = perform("computation: CI for plasma", basis, nm, grid, asfSettings, settings)
+        newMultiplet = JAC.perform("computation: CI for plasma", basis, nm, grid, asfSettings, settings)
         # Print all results to screen
         JAC.PlasmaShift.displayResults(stdout, multiplet, newMultiplet, settings)
         printSummary, iostream = JAC.give("summary flag/stream")

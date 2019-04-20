@@ -5,7 +5,7 @@
 """
 module RayleighCompton
 
-    using JAC, JAC.ManyElectron
+    using JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
 
 
     """

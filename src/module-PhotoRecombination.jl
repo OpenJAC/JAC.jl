@@ -6,7 +6,7 @@
 """
 module PhotoRecombination
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
 
 
@@ -138,7 +138,7 @@ module PhotoRecombination
         if      kind in [ "photorecombination"]
         #-----------------------------------
             amplitude = JAC.PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, energy, finalLevel, continuumLevel, grid)
-            amplitude = im^JAC.subshell_l(Subshell(101, channel.kappa)) * exp( im*channel.phase ) * amplitude
+            amplitude = im^BasicTypes.subshell_l(Subshell(101, channel.kappa)) * exp( im*channel.phase ) * amplitude
         else    error("stop b")
         end
         
@@ -147,12 +147,12 @@ module PhotoRecombination
 
 
     """
-    `JAC.PhotoRecombination.computeAmplitudesProperties(line::PhotoRecombination.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+    `JAC.PhotoRecombination.computeAmplitudesProperties(line::PhotoRecombination.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                                         settings::PhotoRecombination.Settings)`  
         ... to compute all amplitudes and properties of the given line; a line::PhotoRecombination.Line is returned for which the amplitudes 
             and properties are now evaluated.
     """
-    function  computeAmplitudesProperties(line::PhotoRecombination.Line, nm::JAC.Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64,
+    function  computeAmplitudesProperties(line::PhotoRecombination.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64,
                                           settings::PhotoRecombination.Settings)
         newChannels = PhotoRecombination.Channel[];;   contSettings = JAC.Continuum.Settings(false, nrContinuum);    csC = 0.;    csB = 0.
         for channel in line.channels
@@ -222,12 +222,12 @@ module PhotoRecombination
 
 
     """
-    `JAC.PhotoRecombination.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.PhotoRecombination.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                          settings::PhotoRecombination.Settings; output::Bool=true)` 
         ... to compute the photo recombination transition amplitudes and all properties as requested by the given settings. 
             A list of lines::Array{PhotoRecombination.Lines} is returned.
     """
-    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                            settings::PhotoRecombination.Settings; output::Bool=true)
         println("")
         printstyled("JACPhotoRecombination.computeLines(): The computation of photo-recombination properties starts now ... \n", color=:light_green)
@@ -272,9 +272,9 @@ module PhotoRecombination
                     kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symi, symt)
                     for  kappa in kappaList
                         # Include further restrictions if appropriate
-                        if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      
+                        if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      
                             push!(channels, PhotoRecombination.Channel(mp, JAC.Coulomb,   kappa, symt, 0., Complex(0.)) )
-                        elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    
+                        elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    
                             push!(channels, PhotoRecombination.Channel(mp, JAC.Babushkin, kappa, symt, 0., Complex(0.)) )  
                         elseif string(mp)[1] == 'M'                                
                             push!(channels, PhotoRecombination.Channel(mp, JAC.Magnetic,  kappa, symt, 0., Complex(0.)) ) 

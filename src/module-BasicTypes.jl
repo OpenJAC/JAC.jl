@@ -8,8 +8,10 @@ module BasicTypes
 
     using Printf
 
-    export  AngularJ64, AngularM64, HalfInt, HalfInteger, SolidAngle, Parity, LevelSymmetry, Shell, Subshell,
-            EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, TensorComp
+    export  AngularJ, AngularJ64, AngularM, AngularM64, HalfInt, HalfInteger, SolidAngle, Parity, 
+            LevelSymmetry, Shell, Subshell,
+            EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, oplus, subshell_2j,
+            RadialMesh, TensorComp, UseCoulomb, UseBabushkin
 
 
     include("inc-halfintegers.jl")
@@ -30,7 +32,7 @@ module BasicTypes
 
 
     """
-    `JAC.AngularJ64(m::Integer)`  ... constructor for a given integer (numerator).
+    `JAC.BasicTypes.AngularJ64(m::Integer)`  ... constructor for a given integer (numerator).
     """
     function AngularJ64(j::Integer)
         j < 0   &&   error("j must be positive.")
@@ -39,7 +41,7 @@ module BasicTypes
 
 
     """
-    `JAC.AngularJ64(rational::Rational{Int64})`  ... constructor for a given  Rational{Int64}.
+    `JAC.BasicTypes.AngularJ64(rational::Rational{Int64})`  ... constructor for a given  Rational{Int64}.
     """
     function AngularJ64(rational::Rational{Int64})
         !(rational.den in [1,2])   &&   error("Denominator must be 1 or 2.")
@@ -49,7 +51,7 @@ module BasicTypes
 
 
     # `Base.show(io::IO, j::AngularJ64)`  ... prepares a proper printout of the variable j::JAC.AngularJ64.
-    function Base.show(io::IO, j::JAC.AngularJ64) 
+    function Base.show(io::IO, j::AngularJ64) 
         if      j.den == 1    print(io, j.num)
         elseif  j.den == 2    print(io, j.num, "/2")
         else    error("stop a")
@@ -76,8 +78,8 @@ module BasicTypes
 
 
     """
-    `JAC.projections(ja::AngularJ64)`  ... returns all allowed projections of a given angular momenta ja as a list::Array{AngularM64,1} 
-                                        of m-values, i.e. -ja, -ja+1, ..., j.
+    `JAC.projections(ja::AngularJ64)`  
+        ... returns all allowed projections of a given angular momenta ja as a list::Array{AngularM64,1} of m-values, i.e. -ja, -ja+1, ..., j.
     """
     function  projections(ja::AngularJ64)
         if  ja.den == 1   ja2 = 2ja.num   else   ja2 = ja.num   end
@@ -106,7 +108,7 @@ module BasicTypes
 
 
     """
-    `JAC.AngularM64(m::Integer)`  ... constructor for a given integer (numerator).
+    `JAC.BasicTypes.AngularM64(m::Integer)`  ... constructor for a given integer (numerator).
     """
     function AngularM64(m::Integer)
         AngularM64(m, 1)
@@ -114,7 +116,8 @@ module BasicTypes
 
 
     """
-    `JAC.AngularM64(m::Integer, j::AngularJ64)`  ... constructor for a given integer (numerator) that is consistent with a given j-value.
+    `JAC.BasicTypes.AngularM64(m::Integer, j::AngularJ64)`  
+        ... constructor for a given integer (numerator) that is consistent with a given j-value.
     """
     function AngularM64(m::Integer, j::AngularJ64)
         !(j.den == 1)      &&  error("m must be integer for j = $(j).")
@@ -124,7 +127,7 @@ module BasicTypes
 
 
     """
-    `JAC.AngularM64(rational::Rational{Int64})`  ... constructor for a given  Rational{Int64}.
+    `JAC.BasicTypes.AngularM64(rational::Rational{Int64})`  ... constructor for a given  Rational{Int64}.
     """
     function AngularM64(rational::Rational{Int64})
         !(rational.den in [1,2])  &&  error("Denominator must be 1 or 2.")
@@ -133,7 +136,8 @@ module BasicTypes
 
 
     """
-    `JAC.AngularM64(rational::Rational{Int64}, j::AngularJ64)`  ... constructor for a given  Rational{Int64} that is consistent with a given m-value.
+    `JAC.BasicTypes.AngularM64(rational::Rational{Int64}, j::AngularJ64)`  
+        ... constructor for a given  Rational{Int64} that is consistent with a given m-value.
     """
     function AngularM64(rational::Rational{Int64}, j::AngularJ64)
         !(rational.den in [1,2])      &&   error("Denominator must be 1 or 2.")
@@ -144,7 +148,7 @@ module BasicTypes
 
 
     """
-    `JAC.AngularM64(j::AngularJ64)`  ... constructor for a given j::AngularJ64 to define m = j.
+    `JAC.BasicTypes.AngularM64(j::AngularJ64)`  ... constructor for a given j::AngularJ64 to define m = j.
     """
     function AngularM64(j::AngularJ64)
         AngularM64(j.num, j.den)
@@ -152,7 +156,7 @@ module BasicTypes
 
 
     # `Base.show(io::IO, m::AngularM64)`  ... prepares a proper printout of the variable m::JAC.AngularM64.
-    function Base.show(io::IO, m::JAC.AngularM64) 
+    function Base.show(io::IO, m::AngularM64) 
         if      m.den == 1    print(io, m.num)
         elseif  m.den == 2    print(io, m.num, "/2")
         else    error("stop a")
@@ -194,8 +198,9 @@ module BasicTypes
 
 
     """
-    `JAC.isEqual(a::Eigen, b::Eigen, accuracy::Float64)`  ... determines whether a == b with the requested accuracy; a value::Bool is returned.
-                                                            The test is made element-wise on abs(a.number - b.number) > accuracy.
+    `JAC.BasicTypes.isEqual(a::Eigen, b::Eigen, accuracy::Float64)`  
+        ... determines whether a == b with the requested accuracy; a value::Bool is returned. The test is made element-wise on 
+            abs(a.number - b.number) > accuracy.
     """
     function isEqual(a::Eigen, b::Eigen, accuracy::Float64)
         # Check the dimensions
@@ -208,8 +213,6 @@ module BasicTypes
         end
         return( true )
     end
-    
-
 
 
 
@@ -409,13 +412,13 @@ module BasicTypes
 
 
     """
-    `JAC.shellSplitOccupation(sh::Shell, occ::Int64)'  ... to split the occupation of a shell into proper subshell occupations; 
-                                                        an  Array{Dict{JAC.Subshell,Int64},1} is returned.
+    `JAC.shellSplitOccupation(sh::Shell, occ::Int64)'  
+        ... to split the occupation of a shell into proper subshell occupations; an  Array{Dict{JAC.Subshell,Int64},1} is returned.
     """
     function shellSplitOccupation(sh::Shell, occ::Int64)
 
         subshells = shellSplitIntoSubshells(sh)
-        wa        = Dict{JAC.Subshell,Int64}[]
+        wa        = Dict{Subshell,Int64}[]
 
         for  k1 in 0:occ
             for  k2 in 0:occ
@@ -543,7 +546,8 @@ module BasicTypes
 
 
     """
-    `JAC.subshellsFromClosedShellConfiguration("[Ne]")`  ... to provide a list of (relativistic) subshells for the given closed-shell configuration.
+    `JAC.subshellsFromClosedShellConfiguration("[Ne]")`  
+        ... to provide a list of (relativistic) subshells for the given closed-shell configuration.
     """
     function subshellsFromClosedShellConfiguration(sa::String)
         if       sa == "[He]"    wa = [ Subshell("1s_1/2")]    
@@ -570,8 +574,9 @@ module BasicTypes
 
 
     """
-    `struct   SubshellStateR`  ... defines a struct for the relativistic antisymmetric subshell states in the seniority scheme; this struct 
-                                can be accessed only internally and, therefore, the only the standard constructor is supported.
+    `struct   SubshellStateR`  
+        ... defines a struct for the relativistic antisymmetric subshell states in the seniority scheme; this struct can be accessed 
+            only internally and, therefore, the only the standard constructor is supported.
 
         + subshell     ::Subshell        ... to refer to a particular subshell. 
         + occ          ::Int64           ... occupation of the subshell
@@ -599,8 +604,8 @@ module BasicTypes
 
 
     """
-    `JAC.subshellStateString(subshell::String, occ::Int64, seniority::Int64, Jsub::AngularJ64, X::AngularJ64)`  ... to provide a 
-                            string of a given subshell state in the form '[2p_1/2^occ]_(seniority, J_sub), X=Xo'
+    `JAC.subshellStateString(subshell::String, occ::Int64, seniority::Int64, Jsub::AngularJ64, X::AngularJ64)`  
+        ... to provide a string of a given subshell state in the form '[2p_1/2^occ]_(seniority, J_sub), X=Xo' ... .
     """
     function subshellStateString(subshell::String, occ::Int64, seniority::Int64, Jsub::AngularJ64, X::AngularJ64)
         sa = "[" * subshell * "^$occ]_($seniority, " * string(Jsub) * ") X=" * string(X)
@@ -609,8 +614,9 @@ module BasicTypes
 
 
     """
-    `@enum   AtomicProcess`  ... defines a enumeration for the atomic processes that are supported in the JAC program in the computation 
-                                of transition arrays or whole excitation/decay cascades.
+    `@enum   AtomicProcess`  
+        ... defines a enumeration for the atomic processes that are supported in the JAC program in the computation of transition 
+            arrays or whole excitation/decay cascades.
 
         + Auger         ... Auger transitions, i.e. single autoionization or the emission of a single free electron into the continuum.
         + AugerInPlasma ... Auger transitions but calculated for a specified plasma model.
@@ -769,8 +775,9 @@ module BasicTypes
 
 
     """
-    `@enum   EmGauge`  ... defines a enumeration for the (allowed) gauges to deal with the radiation field; this differs from the UseGauge
-                        which can be selected for explicit computations.
+    `@enum   EmGauge`  
+        ... defines a enumeration for the (allowed) gauges to deal with the radiation field; this differs from the UseGauge which can 
+            be selected for explicit computations.
                         
             + NoGauge      ... No gauge define (yet).
             + Coulomb      ... Coulomb gauge (= velocity gauge in the non-relativistic limit; Grant, 1974).
@@ -881,8 +888,9 @@ module BasicTypes
 
 
     """
-    `struct  ExpStokes`  ... defines a type to maintain the (experimentally) given Stokes parameter for the polarization of incoming
-                            photons or electrons.
+    `struct  ExpStokes`  
+        ... defines a type to maintain the (experimentally) given Stokes parameter for the polarization of incoming 
+            photons or electrons.
 
         + P1              ::Float64    ... Stokes P1 parameter.
         + P2              ::Float64    ... Stokes P2 parameter.
@@ -917,8 +925,8 @@ module BasicTypes
 
 
     """
-    `struct  EmStokes`  ... defines a type to maintain the (computed) given Stokes parameter for the polarization of emitted
-                            photons or electrons.
+    `struct  EmStokes`  
+        ... defines a type to maintain the (computed) given Stokes parameter for the polarization of emitted photons or electrons.
 
         + P1              ::EmProperty    ... Stokes P1 parameter in Coulomb and Babushkin gauge
         + P2              ::EmProperty    ... Stokes P2 parameter.
@@ -974,8 +982,8 @@ module BasicTypes
 
 
     """
-    `JAC.tensorComp(k::Int64, q::Int64, tcomps::Array{TensorComp,1};  withZeros::Bool = false)`  ... returns the value of the statistical 
-        tensor component rho_kq if it is contained in tcomps.
+    `JAC.tensorComp(k::Int64, q::Int64, tcomps::Array{TensorComp,1};  withZeros::Bool = false)`  
+        ... returns the value of the statistical tensor component rho_kq if it is contained in tcomps.
     """
     function tensorComp(k::Int64, q::Int64, tcomps::Array{TensorComp,1};  withZeros::Bool = false)
         for  tc in  tcomps
@@ -1134,9 +1142,9 @@ module BasicTypes
 
 
     """
-    `JAC.yesno(question::String, sa::String)`  ... Returns true if the answer 'yes' or 'y' is found, and false otherwise; 
-                                                sa = {"Y", "N"} determines how the zero-String "" is interpreted. The given question is repeated 
-                                                until a proper answer is obtained.
+    `JAC.yesno(question::String, sa::String)`  
+        ... Returns true if the answer 'yes' or 'y' is found, and false otherwise; sa = {"Y", "N"} determines how the zero-String 
+            "" is interpreted. The given question is repeated until a proper answer is obtained.
     """
     function yesno(question::String, sa::String)
         while  true
@@ -1156,6 +1164,4 @@ module BasicTypes
     end
 
 end # module
-
-
 

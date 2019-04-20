@@ -5,7 +5,7 @@
 """
 module ManyElectron
 
-    using  JAC, JAC.Radial
+    using  JAC, JAC.BasicTypes, JAC.Radial
     export Configuration, ConfigurationR, AsfSettings, CsfR, Basis, Level, Multiplet
 
 

@@ -1,4 +1,4 @@
-
+using JAC.BasicTypes
 export  analyze
 
 """
@@ -67,7 +67,7 @@ end
                                                   indicates the relative maximum difference abs( a-b/a+b ) between two eigenvalues. The value is
                                                   set arbitrarely set to 1.0e+2 if the number of eigenvalues differ in the two blocks.
 """
-function analyzeConvergence(blocka::JAC.Eigen, blockb::JAC.Eigen)
+function analyzeConvergence(blocka::BasicTypes.Eigen, blockb::BasicTypes.Eigen)
     va = blocka.values;   vb = blockb.values
     if       length(va) !=  length(vb)    wa = 1.0e+2   
     else     wa = 0.;       for  i = 1:length(va)   wa = max(wa, abs( (va[i]-vb[i]) / (va[i]+vb[i]) ))   end

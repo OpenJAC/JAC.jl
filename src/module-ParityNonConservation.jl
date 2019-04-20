@@ -9,12 +9,12 @@ module ParityNonConservation
 
 
     """
-    `JAC.ParityNonConservation.schiffMomentAmplitude(finalLevel::Level, initialLevel::Level, nm::JAC.Nuclear.Model, 
+    `JAC.ParityNonConservation.schiffMomentAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, 
                                                      grid::Radial.Grid; display::Bool=false)`  ... to compute the Schiff moment amplitude  
          <alpha_f J_f || H^(Schiff) || alpha_i J_i>  for the given final and initial level and for the nuclear density as given by the 
          nuclear model. A value::ComplexF64 is returned.
     """
-    function schiffMomentAmplitude(finalLevel::Level, initialLevel::Level, nm::JAC.Nuclear.Model, grid::Radial.Grid; display::Bool=false)
+    function schiffMomentAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, grid::Radial.Grid; display::Bool=false)
         nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
         printstyled("Compute Schiff moment  matrix of dimension $nf x $ni in the final- and initial-state bases " *
                     "for the transition [$(initialLevel.index)- $(finalLevel.index)] ... ", color=:light_green)
@@ -84,12 +84,12 @@ module ParityNonConservation
 
 
     """
-    `JAC.ParityNonConservation.weakChargeAmplitude(finalLevel::Level, initialLevel::Level, nm::JAC.Nuclear.Model, 
+    `JAC.ParityNonConservation.weakChargeAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, 
                                                    grid::Radial.Grid; display::Bool=false)`  ... to compute the weak-charge amplitude  
              <alpha_f J_f || H^(weak-charge) || alpha_i J_i>  for the given final and initial level and for the nuclear density as 
              given by the nuclear model. A value::ComplexF64 is returned.
     """
-    function weakChargeAmplitude(finalLevel::Level, initialLevel::Level, nm::JAC.Nuclear.Model, grid::Radial.Grid; display::Bool=false)
+    function weakChargeAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, grid::Radial.Grid; display::Bool=false)
         nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
         printstyled("Compute weak -charge matrix of dimension $nf x $ni in the final- and initial-state bases " *
                     "for the transition [$(initialLevel.index)- $(finalLevel.index)] ... ", color=:light_green)

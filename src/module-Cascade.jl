@@ -6,7 +6,7 @@
 """
 module Cascade
 
-    using Printf, JAC, JAC.Radial, JAC.ManyElectron, JAC.Nuclear
+    using Printf, JAC.BasicTypes, JAC.Radial, JAC.ManyElectron, JAC.Nuclear, JAC.PhotoEmission, JAC.PhotoIonization, JAC.AutoIonization
 
     #==
     """
@@ -78,8 +78,8 @@ module Cascade
             process, such as Auger, PhotoEmission, or others and two lists of initial- and final-state configuration that are (each) treated 
             together in a multiplet to allow for configuration interaction but to avoid 'double counting' of individual levels.
 
-        + process          ::JAC.AtomicProcess         ... Atomic process that 'acts' in this step of the cascade.
-        + settings         ::Union{JAC.PhotoEmission.Settings, JAC.AutoIonization.Settings}        
+        + process          ::JBasicTypes.AtomicProcess         ... Atomic process that 'acts' in this step of the cascade.
+        + settings         ::Union{PhotoEmission.Settings, AutoIonization.Settings}        
                                                        ... Settings for this step of the cascade.
         + initialConfs     ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state multiplet.
         + finalConfs       ::Array{Configuration,1}    ... List of one or several configurations that define the final-state multiplet.
@@ -87,8 +87,8 @@ module Cascade
         + finalMultiplet   ::Multiplet                 ... Multiplet of the final-state levels of this step of the cascade.
     """
     struct  Step
-        process            ::JAC.AtomicProcess
-        settings           ::Union{JAC.PhotoEmission.Settings, JAC.AutoIonization.Settings}
+        process            ::BasicTypes.AtomicProcess
+        settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings}
         initialConfs       ::Array{Configuration,1}
         finalConfs         ::Array{Configuration,1}
         initialMultiplet   ::Multiplet
@@ -100,7 +100,7 @@ module Cascade
     `JAC.Cascade.Step()`  ... constructor for an 'empty' instance of a Cascade.Step.
     """
     function Step()
-        Step( Jac.NoProcess, JAC.PhotoEmission.Settings, Configuration[], Configuration[], Multiplet(), Multiplet())
+        Step( Jac.BasicTypes.NoProcess, PhotoEmission.Settings, Configuration[], Configuration[], Multiplet(), Multiplet())
     end
 
 
@@ -128,7 +128,7 @@ module Cascade
         + asfSettings        ::AsfSettings                    ... Provides the settings for the SCF process.
         + approach           ::Cascade.Approach               ... Computational approach/model that is applied to generate and evaluate the 
                                                                   cascade; possible approaches are: {'single-configuration', ...}
-        + processes          ::Array{JAC.AtomicProcess,1}     ... List of the atomic processes that are supported and should be included into the 
+        + processes          ::Array{BasicTypes.AtomicProcess,1}   ... List of the atomic processes that are supported and should be included into the 
                                                                   cascade.
         + initialConfs       ::Array{Configuration,1}         ... List of one or several configurations that contain the level(s) from which the 
                                                                   cascade starts.
@@ -150,7 +150,7 @@ module Cascade
         grid                 ::Radial.Grid
         asfSettings          ::AsfSettings
         approach             ::Union{Cascade.Approach}
-        processes            ::Array{JAC.AtomicProcess,1}
+        processes            ::Array{BasicTypes.AtomicProcess,1}
         initialConfs         ::Array{Configuration,1}
         initialLevels        ::Array{Tuple{Int64,Float64},1}
         maxElectronLoss      ::Int64
@@ -338,11 +338,11 @@ module Cascade
     """
     `struct  Cascade.LineIndex`  ... defines a line index with regard to the various lineLists of data::Cascade.Data.
 
-        + process      ::JAC.AtomicProcess    ... refers to the particular lineList of cascade (data).
-        + index        ::Int64                ... index of the corresponding line.
+        + process      ::BasicTypes.AtomicProcess    ... refers to the particular lineList of cascade (data).
+        + index        ::Int64                       ... index of the corresponding line.
     """
     struct  LineIndex
-        process        ::JAC.AtomicProcess
+        process        ::BasicTypes.AtomicProcess
         index          ::Int64 
     end 
 
@@ -359,7 +359,7 @@ module Cascade
 
         + energy       ::Float64                     ... energy of the level.
         + J            ::AngularJ64                  ... total angular momentum of the level
-        + parity       ::JAC.Parity                  ... total parity of the level
+        + parity       ::BasicTypes.Parity           ... total parity of the level
         + NoElectrons  ::Int64                       ... total number of electrons of the ion to which this level belongs.
         + relativeOcc  ::Float64                     ... relative occupation  
         + parents      ::Array{Cascade.LineIndex,1}  ... list of parent lines that (may) populate the level.     
@@ -368,7 +368,7 @@ module Cascade
     mutable struct  Level
         energy         ::Float64 
         J              ::AngularJ64 
-        parity         ::JAC.Parity 
+        parity         ::BasicTypes.Parity 
         NoElectrons    ::Int64 
         relativeOcc    ::Float64 
         parents        ::Array{Cascade.LineIndex,1} 
@@ -447,7 +447,7 @@ module Cascade
                         if      process == JAC.Radiative   
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons
-                                settings = JAC.PhotoEmission.Settings([E1, M1], [JAC.UseBabushkin], false, false, false, Tuple{Int64,Int64}[], 0., 0., 1.0e6)
+                                settings = JAC.PhotoEmission.Settings([E1, M1], [UseBabushkin], false, false, false, Tuple{Int64,Int64}[], 0., 0., 1.0e6)
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
                             end

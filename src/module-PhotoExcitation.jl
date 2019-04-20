@@ -5,7 +5,7 @@
 """
 module PhotoExcitation
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission
+    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission
     global JAC_counter = 0
 
 
@@ -238,8 +238,8 @@ module PhotoExcitation
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
+                    if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
                     elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 

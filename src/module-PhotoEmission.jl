@@ -5,7 +5,7 @@
 """
 module PhotoEmission
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
@@ -42,7 +42,7 @@ module PhotoEmission
     `JAC.PhotoEmission.Settings()`  ... constructor for the default values of radiative line computations
     """
     function Settings()
-        Settings(EmMultipole[E1], UseGauge[JAC.UseCoulomb], false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0.)
+        Settings(EmMultipole[E1], UseGauge[BasicTypes.UseCoulomb], false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0.)
     end
 
 
@@ -141,7 +141,7 @@ module PhotoEmission
                 if  finalLevel.basis.csfs[r].J != finalLevel.J          ||  finalLevel.basis.csfs[r].parity   != finalLevel.parity    continue    end 
                 for  s = 1:ni
                     if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity  continue    end 
-                    wa = compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    wa = JAC.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                     me = 0.
                     for  coeff in wa
                         ja = JAC.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
@@ -334,8 +334,8 @@ module PhotoEmission
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == JAC.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == JAC.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
+                    if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
                     elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 

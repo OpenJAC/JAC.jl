@@ -5,7 +5,7 @@
 """
 module ImpactExcitation 
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
 
 
@@ -173,11 +173,11 @@ module ImpactExcitation
 
 
     """
-    `JAC.ImpactExcitation.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, 
+    `JAC.ImpactExcitation.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                        settings::ImpactExcitation.Settings; output=true)`  ... to compute the electron-impact excitation 
          transition amplitudes and all properties as requested by the given settings. A list of lines::Array{ImpactExcitation.Lines} is returned.
     """
-    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::ImpactExcitation.Settings; 
+    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::ImpactExcitation.Settings; 
                            output=true)
         println("")
         printstyled("JAC.ImpactExcitation.computePathways(): The computation of electron-impact excitation cross sections starts now ... \n", color=:light_green)

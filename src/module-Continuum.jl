@@ -5,7 +5,7 @@
 """
 module Continuum
 
-    using  GSL, Printf, SpecialFunctions, JAC, JAC.ManyElectron, JAC.Radial
+    using  GSL, Printf, SpecialFunctions, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
 
 
@@ -57,14 +57,14 @@ module Continuum
 
 
     """
-    `JAC.Continuum.generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm::JAC.Nuclear.Model, grid::Radial.Grid, basis::Basis,
+    `JAC.Continuum.generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm::Nuclear.Model, grid::Radial.Grid, basis::Basis,
                                            settings::Continuum.Settings)`   ... to generate a continuum orbital for the (continuum) 
          subshell sh, the 
          energy and the effective charge within the given potential. The continuum orbital is generated orthogonal with regard to all subshells 
          of the same symmetry in the basis. All further specifications about this generations are made by proper settings. A tupel of a 
          (continuum) (orbital::Orbital, phase::Float64) is returned.
     """
-    function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm::JAC.Nuclear.Model, grid::Radial.Grid, settings::Continuum.Settings)  
+    function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm::Nuclear.Model, grid::Radial.Grid, settings::Continuum.Settings)  
         #
         # Generate a (local) potential for the given level
         nuclearPotential  = JAC.Nuclear.nuclearPotential(nm, grid)
@@ -297,7 +297,7 @@ module Continuum
     function normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings::Continuum.Settings) 
         
         nx = 21   # Number of grid points for determining the phase and normalization constants
-        mtp = size( cOrbital.P, 1);    q = sqrt( 2*cOrbital.energy );        l = JAC.subshell_l(cOrbital.subshell)
+        mtp = size( cOrbital.P, 1);    q = sqrt( 2*cOrbital.energy );        l = BasicTypes.subshell_l(cOrbital.subshell)
         meanPhi = zeros(nx);    devsPhi = zeros(nx);   meanN = zeros(nx);    devsN = zeros(nx);   ny = 0
         for i = mtp-nx+1:mtp
             PPprime = cOrbital.P[i] / cOrbital.Pprime[i];    kr  = q * grid.r[i];   at = atan( PPprime * q )

@@ -5,7 +5,7 @@
 """
 module MultipoleMoment
 
-    using Printf, JAC, JAC.ManyElectron
+    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
 
 
     """
@@ -54,7 +54,7 @@ module MultipoleMoment
             #
             for  r = 1:nf
                 for  s = 1:ni
-                    wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    wa = JAC.compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                     for  coeff in wa
                         ja = JAC.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
                         jb = JAC.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)

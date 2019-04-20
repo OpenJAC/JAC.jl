@@ -5,7 +5,7 @@
 """
 module PhotoExcitationFluores 
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
+    using Printf, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -13,15 +13,15 @@ module PhotoExcitationFluores
     `struct  PhotoExcitationFluores.Settings`  ... defines a type for the details and parameters of computing photon-impact 
                                                    excitation-autoionization pathways |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
-        + multipoles              ::Array{JAC.EmMultipole,1}           ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges                  ::Array{JAC.UseGauge,1}              ... Specifies the gauges to be included into the computations.
+        + multipoles              ::Array{EmMultipole,1}               ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges                  ::Array{UseGauge,1}                  ... Specifies the gauges to be included into the computations.
         + printBeforeComputation  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
         + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
     """
     struct Settings
-        multipoles                ::Array{JAC.EmMultipole,1}
-        gauges                    ::Array{JAC.UseGauge,1} 
+        multipoles                ::Array{EmMultipole,1}
+        gauges                    ::Array{UseGauge,1} 
         printBeforeComputation    ::Bool
         selectPathways            ::Bool
         selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
@@ -73,8 +73,8 @@ module PhotoExcitationFluores
         + crossSection        ::EmProperty             ... total cross section of this pathway
         + hasChannels         ::Bool                   ... Determines whether the individual excitation and fluorescence channels are defined 
                                                            in terms of their multipole, gauge as well as the amplitude, or not.
-        + excitChannels       ::Array{JAC.PhotoEmission.Channel,1}  ... List of excitation channels of this pathway.
-        + fluorChannels       ::Array{JAC.PhotoEmission.Channel,1}  ... List of fluorescence channels of this pathway.
+        + excitChannels       ::Array{PhotoEmission.Channel,1}  ... List of excitation channels of this pathway.
+        + fluorChannels       ::Array{PhotoEmission.Channel,1}  ... List of fluorescence channels of this pathway.
     """
     struct  Pathway
         initialLevel          ::Level
@@ -84,8 +84,8 @@ module PhotoExcitationFluores
         fluorEnergy           ::Float64
         crossSection          ::EmProperty
         hasChannels           ::Bool
-        excitChannels         ::Array{JAC.PhotoEmission.Channel,1}
-        fluorChannels         ::Array{JAC.PhotoEmission.Channel,1}
+        excitChannels         ::Array{PhotoEmission.Channel,1}
+        fluorChannels         ::Array{PhotoEmission.Channel,1}
     end 
 
 

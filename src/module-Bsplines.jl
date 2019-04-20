@@ -5,7 +5,7 @@
 """
 module Bsplines
 
-    using  Printf,  JAC, JAC.ManyElectron, JAC.Radial
+    using  Printf,  JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
 
 
@@ -32,12 +32,12 @@ module Bsplines
     """
     `struct  Bspline.Primitives`  ... defines a type for a set of primitive functions which typically belongs to a well-defined grid.
 
-        + grid         ::JAC.Radial.Grid           ... radial grid on which the states are represented.
+        + grid         ::Radial.Grid               ... radial grid on which the states are represented.
         + bsplinesL    ::Array{Bspline,1}          ... set of B-splines for the large components on the given grid.
         + bsplinesS    ::Array{Bspline,1}          ... set of B-splines for the small components on the given grid.
     """
     struct Primitives
-        grid           ::JAC.Radial.Grid
+        grid           ::Radial.Grid
         bsplinesL      ::Array{Bspline,1}
         bsplinesS      ::Array{Bspline,1}
     end
@@ -108,13 +108,13 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.generateOrbitalFromPrimitives(sh::Subshell, wc::JAC.Eigen, primitives::Bsplines.Primitives)`  ... generates the large 
+    `JAC.Bsplines.generateOrbitalFromPrimitives(sh::Subshell, wc::BasicTypes.Eigen, primitives::Bsplines.Primitives)`  ... generates the large 
          and small components for the subshell sh from the primitives and their eigenvalues & eigenvectors. A (normalized) 
          orbital::Orbital is returned.
     """
-    function generateOrbitalFromPrimitives(sh::Subshell, wc::JAC.Eigen, primitives::Bsplines.Primitives)
+    function generateOrbitalFromPrimitives(sh::Subshell, wc::BasicTypes.Eigen, primitives::Bsplines.Primitives)
         nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
-        l  = JAC.subshell_l(sh);   ni = nsS + sh.n - l;          if   sh.kappa > 0   ni = ni + 1  end
+        l  = JAC.BasicTypes.subshell_l(sh);   ni = nsS + sh.n - l;          if   sh.kappa > 0   ni = ni + 1  end
         en = wc.values[ni];        if  en < 0.   isBound = true  else   isBound = false           end
         ev = wc.vectors[ni];       if  length(ev) != nsL + nsS    error("stop a")                 end
         
@@ -399,7 +399,7 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.generateOrbitalsHydrogenic(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Nuclear.Model, 
+    `JAC.Bsplines.generateOrbitalsHydrogenic(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, 
                                              subshells::Array{Subshell,1}; printout::Bool=true)`  
         ... generates the hydrogenic orbitals for the nuclear model and for the given subshells. A set of 
             orbitals::Dict{Subshell, Orbital}() is returned.
@@ -513,8 +513,8 @@ module Bsplines
                 for kx = 1:length(basis.subshells)   if wNotYet[kx]   &&   sh.kappa == basis.subshells[kx].kappa   wNotYet[kx] = false  end   end
             end
         end 
-        bsplineBlock = Dict{Int64,JAC.Eigen}();   previousOrbitals = deepcopy(basis.orbitals)
-        for  kappa  in  kappas           bsplineBlock[kappa]  = JAC.Eigen( zeros(2), [zeros(2), zeros(2)])   end
+        bsplineBlock = Dict{Int64,BasicTypes.Eigen}();   previousOrbitals = deepcopy(basis.orbitals)
+        for  kappa  in  kappas           bsplineBlock[kappa]  = BasicTypes.Eigen( zeros(2), [zeros(2), zeros(2)])   end
         # Determine te nuclear potential once at the beginning
         nuclearPotential  = JAC.Nuclear.nuclearPotential(nuclearModel, grid)
         
@@ -535,7 +535,7 @@ module Bsplines
                 wmc    = zeros( NoCsf );   wN = 0.
                 for i = 1:NoCsf   wmc[i] = JAC.AngularMomentum.twoJ(wBasis.csfs[i].J) + 1.0;   wN = wN + abs(wmc[i])^2    end
                 for i = 1:NoCsf   wmc[i] = wmc[i] / sqrt(wN)   end
-                wLevel = Level( AngularJ64(0), AngularM64(0), JAC.plus, 0, -1., 0., true, wBasis, wmc)
+                wLevel = Level( AngularJ64(0), AngularM64(0), BasicTypes.plus, 0, -1., 0., true, wBasis, wmc)
                 # (2) Re-compute the local potential
                 ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
                 ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)

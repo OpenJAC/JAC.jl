@@ -5,7 +5,7 @@
 """
 module AngularMomentum
 
-    using SpecialFunctions, JAC
+    using SpecialFunctions, JAC.BasicTypes
     using GSL: sf_coupling_3j, sf_coupling_6j, sf_coupling_9j
 
     """
@@ -14,11 +14,11 @@ module AngularMomentum
                          kappa-values is returned.
     """
     function  allowedKappaSymmetries(syma::LevelSymmetry, symb::LevelSymmetry)
-        kappaList = Int64[];    JList = JAC.oplus(syma.J, symb.J);    kappaMax = syma.J.num + symb.J.num + 2
+        kappaList = Int64[];    JList = BasicTypes.oplus(syma.J, symb.J);    kappaMax = syma.J.num + symb.J.num + 2
         for  kappa = -kappaMax:kappaMax
              kappa == 0  &&  continue
-             if  syma.parity == JAC.plus   la = 0               else   la = 1       end
-             if  symb.parity == JAC.plus   lb = 0               else   lb = 1       end
+             if  syma.parity == BasicTypes.plus   la = 0               else   la = 1       end
+             if  symb.parity == BasicTypes.plus   lb = 0               else   lb = 1       end
              if  kappa < 0                 l  = abs(kappa) -1   else   l  = kappa   end
              isodd( la + lb + l )          && continue
              for  j in JList
@@ -35,10 +35,10 @@ module AngularMomentum
                          symList::Array{LevelSymmetry,1} is returned.
     """
     function  allowedMultipoleSymmetries(syma::LevelSymmetry, multipole::EmMultipole)
-        symList = LevelSymmetry[];    JList = JAC.oplus(syma.J, AngularJ64(multipole.L) )
+        symList = LevelSymmetry[];    JList = BasicTypes.oplus(syma.J, AngularJ64(multipole.L) )
         for  J in JList
-            if      parityEmMultipolePi(syma.parity, multipole, JAC.plus)     push!( symList, LevelSymmetry(J, JAC.plus) )
-            elseif  parityEmMultipolePi(syma.parity, multipole, JAC.minus)    push!( symList, LevelSymmetry(J, JAC.minus) )
+            if      parityEmMultipolePi(syma.parity, multipole, BasicTypes.plus)     push!( symList, LevelSymmetry(J, BasicTypes.plus) )
+            elseif  parityEmMultipolePi(syma.parity, multipole, BasicTypes.minus)    push!( symList, LevelSymmetry(J, BasicTypes.minus) )
             else    error("stop a")
             end
         end
@@ -56,10 +56,10 @@ module AngularMomentum
         if  kappa < 0    l  = abs(kappa) -1   else   l  = kappa   end
         j = AngularJ64( abs(kappa) - 1//2 )
         # 
-        JList = JAC.oplus(syma.J, j)
+        JList = BasicTypes.oplus(syma.J, j)
         for J in JList
             if    iseven(l)   push!( symtList, LevelSymmetry(J, syma.parity) )
-            else              push!( symtList, LevelSymmetry(J, JAC.invertParity(syma.parity)) )
+            else              push!( symtList, LevelSymmetry(J, BasicTypes.invertParity(syma.parity)) )
             end
         end
         return( symtList )         
@@ -85,8 +85,8 @@ module AngularMomentum
                        full magnetic (orientational) dependence. A value::Float64 is returned.
     """
     function ChengI(kapa::Int64, ma::AngularM64, kapb::Int64, mb::AngularM64, L::AngularJ64, M::AngularM64)
-        ja = JAC.subshell_j( Subshell(9, kapa) );    jb = JAC.subshell_j( Subshell(9, kapb) )   # Use principal QN n=9 arbitrarely here 
-        la = JAC.subshell_l( Subshell(9, kapa) );    lb = JAC.subshell_l( Subshell(9, kapb) ) 
+        ja = BasicTypes.subshell_j( Subshell(9, kapa) );    jb = BasicTypes.subshell_j( Subshell(9, kapb) )   # Use principal QN n=9 arbitrarely here 
+        la = BasicTypes.subshell_l( Subshell(9, kapa) );    lb = BasicTypes.subshell_l( Subshell(9, kapb) ) 
         #
         # Test for parity
         if  L.den != 1   error("stop a")                end 
@@ -104,8 +104,8 @@ module AngularMomentum
                        the magnetic (orientational) dependence. A value::Float64 is returned.
     """
     function ChengI(kapa::Int64, kapb::Int64, L::AngularJ64)
-        ja = JAC.subshell_j( Subshell(9, kapa) );    jb = JAC.subshell_j( Subshell(9, kapb) )   # Use principal QN n=9 arbitrarely here 
-        la = JAC.subshell_l( Subshell(9, kapa) );    lb = JAC.subshell_l( Subshell(9, kapb) ) 
+        ja = BasicTypes.subshell_j( Subshell(9, kapa) );    jb = BasicTypes.subshell_j( Subshell(9, kapb) )   # Use principal QN n=9 arbitrarely here 
+        la = BasicTypes.subshell_l( Subshell(9, kapa) );    lb = BasicTypes.subshell_l( Subshell(9, kapb) ) 
         #
         # Test for parity
         if  L.den != 1   error("stop a")                end 
@@ -128,10 +128,10 @@ module AngularMomentum
             a proper call to a Wigner 3-j symbol. A value::Float64 is returned.
     """
     function ClebschGordan(ja, ma, jb, mb, Jab, Mab)
-        mab = - JAC.twice(Mab) / 2
-        pp  = (JAC.twice(ja) - JAC.twice(jb) + JAC.twice(Jab))/2
-        cg  = (-1)^pp * sqrt(JAC.twice(Jab) + 1) * sf_coupling_3j(JAC.twice(ja), JAC.twice(jb), JAC.twice(Jab),
-                                                                  JAC.twice(ma), JAC.twice(mb), JAC.twice(mab))
+        mab = - BasicTypes.twice(Mab) / 2
+        pp  = (BasicTypes.twice(ja) - BasicTypes.twice(jb) + BasicTypes.twice(Jab))/2
+        cg  = (-1)^pp * sqrt(BasicTypes.twice(Jab) + 1) * sf_coupling_3j(BasicTypes.twice(ja), BasicTypes.twice(jb), BasicTypes.twice(Jab),
+                                                                         BasicTypes.twice(ma), BasicTypes.twice(mb), BasicTypes.twice(mab))
         return( cg )
     end
 
@@ -154,7 +154,7 @@ module AngularMomentum
                                        spherical tensor <suba || C^(L) || subb>; a value::Float64 is returned.
     """
     function  CL_reduced_me(suba::Subshell, L::Int64, subb::Subshell)   
-        la = JAC.subshell_l(suba);    ja2 = JAC.subshell_2j(suba);    lb = JAC.subshell_l(subb);    jb2 = JAC.subshell_2j(subb)
+        la = BasicTypes.subshell_l(suba);    ja2 = BasicTypes.subshell_2j(suba);    lb = BasicTypes.subshell_l(subb);    jb2 = BasicTypes.subshell_2j(subb)
         rem(ja2+1, 2) != 0    &&    error("stop a")
 
         redme = ((-1)^((ja2+1)/2)) * sqrt( (ja2+1)*(jb2+1) ) * 
@@ -169,7 +169,7 @@ module AngularMomentum
                                        spherical tensor <suba || C^(L) || subb>; a value::Float64 is returned.
     """
     function  CL_reduced_me_rb(suba::Subshell, L::Int64, subb::Subshell)   
-        la = JAC.subshell_l(suba);    ja2 = JAC.subshell_2j(suba);    lb = JAC.subshell_l(subb);    jb2 = JAC.subshell_2j(subb)
+        la = BasicTypes.subshell_l(suba);    ja2 = BasicTypes.subshell_2j(suba);    lb = BasicTypes.subshell_l(subb);    jb2 = BasicTypes.subshell_2j(subb)
         if rem(la + lb + L, 2) != 0   return 0.     end
         
         redme = ((-1)^((jb2-2L-1)/2)) * sqrt( (jb2+1) ) * 
@@ -243,10 +243,10 @@ module AngularMomentum
         # The the multipolarity into account to 'interprete' electric multipoles
         if       isodd(multipole.L)    Le = multipole.electric    else   Le = !(multipole.electric)   end
 
-        if        pa == JAC.plus    &&   Le   &&   pb == JAC.minus        return( true )
-        elseif    pa == JAC.minus   &&   Le   &&   pb == JAC.plus         return( true )
-        elseif    pa == pb          &&   !(Le)                            return( true )
-        else                                                              return( false )
+        if        pa == BasicTypes.plus    &&   Le   &&   pb == BasicTypes.minus        return( true )
+        elseif    pa == BasicTypes.minus   &&   Le   &&   pb == BasicTypes.plus         return( true )
+        elseif    pa == pb          &&   !(Le)                                          return( true )
+        else                                                                            return( false )
         end
     end
 
@@ -281,7 +281,7 @@ module AngularMomentum
                                        spherical tensor <suba || sigma^(1) || subb>; a value::Float64 is returned.
     """
     function  sigma_reduced_me(suba::Subshell, subb::Subshell)   
-        la = JAC.subshell_l(suba);    ja2 = JAC.subshell_2j(suba);    lb = JAC.subshell_l(subb);    jb2 = JAC.subshell_2j(subb)
+        la = BasicTypes.subshell_l(suba);    ja2 = BasicTypes.subshell_2j(suba);    lb = BasicTypes.subshell_l(subb);    jb2 = BasicTypes.subshell_2j(subb)
         if rem(la + lb, 2) != 0   return 0.     end
         
         ## redme = ((-1)^((jb2-2L-1)/2)) * sqrt( (jb2+1) ) * 
@@ -336,8 +336,8 @@ module AngularMomentum
             it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
     """
     function Wigner_3j(a, b, c, m_a, m_b, m_c)
-        sf_coupling_3j(JAC.twice(a),   JAC.twice(b),   JAC.twice(c),
-                       JAC.twice(m_a), JAC.twice(m_b), JAC.twice(m_c))
+        sf_coupling_3j(BasicTypes.twice(a),   BasicTypes.twice(b),   BasicTypes.twice(c),
+                       BasicTypes.twice(m_a), BasicTypes.twice(m_b), BasicTypes.twice(m_c))
     end
 
 
@@ -394,8 +394,8 @@ module AngularMomentum
             it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
     """
     function Wigner_6j(a, b, c, d, e, f)
-        sf_coupling_6j(JAC.twice(a), JAC.twice(b), JAC.twice(c),
-                       JAC.twice(d), JAC.twice(e), JAC.twice(f))
+        sf_coupling_6j(BasicTypes.twice(a), BasicTypes.twice(b), BasicTypes.twice(c),
+                       BasicTypes.twice(d), BasicTypes.twice(e), BasicTypes.twice(f))
     end
 
 
@@ -414,8 +414,8 @@ module AngularMomentum
         if  ee.den == 1      je = ee.num + ee.num  else    je = ee.num     end
         if  f.den == 1       jf = f.num + f.num    else    jf = f.num      end
         #
-        wa = JAC.AngularMomentum.triangularDelta(ja+1, jb+1, jc+1) * JAC.AngularMomentum.triangularDelta(ja+1, je+1, jf+1) *
-             JAC.AngularMomentum.triangularDelta(jd+1, jb+1, jf+1) * JAC.AngularMomentum.triangularDelta(jd+1, je+1, jc+1)
+        wa = AngularMomentum.triangularDelta(ja+1, jb+1, jc+1) * AngularMomentum.triangularDelta(ja+1, je+1, jf+1) *
+             AngularMomentum.triangularDelta(jd+1, jb+1, jf+1) * AngularMomentum.triangularDelta(jd+1, je+1, jc+1)
         if  wa == 0    return( 0. )    end
         #
         # Evaluate the algebraic formulae
@@ -454,9 +454,9 @@ module AngularMomentum
             it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
     """
     function Wigner_9j(a, b, c, d, e, f, g, h, i)
-        sf_coupling_9j(JAC.twice(a), JAC.twice(b), JAC.twice(c),
-                       JAC.twice(d), JAC.twice(e), JAC.twice(f),
-                       JAC.twice(g), JAC.twice(h), JAC.twice(i))
+        sf_coupling_9j(BasicTypes.twice(a), BasicTypes.twice(b), BasicTypes.twice(c),
+                       BasicTypes.twice(d), BasicTypes.twice(e), BasicTypes.twice(f),
+                       BasicTypes.twice(g), BasicTypes.twice(h), BasicTypes.twice(i))
     end
 
 
@@ -490,7 +490,7 @@ module AngularMomentum
         exp = mM-J₁+J₂
         isinteger(exp) || return 0.0
         phase = ifelse(iseven(Integer(exp)), 1, -1)
-        phase * sqrt(JAC.twice(J)+1) * wigner3j(J₁, J₂, J, m₁, m₂, mM)
+        phase * sqrt(BasicTypes.twice(J)+1) * wigner3j(J₁, J₂, J, m₁, m₂, mM)
     end
 
     """
@@ -506,8 +506,8 @@ module AngularMomentum
     by calling the corresponding function from the GNU Scientific Library.
     """
     function wigner3j(j₁, j₂, j₃, m₁, m₂, m₃)
-        sf_coupling_3j(JAC.twice(j₁), JAC.twice(j₂), JAC.twice(j₃),
-                       JAC.twice(m₁), JAC.twice(m₂), JAC.twice(m₃))
+        sf_coupling_3j(BasicTypes.twice(j₁), BasicTypes.twice(j₂), BasicTypes.twice(j₃),
+                       BasicTypes.twice(m₁), BasicTypes.twice(m₂), BasicTypes.twice(m₃))
     end
 
     """
@@ -523,8 +523,8 @@ module AngularMomentum
     by calling the corresponding function from the GNU Scientific Library.
     """
     function wigner6j(j₁, j₂, j₃, j₄, j₅, j₆)
-        sf_coupling_6j(JAC.twice(j₁), JAC.twice(j₂), JAC.twice(j₃),
-                       JAC.twice(j₄), JAC.twice(j₅), JAC.twice(j₆))
+        sf_coupling_6j(BasicTypes.twice(j₁), BasicTypes.twice(j₂), BasicTypes.twice(j₃),
+                       BasicTypes.twice(j₄), BasicTypes.twice(j₅), BasicTypes.twice(j₆))
     end
 
     """
@@ -541,9 +541,9 @@ module AngularMomentum
     by calling the corresponding function from the GNU Scientific Library.
     """
     function wigner9j(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)
-        sf_coupling_9j(JAC.twice(j₁), JAC.twice(j₂), JAC.twice(j₃),
-                       JAC.twice(j₄), JAC.twice(j₅), JAC.twice(j₆),
-                       JAC.twice(j₇), JAC.twice(j₈), JAC.twice(j₉))
+        sf_coupling_9j(BasicTypes.twice(j₁), BasicTypes.twice(j₂), BasicTypes.twice(j₃),
+                       BasicTypes.twice(j₄), BasicTypes.twice(j₅), BasicTypes.twice(j₆),
+                       BasicTypes.twice(j₇), BasicTypes.twice(j₈), BasicTypes.twice(j₉))
     end
 
 end # module
