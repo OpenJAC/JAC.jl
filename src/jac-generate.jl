@@ -252,7 +252,7 @@ function generate(sa::String, confs::Array{ConfigurationR,1})
             if  a in ks     push!(subshells, a);    break    end
         end 
     end
-    println("***subshells = $subshells")
+    ##x println("***subshells = $subshells")
     return( subshells )
 end
 

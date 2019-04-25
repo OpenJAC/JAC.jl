@@ -236,13 +236,18 @@ module PhotoEmission
         newLines = PhotoEmission.Line[]
         for  line in lines
             newLine = JAC.PhotoEmission.computeAmplitudesProperties(line, grid, settings, printout=printout) 
+            #
+            # Don't add this line if it does not contribute to the decay
+            wa = 0.
+            for  ch in newLine.channels   wa = wa + abs(ch.amplitude)^2    end
+            if   wa == 0.    continue    end
             push!( newLines, newLine)
         end
         # Print all results to a summary file, if requested
         printSummary, iostream = JAC.give("summary flag/stream")
         if  printSummary   JAC.PhotoEmission.displayRates(iostream, newLines)    end
         #
-        if    output    return( lines )
+        if    output    return( newLines )
         else            return( nothing )
         end
     end
@@ -336,7 +341,7 @@ module PhotoEmission
                     # Include further restrictions if appropriate
                     if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
                     elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
-                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(channels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
+                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)                      push!(channels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 
                 end
@@ -366,6 +371,7 @@ module PhotoEmission
                 if  omega <= settings.mimimumPhotonEnergy  ||  omega > settings.maximumPhotonEnergy    continue   end  
 
                 channels = JAC.PhotoEmission.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
+                if   length(channels) == 0   continue   end
                 push!( lines, PhotoEmission.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], omega, EmProperty(0., 0.), EmProperty(0., 0.),
                                              true, channels) )
             end

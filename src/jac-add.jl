@@ -1,5 +1,4 @@
 
-using  JAC.BasicTypes
 """
 `JAC.add()`  ... 'adds' vaious quantities in an obvious and appropriate manner.
 

@@ -221,12 +221,14 @@ end
 """
 function perform(comp::Cascade.Computation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
+    printSummary, iostream = JAC.give("summary flag/stream")
     #
     # Perform the SCF and CI computation for the intial-state multiplet and print them out with their relative occupation
     basis     = perform("computation: SCF", comp.initialConfs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
     multiplet = perform("computation: CI", basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
     multiplet = Multiplet("initial states", multiplet.levels)
-    JAC.Cascade.displayInitialLevels(multiplet, comp.initialLevels)
+    JAC.Cascade.displayInitialLevels(stdout, multiplet, comp.initialLevels)
+    if  printSummary   JAC.Cascade.displayInitialLevels(iostream, multiplet, comp.initialLevels)    end      
     if output    results = Base.merge( results, Dict("initial multiplet:" => multiplet) )    end
     #
     # Generate subsequent cascade configurations as well as display and group them together
@@ -235,10 +237,12 @@ function perform(comp::Cascade.Computation; output::Bool=false)
     #
     # Determine first all configuration 'blocks' and from them the individual steps of the cascade
     wc = JAC.Cascade.generateBlocks(comp, wb, basis.orbitals)
-    JAC.Cascade.displayBlocks(wc)
+    JAC.Cascade.displayBlocks(stdout, wc)
+    if  printSummary   JAC.Cascade.displayBlocks(iostream, wc)    end      
     # Determine, modify and compute the transition data for all steps, ie. the PhotoEmission.Line's, the AutoIonization.Line's, etc.
     wd = JAC.Cascade.determineSteps(comp, wc)
-    JAC.Cascade.displaySteps(wd)
+    JAC.Cascade.displaySteps(stdout, wd)
+    if  printSummary   JAC.Cascade.displaySteps(iostream, wd)    end      
     we   = JAC.Cascade.modifySteps(wd)
     data = JAC.Cascade.computeSteps(comp, we)
     if output    
@@ -322,7 +326,7 @@ function perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nucl
         wa = JAC.generate("configuration list: relativistic", conf)
         append!( relconfList, wa)
     end
-    if  true    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
+    if  printout    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
     subshellList = JAC.generate("subshells: ordered list for relativistic configurations", relconfList)
     JAC.define("relativistic subshell list", subshellList; printout=printout)
 
@@ -377,6 +381,106 @@ function perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nucl
     end
     
     return( newBasis )  
+end
+
+
+
+"""
+  + `("computation: mutiplet from orbitals, no CI, CSF diagonal", configs::Array{Configuration,1}, 
+        initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)` 
+        ... to generate from the given initial orbitals a multiplet of single-CSF levels by just using the diagonal part of the
+            Hamiltonian matrix; a multiplet::Multiplet is returned.  
+"""
+function perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
+                 grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
+    !(sa == "computation: mutiplet from orbitals, no CI, CSF diagonal")   &&   error("Unsupported keystring = $sa")
+    if  printout    println("\n... in perform('computation: mutiplet from orbitals, no CI, CSF diagonal', ...")    end
+    
+    # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
+    relconfList = ConfigurationR[]
+    for  conf in configs
+        wa = JAC.generate("configuration list: relativistic", conf)
+        append!( relconfList, wa)
+    end
+    if  printout    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
+    subshellList = JAC.generate("subshells: ordered list for relativistic configurations", relconfList)
+    JAC.define("relativistic subshell list", subshellList; printout=printout)
+
+    # Generate the relativistic CSF's for the given subshell list
+    csfList = CsfR[]
+    for  relconf in relconfList
+        newCsfs = generate("CSF list: from single ConfigurationR", relconf, subshellList)
+        append!( csfList, newCsfs)
+    end
+
+    # Determine the number of electrons and the list of coreSubshells
+    NoElectrons      = sum( csfList[1].occupation )
+    coreSubshellList = Subshell[]
+    for  k in 1:length(subshellList)
+        mocc = JAC.subshell_2j(subshellList[k]) + 1;    is_filled = true
+        for  csf in csfList
+            if  csf.occupation[k] != mocc    is_filled = false;    break   end
+        end
+        if   is_filled    push!( coreSubshellList, subshellList[k])    end
+    end
+    
+    # Set-up a basis for calculating the Hamiltonian matrix
+    basis = Basis(true, NoElectrons, subshellList, csfList, coreSubshellList, initalOrbitals)
+   
+    # Calculate the diagonal part of the Hamiltonian matrix and define a multiplet for these approximate ASf;
+    # Generate first an effective nuclear charge Z(r) on the given grid
+    potential = JAC.Nuclear.nuclearPotential(nuclearModel, grid)
+    
+    n = length(csfList);    matrix = zeros(Float64, n, n)
+    for  r = 1:n
+        wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[r])
+        me = 0.
+        for  coeff in wa[1]
+            jj = subshell_2j(basis.orbitals[coeff.a].subshell)
+            me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
+        end
+
+        for  coeff in wa[2]
+            if  settings.coulombCI    
+                me = me + coeff.V * JAC.InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                 basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   end
+            if  settings.breitCI
+                me = me + coeff.V * JAC.InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                               basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)     end
+        end
+        matrix[r,r] = me
+    end 
+    #
+    eigen  = JAC.diagonalize("matrix: Julia, eigfact", matrix)
+    levels = Level[]
+    for  ev = 1:length(eigen.values)
+        vector = eigen.vectors[ev];   ns = 0
+        for  r = 1:length(vector)   
+            if      (vector[r])^2 > 0.99    ns = r;   break    
+            elseif  (vector[r])^2 > 0.01    error("stop a; unexpected mixing coefficieint; vector = $vector ")    
+            end
+        end
+        J = csfList[ns].J
+        newlevel = Level( J, AngularM64(J.num//J.den), csfList[ns].parity, 0, eigen.values[ev], 0., true, basis, vector ) 
+        push!( levels, newlevel)
+    end
+    mp = Multiplet("noName", levels)
+    mp = JAC.sort("multiplet: by energy", mp)
+    
+    # Display all level energies and energy splittings
+    if  printout
+        JAC.tabulate("multiplet: energies", mp)
+        JAC.tabulate("multiplet: energy relative to immediately lower level",    mp)
+        JAC.tabulate("multiplet: energy of each level relative to lowest level", mp)
+    end
+    printSummary, iostream = JAC.give("summary flag/stream")
+    if  printSummary     
+        JAC.tabulate("multiplet: energies", mp, stream=iostream)
+        JAC.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
+        JAC.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
+    end
+  
+    return( mp )
 end
 
 

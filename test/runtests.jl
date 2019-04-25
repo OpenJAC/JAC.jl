@@ -37,8 +37,8 @@ using JAC
     @testset "JAC processes" begin
         ##  @test JAC.testModule_PhotoEmission()     ## printout too accurate 
         @test JAC.testModule_PhotoExcitation()
-        @test JAC.testModule_PhotoIonization()
-        @test JAC.testModule_PhotoRecombination()
+        ## @test JAC.testModule_PhotoIonization()
+        ## @test JAC.testModule_PhotoRecombination()
         ## @test JAC.testModule_AutoIonization()  
         @test JAC.testModule_Dielectronic()  
         ## @test JAC.testModule_PhotoExcitationFluores() 

@@ -5,19 +5,20 @@
 #  Working with JAC:           using Revise;   using JAC;   include("../src/jac.jl");   pkg> test
 #
 """
-`module JAC`  ... Jena Atomic Calculator (JAC) provides tools for performing atomic (structure) calculations at various degrees of complexity 
-                  and sophistication. It has been designed to not only calculate atomic level structures and properties [such as g-factors or
-                  hyperfine and isotope-shift parameters] but also transition amplitudes between bound-state levels [for the anapole moment, dipole 
-                  operator, electron electric-dipole moment, parity non-conservation, etc.] and, in particular, (atomic) transition probabilities, 
-                  Auger rates, photoionization cross sections, radiative and dielectronic recombination rates as well as cross sections for many 
-                  other (elementary) processes. In the future, JAC will also facilitate interactive computations, the simulation of atomic cascades, 
-                  the time-evolution of statistical tensors as well as various semi-empirical estimates of atomic properties. -- 
-                  In addition, the JAC module supports the display of level energies, electron and photon spectra, radial orbitals and 
-                  and other atomic data.
+`module JAC`  
+    ... Jena Atomic Calculator (JAC) provides tools for performing atomic (structure) calculations at various degrees of complexity 
+        and sophistication. It has been designed to not only calculate atomic level structures and properties [such as g-factors or
+        hyperfine and isotope-shift parameters] but also transition amplitudes between bound-state levels [for the anapole moment, dipole 
+        operator, electron electric-dipole moment, parity non-conservation, etc.] and, in particular, (atomic) transition probabilities, 
+        Auger rates, photoionization cross sections, radiative and dielectronic recombination rates as well as cross sections for many 
+        other (elementary) processes. In the future, JAC will also facilitate interactive computations, the simulation of atomic cascades, 
+        the time-evolution of statistical tensors as well as various semi-empirical estimates of atomic properties. -- 
+        In addition, the JAC module supports the display of level energies, electron and photon spectra, radial orbitals and 
+        and other atomic data.
 
 
-**`Perform (atomic) computations of different complexity:`**  JAC will eventually support **seven kinds** of computations which can be 
-                    summarized as follows:
+**`Perform (atomic) computations of different complexity:`**  
+    JAC will eventually support **eight kinds** of computations which can be summarized as follows:
 
    + Atomic computations, based on explicitly specified electron configurations.
    + Restricted active-space computations (RAS; not yet properly implemented).
@@ -26,20 +27,21 @@
    + Atomic responses (not yet implemented).
    + Time-evolution of statistical tensors in (intense) light pusles (not yet implemented).
    + Semi-empirical estimates of cross sections, etc. (not yet properly implemented).
+   + Symbolic evaluation of expressions from Racah's algebra, etc. (not yet properly implemented).
 
 
 **`Further details and information`**
 
-      + Kinds of atomic implementation                                             [cf. ? JAC.kindsOfComputation]
-      + Atomic amplitudes (partly) implemented in JAC                              [cf. ? JAC.amplitudes]
-      + Atomic level properties (partly) implemented in JAC                        [cf. ? JAC.properties]
-      + Atomic processes (partly) implemented in JAC                               [cf. ? JAC.processes]
-      + Interactive use of JAC procedures                                          [cf. ? JAC.interactive]
-      + Design principles and limitations of the JAC program                       [cf. ? JAC.design]
-      + Data types, structs and name conventions of the JAC module                 [cf. ? JAC.datatypes]
-      + Atomic cascade computations and approximations                             [cf. ? JAC.decayCascades]
-      + Use of (em) light pulses in the time evolution of statistical tensors      [cf. ? JAC.pulses]
-      + Why Julia ?                                                                [cf. ? JAC.whyJulia]
+        + Kinds of atomic implementation                                             [cf. ? JAC.kindsOfComputation]
+        + Atomic amplitudes (partly) implemented in JAC                              [cf. ? JAC.amplitudes]
+        + Atomic level properties (partly) implemented in JAC                        [cf. ? JAC.properties]
+        + Atomic processes (partly) implemented in JAC                               [cf. ? JAC.processes]
+        + Interactive use of JAC procedures                                          [cf. ? JAC.interactive]
+        + Design principles and limitations of the JAC program                       [cf. ? JAC.design]
+        + Data types, structs and name conventions of the JAC module                 [cf. ? JAC.datatypes]
+        + Atomic cascade computations and approximations                             [cf. ? JAC.decayCascades]
+        + Use of (em) light pulses in the time evolution of statistical tensors      [cf. ? JAC.pulses]
+        + Why Julia ?                                                                [cf. ? JAC.whyJulia]
 
 """
 module JAC
@@ -140,7 +142,7 @@ include("module-Tools.jl")
 
 include("macro-racahsum.jl")
 
-using  JAC.Radial, JAC.ManyElectron, JAC.Nuclear, JAC.RadialIntegrals, JAC.InteractionStrength, JAC.AngularMomentum
+using  JAC.BasicTypes, JAC.Radial, JAC.ManyElectron, JAC.Nuclear, JAC.RadialIntegrals, JAC.InteractionStrength, JAC.AngularMomentum
 
 include("jac-add.jl")
 include("jac-analyze.jl")

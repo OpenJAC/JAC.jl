@@ -7,8 +7,8 @@ JAC.define("method: normalization, pure sine")         ## JAC.define("method: no
 
 wa = Cascade.Computation("Si+ (1s^-1) cascade", Nuclear.Model(18.), 
                          JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600), AsfSettings(),
-                         JAC.Cascade.SCA(), [JAC.Radiative, JAC.Auger],          #  JAC.Cascade.AverageSCA()
-                         [Configuration("1s^1 2s^2 2p^6 3s^2 3p^2")], [(1, 1.)], 2, 0, Shell[], Shell[], JAC.Cascade.Step[])
+                         JAC.Cascade.AverageSCA(), [JAC.Radiative],          #  JAC.Cascade.AverageSCA()
+                         [Configuration("1s^1 2s^2 2p^6 3s^2 3p^2")], [(1, 1.)], 1, 0, Shell[], Shell[], JAC.Cascade.Step[])
 wb = perform(wa; output=false)
 JAC.define("print summary: close", "")
 

@@ -6,7 +6,7 @@
 """
 module Cascade
 
-    using Printf, JAC.BasicTypes, JAC.Radial, JAC.ManyElectron, JAC.Nuclear, JAC.PhotoEmission, JAC.PhotoIonization, JAC.AutoIonization
+    using Printf, JAC, JAC.BasicTypes, JAC.Radial, JAC.ManyElectron, JAC.Nuclear, JAC.PhotoEmission, JAC.PhotoIonization, JAC.AutoIonization
 
     #==
     """
@@ -397,6 +397,7 @@ module Cascade
     """
     function computeSteps(comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
         linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    linesP = PhotoIonization.Line[]    
+        printSummary, iostream = JAC.give("summary flag/stream")
         ##x println(" ")
         ##x println("  Perform transition amplitude and line computations for $(length(comp.steps)) individual steps of cascade:")
         ##x println("  Adapt the present augerSettings, PhotoEmissionSettings, etc. for real computations.")
@@ -408,18 +409,22 @@ module Cascade
             st = st + 1
             nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels) 
             println("\n  $st) Perform $(string(step.process)) amplitude computations for up to $nc lines (without selection rules): ")
+            if  printSummary   println(iostream, "\n* $st) Perform $(string(step.process)) amplitude computations for " *
+                                                 "up to $nc lines (without selection rules): ")   end      
             if      step.process == JAC.Auger 
                 newLines = JAC.AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
-                                                         step.settings, output=true, printout=false) 
+                                                                  step.settings, output=true, printout=false) 
                 append!(linesA, newLines);    nt = length(linesA)
             elseif  step.process == JAC.Radiative
                 newLines = JAC.PhotoEmission.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
-                                                             step.settings, output=true, printout=false) 
+                                                                 step.settings, output=true, printout=false) 
                 append!(linesR, newLines);    nt = length(linesR)
             else   error("Unsupported atomic process for cascade computations.")
             end
             println("     Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, giving now rise " *
                     "to a total of $nt $(string(step.process)) lines." )
+            if  printSummary   println(iostream, "\n*    Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, " *
+                                                 "giving now rise to a total of $nt $(string(step.process)) lines." )   end      
         end
         #
         data = Cascade.Data(comp.name, linesR, linesA, linesP)
@@ -447,7 +452,7 @@ module Cascade
                         if      process == JAC.Radiative   
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons
-                                settings = JAC.PhotoEmission.Settings([E1, M1], [UseBabushkin], false, false, false, Tuple{Int64,Int64}[], 0., 0., 1.0e6)
+                                settings = JAC.PhotoEmission.Settings([E1], [UseBabushkin], false, false, false, Tuple{Int64,Int64}[], 0., 0., 1.0e6)
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
                             end
@@ -472,17 +477,17 @@ module Cascade
 
 
     """
-    `JAC.Cascade.displayBlocks(blockList::Array{Cascade.Block,1})` 
+    `JAC.Cascade.displayBlocks(stream::IO, blockList::Array{Cascade.Block,1})` 
         ... group & display the blocks of the cascade with same No. of electrons; this blocks are displayed with the
             minimum and maximum energy of each multiplet.
     """
-    function displayBlocks(blockList::Array{Cascade.Block,1})
+    function displayBlocks(stream::IO, blockList::Array{Cascade.Block,1})
         #
-        println("\n  Configuration 'blocks' (multiplets) in the given cascade model: \n")
-        println("  ", JAC.TableStrings.hLine(134))
-        println("      No.   Configurations                                                                       " *
-                "      Range of total energies " * JAC.TableStrings.inUnits("energy") ) 
-        println("  ", JAC.TableStrings.hLine(134))
+        println(stream, "\n* Configuration 'blocks' (multiplets) in the given cascade model: \n")
+        println(stream, "  ", JAC.TableStrings.hLine(134))
+        println(stream, "      No.   Configurations                                                                       " *
+                        "      Range of total energies " * JAC.TableStrings.inUnits("energy") ) 
+        println(stream, "  ", JAC.TableStrings.hLine(134))
         i = 0
         for  block  in  blockList
             i = i + 1;    
@@ -493,25 +498,25 @@ module Cascade
             maxEn = maximum(en);   maxEn = JAC.convert("energy: from atomic", maxEn)
             sa = sa * JAC.TableStrings.flushleft(90, sb[1:end-2]; na=2) 
             sa = sa * JAC.TableStrings.flushleft(30, string( round(minEn)) * " ... " * string( round(maxEn)); na=2)
-            println(sa)
+            println(stream, sa)
         end
-        println("  ", JAC.TableStrings.hLine(134))
+        println(stream, "  ", JAC.TableStrings.hLine(134))
 
         return( nothing )
     end
    
 
     """
-    `JAC.Cascade.displayInitialLevels(multiplet::Multiplet, initialLevels::Array{Tuple{Int64,Float64},1})`  
+    `JAC.Cascade.displayInitialLevels(stream::IO, multiplet::Multiplet, initialLevels::Array{Tuple{Int64,Float64},1})`  
         ... display the calculated initial levels to screen together with their given relative occupation.
     """
-    function displayInitialLevels(multiplet::Multiplet, initialLevels::Array{Tuple{Int64,Float64},1})
-        println(" ")
-        println("  Initial levels of the given cascade, relative to the lowest, and their given occupation:")
-        println(" ")
-        println("  ", JAC.TableStrings.hLine(64))
-        println("    Level  J Parity          Energy " * JAC.TableStrings.inUnits("energy") * "         rel. occupation ") 
-        println("  ", JAC.TableStrings.hLine(64))
+    function displayInitialLevels(stream::IO, multiplet::Multiplet, initialLevels::Array{Tuple{Int64,Float64},1})
+        println(stream, " ")
+        println(stream, "* Initial levels of the given cascade, relative to the lowest, and their given occupation:")
+        println(stream, " ")
+        println(stream, "  ", JAC.TableStrings.hLine(64))
+        println(stream, "    Level  J Parity          Energy " * JAC.TableStrings.inUnits("energy") * "         rel. occupation ") 
+        println(stream, "  ", JAC.TableStrings.hLine(64))
         for  i = 1:length(multiplet.levels)
             lev = multiplet.levels[i]
             en  = lev.energy - multiplet.levels[1].energy;    en_requested = JAC.convert("energy: from atomic", en)
@@ -521,30 +526,30 @@ module Cascade
             end
             sb  = "          "   * string(wx)
             sc  = "   "  * JAC.TableStrings.level(i) * "     " * string(LevelSymmetry(lev.J, lev.parity)) * "     "
-            @printf("%s %.15e %s %s", sc, en_requested, sb, "\n")
+            @printf(stream, "%s %.15e %s %s", sc, en_requested, sb, "\n")
         end
-        println("  ", JAC.TableStrings.hLine(64))
+        println(stream, "  ", JAC.TableStrings.hLine(64))
         return( nothing )
     end
    
 
     """
-    `JAC.Cascade.displaySteps(steps::Array{Cascade.Step,1})` 
+    `JAC.Cascade.displaySteps(stream::IO, steps::Array{Cascade.Step,1})` 
         ... displays all predefined steps in a neat table and supports to delete individual steps from the list.
     """
-    function displaySteps(steps::Array{Cascade.Step,1})
-        println(" ")
-        println("  Steps that are defined for the current cascade due to the given approach:")
-        println(" ")
-        println("  ", JAC.TableStrings.hLine(170))
+    function displaySteps(stream::IO, steps::Array{Cascade.Step,1})
+        println(stream, " ")
+        println(stream, "* Steps that are defined for the current cascade due to the given approach:")
+        println(stream, " ")
+        println(stream, "  ", JAC.TableStrings.hLine(170))
         sa = "  "
         sa = sa * JAC.TableStrings.center( 9, "Step-No"; na=2)
         sa = sa * JAC.TableStrings.flushleft(11, "Process"; na=1)
         sa = sa * JAC.TableStrings.flushleft(55, "Initial:  No CSF, configuration(s)"; na=4)
         sa = sa * JAC.TableStrings.flushleft(55, "Final:  No CSF, configuration(s)"; na=4)
         sa = sa * JAC.TableStrings.flushleft(40, "Energies from ... to in " * JAC.TableStrings.inUnits("energy"); na=4)
-        println(sa)
-        println("  ", JAC.TableStrings.hLine(170))
+        println(stream, sa)
+        println(stream, "  ", JAC.TableStrings.hLine(170))
         #
         for  i = 1:length(steps)
             sa = " " * JAC.TableStrings.flushright( 7, string(i); na=5)
@@ -562,9 +567,9 @@ module Cascade
             end
             minEn = JAC.convert("energy: from atomic", minEn);   maxEn = JAC.convert("energy: from atomic", maxEn)
             sa = sa * string( round(minEn)) * " ... " * string( round(maxEn))
-            println(sa)
+            println(stream, sa)
         end
-        println("  ", JAC.TableStrings.hLine(170))
+        println(stream, "  ", JAC.TableStrings.hLine(170))
     end
     
     
@@ -577,30 +582,57 @@ module Cascade
     """
     function generateBlocks(comp::Cascade.Computation, confs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital})
         blockList = Cascade.Block[]
+        printSummary, iostream = JAC.give("summary flag/stream")
         #
         if    comp.approach == AverageSCA()
-            # In the AverageSCA() approach, every configuration form an individual block of the cascade whose basis is constructed from
-            # a common set of radial orbitals and whose representation does not include configuration mixing
+            println("\n  In the cascade approach $(comp.approach), the following assumptions/simplifications are made: ")
+            println("    + orbitals from the initial multiplet are applied throughout; ")
+            println("    + all blocks (multiplets) are generated from single-CSF levels and without any configuration mixing even in the SC; ")
+            println("    + only E1 dipole transitions are applied in all radiative decay stets; ")
+            println("    + for each decay step, a (single) set of continuum orbitals with an configuration averaged energy is applied " *
+                           "for all transitions of the same step. \n")
+            if  printSummary   
+            println(iostream, "\n* In the cascade approach $(comp.approach), the following assumptions/simplifications are made: ")
+            println(iostream, "    + orbitals from the initial multiplet are applied throughout; ")
+            println(iostream, "    + all blocks (multiplets) are generated from single-CSF levels and without any configuration mixing even in the SC; ")
+            println(iostream, "    + only E1 dipole transitions are applied in all radiative decay stets; ")
+            println(iostream, "    + for each decay step, a (single) set of continuum orbitals with an configuration averaged energy is applied " *
+                              "for all transitions of the same step. \n")
+            end
+            #
             for  confa  in confs
-                print("  Multiplet computations for $(string(confa)[1:end-2]) with $(confa.NoElectrons) electrons ... ")
-                multiplet = perform("computation: mutiplet from orbitals, no CI",  initalOrbitals, comp.nuclearModel, 
-                                    comp.grid, comp.asfSettings; printout=false)
+                print("  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")
+                if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")   end
+                multiplet = perform("computation: mutiplet from orbitals, no CI, CSF diagonal", [confa],  initalOrbitals, 
+                                    comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
                 println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
+                ##x if  printSummary   println(iostream, "* ... and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")   end
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
             end
         elseif    comp.approach == SCA()
-            # In the SCA() approach, every configuration form an individual block of the cascade for which an independent SCF and CI
-            # computation is then carried out
+            println("\n  In the cascade approach $(comp.approach), the following assumptions/simplifications are made: ")
+            println("    + orbitals are generated independently for each multiplet (block); ")
+            println("    + configuration interaction is included for each block; ")
+            println("    + only E1 dipole transitions are applied in all radiative decay stets; \n")
+            if  printSummary   
+            println(iostream, "\n* In the cascade approach $(comp.approach), the following assumptions/simplifications are made: ")
+            println(iostream, "    + orbitals are generated independently for each multiplet (block); ")
+            println(iostream, "    + configuration interaction is included for each block; ")
+            println(iostream, "    + only E1 dipole transitions are applied in all radiative decay stets; \n")
+            end
+            #
             i = 0
             for  confa  in confs
                 ## i = i + 1;    if   i in [1,2, 4,5,6,7,8,9,10,11,12,13,14]  ||  i > 15   println("  Block $i omitted.");    continue    end
                 ## i = i + 1;    if   i < 11  ||  i > 11   println("  Block $i omitted.");    continue    end
                 print("  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")
+                if  printSummary   print(iostream, "* Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")   end
                 basis     = perform("computation: SCF", [confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 multiplet = perform("computation: CI",  basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
                 println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
+                ##x if  printSummary   println(iostream, "and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")   end
             end
         else  error("Unsupported cascade approach.")
         end
@@ -720,11 +752,14 @@ module Cascade
             maxNoElectrons = max(maxNoElectrons, conf.NoElectrons)
         end
         #
-        println(" ")
-        println("  Electron configuration used in the cascade:")
+        printSummary, iostream = JAC.give("summary flag/stream")
+        #
+        println("\n  Electron configuration used in the cascade:")
+        if  printSummary   println(iostream, "\n* Electron configuration used in the cascade:")    end
         confList = Configuration[];   nc = 0
         for  n = maxNoElectrons:-1:minNoElectrons
             println("\n    Configuration(s) with $n electrons:")
+            if  printSummary   println(iostream, "\n    Configuration(s) with $n electrons:")      end
             for  conf in confs
                 if n == conf.NoElectrons   
                     nc = nc + 1
@@ -732,12 +767,15 @@ module Cascade
                     wa = JAC.provide("binding energy", round(Int64, Z), conf);    wa = JAC.convert("energy: from atomic", wa)
                     sa = "   av. BE = "  * string( round(-wa) ) * "  " * JAC.TableStrings.inUnits("energy")
                     println("      " * string(conf) * sa * "      ($nc)" )
+                    if  printSummary   println(iostream, "      " * string(conf) * sa * "      ($nc)")      end
                 end  
             end
         end
         
         println("\n  A total of $nc configuration have been defined for this cascade, and selected configurations could be " *
                 "removed here:  [currently not supported] \n")
+        if  printSummary   println(iostream, "\n* A total of $nc configuration have been defined for this cascade, and selected " *
+                                             "configurations could be removed here:  [currently not supported] \n")      end
         return( confList )
     end
 
@@ -771,6 +809,9 @@ module Cascade
         # delete from list
         #
         println("\n  A total of $(length(newStepList)) steps are still defined in the cascade.")
+        printSummary, iostream = JAC.give("summary flag/stream")
+        if  printSummary   println(iostream, "\n* A total of $(length(newStepList)) steps are still defined in the cascade.")    end      
+        
         return( newStepList )
     end
 
