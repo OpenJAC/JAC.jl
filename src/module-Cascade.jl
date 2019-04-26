@@ -274,10 +274,10 @@ module Cascade
         + struct MonteCarlo          ... to simulate the cascade decay by a Monte-Carlo approach of possible pathes (not yet considered).
         + struct RateEquations       ... to solve the cascade by a set of rate equations (not yet considered).
     """
-    abstract type  SimulationMethod          end
-    struct   ProbPropagation  <:  Property   end
-    struct   MonteCarlo       <:  Property   end
-    struct   RateEquations    <:  Property   end
+    abstract type  SimulationMethod                  end
+    struct   ProbPropagation  <:  SimulationMethod   end
+    struct   MonteCarlo       <:  SimulationMethod   end
+    struct   RateEquations    <:  SimulationMethod   end
 
 
     """
@@ -494,8 +494,8 @@ module Cascade
             sa = "   " * JAC.TableStrings.flushright( 6, string(i); na=2)
             sb = " ";         for conf  in blockList[i].confs   sb = sb * string(conf) * ", "    end
             en = Float64[];   for level in  block.multiplet.levels    push!(en, level.energy)    end
-            minEn = minimum(en);   minEn = JAC.convert("energy: from atomic", minEn)
-            maxEn = maximum(en);   maxEn = JAC.convert("energy: from atomic", maxEn)
+            minEn = minimum(en);   minEn = Basics.convert("energy: from atomic", minEn)
+            maxEn = maximum(en);   maxEn = Basics.convert("energy: from atomic", maxEn)
             sa = sa * JAC.TableStrings.flushleft(90, sb[1:end-2]; na=2) 
             sa = sa * JAC.TableStrings.flushleft(30, string( round(minEn)) * " ... " * string( round(maxEn)); na=2)
             println(stream, sa)
@@ -519,7 +519,7 @@ module Cascade
         println(stream, "  ", JAC.TableStrings.hLine(64))
         for  i = 1:length(multiplet.levels)
             lev = multiplet.levels[i]
-            en  = lev.energy - multiplet.levels[1].energy;    en_requested = JAC.convert("energy: from atomic", en)
+            en  = lev.energy - multiplet.levels[1].energy;    en_requested = Basics.convert("energy: from atomic", en)
             wx = 0.
             for  ilevel in initialLevels
                 if  i in ilevel   wx = ilevel[2];    break    end
@@ -565,7 +565,7 @@ module Cascade
                 minEn = min(minEn, steps[i].initialMultiplet.levels[p].energy - steps[i].finalMultiplet.levels[q].energy)
                 maxEn = max(maxEn, steps[i].initialMultiplet.levels[p].energy - steps[i].finalMultiplet.levels[q].energy)
             end
-            minEn = JAC.convert("energy: from atomic", minEn);   maxEn = JAC.convert("energy: from atomic", maxEn)
+            minEn = Basics.convert("energy: from atomic", minEn);   maxEn = Basics.convert("energy: from atomic", maxEn)
             sa = sa * string( round(minEn)) * " ... " * string( round(maxEn))
             println(stream, sa)
         end
@@ -764,7 +764,7 @@ module Cascade
                 if n == conf.NoElectrons   
                     nc = nc + 1
                     push!(confList, conf ) 
-                    wa = JAC.provide("binding energy", round(Int64, Z), conf);    wa = JAC.convert("energy: from atomic", wa)
+                    wa = JAC.provide("binding energy", round(Int64, Z), conf);    wa = Basics.convert("energy: from atomic", wa)
                     sa = "   av. BE = "  * string( round(-wa) ) * "  " * JAC.TableStrings.inUnits("energy")
                     println("      " * string(conf) * sa * "      ($nc)" )
                     if  printSummary   println(iostream, "      " * string(conf) * sa * "      ($nc)")      end
@@ -826,8 +826,9 @@ module Cascade
         levels = JAC.Cascade.extractLevels(data)
         JAC.Cascade.displayLevelTree(data.name, levels, data)
         JAC.Cascade.propagateProbability!(levels, data)
-        if   JAC.Cascade.IonDist   in simulation.properties    JAC.Cascade.displayIonDistribution(data.name, levels)     end
-        if   JAC.Cascade.FinalDist in simulation.properties    JAC.Cascade.displayLevelDistribution(data.name, levels)   end
+        println("aaa")
+        if   JAC.Cascade.IonDist()   in simulation.properties    JAC.Cascade.displayIonDistribution(data.name, levels)     end
+        if   JAC.Cascade.FinalDist() in simulation.properties    JAC.Cascade.displayLevelDistribution(data.name, levels)   end
 
         return( nothing )
     end
@@ -890,7 +891,7 @@ module Cascade
             for  en in enIndices
                 if  n == levels[en].NoElectrons  ##    &&  levels[en].relativeOcc > 0
                     sb = sa * "       " * string( LevelSymmetry(levels[en].J, levels[en].parity) )     * "    "
-                    sb = sb * @sprintf("%.6e", JAC.convert("energy: from atomic", levels[en].energy))  * "      "
+                    sb = sb * @sprintf("%.6e", Basics.convert("energy: from atomic", levels[en].energy))  * "      "
                     sb = sb * @sprintf("%.5e", levels[en].relativeOcc) 
                     sa = "           "
                     println(sb)
@@ -935,7 +936,7 @@ module Cascade
             for  en in enIndices
                 if  n == levels[en].NoElectrons
                     sb = sa * "      " * string( LevelSymmetry(levels[en].J, levels[en].parity) )      * "   "
-                    sb = sb * @sprintf("%.6e", JAC.convert("energy: from atomic", levels[en].energy))  * "      "
+                    sb = sb * @sprintf("%.6e", Basics.convert("energy: from atomic", levels[en].energy))  * "      "
                     sb = sb * @sprintf("%.5e", levels[en].relativeOcc)                                 * "    "
                     pProcessSymmetryEnergyList = Tuple{JAC.AtomicProcess,Int64,LevelSymmetry,Float64}[]
                     dProcessSymmetryEnergyList = Tuple{JAC.AtomicProcess,Int64,LevelSymmetry,Float64}[]
@@ -1050,10 +1051,10 @@ module Cascade
         for  i = 1:length(data.linesR)
             line = data.linesR[i]
             iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(JAC.PhotoEmission, i)] ) 
+                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(JAC.Radiative, i)] ) 
             Cascade.pushLevels!(levels, iLevel)  
             fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(JAC.PhotoEmission, i)], Cascade.LineIndex[] ) 
+                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(JAC.Radiative, i)], Cascade.LineIndex[] ) 
             Cascade.pushLevels!(levels, fLevel)  
         end
 

@@ -93,7 +93,7 @@ function provide(sa::String, Z::Int64, sh::Subshell)
     end
     #
     if     wb == -1.   error("No binding energy available for Z = $Z and subshell $sh ")
-    else   wb = JAC.convert("energy: from eV to atomic", wb)
+    else   wb = Basics.convert("energy: from eV to atomic", wb)
     end
     # 
     return( wb )
@@ -125,7 +125,7 @@ function provide(sa::String, Z::Int64, conf::Configuration)
     else   error("Unsupported keystring")
     end
     #
-    wb = JAC.convert("energy: from eV to atomic", wb)
+    wb = Basics.convert("energy: from eV to atomic", wb)
     # 
     return( wb )
 end

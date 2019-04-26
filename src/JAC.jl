@@ -46,14 +46,15 @@
 """
 module JAC
 
-using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL   #, JLD
+using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD
 
 export @racahsum, 
        AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AsfSettings, Atomic, AutoIonization, 
        Basis, 
        Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
        DecayYield, Dielectronic, DoubleAuger,
-       ElectricDipoleMoment, Einstein, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4,
+       ElectricDipoleMoment, Einstein, EmMultipole, 
+       E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor,
        GreenFunction,
        Hfs, HydrogenicIon,
@@ -61,7 +62,8 @@ export @racahsum,
        LandeZeeman, Level, LevelSymmetry,
        MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment,  MultipolePolarizibility, Multiplet, 
        NoAmplitude, NoProcess, Nuclear, Model,
-       Orbital, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
+       Orbital, 
+       PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
        PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, perform,
        Radial, RadiativeAuger, RayleighCompton, REDA, READI,
@@ -70,7 +72,7 @@ export @racahsum,
     
 global JAC_counter = 0
 
-## include("jac-basics.jl")
+# Basic data and data structures
 include("module-BasicTypes.jl")
 include("module-Radial.jl")
 include("module-ManyElectron.jl")
@@ -80,6 +82,29 @@ include("module-Bsplines.jl")
 include("module-Continuum.jl")
 include("module-PeriodicTable.jl")
 
+# Basic functions/methods to manipulate these data
+include("module-Basics.jl")
+
+# Specialized functions/methods to manipulate these data
+include("module-AngularMomentum.jl")
+include("module-AngularCoefficients-Ratip2013.jl")
+include("module-HydrogenicIon.jl")
+include("module-InteractionStrength.jl")
+include("module-InteractionStrengthQED.jl")
+include("module-MessageHandling.jl")
+include("module-RadialIntegrals.jl")
+include("module-Tools.jl")
+
+# Constants and inline documentation
+using  JAC.BasicTypes
+include("jac-constants.jl")
+include("jac-document.jl")
+
+# Functions/methods for atomic amplitudes
+include("module-MultipoleMoment.jl")
+include("module-ParityNonConservation.jl")
+
+# Functions/methods for atomic properties
 include("module-Einstein.jl")
 include("module-Hfs.jl")
 include("module-IsotopeShift.jl")
@@ -91,9 +116,7 @@ include("module-GreenFunction.jl")
 include("module-MultipolePolarizibility.jl")
 include("module-PlasmaShift.jl")
 
-include("module-MultipoleMoment.jl")
-include("module-ParityNonConservation.jl")
-
+# Functions/methods for atomic processes
 include("module-PhotoEmission.jl")
 include("module-PhotoExcitation.jl")
 include("module-PhotoIonization.jl")
@@ -114,7 +137,7 @@ include("module-RadiativeAuger.jl")
 include("module-MultiPhotonIonization.jl")
 include("module-MultiPhotonDoubleIon.jl")
 include("module-InternalConversion.jl")
-#=
+#= Further processes not yet included
 include("module-DoubleAuger.jl")
 include("module-REDA.jl")
 include("module-READI.jl")
@@ -122,59 +145,58 @@ include("module-PairProduction.jl")
 include("module-PairAnnihilation1Photon.jl")
 include("module-PairAnnihilation2Photon.jl")  =#
 
+# Functions/methods for atomic and cascade computations
 include("module-Atomic.jl")
 include("module-Cascade.jl")
-include("module-HydrogenicIon.jl")
+include("module-TableStrings.jl")
+
+# Functions/methods for atomic time evolutions
 # include("module-Pulse.jl")
 # include("module-Statistical.jl")
 
-include("module-AngularMomentum.jl")
-include("module-AngularCoefficients-Ratip2013.jl")
-include("module-InteractionStrength.jl")
-include("module-InteractionStrengthQED.jl")
-include("module-MessageHandling.jl")
-include("module-RadialIntegrals.jl")
-include("module-TableStrings.jl")
-include("module-Tools.jl")
-
+# Functions/methods for semi-empirical estimations
 # include("module-ImpactIonization.jl")
 # include("module-Semiempirical.jl")
 
+# Functions/methods for symbolic computations
+# include("module-Racah.jl")
+
+# Specialized macros
 include("macro-racahsum.jl")
 
 using  JAC.BasicTypes, JAC.Radial, JAC.ManyElectron, JAC.Nuclear, JAC.RadialIntegrals, JAC.InteractionStrength, JAC.AngularMomentum
 
-include("jac-add.jl")
-include("jac-analyze.jl")
+##x include("jac-add.jl")
+##x include("jac-analyze.jl")
 include("jac-compute.jl")
-include("jac-convert.jl")
-include("jac-define.jl")
-include("jac-determine.jl")
-include("jac-diagonalize.jl")
-include("jac-display.jl")
-include("jac-estimate.jl")
-include("jac-exclude.jl")
-include("jac-evaluate.jl")
-include("jac-generate.jl")
-include("jac-give.jl")
-include("jac-integrate.jl")
-include("jac-interpolate.jl")
-include("jac-merge.jl")
-include("jac-modify.jl")
+##x include("jac-convert.jl")
+##x include("jac-define.jl")
+##x include("jac-determine.jl")
+##x include("jac-diagonalize.jl")
+##x include("jac-display.jl")
+##x include("jac-estimate.jl")
+##x include("jac-exclude.jl")
+##x include("jac-evaluate.jl")
+##x include("jac-generate.jl")
+##x include("jac-give.jl")
+##x include("jac-integrate.jl")
+##x include("jac-interpolate.jl")
+##x include("jac-merge.jl")
+##x include("jac-modify.jl")
 include("jac-perform.jl")
-include("jac-provide.jl")
+##x include("jac-provide.jl")
 include("jac-plot.jl")
-include("jac-read.jl")
+##x include("jac-read.jl")
 include("jac-recast.jl")
 include("jac-sort.jl")
 include("jac-tabulate.jl")
-include("jac-warn.jl")
+##x include("jac-warn.jl")
 
-include("jac-constants.jl")
-include("jac-document.jl")
+##x include("jac-constants.jl")
+##x include("jac-document.jl")
 
 include("jac-test.jl")
-include("jac-tools.jl")
+##x include("jac-tools.jl")
 
 function __init__()
     # The following variables need to be initialized at runtime to enable precompilation

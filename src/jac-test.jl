@@ -3,7 +3,7 @@
 
 function testCompareFiles(fold::String, fnew::String, sa::String, noLines::Int64) 
     success = true
-    printTest, iostream = JAC.give("test flag/stream")
+    printTest, iostream = Basics.give("test flag/stream")
     
     # Compare the test computations with previous results
     oldLines = readlines(fold)
@@ -31,7 +31,7 @@ end
 
 
 function testPrint(sa::String, success::Bool) 
-    printTest, iostream = JAC.give("test flag/stream")
+    printTest, iostream = Basics.give("test flag/stream")
     ok(succ) =  succ ? "[OK]" : "[Fail]"
     sb = sa * JAC.TableStrings.hBlank(110);   sb = sb[1:100] * ok(success);    println(iostream, sb)
     return( nothing )
@@ -44,7 +44,7 @@ end
 """
 function testMethod_integrate_ongrid(; short::Bool=true)
     success = true
-    printTest, iostream = JAC.give("test flag/stream")
+    printTest, iostream = Basics.give("test flag/stream")
 
     # Test the integration on the grid for an analytical function
     grid = JAC.Radial.Grid("grid: by given parameters", rnt=2.0e-10, h=5.0e-3, NoPoints=9000)
@@ -115,7 +115,7 @@ end
 """
 function testMethod_Wigner_3j(; short::Bool=true)
     success = true
-    printTest, iostream = JAC.give("test flag/stream")
+    printTest, iostream = Basics.give("test flag/stream")
 
     # Wigner_3j(1,2,1,0,0,0) = 0.36514837167011074230
     a = c = AngularJ64(1);    b = AngularJ64(2);    ma = mb = mc = AngularM64(0)
@@ -202,7 +202,7 @@ function testModule_CoulombExcitation(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    printTest, iostream = JAC.give("test flag/stream")
+    printTest, iostream = Basics.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-CoulombExcitation-new.sum")
     success = true
     ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-AutoIonization-approved.sum"), 
@@ -407,7 +407,7 @@ function testModule_MultiPhotonDeExcitation(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    printTest, iostream = JAC.give("test flag/stream")
+    printTest, iostream = Basics.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-MultiPhotonDeExcitation-new.sum")
     success = true
     ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-MultiPhotonDeExcitation-approved.sum"), 
@@ -577,7 +577,7 @@ wb = perform(wa)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    printTest, iostream = JAC.give("test flag/stream")
+    printTest, iostream = Basics.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-PhotoExcitationAutoion-new.sum")
     success = true
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoExcitationAutoion-approved.sum"), 
@@ -606,7 +606,7 @@ function testModule_PhotoExcitationFluores(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    printTest, iostream = JAC.give("test flag/stream")
+    printTest, iostream = Basics.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-PhotoExcitationFluores-new.sum")
     success = true
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoExcitationFluores-approved.sum"), 
@@ -706,7 +706,7 @@ function testModule_RayleighCompton(; short::Bool=true)
     ###
     JAC.define("print summary: close", "")
     # Make the comparison with approved data
-    printTest, iostream = JAC.give("test flag/stream")
+    printTest, iostream = Basics.give("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-RayleighCompton-new.sum")
     success = true
     ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-RayleighCompton-approved.sum"), 

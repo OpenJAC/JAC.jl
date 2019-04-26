@@ -249,9 +249,11 @@ function perform(comp::Cascade.Computation; output::Bool=false)
         results = Base.merge( results, Dict("cascade data:" => data) )
         #
         #  Write out the result to file to later continue with simulations on the cascade data
-        filename = "xxx-cascade-" * string(now())[1:13] * ".jld"
+        filename = "zzz-Cascade-" * string(now())[1:13] * ".jld"
         println("\nWrite all results to disk; use:\n   save($filename, results) \n   using JLD " *
                 "\n   results = load($filename)    ... to load the results back from file.")
+        if  printSummary   println(iostream, "\nWrite all results to disk; use:\n   save($filename, results) \n   using JLD " *
+                                             "\n   results = load($filename)    ... to load the results back from file." )      end      
         save(filename, results)
     end
     return( results )
@@ -274,12 +276,12 @@ function perform(simulation::Cascade.Simulation, data::Cascade.Data; output::Boo
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     #
     # Distinguish between the different computational methods for running the simulations
-    if  simulation.method == Cascade.ProbPropagation
-        if      JAC.Cascade.FinalDist in simulation.properties   ||   JAC.Cascade.IonDist in simulation.properties
+    if  simulation.method == Cascade.ProbPropagation()
+        if   JAC.Cascade.FinalDist()  in  simulation.properties   ||   JAC.Cascade.IonDist()  in  simulation.properties
             wa = Cascade.simulateLevelDistribution(simulation, data) 
         end
-        if   JAC.Cascade.ElectronIntensity    in simulation.properties   ||  JAC.Cascade.PhotonIntensity  in simulation.properties   ||
-             JAC.Cascade.ElectronCoincidence  in simulation.properties 
+        if   JAC.Cascade.ElectronIntensity()    in simulation.properties    ||   JAC.Cascade.PhotonIntensity()  in simulation.properties   ||
+             JAC.Cascade.ElectronCoincidence()  in simulation.properties 
             error("stop a: Not yet implemented")    
         end
     else  error("stop b")

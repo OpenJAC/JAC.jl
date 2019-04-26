@@ -200,9 +200,9 @@ module Nuclear
     
         b = computeFermiBParameter(Rrms);    b < 0  &&  error("Inappropriate R_rms radius.")
         
-        fermiA_au = JAC.convert("length: from fm to atomic", fermiA)
-        fermiC_au = JAC.convert("length: from fm to atomic", b)
-        ##x fermi1_au = JAC.convert("length: from fm to atomic", 1.0)
+        fermiA_au = Basics.convert("length: from fm to atomic", fermiA)
+        fermiC_au = Basics.convert("length: from fm to atomic", b)
+        ##x fermi1_au = Basics.convert("length: from fm to atomic", 1.0)
         ##x N = 3/(4pi * fermiC_au^3) / (1 + pi^2 * fermiA_au^2 / fermiC_au^2)
         N = 1. / QuadGK.quadgk(rr_rho, 0., 1.3, rtol=1.0e-10)[1]
         ##x println("fermiA_au = $fermiA_au  fermiC_au = $fermiC_au  fermi1_au = $fermi1_au")
@@ -253,7 +253,7 @@ module Nuclear
     function uniformNucleus(R::Float64, Z::Float64, grid::Radial.Grid)
         # grid = JAC.JAC_STANDARD_GRID
     
-        zz = zeros(Float64, grid.nr);   R_au = JAC.convert("length: from fm to atomic", R)
+        zz = zeros(Float64, grid.nr);   R_au = Basics.convert("length: from fm to atomic", R)
         ##x println("uniformNucleus()::  R_au = $R_au")
     
         for i = 1:grid.nr

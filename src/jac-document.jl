@@ -304,7 +304,7 @@ Three important `design principles of JAC` are:
   + **Covers the basics functionality of other established codes:** cf. Section Comparison with other (established) atomic structure codes
     above.
   + **Tutorials and examples at different level of complexity:** Cf. the method JAC.tutorials().
-  + **Supports and (re-) definition of physical constants, frequent settings and frameworks:** See the help pages ?JAC.define and ?JAC.convert.
+  + **Supports and (re-) definition of physical constants, frequent settings and frameworks:** See the help pages ?JAC.define and ?Basics.convert.
   + **Open-code project:**  We wish to encourage other user to make suggestions, request and improvements to the code.
 
 
@@ -628,7 +628,7 @@ Various functions (methods) are available in JAC which support the interactive g
 for example, use ? JAC.compute for all further details:
 
     +      compute()        ... to compute angular coefficients; CI matrix; radial orbitals; radial potentials; ...
-    +  JAC.convert()        ... to convert units for energy, cross sections, rates, times, etc.; wave numbers; ...
+    +  Basics.convert()        ... to convert units for energy, cross sections, rates, times, etc.; wave numbers; ...
     +      define()         ... to define the framework; units for energy, cross sections, rates, etc.; standard grid; 
                                 subshell list; methods for solving continuum orbitals and their normalization; ...
     +  JAC.display()        ... to display constants and settings; ...

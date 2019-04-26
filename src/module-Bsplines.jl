@@ -549,18 +549,18 @@ module Bsplines
                 elseif   settings.methodScf == "meanDFS"    wp = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
                 else     error("stop potential")
                 end
-                pot = JAC.add(nuclearPotential, wp)
+                pot = Basics.add(nuclearPotential, wp)
                 # (3) Set-up the diagonal part of the Hamiltonian matrix
                 wa = JAC.Bsplines.setupLocalMatrix(kappa, primitives, pot, storage)
                 # (4) Solve the generalized eigenvalue problem
                 wc = JAC.diagonalize("generalized eigenvalues: Julia, eigfact", wa, wb)
                 # (5) Analyse and print information about the convergence of the symmetry blocks and the occupied orbitals
-                wcBlock = JAC.analyzeConvergence(bsplineBlock[kappa], wc)
+                wcBlock = Basics.analyzeConvergence(bsplineBlock[kappa], wc)
                 if  wcBlock > 1.000 * settings.accuracyScf   go_on = true   end
                 for  sh in basis.subshells
                     if  sh.kappa == kappa
                         newOrbital = generateOrbitalFromPrimitives(sh, wc, primitives)
-                        wcOrbital  = JAC.analyzeConvergence(previousOrbitals[sh], newOrbital)
+                        wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
                         if  wcOrbital > settings.accuracyScf   go_on = true   end
                            sa = "  $sh::  en [a.u.] = " * @sprintf("%.8e", newOrbital.energy) * ";   self-consistency = "  
                            sa = sa * @sprintf("%.6e", wcOrbital)   * "  ["

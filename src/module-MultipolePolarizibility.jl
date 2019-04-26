@@ -198,7 +198,7 @@ module MultipolePolarizibility
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", outcome.level.energy)) * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", outcome.level.energy)) * "    "
             println( sa )
         end
         println("  ", JAC.TableStrings.hLine(43))
@@ -230,7 +230,7 @@ module MultipolePolarizibility
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
             energy = 1.0
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", energy))              * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", energy))              * "    "
             ## sa = sa * @sprintf("%.8e", outcome.K)                                               * "    "
             println(stream, sa )
         end

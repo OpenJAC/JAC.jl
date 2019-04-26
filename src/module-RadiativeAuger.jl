@@ -283,11 +283,11 @@ module RadiativeAuger
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
             energy = line.initialLevel.energy - line.finalLevel.energy
-            sa = sa * @sprintf("%.5e", JAC.convert("energy: from atomic", energy)) * "  "
+            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic", energy)) * "  "
             #
             for  sharing  in  line.sharings
-                sb =      @sprintf("%.4e", JAC.convert("energy: from atomic", sharing.photonEnergy))   * "  "
-                sb = sb * @sprintf("%.4e", JAC.convert("energy: from atomic", sharing.electronEnergy)) * "    "
+                sb =      @sprintf("%.4e", Basics.convert("energy: from atomic", sharing.photonEnergy))   * "  "
+                sb = sb * @sprintf("%.4e", Basics.convert("energy: from atomic", sharing.electronEnergy)) * "    "
                 kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
                 for  i in 1:length(sharing.channels)
                     push!( kappaMultipoleSymmetryList, (sharing.channels[i].kappa, sharing.channels[i].multipole, sharing.channels[i].gauge, 
@@ -332,17 +332,17 @@ module RadiativeAuger
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
             energy = line.initialLevel.energy - line.finalLevel.energy
-            sa = sa * @sprintf("%.5e", JAC.convert("energy: from atomic", energy)) * "    "
+            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic", energy)) * "    "
             #
             first = true
             for  sharing  in  line.sharings
-                sb =      @sprintf("%.4e", JAC.convert("energy: from atomic", sharing.photonEnergy))   * "  "
-                sb = sb * @sprintf("%.4e", JAC.convert("energy: from atomic", sharing.electronEnergy)) * "    "
-                sb = sb * @sprintf("%.6e", JAC.convert("cross section: from atomic", sharing.differentialCs.Coulomb))     * "    "
-                sb = sb * @sprintf("%.6e", JAC.convert("cross section: from atomic", sharing.differentialCs.Babushkin))   * "    "
+                sb =      @sprintf("%.4e", Basics.convert("energy: from atomic", sharing.photonEnergy))   * "  "
+                sb = sb * @sprintf("%.4e", Basics.convert("energy: from atomic", sharing.electronEnergy)) * "    "
+                sb = sb * @sprintf("%.6e", Basics.convert("cross section: from atomic", sharing.differentialCs.Coulomb))     * "    "
+                sb = sb * @sprintf("%.6e", Basics.convert("cross section: from atomic", sharing.differentialCs.Babushkin))   * "    "
                 if  first                  first = false
-                sb = sb * @sprintf("%.6e", JAC.convert("cross section: from atomic", line.totalRate.Coulomb))     * "    "
-                sb = sb * @sprintf("%.6e", JAC.convert("cross section: from atomic", line.totalRate.Babushkin))   * "    "
+                sb = sb * @sprintf("%.6e", Basics.convert("cross section: from atomic", line.totalRate.Coulomb))     * "    "
+                sb = sb * @sprintf("%.6e", Basics.convert("cross section: from atomic", line.totalRate.Babushkin))   * "    "
                 end 
                 println(sa*sb)
             end

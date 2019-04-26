@@ -300,8 +300,8 @@ module PhotoExcitationAutoion
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", pathway.excitEnergy))   * "    "
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", pathway.electronEnergy)) * "   "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", pathway.excitEnergy))   * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", pathway.electronEnergy)) * "   "
             kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
             for  ech in pathway.excitChannels
                 for  ach in pathway.augerChannels
@@ -351,16 +351,16 @@ module PhotoExcitationAutoion
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", pathway.excitEnergy))   * "    "
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", pathway.electronEnergy)) * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", pathway.excitEnergy))   * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", pathway.electronEnergy)) * "    "
             multipoles = EmMultipole[]
             for  ech in pathway.excitChannels
                 multipoles = push!( multipoles, ech.multipole)
             end
             multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
             sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=3)
-            sa = sa * @sprintf("%.6e", JAC.convert("cross section: from atomic", pathway.crossSection.Coulomb))     * "    "
-            sa = sa * @sprintf("%.6e", JAC.convert("cross section: from atomic", pathway.crossSection.Babushkin))   * "    "
+            sa = sa * @sprintf("%.6e", Basics.convert("cross section: from atomic", pathway.crossSection.Coulomb))     * "    "
+            sa = sa * @sprintf("%.6e", Basics.convert("cross section: from atomic", pathway.crossSection.Babushkin))   * "    "
             println(stream, sa)
         end
         println(stream, "  ", JAC.TableStrings.hLine(135))

@@ -459,8 +459,8 @@ module AutoIonization
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.initialLevel.energy))  * "    "
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.electronEnergy))       * "   "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.initialLevel.energy))  * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.electronEnergy))       * "   "
             kappaSymmetryList = Tuple{Int64,LevelSymmetry}[]
             for  i in 1:length(line.channels)
                 push!( kappaSymmetryList, (line.channels[i].kappa, line.channels[i].symmetry) )
@@ -505,11 +505,11 @@ module AutoIonization
                 sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                 sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(line.initialLevel.index); na=2)
                 sa = sa * JAC.TableStrings.center( 8, string(isym); na=4)
-                sa = sa * @sprintf("%.8e", JAC.convert("time: from atomic",  1/totalRate))            * "     "
-                sa = sa * @sprintf("%.8e", JAC.convert("rate: from atomic",    totalRate))            * "      "
+                sa = sa * @sprintf("%.8e", Basics.convert("time: from atomic",  1/totalRate))            * "     "
+                sa = sa * @sprintf("%.8e", Basics.convert("rate: from atomic",    totalRate))            * "      "
                 sa = sa * @sprintf("%.8e", totalRate)                                                 * "    "
-                sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic to Kayser",  totalRate))  * "    "
-                sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic to eV",      totalRate))  * "    "
+                sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic to Kayser",  totalRate))  * "    "
+                sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic to eV",      totalRate))  * "    "
                 println(stream, sa)
             end
         end
@@ -546,9 +546,9 @@ module AutoIonization
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.initialLevel.energy))  * "    "
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.electronEnergy))       * "    "
-            sa = sa * @sprintf("%.8e", JAC.convert("rate: from atomic", line.totalRate))              * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.initialLevel.energy))  * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.electronEnergy))       * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("rate: from atomic", line.totalRate))              * "    "
             sa = sa * JAC.TableStrings.flushright(13, @sprintf("%.5e", line.angularAlpha))            * "    "
             println(stream, sa)
         end

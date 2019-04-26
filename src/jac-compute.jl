@@ -59,8 +59,8 @@ function compute(sa::String, parity, rank::Integer, csfa::CsfR, csfb::CsfR)
             mct_coeffs = JAC.AngularCoefficientsRatip2013.mct_generate_coefficients(1, 1, 1, 1, Int32(parity), rank)
         else
             # Add 'zeros' to the fields if the length of occupation does not agree
-            if       ( nz = length(csfa.occupation) - length(csfb.occupation) ) <  0   csfa = JAC.addZerosToCsfR( -nz, csfa)
-            elseif   ( nz = length(csfa.occupation) - length(csfb.occupation) ) >  0   csfb = JAC.addZerosToCsfR(  nz, csfb)    end
+            if       ( nz = length(csfa.occupation) - length(csfb.occupation) ) <  0   csfa = Basics.addZerosToCsfR( -nz, csfa)
+            elseif   ( nz = length(csfa.occupation) - length(csfb.occupation) ) >  0   csfb = Basics.addZerosToCsfR(  nz, csfb)    end
             subshells  = JAC.AngularCoefficientsRatip2013.load_csl(csfa, csfb)
             mct_coeffs = JAC.AngularCoefficientsRatip2013.mct_generate_coefficients(1, 1, 2, 2, Int32(parity), rank)
             ##x println("csfa.subshells = $(csfa.subshells)")

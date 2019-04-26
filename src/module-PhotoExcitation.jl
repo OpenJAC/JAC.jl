@@ -302,7 +302,7 @@ module PhotoExcitation
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.omega)) * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.omega)) * "    "
             mpGaugeList = Tuple{JAC.EmMultipole,JAC.EmGauge}[]
             for  i in 1:length(line.channels)
                 push!( mpGaugeList, (line.channels[i].multipole, line.channels[i].gauge) )
@@ -342,15 +342,15 @@ module PhotoExcitation
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.omega)) * "    "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.omega)) * "    "
             multipoles = EmMultipole[]
             for  ch in line.channels
                 multipoles = push!( multipoles, ch.multipole)
             end
             multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
             sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=3)
-            sa = sa * @sprintf("%.6e", JAC.convert("cross section: from atomic", line.crossSection.Coulomb))     * "    "
-            sa = sa * @sprintf("%.6e", JAC.convert("cross section: from atomic", line.crossSection.Babushkin))   * "    "
+            sa = sa * @sprintf("%.6e", Basics.convert("cross section: from atomic", line.crossSection.Coulomb))     * "    "
+            sa = sa * @sprintf("%.6e", Basics.convert("cross section: from atomic", line.crossSection.Babushkin))   * "    "
             ##x sa = sa * @sprintf("%.6e", line.anisotropy.Coulomb)      * "    "
             ##x sa = sa * @sprintf("%.6e", line.anisotropy.Babushkin)    * "    "
             println(stream, sa)
@@ -379,7 +379,7 @@ module PhotoExcitation
                                fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-                sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.omega)) * "    "
+                sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.omega)) * "    "
                 multipoles = EmMultipole[]
                 for  ch in line.channels
                     multipoles = push!( multipoles, ch.multipole)
@@ -387,8 +387,8 @@ module PhotoExcitation
                 multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
                 sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=3)
                 crossSection = JAC.PhotoExcitation.computeCrossSection(line, stokes)
-                sa = sa * @sprintf("%.6e", JAC.convert("cross section: from atomic", crossSection.Coulomb))     * "    "
-                sa = sa * @sprintf("%.6e", JAC.convert("cross section: from atomic", crossSection.Babushkin))   * "    "
+                sa = sa * @sprintf("%.6e", Basics.convert("cross section: from atomic", crossSection.Coulomb))     * "    "
+                sa = sa * @sprintf("%.6e", Basics.convert("cross section: from atomic", crossSection.Babushkin))   * "    "
                 println(stream, sa)
             end
             println(stream, "  ", JAC.TableStrings.hLine(105))
@@ -417,7 +417,7 @@ module PhotoExcitation
                                fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-                sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", line.omega)) * "    "
+                sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.omega)) * "    "
                 multipoles = EmMultipole[]
                 for  ch in line.channels
                     multipoles = push!( multipoles, ch.multipole)

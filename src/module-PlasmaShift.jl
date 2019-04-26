@@ -239,9 +239,9 @@ module PlasmaShift
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(multiplet.levels[i].index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=6)
             energy = multiplet.levels[i].energy
-            sa = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", energy))              * "     "
+            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", energy))              * "     "
             if  sym == newsym   deltaE = pMultiplet.levels[i].energy - energy;    
-                                sa     = sa * @sprintf("%.8e", JAC.convert("energy: from atomic", deltaE))   
+                                sa     = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", deltaE))   
             else                sa     = sa * "Level crossing."
             end
             println(stream, sa )

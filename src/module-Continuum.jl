@@ -73,7 +73,7 @@ module Continuum
         ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
         ## wp4 = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
         wp = compute("radial potential: Dirac-Fock-Slater", grid, level)   
-        pot = JAC.add(nuclearPotential, wp)
+        pot = Basics.add(nuclearPotential, wp)
         JAC.warn(AddWarning, "All continuum orbitals are generated in a local (DFS) potential.")  
         
         # Generate a continuum orbital due to the given solution method
