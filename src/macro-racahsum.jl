@@ -1,5 +1,7 @@
 using MacroTools: @capture, postwalk
 
+using ..BasicTypes: ⊕, projections
+
 # If no upper or lower bound for a summation index can be determined, this cutoff is used,
 # i.e., the range of summation indices is considered a subset of -CUTOFF:1/2:CUTOFF.
 const CUTOFF = 30

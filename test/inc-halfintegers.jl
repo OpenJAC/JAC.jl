@@ -1,4 +1,5 @@
 using JAC: HalfInt
+using JAC.BasicTypes: twice
 
 @testset "HalfInt" begin
     @testset "Construction" begin
@@ -278,9 +279,9 @@ using JAC: HalfInt
     end
 
     @testset "twice" begin
-        @test @inferred(JAC.twice(HalfInt(3/2))) === 3
-        @test @inferred(JAC.twice(-2)) === -4
-        @test @inferred(JAC.twice(1.6)) === 3.2
-        @test @inferred(JAC.twice(2//3)) === 4//3
+        @test @inferred(twice(HalfInt(3/2))) === 3
+        @test @inferred(twice(-2)) === -4
+        @test @inferred(twice(1.6)) === 3.2
+        @test @inferred(twice(2//3)) === 4//3
     end
 end
