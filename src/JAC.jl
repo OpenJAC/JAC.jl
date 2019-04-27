@@ -32,16 +32,16 @@
 
 **`Further details and information`**
 
-        + Kinds of atomic implementation                                             [cf. ? JAC.kindsOfComputation]
-        + Atomic amplitudes (partly) implemented in JAC                              [cf. ? JAC.amplitudes]
-        + Atomic level properties (partly) implemented in JAC                        [cf. ? JAC.properties]
-        + Atomic processes (partly) implemented in JAC                               [cf. ? JAC.processes]
-        + Interactive use of JAC procedures                                          [cf. ? JAC.interactive]
-        + Design principles and limitations of the JAC program                       [cf. ? JAC.design]
-        + Data types, structs and name conventions of the JAC module                 [cf. ? JAC.datatypes]
-        + Atomic cascade computations and approximations                             [cf. ? JAC.decayCascades]
-        + Use of (em) light pulses in the time evolution of statistical tensors      [cf. ? JAC.pulses]
-        + Why Julia ?                                                                [cf. ? JAC.whyJulia]
+        + Kinds of atomic implementation                                             [cf. ? Details.kindsOfComputation]
+        + Atomic amplitudes (partly) implemented in JAC                              [cf. ? Details.amplitudes]
+        + Atomic level properties (partly) implemented in JAC                        [cf. ? Details.properties]
+        + Atomic processes (partly) implemented in JAC                               [cf. ? Details.processes]
+        + Interactive use of JAC procedures                                          [cf. ? Details.interactive]
+        + Design principles and limitations of the JAC program                       [cf. ? Details.design]
+        + Data types, structs and name conventions of the JAC module                 [cf. ? Details.datatypes]
+        + Atomic cascade computations and approximations                             [cf. ? Details.decayCascades]
+        + Use of (em) light pulses in the time evolution of statistical tensors      [cf. ? Details.pulses]
+        + Why Julia ?                                                                [cf. ? Details.whyJulia]
 
 """
 module JAC
@@ -50,13 +50,13 @@ using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, 
 
 export @racahsum, 
        AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AsfSettings, Atomic, AutoIonization, 
-       Basis, 
-       Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
-       DecayYield, Dielectronic, DoubleAuger,
+       Basics, Basis, 
+       Defaults, Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
+       DecayYield, Details, Dielectronic, DoubleAuger,
        ElectricDipoleMoment, Einstein, EmMultipole, 
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor,
-       GreenFunction,
+       GreenFunction, getDefaults,
        Hfs, HydrogenicIon,
        ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, 
        LandeZeeman, Level, LevelSymmetry,
@@ -67,39 +67,29 @@ export @racahsum,
        PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, perform,
        Radial, RadiativeAuger, RayleighCompton, REDA, READI,
-       SchiffMoment, Shell, Subshell,
-       UseCoulomb, UseBabushkin
+       SchiffMoment, Shell, Subshell, setDefaults,
+       UseCoulomb, UseBabushkin, convertUnits
     
-global JAC_counter = 0
-
 # Basic data and data structures
-include("module-BasicTypes.jl")
+include("module-Basics.jl")
 include("module-Radial.jl")
 include("module-Math.jl")
-include("module-Constants.jl")
+include("module-Defaults.jl")
 include("module-ManyElectron.jl")
 include("module-Nuclear.jl")
-
-# Basic functions/methods to manipulate these data
-include("module-Basics.jl")
 
 # Specialized functions/methods to manipulate these data
 include("module-AngularMomentum.jl")
 include("module-AngularCoefficients-Ratip2013.jl")
 include("module-Bsplines.jl")
 include("module-Continuum.jl")
+include("module-Details.jl")
 include("module-HydrogenicIon.jl")
 include("module-InteractionStrength.jl")
 include("module-InteractionStrengthQED.jl")
-include("module-MessageHandling.jl")
 include("module-PeriodicTable.jl")
 include("module-RadialIntegrals.jl")
 include("module-Tools.jl")
-
-# Constants and inline documentation
-##x using  JAC.BasicTypes
-##x include("jac-constants.jl")
-include("jac-document.jl")
 
 # Functions/methods for atomic amplitudes
 include("module-MultipoleMoment.jl")
@@ -138,7 +128,7 @@ include("module-RadiativeAuger.jl")
 include("module-MultiPhotonIonization.jl")
 include("module-MultiPhotonDoubleIon.jl")
 include("module-InternalConversion.jl")
-#= Further processes not yet included
+#= Further processes, not yet included into the code
 include("module-DoubleAuger.jl")
 include("module-REDA.jl")
 include("module-READI.jl")
@@ -162,42 +152,14 @@ include("module-TableStrings.jl")
 # Functions/methods for symbolic computations
 # include("module-Racah.jl")
 
+# Basic functions/methods to manipulate these data
+include("inc-module-Basics.jl")
+
 # Specialized macros
 include("macro-racahsum.jl")
 
-using  JAC.BasicTypes, JAC.Radial, JAC.ManyElectron, JAC.Nuclear, JAC.RadialIntegrals, JAC.InteractionStrength, JAC.AngularMomentum
-
-##x include("jac-add.jl")
-##x include("jac-analyze.jl")
-include("jac-compute.jl")
-##x include("jac-convert.jl")
-##x include("jac-define.jl")
-##x include("jac-determine.jl")
-##x include("jac-diagonalize.jl")
-##x include("jac-display.jl")
-##x include("jac-estimate.jl")
-##x include("jac-exclude.jl")
-##x include("jac-evaluate.jl")
-##x include("jac-generate.jl")
-##x include("jac-give.jl")
-##x include("jac-integrate.jl")
-##x include("jac-interpolate.jl")
-##x include("jac-merge.jl")
-##x include("jac-modify.jl")
-include("jac-perform.jl")
-##x include("jac-provide.jl")
-include("jac-plot.jl")
-##x include("jac-read.jl")
-include("jac-recast.jl")
-include("jac-sort.jl")
-include("jac-tabulate.jl")
-##x include("jac-warn.jl")
-
-##x include("jac-constants.jl")
-##x include("jac-document.jl")
-
+# All test functions/methods stay with the JAC root module
 include("jac-test.jl")
-##x include("jac-tools.jl")
     
 function __init__()
     # The following variables need to be initialized at runtime to enable precompilation

@@ -7,7 +7,7 @@
 module Atomic
 
     using Interact
-    using JAC.BasicTypes, JAC.Radial, JAC.ManyElectron, JAC.Nuclear
+    using JAC.Basics, JAC.Radial, JAC.ManyElectron, JAC.Nuclear
     using JAC.Einstein, JAC.Hfs, JAC.IsotopeShift, JAC.PlasmaShift, JAC.LandeZeeman, JAC.AlphaVariation, JAC.FormFactor, JAC.DecayYield,
           JAC.GreenFunction,  JAC.MultipolePolarizibility,
           JAC.PhotoEmission, JAC.PhotoIonization, JAC.PhotoExcitation, JAC.PhotoRecombination, 
@@ -350,7 +350,7 @@ module Atomic
          which all requested details are given by proper keyword specification. A few internal checks are  made. 
     """
     function Computation(sa::String, nm::Nuclear.Model; grid::Radial.Grid = Radial.Grid("grid: exponential"), ##x calc::Bool = false,
-                         properties::Array{AtomicLevelProperty,1} = [BasicTypes.NoProperty], configs::Array{Configuration,1} = Configuration[],
+                         properties::Array{AtomicLevelProperty,1} = [Basics.NoProperty], configs::Array{Configuration,1} = Configuration[],
                          asfSettings::AsfSettings = AsfSettings(),  
                          initialConfigs::Array{Configuration,1} = Configuration[], initialAsfSettings::AsfSettings = AsfSettings(), 
                          intermediateConfigs::Array{Configuration,1} = Configuration[], intermediateAsfSettings::AsfSettings = AsfSettings(), 
@@ -365,52 +365,52 @@ module Atomic
                          polaritySettings::MultipolePolarizibility.Settings = MultipolePolarizibility.Settings(), 
                          yieldSettings::DecayYield.Settings = DecayYield.Settings(), 
                          zeemanSettings::LandeZeeman.Settings = LandeZeeman.Settings(), 
-                         process::BasicTypes.AtomicProcess = BasicTypes.NoProcess, processSettings::Any = true)
-        if      process == BasicTypes.NoProcess         && typeof(processSettings) == Bool && processSettings             procSettings = PhotoEmission.Settings()
-        elseif  process == BasicTypes.Auger             && typeof(processSettings) == Bool && processSettings             procSettings = AutoIonization.Settings()
-        elseif  process == BasicTypes.Auger             && typeof(processSettings) == AutoIonization.Settings             procSettings = processSettings 
-        elseif  process == BasicTypes.AugerInPlasma     && typeof(processSettings) == Bool && processSettings             procSettings = PlasmaShift.AugerSettings()
-        elseif  process == BasicTypes.AugerInPlasma     && typeof(processSettings) == PlasmaShift.AugerSettings           procSettings = processSettings 
-        elseif  process == BasicTypes.Radiative         && typeof(processSettings) == Bool && processSettings             procSettings = PhotoEmission.Settings()
-        elseif  process == BasicTypes.Radiative         && typeof(processSettings) == PhotoEmission.Settings              procSettings = processSettings 
-        elseif  process == BasicTypes.PhotoExc          && typeof(processSettings) == Bool && processSettings             procSettings = PhotoExcitation.Settings()
-        elseif  process == BasicTypes.PhotoExc          && typeof(processSettings) == PhotoExcitation.Settings            procSettings = processSettings 
-        elseif  process == BasicTypes.Photo             && typeof(processSettings) == Bool && processSettings             procSettings = PhotoIonization.Settings()
-        elseif  process == BasicTypes.Photo             && typeof(processSettings) == PhotoIonization.Settings            procSettings = processSettings 
-        elseif  process == BasicTypes.PhotoInPlasma     && typeof(processSettings) == Bool && processSettings             procSettings = PlasmaShift.PhotoSettings()
-        elseif  process == BasicTypes.PhotoInPlasma     && typeof(processSettings) == PlasmaShift.PhotoSettings           procSettings = processSettings 
-        elseif  process == BasicTypes.Rec               && typeof(processSettings) == Bool && processSettings             procSettings = PhotoRecombination.Settings()
-        elseif  process == BasicTypes.Rec               && typeof(processSettings) == PhotoRecombination.Settings         procSettings = processSettings 
-        elseif  process == BasicTypes.Dierec            && typeof(processSettings) == Bool && processSettings             procSettings = Dielectronic.Settings()
-        elseif  process == BasicTypes.Dierec            && typeof(processSettings) == Dielectronic.Settings               procSettings = processSettings 
-        elseif  process == BasicTypes.PhotoExcFluor     && typeof(processSettings) == Bool && processSettings             procSettings = PhotoExcitationFluores.Settings()
-        elseif  process == BasicTypes.PhotoExcFluor     && typeof(processSettings) == PhotoExcitationFluores.Settings     procSettings = processSettings 
-        elseif  process == BasicTypes.PhotoExcAuto      && typeof(processSettings) == Bool && processSettings             procSettings = PhotoExcitationAutoion.Settings()
-        elseif  process == BasicTypes.PhotoExcAuto      && typeof(processSettings) == PhotoExcitationAutoion.Settings     procSettings = processSettings 
-        elseif  process == BasicTypes.PhotoIonFluor     && typeof(processSettings) == Bool && processSettings             procSettings = PhotoIonizationFluores.Settings()
-        elseif  process == BasicTypes.PhotoIonFluor     && typeof(processSettings) == PhotoIonizationFluores.Settings     procSettings = processSettings 
-        elseif  process == BasicTypes.PhotoIonAuto      && typeof(processSettings) == Bool && processSettings             procSettings = PhotoIonizationAutoion.Settings()
-        elseif  process == BasicTypes.PhotoIonAuto      && typeof(processSettings) == PhotoIonizationAutoion.Settings     procSettings = processSettings 
-        elseif  process == BasicTypes.MultiPhotonDE     && typeof(processSettings) == Bool && processSettings             procSettings = MultiPhotonDeExcitation.Settings()
-        elseif  process == BasicTypes.MultiPhotonDE     && typeof(processSettings) == MultiPhotonDeExcitation.Settings    procSettings = processSettings 
-        elseif  process == BasicTypes.Compton           && typeof(processSettings) == Bool && processSettings             procSettings = RayleighCompton.Settings()
-        elseif  process == BasicTypes.Compton           && typeof(processSettings) == RayleighCompton.Settings            procSettings = processSettings 
-        elseif  process == BasicTypes.Eimex             && typeof(processSettings) == Bool && processSettings             procSettings = ImpactExcitation.Settings()
-        elseif  process == BasicTypes.Eimex             && typeof(processSettings) == ImpactExcitation.Settings           procSettings = processSettings 
-        elseif  process == BasicTypes.ImpactExcAuto     && typeof(processSettings) == Bool && processSettings             procSettings = ImpactExcitationAutoion.Settings()
-        elseif  process == BasicTypes.ImpactExcAuto     && typeof(processSettings) == ImpactExcitationAutoion.Settings    procSettings = processSettings 
-        elseif  process == BasicTypes.RAuger            && typeof(processSettings) == Bool && processSettings             procSettings = RadiativeAuger.Settings()
-        elseif  process == BasicTypes.RAuger            && typeof(processSettings) == RadiativeAuger.Settings             procSettings = processSettings 
-        elseif  process == BasicTypes.MultiPI           && typeof(processSettings) == Bool && processSettings             procSettings = MultiPhotonIonization.Settings()
-        elseif  process == BasicTypes.MultiPI           && typeof(processSettings) == MultiPhotonIonization.Settings      procSettings = processSettings 
-        elseif  process == BasicTypes.MultiPDI          && typeof(processSettings) == Bool && processSettings             procSettings = MultiPhotonDoubleIon.Settings()
-        elseif  process == BasicTypes.MultiPDI          && typeof(processSettings) == MultiPhotonDoubleIon.Settings       procSettings = processSettings 
-        elseif  process == BasicTypes.InternalConv      && typeof(processSettings) == Bool && processSettings             procSettings = InternalConversion.Settings()
-        elseif  process == BasicTypes.InternalConv      && typeof(processSettings) == InternalConversion.Settings         procSettings = processSettings 
-        elseif  process == BasicTypes.Coulex            && typeof(processSettings) == Bool && processSettings             procSettings = CoulombExcitation.Settings()
-        elseif  process == BasicTypes.Coulex            && typeof(processSettings) == CoulombExcitation.Settings          procSettings = processSettings 
-        elseif  process == BasicTypes.Coulion           && typeof(processSettings) == Bool && processSettings             procSettings = CoulombIonization.Settings()
-        elseif  process == BasicTypes.Coulion           && typeof(processSettings) == CoulombIonization.Settings          procSettings = processSettings 
+                         process::Basics.AtomicProcess = Basics.NoProcess, processSettings::Any = true)
+        if      process == Basics.NoProcess         && typeof(processSettings) == Bool && processSettings             procSettings = PhotoEmission.Settings()
+        elseif  process == Basics.Auger             && typeof(processSettings) == Bool && processSettings             procSettings = AutoIonization.Settings()
+        elseif  process == Basics.Auger             && typeof(processSettings) == AutoIonization.Settings             procSettings = processSettings 
+        elseif  process == Basics.AugerInPlasma     && typeof(processSettings) == Bool && processSettings             procSettings = PlasmaShift.AugerSettings()
+        elseif  process == Basics.AugerInPlasma     && typeof(processSettings) == PlasmaShift.AugerSettings           procSettings = processSettings 
+        elseif  process == Basics.Radiative         && typeof(processSettings) == Bool && processSettings             procSettings = PhotoEmission.Settings()
+        elseif  process == Basics.Radiative         && typeof(processSettings) == PhotoEmission.Settings              procSettings = processSettings 
+        elseif  process == Basics.PhotoExc          && typeof(processSettings) == Bool && processSettings             procSettings = PhotoExcitation.Settings()
+        elseif  process == Basics.PhotoExc          && typeof(processSettings) == PhotoExcitation.Settings            procSettings = processSettings 
+        elseif  process == Basics.Photo             && typeof(processSettings) == Bool && processSettings             procSettings = PhotoIonization.Settings()
+        elseif  process == Basics.Photo             && typeof(processSettings) == PhotoIonization.Settings            procSettings = processSettings 
+        elseif  process == Basics.PhotoInPlasma     && typeof(processSettings) == Bool && processSettings             procSettings = PlasmaShift.PhotoSettings()
+        elseif  process == Basics.PhotoInPlasma     && typeof(processSettings) == PlasmaShift.PhotoSettings           procSettings = processSettings 
+        elseif  process == Basics.Rec               && typeof(processSettings) == Bool && processSettings             procSettings = PhotoRecombination.Settings()
+        elseif  process == Basics.Rec               && typeof(processSettings) == PhotoRecombination.Settings         procSettings = processSettings 
+        elseif  process == Basics.Dierec            && typeof(processSettings) == Bool && processSettings             procSettings = Dielectronic.Settings()
+        elseif  process == Basics.Dierec            && typeof(processSettings) == Dielectronic.Settings               procSettings = processSettings 
+        elseif  process == Basics.PhotoExcFluor     && typeof(processSettings) == Bool && processSettings             procSettings = PhotoExcitationFluores.Settings()
+        elseif  process == Basics.PhotoExcFluor     && typeof(processSettings) == PhotoExcitationFluores.Settings     procSettings = processSettings 
+        elseif  process == Basics.PhotoExcAuto      && typeof(processSettings) == Bool && processSettings             procSettings = PhotoExcitationAutoion.Settings()
+        elseif  process == Basics.PhotoExcAuto      && typeof(processSettings) == PhotoExcitationAutoion.Settings     procSettings = processSettings 
+        elseif  process == Basics.PhotoIonFluor     && typeof(processSettings) == Bool && processSettings             procSettings = PhotoIonizationFluores.Settings()
+        elseif  process == Basics.PhotoIonFluor     && typeof(processSettings) == PhotoIonizationFluores.Settings     procSettings = processSettings 
+        elseif  process == Basics.PhotoIonAuto      && typeof(processSettings) == Bool && processSettings             procSettings = PhotoIonizationAutoion.Settings()
+        elseif  process == Basics.PhotoIonAuto      && typeof(processSettings) == PhotoIonizationAutoion.Settings     procSettings = processSettings 
+        elseif  process == Basics.MultiPhotonDE     && typeof(processSettings) == Bool && processSettings             procSettings = MultiPhotonDeExcitation.Settings()
+        elseif  process == Basics.MultiPhotonDE     && typeof(processSettings) == MultiPhotonDeExcitation.Settings    procSettings = processSettings 
+        elseif  process == Basics.Compton           && typeof(processSettings) == Bool && processSettings             procSettings = RayleighCompton.Settings()
+        elseif  process == Basics.Compton           && typeof(processSettings) == RayleighCompton.Settings            procSettings = processSettings 
+        elseif  process == Basics.Eimex             && typeof(processSettings) == Bool && processSettings             procSettings = ImpactExcitation.Settings()
+        elseif  process == Basics.Eimex             && typeof(processSettings) == ImpactExcitation.Settings           procSettings = processSettings 
+        elseif  process == Basics.ImpactExcAuto     && typeof(processSettings) == Bool && processSettings             procSettings = ImpactExcitationAutoion.Settings()
+        elseif  process == Basics.ImpactExcAuto     && typeof(processSettings) == ImpactExcitationAutoion.Settings    procSettings = processSettings 
+        elseif  process == Basics.RAuger            && typeof(processSettings) == Bool && processSettings             procSettings = RadiativeAuger.Settings()
+        elseif  process == Basics.RAuger            && typeof(processSettings) == RadiativeAuger.Settings             procSettings = processSettings 
+        elseif  process == Basics.MultiPI           && typeof(processSettings) == Bool && processSettings             procSettings = MultiPhotonIonization.Settings()
+        elseif  process == Basics.MultiPI           && typeof(processSettings) == MultiPhotonIonization.Settings      procSettings = processSettings 
+        elseif  process == Basics.MultiPDI          && typeof(processSettings) == Bool && processSettings             procSettings = MultiPhotonDoubleIon.Settings()
+        elseif  process == Basics.MultiPDI          && typeof(processSettings) == MultiPhotonDoubleIon.Settings       procSettings = processSettings 
+        elseif  process == Basics.InternalConv      && typeof(processSettings) == Bool && processSettings             procSettings = InternalConversion.Settings()
+        elseif  process == Basics.InternalConv      && typeof(processSettings) == InternalConversion.Settings         procSettings = processSettings 
+        elseif  process == Basics.Coulex            && typeof(processSettings) == Bool && processSettings             procSettings = CoulombExcitation.Settings()
+        elseif  process == Basics.Coulex            && typeof(processSettings) == CoulombExcitation.Settings          procSettings = processSettings 
+        elseif  process == Basics.Coulion           && typeof(processSettings) == Bool && processSettings             procSettings = CoulombIonization.Settings()
+        elseif  process == Basics.Coulion           && typeof(processSettings) == CoulombIonization.Settings          procSettings = processSettings 
         else    error("The processSettings must fit to the given process or should not occur if NoProcess is to be calculated.")
         end
         

@@ -5,7 +5,7 @@
 """
 module PhotoEmission
 
-    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, JAC.Basics, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
@@ -42,7 +42,7 @@ module PhotoEmission
     `JAC.PhotoEmission.Settings()`  ... constructor for the default values of radiative line computations
     """
     function Settings()
-        Settings(EmMultipole[E1], UseGauge[BasicTypes.UseCoulomb], false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0.)
+        Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0.)
     end
 
 
@@ -141,11 +141,11 @@ module PhotoEmission
                 if  finalLevel.basis.csfs[r].J != finalLevel.J          ||  finalLevel.basis.csfs[r].parity   != finalLevel.parity    continue    end 
                 for  s = 1:ni
                     if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity  continue    end 
-                    wa = JAC.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                     me = 0.
                     for  coeff in wa
-                        ja = JAC.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
-                        jb = JAC.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
+                        ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
+                        jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
                         MbaCheng  = JAC.InteractionStrength.MbaEmissionCheng(Mp, gauge, omega, finalLevel.basis.orbitals[coeff.a],  
                                                                                                  initialLevel.basis.orbitals[coeff.b], grid)
                         me = me + coeff.T * MbaCheng  ## sqrt( (ja + 1)/(jb + 1) ) * ##   0.707106781186548 *
@@ -184,8 +184,8 @@ module PhotoEmission
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::PhotoEmission.Settings; output=true) 
         # Define a common subshell list for both multiplets
         subshellList = Basics.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
-        Constants.define("relativistic subshell list", subshellList; printout=true)
-        ##x Constants.define("standard grid", grid)
+        Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
+        ##x Defaults.setDefaults("standard grid", grid)
         println("")
         printstyled("JAC.PhotoEmission.computeLines(): The computation of the transition amplitudes and properties starts now ... \n", color=:light_green)
         printstyled("-------------------------------------------------------------------------------------------------------- \n", color=:light_green)
@@ -205,7 +205,7 @@ module PhotoEmission
         if  settings.calcAnisotropy    JAC.PhotoEmission.displayAnisotropies(stdout, newLines)    end
         JAC.PhotoEmission.displayLifetimes(stdout, newLines)
         #
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   JAC.PhotoEmission.displayRates(iostream, newLines)       
                            JAC.PhotoEmission.displayAnisotropies(stdout, newLines)
                            JAC.PhotoEmission.displayLifetimes(iostream, newLines)
@@ -228,7 +228,7 @@ module PhotoEmission
                                   settings::PhotoEmission.Settings; output=true, printout::Bool=true) 
         # Define a common subshell list for both multiplets
         subshellList = Basics.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
-        Constants.define("relativistic subshell list", subshellList; printout=false)
+        Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
         lines = JAC.PhotoEmission.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
         # if  settings.printBeforeComputation    JAC.PhotoEmission.displayLines(lines)    end
@@ -244,7 +244,7 @@ module PhotoEmission
             push!( newLines, newLine)
         end
         # Print all results to a summary file, if requested
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   JAC.PhotoEmission.displayRates(iostream, newLines)    end
         #
         if    output    return( newLines )
@@ -275,7 +275,7 @@ module PhotoEmission
         end
         #     
         # Calculate the photonrate and angular beta if requested 
-        wa = 8.0pi * Constants.give("alpha") * line.omega / (JAC.AngularMomentum.twoJ(line.initialLevel.J) + 1) * 
+        wa = 8.0pi * Defaults.getDefaults("alpha") * line.omega / (JAC.AngularMomentum.twoJ(line.initialLevel.J) + 1) * 
                                                       (JAC.AngularMomentum.twoJ(line.finalLevel.J) + 1)
         photonrate  = EmProperty(wa * rateC, wa * rateB)    
         angularBeta = EmProperty(-9., -9.)
@@ -307,8 +307,8 @@ module PhotoEmission
                 wa = compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                 me = 0.
                 for  coeff in wa
-                    ja = JAC.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
-                    jb = JAC.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
+                    ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
+                    jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
                     MbaCheng  = JAC.InteractionStrength.MbaEmissionCheng(Mp, gauge, omega, finalLevel.basis.orbitals[coeff.a],  
                                                                                    initialLevel.basis.orbitals[coeff.b], grid)
                     MbaAndrey = JAC.InteractionStrength.MbaEmissionAndrey(Mp, gauge, omega, finalLevel.basis.orbitals[coeff.a],  
@@ -339,8 +339,8 @@ module PhotoEmission
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
+                    if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
                     elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)                      push!(channels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 
@@ -359,7 +359,7 @@ module PhotoEmission
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoEmission.Settings)
         if    settings.selectLines    selectLines   = true
-            selectedLines = JAC.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
+            selectedLines = Basics.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
         else                          selectLines   = false
         end
     
@@ -408,7 +408,7 @@ module PhotoEmission
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.omega)) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
             # Now compute the anisotropy parameter from the amplitudes
             for  ch in line.channels
                 if  !(ch.multipole  in  mpList)    push!(mpList, ch.multipole)    end
@@ -492,7 +492,7 @@ module PhotoEmission
                sa  = "  ";    sym = LevelSymmetry( lines[i].initialLevel.J, lines[i].initialLevel.parity )
                sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(lines[i].initialLevel.index); na=2)
                sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-               sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", lines[i].initialLevel.energy)) * "    "
+               sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", lines[i].initialLevel.energy)) * "    "
                push!( ilevels, ii);    push!( istr, sa )   
             end
         end
@@ -528,13 +528,13 @@ module PhotoEmission
         for  ii = 1:length(ilevels)
             sa = istr[ii]
             sa = sa * "Coulomb          " * @sprintf("%.8e",              1.0/irates[ii].Coulomb)     * "  "
-            sa = sa * @sprintf("%.8e", Constants.convert("time: from atomic",   1.0/irates[ii].Coulomb) )   * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic",     irates[ii].Coulomb) )
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("time: from atomic",   1.0/irates[ii].Coulomb) )   * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic",     irates[ii].Coulomb) )
             println(stream, sa)
             sa = repeat(" ", length(istr[ii]) )
             sa = sa * "Babushkin        " * @sprintf("%.8e",              1.0/irates[ii].Babushkin)   * "  "
-            sa = sa * @sprintf("%.8e", Constants.convert("time: from atomic",   1.0/irates[ii].Babushkin) ) * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic",     irates[ii].Babushkin) )
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("time: from atomic",   1.0/irates[ii].Babushkin) ) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic",     irates[ii].Babushkin) )
             println(stream, sa)
         end
         println(stream, "  ", JAC.TableStrings.hLine(111))
@@ -565,7 +565,7 @@ module PhotoEmission
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.omega)) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
             mpGaugeList = Tuple{JAC.EmMultipole,JAC.EmGauge}[]
             for  i in 1:length(line.channels)
                 push!( mpGaugeList, (line.channels[i].multipole, line.channels[i].gauge) )
@@ -609,15 +609,15 @@ module PhotoEmission
                                fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-                sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.omega)) * "    "
+                sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
                 sa = sa * JAC.TableStrings.center(9,  string(ch.multipole); na=4)
                 sa = sa * JAC.TableStrings.flushleft(11, string(ch.gauge);  na=2)
-                chRate =  8pi * Constants.give("alpha") * line.omega / (JAC.AngularMomentum.twoJ(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) * 
+                chRate =  8pi * Defaults.getDefaults("alpha") * line.omega / (JAC.AngularMomentum.twoJ(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) * 
                                                                  (JAC.AngularMomentum.twoJ(line.finalLevel.J) + 1)
-                sa = sa * @sprintf("%.8e", JAC.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
-                sa = sa * @sprintf("%.8e", JAC.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
-                sa = sa * @sprintf("%.8e", JAC.recast("rate: radiative, to g_f",         line, chRate)) * "    "
-                sa = sa * @sprintf("%.8e", JAC.recast("rate: radiative, to decay width", line, chRate)) * "      "
+                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
+                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
+                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to g_f",         line, chRate)) * "    "
+                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to decay width", line, chRate)) * "      "
                 ##x sa = sa * @sprintf("%.5e  %.5e", ch.amplitude.re, ch.amplitude.im) * "        "
                 println(stream, sa)
             end

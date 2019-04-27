@@ -21,7 +21,7 @@ end
 nucleus = Nuclear.Model(10.)
 
 grid = JAC.Radial.Grid("grid: by given parameters", rnt=2.0e-6, h=5.0e-2, NoPoints=390)
-JAC.define("standard grid", grid)
+setDefaults("standard grid", grid)
 
 
 # configurations = [Configuration("1s^2 2s^2 2p^6")];      orbitalsIn = JAC.read("orbital list: Grasp92", "Work/Ne-jac/Ne-0+-1-scf.out")
@@ -49,7 +49,7 @@ printList(relativisticConfigurationsList)
 subshellList = JAC.generate("subshells: ordered list for relativistic configurations", relativisticConfigurationsList)
 println("The subshells are: $subshellList")
 
-JAC.define("relativistic subshell list", subshellList)
+setDefaults("relativistic subshell list", subshellList)
 
 # Generate the relativistic CSF's for the given subshell list
 csfList = CsfR[]

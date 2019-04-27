@@ -1,9 +1,9 @@
 #
 println("Da) Test of the PhotoEmission module with ASF from an internally generated initial- and final-state multiplet.")
 #
-# JAC.define("unit: rate", "a.u.")
-JAC.define("unit: rate", "1/s")
-JAC.define("print summary: open", "zzz-radiative.sum")
+# setDefaults("unit: rate", "a.u.")
+setDefaults("unit: rate", "1/s")
+setDefaults("print summary: open", "zzz-radiative.sum")
 #== wa = Atomic.Computation("xx",  Nuclear.Model(36.);
                         initialConfigs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                         finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
@@ -18,7 +18,7 @@ wa = Atomic.Computation("Energies and Einstein coefficients for the spectrum Fe 
                         processSettings = PhotoEmission.Settings([E1, M1, E2, M2], [JAC.UseCoulomb, JAC.UseBabushkin], 
                                           false, true, false, Tuple{Int64,Int64}[], 0., 0., 10000. ) );
 wb = @time( perform(wa) )
-JAC.define("print summary: close", "")
+setDefaults("print summary: close", "")
 
 
 ## , Configuration("[Ne] 3s^2 3p^4 3d")  Configuration("[Ne] 3s 3p^6")

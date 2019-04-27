@@ -1,18 +1,19 @@
 
 """
-`module JAC.Math`  ... a submodel of JAC that contains various (adopted) procedures from different libraries and sources;
-                       it is using GSL and JAC, JAC.Radial.
+`module JAC.Math`  
+    ... a submodel of JAC that contains various (adopted) procedures from different libraries and sources.
 """
 module Math
 
   using GSL
-  using JAC, JAC.Radial
+  using JAC, ..Radial
 
 
   """
-  `JAC.Math.finiteDifferenceWeights(position, npoints; order=1)`  ... computes the weights for a n-point finite-difference approximation. 
-       position=0 corresponds to the centered stencil, while positive and negative values refer to the non-symmetric stencils, respecitvely. 
-       The order specifies for which derivative the coefficients are computed, the default ist the first derivative.
+  `Math.finiteDifferenceWeights(position, npoints; order=1)`  
+    ... computes the weights for a n-point finite-difference approximation. position=0 corresponds to the centered stencil, 
+        while positive and negative values refer to the non-symmetric stencils, respecitvely. The order specifies for which 
+        derivative the coefficients are computed, the default ist the first derivative.
   """
   function finiteDifferenceWeights(position, npoints; order=1)
     
@@ -50,19 +51,20 @@ module Math
 
 
   """
-  `JAC.Math.derivative(input::Array{Float64}, i::Int64)`  ... computes the derivative of a given input array at position i; a Float64 is returned.
-       An equally spaced grid is assumed, the result must be multiplied by the inverse lattice spacing h manually. If an exponential grid is 
-       used, the transformation must be applied too.
+  `Math.derivative(input::Array{Float64}, i::Int64)`  
+    ... computes the derivative of a given input array at position i; a Float64 is returned. An equally spaced grid is 
+        assumed, the result must be multiplied by the inverse lattice spacing h manually. If an exponential grid is 
+        used, the transformation must be applied too.
   """
   function derivative(input::Array{Float64}, i::Int64) :: Float64
      
-      n = JAC.FINITE_DIFFERENCE_NPOINTS
+      n = JAC.Defaults.FINITE_DIFFERENCE_NPOINTS
       result ::Float64 = 0.
       
       if i <= n
         
         for j = 1:2*n + 1
-          result += JAC.weights[i, j] * input[j]
+          result += JAC.Defaults.weights[i, j] * input[j]
         end
         return result
       end
@@ -70,14 +72,14 @@ module Math
       if size(input, 1) - i < n
         
         for j = 1:2*n + 1
-          result += JAC.weights[2*n + 1 + i - size(input, 1), j] * input[size(input, 1) - 2*n - 1 + j]
+          result += JAC.Defaults.weights[2*n + 1 + i - size(input, 1), j] * input[size(input, 1) - 2*n - 1 + j]
         end
         
         return result
       end
       
       for j = i - n:i+n
-        result += JAC.weights[n + 1, j - i + n + 1] * input[j]
+        result += JAC.Defaults.weights[n + 1, j - i + n + 1] * input[j]
       end
       
       return result
@@ -85,14 +87,14 @@ module Math
   
   
   """
-  `JAC.Math.integrateFitTransform(f::Function, mtp::Int64, grid::Radial.Grid)`  ... to integrate a (point-wise) given function over mtp grid points
-       on an exponential grid. The transformation of the exponential grid is automatically performed such that no modifications to the integrand 
-       are necessary; a value::Float64 is returned.
+  `Math.integrateFitTransform(f::Function, mtp::Int64, grid::Radial.Grid)`  
+    ... to integrate a (point-wise) given function over mtp grid points on an exponential grid. The transformation of the 
+        exponential grid is automatically performed such that no modifications to the integrand are necessary; a value::Float64 
+        is returned.
   """
   function integrateFitTransform(f::Function, mtp::Int64, grid::Radial.Grid)
-      # grid   = JAC.JAC_STANDARD_GRID
-      n      = size(JAC.newtonCotesCoefficients, 1)
-      newtonCotesCoefficientsOnGrid = copy(JAC.newtonCotesCoefficients) * grid.h
+      n      = size(JAC.Defaults.newtonCotesCoefficients, 1)
+      newtonCotesCoefficientsOnGrid = copy(JAC.Defaults.newtonCotesCoefficients) * grid.h
       i0     = 2
       gamma  = 0.
       result = 0.
@@ -117,14 +119,13 @@ module Math
 
   
   """
-  `JAC.Math.integrateFit(f::Function, mtp::Int64, grid::Radial.Grid)`  ... to integrate a (point-wise) given function over mtp grid points 
+  `Math.integrateFit(f::Function, mtp::Int64, grid::Radial.Grid)`  ... to integrate a (point-wise) given function over mtp grid points 
        on an exponential grid. This function assumes that the ingegrand was already transformed to the exponential grid by multiplying it with 
        the derivative of the transformation function; a value::Float64 is returned.
   """
   function integrateFit(f::Function, mtp::Int64, grid::Radial.Grid)
-      # grid   = JAC.JAC_STANDARD_GRID
-      n      = size(JAC.newtonCotesCoefficients, 1)
-      newtonCotesCoefficientsOnGrid = copy(JAC.newtonCotesCoefficients) * grid.h
+      n      = size(JAC.Defaults.newtonCotesCoefficients, 1)
+      newtonCotesCoefficientsOnGrid = copy(JAC.Defaults.newtonCotesCoefficients) * grid.h
 
       i0     = 2
       gamma  = 0.
@@ -151,7 +152,7 @@ module Math
 
   
   """
-  `JAC.Math.integrateTransform(f::Function, n0::Int64, mtp::Int64, grid::Radial.Grid)`  ... to integrate a (point-wise) given function over 
+  `Math.integrateTransform(f::Function, n0::Int64, mtp::Int64, grid::Radial.Grid)`  ... to integrate a (point-wise) given function over 
        mtp grid points ...; a value::Float64 is returned.
   """
   function integrateTransform(f::Function, n0::Int64, mtp::Int64, grid::Radial.Grid)
@@ -180,7 +181,7 @@ module Math
 
   
   """
-  `JAC.Math.polylogExp(x::Float64, s::Int64)`  ... to evaluate the polylog(s, -exp(x)) function.
+  `Math.polylogExp(x::Float64, s::Int64)`  ... to evaluate the polylog(s, -exp(x)) function.
   """
   function polylogExp(x::Float64, s::Int64)
       return -sf_fermi_dirac_int(s-1, x)

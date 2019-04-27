@@ -5,7 +5,7 @@
 """
 module Bsplines
 
-    using  Printf,  JAC, ..BasicTypes, ..Constants,  ..Basics, ..ManyElectron, ..Radial, ..Nuclear
+    using  Printf,  JAC, ..Basics, ..Defaults,  ..Basics, ..ManyElectron, ..Radial, ..Nuclear
     global JAC_counter = 0
 
 
@@ -87,7 +87,7 @@ module Bsplines
             nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS;    wa = zeros( nsL, nsS ) 
             for  i = 1:nsL
                 for  j = 1:nsS
-                    wa[i,j] = Constants.give("speed of light: c") *
+                    wa[i,j] = Defaults.getDefaults("speed of light: c") *
                               JAC.RadialIntegrals.nondiagonalD(-1, kappa, primitives.bsplinesL[i], primitives.bsplinesS[j], primitives.grid)
                 end
             end
@@ -95,7 +95,7 @@ module Bsplines
             nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS;    wa = zeros( nsS, nsL ) 
             for  i = 1:nsS
                 for  j = 1:nsL
-                    wa[i,j] = Constants.give("speed of light: c") *
+                    wa[i,j] = Defaults.getDefaults("speed of light: c") *
                               JAC.RadialIntegrals.nondiagonalD( 1, kappa, primitives.bsplinesS[i], primitives.bsplinesL[j], primitives.grid)
                 end
             end
@@ -108,13 +108,13 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.generateOrbitalFromPrimitives(sh::Subshell, wc::BasicTypes.Eigen, primitives::Bsplines.Primitives)`  ... generates the large 
+    `JAC.Bsplines.generateOrbitalFromPrimitives(sh::Subshell, wc::Basics.Eigen, primitives::Bsplines.Primitives)`  ... generates the large 
          and small components for the subshell sh from the primitives and their eigenvalues & eigenvectors. A (normalized) 
          orbital::Orbital is returned.
     """
-    function generateOrbitalFromPrimitives(sh::Subshell, wc::BasicTypes.Eigen, primitives::Bsplines.Primitives)
+    function generateOrbitalFromPrimitives(sh::Subshell, wc::Basics.Eigen, primitives::Bsplines.Primitives)
         nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
-        l  = JAC.BasicTypes.subshell_l(sh);   ni = nsS + sh.n - l;          if   sh.kappa > 0   ni = ni + 1  end
+        l  = Basics.subshell_l(sh);   ni = nsS + sh.n - l;          if   sh.kappa > 0   ni = ni + 1  end
         en = wc.values[ni];        if  en < 0.   isBound = true  else   isBound = false           end
         ev = wc.vectors[ni];       if  length(ev) != nsL + nsS    error("stop a")                 end
         
@@ -284,14 +284,14 @@ module Bsplines
     function generateSplinePrime(i::Int64, k::Int64, tlist::Array{Float64,1}, r::Float64)
         wa = 0.
         if  (tlist[i+k-1] - tlist[i]) == 0. 
-            Constants.warn(AddWarning, "DB for i=$i, k=$k, tlist[i+k-1]=$(tlist[i+k-1]), tlist[i]=$(tlist[i]), bspline=$(generateSpline(i, k-1, tlist, r)), wa=$wa")  
+            Defaults.warn(AddWarning, "DB for i=$i, k=$k, tlist[i+k-1]=$(tlist[i+k-1]), tlist[i]=$(tlist[i]), bspline=$(generateSpline(i, k-1, tlist, r)), wa=$wa")  
         else
             wa = wa + (k - 1)/(tlist[i+k-1] - tlist[i]) * generateSpline(i,   k-1, tlist, r)
         end
 
         
         if  (tlist[i+k] - tlist[i+1]) == 0.  
-            Constants.warn(AddWarning, "DB for i=$i, k=$k, tlist[i+k]=$(tlist[i+k]), tlist[i+1]=$(tlist[i+1]), bspline=$(generateSpline(i+1, k-1, tlist, r)), wa=$wa")   
+            Defaults.warn(AddWarning, "DB for i=$i, k=$k, tlist[i+k]=$(tlist[i+k]), tlist[i+1]=$(tlist[i+1]), bspline=$(generateSpline(i+1, k-1, tlist, r)), wa=$wa")   
         else
             wa = wa - (k - 1)/(tlist[i+k] - tlist[i+1]) * generateSpline(i+1, k-1, tlist, r)
         end
@@ -326,7 +326,7 @@ module Bsplines
         end
         ##x error("stop for test reasons")
         # (3) Substract the rest mass from the 'SS' block
-        wa[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = wa[nsL+1:nsL+nsS,nsL+1:nsL+nsS] - 2 * Constants.give("speed of light: c")^2 * wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS]
+        wa[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = wa[nsL+1:nsL+nsS,nsL+1:nsL+nsS] - 2 * Defaults.getDefaults("speed of light: c")^2 * wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS]
         # (4) Compute or fetch the diagonal 'D_kappa' blocks
         wa[1:nsL,nsL+1:nsL+nsS] = wa[1:nsL,nsL+1:nsL+nsS] + generateMatrix!(kappa, "LS-D_kappa^-", primitives, storage)
         wa[nsL+1:nsL+nsS,1:nsL] = wa[nsL+1:nsL+nsS,1:nsL] + generateMatrix!(kappa, "SL-D_kappa^+", primitives, storage)
@@ -341,7 +341,7 @@ module Bsplines
             end
         end
         ny = (nsL+nsS)^2/2 - (nsL+nsS)
-        if  nx > 0    Constants.warn(AddWarning, "setupLocalMatrix:: $nx (from $(ny)) non-symmetric H-matrix integrals " *
+        if  nx > 0    Defaults.warn(AddWarning, "setupLocalMatrix:: $nx (from $(ny)) non-symmetric H-matrix integrals " *
                                            "for kappa = $kappa with relative deviation > 1.0e-7.")                 end
        
         return( wa )
@@ -423,7 +423,7 @@ module Bsplines
         for  i = 1:nsL+nsS    
             for  j = i+1:nsL+nsS    
                 if  abs(  (wb[i,j] - wb[j,i])/wb[i,j] ) > 1.0e-8  
-                   Constants.warn(AddWarning, "Nonsymmetric overlap at $i, $j with rel. D = $( abs((wb[i,j] - wb[j,i])/wb[i,j]) ) ")  end
+                   Defaults.warn(AddWarning, "Nonsymmetric overlap at $i, $j with rel. D = $( abs((wb[i,j] - wb[j,i])/wb[i,j]) ) ")  end
                 wij = (wb[i,j] + wb[j,i]) / 2
                 wb[i,j] = wb[j,i] = wij
             end
@@ -450,7 +450,7 @@ module Bsplines
             wa = JAC.Bsplines.setupLocalMatrix(sh.kappa, primitives, pot, storage)
             w2 = Basics.diagonalize("generalized eigenvalues: Julia, eigfact", wa, wb)
             nsi = nsS;    if sh.kappa > 0   nsi = nsi + 1   end
-            if  printout    JAC.tabulateKappaSymmetryEnergiesDirac(sh.kappa, w2.values, nsi, nuclearModel)    end
+            if  printout    Basics.tabulateKappaSymmetryEnergiesDirac(sh.kappa, w2.values, nsi, nuclearModel)    end
             newOrbitals[sh] = generateOrbitalFromPrimitives(sh, w2, primitives)
             # Take over orbitals of the same symmetry
             for  j = 1:length(subshells)
@@ -474,7 +474,7 @@ module Bsplines
     """
     function solveSelfConsistentFieldOptimized(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
                                                settings::AsfSettings; printout::Bool=true) 
-        Constants.define("standard grid", primitives.grid)
+        Defaults.setDefaults("standard grid", primitives.grid)
         
         #
         #
@@ -494,7 +494,7 @@ module Bsplines
     """
     function solveSelfConsistentFieldMean(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
                                           settings::AsfSettings; printout::Bool=true) 
-        Constants.define("standard grid", primitives.grid; printout=printout)
+        Defaults.setDefaults("standard grid", primitives.grid; printout=printout)
         # Define the storage for the calculations of matrices
         if  printout    println("(Re-) Define a storage array for various B-spline matrices:")    end
         storage  = Dict{Array{Any,1},Array{Float64,2}}()
@@ -513,8 +513,8 @@ module Bsplines
                 for kx = 1:length(basis.subshells)   if wNotYet[kx]   &&   sh.kappa == basis.subshells[kx].kappa   wNotYet[kx] = false  end   end
             end
         end 
-        bsplineBlock = Dict{Int64,BasicTypes.Eigen}();   previousOrbitals = deepcopy(basis.orbitals)
-        for  kappa  in  kappas           bsplineBlock[kappa]  = BasicTypes.Eigen( zeros(2), [zeros(2), zeros(2)])   end
+        bsplineBlock = Dict{Int64,Basics.Eigen}();   previousOrbitals = deepcopy(basis.orbitals)
+        for  kappa  in  kappas           bsplineBlock[kappa]  = Basics.Eigen( zeros(2), [zeros(2), zeros(2)])   end
         # Determine te nuclear potential once at the beginning
         nuclearPotential  = JAC.Nuclear.nuclearPotential(nuclearModel, grid)
         
@@ -535,7 +535,7 @@ module Bsplines
                 wmc    = zeros( NoCsf );   wN = 0.
                 for i = 1:NoCsf   wmc[i] = JAC.AngularMomentum.twoJ(wBasis.csfs[i].J) + 1.0;   wN = wN + abs(wmc[i])^2    end
                 for i = 1:NoCsf   wmc[i] = wmc[i] / sqrt(wN)   end
-                wLevel = Level( AngularJ64(0), AngularM64(0), BasicTypes.plus, 0, -1., 0., true, wBasis, wmc)
+                wLevel = Level( AngularJ64(0), AngularM64(0), Basics.plus, 0, -1., 0., true, wBasis, wmc)
                 # (2) Re-compute the local potential
                 ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
                 ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)

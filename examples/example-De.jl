@@ -1,9 +1,9 @@
 #
 println("De) Test of the AutoIonization module with ASF from an internally generated initial- and final-state multiplet.")
 #
-JAC.define("print summary: open", "zzz-AutoIonization.sum")
-JAC.define("method: continuum, asymptotic Coulomb")  ## JAC.define("method: continuum, Galerkin")
-JAC.define("method: normalization, pure sine")       ## JAC.define("method: normalization, pure Coulomb")    JAC.define("method: normalization, pure sine")
+setDefaults("print summary: open", "zzz-AutoIonization.sum")
+setDefaults("method: continuum, asymptotic Coulomb")  ## setDefaults("method: continuum, Galerkin")
+setDefaults("method: normalization, pure sine")       ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
 wa = Atomic.Computation("xx",  Nuclear.Model(12.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600), 
                         initialConfigs  =[Configuration("1s 2s^2 2p^6")],
@@ -11,6 +11,6 @@ wa = Atomic.Computation("xx",  Nuclear.Model(12.); grid=JAC.Radial.Grid("grid: b
                         processSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(1,0)], 0., 1.0e6, 2, "Coulomb") )
 
 wb = perform(wa)
-JAC.define("print summary: close", "")
+setDefaults("print summary: close", "")
 
 

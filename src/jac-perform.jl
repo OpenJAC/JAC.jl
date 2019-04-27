@@ -1,8 +1,6 @@
-using   JAC.BasicTypes
-export  perform
 
 """
-`JAC.perform()`  ... performs various computations.
+`Basics.perform()`  ... performs various computations.
 
   + `(computation::Atomic.Computation)`  ... to perform the computation as prescribed by comp. All relevant intermediate and final
                                              results are printed to screen (stdout). Nothing is returned.
@@ -10,7 +8,7 @@ export  perform
   + `(computation::Atomic.Computation; output=true)`  ... to perform the same but to return the complete output in a dictionary;  the particular
                  output depends on the type and specifications of the computations but can easily accessed by the keys of this dictionary.
 """
-function perform(computation::Atomic.Computation; output::Bool=false)
+function Basics.perform(computation::Atomic.Computation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     nModel = computation.nuclearModel
 
@@ -204,8 +202,8 @@ function perform(computation::Atomic.Computation; output::Bool=false)
         end
     end
        
-    Constants.warn(PrintWarnings)
-    Constants.warn(ResetWarnings)
+    Defaults.warn(PrintWarnings)
+    Defaults.warn(ResetWarnings)
     return( results )
 end
 
@@ -219,9 +217,9 @@ end
   + `(comp::Cascade.Computation; output=true)`   ... to perform the same but to return the complete output in a dictionary;  the particular
             output depends on the type and specifications of the cascade but can easily accessed by the keys of this dictionary.
 """
-function perform(comp::Cascade.Computation; output::Bool=false)
+function Basics.perform(comp::Cascade.Computation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
-    printSummary, iostream = Constants.give("summary flag/stream")
+    printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     #
     # Perform the SCF and CI computation for the intial-state multiplet and print them out with their relative occupation
     basis     = perform("computation: SCF", comp.initialConfs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
@@ -272,7 +270,7 @@ end
                   dictionary;  the particular output depends on the method and specifications of the cascade but can easily accessed by the keys 
                   of this dictionary.
 """
-function perform(simulation::Cascade.Simulation, data::Cascade.Data; output::Bool=false)
+function Basics.perform(simulation::Cascade.Simulation, data::Cascade.Data; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     #
     # Distinguish between the different computational methods for running the simulations
@@ -306,7 +304,7 @@ end
 
   + `(computation::Atomic.CasComputation; output=true)`  ... to perform the same ....  **Not yet implemented !**
 """
-function perform(computation::Atomic.CasComputation; output::Bool=false)
+function Basics.perform(computation::Atomic.CasComputation; output::Bool=false)
     error("Not yet implemented")
 end
 
@@ -317,7 +315,7 @@ end
                           printout::Bool=true)`  ... to generate an atomic basis and to compute the self-consistent field (SCF) for this basis 
                           due to the given settings; a basis::Basis is returned.  
 """
-function perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
+function Basics.perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
                  printout::Bool=true)
     !(sa == "computation: SCF")   &&   error("Unsupported keystring = $sa")
     if  printout    println("\n... in perform('computation: SCF', ...")    end
@@ -330,7 +328,7 @@ function perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nucl
     end
     if  printout    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
     subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
-    Constants.define("relativistic subshell list", subshellList; printout=printout)
+    Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
 
     # Generate the relativistic CSF's for the given subshell list
     csfList = CsfR[]
@@ -343,7 +341,7 @@ function perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nucl
     NoElectrons      = sum( csfList[1].occupation )
     coreSubshellList = Subshell[]
     for  k in 1:length(subshellList)
-        mocc = JAC.subshell_2j(subshellList[k]) + 1;    is_filled = true
+        mocc = Basics.subshell_2j(subshellList[k]) + 1;    is_filled = true
         for  csf in csfList
             if  csf.occupation[k] != mocc    is_filled = false;    break   end
         end
@@ -352,7 +350,7 @@ function perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nucl
         
     ##x waL = JAC.Bsplines.generatePrimitives(7, 7, grid);    nsL = length(waL.bsplines) - 3
     ##x waS = JAC.Bsplines.generatePrimitives(8, 7, grid);    nsS = length(waS.bsplines) - 3 
-    wa = JAC.Bsplines.generatePrimitives(grid)
+    wa = Bsplines.generatePrimitives(grid)
 
     # Generate start orbitals
     if  settings.startScf == "hydrogenic"
@@ -393,7 +391,7 @@ end
         ... to generate from the given initial orbitals a multiplet of single-CSF levels by just using the diagonal part of the
             Hamiltonian matrix; a multiplet::Multiplet is returned.  
 """
-function perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
+function Basics.perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
                  grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
     !(sa == "computation: mutiplet from orbitals, no CI, CSF diagonal")   &&   error("Unsupported keystring = $sa")
     if  printout    println("\n... in perform('computation: mutiplet from orbitals, no CI, CSF diagonal', ...")    end
@@ -406,7 +404,7 @@ function perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Di
     end
     if  printout    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
     subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
-    Constants.define("relativistic subshell list", subshellList; printout=printout)
+    Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
 
     # Generate the relativistic CSF's for the given subshell list
     csfList = CsfR[]
@@ -419,7 +417,7 @@ function perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Di
     NoElectrons      = sum( csfList[1].occupation )
     coreSubshellList = Subshell[]
     for  k in 1:length(subshellList)
-        mocc = JAC.subshell_2j(subshellList[k]) + 1;    is_filled = true
+        mocc = Basics.subshell_2j(subshellList[k]) + 1;    is_filled = true
         for  csf in csfList
             if  csf.occupation[k] != mocc    is_filled = false;    break   end
         end
@@ -438,7 +436,7 @@ function perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Di
         wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[r])
         me = 0.
         for  coeff in wa[1]
-            jj = subshell_2j(basis.orbitals[coeff.a].subshell)
+            jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
             me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
         end
 
@@ -467,19 +465,19 @@ function perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Di
         push!( levels, newlevel)
     end
     mp = Multiplet("noName", levels)
-    mp = JAC.sort("multiplet: by energy", mp)
+    mp = Basics.sort("multiplet: by energy", mp)
     
     # Display all level energies and energy splittings
     if  printout
-        JAC.tabulate("multiplet: energies", mp)
-        JAC.tabulate("multiplet: energy relative to immediately lower level",    mp)
-        JAC.tabulate("multiplet: energy of each level relative to lowest level", mp)
+        Basics.tabulate("multiplet: energies", mp)
+        Basics.tabulate("multiplet: energy relative to immediately lower level",    mp)
+        Basics.tabulate("multiplet: energy of each level relative to lowest level", mp)
     end
-    printSummary, iostream = Constants.give("summary flag/stream")
+    printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary     
-        JAC.tabulate("multiplet: energies", mp, stream=iostream)
-        JAC.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
-        JAC.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
+        Basics.tabulate("multiplet: energies", mp, stream=iostream)
+        Basics.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
+        Basics.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
     end
   
     return( mp )
@@ -492,7 +490,7 @@ end
                          display the level structure of the corresponding multiplet due to the given settings; 
                          a multiplet::Multiplet is returned.   
 """
-function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
+function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
     !(sa == "computation: CI")   &&   error("Unsupported keystring = $sa")
     
     # Determine the J^P symmetry blocks
@@ -529,19 +527,19 @@ function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Ra
     
     # Merge all multiplets into a single one
     mp = Basics.merge("multiplets", multiplets)
-    mp = JAC.sort("multiplet: by energy", mp)
+    mp = Basics.sort("multiplet: by energy", mp)
     
     # Display all level energies and energy splittings
     if  printout
-        JAC.tabulate("multiplet: energies", mp)
-        JAC.tabulate("multiplet: energy relative to immediately lower level",    mp)
-        JAC.tabulate("multiplet: energy of each level relative to lowest level", mp)
+        Basics.tabulate("multiplet: energies", mp)
+        Basics.tabulate("multiplet: energy relative to immediately lower level",    mp)
+        Basics.tabulate("multiplet: energy of each level relative to lowest level", mp)
     end
-    printSummary, iostream = Constants.give("summary flag/stream")
+    printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary     
-        JAC.tabulate("multiplet: energies", mp, stream=iostream)
-        JAC.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
-        JAC.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
+        Basics.tabulate("multiplet: energies", mp, stream=iostream)
+        Basics.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
+        Basics.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
     end
   
     return( mp )
@@ -555,7 +553,7 @@ end
             display the level structure of the corresponding multiplet due to the given settings. Here, the CI matrix
             includes the modifications of the Hamiltonian due to the given plasmaSettings; a multiplet::Multiplet is returned.   
 """
-function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
+function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
                  settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)
     !(sa == "computation: CI for plasma")   &&   error("Unsupported keystring = $sa")
     
@@ -594,19 +592,19 @@ function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Ra
     
     # Merge all multiplets into a single one
     mp = Basics.merge("multiplets", multiplets)
-    mp = JAC.sort("multiplet: by energy", mp)
+    mp = Basics.sort("multiplet: by energy", mp)
     
     # Display all level energies and energy splittings
     if  printout
-        JAC.tabulate("multiplet: energies", mp)
-        JAC.tabulate("multiplet: energy relative to immediately lower level",    mp)
-        JAC.tabulate("multiplet: energy of each level relative to lowest level", mp)
+        Basics.tabulate("multiplet: energies", mp)
+        Basics.tabulate("multiplet: energy relative to immediately lower level",    mp)
+        Basics.tabulate("multiplet: energy of each level relative to lowest level", mp)
     end
-    printSummary, iostream = Constants.give("summary flag/stream")
+    printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary     
-        JAC.tabulate("multiplet: energies", mp, stream=iostream)
-        JAC.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
-        JAC.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
+        Basics.tabulate("multiplet: energies", mp, stream=iostream)
+        Basics.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
+        Basics.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
     end
   
     return( mp )

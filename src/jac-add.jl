@@ -1,12 +1,12 @@
 
 """
-`JAC.add()`  ... 'adds' vaious quantities in an obvious and appropriate manner.
+`Basics.add()`  ... 'adds' vaious quantities in an obvious and appropriate manner.
 
   + `(pota::Radial.Potential, potb::Radial.Potential)`  ... to add two radial potentials together that are defined on the same grid.
                                                              A potential::RadialPotential is returned that inherits its radial size from the
                                                              potential that is defined in a larger range of r-values.
 """
-function  add(pota::Radial.Potential, potb::Radial.Potential)
+function  Basics.add(pota::Radial.Potential, potb::Radial.Potential)
     if  pota.grid.NoPoints != potb.grid.NoPoints  ||   pota.grid.rnt != potb.grid.rnt  ||  pota.grid.h != potb.grid.h  ||  
         pota.grid.hp != potb.grid.hp                   error("stop a")   end
     name = pota.name * "+" * potb.name;   nmax = max(length(pota.Zr), length(potb.Zr));   nmin = min(length(pota.Zr), length(potb.Zr))
@@ -22,9 +22,9 @@ end
 
 
 """
-`JAC.addZerosToCsfR(nz::Int64, csf::CsfR)`  ... 'adds' a number of zeros to the occupation, seniority, etc. of a given CsfR.
+`Basics.addZerosToCsfR(nz::Int64, csf::CsfR)`  ... 'adds' a number of zeros to the occupation, seniority, etc. of a given CsfR.
 """
-function  addZerosToCsfR(nz::Int64, csf::CsfR)
+function  Basics.addZerosToCsfR(nz::Int64, csf::CsfR)
     !csf.useStandardSubshells   &&   error("Zeros can only be added to CSF with standard subshell order.")
     
     println("nz = $nz")

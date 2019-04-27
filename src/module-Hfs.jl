@@ -5,7 +5,7 @@
 """
 module Hfs
 
-    using Printf, JAC, ..BasicTypes,  ..Basics,  ..Constants,  ..ManyElectron, ..Radial, ..Nuclear
+    using Printf, JAC, ..Basics,  ..Basics,  ..Defaults,  ..ManyElectron, ..Radial, ..Nuclear
     global JAC_counter = 0
     
 
@@ -295,8 +295,8 @@ module Hfs
                 #--------------------------------
                     wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                     for  coeff in wa
-                        ja = JAC.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
-                        jb = JAC.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
+                        ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
+                        jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = JAC.InteractionStrength.hfs_t1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
                         #
                         ## println("**  <$(coeff.a) || t1 || $(coeff.b)>  = $(coeff.T * tamp)   = $(coeff.T) * $tamp" )
@@ -307,8 +307,8 @@ module Hfs
                 #--------------------------------
                     wa = compute("angular coefficients: 1-p, Grasp92", 0, 2, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                     for  coeff in wa
-                        ja = JAC.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
-                        jb = JAC.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
+                        ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
+                        jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = JAC.InteractionStrength.hfs_t2(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
                         #
                         ## println("**  <$(coeff.a) || t2 || $(coeff.b)>  = $(coeff.T * tamp)   = $(coeff.T) * $tamp" )
@@ -372,13 +372,13 @@ module Hfs
         hfsBasis     = JAC.Hfs.defineHyperfineBasis(multiplet, nm, settings)
         hfsMultiplet = JAC.Hfs.computeHyperfineRepresentation(hfsBasis, nm, grid, settings)
         # Print all results to screen
-        hfsMultiplet = JAC.sort("multiplet: by energy", hfsMultiplet)
-        JAC.tabulate("multiplet: energies",                                      hfsMultiplet) 
-        JAC.tabulate("multiplet: energy of each level relative to lowest level", hfsMultiplet) 
-        printSummary, iostream = Constants.give("summary flag/stream")
+        hfsMultiplet = Basics.sort("multiplet: by energy", hfsMultiplet)
+        Basics.tabulate("multiplet: energies",                                      hfsMultiplet) 
+        Basics.tabulate("multiplet: energy of each level relative to lowest level", hfsMultiplet) 
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary     
-            JAC.tabulate("multiplet: energies",                                      hfsMultiplet, stream=iostream) 
-            JAC.tabulate("multiplet: energy of each level relative to lowest level", hfsMultiplet, stream=iostream) 
+            Basics.tabulate("multiplet: energies",                                      hfsMultiplet, stream=iostream) 
+            Basics.tabulate("multiplet: energy of each level relative to lowest level", hfsMultiplet, stream=iostream) 
         end
         #
         if    output    return( hfsMultiplet )
@@ -425,7 +425,7 @@ module Hfs
         for  ev = 1:length(eigen.values)
             # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)
             evector   = eigen.vectors[ev];    en = eigen.values[ev]
-            parity    = JAC.BasicTypes.plus;    F = AngularJ64(0);     MF = AngularM64(0)
+            parity    = JAC.Basics.plus;    F = AngularJ64(0);     MF = AngularM64(0)
             ##x println("len = $(length(hfsBasis.vectors))  evector = $evector   ")
             for  r = 1:length(hfsBasis.vectors)
                 if  abs(evector[r]) > 1.0e-6    
@@ -458,8 +458,8 @@ module Hfs
                     #
                     wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, basis.csfs[r], basis.csfs[s])
                     for  coeff in wa
-                        ja   = JAC.subshell_2j(basis.orbitals[coeff.a].subshell)
-                        jb   = JAC.subshell_2j(basis.orbitals[coeff.b].subshell)
+                        ja   = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
+                        jb   = Basics.subshell_2j(basis.orbitals[coeff.b].subshell)
                         tamp = JAC.InteractionStrength.hfs_t1(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
                         matrixT1[r,s] = matrixT1[r,s] + coeff.T * tamp  
                     end
@@ -477,8 +477,8 @@ module Hfs
                     #
                     wa = compute("angular coefficients: 1-p, Grasp92", 0, 2, basis.csfs[r], basis.csfs[s])
                     for  coeff in wa
-                        ja   = JAC.subshell_2j(basis.orbitals[coeff.a].subshell)
-                        jb   = JAC.subshell_2j(basis.orbitals[coeff.b].subshell)
+                        ja   = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
+                        jb   = Basics.subshell_2j(basis.orbitals[coeff.b].subshell)
                         tamp  = JAC.InteractionStrength.hfs_t2(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
                         matrixT2[r,s] = matrixT2[r,s] + coeff.T * tamp  
                     end
@@ -521,7 +521,7 @@ module Hfs
         Hfs.displayResults(stdout, newOutcomes, nm, settings)
         # Compute and display the non-diagonal hyperfine amplitudes, if requested
         if  settings.calcNondiagonal    Hfs.displayNondiagonal(stdout, multiplet, grid, settings)   end
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary    
             Hfs.displayResults(iostream, newOutcomes, nm, settings) 
             if  settings.calcNondiagonal    Hfs.displayNondiagonal(iostream, multiplet, grid, settings)   end
@@ -550,7 +550,7 @@ module Hfs
                 wa = compute("angular coefficients: 1-p, Ratip2013", 1, basis.csfs[r], basis.csfs[s])
                 me = 0.
                 for  coeff in wa
-                    jj = JAC.subshell_2j(basis.orbitals[coeff.a].subshell)
+                    jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                     me = me + coeff.T * sqrt( jj + 1) * 
                                         JAC.InteractionStrength.hfs_t1(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
                 end
@@ -578,7 +578,7 @@ module Hfs
                 wa = compute("angular coefficients: 1-p, Ratip2013", 2, basis.csfs[r], basis.csfs[s])
                 me = 0.
                 for  coeff in wa
-                    jj = JAC.subshell_2j(basis.orbitals[coeff.a].subshell)
+                    jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                     me = me + coeff.T * sqrt( jj + 1) * 
                                         JAC.InteractionStrength.hfs_t2(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
                 end
@@ -712,7 +712,7 @@ module Hfs
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.Jlevel.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.Jlevel.energy)) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.Jlevel.energy)) * "    "
             println( sa )
         end
         println("  ", JAC.TableStrings.hLine(43))
@@ -747,12 +747,12 @@ module Hfs
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.Jlevel.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
             energy = outcome.Jlevel.energy
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", energy))           * "      "
-            wa = Constants.convert("energy: from atomic", outcome.AIoverMu) / nm.spinI.num * nm.spinI.den 
-            wa = wa / (2 * 1836.15267 ) * Constants.give("alpha")  # take 2m_p and alpha into account
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))           * "      "
+            wa = Defaults.convertUnits("energy: from atomic", outcome.AIoverMu) / nm.spinI.num * nm.spinI.den 
+            wa = wa / (2 * 1836.15267 ) * Defaults.getDefaults("alpha")  # take 2m_p and alpha into account
             sa = sa * @sprintf("%.8e", wa)                                                   * "    " 
-            wa = Constants.convert("energy: from atomic", outcome.BoverQ) 
-            wa = wa / Constants.convert("cross section: from atomic to barn", 1.0)  # take Q [barn] into account
+            wa = Defaults.convertUnits("energy: from atomic", outcome.BoverQ) 
+            wa = wa / Defaults.convertUnits("cross section: from atomic to barn", 1.0)  # take Q [barn] into account
             sa = sa * @sprintf("%.8e", wa)                                                   * "    "
             sa = sa * @sprintf("%.8e %s %.8e", outcome.amplitudeT1.re, "  ", outcome.amplitudeT2.re) * "    "
             println(stream, sa )
@@ -787,7 +787,7 @@ module Hfs
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
             energy = outcome.Jlevel.energy
             #
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", energy))           * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))           * "    "
             J     = JAC.AngularMomentum.oneJ(outcome.Jlevel.J);   spinI = JAC.AngularMomentum.oneJ(nm.spinI)
             Flist = JAC.oplus(nm.spinI, outcome.Jlevel.J)
             first = true
@@ -802,7 +802,7 @@ module Hfs
                 end
                 ##x println("energy-b = $energy  outcome.BoverQ = $(outcome.BoverQ) Q = $(nm.Q)")
                 sb = JAC.TableStrings.center(10, string(Fsym); na=2)
-                sb = sb * JAC.TableStrings.flushright(16, @sprintf("%.8e", Constants.convert("energy: from atomic", energy))) * "    "
+                sb = sb * JAC.TableStrings.flushright(16, @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))) * "    "
                 sb = sb * JAC.TableStrings.flushright(12, @sprintf("%.5e", Cfactor))
                 #
                 if   first    println(stream,  sa*sb );   first = false

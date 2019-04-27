@@ -5,7 +5,7 @@
 """
 module Continuum
 
-    using  GSL, Printf, SpecialFunctions, JAC, JAC.BasicTypes, ..Basics, ..Constants, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
+    using  GSL, Printf, SpecialFunctions, JAC, JAC.Basics, ..Basics, ..Defaults, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
 
 
@@ -34,14 +34,14 @@ module Continuum
         P = zeros(settings.mtp);    Q = zeros(settings.mtp);   Pprime = zeros(settings.mtp);    Qprime = zeros(settings.mtp)
         
         phi0 = 0.3
-        wc   = Constants.give("speed of light: c");    q = sqrt( 2*energy + energy/(wc*wc));    kappa = sh.kappa
+        wc   = Defaults.getDefaults("speed of light: c");    q = sqrt( 2*energy + energy/(wc*wc));    kappa = sh.kappa
         Zbar = JAC.Radial.determineZbar(pot)
         y    = Zbar * (energy + wc^2) / (wc^2 * q);   gammaBar = sqrt(kappa^2 - Zbar^2 / wc^2)
         eta  = - (kappa - im*y) / (energy + wc^2) / (gammaBar + im*y) / (2im)
         NP   = sqrt( (energy + 2*wc^2)/(pi*wc^2*q) );   NQ = -sqrt( energy / (pi*wc^2*q) )
         
         ## println("Continuum-asymptotic Coulomb orbital for q = $q,  kappa = $kappa,  Zbar=$Zbar  y = $y,   gammaBar = $gammaBar,  eta = $eta")
-        if  Constants.GBL_PRINT_DEBUG  println("Continuum-asymptotic Coulomb orbital for q = $q,  kappa = $kappa,  Zbar=$Zbar,  eta = $eta")    end
+        if  Defaults.GBL_PRINT_DEBUG  println("Continuum-asymptotic Coulomb orbital for q = $q,  kappa = $kappa,  Zbar=$Zbar,  eta = $eta")    end
 
         
         for  i = 2:settings.mtp  
@@ -74,28 +74,28 @@ module Continuum
         ## wp4 = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
         wp = compute("radial potential: Dirac-Fock-Slater", grid, level)   
         pot = Basics.add(nuclearPotential, wp)
-        Constants.warn(AddWarning, "All continuum orbitals are generated in a local (DFS) potential.")  
+        Defaults.warn(AddWarning, "All continuum orbitals are generated in a local (DFS) potential.")  
         
         # Generate a continuum orbital due to the given solution method
-        ##x println("Constants.GBL_CONT_SOLUTION = $(Constants.GBL_CONT_SOLUTION)")
-        if      Constants.GBL_CONT_SOLUTION  ==  ContBessel 
+        ##x println("Defaults.GBL_CONT_SOLUTION = $(Defaults.GBL_CONT_SOLUTION)")
+        if      Defaults.GBL_CONT_SOLUTION  ==  ContBessel 
             cOrbital = JAC.Continuum.generateOrbitalBessel(energy, sh, grid::Radial.Grid, settings)
-        elseif  Constants.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb 
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb 
             cOrbital = JAC.Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
-        elseif  Constants.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb 
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb 
             cOrbital = JAC.Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
-        elseif  Constants.GBL_CONT_SOLUTION  ==  BsplineGalerkin
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin
             cOrbital = JAC.Continuum.generateOrbitalGalerkin(energy, sh, pot, settings)
         else    error("stop a")
         end
         #
         #
         # Normalize the continuum orbital and determine its phase
-        if      Constants.GBL_CONT_NORMALIZATION  ==  PureSine
+        if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSine
             cOrbital, phase = JAC.Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
-        elseif  Constants.GBL_CONT_NORMALIZATION  ==  CoulombSine
+        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSine
             cOrbital, phase = JAC.Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
-        elseif  Constants.GBL_CONT_NORMALIZATION  ==  OngRussek
+        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussek
             cOrbital, phase = JAC.Continuum.normalizeOrbitalOngRussek(cOrbital, pot.grid, settings)
         else    error("stop b")
         end
@@ -115,26 +115,26 @@ module Continuum
         settings.includeExchange   &&   error("Continuum orbital for local potential does not allow 'exchange'.")
         
         # Generate a continuum orbital due to the given solution method
-        if      Constants.GBL_CONT_SOLUTION  ==  ContBessel 
+        if      Defaults.GBL_CONT_SOLUTION  ==  ContBessel 
             cOrbital = JAC.Continuum.generateOrbitalBessel(energy, sh, pot.grid, settings)
-        elseif  Constants.GBL_CONT_SOLUTION  ==  ContSine 
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  ContSine 
             cOrbital = JAC.Continuum.generateOrbitalPureSine(energy, sh, pot.grid, settings)
-        elseif  Constants.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb 
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb 
             cOrbital = JAC.Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
-        elseif  Constants.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb 
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb 
             cOrbital = JAC.Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
-        elseif  Constants.GBL_CONT_SOLUTION  ==  BsplineGalerkin
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin
             cOrbital = JAC.Continuum.generateOrbitalGalerkin(energy, sh, pot, settings)
         else    error("stop a")
         end
         #
         #
         # Normalize the continuum orbital and determine its phase
-        if      Constants.GBL_CONT_NORMALIZATION  ==  PureSine
+        if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSine
             cOrbital, phase = JAC.Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
-        elseif  Constants.GBL_CONT_NORMALIZATION  ==  CoulombSine
+        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSine
             cOrbital, phase = JAC.Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
-        elseif  Constants.GBL_CONT_NORMALIZATION  ==  OngRussek
+        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussek
             cOrbital, phase = JAC.Continuum.normalizeOrbitalOngRussek(cOrbital, pot.grid, settings)
         else    error("stop b")
         end
@@ -153,7 +153,7 @@ module Continuum
     function generateOrbitalBessel(energy::Float64, sh::Subshell, grid::Radial.Grid, settings::Continuum.Settings)  
         P = zeros(settings.mtp);    Q = zeros(settings.mtp);   Pprime = zeros(settings.mtp);    Qprime = zeros(settings.mtp)
         
-        q = sqrt( 2*energy );    l = JAC.subshell_l(sh);   wc = Constants.give("speed of light: c")
+        q = sqrt( 2*energy );    l = Basics.subshell_l(sh);   wc = Defaults.getDefaults("speed of light: c")
         for  i = 2:settings.mtp   P[i] = GSL.sf_bessel_jl(l, q * grid.r[i]) * grid.r[i]    end
         for  i = 2:settings.mtp   qz = q * grid.r[i];   Pprime[i] = (l/qz * GSL.sf_bessel_jl(l, qz) - GSL.sf_bessel_jl(l+1, qz)) + P[i]/grid.r[i]     end
         ## for  i = 1:settings.mtp   P[i]      = sin(q * grid.r[i] + 5.1)    end
@@ -207,7 +207,7 @@ module Continuum
         
         P = zeros(settings.mtp);    Q = zeros(settings.mtp);   Pprime = zeros(settings.mtp);    Qprime = zeros(settings.mtp)
         
-        q  = sqrt( 2*energy );    l = JAC.subshell_l(sh);   wc = Constants.give("speed of light: c");   np = Zeff/q;   ws = 1
+        q  = sqrt( 2*energy );    l = Basics.subshell_l(sh);   wc = Defaults.getDefaults("speed of light: c");   np = Zeff/q;   ws = 1
         wa = 2 * sqrt(Zeff) / sqrt(1 - Base.MathConstants.e^(-2pi*np)) / factorial(2l + 1)
         for  s = 1:l    ws = ws * sqrt(s^2 + np^2)    end
         
@@ -248,9 +248,9 @@ module Continuum
              is currently set to nrContinuum = grid.nr - 200  ... to correct for the wrong 'phase behaviour' at large r-values.
     """
     function gridConsistency(maxEnergy::Float64, grid::Radial.Grid)
-        Constants.warn(AddWarning, "Continuum.gridConsistency(): Improve the grid point for normalization; currently 600.")
+        Defaults.warn(AddWarning, "Continuum.gridConsistency(): Improve the grid point for normalization; currently 600.")
         
-        wavenb      = sqrt( 2maxEnergy + maxEnergy * Constants.give("alpha")^2 )
+        wavenb      = sqrt( 2maxEnergy + maxEnergy * Defaults.getDefaults("alpha")^2 )
         wavelgth    = 2pi / wavenb
         nrContinuum = grid.nr - 200
         
@@ -276,7 +276,7 @@ module Continuum
         P = zeros(settings.mtp);    Q = zeros(settings.mtp);   Pprime = zeros(settings.mtp);    Qprime = zeros(settings.mtp)
         
         phi0 = 0.3
-        q = sqrt( 2*energy );    l = JAC.subshell_l(sh);   wc = Constants.give("speed of light: c");    N = sqrt(2/(pi*q))
+        q = sqrt( 2*energy );    l = Basics.subshell_l(sh);   wc = Defaults.getDefaults("speed of light: c");    N = sqrt(2/(pi*q))
         for  i = 1:settings.mtp   P[i]      = N * sin(q * grid.r[i] - l*pi/2 + phi0)                  end
         for  i = 1:settings.mtp   Pprime[i] = N * q * cos(q * grid.r[i] - l*pi/2 + phi0)              end
         for  i = 2:settings.mtp   Q[i] = -1/(2 * wc) * Pprime[i]  +  sh.kappa/grid.r[i] * P[i]        end
@@ -297,7 +297,7 @@ module Continuum
     function normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings::Continuum.Settings) 
         
         nx = 21   # Number of grid points for determining the phase and normalization constants
-        mtp = size( cOrbital.P, 1);    q = sqrt( 2*cOrbital.energy );        l = BasicTypes.subshell_l(cOrbital.subshell)
+        mtp = size( cOrbital.P, 1);    q = sqrt( 2*cOrbital.energy );        l = Basics.subshell_l(cOrbital.subshell)
         meanPhi = zeros(nx);    devsPhi = zeros(nx);   meanN = zeros(nx);    devsN = zeros(nx);   ny = 0
         for i = mtp-nx+1:mtp
             PPprime = cOrbital.P[i] / cOrbital.Pprime[i];    kr  = q * grid.r[i];   at = atan( PPprime * q )
@@ -316,7 +316,7 @@ module Continuum
         mPhi = sum(meanPhi) / nx;    mN = sum(meanN) / nx
         for  i = 1:nx    devsPhi[i] = (meanPhi[i] - mPhi)^2;    devsN[i] = (meanN[i] - mN)^2    end
         stdPhi = sqrt( sum(devsPhi) / nx );   stdN = sqrt( sum(devsN) / nx );
-         if  Constants.GBL_PRINT_DEBUG  println("Pure-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",mN) *
+         if  Defaults.GBL_PRINT_DEBUG  println("Pure-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",mN) *
                                       " (Delta-N=" * @sprintf("%.4e",stdN) *
                                       ") and phase phi=" * @sprintf("%.4e",mPhi) *
                                       " (Delta-N=" * @sprintf("%.4e",stdPhi) * ")." )    end
@@ -337,7 +337,7 @@ module Continuum
         
         nx = 21   # Number of grid points for determining the phase and normalization constants
         mtp = size( cOrbital.P, 1);   energy = cOrbital.energy    
-        wc   = Constants.give("speed of light: c");    q = sqrt( 2*energy + energy/(wc*wc));      kappa = cOrbital.subshell.kappa
+        wc   = Defaults.getDefaults("speed of light: c");    q = sqrt( 2*energy + energy/(wc*wc));      kappa = cOrbital.subshell.kappa
         Zbar = JAC.Radial.determineZbar(pot);    y = Zbar * (energy + wc^2) / (wc^2 * q);   gammaBar = sqrt(kappa^2 - Zbar^2 / wc^2)
         eta  = - (kappa - im*y) / (energy + wc^2) / (gammaBar + im*y) / (2im)
         NP   = sqrt( (energy + 2*wc^2)/(pi*wc^2*q) );   NQ = -sqrt( energy / (pi*wc^2*q) )

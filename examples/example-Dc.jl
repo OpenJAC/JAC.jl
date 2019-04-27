@@ -1,9 +1,9 @@
 #
 println("Dc) Test of the PhotoIonization module with ASF from an internally generated initial- and final-state multiplet.")
 #
-JAC.define("print summary: open", "zzz-PhotoIonization.sum")
-JAC.define("method: continuum, asymptotic Coulomb")  ## JAC.define("method: continuum, Galerkin")
-JAC.define("method: normalization, pure Coulomb")   ## JAC.define("method: normalization, pure Coulomb")    JAC.define("method: normalization, pure sine")
+setDefaults("print summary: open", "zzz-PhotoIonization.sum")
+setDefaults("method: continuum, asymptotic Coulomb")  ## setDefaults("method: continuum, Galerkin")
+setDefaults("method: normalization, pure Coulomb")   ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
 wa = Atomic.Computation("xx",  Nuclear.Model(20.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800),
                         initialConfigs=[Configuration("[Ne] 3s^2 3p^6")],
@@ -13,7 +13,7 @@ wa = Atomic.Computation("xx",  Nuclear.Model(20.); grid=JAC.Radial.Grid("grid: b
                                         false, Tuple{Int64,Int64}[], ExpStokes(1., 0., 0.)) )
 
 wb = perform(wa)
-JAC.define("print summary: close", "")
+setDefaults("print summary: close", "")
 
 
 #==

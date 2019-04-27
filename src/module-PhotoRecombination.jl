@@ -6,7 +6,7 @@
 """
 module PhotoRecombination
 
-    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
+    using Printf, JAC, JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
 
 
@@ -138,7 +138,7 @@ module PhotoRecombination
         if      kind in [ "photorecombination"]
         #-----------------------------------
             amplitude = JAC.PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, energy, finalLevel, continuumLevel, grid)
-            amplitude = im^BasicTypes.subshell_l(Subshell(101, channel.kappa)) * exp( im*channel.phase ) * amplitude
+            amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( im*channel.phase ) * amplitude
         else    error("stop b")
         end
         
@@ -171,7 +171,7 @@ module PhotoRecombination
             end
         end
         Ji2 = JAC.AngularMomentum.twoJ(line.initialLevel.J)
-        csFactor     = 8 * pi^3 * Constants.give("alpha")^3 * line.photonEnergy / (Ji2 + 1)
+        csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 * line.photonEnergy / (Ji2 + 1)
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         newLine = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, crossSection, true, newChannels)
         return( newLine )
@@ -247,7 +247,7 @@ module PhotoRecombination
         end
         # Print all results to screen
         JAC.PhotoRecombination.displayResults(stdout, newLines, settings)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   JAC.PhotoRecombination.displayResults(iostream, newLines, settings)    end
         #
         if    output    return( lines )
@@ -272,9 +272,9 @@ module PhotoRecombination
                     kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symi, symt)
                     for  kappa in kappaList
                         # Include further restrictions if appropriate
-                        if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      
+                        if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
                             push!(channels, PhotoRecombination.Channel(mp, JAC.Coulomb,   kappa, symt, 0., Complex(0.)) )
-                        elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    
+                        elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
                             push!(channels, PhotoRecombination.Channel(mp, JAC.Babushkin, kappa, symt, 0., Complex(0.)) )  
                         elseif string(mp)[1] == 'M'                                
                             push!(channels, PhotoRecombination.Channel(mp, JAC.Magnetic,  kappa, symt, 0., Complex(0.)) ) 
@@ -295,7 +295,7 @@ module PhotoRecombination
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoRecombination.Settings)
         if    settings.selectLines    selectLines   = true;   
-                       selectedLines = JAC.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
+                       selectedLines = Basics.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
         else                          selectLines   = false
         end
     
@@ -311,7 +311,7 @@ module PhotoRecombination
                     for  en in settings.electronEnergies
                         if  en < 0    continue   end 
                         # Electron energies are still in 'pre-defined' units; convert to Hartree
-                        en_au = Constants.convert("energy: to atomic", en)
+                        en_au = Defaults.convertUnits("energy: to atomic", en)
                         omega = en_au + initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy
 
                         channels = JAC.PhotoRecombination.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
@@ -354,9 +354,9 @@ module PhotoRecombination
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
             energy = line.initialLevel.energy - line.finalLevel.energy
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", energy))              * "   "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", line.electronEnergy)) * "   "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", line.photonEnergy))   * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", energy))              * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "    "
             kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
             for  i in 1:length(line.channels)
                 push!( kappaMultipoleSymmetryList, (line.channels[i].kappa, line.channels[i].multipole, line.channels[i].gauge, 
@@ -405,17 +405,17 @@ module PhotoRecombination
             sa = sa * JAC.TableStrings.center(17, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(17, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
             en = line.initialLevel.energy - line.finalLevel.energy
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", en))                  * "    "
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.photonEnergy))   * "    "
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.electronEnergy)) * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                  * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) * "    "
             multipoles = EmMultipole[]
             for  ch in line.channels
                 multipoles = push!( multipoles, ch.multipole)
             end
             multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
             sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=2)
-            sa = sa * @sprintf("%.6e", Constants.convert("cross section: from atomic", line.crossSection.Coulomb))     * "    "
-            sa = sa * @sprintf("%.6e", Constants.convert("cross section: from atomic", line.crossSection.Babushkin))   * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Coulomb))     * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin))   * "    "
             println(stream, sa)
         end
         println(stream, "  ", JAC.TableStrings.hLine(133))
@@ -445,9 +445,9 @@ module PhotoRecombination
                 sa = sa * JAC.TableStrings.center(17, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
                 sa = sa * JAC.TableStrings.center(17, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
                 en = line.initialLevel.energy - line.finalLevel.energy
-                sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", en))                  * "    "
-                sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.photonEnergy))   * "    "
-                sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.electronEnergy)) * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                  * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) * "    "
                 multipoles = EmMultipole[]
                 for  ch in line.channels
                     multipoles = push!( multipoles, ch.multipole)

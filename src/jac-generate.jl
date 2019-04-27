@@ -1,14 +1,12 @@
-using   JAC.BasicTypes
-export  generate
 
 """
-`JAC.Basics.generate()`  ... generates various (complex) lists and elaborate data from simple rather simple input; the return typically depends
+`Basics.generate()`  ... generates various (complex) lists and elaborate data from simple rather simple input; the return typically depends
                       on the given keystring and the input data. 
 
   + `("condensed multiplet: by single weight", multiplet::Multiplet)`  ... to condense/reduce the number of CSF in the basis of the
                       given multiplet due to a single 'weight'; a multiplet::Multiplet is returned.  **Not yet implemented !**
 """
-function generate(sa::String, multiplet::Multiplet)
+function Basics.generate(sa::String, multiplet::Multiplet)
     !(sa == "condensed multiplet: by single weight")   &&   error("Unsupported keystring = $sa")
     error("Not yet implemented !")
 end
@@ -19,14 +17,14 @@ end
   + `("configuration list: NR, from basis", basis::Basis)`  ... to (re-) generate the list of NR configurations from the given basis;
                       a confList::Array{Configuration,1} is returned.
 """
-function generate(sa::String, basis::Basis)
+function Basics.generate(sa::String, basis::Basis)
     !(sa == "configuration list: NR, from basis")   &&   error("Unsupported keystring = $sa")
     confList    = Configuration[]
     NoElectrons = sum( basis.csfs[1].occupation )
     for  csf in basis.csfs
         shellList = Dict{Shell,Int64}[]
         for  i = 1:length(csf.occupation)
-             n = csf.subshell[i].n;    l = subshell_l( csf.subshell[i] );    sh = Shell(n, l)
+             n = csf.subshell[i].n;    l = Basics.subshell_l( csf.subshell[i] );    sh = Shell(n, l)
             if     haskey(shellList, sh)    shellList(sh) = shellList(sh) + csf.occupation[i]
             else   shellList = merge( shellList, Dict(sh => csf.occupation[i]) )
             end
@@ -46,7 +44,7 @@ end
                       configuration (refConf) and with all configurations that differ by NoExcitations from the fromShells into the 
                       toShells; an Array{Configuration,1} is returned.
 """
-function generate(sa::String, refConf::Configuration, NoExcitations::Int64, fromShells::Array{Shell,1}, toShells::Array{Shell,1})
+function Basics.generate(sa::String, refConf::Configuration, NoExcitations::Int64, fromShells::Array{Shell,1}, toShells::Array{Shell,1})
     !(sa == "configuration list: NR, single-configuration")   &&   error("Unsupported keystring = $sa")
     confList = [refConf]
     # First prepare a proper reference configuration that also includes all fromShells and toShells with zero occupation
@@ -133,7 +131,7 @@ end
   + `("configuration list: relativistic", conf::Configuration)`  ... to split/decompose a non-relativistic configuration into an list
                       of relativistic ConfigurationR[]. The proper occupuation of the relativistic subshells is taken into account.
 """
-function generate(sa::String, conf::Configuration)
+function Basics.generate(sa::String, conf::Configuration)
     subshellList = Subshell[]
     confList     = ConfigurationR[]
 
@@ -142,7 +140,7 @@ function generate(sa::String, conf::Configuration)
     initialize = true;    NoElectrons = 0
     for (k, occ)  in conf.shells
         NoElectrons     = NoElectrons + occ
-        wa              = JAC.BasicTypes.shellSplitOccupation(k, occ)
+        wa              = JAC.Basics.shellSplitOccupation(k, occ)
         subshellListNew = Dict{JAC.Subshell,Int64}[]
 
         if  initialize
@@ -172,14 +170,14 @@ end
                  (relativistic) configuration all possible CSF with regard to the subshell order as specified by subshellList; 
                  a list::Array{CsfR,1} is returned.
 """
-function generate(sa::String, conf::ConfigurationR, subshellList::Array{Subshell,1})
+function Basics.generate(sa::String, conf::ConfigurationR, subshellList::Array{Subshell,1})
     parity  = Basics.determineParity(conf)
     csfList = CsfR[];   useStandardSubshells = true;    subhshellList = Subshell[];   first = true;    previousCsfs = CsfR[]
     # 
     for  subsh in subshellList
         if   subsh in keys(conf.subshells)    occ = conf.subshells[subsh]    else    occ = 0    end
         if   first
-            stateList   = provide("subshell states: antisymmetric, seniority", subsh, occ)
+            stateList   = Basics.provide("subshell states: antisymmetric, seniority", subsh, occ)
             currentCsfs = CsfR[]
             for  state in stateList
                 push!( currentCsfs, CsfR( true, AngularJ64(state.Jsub2//2), parity, [state.occ], [state.nu],
@@ -189,7 +187,7 @@ function generate(sa::String, conf::ConfigurationR, subshellList::Array{Subshell
             first        = false
         else
             # Now support also all couplings of the subshell states with the CSFs that were built-up so far
-            stateList   = provide("subshell states: antisymmetric, seniority", subsh, occ)
+            stateList   = Basics.provide("subshell states: antisymmetric, seniority", subsh, occ)
             currentCsfs = CsfR[]
             ##x for  i = 1:length(previousCsfs)    println("generate-aa: ", previousCsfs[i])    end
             for  csf in  previousCsfs
@@ -217,12 +215,12 @@ end
   + `("shells: ordered list for NR configurations", confs::Array{Configuration,1})`  ... to generate for confs, i.e. all the given
                (non-relativistic) configurations, a common and ordered shell list; a list::Array{Shell,1} is returned.
 """
-function generate(sa::String, confs::Array{Configuration,1})
+function Basics.generate(sa::String, confs::Array{Configuration,1})
     shells = Shell[]   
 
     !(sa == "shells: ordered list for NR configurations")  &&   error("Unsupported keystring = $sa")
 
-    wa = Constants.give("ordered shell list: non-relativistic", 7)
+    wa = Defaults.getDefaults("ordered shell list: non-relativistic", 7)
     for  a in wa
         for  cf in 1:length(confs)
             ks = keys(confs[cf].shells)
@@ -238,12 +236,12 @@ end
   + `("subshells: ordered list for relativistic configurations", confs::Array{ConfigurationR,1})`  ... to generate for confs, i.e. all the given
                       (relativistic) configurations, common and ordered subshell list; a list::Array{Subshell,1} is returned.
 """
-function generate(sa::String, confs::Array{ConfigurationR,1})
+function Basics.generate(sa::String, confs::Array{ConfigurationR,1})
     subshells = Subshell[]   
 
     !(sa == "subshells: ordered list for relativistic configurations")  &&   error("Unsupported keystring = $sa")
 
-    wa = Constants.give("ordered subshell list: relativistic", 7)
+    wa = Defaults.getDefaults("ordered subshell list: relativistic", 7)
     for  a in wa
         for  cf in 1:length(confs)
             ks = keys(confs[cf].subshells)
@@ -261,7 +259,7 @@ end
   + `("subshells: ordered list for two bases", basisA::Basis,  basisB::Basis)`  ... to generate common and ordered subshell 
                   list for the two basis A and B; a list::Array{Subshell,1} is returned.
 """
-function generate(sa::String, basisA::Basis,  basisB::Basis)
+function Basics.generate(sa::String, basisA::Basis,  basisB::Basis)
     function areEqual(nn::Int64, sha::Array{Subshell,1}, shb::Array{Subshell,1})
         # Determines whether the first nn subshells are equal in sha and shb (true) or not (false)
         for  i = 1:nx   
@@ -292,7 +290,7 @@ function generate(sa::String, basisA::Basis,  basisB::Basis)
         println("basisA.subshells = $(basisA.subshells)")
         println("basisB.subshells = $(basisB.subshells)")
         # If subshell order is NOT equal, all subshell in basisA and basisB must follow standard order
-        standardList = Constants.give("ordered subshell list: relativistic", 7)
+        standardList = Defaults.getDefaults("ordered subshell list: relativistic", 7)
         na = 0;  nb = 0
         for  sh in standardList   
             if  sh in basisA.subshells  ||   sh in basisB.subshells   push!( subshells, sh)    end    
@@ -329,7 +327,7 @@ end
                                       beta_0::Float64=1.1)`  ... to generate the same but to return only the N_0 positive states.  
                                       **Not yet implemented !**
 """
-function generate(sa::String, N::Int64, potential::Radial.Potential, grid::Radial.Grid; N_0::Int64=30, alpha_0::Float64=1.0, beta_0::Float64=1.1)
+function Basics.generate(sa::String, N::Int64, potential::Radial.Potential, grid::Radial.Grid; N_0::Int64=30, alpha_0::Float64=1.0, beta_0::Float64=1.1)
     !(sa == "single-electron spectrum: STO"  &&  sa == "single-electron spectrum: STO, positive")   &&   error("Unsupported keystring = $sa")
     error("Not yet implemented !")
 
@@ -345,7 +343,7 @@ end
 
 
 """
-`JAC.generateLevelWithExtraElectron(newOrbital, symt::LevelSymmetry, level::Level)`  ... generates a (new) level with one extra electron
+`Basics.generateLevelWithExtraElectron(newOrbital, symt::LevelSymmetry, level::Level)`  ... generates a (new) level with one extra electron
                                     in subshell newOrbital.subshell and with overall symmetry symt. The function assumes that all CSF in the basis
                                     of level have the same symmetry as the level itself, that the new subshell is not yet part of the basis and
                                     that CSF with the total symmetry can be constructed; it terminates with an error if one of this assumptions
@@ -353,18 +351,18 @@ end
                                     as the given level is returned. From a physics viewpoint, newLevel refers to a antisymmetrized product state
                                     of [level x orbital(sh, energy)] J^P (symt) and with an total energy = level.energy + newOrbital.energy.
 """
-function generateLevelWithExtraElectron(newOrbital, symt::LevelSymmetry, level::Level)
+function Basics.generateLevelWithExtraElectron(newOrbital, symt::LevelSymmetry, level::Level)
     basis = level.basis;    newSubshells = copy(basis.subshells);    newCsfs = CsfR[];   J = level.J;   parity = level.parity
     
     push!(newSubshells, newOrbital.subshell)
-    Constants.define("relativistic subshell list", newSubshells; printout=false)
+    Defaults.setDefaults("relativistic subshell list", newSubshells; printout=false)
     newOrbitals = Base.merge( copy(basis.orbitals), Dict( newOrbital.subshell => newOrbital ))
    
     for  i = 1:length(basis.csfs)
-        stateList   = provide("subshell states: antisymmetric, seniority", newOrbital.subshell, 1)
+        stateList   = Basics.provide("subshell states: antisymmetric, seniority", newOrbital.subshell, 1)
         if  basis.csfs[i].J != J   ||   basis.csfs[i].parity != parity    error("Improper symmetry of CSF.")   end
         if  length(stateList) != 1                                        error("Improper number of subshell states.")   end
-        if  JAC.AngularMomentum.triangularDelta(J, BasicTypes.subshell_j(newOrbital.subshell), symt.J) != 1    
+        if  JAC.AngularMomentum.triangularDelta(J, Basics.subshell_j(newOrbital.subshell), symt.J) != 1    
                                                                          error("Improper coupling of (new) subshell & total J.")   end
         substate   = stateList[1]
         occupation = copy(basis.csfs[i].occupation);    push!(occupation, substate.occ)
@@ -382,20 +380,20 @@ end
 
 
 """
-`JAC.Basics.generateLevelWithExtraSubshell(sh::Subshell, level::Level)`  ... generates a (new) level with one extra subshell sh but with the same
+`Basics.generateLevelWithExtraSubshell(sh::Subshell, level::Level)`  ... generates a (new) level with one extra subshell sh but with the same
                                     overall symmetry as before. The function assumes that the new subshell is not yet part of the basis; 
                                     it terminates with an error if one of this assumptions is violated. A newLevel::Level with the same 
                                     symmetry, number of CSF, energy and the same representation (eigenvector) as the given level is returned. 
 """
-function generateLevelWithExtraSubshell(sh::Subshell, level::Level)
+function Basics.generateLevelWithExtraSubshell(sh::Subshell, level::Level)
     basis = level.basis;    newSubshells = copy(basis.subshells);    newCsfs = CsfR[];   J = level.J;   parity = level.parity
     newOrbitals = copy(basis.orbitals)
 
     push!(newSubshells, sh)
-    Constants.define("relativistic subshell list", newSubshells; printout=false)
+    Defaults.setDefaults("relativistic subshell list", newSubshells; printout=false)
    
     for  i = 1:length(basis.csfs)
-        stateList   = provide("subshell states: antisymmetric, seniority", sh, 0)
+        stateList   = Basics.provide("subshell states: antisymmetric, seniority", sh, 0)
         if  length(stateList) != 1                                        error("Improper number of subshell states.")   end
         substate   = stateList[1]
         occupation = copy(basis.csfs[i].occupation);    push!(occupation, substate.occ)
@@ -412,11 +410,11 @@ end
 
 
 """
-`JAC.Basics.generateLevelWithSymmetryReducedBasis(level::Level)`  ... generates a level with a new basis and representation that only includes the
+`Basics.generateLevelWithSymmetryReducedBasis(level::Level)`  ... generates a level with a new basis and representation that only includes the
                                                                 CSF with the same symmetry as the level itself. Both, the underlying CSF basis
                                                                 and the eigenvectors are adopted accordingly. A (new) level::levelR is returned.
 """
-function generateLevelWithSymmetryReducedBasis(level::Level)
+function Basics.generateLevelWithSymmetryReducedBasis(level::Level)
     basis = level.basis;    newCsfs = CsfR[];    newMc = Float64[]
     
     for  i = 1:length(basis.csfs)

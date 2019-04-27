@@ -6,7 +6,7 @@
 """
 module Cascade
 
-    using Printf, JAC, JAC.BasicTypes, JAC.Radial, JAC.ManyElectron, JAC.Nuclear, JAC.PhotoEmission, JAC.PhotoIonization, JAC.AutoIonization
+    using Printf, JAC, ..Basics, ..Radial, JAC.ManyElectron, JAC.Nuclear, JAC.PhotoEmission, JAC.PhotoIonization, JAC.AutoIonization
 
     #==
     """
@@ -78,7 +78,7 @@ module Cascade
             process, such as Auger, PhotoEmission, or others and two lists of initial- and final-state configuration that are (each) treated 
             together in a multiplet to allow for configuration interaction but to avoid 'double counting' of individual levels.
 
-        + process          ::JBasicTypes.AtomicProcess         ... Atomic process that 'acts' in this step of the cascade.
+        + process          ::JBasics.AtomicProcess         ... Atomic process that 'acts' in this step of the cascade.
         + settings         ::Union{PhotoEmission.Settings, AutoIonization.Settings}        
                                                        ... Settings for this step of the cascade.
         + initialConfs     ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state multiplet.
@@ -87,7 +87,7 @@ module Cascade
         + finalMultiplet   ::Multiplet                 ... Multiplet of the final-state levels of this step of the cascade.
     """
     struct  Step
-        process            ::BasicTypes.AtomicProcess
+        process            ::Basics.AtomicProcess
         settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings}
         initialConfs       ::Array{Configuration,1}
         finalConfs         ::Array{Configuration,1}
@@ -100,7 +100,7 @@ module Cascade
     `JAC.Cascade.Step()`  ... constructor for an 'empty' instance of a Cascade.Step.
     """
     function Step()
-        Step( Jac.BasicTypes.NoProcess, PhotoEmission.Settings, Configuration[], Configuration[], Multiplet(), Multiplet())
+        Step( Jac.Basics.NoProcess, PhotoEmission.Settings, Configuration[], Configuration[], Multiplet(), Multiplet())
     end
 
 
@@ -128,7 +128,7 @@ module Cascade
         + asfSettings        ::AsfSettings                    ... Provides the settings for the SCF process.
         + approach           ::Cascade.Approach               ... Computational approach/model that is applied to generate and evaluate the 
                                                                   cascade; possible approaches are: {'single-configuration', ...}
-        + processes          ::Array{BasicTypes.AtomicProcess,1}   ... List of the atomic processes that are supported and should be included into the 
+        + processes          ::Array{Basics.AtomicProcess,1}   ... List of the atomic processes that are supported and should be included into the 
                                                                   cascade.
         + initialConfs       ::Array{Configuration,1}         ... List of one or several configurations that contain the level(s) from which the 
                                                                   cascade starts.
@@ -150,7 +150,7 @@ module Cascade
         grid                 ::Radial.Grid
         asfSettings          ::AsfSettings
         approach             ::Union{Cascade.Approach}
-        processes            ::Array{BasicTypes.AtomicProcess,1}
+        processes            ::Array{Basics.AtomicProcess,1}
         initialConfs         ::Array{Configuration,1}
         initialLevels        ::Array{Tuple{Int64,Float64},1}
         maxElectronLoss      ::Int64
@@ -338,11 +338,11 @@ module Cascade
     """
     `struct  Cascade.LineIndex`  ... defines a line index with regard to the various lineLists of data::Cascade.Data.
 
-        + process      ::BasicTypes.AtomicProcess    ... refers to the particular lineList of cascade (data).
+        + process      ::Basics.AtomicProcess    ... refers to the particular lineList of cascade (data).
         + index        ::Int64                       ... index of the corresponding line.
     """
     struct  LineIndex
-        process        ::BasicTypes.AtomicProcess
+        process        ::Basics.AtomicProcess
         index          ::Int64 
     end 
 
@@ -359,7 +359,7 @@ module Cascade
 
         + energy       ::Float64                     ... energy of the level.
         + J            ::AngularJ64                  ... total angular momentum of the level
-        + parity       ::BasicTypes.Parity           ... total parity of the level
+        + parity       ::Basics.Parity           ... total parity of the level
         + NoElectrons  ::Int64                       ... total number of electrons of the ion to which this level belongs.
         + relativeOcc  ::Float64                     ... relative occupation  
         + parents      ::Array{Cascade.LineIndex,1}  ... list of parent lines that (may) populate the level.     
@@ -368,7 +368,7 @@ module Cascade
     mutable struct  Level
         energy         ::Float64 
         J              ::AngularJ64 
-        parity         ::BasicTypes.Parity 
+        parity         ::Basics.Parity 
         NoElectrons    ::Int64 
         relativeOcc    ::Float64 
         parents        ::Array{Cascade.LineIndex,1} 
@@ -397,7 +397,7 @@ module Cascade
     """
     function computeSteps(comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
         linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    linesP = PhotoIonization.Line[]    
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         ##x println(" ")
         ##x println("  Perform transition amplitude and line computations for $(length(comp.steps)) individual steps of cascade:")
         ##x println("  Adapt the present augerSettings, PhotoEmissionSettings, etc. for real computations.")
@@ -494,8 +494,8 @@ module Cascade
             sa = "   " * JAC.TableStrings.flushright( 6, string(i); na=2)
             sb = " ";         for conf  in blockList[i].confs   sb = sb * string(conf) * ", "    end
             en = Float64[];   for level in  block.multiplet.levels    push!(en, level.energy)    end
-            minEn = minimum(en);   minEn = Constants.convert("energy: from atomic", minEn)
-            maxEn = maximum(en);   maxEn = Constants.convert("energy: from atomic", maxEn)
+            minEn = minimum(en);   minEn = Defaults.convertUnits("energy: from atomic", minEn)
+            maxEn = maximum(en);   maxEn = Defaults.convertUnits("energy: from atomic", maxEn)
             sa = sa * JAC.TableStrings.flushleft(90, sb[1:end-2]; na=2) 
             sa = sa * JAC.TableStrings.flushleft(30, string( round(minEn)) * " ... " * string( round(maxEn)); na=2)
             println(stream, sa)
@@ -519,7 +519,7 @@ module Cascade
         println(stream, "  ", JAC.TableStrings.hLine(64))
         for  i = 1:length(multiplet.levels)
             lev = multiplet.levels[i]
-            en  = lev.energy - multiplet.levels[1].energy;    en_requested = Constants.convert("energy: from atomic", en)
+            en  = lev.energy - multiplet.levels[1].energy;    en_requested = Defaults.convertUnits("energy: from atomic", en)
             wx = 0.
             for  ilevel in initialLevels
                 if  i in ilevel   wx = ilevel[2];    break    end
@@ -565,7 +565,7 @@ module Cascade
                 minEn = min(minEn, steps[i].initialMultiplet.levels[p].energy - steps[i].finalMultiplet.levels[q].energy)
                 maxEn = max(maxEn, steps[i].initialMultiplet.levels[p].energy - steps[i].finalMultiplet.levels[q].energy)
             end
-            minEn = Constants.convert("energy: from atomic", minEn);   maxEn = Constants.convert("energy: from atomic", maxEn)
+            minEn = Defaults.convertUnits("energy: from atomic", minEn);   maxEn = Defaults.convertUnits("energy: from atomic", maxEn)
             sa = sa * string( round(minEn)) * " ... " * string( round(maxEn))
             println(stream, sa)
         end
@@ -582,7 +582,7 @@ module Cascade
     """
     function generateBlocks(comp::Cascade.Computation, confs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital})
         blockList = Cascade.Block[]
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
         if    comp.approach == AverageSCA()
             println("\n  In the cascade approach $(comp.approach), the following assumptions/simplifications are made: ")
@@ -752,7 +752,7 @@ module Cascade
             maxNoElectrons = max(maxNoElectrons, conf.NoElectrons)
         end
         #
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
         println("\n  Electron configuration used in the cascade:")
         if  printSummary   println(iostream, "\n* Electron configuration used in the cascade:")    end
@@ -764,7 +764,7 @@ module Cascade
                 if n == conf.NoElectrons   
                     nc = nc + 1
                     push!(confList, conf ) 
-                    wa = Basics.provide("binding energy", round(Int64, Z), conf);    wa = Constants.convert("energy: from atomic", wa)
+                    wa = Basics.provide("binding energy", round(Int64, Z), conf);    wa = Defaults.convertUnits("energy: from atomic", wa)
                     sa = "   av. BE = "  * string( round(-wa) ) * "  " * JAC.TableStrings.inUnits("energy")
                     println("      " * string(conf) * sa * "      ($nc)" )
                     if  printSummary   println(iostream, "      " * string(conf) * sa * "      ($nc)")      end
@@ -809,7 +809,7 @@ module Cascade
         # delete from list
         #
         println("\n  A total of $(length(newStepList)) steps are still defined in the cascade.")
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   println(iostream, "\n* A total of $(length(newStepList)) steps are still defined in the cascade.")    end      
         
         return( newStepList )
@@ -891,7 +891,7 @@ module Cascade
             for  en in enIndices
                 if  n == levels[en].NoElectrons  ##    &&  levels[en].relativeOcc > 0
                     sb = sa * "       " * string( LevelSymmetry(levels[en].J, levels[en].parity) )     * "    "
-                    sb = sb * @sprintf("%.6e", Constants.convert("energy: from atomic", levels[en].energy))  * "      "
+                    sb = sb * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", levels[en].energy))  * "      "
                     sb = sb * @sprintf("%.5e", levels[en].relativeOcc) 
                     sa = "           "
                     println(sb)
@@ -936,7 +936,7 @@ module Cascade
             for  en in enIndices
                 if  n == levels[en].NoElectrons
                     sb = sa * "      " * string( LevelSymmetry(levels[en].J, levels[en].parity) )      * "   "
-                    sb = sb * @sprintf("%.6e", Constants.convert("energy: from atomic", levels[en].energy))  * "      "
+                    sb = sb * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", levels[en].energy))  * "      "
                     sb = sb * @sprintf("%.5e", levels[en].relativeOcc)                                 * "    "
                     pProcessSymmetryEnergyList = Tuple{JAC.AtomicProcess,Int64,LevelSymmetry,Float64}[]
                     dProcessSymmetryEnergyList = Tuple{JAC.AtomicProcess,Int64,LevelSymmetry,Float64}[]

@@ -1,12 +1,12 @@
 
 """
 `module  JAC.PhotoIonizationAutoion`  ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross 
-                                          sections and rates; it is using JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, 
+                                          sections and rates; it is using JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, 
                                           JAC.AutoIonization.
 """
 module PhotoIonizationAutoion 
 
-    using JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
+    using JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 

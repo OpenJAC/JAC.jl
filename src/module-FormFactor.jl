@@ -5,7 +5,7 @@
 """
 module FormFactor
 
-    using Printf, JAC, ..BasicTypes,  ..Basics,  ..Constants, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, ..Basics,  ..Basics,  ..Defaults, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
@@ -112,7 +112,7 @@ module FormFactor
         wa = zeros( grid.nr )
         # Compute the total density
         for  sh in level.basis.subshells
-            occ  = JAC.computeMeanSubshellOccupation(sh, [level])
+            occ  = Basics.computeMeanSubshellOccupation(sh, [level])
             orb  = level.basis.orbitals[sh]
             nrho = length(orb.P)
             for    i = 1:nrho   wa[i] = wa[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
@@ -134,11 +134,11 @@ module FormFactor
     """
     function modifiedF(q::Float64, level::Level, grid::Radial.Grid)
         wa  = zeros( grid.nr )
-        wc  = Constants.give("speed of light: c")
-        pot = JAC.compute("radial potential: Dirac-Fock-Slater", grid, level)
+        wc  = Defaults.getDefaults("speed of light: c")
+        pot = Basics.compute("radial potential: Dirac-Fock-Slater", grid, level)
         # Compute the total density
         for  sh in level.basis.subshells
-            occ  = JAC.computeMeanSubshellOccupation(sh, [level])
+            occ  = Basics.computeMeanSubshellOccupation(sh, [level])
             orb  = level.basis.orbitals[sh]
             ei   = abs(orb.energy)
             nrho = length(orb.P)
@@ -194,7 +194,7 @@ module FormFactor
         end
         # Print all results to screen
         JAC.FormFactor.displayResults(stdout, newOutcomes)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary    JAC.FormFactor.displayResults(iostream, newOutcomes)   end
         #
         if    output    return( newOutcomes )
@@ -244,7 +244,7 @@ module FormFactor
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy)) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             if  length(outcome.qValues) >= 1   sa = sa * @sprintf("%.2e", outcome.qValues[1] ) * ",  "   end
             if  length(outcome.qValues) >= 2   sa = sa * @sprintf("%.2e", outcome.qValues[2] ) * ",  "   end
             if  length(outcome.qValues) >= 3   sa = sa * @sprintf("%.2e", outcome.qValues[3] ) * ",  "   end
@@ -281,7 +281,7 @@ module FormFactor
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy)) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             sa = sa * @sprintf("%.5e", outcome.qValues[1])                                       * "    "
             sa = sa * @sprintf("%.5e", outcome.standardFs[1])                                    * "    "
             sa = sa * @sprintf("%.5e", outcome.modifiedFs[1])                                    * "    "

@@ -5,7 +5,7 @@
 """
 module PlasmaShift
 
-    using Printf, ..BasicTypes,  ..Basics,  ..Constants, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
+    using Printf, ..Basics,  ..Basics,  ..Defaults, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
 
 
     """
@@ -132,8 +132,8 @@ module PlasmaShift
         + lambdaDebye            ::Float64                       ... The lambda parameter of different plasma models.
         + ionSphereR0            ::Float64                       ... The effective radius of the ion-sphere model.
         + NoBoundElectrons       ::Int64                         ... Effective number of bound electrons.
-        + multipoles             ::Array{BasicTypes.EmMultipole}            ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges                 ::Array{BasicTypes.UseGauge}               ... Specifies the gauges to be included into the computations.
+        + multipoles             ::Array{Basics.EmMultipole}            ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges                 ::Array{Basics.UseGauge}               ... Specifies the gauges to be included into the computations.
         + photonEnergies         ::Array{Float64,1}              ... List of photon energies.  
         + printBeforeComputation ::Bool                          ... True, if all energies and lines are printed before their evaluation.
         + selectLines            ::Bool                          ... True, if lines are selected individually for the computations.
@@ -144,8 +144,8 @@ module PlasmaShift
         lambdaDebye              ::Float64 
         ionSphereR0              ::Float64
         NoBoundElectrons         ::Int64
-        multipoles               ::Array{BasicTypes.EmMultipole}
-        gauges                   ::Array{BasicTypes.UseGauge}  
+        multipoles               ::Array{Basics.EmMultipole}
+        gauges                   ::Array{Basics.UseGauge}  
         photonEnergies           ::Array{Float64,1} 
         printBeforeComputation   ::Bool 
         selectLines              ::Bool
@@ -157,7 +157,7 @@ module PlasmaShift
     `JAC.PlasmaShift.PhotoSettings()`  ... constructor for a standard instance of PlasmaShift.PhotoSettings.
     """
     function PhotoSettings()
-        PhotoSettings(DebyeHueckel, 0.25, 0., 0, [E1], [BasicTypes.UseCoulomb], Float64[], true, false, Tuple{Int64,Int64}[])
+        PhotoSettings(DebyeHueckel, 0.25, 0., 0, [E1], [Basics.UseCoulomb], Float64[], true, false, Tuple{Int64,Int64}[])
     end
 
 
@@ -193,10 +193,10 @@ module PlasmaShift
         printstyled("---------------------------------------------------------------------------------- \n", color=:light_green)
         #
         basis        = multiplet.levels[1].basis
-        newMultiplet = JAC.perform("computation: CI for plasma", basis, nm, grid, asfSettings, settings)
+        newMultiplet = Basics.perform("computation: CI for plasma", basis, nm, grid, asfSettings, settings)
         # Print all results to screen
         JAC.PlasmaShift.displayResults(stdout, multiplet, newMultiplet, settings)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary    JAC.PlasmaShift.displayResults(iostream, multiplet, newMultiplet, settings)   end
         #
         if    output    return( newMultiplet )
@@ -239,9 +239,9 @@ module PlasmaShift
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(multiplet.levels[i].index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=6)
             energy = multiplet.levels[i].energy
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", energy))              * "     "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))              * "     "
             if  sym == newsym   deltaE = pMultiplet.levels[i].energy - energy;    
-                                sa     = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", deltaE))   
+                                sa     = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", deltaE))   
             else                sa     = sa * "Level crossing."
             end
             println(stream, sa )

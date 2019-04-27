@@ -5,7 +5,7 @@
 """
 module MultipoleMoment
 
-    using Printf, JAC, ..BasicTypes, ..Constants,  ..ManyElectron, ..Radial
+    using Printf, JAC, ..Basics, ..Defaults,  ..ManyElectron, ..Radial
 
 
     """
@@ -24,7 +24,7 @@ module MultipoleMoment
             sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
             println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || Q^($mp) ($omega a.u., $gauge) ||" *
                     " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
-            printSummary, iostream = Constants.give("summary flag/stream")
+            printSummary, iostream = Defaults.getDefaults("summary flag/stream")
             if  printSummary
                 println(iostream, "    Multipole-moment amplitude:     " *
                                   " < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || Q^($mp) ($omega a.u., $gauge) ||" *
@@ -54,10 +54,10 @@ module MultipoleMoment
             #
             for  r = 1:nf
                 for  s = 1:ni
-                    wa = JAC.compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                     for  coeff in wa
-                        ja = JAC.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
-                        jb = JAC.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
+                        ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
+                        jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = JAC.InteractionStrength.dipole(finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], grid)
                         matrix[r,s] = matrix[r,s] + coeff.T * tamp  
                     end
@@ -71,7 +71,7 @@ module MultipoleMoment
             sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
             println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || D ||" *
                     " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
-            printSummary, iostream = Constants.give("summary flag/stream")
+            printSummary, iostream = Defaults.getDefaults("summary flag/stream")
             if  printSummary
                 println(iostream, "    Dipole amplitude:  < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || D ||" *
                                   " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
@@ -100,8 +100,8 @@ module MultipoleMoment
             for  s = 1:ni
                 wa = compute("angular coefficients: 1-p, Grasp92", 0, mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                 for  coeff in wa
-                    ##x ja = JAC.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
-                    ##x jb = JAC.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
+                    ##x ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
+                    ##x jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
                     tamp  = JAC.InteractionStrength.multipoleTransition(mp, gauge, omega, finalLevel.basis.orbitals[coeff.a], 
                                                                         initialLevel.basis.orbitals[coeff.b], grid)
                     matrix[r,s] = matrix[r,s] + coeff.T * tamp  
@@ -116,7 +116,7 @@ module MultipoleMoment
             println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] ||" *
                     " T^($mp, absorption) ($omega a.u., $gauge) ||" *
                     " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
-            printSummary, iostream = Constants.give("summary flag/stream")
+            printSummary, iostream = Defaults.getDefaults("summary flag/stream")
             if  printSummary
                 println(iostream, "    Multipole-transition amplitude:      < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] ||" *
                                   " T^($mp, absorption) ($omega a.u., $gauge) ||" *

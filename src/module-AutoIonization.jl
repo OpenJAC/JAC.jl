@@ -2,11 +2,11 @@
 """
 `module  JAC.AutoIonization`  
     ... a submodel of JAC that contains all methods for computing Auger properties between some initial and final-state 
-        multiplets; it is using JAC.BasicTypes, JAC.Radial, JAC.Nuclear, JAC.PlasmaShift.
+        multiplets; it is using JAC.Basics, JAC.Radial, JAC.Nuclear, JAC.PlasmaShift.
 """
 module AutoIonization
 
-    using  Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear, JAC.PlasmaShift
+    using  Printf, JAC, JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.Nuclear, JAC.PlasmaShift
     global JAC_counter = 0
 
     
@@ -152,7 +152,7 @@ module AutoIonization
             end 
             if  printout  printstyled("done. \n", color=:light_green)    end
             amplitude = transpose(continuumLevel.mc) * matrix * initialLevel.mc 
-            amplitude = im^BasicTypes.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
+            amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
             #
             #
          elseif  kind == "H-E"
@@ -310,7 +310,7 @@ module AutoIonization
         # Print all results to screen
         JAC.AutoIonization.displayRates(stdout, newLines, settings)
         JAC.AutoIonization.displayLifetimes(stdout, newLines)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   JAC.AutoIonization.displayRates(iostream, newLines, settings);   JAC.AutoIonization.displayLifetimes(iostream, newLines)     end
         #
         if    output    return( lines )
@@ -343,7 +343,7 @@ module AutoIonization
             push!( newLines, newLine)
         end
         # Print all results to a summary file, if requested
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   JAC.AutoIonization.displayRates(iostream, newLines, settings)     end
         #
         if    output    return( lines )
@@ -381,7 +381,7 @@ module AutoIonization
         # Print all results to screen
         JAC.AutoIonization.displayRates(stdout, newLines, augerSettings)
         JAC.AutoIonization.displayLifetimes(stdout, newLines)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   JAC.AutoIonization.displayRates(iostream, newLines, augerSettings);   JAC.AutoIonization.displayLifetimes(iostream, newLines)     end
         #
         if    output    return( lines )
@@ -459,8 +459,8 @@ module AutoIonization
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.initialLevel.energy))  * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.electronEnergy))       * "   "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.electronEnergy))       * "   "
             kappaSymmetryList = Tuple{Int64,LevelSymmetry}[]
             for  i in 1:length(line.channels)
                 push!( kappaSymmetryList, (line.channels[i].kappa, line.channels[i].symmetry) )
@@ -505,11 +505,11 @@ module AutoIonization
                 sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                 sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(line.initialLevel.index); na=2)
                 sa = sa * JAC.TableStrings.center( 8, string(isym); na=4)
-                sa = sa * @sprintf("%.8e", Constants.convert("time: from atomic",  1/totalRate))            * "     "
-                sa = sa * @sprintf("%.8e", Constants.convert("rate: from atomic",    totalRate))            * "      "
+                sa = sa * @sprintf("%.8e", Defaults.convertUnits("time: from atomic",  1/totalRate))            * "     "
+                sa = sa * @sprintf("%.8e", Defaults.convertUnits("rate: from atomic",    totalRate))            * "      "
                 sa = sa * @sprintf("%.8e", totalRate)                                                 * "    "
-                sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic to Kayser",  totalRate))  * "    "
-                sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic to eV",      totalRate))  * "    "
+                sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic to Kayser",  totalRate))  * "    "
+                sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic to eV",      totalRate))  * "    "
                 println(stream, sa)
             end
         end
@@ -546,9 +546,9 @@ module AutoIonization
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.initialLevel.energy))  * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.electronEnergy))       * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("rate: from atomic", line.totalRate))              * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.electronEnergy))       * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("rate: from atomic", line.totalRate))              * "    "
             sa = sa * JAC.TableStrings.flushright(13, @sprintf("%.5e", line.angularAlpha))            * "    "
             println(stream, sa)
         end

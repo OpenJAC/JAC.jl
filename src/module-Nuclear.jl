@@ -1,15 +1,12 @@
 
 """
-`module JAC.Nuclear`  ... a submodel of JAC that contains procedures for defining a Nuclear.Model and for calculating various nuclear
-                          potentials; it is using JAC, JAC.Radial   
-                          ##x  ./../deps/bin/libnuc.so.
+`module JAC.Nuclear`  
+    ... a submodel of JAC that contains procedures for defining a Nuclear.Model and for calculating various nuclear
+        potentials.
 """
 module Nuclear
   
-    using Interact, QuadGK, JAC, ..BasicTypes,  ..Constants, ..Radial, ..Math
-    ##x const LIBNUC = joinpath(@__DIR__, "..", "deps", "bin", "libnuc.so")
-
-
+    using Interact, QuadGK, ..Basics,  ..Defaults, ..Radial, ..Math
     export Model
 
 
@@ -36,8 +33,9 @@ module Nuclear
 
 
     """
-    `JAC.Nuclear.Model(Z::Real)`  ... constructor just for a given nuclear charge Z, and where a Fermi model is defined 
-         with a = 1.0 and c = 1.0 for the moment. Both, the nuclear spin and moments are all set to zero in this case.
+    `Nuclear.Model(Z::Real)`  
+        ... constructor just for a given nuclear charge Z, and where a Fermi model is defined with a = 1.0 and c = 1.0 
+            for the moment. Both, the nuclear spin and moments are all set to zero in this case.
     """
     function Model(Z::Real)
         Z < 0.1  &&  error("Z must be >= 0.1")
@@ -53,9 +51,10 @@ module Nuclear
 
 
     """
-    `JAC.Nuclear.Model(Z::Real, model::String)`  ... constructor just for a given nuclear charge Z and
-         model = {"Fermi", "point", "uniform"}, and where further parameters are defined approximately. 
-         Both, the nuclear spin and moments are all set to zero in this case.
+    `Nuclear.Model(Z::Real, model::String)`  
+        ... constructor just for a given nuclear charge Z and model = {"Fermi", "point", "uniform"}, and where 
+            further parameters are defined approximately. Both, the nuclear spin and moments are all set to zero 
+            in this case.
     """
     function Model(Z::Real, model::String)
         Z < 0.1                                    &&  error("Z must be >= 0.1")
@@ -65,7 +64,7 @@ module Nuclear
             radius   = 0.
         else
             mass     = 2*Z + 0.005*Z^2
-            radius   = JAC.Nuclear.Rrms(mass)
+            radius   = Nuclear.Rrms(mass)
         end
         spinI    = AngularJ64(0)
         mu       = 0.
@@ -92,7 +91,7 @@ module Nuclear
 
 
     """
-    `JAC.Nuclear.Model(gui::Guint; model::Nuclear.Model=Model(36.0))`  ... constructor that is defined by a graphical user interface.
+    `Nuclear.Model(gui::Guint; model::Nuclear.Model=Model(36.0))`  ... constructor that is defined by a graphical user interface.
     """
     function Model(gui::Guint; model::Nuclear.Model=Model(36.0))
         nmd = model
@@ -123,14 +122,15 @@ module Nuclear
   
 
     """
-   `JAC.Nuclear.fermiA`  ... provides a value::Float64 for the fermi_a parameter.
+   `Nuclear.fermiA`  ... provides a value::Float64 for the fermi_a parameter.
     """
     fermiA   = 2.3/(4 * log(3))
   
   
     """
-    `JAC.Nuclear.Rrms(A)`  ... provides a value::Float64 for the root-mean-squared radius R of a uniformly-distributed charge density of 
-                               a nuclues with mass A.
+    `Nuclear.Rrms(A)`  
+        ... provides a value::Float64 for the root-mean-squared radius R of a uniformly-distributed charge
+            density of a nuclues with mass A.
     """
     function Rrms(A)
         return( 0.836 * A^(1/3) + 0.57 )
@@ -138,8 +138,9 @@ module Nuclear
   
   
     """
-    `JAC.Nuclear.fermiDensity(r, b)`  ... provides a value::Float64 for a fermi-distributed charge density at r and for given fermi_a
-                                          and fermi_b parameters.
+    `Nuclear.fermiDensity(r, b)`  
+        ... provides a value::Float64 for a fermi-distributed charge density at r and for given fermi_a
+            and fermi_b parameters.
     """
     function fermiDensity(r, b)
         return( 1/(1 + exp((r-b)/fermiA)) )
@@ -147,8 +148,9 @@ module Nuclear
   
 
     """
-    `JAC.Nuclear.fermiRrms(b::Float64)`  ... provides a value::Float64 for the root-mean-squared radius of a fermi-distributed charge 
-                                             density for given fermi_a and fermi_b parameters.
+    `Nuclear.fermiRrms(b::Float64)`  
+        ... provides a value::Float64 for the root-mean-squared radius of a fermi-distributed charge 
+            density for given fermi_a and fermi_b parameters.
     """
     function fermiRrms(b::Float64)
     
@@ -157,8 +159,9 @@ module Nuclear
   
 
     """
-    `JAC.Nuclear.computeFermiBParameter(R::Float64)`  ... computes a value::Float64 for the fermi_b parameter for a fermi-distributed 
-                                                          nuclear with root-mean square radius R.
+    `Nuclear.computeFermiBParameter(R::Float64)`  
+        ... computes a value::Float64 for the fermi_b parameter for a fermi-distributed nuclear with 
+            root-mean square radius R.
     """
     function computeFermiBParameter(R::Float64)
 
@@ -186,12 +189,12 @@ module Nuclear
 
   
     """
-    `JAC.Nuclear.fermiDistributedNucleus(Rrms::Float64, Z::Float64, grid::Radial.Grid)`  ... computes the effective, radial-dependent charge Z(r) 
-         for a Fermi-distributed nucleus with rms radius R and nuclear charge Z. The full nuclear potential is then given by V_nuc = - Z(r)/r; 
-         a potential::Radial.Potential is returned.
+    `Nuclear.fermiDistributedNucleus(Rrms::Float64, Z::Float64, grid::Radial.Grid)`  
+        ... computes the effective, radial-dependent charge Z(r) for a Fermi-distributed nucleus with rms 
+            radius R and nuclear charge Z. The full nuclear potential is then given by V_nuc = - Z(r)/r; 
+            a potential::Radial.Potential is returned.
     """
     function fermiDistributedNucleus(Rrms::Float64, Z::Float64, grid::Radial.Grid)
-        # grid = JAC.JAC_STANDARD_GRID
     
         zz = zeros(Float64, grid.nr);   zznew = zeros(Float64, grid.nr);   dx = zeros(Float64, grid.nr)
         ##x function  rho(r::Float64)  1.0 / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )   end
@@ -200,14 +203,9 @@ module Nuclear
     
         b = computeFermiBParameter(Rrms);    b < 0  &&  error("Inappropriate R_rms radius.")
         
-        fermiA_au = Constants.convert("length: from fm to atomic", fermiA)
-        fermiC_au = Constants.convert("length: from fm to atomic", b)
-        ##x fermi1_au = Constants.convert("length: from fm to atomic", 1.0)
-        ##x N = 3/(4pi * fermiC_au^3) / (1 + pi^2 * fermiA_au^2 / fermiC_au^2)
+        fermiA_au = Defaults.convertUnits("length: from fm to atomic", fermiA)
+        fermiC_au = Defaults.convertUnits("length: from fm to atomic", b)
         N = 1. / QuadGK.quadgk(rr_rho, 0., 1.3, rtol=1.0e-10)[1]
-        ##x println("fermiA_au = $fermiA_au  fermiC_au = $fermiC_au  fermi1_au = $fermi1_au")
-        ##x wa = N * QuadGK.quadgk(rr_rho, 0., 1.3, rtol=1.0e-10)[1]
-        ##x println("N = $N  N-int = $wa " )
         #
         #
         for  i = 2:length(zznew)   
@@ -216,27 +214,17 @@ module Nuclear
             zznew[i] = Z * N * zznew[i] * grid.r[i]
         end 
     
-        #== ccall((:__nuc_MOD_nucpotmain, LIBNUC), Nothing, 
-              (Ptr{Int32}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}, Ptr{Float64}),
-               Ref(Int32(grid.nr)), Ref(grid.rnt), Ref(grid.h), Ref(grid.hp), zz, Ref(b), Ref(fermiA), Ref(Z))
-              
-        for i = 1:3:length(zznew)
-            dx[i] = zz[i] / zznew[i]
-            println("++ $i )  old = $(zz[i])   new = $(zznew[i])   dx = $(dx[i])")
-        end  ==#
-        ##x error("stop -- nuclear potential") 
-   
         potential = Radial.Potential("nuclear-potential: Fermi-distributed", zznew, deepcopy(grid))
         return( potential )
     end
 
   
     """
-    `JAC.Nuclear.pointNucleus(Z::Float64, grid::Radial.Grid)`  ... computes the effective, radial-dependent charge Z(r) for a point-like nucleus 
-         with nuclear charge Z. The full nuclear potential is then given by V_nuc = - Z(r)/r; a potential::Radial.Potential is returned.
+    `Nuclear.pointNucleus(Z::Float64, grid::Radial.Grid)`  
+        ... computes the effective, radial-dependent charge Z(r) for a point-like nucleus with nuclear charge Z. 
+            The full nuclear potential is then given by V_nuc = - Z(r)/r; a potential::Radial.Potential is returned.
     """
     function pointNucleus(Z::Float64, grid::Radial.Grid)
-        # grid = JAC.JAC_STANDARD_GRID
     
         zz = Z * ones(Float64, grid.nr)
     
@@ -246,14 +234,14 @@ module Nuclear
 
   
     """
-    `JAC.Nuclear.uniformNucleus(R::Float64, Z::Float64, grid::Radial.Grid)`  ... computes the effective, radial-dependent charge Z(r) for a 
-         uniformly-distributed nucleus with radius R [in fm] and nuclear charge Z. The full nuclear potential is then given by V_nuc = - Z(r)/r outside 
-         the nucleus; a potential::Radial.Potential is returned.
+    `Nuclear.uniformNucleus(R::Float64, Z::Float64, grid::Radial.Grid)`  
+        ... computes the effective, radial-dependent charge Z(r) for a uniformly-distributed nucleus with radius 
+            R [in fm] and nuclear charge Z. The full nuclear potential is then given by V_nuc = - Z(r)/r outside 
+            the nucleus; a potential::Radial.Potential is returned.
     """
     function uniformNucleus(R::Float64, Z::Float64, grid::Radial.Grid)
-        # grid = JAC.JAC_STANDARD_GRID
     
-        zz = zeros(Float64, grid.nr);   R_au = Constants.convert("length: from fm to atomic", R)
+        zz = zeros(Float64, grid.nr);   R_au = Defaults.convertUnits("length: from fm to atomic", R)
         ##x println("uniformNucleus()::  R_au = $R_au")
     
         for i = 1:grid.nr
@@ -268,16 +256,17 @@ module Nuclear
 
   
     """
-    `JAC.Nuclear.nuclearPotential(model::Nuclear.Model, grid::Radial.Grid)`  ... computes the effective, radial-dependent charge Z(r) for 
-         a nucleus with radius R and nuclear charge Z. The full nuclear potential is then given by V_nuc = - Z(r)/r; a potential::Radial.Potential 
-         is returned.
+    `Nuclear.nuclearPotential(model::Nuclear.Model, grid::Radial.Grid)`  
+        ... computes the effective, radial-dependent charge Z(r) for a nucleus with radius R and nuclear charge Z. 
+            The full nuclear potential is then given by V_nuc = - Z(r)/r; a potential::Radial.Potential 
+            is returned.
     """
     function nuclearPotential(nm::Nuclear.Model, grid::Radial.Grid)
         zz = zeros(Float64, grid.nr)
     
-        if      nm.model == "point"      potential = JAC.Nuclear.pointNucleus(nm.Z, grid)
-        elseif  nm.model == "uniform"    potential = JAC.Nuclear.uniformNucleus(nm.radius, nm.Z, grid)
-        elseif  nm.model == "Fermi"      potential = JAC.Nuclear.fermiDistributedNucleus(nm.radius, nm.Z, grid)
+        if      nm.model == "point"      potential = Nuclear.pointNucleus(nm.Z, grid)
+        elseif  nm.model == "uniform"    potential = Nuclear.uniformNucleus(nm.radius, nm.Z, grid)
+        elseif  nm.model == "Fermi"      potential = Nuclear.fermiDistributedNucleus(nm.radius, nm.Z, grid)
         else    error("stop a")
         end
 
@@ -286,9 +275,10 @@ module Nuclear
 
     
     """
-    `JAC.Nuclear.nuclearPotentialDH(model::Nuclear.Model, grid::Radial.Grid, lambda::Float64)`  ... computes the effective, 
-         radial-dependent charge Z(r) for a nucleus with radius R, nuclear charge Z and for a Debye-Hueckel screening exp(-lambda r). 
-         The full Debye-Hueckel nuclear potential is then given by V_nuc = - Z(r)/r; a potential::Radial.Potential is returned.
+    `Nuclear.nuclearPotentialDH(model::Nuclear.Model, grid::Radial.Grid, lambda::Float64)`  
+        ... computes the effective, radial-dependent charge Z(r) for a nucleus with radius R, nuclear charge Z 
+            and for a Debye-Hueckel screening exp(-lambda r). The full Debye-Hueckel nuclear potential is then 
+            given by V_nuc = - Z(r)/r; a potential::Radial.Potential is returned.
     """ 
     function nuclearPotentialDH(nm::Nuclear.Model, grid::Radial.Grid, lambda::Float64)
         pot = nuclearPotential(nm, grid)

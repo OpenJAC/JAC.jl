@@ -86,7 +86,7 @@ module  LSjjTransformation
                  a list::Array{CsfR,1} is returned.
 """
 function generate(sa::String, conf::ConfigurationR, subshellList::Array{Subshell,1})
-    parity  = JAC.determineParity(conf)
+    parity  = Basics.determineParity(conf)
     csfList = CsfR[];   useStandardSubshells = true;    subhshellList = Subshell[];   first = true;    previousCsfs = CsfR[]
     # 
     for  subsh in subshellList

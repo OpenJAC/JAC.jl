@@ -6,7 +6,7 @@
 """
 module CoulombIonization
 
-    using JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
+    using JAC.Basics, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 

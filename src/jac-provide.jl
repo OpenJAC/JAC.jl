@@ -1,64 +1,62 @@
-using JAC.BasicTypes
-export  provide
 
 """
-`JAC.Basics.provide()`  ... provides various data and transformations. 
+`Basics.provide()`  ... provides various data and transformations. 
 
   + `("subshell states: antisymmetric, seniority", sh::Subshell, occ::Int64)`   ... to provide all antisymmetric SubshellStates within the
                         relativistic seniority scheme for the given shell and occupation; an Array{SubshellStateR,1} is returned.
 """
-function provide(sa::String, sh::Subshell, occ::Int64)
+function Basics.provide(sa::String, sh::Subshell, occ::Int64)
 
     !(sa == "subshell states: antisymmetric, seniority")   &&   error("Unsupported keystring = $sa")
 
     # Use the j-value = wa[4] of the subshell to select the allowed SubshellStateR's
-    wb = BasicTypes.SubshellStateR[]
+    wb = Basics.SubshellStateR[]
 
-    if       BasicTypes.subshell_2j(sh) == 1
-        if       occ == 0  || occ == 2      push!( wb, BasicTypes.SubshellStateR( sh, occ, 0, 0) );       return(wb)
-        elseif   occ == 1                   push!( wb, BasicTypes.SubshellStateR( sh, occ, 1, 1) );       return(wb)
+    if       Basics.subshell_2j(sh) == 1
+        if       occ == 0  || occ == 2      push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) );       return(wb)
+        elseif   occ == 1                   push!( wb, Basics.SubshellStateR( sh, occ, 1, 1) );       return(wb)
         end
-    elseif   BasicTypes.subshell_2j(sh) == 3
-        if       occ == 0  || occ == 4      push!( wb, BasicTypes.SubshellStateR( sh, occ, 0, 0) );       return(wb)
-        elseif   occ == 1  || occ == 3      push!( wb, BasicTypes.SubshellStateR( sh, occ, 1, 3) );       return(wb)
-        elseif   occ == 2                   push!( wb, BasicTypes.SubshellStateR( sh, occ, 0, 0) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 2, 4) );       return(wb)
+    elseif   Basics.subshell_2j(sh) == 3
+        if       occ == 0  || occ == 4      push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) );       return(wb)
+        elseif   occ == 1  || occ == 3      push!( wb, Basics.SubshellStateR( sh, occ, 1, 3) );       return(wb)
+        elseif   occ == 2                   push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 2, 4) );       return(wb)
         end
-    elseif   BasicTypes.subshell_2j(sh) == 5
-        if       occ == 0  || occ == 6      push!( wb, BasicTypes.SubshellStateR( sh, occ, 0, 0) );       return(wb)
-        elseif   occ == 1  || occ == 5      push!( wb, BasicTypes.SubshellStateR( sh, occ, 1, 5) );       return(wb)
-        elseif   occ == 2  || occ == 4      push!( wb, BasicTypes.SubshellStateR( sh, occ, 0, 0) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 2, 4) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 2, 8) );       return(wb)
-        elseif   occ == 3                   push!( wb, BasicTypes.SubshellStateR( sh, occ, 1, 5) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 3, 3) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 3, 9) );       return(wb)
+    elseif   Basics.subshell_2j(sh) == 5
+        if       occ == 0  || occ == 6      push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) );       return(wb)
+        elseif   occ == 1  || occ == 5      push!( wb, Basics.SubshellStateR( sh, occ, 1, 5) );       return(wb)
+        elseif   occ == 2  || occ == 4      push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 2, 4) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 2, 8) );       return(wb)
+        elseif   occ == 3                   push!( wb, Basics.SubshellStateR( sh, occ, 1, 5) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 3, 3) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 3, 9) );       return(wb)
         end
-    elseif   BasicTypes.subshell_2j(sh) == 7
-        if       occ == 0  || occ == 8      push!( wb, BasicTypes.SubshellStateR( sh, occ, 0, 0) );       return(wb)
-        elseif   occ == 1  || occ == 7      push!( wb, BasicTypes.SubshellStateR( sh, occ, 1, 7) );       return(wb)
-        elseif   occ == 2  || occ == 6      push!( wb, BasicTypes.SubshellStateR( sh, occ, 0, 0) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 2, 4) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 2, 8) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 2,12) );       return(wb)
-        elseif   occ == 3  || occ == 5      push!( wb, BasicTypes.SubshellStateR( sh, occ, 1, 7) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 3, 3) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 3, 5) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 3, 9) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 3,11) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 3,15) );       return(wb)
-        elseif   occ == 4                   push!( wb, BasicTypes.SubshellStateR( sh, occ, 0, 0) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 2, 4) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 2, 8) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 2,12) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 4, 4) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 4, 8) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 4,10) )
-                                            push!( wb, BasicTypes.SubshellStateR( sh, occ, 4,16) );       return(wb)
+    elseif   Basics.subshell_2j(sh) == 7
+        if       occ == 0  || occ == 8      push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) );       return(wb)
+        elseif   occ == 1  || occ == 7      push!( wb, Basics.SubshellStateR( sh, occ, 1, 7) );       return(wb)
+        elseif   occ == 2  || occ == 6      push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 2, 4) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 2, 8) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 2,12) );       return(wb)
+        elseif   occ == 3  || occ == 5      push!( wb, Basics.SubshellStateR( sh, occ, 1, 7) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 3, 3) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 3, 5) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 3, 9) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 3,11) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 3,15) );       return(wb)
+        elseif   occ == 4                   push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 2, 4) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 2, 8) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 2,12) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 4, 4) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 4, 8) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 4,10) )
+                                            push!( wb, Basics.SubshellStateR( sh, occ, 4,16) );       return(wb)
         end
-    elseif   BasicTypes.subshell_2j(sh) in [ 9, 11, 13, 15]
-        if       occ == 0                   push!( wb, BasicTypes.SubshellStateR( sh, occ, 0, 0) );                 return(wb)
-        elseif   occ == 1                   push!( wb, BasicTypes.SubshellStateR( sh, occ, 1, subshell_2j(sh)) );   return(wb)
+    elseif   Basics.subshell_2j(sh) in [ 9, 11, 13, 15]
+        if       occ == 0                   push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) );                 return(wb)
+        elseif   occ == 1                   push!( wb, Basics.SubshellStateR( sh, occ, 1, subshell_2j(sh)) );   return(wb)
         else     error("stop b")
         end
 
@@ -72,7 +70,7 @@ end
   + `("binding energy", Z::Float64, sh::Subshell)`   ... to provide the binding energy of a subshell electron, taken from a semi-empirical 
                         tabulations by Williams et al., https://userweb.jlab.org/~gwyn/ebindene.html. A energy::Float64 in  Hartree is returned.
 """
-function provide(sa::String, Z::Int64, sh::Subshell)
+function Basics.provide(sa::String, Z::Int64, sh::Subshell)
     if     sa == "binding energy"
         wa = JAC.store_Williams2000(Z)
         if      sh == Subshell("1s_1/2")    wb = wa[1]
@@ -93,7 +91,7 @@ function provide(sa::String, Z::Int64, sh::Subshell)
     end
     #
     if     wb == -1.   error("No binding energy available for Z = $Z and subshell $sh ")
-    else   wb = Constants.convert("energy: from eV to atomic", wb)
+    else   wb = Defaults.convertUnits("energy: from eV to atomic", wb)
     end
     # 
     return( wb )
@@ -107,7 +105,7 @@ end
                         Williams et al., https://userweb.jlab.org/~gwyn/ebindene.html. No relaxation effects are included if several hole states
                         occur with regard to the neutral atom. An energy::Float64 in  Hartree is returned.
 """
-function provide(sa::String, Z::Int64, conf::Configuration)
+function Basics.provide(sa::String, Z::Int64, conf::Configuration)
     if     sa == "binding energy"
         wa = JAC.PeriodicTable.bindingEnergies_Williams2000(Z);    wb = 0.
         for (sh,v) in  conf.shells
@@ -125,7 +123,7 @@ function provide(sa::String, Z::Int64, conf::Configuration)
     else   error("Unsupported keystring")
     end
     #
-    wb = Constants.convert("energy: from eV to atomic", wb)
+    wb = Defaults.convertUnits("energy: from eV to atomic", wb)
     # 
     return( wb )
 end

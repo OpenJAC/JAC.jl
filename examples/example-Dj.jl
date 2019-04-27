@@ -1,6 +1,6 @@
 println("Dj) Test of the MultiPhotonDeExcitation module with ASF from an internally generated initial- and final-state multiplet.")
 #
-JAC.define("print summary: open", "zzz-MultiPhotonDeExcitation.sum")
+setDefaults("print summary: open", "zzz-MultiPhotonDeExcitation.sum")
 wa = Atomic.Computation("xx",  Nuclear.Model(26.), 
                         initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                         intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
@@ -10,6 +10,6 @@ wa = Atomic.Computation("xx",  Nuclear.Model(26.),
 #
 
 wb = perform(wa)
-JAC.define("print summary: close", "")
+setDefaults("print summary: close", "")
 
 

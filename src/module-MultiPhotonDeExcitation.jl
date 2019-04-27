@@ -5,7 +5,7 @@
 """
 module MultiPhotonDeExcitation
 
-    using Printf, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC.Basics, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
@@ -147,7 +147,7 @@ module MultiPhotonDeExcitation
         end
         # Print all results to screen
         JAC.MultiPhotonDeExcitation.displayRates(stdout, lines)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary    JAC.MultiPhotonDeExcitation.displayRates(iostream, lines)   end
         #
         if    output    return( lines )
@@ -201,7 +201,7 @@ module MultiPhotonDeExcitation
          is returned. Apart from the level specification, all physical properties are set to zero during the initialization process.  
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::MultiPhotonDeExcitation.Settings)
-        if    settings.selectLines    selectLines   = true;   selectedLines = JAC.determine("selected lines", settings.selectedLines)
+        if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
         else                          selectLines   = false
         end
     
@@ -244,7 +244,7 @@ module MultiPhotonDeExcitation
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.photonEnergy)) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.photonEnergy)) * "    "
             mpGaugeList = Tuple{UseGauge, Array{JAC.EmMultipole,1}}[]
             for  i in 1:length(line.channels)
                 push!( mpGaugeList, (line.channels[i].gauge, line.channels[i].multipoles) )
@@ -285,9 +285,9 @@ module MultiPhotonDeExcitation
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.photonEnergy))         * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("rate: from atomic",   line.totalRate.Coulomb))    * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("rate: from atomic",   line.totalRate.Babushkin))  * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))         * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("rate: from atomic",   line.totalRate.Coulomb))    * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("rate: from atomic",   line.totalRate.Babushkin))  * "    "
             println(stream, sa )
         end
         println(stream, "  ", JAC.TableStrings.hLine(95))

@@ -1,19 +1,17 @@
 
-## export  plot
-
 # using Plots
 # pyplot()
 
 using RecipesBase
 
 """
-`JAC.plot()`  ... plots various quantities, often in a new window.
+`Basics.plot()`  ... plots various quantities, often in a new window.
 
     + `("radial potentials", potentials::Array{Radial.Potential,1}, grid::Radial.Grid; N::Int64 = 0)`  
         ... to plot one or more radial potentials, and where N::Int64 describes the number of grid points to be considered.
             call:  using Plots; pyplot()    ... to access this method by plot(...)
 """
-function plot(sa::String, potentials::Array{Radial.Potential,1}, grid::Radial.Grid; N::Int64 = 0)   
+function Basics.plot(sa::String, potentials::Array{Radial.Potential,1}, grid::Radial.Grid; N::Int64 = 0)   
     error("call instead:  using Plots; pyplot()    ... to access this method simply by plot(...)")
 end
 
@@ -44,7 +42,7 @@ end
 
             call:  using Plots; pyplot()    ... to access this method by plot(...)
 """
-function plot(sa::String, orbitals::Array{Radial.Orbital,1}, grid::Radial.Grid; N = 0)
+function Basics.plot(sa::String, orbitals::Array{Radial.Orbital,1}, grid::Radial.Grid; N = 0)
     error("call instead:  using Plots; pyplot()    ... to access this method simply by plot(...)")
 end
 
@@ -99,7 +97,7 @@ end
         ... to plot the absorption oscillator strength of all lines as function of their transition energies. Again, a new window is opened but
             nothing returned by this method. **Not yet implemented !**
 """
-function plot(sa::String, lines::Array{PhotoEmission.Line,1})
+function Basics.plot(sa::String, lines::Array{PhotoEmission.Line,1})
     error("call instead:  using Plots; pyplot()    ... to access this method simply by plot(...) ... not yet implemented !")
 end
 
@@ -112,7 +110,7 @@ end
             a new window is opened but nothing returned by this method. It still need to be decided how the widths (and, perhaps, other parameters) 
             will be communicated to the method. **Not yet implemented !**
 """
-function plot(sa::String, lines::Array{PhotoEmission.Line,1}, widths::Float64)
+function Basics.plot(sa::String, lines::Array{PhotoEmission.Line,1}, widths::Float64)
     error("call instead:  using Plots; pyplot()    ... to access this method simply by plot(...) ... not yet implemented !")
 end
 

@@ -1,15 +1,15 @@
 #
 println("Cb) Test of the Hfs module for HFS A,B parameters and hyperfine representation with ASF from an internally generated multiplet.")
 #
-JAC.define("unit: energy", "Hz")
-JAC.define("print summary: open", "zzz-Hfs.sum")
+setDefaults("unit: energy", "Hz")
+setDefaults("print summary: open", "zzz-Hfs.sum")
 wa = Atomic.Computation("xx",  Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0); properties=[JAC.HFS],
                         # grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-6, h = 5.0e-2, hp = 0., NoPoints = 600),
                         configs=[Configuration("[Ne] 3s"), Configuration("[Ne] 3p"), Configuration("[Ne] 3d")],
                         hfsSettings=Hfs.Settings(true, true, false, false, false, false, false, Int64[] ) )
 
 wb = perform(wa)
-JAC.define("print summary: close", "")
+setDefaults("print summary: close", "")
 
 
 #==

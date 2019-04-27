@@ -1,12 +1,14 @@
 
 """
-`module  JAC.Constants`  
-    ... a submodel of JAC that contains all constants and global parameters of the JAC.
+`module  JAC.Defaults`  
+    ... a submodel of JAC that contains all constants and global parameters of the program.
 """
-module Constants
+module Defaults
     
-    using Dates,  JAC,  ..BasicTypes,  ..Radial,  ..Math
+    using Dates,  JAC, ..Basics,  ..Radial,  ..Math
     # 2014 CODATA recommended values, obtained from http://physics.nist.gov/cuu/Constants/
+    
+    export  convertUnits, getDefaults,  setDefaults
 
     # Dimensionless constants
     const FINE_STRUCTURE_CONSTANT         = 7.297_352_566_4e-3 
@@ -83,27 +85,28 @@ module Constants
     GBL_PRINT_TEST              = false
     GBL_PRINT_DEBUG             = false
 
-    GBL_STANDARD_GRID           = Radial.Grid("grid: exponential")        
+    GBL_STANDARD_GRID           = Radial.Grid("grid: exponential", printout=false)        
         
     """
-    `Constants.convert()`  ... converts some data from one format/unit into another one; cf. the supported keystrings and return values.
+    `Defaults.convertUnits()`  
+        ... converts some data from one format/unit into another one; cf. the supported keystrings and return values.
 
-    + `("cross section: from atomic to predefined unit", value::Float64)`  or  `("energy: from atomic", value::Float64)`  ... to convert 
-                                                    an energy value from atomic to the predefined cross section unit; a Float64 is returned.
+    + `("cross section: from atomic to predefined unit", value::Float64)`  or  `("energy: from atomic", value::Float64)`  
+        ... to convert an energy value from atomic to the predefined cross section unit; a Float64 is returned.
 
     + `("cross section: from atomic to barn", value::Float64)`  or  `("cross section: from atomic to Mbarn", value::Float64)`  or
-        `("cross section: from atomic to Hz", value::Float64)`  or  `("energy: from atomic to Angstrom", value::Float64)` ... to convert an 
-                                                    energy value from atomic to the speficied cross section unit; a Float64 is returned.
+      `("cross section: from atomic to Hz", value::Float64)`  or  `("energy: from atomic to Angstrom", value::Float64)` 
+        ... to convert an energy value from atomic to the speficied cross section unit; a Float64 is returned.
 
-    + `("cross section: from predefined to atomic unit", value::Float64)`  or  `("cross section: to atomic", value::Float64)`... to convert a
-                                                    cross section value from the predefined to the atomic cross section unit; a Float64 is returned.
+    + `("cross section: from predefined to atomic unit", value::Float64)`  or  `("cross section: to atomic", value::Float64)`
+        ... to convert a cross section value from the predefined to the atomic cross section unit; a Float64 is returned.
 
-    + `("einstein B: from atomic", value::Float64)`  ... to convert a Einstein B coefficient from atomic to the speficied energy units; 
-                                                        a Float64 is returned.or
+    + `("einstein B: from atomic", value::Float64)`  
+        ... to convert a Einstein B coefficient from atomic to the speficied energy units; a Float64 is returned.or
 
     + `("energy: from atomic to eV", value::Float64)`  or  `("energy: from atomic to Kayser", value::Float64)`  or
-        `("energy: from atomic to Hz", value::Float64)`  or  `("energy: from atomic to Angstrom", value::Float64)` ... to convert an energy value 
-                                                    from atomic to the speficied energy unit; a Float64 is returned.
+      `("energy: from atomic to Hz", value::Float64)`  or  `("energy: from atomic to Angstrom", value::Float64)` 
+        ... to convert an energy value from atomic to the speficied energy unit; a Float64 is returned.
 
     + `("energy: from predefined to atomic unit", value::Float64)`  or  `("energy: to atomic", value::Float64)`... to convert an energy value 
                                                     from the predefined to the atomic energy unit; a Float64 is returned.
@@ -141,106 +144,106 @@ module Constants
     + `("wave number to kinetic energy: atomic units", value::Float64)`  ... to convert a wavenumber (a.u.) into the kinetic energy; 
                                                 a Float64 is returned.
     """
-    function convert(sa::String, wa::Float64)
+    function convertUnits(sa::String, wa::Float64)
         global  CONVERT_ENERGY_AU_TO_EV, CONVERT_ENERGY_AU_TO_KAYSERS, CONVERT_ENERGY_AU_TO_PER_SEC, CONVERT_TIME_AU_TO_SEC,
                 CONVERT_CROSS_SECTION_AU_TO_BARN,  CONVERT_RATE_AU_TO_PER_SEC,  CONVERT_LENGTH_AU_TO_FEMTOMETER 
     
         if       sa in ["cross section: from atomic to predefined unit", "cross section: from atomic"]
-            if      Constants.give("unit: cross section") == "a.u."   return( wa )
-            elseif  Constants.give("unit: cross section") == "barn"   return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN )
-            elseif  Constants.give("unit: cross section") == "Mbarn"  return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 10.0e-6 )
+            if      Defaults.getDefaults("unit: cross section") == "a.u."   return( wa )
+            elseif  Defaults.getDefaults("unit: cross section") == "barn"   return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN )
+            elseif  Defaults.getDefaults("unit: cross section") == "Mbarn"  return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 10.0e-6 )
             else    error("stop a")
             end
         
-        elseif   sa in ["cross section: from atomic to barn"]   return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN )
-        elseif   sa in ["cross section: from atomic to Mbarn"]  return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 10.0e-6 )
+        elseif   sa in ["cross section: from atomic to barn"]               return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN )
+        elseif   sa in ["cross section: from atomic to Mbarn"]              return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 10.0e-6 )
 
         elseif   sa in ["cross section: from predefined to atomic unit", "cross section: to atomic"]
-            if      Constants.give("unit: cross section") == "a.u."   return( wa )
-            elseif  Constants.give("unit: cross section") == "barn"   return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN )
-            elseif  Constants.give("unit: cross section") == "Mbarn"  return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN * 10.0e6 )
+            if      Defaults.getDefaults("unit: cross section") == "a.u."   return( wa )
+            elseif  Defaults.getDefaults("unit: cross section") == "barn"   return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN )
+            elseif  Defaults.getDefaults("unit: cross section") == "Mbarn"  return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN * 10.0e6 )
             else    error("stop b")
             end
 
-        elseif   sa in ["Einstein B: from atomic"]              return( wa )  # Einstein B not yet properly converted.
+        elseif   sa in ["Einstein B: from atomic"]                          return( wa )  # Einstein B not yet properly converted.
 
         elseif   sa in ["energy: from atomic to predefined unit", "energy: from atomic"]
-            if      Constants.give("unit: energy") == "eV"            return( wa * CONVERT_ENERGY_AU_TO_EV )
-            elseif  Constants.give("unit: energy") == "Kayser"        return( wa * CONVERT_ENERGY_AU_TO_KAYSERS )
-            elseif  Constants.give("unit: energy") == "Hartree"       return( wa )
-            elseif  Constants.give("unit: energy") == "Hz"            return( wa * CONVERT_ENERGY_AU_TO_PER_SEC )
-            elseif  Constants.give("unit: energy") == "A"             return( 1.0e8 / ( CONVERT_ENERGY_AU_TO_KAYSERS * wa ) )
+            if      Defaults.getDefaults("unit: energy") == "eV"            return( wa * CONVERT_ENERGY_AU_TO_EV )
+            elseif  Defaults.getDefaults("unit: energy") == "Kayser"        return( wa * CONVERT_ENERGY_AU_TO_KAYSERS )
+            elseif  Defaults.getDefaults("unit: energy") == "Hartree"       return( wa )
+            elseif  Defaults.getDefaults("unit: energy") == "Hz"            return( wa * CONVERT_ENERGY_AU_TO_PER_SEC )
+            elseif  Defaults.getDefaults("unit: energy") == "A"             return( 1.0e8 / ( CONVERT_ENERGY_AU_TO_KAYSERS * wa ) )
             else    error("stop c")
             end
         
-        elseif   sa in ["energy: from atomic to eV"]            return( wa * CONVERT_ENERGY_AU_TO_EV )
-        elseif   sa in ["energy: from atomic to Kayser"]        return( wa * CONVERT_ENERGY_AU_TO_KAYSERS )
-        elseif   sa in ["energy: from atomic to Hz"]            return( wa * CONVERT_ENERGY_AU_TO_PER_SEC )
-        elseif   sa in ["energy: from atomic to Angstrom"]      return( 1.0e8 / ( CONVERT_ENERGY_AU_TO_KAYSERS * wa ) )
+        elseif   sa in ["energy: from atomic to eV"]                        return( wa * CONVERT_ENERGY_AU_TO_EV )
+        elseif   sa in ["energy: from atomic to Kayser"]                    return( wa * CONVERT_ENERGY_AU_TO_KAYSERS )
+        elseif   sa in ["energy: from atomic to Hz"]                        return( wa * CONVERT_ENERGY_AU_TO_PER_SEC )
+        elseif   sa in ["energy: from atomic to Angstrom"]                  return( 1.0e8 / ( CONVERT_ENERGY_AU_TO_KAYSERS * wa ) )
 
         elseif   sa in ["energy: from predefined to atomic unit", "energy: to atomic"]
-            if      Constants.give("unit: energy") == "eV"            return( wa / CONVERT_ENERGY_AU_TO_EV )
-            elseif  Constants.give("unit: energy") == "Kayser"        return( wa / CONVERT_ENERGY_AU_TO_KAYSERS )
-            elseif  Constants.give("unit: energy") == "Hartree"       return( wa )
-            elseif  Constants.give("unit: energy") == "Hz"            return( wa / CONVERT_ENERGY_AU_TO_PER_SEC )
-            elseif  Constants.give("unit: energy") == "A"             return( CONVERT_ENERGY_AU_TO_KAYSERS / (1.0e8 * wa) )
+            if      Defaults.getDefaults("unit: energy") == "eV"            return( wa / CONVERT_ENERGY_AU_TO_EV )
+            elseif  Defaults.getDefaults("unit: energy") == "Kayser"        return( wa / CONVERT_ENERGY_AU_TO_KAYSERS )
+            elseif  Defaults.getDefaults("unit: energy") == "Hartree"       return( wa )
+            elseif  Defaults.getDefaults("unit: energy") == "Hz"            return( wa / CONVERT_ENERGY_AU_TO_PER_SEC )
+            elseif  Defaults.getDefaults("unit: energy") == "A"             return( CONVERT_ENERGY_AU_TO_KAYSERS / (1.0e8 * wa) )
             else    error("stop d")
             end
 
-        elseif   sa in ["energy: from eV to atomic"]            return( wa / CONVERT_ENERGY_AU_TO_EV )
+        elseif   sa in ["energy: from eV to atomic"]                        return( wa / CONVERT_ENERGY_AU_TO_EV )
 
         elseif    sa in ["rate: from atomic to predefined unit", "rate: from atomic"]
-            if       Constants.give("unit: rate") == "1/s"            return( wa * CONVERT_RATE_AU_TO_PER_SEC )
-            elseif   Constants.give("unit: rate") == "a.u."           return( wa )
+            if       Defaults.getDefaults("unit: rate") == "1/s"            return( wa * CONVERT_RATE_AU_TO_PER_SEC )
+            elseif   Defaults.getDefaults("unit: rate") == "a.u."           return( wa )
             else     error("stop e")
             end
         
-        elseif   sa in ["rate: from atomic to 1/s"]             return( wa * CONVERT_RATE_AU_TO_PER_SEC )
+        elseif   sa in ["rate: from atomic to 1/s"]                         return( wa * CONVERT_RATE_AU_TO_PER_SEC )
 
         elseif   sa in ["rate: from predefined to atomic unit", "rate: to atomic"]
-            if      Constants.give("rate: time") == "1/s"             return( wa / CONVERT_RATE_AU_TO_PER_SEC )
-            elseif  Constants.give("rate: time") == "a.u."            return( wa  )
+            if      Defaults.getDefaults("rate: time") == "1/s"             return( wa / CONVERT_RATE_AU_TO_PER_SEC )
+            elseif  Defaults.getDefaults("rate: time") == "a.u."            return( wa  )
             else    error("stop f")
             end
 
         elseif  sa in ["time: from atomic to predefined unit", "time: from atomic"]
-            if      Constants.give("unit: time") == "sec"             return( wa * CONVERT_TIME_AU_TO_SEC )
-            elseif  Constants.give("unit: time") == "fs"              return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e15 )
-            elseif  Constants.give("unit: time") == "as"              return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e18 )
-            elseif  Constants.give("unit: time") == "a.u."            return( wa )
+            if      Defaults.getDefaults("unit: time") == "sec"             return( wa * CONVERT_TIME_AU_TO_SEC )
+            elseif  Defaults.getDefaults("unit: time") == "fs"              return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e15 )
+            elseif  Defaults.getDefaults("unit: time") == "as"              return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e18 )
+            elseif  Defaults.getDefaults("unit: time") == "a.u."            return( wa )
             else    error("stop g")
             end
         
-        elseif   sa in ["time: from atomic to sec"]             return( wa * CONVERT_TIME_AU_TO_SEC )
-        elseif   sa in ["time: from atomic to fs"]              return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e15 )
-        elseif   sa in ["time: from atomic to as"]              return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e18 )
+        elseif   sa in ["time: from atomic to sec"]                         return( wa * CONVERT_TIME_AU_TO_SEC )
+        elseif   sa in ["time: from atomic to fs"]                          return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e15 )
+        elseif   sa in ["time: from atomic to as"]                          return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e18 )
 
         elseif  sa in ["time: from predefined to atomic unit", "time: to atomic"]
-            if      Constants.give("unit: time") == "sec"             return( wa / CONVERT_TIME_AU_TO_SEC )
-            elseif  Constants.give("unit: time") == "fs"              return( wa / (CONVERT_TIME_AU_TO_SEC * 10.0e15) )
-            elseif  Constants.give("unit: time") == "as"              return( wa / (CONVERT_TIME_AU_TO_SEC * 10.0e18) )
-            elseif  Constants.give("unit: time") == "a.u."            return( wa )
+            if      Defaults.getDefaults("unit: time") == "sec"             return( wa / CONVERT_TIME_AU_TO_SEC )
+            elseif  Defaults.getDefaults("unit: time") == "fs"              return( wa / (CONVERT_TIME_AU_TO_SEC * 10.0e15) )
+            elseif  Defaults.getDefaults("unit: time") == "as"              return( wa / (CONVERT_TIME_AU_TO_SEC * 10.0e18) )
+            elseif  Defaults.getDefaults("unit: time") == "a.u."            return( wa )
             else    error("stop h")
             end
 
-        elseif  sa in ["length: from fm to atomic"]        return (wa / CONVERT_LENGTH_AU_TO_FEMTOMETER )
-        elseif  sa in ["length: from atomic to fm"]        return (wa * CONVERT_LENGTH_AU_TO_FEMTOMETER )
+        elseif  sa in ["length: from fm to atomic"]                         return (wa / CONVERT_LENGTH_AU_TO_FEMTOMETER )
+        elseif  sa in ["length: from atomic to fm"]                         return (wa * CONVERT_LENGTH_AU_TO_FEMTOMETER )
 
         elseif  sa in ["kinetic energy to wave number: atomic units"]
             c = INVERSE_FINE_STRUCTURE_CONSTANT
-            wb = sqrt( wa*wa/(c*c) + 2wa );                     return( wb )
+            wb = sqrt( wa*wa/(c*c) + 2wa );                                 return( wb )
 
         elseif  sa in ["kinetic energy to wavelength: atomic units"]
             c = INVERSE_FINE_STRUCTURE_CONSTANT
-            wb = sqrt( wa*wa/(c*c) + 2wa );                     return( 2pi / wb )
+            wb = sqrt( wa*wa/(c*c) + 2wa );                                 return( 2pi / wb )
 
         elseif  sa in ["wave number to total electron energy: atomic units"]
             c = INVERSE_FINE_STRUCTURE_CONSTANT
-            wb = sqrt( wa*wa/(c*c) + 2wa );                     return( sqrt(wb*wb*c*c + c^4) )
+            wb = sqrt( wa*wa/(c*c) + 2wa );                                 return( sqrt(wb*wb*c*c + c^4) )
 
         elseif  sa in ["wave number to kinetic energy: atomic units"]
             c = INVERSE_FINE_STRUCTURE_CONSTANT
-            wb = sqrt( wa*wa/(c*c) + 2wa );                     return( c + sqrt(wb*wb*c*c + c^2) )
+            wb = sqrt( wa*wa/(c*c) + 2wa );                                 return( c + sqrt(wb*wb*c*c + c^2) )
 
         else
             error("Unsupported keystring = $sa")
@@ -250,38 +253,43 @@ module Constants
 
 
     """
-    `Constants.define()`  ... (re-) defines some 'standard' settings which are common to all the computations with the JAC module, and which can 
-                        be 'overwritten' by the user. --- An improper setting of some variable may lead to an error message, if recognized
-                        immediately. The following defaults apply if not specified otherwise by the user: the framework is 'relativistic', 
-                        energies are given in eV and cross sections in barn. Note that, internally, atomic units are used throughout for 
-                        all the computations within the program. nothing is returned if not indicated otherwise.
+    `Defaults.setDefaults()`  
+        ... (re-) defines some 'standard' settings which are common to all the computations with the JAC module, and which can 
+            be 'overwritten' by the user. --- An improper setting of some variable may lead to an error message, if recognized
+            immediately. The following defaults apply if not specified otherwise by the user: the framework is 'relativistic', 
+            energies are given in eV and cross sections in barn. Note that, internally, atomic units are used throughout for 
+            all the computations within the program. nothing is returned if not indicated otherwise.
 
-    + `("framework: relativistic")`  or  `("framework: non-relativistic")`   ... to define a relativistic or non-relativistic framework 
-                    for all subsequent computations. 
+    + `("framework: relativistic")`  or  `("framework: non-relativistic")`   
+        ... to define a relativistic or non-relativistic framework for all subsequent computations. 
 
-    + `("method: continuum, spherical Bessel")`  or  `("method: continuum, pure sine")`  or  `("method: continuum, asymptotic Coulomb")`  
-                    or  `("method: continuum, nonrelativistic Coulomb")`  or  `("method: continuum, Galerkin")`  
-                    ... to define a a method for the generation of the continuum orbitals as (pure) spherical Bessel, pure sine,
-                    asymptotic Coulomb, nonrelativistic Coulomb orbital or by means of the B-spline-Galerkin method.
+    + `("method: continuum, spherical Bessel")`  or  `("method: continuum, pure sine")`  or  
+      `("method: continuum, asymptotic Coulomb")`  or  `("method: continuum, nonrelativistic Coulomb")`  or  
+      `("method: continuum, Galerkin")`  
+        ... to define a a method for the generation of the continuum orbitals as (pure) spherical Bessel, pure sine,
+            asymptotic Coulomb, nonrelativistic Coulomb orbital or by means of the B-spline-Galerkin method.
 
-    + `("method: normalization, pure sine")`  or  `("method: normalization, pure Coulomb")`   ... to define a method for the 
-                    normalization of the continuum orbitals as asymptotically (pure) sine or Coulomb functions.
+    + `("method: normalization, pure sine")`  or  `("method: normalization, pure Coulomb")`   
+        ... to define a method for the normalization of the continuum orbitals as asymptotically (pure) sine or Coulomb 
+            functions.
 
-    + `("QED model: Petersburg")`  or  `("QED model: Sydney")`   ... to define a model for the computation of the QED corrections following
-                    the work by Shabaev et al. (2011; Petersburg) or Flambaum and Ginges (2004; Syney).
+    + `("QED model: Petersburg")`  or  `("QED model: Sydney")`   
+        ... to define a model for the computation of the QED corrections following the work by Shabaev et al. (2011; Petersburg) 
+            or Flambaum and Ginges (2004; Syney).
 
-    + `("unit: energy", "eV")`  or  `("unit: energy", "Kayser")`  or  `("unit: energy", "Hartree")`  or  `("unit: energy", "Hz")`  or  
-        `("unit: energy", "Hz")`  ... to (pre-) define the energy units for all further printouts and communications with the JAC module.
+    + `("unit: energy", "eV")`  or  `("unit: energy", "Kayser")`  or  `("unit: energy", "Hartree")`  or  
+      `("unit: energy", "Hz")`  or  `("unit: energy", "Hz")`  
+        ... to (pre-) define the energy units for all further printouts and communications with the JAC module.
 
-    + `("unit: cross section", "a.u.")`  or  `("unit: cross section", "barn")`  or  `("unit: cross section", "Mbarn")`  ... to (pre-) 
-                    define the unit for the printout of cross sections.
+    + `("unit: cross section", "a.u.")`  or  `("unit: cross section", "barn")`  or  `("unit: cross section", "Mbarn")`  
+        ... to (pre-) define the unit for the printout of cross sections.
 
     + `("unit: rate", "a.u.")`  or  `("unit: rate", "1/s")`  ... to (pre-) define the unit for the printout of rates.
 
-    + `("unit: time", "a.u.")`  or  `("unit: time", "sec")`  or  `("unit: time", "fs")`  or  `("unit: time", "as")`  ... to (pre-) define 
-                    the unit for the printout and communications of times with the JAC module.
+    + `("unit: time", "a.u.")`  or  `("unit: time", "sec")`  or  `("unit: time", "fs")`  or  `("unit: time", "as")`  
+        ... to (pre-) define the unit for the printout and communications of times with the JAC module.
     """
-    function define(sa::String)
+    function setDefaults(sa::String)
         global GBL_FRAMEWORK, GBL_CONT_SOLUTION, GBL_CONT_NORMALIZATION, GBL_QED_MODEL
 
         if        sa == "framework: relativistic"                            GBL_FRAMEWORK           = "relativistic"    
@@ -301,9 +309,9 @@ module Constants
     end
 
 
-    function define(sa::String, sb::String)
-        global GBL_ENERGY_UNIT, GBL_CROSS_SECTION_UNIT, GBL_RATE_UNIT, GBL_TIME_UNIT, GBL_SUMMARY_IOSTREAM, GBL_PRINT_SUMMARY, 
-            GBL_TEST_IOSTREAM, GBL_PRINT_TEST 
+    function setDefaults(sa::String, sb::String)
+        ## global GBL_ENERGY_UNIT, GBL_CROSS_SECTION_UNIT, GBL_RATE_UNIT, GBL_TIME_UNIT, GBL_SUMMARY_IOSTREAM, GBL_PRINT_SUMMARY, 
+        ##    GBL_TEST_IOSTREAM, GBL_PRINT_TEST 
 
         if        sa == "unit: energy"
             units = ["eV", "Kayser", "Hartree", "Hz", "A"]
@@ -322,8 +330,8 @@ module Constants
             !(sb in units)    &&    error("Currently supported time units: $(units)")
             GBL_TIME_UNIT = sb
         elseif    sa == "print summary: open"
-            GBL_PRINT_SUMMARY    = true
-            GBL_SUMMARY_IOSTREAM = open(sb, "w") 
+            global GBL_PRINT_SUMMARY    = true
+            global GBL_SUMMARY_IOSTREAM = open(sb, "w") 
             println(GBL_SUMMARY_IOSTREAM, "Summary file opened at $( string(now())[1:16] ): \n" *
                                         "========================================   \n")
         elseif    sa == "print summary: append"
@@ -351,9 +359,9 @@ module Constants
 
     """
     + `("relativistic subshell list", subshells::Array{Subshell,1}; printout::Bool=true)`  
-            ... to (pre-) define internally the standard relativistic subshell list on which the standard order of orbitals is based.
+        ... to (pre-) define internally the standard relativistic subshell list on which the standard order of orbitals is based.
     """
-    function define(sa::String, subshells::Array{Subshell,1}; printout::Bool=true)
+    function setDefaults(sa::String, subshells::Array{Subshell,1}; printout::Bool=true)
         if        sa == "relativistic subshell list"
             if printout    println("(Re-) Define a new standard subshell list.")    end
             global GBL_STANDARD_SUBSHELL_LIST = deepcopy(subshells)
@@ -367,9 +375,9 @@ module Constants
 
     """
     + `("standard grid", grid::Radial.Grid; printout::Bool=true)`  
-            ... to (pre-) define internally the standard radial grid which is used to represent most orbitals.
+        ... to (pre-) define internally the standard radial grid which is used to represent most orbitals.
     """
-    function define(sa::String, grid::Radial.Grid; printout::Bool=true)
+    function setDefaults(sa::String, grid::Radial.Grid; printout::Bool=true)
         global GBL_STANDARD_GRID
 
         if        sa == "standard grid"
@@ -384,11 +392,12 @@ module Constants
 
 
     """
-    + `("QED: damped-hydrogenic", Znuc::Float64, wa::Array{Float64,1})`  ... to (re-) define the lambda-C damped overlap integrals of 
-                                    the lowest kappa-orbitals [ wa_1s_1/2, wa_2p_1/2, wa_2p_3/2, wa_3d_3/2, wa_3d_5/2 ] for the (new) 
-                                    nuclear charge Znuc; nothing is returned.
+    + `("QED: damped-hydrogenic", Znuc::Float64, wa::Array{Float64,1})`  
+        ... to (re-) define the lambda-C damped overlap integrals of the lowest kappa-orbitals 
+            [ wa_1s_1/2, wa_2p_1/2, wa_2p_3/2, wa_3d_3/2, wa_3d_5/2 ] for the (new) nuclear charge Znuc; 
+            nothing is returned.
     """
-    function define(sa::String, Znuc::Float64, wa::Array{Float64,1})
+    function setDefaults(sa::String, Znuc::Float64, wa::Array{Float64,1})
         global GBL_QED_HYDROGENIC_LAMBDAC,  GBL_QED_NUCLEAR_CHARGE
 
         if        sa == "QED: damped-hydrogenic"
@@ -407,29 +416,34 @@ module Constants
         
         
     """
-    `Constants.give()`  ... gives/supplies different information about the (present) framework of the computation or about some given data; 
-                    cf. Constants.define(). 
+    `Defaults.getDefaults()`  
+        ... gives/supplies different information about the (present) framework of the computation or about some 
+            given data; cf. Defaults.setDefaults(). 
 
-    + `("alpha")`  or  `("fine-structure constant alpha")`   ... to give the (current) value::Float64 of the fine-structure constant alpha.
+    + `("alpha")`  or  `("fine-structure constant alpha")`   
+        ... to get the (current) value::Float64 of the fine-structure constant alpha.
 
-    + `("electron mass: kg")`  or  `("electron mass: amu")`  ... to give the (current) value::Float64 of the electron mass in the specified unit.
+    + `("electron mass: kg")`  or  `("electron mass: amu")`  
+        ... to get the (current) value::Float64 of the electron mass in the specified unit.
 
     + `("framework")`  ... to give the (current) setting::String  of the overall framework.
 
-    + `("electron rest energy")`  or  `("mc^2")`  ... to give the electron rest energy.
+    + `("electron rest energy")`  or  `("mc^2")`  ... to get the electron rest energy.
 
     + `("electron g-factor")`  ... to give the electron g-factor g_s = 2.00232.
 
-    + `("unit: energy")`  or  `("unit: cross section")`  or  `("unit: rate")`  ... to give the corresponding (user-defined) unit::String for 
-                    the current computations.
+    + `("unit: energy")`  or  `("unit: cross section")`  or  `("unit: rate")`  
+        ... to get the corresponding (user-defined) unit::String for the current computations.
 
-    + `("standard grid")`  ... to give the (current standard) grid::Array{Float64,1} to which all radial orbital functions usually refer.
+    + `("standard grid")`  
+        ... to get the (current standard) grid::Array{Float64,1} to which all radial orbital functions usually refer.
 
-    + `("speed of light: c")`  ... to give the speed of light in atomic units.
+    + `("speed of light: c")`  ... to get the speed of light in atomic units.
 
-    + `("summary flag/stream")`  ... to give the logical flag and stream for printing a summary file; a tupel (flag, iostream) is returned.
+    + `("summary flag/stream")`  
+        ... to get the logical flag and stream for printing a summary file; a tupel (flag, iostream) is returned.
     """
-    function give(sa::String)
+    function getDefaults(sa::String)
         global GBL_FRAMEWORK, GBL_CONTINUUM, GBL_ENERGY_UNIT, GBL_CROSS_SECTION_UNIT, GBL_RATE_UNIT
         global ELECTRON_MASS_SI, ELECTRON_MASS_U, FINE_STRUCTURE_CONSTANT, GBL_STANDARD_GRID, GBL_SUMMARY_IOSTREAM, GBL_PRINT_SUMMARY, 
                GBL_TEST_IOSTREAM, GBL_TEST_SUMMARY
@@ -447,7 +461,7 @@ module Constants
         elseif    sa == "unit: time"                                        return (GBL_TIME_UNIT)
         elseif    sa == "standard grid"                                     return (GBL_STANDARD_GRID)
         elseif    sa == "speed of light: c"                                 return (1.0/FINE_STRUCTURE_CONSTANT)
-        elseif    sa == "summary flag/stream"                               return ( (GBL_PRINT_SUMMARY, JAC.JAC_SUMMARY_IOSTREAM) )
+        elseif    sa == "summary flag/stream"                               return ( (GBL_PRINT_SUMMARY, GBL_SUMMARY_IOSTREAM) )
         elseif    sa == "test flag/stream"                                  return ( (GBL_PRINT_TEST,    JAC.JAC_TEST_IOSTREAM) )
         else      error("Unsupported keystring:: $sa")
         end
@@ -455,12 +469,13 @@ module Constants
 
 
     """
-    + `("ordered shell list: non-relativistic", n_max::Int64)`  ... to give an ordered list of non-relativistic shells::Array{Shell,1} up to 
-                                                                    the (maximum) principal number n_max.
-    + `("ordered subshell list: relativistic", n_max::Int64)`   ... to give an ordered list of relativistic subshells::Array{Subshell,1} up to the 
-                                                                    (maximum) principal number n_max.
+    + `("ordered shell list: non-relativistic", n_max::Int64)`  
+        ... to give an ordered list of non-relativistic shells::Array{Shell,1} up to the (maximum) principal number n_max.
+            
+    + `("ordered subshell list: relativistic", n_max::Int64)`   
+        ... to give an ordered list of relativistic subshells::Array{Subshell,1} up to the (maximum) principal number n_max.
     """
-    function give(sa::String, n_max::Int64)
+    function getDefaults(sa::String, n_max::Int64)
     
         !(1 <= n_max < 10)    &&    error("Unsupported value of n_max = $n_max")
 
@@ -488,7 +503,8 @@ module Constants
         
         
     """
-    `Constants.warn()`  ... deals with warnings that occur during a run and session; it handles the global array GBL_WARNINGS.
+    `Defaults.warn()`  
+        ... deals with warnings that occur during a run and session; it handles the global array GBL_WARNINGS.
 
     + `(AddWarning, warning::String)`  ... to add warning to the global array GBL_WARNINGS.
 

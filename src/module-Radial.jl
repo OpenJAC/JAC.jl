@@ -1,11 +1,12 @@
 
 """
-`module  JAC.Radial`  ... a submodel of JAC that contains all structs and methods to deal with the radial grid, radial orbitals and potentials; 
-                          it is using JAC.
+`module  JAC.Radial`  
+    ... a submodel of JAC that contains all structs and methods to deal with the radial grid, radial orbitals and potentials.
 """
 module Radial
 
-    using  JAC, ..BasicTypes, QuadGK, Printf
+    using  QuadGK, Printf, JAC, ..Basics
+    
     export Grid, Potential, Orbital, SingleElecSpectrum
 
 
@@ -60,19 +61,19 @@ module Radial
 
 
     """
-    `JAC.Radial.Grid()`  ... constructor to define an 'empty' instance of the radial grid.
+    `Radial.Grid()`  ... constructor to define an 'empty' instance of the radial grid.
 
-    `JAC.Radial.Grid("grid: exponential")`  ... constructor to define an instance of the (Grasp) standard exponential grid.
+    `Radial.Grid("grid: exponential")`  ... constructor to define an instance of the (Grasp) standard exponential grid.
 
-    `JAC.Radial.Grid("grid: by given parameters"; rnt = rntx, h = hx, hp = hpx, NoPoints = NoPointx)`  ... constructor to define an instance 
-                                                 of the radial grid with the given parameters.
+    `Radial.Grid("grid: by given parameters"; rnt = rntx, h = hx, hp = hpx, NoPoints = NoPointx)`  
+        ... constructor to define an instance of the radial grid with the given parameters.
     """
     function Grid()
         Grid(0., 0., 0., 0,   Float64[], 0, 0, 0, 0, 0, 0, 0,   MeshGrasp, 0, Float64[], Float64[], Float64[], Float64[] )
     end
 
 
-    function Grid(sa::String; rnt::Float64 = 2.0e-6, h::Float64 = 5.0e-2, hp::Float64 = 0., NoPoints::Int64 = 390)
+    function Grid(sa::String; rnt::Float64 = 2.0e-6, h::Float64 = 5.0e-2, hp::Float64 = 0., NoPoints::Int64 = 390, printout::Bool=true)
         
         # Define the general parameters for the B-spline grid and radial mesh
         mesh = MeshGL  ## MeshGL   MeshGrasp
@@ -151,10 +152,12 @@ module Radial
                 rlow = t[i]
             end
             #
-            println("Define a radial grid of type $mesh with $nr grid points")
-            println(" [rnt=" * @sprintf("%.3e",rnt) * ", h=" * @sprintf("%.3e",h) * 
-                    ", hp=" * @sprintf("%.3e",hp) * ", NoPoints=$NoPoints, r_max=" * @sprintf("%.3e",r[nr]) * ";")
-            println("  B-splines wit break points at every $(nth)th point, nsL=$nsL, nsS=$nsS, orderL=$orderL, orderS=$orderS, orderGL=$orderGL] ")
+            if  printout
+                println("Define a radial grid of type $mesh with $nr grid points")
+                println(" [rnt=" * @sprintf("%.3e",rnt) * ", h=" * @sprintf("%.3e",h) * 
+                        ", hp=" * @sprintf("%.3e",hp) * ", NoPoints=$NoPoints, r_max=" * @sprintf("%.3e",r[nr]) * ";")
+                println("  B-splines wit break points at every $(nth)th point, nsL=$nsL, nsS=$nsS, orderL=$orderL, orderS=$orderS, orderGL=$orderGL] ")
+            end
             ## for j = 1:nr   println("j = $j,  r = $(r[j]),  wr = $(wr[j])")   end
         end
 
@@ -163,7 +166,7 @@ module Radial
 
 
     # `Base.show(io::IO, grid::Radial.Grid)`  ... prepares a proper printout of the variable grid::Radial.Grid.
-     function Base.show(io::IO, grid::Radial.Grid) 
+    function Base.show(io::IO, grid::Radial.Grid) 
     
         sa = Base.string(grid::Radial.Grid);    print(io, sa * "\n")
     
@@ -205,8 +208,8 @@ module Radial
 
 
     """
-    `JAC.Radial.GridGL("QED", orderGL::Int64; printout::Bool=false)`  ... constructor to define Gauss-Legendre grid 
-         for the typical QED computation in the interval [1.0, infinity].
+    `Radial.GridGL("QED", orderGL::Int64; printout::Bool=false)`  
+        ... constructor to define Gauss-Legendre grid for the typical QED computation in the interval [1.0, infinity].
     """
     function GridGL(sa::String, orderGL::Int64; printout::Bool=false)
         !(sa == "QED")  && error("Unrecognized keystring; sa = $sa")
@@ -252,10 +255,10 @@ module Radial
 
 
     """
-    `JAC.Radial.Potential()`  ... constructor to define an 'empty' instance of the radial potential.
+    `Radial.Potential()`  ... constructor to define an 'empty' instance of the radial potential.
     """
     function Potential()
-        Potential("", Float64[], JAC.Radial.Grid())
+        Potential("", Float64[], Radial.Grid())
     end
 
 
@@ -310,8 +313,10 @@ module Radial
 
 
     """
-    `JAC.Orbital(subshell::Subshell, energy::Float64)`  ... constructor for given subshell and energy, and where isStandardGrid is set to true;
-         the grid must be defined explicitly and the large and small components are not yet defined in this case.
+    `Radial.Orbital(subshell::Subshell, energy::Float64)`  
+        ... constructor for given subshell and energy, and where isStandardGrid is set to true; the grid must be defined 
+            explicitly and the large and small components are not yet defined in 
+this case.
     """
     function Orbital(subshell::Subshell, energy::Float64)
         if energy < 0    isBound = true    else    isBound = false    end
@@ -323,8 +328,9 @@ module Radial
 
 
     """
-    `JAC.Orbital(label::String, energy::Float64)`  ... constructor for given string identifier and energy, and where isStandardGrid is set 
-         to true; the grid must be defined explicitly and the large and small components are not yet defined in this case.
+    `Radial.Orbital(label::String, energy::Float64)`  
+        ... constructor for given string identifier and energy, and where isStandardGrid is set to true; the grid must be 
+            defined explicitly and the large and small components are not yet defined in this case.
     """
     function Orbital(label::String, energy::Float64)
         if energy < 0    isBound = true    else    isBound = false    end
@@ -341,7 +347,7 @@ module Radial
         n = length(orbital.P)
 
         if   orbital.useStandardGrid
-            stdgrid = Constants.give("standard grid")
+            stdgrid = Defaults.getDefaults("standard grid")
             stdgrid.NoPoints == 0     &&   return( print("Standard grid has not yet been defined.") )
 
             n > stdgrid.NoPoints      &&   error("length of P does not match to standard grid")    
@@ -383,8 +389,9 @@ module Radial
 
 
     """
-    `struct  SingleSymOrbitals`  ... defines a type for a (relativistic and quasi-complete) single-electron spectrum for symmetry kappa
-             with N positive and/or N negative states. All these states are defined with regard to the same grid.
+    `struct  Radial.SingleSymOrbitals`  
+        ... defines a type for a (relativistic and quasi-complete) single-electron spectrum for symmetry kappa with N positive 
+            and/or N negative states. All these states are defined with regard to the same grid.
 
         + name         ::String                ... A name for this spectrum, may contain information about the original type of basis functions.
         + kappa        ::Int64                 ... symmetry of the one-electron spectrum
@@ -406,7 +413,7 @@ module Radial
 
 
     """
-     `JAC.Radial.SingleSymOrbitals()`  ... constructor for providing an 'empty' instance of this struct.
+     `Radial.SingleSymOrbitals()`  ... constructor for providing an 'empty' instance of this struct.
     """
     function SingleSymOrbitals()
         SingleSymOrbitals("", 0, 0, true, Orbital[], Orbital[], Radial.Grid() )
@@ -424,15 +431,15 @@ module Radial
 
 
     """
-    `JAC.Radial.OrbitalBunge1993(subshell::Subshell, Z::Int64)`  ... to calculate the radial orbital on the standard grid.
+    `Radial.OrbitalBunge1993(subshell::Subshell, Z::Int64)`  ... to calculate the radial orbital on the standard grid.
     """
     function OrbitalBunge1993(subshell::Subshell, Z::Int64, grid::Radial.Grid)
-        #x grid = Constants.give("standard grid");    
-        #x qn = JAC.SubshellQuantumNumbers( string(subshell) );    n = qn[1];    kappa = qn[2];   l = qn[3]
-        n = subshell.n;    kappa = subshell.kappa;   l = JAC.subshell_l(subshell)
+        #x grid = Defaults.getDefaults("standard grid");    
+        #x qn = SubshellQuantumNumbers( string(subshell) );    n = qn[1];    kappa = qn[2];   l = qn[3]
+        n = subshell.n;    kappa = subshell.kappa;   l = Basics.subshell_l(subshell)
         ##x println("n, l = $n, $l")
     
-        wa = JAC.store("orbital functions: NR, Bunge (1993)", Z)
+        wa = Basics.store("orbital functions: NR, Bunge (1993)", Z)
         if      l == 0  &&  n > wa[5][1]+0     error("orbitals with s symmetry for Z = $Z only available up to $(wa[5][1]+0) only.")
         elseif  l == 1  &&  n > wa[6][1]+1     error("orbitals with p symmetry for Z = $Z only available up to $(wa[6][1]+1) only.")
         elseif  l == 2  &&  n > wa[7][1]+2     error("orbitals with d symmetry for Z = $Z only available up to $(wa[7][1]+2) only.")
@@ -460,16 +467,16 @@ module Radial
     
         dP(i) = JAC.Math.derivative(P, i)
         for i = 2:size(Q, 1)
-            Q[i] = -1/(2 * JAC.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(i) / grid.h / grid.rp[i] + kappa/grid.r[i]) * P[i]
+            Q[i] = -1/(2 * JAC.Defaults.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(i) / grid.h / grid.rp[i] + kappa/grid.r[i]) * P[i]
         end
         ##x println("OrbitalBunge1993-ab: ",Q)
     
         o     = Orbital( subshell, true, true, -0.5, P, Q, grid)
-        norma = JAC.RadialIntegrals.overlap(o, o, grid)
+        norma = RadialIntegrals.overlap(o, o, grid)
         o.P = o.P/sqrt(norma)
         o.Q = o.Q/sqrt(norma)
 
-        normb = JAC.RadialIntegrals.overlap(o, o, grid)
+        normb = RadialIntegrals.overlap(o, o, grid)
         ##x println("OrbitalBunge1993-ac:  for subshell $subshell : norm-before = $norma, norm-after = $normb")
     
         return( o )
@@ -477,14 +484,14 @@ module Radial
 
 
     """
-    `JAC.Radial.OrbitalMcLean1981(subshell::Subshell,Z::Int64)`  ... to calculate the radial orbital on the standard grid.  
+    `Radial.OrbitalMcLean1981(subshell::Subshell,Z::Int64)`  ... to calculate the radial orbital on the standard grid.  
     """
     function compute_McLean1981(subshell::Subshell,Z::Int64)
-        grid = Constants.give("standard grid");    
-        #x qn = JAC.SubshellQuantumNumbers( string(subshell) );    n = qn[1];   l = qn[3]
-        n = subshell.n;   l = subshell_l( subshell )
+        grid = Defaults.getDefaults("standard grid");    
+        #x qn = Basics.SubshellQuantumNumbers( string(subshell) );    n = qn[1];   l = qn[3]
+        n = subshell.n;   l = Basics.subshell_l( subshell )
     
-        wa = JAC.store("orbital functions: NR, McLean (1981)", Z)
+        wa = Basics.store("orbital functions: NR, McLean (1981)", Z)
 
         !(55 <= Z <= 92)   &&                     error("Nuclear charge must be 55 <= (Z=$Z) <= 92.")            
         wa == Any[]        &&                     error("No data available for neutral Z = $Z.")
@@ -517,22 +524,23 @@ module Radial
 
 
     """
-    `JAC.Radial.OrbitalPrimitiveSlater(subshell::Subshell, N::Int64, alpha0::Float64, beta0::Float64, grid::Radial.Grid)`  ... to calculate a 
-         list of (non-relativistic) radial Slater primitives::Array{Orbital,1} for the subshell-symmetry on the given grid. All orbitals have 
-         the same subshell, isBound = true, useStandardGrid = true and energy = 0. The small components are constructed by applying kinetic 
-         balance to the large component, and all the primitives are properly normalized.
+    `Radial.OrbitalPrimitiveSlater(subshell::Subshell, N::Int64, alpha0::Float64, beta0::Float64, grid::Radial.Grid)`  
+        ... to calculate a list of (non-relativistic) radial Slater primitives::Array{Orbital,1} for the subshell-symmetry on 
+            the given grid. All orbitals have the same subshell, isBound = true, useStandardGrid = true and energy = 0. 
+            The small components are constructed by applying kinetic balance to the large component, and all the primitives are 
+            properly normalized.
     """
     function OrbitalPrimitiveSlater(subshell::Subshell, N::Int64, alpha0::Float64, beta0::Float64, grid::Radial.Grid) 
         function P(i::Int64, l::Int64, eta::Float64)   return( grid.r[i]^(l+1) * exp(-eta*grid.r[i]) )   end
         dP(i) = JAC.Math.derivative(Px, i)
 
-        orbitals = Orbital[];    ll = subshell_l(subshell)
+        orbitals = Orbital[];    ll = Basics.subshell_l(subshell)
         for  i = 1:N
             eta = alpha0 * beta0^(i-1)
             # Px  = [for i = 1:grid.NoPoints P(i, ll, eta)]
             Qx  = zeros(size(Px, 1))
             for j = 2:size(Q, 1)
-                Qx[j] = -1/(2 * JAC.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(j) / grid.h / grid.rp[j] + kappa/grid.r[j]) * Px[j]
+                Qx[j] = -1/(2 * JAC.Defaults.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(j) / grid.h / grid.rp[j] + kappa/grid.r[j]) * Px[j]
             end
     
             o     = Orbital( subshell, true, true, 0., Px, Qx, grid() )
@@ -552,8 +560,9 @@ module Radial
 
 
     """
-    `JAC.Radial.determineZbar(pot::Radial.Potential)`  ... determines the effective charge that is asymptotically seen by the electron
-                                                           in the potential pot. A Zbar::Float64 is returned.
+    `Radial.determineZbar(pot::Radial.Potential)`  
+        ... determines the effective charge that is asymptotically seen by the electron in the potential pot. 
+            A Zbar::Float64 is returned.
     """
     function determineZbar(pot::Radial.Potential) 
         nx = 5   # Number of grid points for determining the effective charge Zbar

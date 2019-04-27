@@ -6,7 +6,7 @@
 """
 module MultipolePolarizibility
 
-    using Printf,  JAC, ..BasicTypes,  ..Basics,  ..Constants, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
+    using Printf,  JAC, ..Basics,  ..Basics,  ..Defaults, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
     
 
@@ -149,7 +149,7 @@ module MultipolePolarizibility
         end
         # Print all results to screen
         JAC.MultipolePolarizibility.displayResults(stdout, newOutcomes)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary    JAC.MultipolePolarizibility.displayResults(iostream, newOutcomes)   end
         #
         if    output    return( newOutcomes )
@@ -198,7 +198,7 @@ module MultipolePolarizibility
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy)) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             println( sa )
         end
         println("  ", JAC.TableStrings.hLine(43))
@@ -230,7 +230,7 @@ module MultipolePolarizibility
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
             energy = 1.0
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", energy))              * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))              * "    "
             ## sa = sa * @sprintf("%.8e", outcome.K)                                               * "    "
             println(stream, sa )
         end

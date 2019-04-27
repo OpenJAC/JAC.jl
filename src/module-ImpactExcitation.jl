@@ -5,7 +5,7 @@
 """
 module ImpactExcitation 
 
-    using Printf, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
+    using Printf, JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
 
 
@@ -245,7 +245,7 @@ module ImpactExcitation
          Apart from the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::ImpactExcitation.Settings)
-        if    settings.selectLines    selectLines   = true;   selectedLines = JAC.determine("selected lines", settings.selectedLines)
+        if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
         else                          selectLines   = false
         end
     
@@ -298,9 +298,9 @@ module ImpactExcitation
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
             en = line.finalLevel.energy - line.initialLevel.energy
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", en))                          * "    "
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.initialElectronEnergy))  * "    "
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.finalElectronEnergy))    * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                          * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialElectronEnergy))  * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.finalElectronEnergy))    * "    "
             kappaInOutSymmetryList = Tuple{Int64,Int64,LevelSymmetry}[]
             for  i in 1:length(line.channels)
                 push!( kappaInOutSymmetryList, (line.channels[i].initialKappa, line.channels[i].finalKappa, line.channels[i].symmetry) ) 
@@ -351,10 +351,10 @@ module ImpactExcitation
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
             en = line.finalLevel.energy - line.initialLevel.energy
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", en))                          * "    "
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.initialElectronEnergy))  * "    "
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.finalElectronEnergy))    * "     "
-            sa = sa * @sprintf("%.6e", Constants.convert("cross section: from atomic", line.crossSection))    * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                          * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialElectronEnergy))  * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.finalElectronEnergy))    * "     "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection))    * "    "
             println(sa)
         end
         println("  ", JAC.TableStrings.hLine(113))

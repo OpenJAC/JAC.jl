@@ -195,7 +195,7 @@ module ImpactExcitationAutoion
     """
     function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                 settings::ImpactExcitationAutoion.Settings)
-        if    settings.selectPathways    selectPathways = true;   selectedPathways = JAC.determine("selected pathways", settings.selectedPathways)
+        if    settings.selectPathways    selectPathways = true;   selectedPathways = Basics.determine("selected pathways", settings.selectedPathways)
         else                             selectPathways = false
         end
     
@@ -293,11 +293,11 @@ module ImpactExcitationAutoion
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
             en_mi = pathway.intermediateLevel.energy - pathway.initialLevel.energy
             en_mf = pathway.intermediateLevel.energy - pathway.finalLevel.energy
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", en_mi))   * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", en_mf))   * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.electronInEnergy))    * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.electronOutEnergy))   * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.electronAugerEnergy)) * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", en_mi))   * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", en_mf))   * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronInEnergy))    * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronOutEnergy))   * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronAugerEnergy)) * "    "
             kappaSymmetryList = Tuple{Int64,Int64,Int64,LevelSymmetry}[]
             for  i in 1:length(pathway.channels)
                 eChannel = pathway.channels[i].excitationChannel;    aChannel = pathway.channels[i].augerChannel;  
@@ -347,12 +347,12 @@ module ImpactExcitationAutoion
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
             en_mi = pathway.intermediateLevel.energy - pathway.initialLevel.energy
             en_mf = pathway.intermediateLevel.energy - pathway.finalLevel.energy
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", en_mi))   * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", en_mf))   * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.electronInEnergy))      * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.electronOutEnergy))     * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.electronAugerEnergy))   * "     "
-            sa = sa * @sprintf("%.6e", Constants.convert("cross section: from atomic", pathway.crossSection))   * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", en_mi))   * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", en_mf))   * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronInEnergy))      * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronOutEnergy))     * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronAugerEnergy))   * "     "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection))   * "  "
             println(sa)
         end
         println("  ", JAC.TableStrings.hLine(133))

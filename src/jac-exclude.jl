@@ -2,7 +2,7 @@
 ## export  exclude
 
 """
-`JAC.Basics.excludeDoubles()  ... exclude 'double entries' from various list; see below:
+`Basics.excludeDoubles()  ... exclude 'double entries' from various list; see below:
 
   + `(confList::Array{Configuration,1})`  ... to exlude from the (non-relativistic) confList all 'doubles', ie. configurations 
                                               that occured before in the list; a new confList::Array{Configuration,1} is returned.
@@ -10,7 +10,7 @@
   + `(csfList::Array{CsfR,1})`  ... to exlude from the (relativistic) csfList all 'doubles', ie. CSF that occured already before in the list; 
                                     a new csfList::Array{CsfR,1} is returned.
 """
-function excludeDoubles(confList::Array{Configuration,1})
+function Basics.excludeDoubles(confList::Array{Configuration,1})
     confListNew = [ deepcopy(confList[1]) ]
 
     for  ic  in 2:length(confList)
@@ -23,7 +23,7 @@ function excludeDoubles(confList::Array{Configuration,1})
 end
     
     
-function excludeDoubles(confList::Array{CsfR,1})
+function Basics.excludeDoubles(confList::Array{CsfR,1})
     error("Not yet implemented !")
     
     csfListNew = [ deepcopy(csfList[1]) ]

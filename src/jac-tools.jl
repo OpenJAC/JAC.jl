@@ -1,11 +1,8 @@
 
-## export  sort
-
-
 """
-`JAC.tools()`  ... select different tools from a menu for which no further input is required.
+`Basics.tools()`  ... select different tools from a menu for which no further input is required.
 """
-function tools()
+function Basics.tools(x::Int64)
     println("JAC.Tools.select(): A menu if nothing comes in")
     #
     t1 = "Simple tools JAC without input: "
@@ -22,10 +19,10 @@ end
 
 
 """
-`JAC.tools(dict::Dict)`  ... select different tools from a menu if proper results::dict are given in terms of a dictionary as obtained
+`Basics.tools(dict::Dict)`  ... select different tools from a menu if proper results::dict are given in terms of a dictionary as obtained
                              usually from an Atomic.Computation.
 """
-function tools(dict::Dict)
+function Basics.tools(dict::Dict)
     println("JAC.Tools.select(): A menu if a dict comes in; $dict ")
 end
 

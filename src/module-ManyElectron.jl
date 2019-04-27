@@ -1,20 +1,21 @@
 
 """
-`module  JAC.ManyElectron`  ... a submodel of JAC that contains all structs and methods for many-electron CSF, basis and levels; 
-                                it is using JAC, JAC.Radial.
+`module  JAC.ManyElectron`  
+    ... a submodel of JAC that contains all structs and methods for many-electron CSF, basis and levels.
 """
 module ManyElectron
 
-    using  JAC, ..BasicTypes, ..Constants,  ..Radial
+    using  ..Basics, ..Defaults,  ..Radial
     export Configuration, ConfigurationR, AsfSettings, CsfR, Basis, Level, Multiplet
 
 
     """
-    `struct  Configuration`  ... defines a struct for a non-relativistic electron configuration that is fully speficied by its shell notations 
-                                 (such as "1s", "2s", "2p", ....) and the corresponding occupation numbers (>= 0). An electron configuration 
-             is independent of any order of the shells, and a zero occupation is assumed for all shells that do not appear as a key in the shell 
-             (dictionary). Therefore, the number of keys do not allow any conclusion about the underlying orbital space of any considered 
-             computation that include more than just a single configuration.
+    `struct  ManyElectron.Configuration`  
+        ... defines a struct for a non-relativistic electron configuration that is fully speficied by its shell notations 
+            (such as "1s", "2s", "2p", ....) and the corresponding occupation numbers (>= 0). An electron configuration 
+            is independent of any order of the shells, and a zero occupation is assumed for all shells that do not appear as a 
+            key in the shell (dictionary). Therefore, the number of keys do not allow any conclusion about the underlying orbital 
+            space of any considered computation that include more than just a single configuration.
 
         + shells         ::Dict{Shell,Int64}   ... Dictionary that maps shells to their occupation.
         + NoElectrons    ::Int64               ... No. of electrons.
@@ -26,8 +27,8 @@ module ManyElectron
 
 
     """
-    `JAC.Configuration(sa::String)`  ... constructor for a given configuration string, such as "[He]", "[Ne]", "[Ne] 3s 3p^6"  or 
-                                         "1s 2p^6 3s^2 3p".
+    `ManyElectron.Configuration(sa::String)`  
+        ... constructor for a given configuration string, such as "[He]", "[Ne]", "[Ne] 3s 3p^6"  or "1s 2p^6 3s^2 3p".
     """
     function Configuration(sa::String)
         sax = strip(sa)
@@ -69,7 +70,7 @@ module ManyElectron
     # `Base.string(conf::Configuration)`  ... provides a String notation for the variable conf::Configuration.
     function Base.string(conf::Configuration)
         wa = keys(conf.shells);   va = values(conf.shells)
-        wb = Constants.give("ordered shell list: non-relativistic", 7)
+        wb = Defaults.getDefaults("ordered shell list: non-relativistic", 7)
 
         sa = ""
         for  k  in  wb
@@ -84,8 +85,9 @@ module ManyElectron
 
 
     """
-    `Base.:(==)(confa::Configuration, confb::Configuration)`  ... compares (recursively) two non-relativistic configurations and return true
-                                                                  if all subfields are equal, and false otherwise
+    `Base.:(==)(confa::Configuration, confb::Configuration)`  
+        ... compares (recursively) two non-relativistic configurations and return true if all subfields are equal, 
+            and false otherwise
     """
     function  Base.:(==)(confa::Configuration, confb::Configuration)
         if   confa.NoElectrons  != confb.NoElectrons    return( false )    end
@@ -98,11 +100,12 @@ module ManyElectron
 
 
     """
-    `struct  ConfigurationR`  ... defines a type for a relativistic electron configuration that is fully speficied by its subshell notations 
-                                  (such as "1s_1/2", "2s_1/2", "2p_3/2", ....) and the corresponding occupation numbers (>= 0). An 
-             electron configuration is independent of any order of the subshells, and a zero occupation is assumed for all shells that do not 
-             appears as a key. Therefore, the number of keys do not allow any conclusion about the underlying orbital space of any considered 
-             computation that include more than a single configuration.
+    `struct  ManyElectron.ConfigurationR`  
+        ... defines a type for a relativistic electron configuration that is fully speficied by its subshell notations 
+            (such as "1s_1/2", "2s_1/2", "2p_3/2", ....) and the corresponding occupation numbers (>= 0). An electron 
+            configuration is independent of any order of the subshells, and a zero occupation is assumed for all shells that 
+            do not appears as a key. Therefore, the number of keys do not allow any conclusion about the underlying orbital 
+            space of any considered computation that include more than a single configuration.
 
         + subshells      ::Dict{Subshell,Int64}  ... Dictionary that maps subshells to their occupation.
         + NoElectrons    ::Int64                 ... No. of electrons.
@@ -123,7 +126,7 @@ module ManyElectron
     # `Base.string(conf::ConfigurationR)`  ... provides a String notation for the variable conf::ConfigurationR.
     function Base.string(conf::ConfigurationR)
         wa = keys(conf.subshells);   va = values(conf.subshells)
-        wb = Constants.give("ordered subshell list: relativistic", 7)
+        wb = Defaults.getDefaults("ordered subshell list: relativistic", 7)
 
         sa = ""
         for  k  in  wb
@@ -138,8 +141,9 @@ module ManyElectron
 
 
     """
-    `Base.:(==)(confa::ConfigurationR, confb::ConfigurationR)`  ... compares (recursively) two relativistic configurations and return true
-                                                                    if all subfields are equal, and false otherwise
+    `Base.:(==)(confa::ConfigurationR, confb::ConfigurationR)`  
+        ... compares (recursively) two relativistic configurations and return true if all subfields are equal, 
+            and false otherwise
     """
     function  Base.:(==)(confa::ConfigurationR, confb::ConfigurationR)
         if   confa.NoElectrons  != confb.NoElectrons    return( false )    end
@@ -152,8 +156,9 @@ module ManyElectron
 
 
     """
-    `struct  AsfSettings`  ... a struct for defining the settings for the atomic state functions, i.e. the self-consistent-field (SCF) 
-                               and CI computations
+    `struct  ManyElectron.AsfSettings`  
+        ... a struct for defining the settings for the atomic state functions, i.e. the self-consistent-field (SCF) 
+            and CI computations
 
         + generateScf          ::Bool               ... True, if a SCF need to be generated, and false otherwise (frozen orbitals).
         + breitScf             ::Bool               ... True, if Breit interaction is to be included into the SCF computations.
@@ -197,7 +202,7 @@ module ManyElectron
 
 
     """
-    `JAC.AsfSettings()`  ... constructor for setting the default values.
+    `ManyElectron.AsfSettings()`  ... constructor for setting the default values.
     """
     function AsfSettings()
     	AsfSettings(false, false, "meanDFS", "hydrogenic", "", Int64[1], 24, 1.0e-6, Subshell[],   
@@ -237,63 +242,10 @@ module ManyElectron
     end
     
     
-#=
     """
-    `struct  ScfSettings`  ... a struct for defining the settings for self-consistent-field (SCF) computations
-
-        + generateScf       ::Bool               ... True, if a SCF need to be generated, and false if just the start orbitals should be applied.
-        + startOrbitals     ::String             ... Specify how the start orbitals are obtained ["fromNRorbitals", "fromGrasp", "hydrogenic"].
-        + rwfFilename       ::String             ... Filename of orbitals, if taken from Grasp.
-        + levels            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
-        + includeBreit      ::Bool               ... True, if the Breit interaction is included into the SCF generation.
-        + maxIterations     ::Int64              ... maximum number of SCF iterations
-        + scfAccuracy       ::Float64            ... convergence criterion for the SCF field.
-        + iterationSequence ::Array{Subshell,1}  ... Sequence of subshells to be optimized.
-    """
-    struct  ScfSettings
-        generateScf         ::Bool
-        startOrbitals       ::String
-        rwfFilename         ::String
-        levels              ::Array{Int64,1}
-        includeBreit        ::Bool
-        maxIterations       ::Int64
-        scfAccuracy         ::Float64
-        iterationSequence   ::Array{Subshell,1}
-     end
-
-
-    """
-    `JAC.ScfSettings()`  ... constructor for setting the default values.
-    """
-    function ScfSettings()
-    	ScfSettings(false, "hydrogenic", "", Int64[1], false, 24, 1.0e-8, Subshell[] )
-    end
-    
-    
-    # `Base.show(io::IO, settings::ScfSettings)`  ... prepares a proper printout of the settings::ScfSettings.
-    function Base.show(io::IO, settings::ScfSettings)
-    	  println(io, "generateScf:	 $(settings.generateScf)  ")
-    	  println(io, "startOrbitals:	 $(settings.startOrbitals)  ")
-    	  println(io, "rwfFilename:	 $(settings.rwfFilename)  ")
-    	  println(io, "levels:		 $(settings.levels)  ")
-    	  println(io, "includeBreit:	 $(settings.includeBreit)  ")
-    	  println(io, "maxIterations:	 $(settings.maxIterations)  ")
-    	  println(io, "scfAccuracy:	 $(settings.scfAccuracy)  ")
-    	  println(io, "iterationSequence:  $(settings.iterationSequence)  ")
-    end
-    
-    
-    # `Base.string(settings::ScfSettings)`  ... provides a String notation for the variable settings::ScfSettings.
-    function Base.string(settings::ScfSettings)
-    	  error("Not yet implemented.")
-    	  sa = "SCF settings: maximum No. of iterations = $(settings.maxIterations), accuracy = (settings.scfAccuracy)"
-    	  return( sa )
-    end                                                                      =#
-    
-    
-    """
-    `struct  CsfR`  ... defines a type for a relativistic configuration state function (CSF) in terms of its orbitals (sequence of orbitals), 
-    		 their occupation as well as the angular momenta, seniority and the coupling of the corresponding antisymmetric subshell states.
+    `struct  ManyElectron.CsfR`  
+        ... defines a type for a relativistic configuration state function (CSF) in terms of its orbitals (sequence of orbitals), 
+            their occupation as well as the angular momenta, seniority and the coupling of the corresponding antisymmetric subshell states.
     
         + useStandardSubshells ::Bool                 ... Determines whether the subshell list has to be obtained from some outer structure
                                                           given by the subshells field below. 
@@ -318,7 +270,8 @@ module ManyElectron
     
     
     """
-    `JAC.CsfR(J::AngularJ64, parity::Parity)`  ... simple constructor for given J and parity, and where standardOrbitals is set to false.
+    `ManyElectron.CsfR(J::AngularJ64, parity::Parity)`  
+        ... simple constructor for given J and parity, and where standardOrbitals is set to false.
     """
     function CsfR(J::AngularJ64, parity::String)
     	  CsfR(false, J, parity, Int64[], Int64[], AngularJ64[], AngularJ64[], Subshell[] )
@@ -326,7 +279,8 @@ module ManyElectron
     
     
     """
-    `JAC.CsfR(sa::String)`  ... simple constructor for given closed-shell occupation (such as "[Ne]"), and where standardOrbitals is set to true.
+    `ManyElectron.CsfR(sa::String)`  
+        ... simple constructor for given closed-shell occupation (such as "[Ne]"), and where standardOrbitals is set to true.
     """
     function CsfR(sa::String)
     	  wa = subshellsFromClosedShellConfiguration(sa)
@@ -335,8 +289,8 @@ module ManyElectron
     	  subshells  = Subshell[];  seniority = Int64[]
     	
         for  sb  in  wa
-    	      #x wb = JAC.SubshellQuantumNumbers(string(sb));   kappa = wb[2];   occ = wb[4] + 1
-    	      occ = subshell_2j(sb) + 1
+    	      #x wb = Basics.SubshellQuantumNumbers(string(sb));   kappa = wb[2];   occ = wb[4] + 1
+    	      occ = Basics.subshell_2j(sb) + 1
     	      occupation = push!(occupation, occ)
     	      seniority  = push!(seniority,    0) 
     	      subshellJ  = push!(subshellJ, AngularJ64(0) ) 
@@ -361,7 +315,7 @@ module ManyElectron
         if    csf.useStandardSubshells
 
     	      for  i in 1:length(csf.occupation)
-    		    sa = sa * JAC.subshellStateString(string(JAC.JAC_STANDARD_SUBSHELL_LIST[i]), csf.occupation[i], csf.seniority[i], 
+    		    sa = sa * Basics.subshellStateString(string(Defaults.GBL_STANDARD_SUBSHELL_LIST[i]), csf.occupation[i], csf.seniority[i], 
                                                   csf.subshellJ[i], csf.subshellX[i])
     		    sa = sa * ", "
     	      end
@@ -369,7 +323,7 @@ module ManyElectron
 
             else
     	      for  i in 1:length(csf.subshells)
-    		    sa = sa * JAC.subshellStateString(string(csf.subshells[i]), csf.occupation[i], csf.seniority[i], 
+    		    sa = sa * Basics.subshellStateString(string(csf.subshells[i]), csf.occupation[i], csf.seniority[i], 
                                                   csf.subshellJ[i], csf.subshellX[i])
     		    sa = sa * ", "
     	      end
@@ -380,8 +334,9 @@ module ManyElectron
     
 
     """
-    `Base.:(==)(csfa::CsfR, csfb::CsfR)`  ... compares (recursively) two relativistic CSFs and return true if all subfields are equal, 
-    						          and false otherwise
+    `Base.:(==)(csfa::CsfR, csfb::CsfR)`  
+        ... compares (recursively) two relativistic CSFs and return true if all subfields are equal, 
+            and false otherwise
     """
     function  Base.:(==)(csfa::CsfR, csfb::CsfR)
         # Stop the comparison with an error message if the CSF are not defined w.r.t a common subshell list.
@@ -401,15 +356,15 @@ module ManyElectron
     
     
     """
-    `JAC.CsfRGrasp92(subshells::Array{Subshell,1}, coreSubshells::Array{Subshell,1}, sa::String, sb::String, sc::String)`  ... to construct a CsfR 
-    	   from 3 Grasp-Strings and the given list of subshells and core subshells.
+    `ManyElectron.CsfRGrasp92(subshells::Array{Subshell,1}, coreSubshells::Array{Subshell,1}, sa::String, sb::String, sc::String)`  
+        ... to construct a CsfR from 3 Grasp-Strings and the given list of subshells and core subshells.
     """
     function CsfRGrasp92(subshells::Array{Subshell,1}, coreSubshells::Array{Subshell,1}, sa::String, sb::String, sc::String)
     	occupation = Int64[];	 seniority = Int64[];	 subshellJ = AngularJ64[];    subshellX = AngularJ64[];    subshellsx = Subshell[]
 
     	# Define the occupation and quantum numbers of the closed shells
     	for i in 1:length(coreSubshells)
-    	    push!(occupation, JAC.subshell_2j( coreSubshells[i] ) +1);    
+    	    push!(occupation, Basics.subshell_2j( coreSubshells[i] ) +1);    
     	    push!(seniority, 0);     push!(subshellJ, AngularJ64(0));	 push!(subshellX, AngularJ64(0)) 
     	end
     
@@ -418,7 +373,7 @@ module ManyElectron
     	while true
     	    i = i + 1;    sax = sa[9i+1:9i+9];     sbx = sb[9i+1:9i+9];    scx = strip( scc[9i+6:9i+14] )
     
-    	    sh = strip( sax[1:5] );    sh = JAC.subshellGrasp(sh);    occ = parse( sax[7:8] )
+    	    sh = strip( sax[1:5] );    sh = Basics.subshellGrasp(sh);    occ = parse( sax[7:8] )
     	    search(sbx, ',') > 0    &&    error("stop a: missing seniority; sb = $sb")   # Include seniority more properly if it occurs
     	    subJx = parse( sbx )
     	    if      typeof(subJx) == Void     subJ = AngularJ64(0)
@@ -442,7 +397,7 @@ module ManyElectron
     	    while  true
     		ishell = ishell + 1
     		if  subshells[ishell] == sh
-    		    wa = BasicTypes.provide("subshell states: antisymmetric, seniority", sh, occ);    nu = -1
+    		    wa = Basics.provide("subshell states: antisymmetric, seniority", sh, occ);    nu = -1
     		    for  a in wa
     			if   AngularJ64( a.Jsub2//2 ) == subJ	 nu = a.nu;    break   end
     		    end
@@ -478,11 +433,11 @@ module ManyElectron
     
 
     """
-    `JAC.CsfRTransformToStandardSubshells(csf::CsfR, subshells::Array{Subshell,1})`  ... constructor to re-define a CSF with regard to the 
-    	   given list of subshells. It incorporates 'empty' subshell state and their coupling (if necessary) but does not support a re-arrangement 
-         of the subshell order. This constructor is used to 'combine' individual CsfR into a common list (such as in a Basis) and, thus, use
-         StandardSubshells = true is set. This method terminates with an error message if the given subshell list requires a re-coupling 
-         of the CSF.
+    `ManyElectron.CsfRTransformToStandardSubshells(csf::CsfR, subshells::Array{Subshell,1})`  
+        ... constructor to re-define a CSF with regard to the given list of subshells. It incorporates 'empty' subshell state 
+            and their coupling (if necessary) but does not support a re-arrangement of the subshell order. This constructor 
+            is used to 'combine' individual CsfR into a common list (such as in a Basis) and, thus, use StandardSubshells = true 
+            is set. This method terminates with an error message if the given subshell list requires a re-coupling of the CSF.
     """
     function CsfRTransformToStandardSubshells(csf::CsfR, subshells::Array{Subshell,1})
     	J = csf.J;    parity = csf.parity; 
@@ -513,8 +468,9 @@ module ManyElectron
     
     
     """
-    `struct  Basis`  ... defines a type for a relativistic atomic basis, including the (full) specification of the 
-    			  configuration space and radial orbitals.
+    `struct  ManyElectron.Basis`  
+        ... defines a type for a relativistic atomic basis, including the (full) specification of the configuration space 
+            and radial orbitals.
 
         + isDefined      ::Bool                      ... Determines whether this atomic basis 'points' to some a well-defined basis
                                                          or to an empty instance, otherwise.
@@ -535,7 +491,7 @@ module ManyElectron
     
     
     """
-    `JAC.ManyElectron.Basis()`  ... constructor for an 'empty' instance::Basis with isDefined == false.
+    `ManyElectron.Basis()`  ... constructor for an 'empty' instance::Basis with isDefined == false.
     """
     function Basis()
     	  Basis(false, 0, Subshell[], CsfR[], Subshell[], Dict{Subshell, Orbital}() )
@@ -543,17 +499,17 @@ module ManyElectron
     
     
     """
-    `JAC.ManyElectron.Basis("from Grasp2013", cslFilename::String, rwfFilename::String)`  ... to construct an instance::Basis from 
-                             the Grasp92/Grasp2013 .csl and .rwf files.
+    `ManyElectron.Basis("from Grasp2013", cslFilename::String, rwfFilename::String)`  
+        ... to construct an instance::Basis from the Grasp92/Grasp2013 .csl and .rwf files.
     """
     function Basis(sa::String, cslFilename::String, rwfFilename::String)
         if  sa == "from Grasp2013"
            isDefined = true 
            #
-           println("JAC.ManyElectron.Basis-aa: warning ... The standard grid is set; make an interactive request if not appropriate.") 
-           grid     = JAC.Radial.Grid("grid: exponential")
-           basis    = BasicTypes.read("CSF list: Grasp92", cslFilename)
-           orbitals = BasicTypes.readOrbitalFileGrasp92(rwfFilename, grid)
+           println("ManyElectron.Basis-aa: warning ... The standard grid is set; make an interactive request if not appropriate.") 
+           grid     = Radial.Grid("grid: exponential")
+           basis    = Basics.read("CSF list: Grasp92", cslFilename)
+           orbitals = Basics.readOrbitalFileGrasp92(rwfFilename, grid)
         else  error("stop a")
         end
 
@@ -589,7 +545,8 @@ module ManyElectron
     
 
     """
-    `struct  Level`  ... defines a type for an atomic level in terms of its quantum number, energy and with regard to a relativistic basis.
+    `struct  ManyElectron.Level`  
+        ... defines a type for an atomic level in terms of its quantum number, energy and with regard to a relativistic basis.
     
         + J            ::AngularJ64       ... Total angular momentum J.
         + M            ::AngularM64       ... Total projection M, only defined if a particular sublevel is referred to.
@@ -616,7 +573,7 @@ module ManyElectron
     
     
     """
-    `JAC.Level()`  ... constructor an empty level without useful data.
+    `ManyElectron.Level()`  ... constructor an empty level without useful data.
     """
     function Level()
         Level( AngularJ64(0),  AngularM64(0), Parity("+"), 0, 0., 0., false, Basis(), Vector{Float64}[] )
@@ -624,7 +581,7 @@ module ManyElectron
     
     
     """
-    `JAC.Level(J::AngularJ64, parity::Parity, energy::Float64, relativeOcc::Float64)`  
+    `ManyElectron.Level(J::AngularJ64, parity::Parity, energy::Float64, relativeOcc::Float64)`  
         ... constructor an atomic level without a state representation: hasStateRep == false.
     """
     function Level(J::AngularJ64, parity::Parity, energy::Float64, relativeOcc::Float64)
@@ -644,7 +601,8 @@ module ManyElectron
     
     
     """
-    `struct  Multiplet`  ... defines a type for an ordered list of atomic levels; has only the default constructor.
+    `struct  ManyElectron.Multiplet`  
+        ... defines a type for an ordered list of atomic levels; has only the default constructor.
     
     	  + name  	 ::String	         ... A name associated to the multiplet.
     	  + levels	 ::Array{Level,1}   ... A list of levels (pointers).
@@ -656,7 +614,7 @@ module ManyElectron
 
 
     """
-     `JAC.ManyElectron.Multiplet()`  ... constructor for providing an 'empty' instance of this struct.
+     `ManyElectron.Multiplet()`  ... constructor for providing an 'empty' instance of this struct.
     """
     function Multiplet()
         Multiplet("", Level[] )
@@ -664,17 +622,18 @@ module ManyElectron
     
     
     """
-    `JAC.ManyElectron.Multiplet("from Ratip2012", cslFilename::String, rwfFilename::String, mixFilename::String)`  ... to construct an 
-         instance::Multiplet from the Grasp92/Ratip2012 .csl, .rwf and .mix files.  Some consistency checks are made and the method terminates 
-         with an error message if the files don't fit together. 
+    `ManyElectron.Multiplet("from Ratip2012", cslFilename::String, rwfFilename::String, mixFilename::String)`  
+        ... to construct an instance::Multiplet from the Grasp92/Ratip2012 .csl, .rwf and .mix files.  Some consistency 
+            checks are made and the method terminates with an error message if the files don't fit together. 
         
-        + `("from Grasp2018", cslFilename::String, rwfFilename::String, mixFilename::String)` ... to do the same but for files from Grasp2018.
+    + `("from Grasp2018", cslFilename::String, rwfFilename::String, mixFilename::String)` 
+        ... to do the same but for files from Grasp2018.
     """
     function Multiplet(sa::String, cslFilename::String, rwfFilename::String, mixFilename::String)
         if  sa == "from Ratip2012"
            name      = "from "*cslFilename[1:end-4] 
-           basis     = JAC.ManyElectron.Basis("from Grasp2013", cslFilename, rwfFilename)
-           multiplet = BasicTypes.readMixFileRelci(mixFilename, basis)
+           basis     = ManyElectron.Basis("from Grasp2013", cslFilename, rwfFilename)
+           multiplet = Basics.readMixFileRelci(mixFilename, basis)
         else  error("Unrecognized keystrings:  $sa")
         end
 
@@ -690,16 +649,17 @@ module ManyElectron
     
     
     """
-    `struct  MultipletSettings`  ... a struct for defining the atomic interactions to be incorporated into the representation of a multiplet.
+    `struct  ManyElectron.MultipletSettings`  
+        ... a struct for defining the atomic interactions to be incorporated into the representation of a multiplet.
     
-    	+ Coulomb		       ::Bool 		          ... logical flag to include Coulomb interactions.
-    	+ Breit 		       ::Bool 		          ... logical flag to include Breit interactions.
-    	+ QED			       ::Bool 		          ... logical flag to include QED interactions.
-    	+ diagonalizationMethod  ::String		          ... method for diagonalizing the matrix.
-    	+ selectLevels  	       ::Bool 		          ... true, if specific level (number)s have been selected for computation.
-    	+ selectedLevels	       ::Array{Int64,1}	          ... Level number that have been selected.
-    	+ selectSymmetries	 ::Bool 		          ... true, if specific level symmetries have been selected for computation.
-    	+ selectededSymmetries   ::Array{LevelSymmetry,1}   ... Level symmetries that have been selected.
+    	+ Coulomb		           ::Bool 		      ... logical flag to include Coulomb interactions.
+    	+ Breit 		           ::Bool 		      ... logical flag to include Breit interactions.
+    	+ QED			           ::Bool 		      ... logical flag to include QED interactions.
+    	+ diagonalizationMethod    ::String		      ... method for diagonalizing the matrix.
+    	+ selectLevels  	       ::Bool 		      ... true, if specific level (number)s have been selected for computation.
+    	+ selectedLevels	       ::Array{Int64,1}	  ... Level number that have been selected.
+    	+ selectSymmetries	       ::Bool 		      ... true, if specific level symmetries have been selected for computation.
+    	+ selectededSymmetries     ::Array{LevelSymmetry,1}   ... Level symmetries that have been selected.
     
     	### `Methods for diagonalization`  
     
@@ -707,57 +667,15 @@ module ManyElectron
     	*
     """
     struct  MultipletSettings
-    	  Coulomb 		       ::Bool
-        Breit			 ::Bool
-    	  QED			       ::Bool
-    	  diagonalizationMethod	 ::String
-        selectLevels		 ::Bool
-    	  selectedLevels  	 ::Array{Int64,1}
-        selectSymmetries	 ::Bool
-    	  selectedSymmetries	 ::Array{LevelSymmetry,1}
+        Coulomb 		         ::Bool
+        Breit			         ::Bool
+        QED			             ::Bool
+    	diagonalizationMethod	 ::String
+        selectLevels		     ::Bool
+        selectedLevels  	     ::Array{Int64,1}
+        selectSymmetries	     ::Bool
+        selectedSymmetries	     ::Array{LevelSymmetry,1}
     end
-
-#=    
-    """
-    `JAC.MultipletSettings()`  ... constructor for a standard instance, ie. by just including Coulomb interactions.
-    """
-    function MultipletSettings()
-    	  MultipletSettings(true, false, false, "eigval", false, Int64[], false, LevelSymmetry[] )
-    end
-
-    
-    """
-    `JAC.MultipletSettings(coulomb::Bool, breit::Bool, qed::Bool)`  ... constructor for a standard instance, ie. by just defining the atomic 
-                                                                        interactions.
-    """
-    function MultipletSettings(coulomb::Bool, breit::Bool, qed::Bool)
-    	  MultipletSettings(coulomb, breit, qed, "eigval", false, Int64[], false, LevelSymmetry[] )
-    end
-
-
-    # `Base.show(io::IO, settings::MultipletSettings)`  ... prepares a proper printout of the settings::MultipletSettings.
-    function Base.show(io::IO, settings::MultipletSettings)
-    	println(io, "Coulomb:		       $(settings.Coulomb)  ")
-    	println(io, "Breit:		       $(settings.Breit)  ")
-    	println(io, "QED:		             $(settings.QED)  ")
-    	println(io, "diagonalizationMethod:  $(settings.diagonalizationMethod)  ")
-    	println(io, "selectLevels:	       $(settings.selectLevels)  ")
-    	println(io, "selectedLevels:	       $(settings.selectedLevels)  ")
-    	println(io, "selectSymmetries:       $(settings.selectSymmetries)  ")
-    	println(io, "selectedSymmetries:     $(settings.selectedSymmetries)  ")
-    end
-    
-    
-    # `Base.string(settings::MultipletSettings)`  ... provides a String notation for the variable settings::MultipletSettings.
-    function Base.string(settings::MultipletSettings)
-    	error("Not yet implemented.")
-    	sa = " "
-    	if   settings.Coulomb	 sa = sa * "Coulomb  "   end
-    	if   settings.Breit	 sa = sa * "Breit  "	 end
-    	if   settings.QED	 sa = sa * "QED  "	 end
-    	sa = "Atomic interactions (to be) included: " * sa
-    	return( sa )
-    end                                        =#
     
 end # module
     

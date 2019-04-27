@@ -8,7 +8,7 @@ module AngularCoefficientsRatip2013
 
     # using ..JAC: AngularJ64, twice, CsfR, getsubshells, have_same_subshells, Parity, plus, minus, Subshell, SubshellQuantumNumbers
     # using ..JAC: AngularJ64, CsfR, Parity, plus, minus, Subshell # , SubshellQuantumNumbers
-    using  JAC, ..BasicTypes, ..Constants,  ..ManyElectron
+    using  JAC, ..Basics, ..Defaults,  ..ManyElectron
     using Libdl: dlopen, dlsym
 
     export AngularTcoeff, AngularVcoeff
@@ -26,7 +26,7 @@ module AngularCoefficientsRatip2013
     `JAC.AngularCoefficientsRatip2013.getsubshells(csf::CsfR)`  ... returns the array of subshells of a relativistic configuration state 
                                                                     function.
     """
-    getsubshells(csf::CsfR) = csf.useStandardSubshells ?   Constants.GBL_STANDARD_SUBSHELL_LIST : csf.subshells
+    getsubshells(csf::CsfR) = csf.useStandardSubshells ?   Defaults.GBL_STANDARD_SUBSHELL_LIST : csf.subshells
 
 
     """
@@ -282,7 +282,7 @@ module AngularCoefficientsRatip2013
         suX = reshape(Int8.(twice.(csf.subshellX)), nwshells, 1)
         totalJs =  Int8[twice(csf.J)]
         # parities = UInt8[Char(csf.parity)]
-        if   csf.parity == BasicTypes.plus    parities = UInt8[Char('+')]   else    parities = UInt8[Char('-')]   end
+        if   csf.parity == Basics.plus    parities = UInt8[Char('+')]   else    parities = UInt8[Char('-')]   end
         nwcore = 0
         for i in eachindex(nkappas)
             if  occ[i]!=maxocc(nkappas[i])
@@ -342,8 +342,8 @@ module AngularCoefficientsRatip2013
         totalJs =  Int8[twice(csfa.J), twice(csfb.J)]
         ## parities = UInt8[Char(csfa.parity), Char(csfb.parity)]
         parities = UInt8['a', 'a']
-        if csfa.parity == BasicTypes.plus      parities[1] = '+'     else       parities[1] = '-'      end
-        if csfb.parity == BasicTypes.plus      parities[2] = '+'     else       parities[2] = '-'      end
+        if csfa.parity == Basics.plus      parities[1] = '+'     else       parities[1] = '-'      end
+        if csfb.parity == Basics.plus      parities[2] = '+'     else       parities[2] = '-'      end
         nkappas = Fnkappa.(subshells)
         nwcore = 0
         for i in eachindex(subshells)

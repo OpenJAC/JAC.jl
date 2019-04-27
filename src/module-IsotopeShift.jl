@@ -5,7 +5,7 @@
 """
 module IsotopeShift
 
-    using Printf, JAC, ..BasicTypes,  ..Basics,  ..Constants, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, ..Basics,  ..Basics,  ..Defaults, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
@@ -120,8 +120,8 @@ module IsotopeShift
                 #----------------------------------
                     wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                     for  coeff in wa[1]
-                        ja = JAC.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
-                        jb = JAC.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
+                        ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
+                        jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = JAC.InteractionStrength.hamiltonian_nms(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], nm, grid)
                         me = me + coeff.T  * sqrt( ja + 1) * tamp  
                     end 
@@ -131,8 +131,8 @@ module IsotopeShift
                     wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                     for  coeff in wa[2]
                         if  coeff.nu != 1  continue   end
-                        ja = JAC.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
-                        jb = JAC.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
+                        ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
+                        jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = JAC.InteractionStrength.X1_smsA(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
                                                                 sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
                         me = me + coeff.V * sqrt( ja + 1) * tamp  
@@ -143,8 +143,8 @@ module IsotopeShift
                     wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                     for  coeff in wa[2]
                         if  coeff.nu != 1  continue   end
-                        ja = JAC.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
-                        jb = JAC.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
+                        ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
+                        jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = JAC.InteractionStrength.X1_smsB(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
                                                                 sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
                         me = me + coeff.V * sqrt( ja + 1) * tamp  
@@ -155,8 +155,8 @@ module IsotopeShift
                     wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                     for  coeff in wa[2]
                         if  coeff.nu != 1  continue   end
-                        ja = JAC.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
-                        jb = JAC.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
+                        ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
+                        jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = JAC.InteractionStrength.X1_smsC(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
                                                                 sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
                         me = me + coeff.V * sqrt( ja + 1) * tamp  
@@ -225,7 +225,7 @@ module IsotopeShift
                 wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[s])
                 me = 0.
                 for  coeff in wa[1]
-                    jj = JAC.subshell_2j(basis.orbitals[coeff.a].subshell)
+                    jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                     me = me + coeff.T * sqrt( jj + 1) * 
                                         JAC.InteractionStrength.hamiltonian_nms(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
                 end
@@ -254,7 +254,7 @@ module IsotopeShift
                 wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[s])
                 me = 0.
                 for  coeff in wa[2]
-                    jj = JAC.subshell_2j(basis.orbitals[coeff.a].subshell)
+                    jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                     if       k == 1    wa = JAC.InteractionStrength.X1_sms1(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
                                                                                       basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)
                     elseif   k == 2    wa = JAC.InteractionStrength.X1_sms2(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
@@ -295,7 +295,7 @@ module IsotopeShift
         end
         # Print all results to screen
         JAC.IsotopeShift.displayResults(stdout, newOutcomes)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary    JAC.IsotopeShift.displayResults(iostream, newOutcomes)   end
         #
         if    output    return( newOutcomes )
@@ -341,10 +341,10 @@ module IsotopeShift
         println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(43)) 
         #  
         for  outcome in outcomes
-            sa  = "  ";    sym = BasicTypes.LevelSymmetry( outcome.level.J, outcome.level.parity)
+            sa  = "  ";    sym = Basics.LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy)) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             println( sa )
         end
         println("  ", JAC.TableStrings.hLine(43))
@@ -384,11 +384,11 @@ module IsotopeShift
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy))               * "    "
-            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic to Hz", outcome.Knms))                 * "    "
-            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic to Hz", outcome.Ksms))                 * "    "
-            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic to Hz", outcome.Knms + outcome.Ksms))  * "    "
-            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic to Hz", outcome.F))                    * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy))               * "    "
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Knms))                 * "    "
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Ksms))                 * "    "
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Knms + outcome.Ksms))  * "    "
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.F))                    * "    "
             println(stream, sa )
             sb = JAC.TableStrings.hBlank(47)
             sb = sb * @sprintf("%.5e", outcome.Knms * 1822.888 * 2)                                            * "    "
@@ -416,7 +416,7 @@ module IsotopeShift
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy))          * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy))          * "    "
             sa = sa * @sprintf("%.5e %s %.5e", outcome.amplitudeKnms.re,  " ", outcome.amplitudeKnms.im)  * "    "
             sa = sa * @sprintf("%.5e %s %.5e", outcome.amplitudeKsmsA.re, " ", outcome.amplitudeKsmsA.im) * "    "
             sa = sa * @sprintf("%.5e %s %.5e", outcome.amplitudeKsmsB.re, " ", outcome.amplitudeKsmsB.im) * "    "

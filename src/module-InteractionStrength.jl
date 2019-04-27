@@ -5,7 +5,7 @@
 """
 module InteractionStrength
 
-    using  GSL, JAC, ..BasicTypes,  ..Basics,  ..Constants, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
+    using  GSL, JAC, ..Basics,  ..Basics,  ..Defaults, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
     global JAC_counter = 0
 
 
@@ -61,7 +61,7 @@ module InteractionStrength
     function hfs_t1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
-        ##x wa = - Constants.give("alpha") * (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell) *
+        ##x wa = - Defaults.getDefaults("alpha") * (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell) *
         wb =   - (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell)
         wc =   JAC.RadialIntegrals.rkNonDiagonal(-2, a, b, grid)
         wa =   wb * wc
@@ -107,7 +107,7 @@ module InteractionStrength
          A value::Float64 is returned.  
     """
     function MbaEmissionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
-        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Constants.give("speed of light: c") 
+        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
         #
         if       gauge == JAC.Magnetic
             ChengI = JAC.AngularMomentum.ChengI(-kapa, kapb, AngularJ64(mp.L))
@@ -144,11 +144,11 @@ module InteractionStrength
          is returned. At present, only the magnetic matrix elements are implemented. 
     """
     function MbaEmissionAndrey(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
-        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Constants.give("speed of light: c") 
-        ja   = JAC.subshell_j(a.subshell);   jb   = JAC.subshell_j(b.subshell);   
+        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
+        ja   = Basics.subshell_j(a.subshell);   jb   = Basics.subshell_j(b.subshell);   
         #
         if       gauge == JAC.Magnetic
-            wa = -1.0im * sqrt( (2mp.L+1) * (JAC.subshell_2j(a.subshell)+1) ) / sqrt(4pi) / sqrt(mp.L * (mp.L+1)) * (-1)^mp.L * (kapb + kapa)
+            wa = -1.0im * sqrt( (2mp.L+1) * (Basics.subshell_2j(a.subshell)+1) ) / sqrt(4pi) / sqrt(mp.L * (mp.L+1)) * (-1)^mp.L * (kapb + kapa)
             wa = wa * JAC.AngularMomentum.ClebschGordan(ja, AngularM64(1//2), AngularJ64(mp.L), AngularM64(0), jb, AngularM64(1//2)) 
             wa = wa * JAC.RadialIntegrals.GrantILplus(mp.L, q, a, b, grid::Radial.Grid)
             wa = conj(wa)
@@ -174,7 +174,7 @@ module InteractionStrength
     function multipoleTransition(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
         function besselPrime_jl(L::Int64, x::Float64)    return( GSL.sf_bessel_jl(L-1, x) - (L+1)/x * GSL.sf_bessel_jl(L, x) )       end
 
-        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Constants.give("speed of light: c") 
+        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
         mtp  = min(size(a.P, 1), size(b.P, 1))
         !(grid.mesh == MeshGL)  &&  error("Only for MeshGL implemented so far.")
         #
@@ -245,10 +245,10 @@ module InteractionStrength
          A value::Float64 is returned. At present, only the zero-frequency Breit interaction is taken into account.
     """
     function XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
-        ja2 = JAC.subshell_2j(a.subshell)
-        jb2 = JAC.subshell_2j(b.subshell)
-        jc2 = JAC.subshell_2j(c.subshell)
-        jd2 = JAC.subshell_2j(d.subshell)
+        ja2 = Basics.subshell_2j(a.subshell)
+        jb2 = Basics.subshell_2j(b.subshell)
+        jc2 = Basics.subshell_2j(c.subshell)
+        jd2 = Basics.subshell_2j(d.subshell)
         if  JAC.AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * JAC.AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||  L == 0  
             return( 0. )
         end
@@ -277,10 +277,10 @@ module InteractionStrength
     function XL_Breit0_coefficients(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital)
         xcList = XLCoefficient[]
         
-        la = JAC.subshell_l(a.subshell);    ja2 = JAC.subshell_2j(a.subshell)
-        lb = JAC.subshell_l(b.subshell);    jb2 = JAC.subshell_2j(b.subshell)
-        lc = JAC.subshell_l(c.subshell);    jc2 = JAC.subshell_2j(c.subshell)
-        ld = JAC.subshell_l(d.subshell);    jd2 = JAC.subshell_2j(d.subshell)
+        la = Basics.subshell_l(a.subshell);    ja2 = Basics.subshell_2j(a.subshell)
+        lb = Basics.subshell_l(b.subshell);    jb2 = Basics.subshell_2j(b.subshell)
+        lc = Basics.subshell_l(c.subshell);    jc2 = Basics.subshell_2j(c.subshell)
+        ld = Basics.subshell_l(d.subshell);    jd2 = Basics.subshell_2j(d.subshell)
 
         xc = JAC.AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * JAC.AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
         if   rem(L,2) == 1    xc = - xc                end 
@@ -430,10 +430,10 @@ module InteractionStrength
     """
     function XL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
         # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
-        la = BasicTypes.subshell_l(a.subshell);    ja2 = BasicTypes.subshell_2j(a.subshell)
-        lb = BasicTypes.subshell_l(b.subshell);    jb2 = BasicTypes.subshell_2j(b.subshell)
-        lc = BasicTypes.subshell_l(c.subshell);    jc2 = BasicTypes.subshell_2j(c.subshell)
-        ld = BasicTypes.subshell_l(d.subshell);    jd2 = BasicTypes.subshell_2j(d.subshell)
+        la = Basics.subshell_l(a.subshell);    ja2 = Basics.subshell_2j(a.subshell)
+        lb = Basics.subshell_l(b.subshell);    jb2 = Basics.subshell_2j(b.subshell)
+        lc = Basics.subshell_l(c.subshell);    jc2 = Basics.subshell_2j(c.subshell)
+        ld = Basics.subshell_l(d.subshell);    jd2 = Basics.subshell_2j(d.subshell)
 
         if  JAC.AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * JAC.AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
             rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
@@ -458,10 +458,10 @@ module InteractionStrength
     """
     function XL_Coulomb_DH(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid, lambda::Float64)
         # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
-        la = BasicTypes.subshell_l(a.subshell);    ja2 = BasicTypes.subshell_2j(a.subshell)
-        lb = BasicTypes.subshell_l(b.subshell);    jb2 = BasicTypes.subshell_2j(b.subshell)
-        lc = BasicTypes.subshell_l(c.subshell);    jc2 = BasicTypes.subshell_2j(c.subshell)
-        ld = BasicTypes.subshell_l(d.subshell);    jd2 = BasicTypes.subshell_2j(d.subshell)
+        la = Basics.subshell_l(a.subshell);    ja2 = Basics.subshell_2j(a.subshell)
+        lb = Basics.subshell_l(b.subshell);    jb2 = Basics.subshell_2j(b.subshell)
+        lc = Basics.subshell_l(c.subshell);    jc2 = Basics.subshell_2j(c.subshell)
+        ld = Basics.subshell_l(d.subshell);    jd2 = Basics.subshell_2j(d.subshell)
 
         if  JAC.AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * JAC.AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
             rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
@@ -531,7 +531,7 @@ module InteractionStrength
     function zeeman_Delta_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
-        wa = (Constants.give("electron g-factor") - 2) / 2. * (a.subshell.kappa + b.subshell.kappa + 1) * 
+        wa = (Defaults.getDefaults("electron g-factor") - 2) / 2. * (a.subshell.kappa + b.subshell.kappa + 1) * 
              JAC.AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) * JAC.RadialIntegrals.rkDiagonal(0, a, b, grid)
         return( wa )
     end
@@ -544,7 +544,7 @@ module InteractionStrength
     function zeeman_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
-        wa = - JAC.AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) / (2 * Constants.give("alpha")) *
+        wa = - JAC.AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) / (2 * Defaults.getDefaults("alpha")) *
                JAC.RadialIntegrals.rkNonDiagonal(1, a, b, grid)
         return( wa )
     end

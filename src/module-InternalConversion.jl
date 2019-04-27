@@ -5,7 +5,7 @@
 """
 module InternalConversion 
 
-    using JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
+    using JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 

@@ -1,7 +1,7 @@
 export  compute
 
 """
-`JAC.compute()`  ... computes various (radial and angular) functions.
+`Basics.compute()`  ... computes various (radial and angular) functions.
 
   + `("angular coefficients: e-e, Ratip2013", csfa::CsfR, csfb::CsfR)`  ... to compute the angular coefficients in the decomposition of a 
                              (reduced) many-electron matrix element with a general rank-0 electron-electron interaction operator 
@@ -9,7 +9,7 @@ export  compute
                              by a call to the Fortran procedure `anco_calculate_csf_pair` of the RATIP program; a 
                              Tuple{Array{AngularTcoeff,1},Array{AngularVcoeff,1}}` is returned.
 """
-function compute(sa::String, csfa::CsfR, csfb::CsfR)
+function Basics.compute(sa::String, csfa::CsfR, csfb::CsfR)
     if sa == "angular coefficients: e-e, Ratip2013"
         if csfa == csfb
             JAC.AngularCoefficientsRatip2013.load_csl(csfa)
@@ -31,7 +31,7 @@ end
                              ``⟨csf_a ||O^rank|| csfb⟩ = \\sum_t  T(a_t, b_t) * R (a_t, b_t)``  by a call to the Fortran procedure 
                              `anco_calculate_csf_pair_1p` of the RATIP program; an `Array{AngularTcoeff,1}` is returned.
 """
-function compute(sa::String, rank, csfa::CsfR, csfb::CsfR)
+function Basics.compute(sa::String, rank, csfa::CsfR, csfb::CsfR)
     if      sa == "angular coefficients: 1-p, Ratip2013"
         if csfa == csfb
             JAC.AngularCoefficientsRatip2013.load_csl(csfa)
@@ -52,7 +52,7 @@ end
                and rank by a call to the Fortran procedure `mct_generate_coefficients` of the RATIP program; an `Array{AngularTcoeff,1}` 
                is returned.
 """
-function compute(sa::String, parity, rank::Integer, csfa::CsfR, csfb::CsfR)
+function Basics.compute(sa::String, parity, rank::Integer, csfa::CsfR, csfb::CsfR)
     if      sa == "angular coefficients: 1-p, Grasp92"
         if csfa == csfb
             subshells  = JAC.AngularCoefficientsRatip2013.load_csl(csfa)
@@ -77,7 +77,7 @@ end
                   settings::AsfSettings; printout::Bool=true)`  ... to compute the CI matrix for a given J^P symmetry block of basis and 
                   by making use of the nuclear model and the grid; a matrix::Array{Float64,2} is returned.
 """
-function compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
+function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
                              settings::AsfSettings; printout::Bool=true)    
     !(sa == "matrix: CI, J^P symmetry")   &&   error("Not supported keystring")
 
@@ -100,7 +100,7 @@ function compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearModel::Nucl
             wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[idx_csf[r]], basis.csfs[idx_csf[s]])
             me = 0.
             for  coeff in wa[1]
-                jj = subshell_2j(basis.orbitals[coeff.a].subshell)
+                jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                 me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
                 if  settings.qedCI    
                     me = me + JAC.InteractionStrengthQED.qedLocal(basis.orbitals[coeff.a], basis.orbitals[coeff.b], nuclearModel, meanPot, grid)  
@@ -131,7 +131,7 @@ end
     ... to compute the CI matrix for a given J^P symmetry block of basis and by making use of the nuclear model and the grid; 
         a matrix::Array{Float64,2} is returned.
 """
-function compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
+function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
                              settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)    
     !(sa == "matrix: CI for plasma, J^P symmetry")   &&   error("Not supported keystring")
 
@@ -158,7 +158,7 @@ function compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearModel::Nucl
                 wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[idx_csf[r]], basis.csfs[idx_csf[s]])
                 me = 0.
                 for  coeff in wa[1]
-                    jj = subshell_2j(basis.orbitals[coeff.a].subshell)
+                    jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                     me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
                 end
 
@@ -194,7 +194,7 @@ end
                            a large component, and the small component is obtained from the kinetic balance condition. Radial orbitals
                            can be obtained for the ground-state configuration for all elements with 55 <= Z <= 92. 
 """
-function compute(sa::String, subshell::Subshell, Z::Int64)
+function Basics.compute(sa::String, subshell::Subshell, Z::Int64)
     if      sa == "radial orbital: NR, Bunge (1993)"          wa = JAC.Radial.OrbitalBunge1993(subshell,Z)
     elseif  sa == "radial orbital: NR, McLean (1981)"         wa = JAC.Radial.OrbitalMcLean1981(subshell,Z)
     elseif  sa == "radial orbital: hydrogenic"                wa = JAC.Radial.OrbitalHydrogenic(subshell,Z)
@@ -209,37 +209,37 @@ end
 
 """
   + `("radial potential: core-Hartree", grid::Radial.Grid, level::Level)`  ... to compute a (radial) core-Hartree potential from the given list 
-                         of orbitals; cf. JAC.computePotentialCoreHartree. A potential::RadialPotential is returned. 
+                         of orbitals; cf. Basics.computePotentialCoreHartree. A potential::RadialPotential is returned. 
 
   + `("radial potential: Kohn-Sham", grid::Radial.Grid, level::Level)`  ... to compute a (radial) Kohn-Sham potential from the given list of 
-                         orbitals; cf. JAC.computePotentialKohnSham. A potential::RadialPotential is returned.
+                         orbitals; cf. Basics.computePotentialKohnSham. A potential::RadialPotential is returned.
 
   + `("radial potential: Dirac-Fock-Slater", grid::Radial.Grid, level::Level)`  ... to compute a (radial) Dirac-Fock-Slater potential from the
                          given list of orbitals; this potential is rather simple but includes some undesired self-interaction and exhibits an 
-                         asymptotic behaviour. Cf. JAC.computePotentialDFS. A potential::RadialPotential is returned.
+                         asymptotic behaviour. Cf. Basics.computePotentialDFS. A potential::RadialPotential is returned.
 
   + `("radial potential: Dirac-Fock-Slater", grid::Radial.Grid, basis::Basis)`  ... to compute a (radial) Dirac-Fock-Slater potential but for 
-                         mean occupation of the given basis. Cf. JAC.computePotentialDFS. A potential::RadialPotential is returned.
+                         mean occupation of the given basis. Cf. Basics.computePotentialDFS. A potential::RadialPotential is returned.
 
   + `("radial potential: extended Hartree", grid::Radial.Grid, level::Level)`  ... to compute a (radial) extended Hartree potential from the 
                          given list of orbitals; it is a local potential that is based on direct and exchange coefficients as obtained from 
-                         the configuration-averaged energy. Cf. JAC.computePotentialExtendedHartree. A potential::RadialPotential is returned.
+                         the configuration-averaged energy. Cf. Basics.computePotentialExtendedHartree. A potential::RadialPotential is returned.
 """
-function compute(sa::String, grid::Radial.Grid, level::Level)
-    if      sa == "radial potential: core-Hartree"               wa = JAC.computePotentialCoreHartree(grid, level)
-    elseif  sa == "radial potential: Hartree"                    wa = JAC.computePotentialHartree(grid, level)
-    elseif  sa == "radial potential: Hartree-Slater"             wa = JAC.computePotentialHartreeSlater(grid, level)
-    elseif  sa == "radial potential: Kohn-Sham"                  wa = JAC.computePotentialKohnSham(grid, level)
-    elseif  sa == "radial potential: Dirac-Fock-Slater"          wa = JAC.computePotentialDFS(grid, level) 
-    elseif  sa == "radial potential: extended-Hartree"           wa = JAC.computePotentialExtendedHartree(grid, level)
+function Basics.compute(sa::String, grid::Radial.Grid, level::Level)
+    if      sa == "radial potential: core-Hartree"               wa = Basics.computePotentialCoreHartree(grid, level)
+    elseif  sa == "radial potential: Hartree"                    wa = Basics.computePotentialHartree(grid, level)
+    elseif  sa == "radial potential: Hartree-Slater"             wa = Basics.computePotentialHartreeSlater(grid, level)
+    elseif  sa == "radial potential: Kohn-Sham"                  wa = Basics.computePotentialKohnSham(grid, level)
+    elseif  sa == "radial potential: Dirac-Fock-Slater"          wa = Basics.computePotentialDFS(grid, level) 
+    elseif  sa == "radial potential: extended-Hartree"           wa = Basics.computePotentialExtendedHartree(grid, level)
     else    error("Unsupported keystring = $sa ")
     end
 
     return( wa )
 end
 
-function compute(sa::String, grid::Radial.Grid, basis::Basis)
-    if      sa == "radial potential: Dirac-Fock-Slater"          wa = JAC.computePotentialDFS(grid, basis) 
+function Basics.compute(sa::String, grid::Radial.Grid, basis::Basis)
+    if      sa == "radial potential: Dirac-Fock-Slater"          wa = Basics.computePotentialDFS(grid, basis) 
     else    error("Unsupported keystring = $sa ")
     end
 
@@ -249,29 +249,29 @@ end
 
 
 """
-`JAC.computeDiracEnergy(sh::Subshell, Z::Float64)`  ... computes the Dirac energy for the hydrogenic subshell sh and for a point-like nucleus
+`Basics.computeDiracEnergy(sh::Subshell, Z::Float64)`  ... computes the Dirac energy for the hydrogenic subshell sh and for a point-like nucleus
                         with nuclear charge Z; a energy::Float64 in atomic units and without the rest energy of the electron is returned. 
                         That is the binding energy of a 1s_1/2 electron for Z=1 is -0.50000665.
 """
-function computeDiracEnergy(sh::Subshell, Z::Float64)
+function Basics.computeDiracEnergy(sh::Subshell, Z::Float64)
     if  Z <= 0.1    error("Requires nuclear charge Z >= 0.1")    end
     # Compute the energy from the Dirac formula
-    jPlusHalf = (JAC.subshell_2j(sh) + 1) / 2;   nr = sh.n - jPlusHalf;    alpha = Constants.give("alpha") 
+    jPlusHalf = (Basics.subshell_2j(sh) + 1) / 2;   nr = sh.n - jPlusHalf;    alpha = Defaults.getDefaults("alpha") 
     wa = sqrt(jPlusHalf^2 - Z^2 * alpha^2 )  
     wa = sqrt(1.0 + Z^2 * alpha^2 / (nr + wa)^2)
-    wa = Constants.give("speed of light: c")^2 * (1/wa - 1.0)
+    wa = Defaults.getDefaults("speed of light: c")^2 * (1/wa - 1.0)
     return( wa )
 end
 
 
 
 """
-`JAC.computeMeanSubshellOccupation()`
+`Basics.computeMeanSubshellOccupation()`
 
     + (sh::Subshell, levels::Array{Level,1})`  ... computes the mean subshell occupation for the subshell sh and for the given levels; 
                                                    a q::Float64 is returned.
 """
-function computeMeanSubshellOccupation(sh::Subshell, levels::Array{Level,1})
+function Basics.computeMeanSubshellOccupation(sh::Subshell, levels::Array{Level,1})
     q = 0.
     if  length(levels) < 1   error("stop a")    end
     for  level in levels
@@ -287,12 +287,12 @@ end
 
 
 """
-`JAC.computeMeanSubshellOccupation()`
+`Basics.computeMeanSubshellOccupation()`
 
     + (sh::Subshell, basis::Basis)`  ... computes the mean subshell occupation for the subshell sh and for the given CSF in the basis; 
                                          a q::Float64 is returned.
 """
-function computeMeanSubshellOccupation(sh::Subshell, basis::Basis)
+function Basics.computeMeanSubshellOccupation(sh::Subshell, basis::Basis)
     q = 0.
     for  csf in basis.csfs
         subshells = basis.subshells;    nsh = 0
@@ -307,7 +307,7 @@ end
 
 
 """
-`JAC.computePotentialCoreHartree(grid::Radial.Grid, level::Level)`  ... to compute a (radial) core-Hartree potential for the given level; 
+`Basics.computePotentialCoreHartree(grid::Radial.Grid, level::Level)`  ... to compute a (radial) core-Hartree potential for the given level; 
                                  a potential::RadialPotential is returned. The core-Hartree potential is defined by
 
                                  V_CH(r) = int_0^infty dr'  rho_c(r') / r_>                 with r_> = max(r,r')  
@@ -315,7 +315,7 @@ end
                                  and  rho_c(r) =  sum_a (Pa^2(r) + Qa^2(r))                 the charge density of the core-electrons.  
                                  An Radial.Potential with -r * V_CH(r)  is returned to be consistent with an effective charge Z(r).
 """
-function computePotentialCoreHartree(grid::Radial.Grid, level::Level)
+function Basics.computePotentialCoreHartree(grid::Radial.Grid, level::Level)
     basis = level.basis;    npoints = grid.nr
     println("coreSubshells = $(basis.coreSubshells);    subshells = $(basis.subshells)")
     rhoc = zeros( npoints );    wx = zeros( npoints );    wb = zeros( npoints )
@@ -323,7 +323,7 @@ function computePotentialCoreHartree(grid::Radial.Grid, level::Level)
     for  sh in basis.coreSubshells
     ## for  sh in basis.subshells
         orb  = basis.orbitals[sh]
-        occ  = computeMeanSubshellOccupation(sh, [level])    ## (JAC.subshell_2j(sh) + 1.0)  for closed-shells
+        occ  = computeMeanSubshellOccupation(sh, [level])    ## (Basics.subshell_2j(sh) + 1.0)  for closed-shells
         nrho = length(orb.P)
         for    i = 1:nrho   rhoc[i] = rhoc[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
     end
@@ -342,14 +342,14 @@ end
 
 
 """
-`JAC.computePotentialHartree(grid::Radial.Grid, level::Level)`  ... to compute a (radial) Hartree potential for the given level; 
+`Basics.computePotentialHartree(grid::Radial.Grid, level::Level)`  ... to compute a (radial) Hartree potential for the given level; 
                                  a potential::RadialPotential is returned. Here, the Hartree potential is simply defined by
 
                                  V_H(r) = - Sum_a  q_a^bar  Y0_aa(r)
 
                                  An Radial.Potential with V_H(r)  is returned that is consistent with an effective charge Z(r).
 """
-function computePotentialHartree(grid::Radial.Grid, level::Level)
+function Basics.computePotentialHartree(grid::Radial.Grid, level::Level)
     basis = level.basis;    npoints = grid.nr;    wx = zeros( npoints )
     # Sum_a ...
     for  a in basis.subshells
@@ -367,7 +367,7 @@ end
 
 
 """
-`JAC.computePotentialHartreeSlater(grid::Radial.Grid, level::Level)`  ... to compute a (radial) Hartree-Slater potential for the given level; 
+`Basics.computePotentialHartreeSlater(grid::Radial.Grid, level::Level)`  ... to compute a (radial) Hartree-Slater potential for the given level; 
                                    a potential::RadialPotential is returned. Here, the Hartree-Slater potential is defined by
                                                      
                                                                             3  [     3          ]^1/3      r
@@ -377,7 +377,7 @@ end
                                  with rho(r) = Sum_a  q_a^bar * (Pa^2(r) + Qa^2(r))   ... charge density of all electrons.  
                                  An Radial.Potential with V_HS(r)  is returned that is consistent with an effective charge Z(r).
 """
-function computePotentialHartreeSlater(grid::Radial.Grid, level::Level)
+function Basics.computePotentialHartreeSlater(grid::Radial.Grid, level::Level)
     basis = level.basis;    npoints = grid.nr;    wx = zeros( npoints );    rho = zeros( npoints )
     # Sum_a ...
     for  a in basis.subshells
@@ -399,7 +399,7 @@ end
 
 
 """
-`JAC.computePotentialKohnSham(grid::Radial.Grid, level::Level)`  ... to compute a (radial) Kohn-Sham potential for the given level;
+`Basics.computePotentialKohnSham(grid::Radial.Grid, level::Level)`  ... to compute a (radial) Kohn-Sham potential for the given level;
                               a potential::RadialPotential is returned. The Kohn-Sham potential is defined by
 
                                                                                2    [   81                   ]^(1/3)
@@ -409,13 +409,13 @@ end
                               with r_> = max(r,r')  and  rho_t(r) = sum_a (Pa^2(r) + Qa^2(r))   ... charge density of all electrons.  
                               An Radial.Potential with -r * V_KS(r)  is returned to be consistent with an effective charge Z(r).
 """
-function computePotentialKohnSham(grid::Radial.Grid, level::Level)
+function Basics.computePotentialKohnSham(grid::Radial.Grid, level::Level)
     basis = level.basis;       npoints = grid.nr
     rhot = zeros( npoints );   wb = zeros( npoints );   wx = zeros( npoints )
     # Compute the charge density of the core orbitals for the given level
     for  sh in basis.subshells
         orb  = basis.orbitals[sh]
-        occ  = computeMeanSubshellOccupation(sh, [level])
+        occ  = Basics.computeMeanSubshellOccupation(sh, [level])
         nrho = length(orb.P)
         for    i = 1:nrho   rhot[i] = rhot[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
     end
@@ -435,7 +435,7 @@ end
 
 
 """
-`JAC.computePotentialDFS()`
+`Basics.computePotentialDFS()`
 
     + `(grid::Radial.Grid, level::Level)`  ... to compute a (radial) Dirac-Fock-Slater potential for the given level;
                          a potential::RadialPotential is returned. The Dirac-Fock-Slater potential is defined by
@@ -447,14 +447,14 @@ end
                          with r_> = max(r,r')  and  rho_t(r) = sum_a (Pa^2(r) + Qa^2(r))   ... charge density of all electrons.  
                          An Radial.Potential with -r * V_DFS(r)  is returned to be consistent with an effective charge Z(r).
 """
-function computePotentialDFS(grid::Radial.Grid, level::Level)
+function Basics.computePotentialDFS(grid::Radial.Grid, level::Level)
     basis = level.basis;    npoints = grid.nr
     ##x println("coreSubshells = $(basis.coreSubshells);    subshells = $(basis.subshells)")
     rhot = zeros( npoints );    wb = zeros( npoints );    wx = zeros( npoints )
     # Compute the charge density of the core orbitals for the given level
     for  sh in basis.subshells
         orb  = basis.orbitals[sh]
-        occ  = computeMeanSubshellOccupation(sh, [level])
+        occ  = Basics.computeMeanSubshellOccupation(sh, [level])
         nrho = length(orb.P)
         for    i = 1:nrho   rhot[i] = rhot[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
     end
@@ -474,11 +474,11 @@ end
 
 
 """
-`JAC.computePotentialDFS()`
+`Basics.computePotentialDFS()`
 
     + `(grid::Radial.Grid, basis::Basis)`  ... to compute the same but for the mean occupation of the orbitals in the given basis.
 """
-function computePotentialDFS(grid::Radial.Grid, basis::Basis)
+function Basics.computePotentialDFS(grid::Radial.Grid, basis::Basis)
     npoints = grid.nr
     rhot = zeros( npoints );    wb = zeros( npoints );    wx = zeros( npoints )
     # Compute the charge density of the core orbitals for the given level
@@ -504,12 +504,12 @@ end
 
 
 """
-`JAC.computePotentialExtendedHartree(grid::Radial.Grid, level::Level)`  ... to compute a (radial) extended-Hartree potential for the given level;
+`Basics.computePotentialExtendedHartree(grid::Radial.Grid, level::Level)`  ... to compute a (radial) extended-Hartree potential for the given level;
                                      a potential::RadialPotential is returned. The extended-Hartreepotential is defined by Gu (2008, Eq.(8))
                                      and is based on the Y^k_ab (r) function and various direct and exchange coefficients as the arise from
                                      average energy of the configuration.
 """
-function computePotentialExtendedHartree(grid::Radial.Grid, level::Level)
+function Basics.computePotentialExtendedHartree(grid::Radial.Grid, level::Level)
     basis = level.basis;    npoints = grid.nr
     rhoab = zeros( npoints );    wx = zeros( npoints );    wg = zeros( npoints )
     # First term Sum_ab ...

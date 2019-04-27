@@ -6,7 +6,7 @@
 """
 module Dielectronic
 
-    using Printf, JAC, ..BasicTypes,  ..Basics,  ..Constants, JAC.Radial, JAC.Nuclear, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
+    using Printf, JAC, ..Basics,  ..Basics,  ..Defaults, JAC.Radial, JAC.Nuclear, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -250,7 +250,7 @@ module Dielectronic
         # Print all results to screen
         JAC.Dielectronic.displayResults(stdout, newPathways, settings)
         JAC.Dielectronic.displayResults(stdout, resonances,  settings)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   JAC.Dielectronic.displayResults(iostream, newPathways, settings)
                            JAC.Dielectronic.displayResults(iostream, resonances,  settings)    end
         #
@@ -397,8 +397,8 @@ module Dielectronic
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=5)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", pathway.electronEnergy)) * "   "
-            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", pathway.photonEnergy))   * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "   "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", pathway.photonEnergy))   * "    "
             kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
             for  cChannel in pathway.captureChannels
                 for  pChannel in pathway.photonChannels
@@ -444,18 +444,18 @@ module Dielectronic
                                                                               pathway.finalLevel.index); na=3)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
             en_mi = pathway.intermediateLevel.energy - pathway.initialLevel.energy
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.photonEnergy))   * "   "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", en_mi))                  * "   "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.electronEnergy)) * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.photonEnergy))   * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", en_mi))                  * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "    "
             multipoles = EmMultipole[]
             for  pch in pathway.photonChannels
                 multipoles = push!( multipoles, pch.multipole)
             end
             multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles)     * "                   "
             sa = sa * JAC.TableStrings.flushleft(16, mpString[1:16];  na=2)
-            sa = sa * @sprintf("%.4e", Constants.convert("rate: from atomic", pathway.captureRate))            * "     "
-            sa = sa * @sprintf("%.4e", Constants.convert("rate: from atomic", pathway.photonRate.Coulomb))     * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("rate: from atomic", pathway.photonRate.Babushkin))   * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", pathway.captureRate))            * "     "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", pathway.photonRate.Coulomb))     * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", pathway.photonRate.Babushkin))   * "  "
             println(stream, sa)
         end
         println(stream, "  ", JAC.TableStrings.hLine(150))
@@ -484,17 +484,17 @@ module Dielectronic
                                                                               pathway.finalLevel.index); na=3)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
             en_mi = pathway.intermediateLevel.energy - pathway.initialLevel.energy
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.photonEnergy))   * "   "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", en_mi))                  * "   "
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.electronEnergy)) * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.photonEnergy))   * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", en_mi))                  * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "    "
             multipoles = EmMultipole[]
             for  pch in pathway.photonChannels
                 multipoles = push!( multipoles, pch.multipole)
             end
             multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles)     * "                   "
             sa = sa * JAC.TableStrings.flushleft(16, mpString[1:16];  na=1)
-            sa = sa * @sprintf("%.4e", Constants.convert("rate: from atomic", pathway.resonanceStrength.Coulomb))     * "     "
-            sa = sa * @sprintf("%.4e", Constants.convert("rate: from atomic", pathway.resonanceStrength.Babushkin))   * "     "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", pathway.resonanceStrength.Coulomb))     * "     "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", pathway.resonanceStrength.Babushkin))   * "     "
             println(stream, sa)
         end
         println(stream, "  ", JAC.TableStrings.hLine(150))
@@ -533,12 +533,12 @@ module Dielectronic
                            msym = LevelSymmetry( resonance.intermediateLevel.J, resonance.intermediateLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(resonance.initialLevel.index, resonance.intermediateLevel.index); na=4)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, msym);  na=4)
-            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", resonance.resonanceEnergy))          * "       "
-            sa = sa * @sprintf("%.4e", Constants.convert("rate: from atomic", resonance.augerRate))                  * "     "
-            sa = sa * @sprintf("%.4e", Constants.convert("rate: from atomic", resonance.photonRate.Coulomb))         * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("rate: from atomic", resonance.photonRate.Babushkin))       * "        "
-            sa = sa * @sprintf("%.4e", Constants.convert("rate: from atomic", resonance.resonanceStrength.Coulomb))  * "  "
-            sa = sa * @sprintf("%.4e", Constants.convert("rate: from atomic", resonance.resonanceStrength.Coulomb))  * "     "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", resonance.resonanceEnergy))          * "       "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", resonance.augerRate))                  * "     "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", resonance.photonRate.Coulomb))         * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", resonance.photonRate.Babushkin))       * "        "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", resonance.resonanceStrength.Coulomb))  * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", resonance.resonanceStrength.Coulomb))  * "     "
             println(stream, sa)
         end
         println(stream, "  ", JAC.TableStrings.hLine(150))

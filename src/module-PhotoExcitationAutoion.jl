@@ -5,7 +5,7 @@
 """
 module PhotoExcitationAutoion 
 
-    using Printf, JAC.BasicTypes, JAC.Radial, JAC.Nuclear, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
+    using Printf, JAC.Basics, JAC.Radial, JAC.Nuclear, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -13,16 +13,16 @@ module PhotoExcitationAutoion
     `struct  PhotoExcitationAutoion.Settings`  ... defines a type for the details and parameters of computing photon-impact 
                                                    excitation-autoionization pathways |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
-        + multipoles              ::Array{BasicTypes.EmMultipole,1}    ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges                  ::Array{BasicTypes.UseGauge,1}       ... Specifies the gauges to be included into the computations.
+        + multipoles              ::Array{Basics.EmMultipole,1}    ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges                  ::Array{Basics.UseGauge,1}       ... Specifies the gauges to be included into the computations.
         + printBeforeComputation  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
         + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
         + maxKappa                ::Int64                              ... Maximum kappa value of partial waves to be included.
     """
     struct Settings
-        multipoles                ::Array{BasicTypes.EmMultipole,1}
-        gauges                    ::Array{BasicTypes.UseGauge,1} 
+        multipoles                ::Array{Basics.EmMultipole,1}
+        gauges                    ::Array{Basics.UseGauge,1} 
         printBeforeComputation    ::Bool
         selectPathways            ::Bool
         selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
@@ -181,7 +181,7 @@ module PhotoExcitationAutoion
         end
         # Print all results to screen
         JAC.PhotoExcitationAutoion.displayResults(stdout, newPathways)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary    JAC.PhotoExcitationAutoion.displayResults(iostream, newPathways)   end
         #
         if    output    return( newPathways )
@@ -200,7 +200,7 @@ module PhotoExcitationAutoion
     """
     function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                 settings::PhotoExcitationAutoion.Settings)
-        if    settings.selectPathways    selectPathways = true;   selectedPathways = JAC.determine("selected pathways", settings.selectedPathways)
+        if    settings.selectPathways    selectPathways = true;   selectedPathways = Basics.determine("selected pathways", settings.selectedPathways)
         else                             selectPathways = false
         end
     
@@ -244,8 +244,8 @@ module PhotoExcitationAutoion
                 hasMagnetic = false
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      push!(rChannels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    push!(rChannels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
+                    if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      push!(rChannels, PhotoEmission.Channel(mp, JAC.Coulomb,   0.) )
+                    elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    push!(rChannels, PhotoEmission.Channel(mp, JAC.Babushkin, 0.) )  
                     elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)               push!(rChannels, PhotoEmission.Channel(mp, JAC.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 
@@ -300,8 +300,8 @@ module PhotoExcitationAutoion
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", pathway.excitEnergy))   * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", pathway.electronEnergy)) * "   "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))   * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "   "
             kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
             for  ech in pathway.excitChannels
                 for  ach in pathway.augerChannels
@@ -351,16 +351,16 @@ module PhotoExcitationAutoion
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", pathway.excitEnergy))   * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", pathway.electronEnergy)) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))   * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "    "
             multipoles = EmMultipole[]
             for  ech in pathway.excitChannels
                 multipoles = push!( multipoles, ech.multipole)
             end
             multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
             sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=3)
-            sa = sa * @sprintf("%.6e", Constants.convert("cross section: from atomic", pathway.crossSection.Coulomb))     * "    "
-            sa = sa * @sprintf("%.6e", Constants.convert("cross section: from atomic", pathway.crossSection.Babushkin))   * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection.Coulomb))     * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection.Babushkin))   * "    "
             println(stream, sa)
         end
         println(stream, "  ", JAC.TableStrings.hLine(135))

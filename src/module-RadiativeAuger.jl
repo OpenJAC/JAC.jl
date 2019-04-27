@@ -5,7 +5,7 @@
 """
 module RadiativeAuger
 
-    using Printf, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, JAC.AutoIonization
+    using Printf, JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, JAC.AutoIonization
     global JAC_counter = 0
 
 
@@ -205,7 +205,7 @@ module RadiativeAuger
          specification, all physical properties are set to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::RadiativeAuger.Settings)
-        if    settings.selectLines    selectLines   = true;   selectedLines = JAC.determine("selected lines", settings.selectedLines)
+        if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
         else                          selectLines   = false
         end
     
@@ -230,7 +230,7 @@ module RadiativeAuger
          account the particular settings of for this computation; an Array{RadiativeAuger.Sharing,1} is returned.
     """
     function determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, energy::Float64, settings::RadiativeAuger.Settings)
-        sharings  = RadiativeAuger.Sharing[];    eSharings = JAC.determineEnergySharings(energy, settings.NoEnergySharings) 
+        sharings  = RadiativeAuger.Sharing[];    eSharings = Basics.determineEnergySharings(energy, settings.NoEnergySharings) 
         for  es in eSharings
             pEnergy   = es[1];    eEnergy = es[2] 
             channels  = RadiativeAuger.Channel[];   
@@ -242,9 +242,9 @@ module RadiativeAuger
                         kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symt, symf)
                         for  kappa in kappaList
                             # Include further restrictions if appropriate
-                            if     string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseCoulomb      
+                            if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
                                 push!(channels, RadiativeAuger.Channel(mp, JAC.Coulomb,   kappa, symt, 0., Complex(0.)) )
-                            elseif string(mp)[1] == 'E'  &&   gauge == BasicTypes.UseBabushkin    
+                            elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
                                 push!(channels, RadiativeAuger.Channel(mp, JAC.Babushkin, kappa, symt, 0., Complex(0.)) )  
                             elseif string(mp)[1] == 'M'                                
                                 push!(channels, RadiativeAuger.Channel(mp, JAC.Magnetic,  kappa, symt, 0., Complex(0.)) ) 
@@ -283,11 +283,11 @@ module RadiativeAuger
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
             energy = line.initialLevel.energy - line.finalLevel.energy
-            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic", energy)) * "  "
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "  "
             #
             for  sharing  in  line.sharings
-                sb =      @sprintf("%.4e", Constants.convert("energy: from atomic", sharing.photonEnergy))   * "  "
-                sb = sb * @sprintf("%.4e", Constants.convert("energy: from atomic", sharing.electronEnergy)) * "    "
+                sb =      @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.photonEnergy))   * "  "
+                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.electronEnergy)) * "    "
                 kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
                 for  i in 1:length(sharing.channels)
                     push!( kappaMultipoleSymmetryList, (sharing.channels[i].kappa, sharing.channels[i].multipole, sharing.channels[i].gauge, 
@@ -332,17 +332,17 @@ module RadiativeAuger
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
             energy = line.initialLevel.energy - line.finalLevel.energy
-            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic", energy)) * "    "
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "    "
             #
             first = true
             for  sharing  in  line.sharings
-                sb =      @sprintf("%.4e", Constants.convert("energy: from atomic", sharing.photonEnergy))   * "  "
-                sb = sb * @sprintf("%.4e", Constants.convert("energy: from atomic", sharing.electronEnergy)) * "    "
-                sb = sb * @sprintf("%.6e", Constants.convert("cross section: from atomic", sharing.differentialCs.Coulomb))     * "    "
-                sb = sb * @sprintf("%.6e", Constants.convert("cross section: from atomic", sharing.differentialCs.Babushkin))   * "    "
+                sb =      @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.photonEnergy))   * "  "
+                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.electronEnergy)) * "    "
+                sb = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", sharing.differentialCs.Coulomb))     * "    "
+                sb = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", sharing.differentialCs.Babushkin))   * "    "
                 if  first                  first = false
-                sb = sb * @sprintf("%.6e", Constants.convert("cross section: from atomic", line.totalRate.Coulomb))     * "    "
-                sb = sb * @sprintf("%.6e", Constants.convert("cross section: from atomic", line.totalRate.Babushkin))   * "    "
+                sb = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.totalRate.Coulomb))     * "    "
+                sb = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.totalRate.Babushkin))   * "    "
                 end 
                 println(sa*sb)
             end

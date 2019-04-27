@@ -5,7 +5,7 @@
 """
 module Einstein
 
-    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, JAC.Basics, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
@@ -150,7 +150,7 @@ module Einstein
         # Print all results to screen
         JAC.Einstein.displayRates(stdout, newLines)
         JAC.Einstein.displayLifetimes(stdout, newLines)
-        printSummary, iostream = Constants.give("summary flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary    JAC.Einstein.displayRates(iostream, newLines);    JAC.Einstein.displayLifetimes(iostream, newLines)   end
         #
         if    output    return( newLines )
@@ -171,7 +171,7 @@ module Einstein
             ##x amplitude = transpose(line.finalLevel.mc) * matrix * line.initialLevel.mc 
             #
             amplitude = JAC.PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
-            ##x Constants.warn(AddWarning, "amplitude = $amplitude,  testamp =  $testamp, Diff = $(amplitude-testamp) ")
+            ##x Defaults.warn(AddWarning, "amplitude = $amplitude,  testamp =  $testamp, Diff = $(amplitude-testamp) ")
             #
             push!( newChannels, Einstein.Channel( channel.multipole, channel.gauge, amplitude) )
             if       channel.gauge == JAC.Coulomb     rateC = rateC + abs(amplitude)^2
@@ -180,7 +180,7 @@ module Einstein
             end
         end
         # Calculate the photonrate and angular beta if requested
-        wa = 8.0pi * Constants.give("alpha") * line.omega / (JAC.AngularMomentum.twoJ(line.initialLevel.J) + 1) * 
+        wa = 8.0pi * Defaults.getDefaults("alpha") * line.omega / (JAC.AngularMomentum.twoJ(line.initialLevel.J) + 1) * 
                                                       (JAC.AngularMomentum.twoJ(line.finalLevel.J) + 1)
         photonrate  = EmProperty(wa * rateC, wa * rateB)    
         angularBeta = EmProperty(-9., -9.)
@@ -260,7 +260,7 @@ module Einstein
                 if  selectLines  &&  !((i,f) in selectedLines )    continue   end
                 omega    = multiplet.levels[i].energy - multiplet.levels[f].energy + settings.photonEnergyShift
                 if  omega <= settings.mimimumPhotonEnergy  ||  omega > settings.maximumPhotonEnergy    continue   end  
-                ##x Constants.warn(AddWarning, "determineLines:: omega = $omega  min-omega = $(settings.mimimumPhotonEnergy) ")
+                ##x Defaults.warn(AddWarning, "determineLines:: omega = $omega  min-omega = $(settings.mimimumPhotonEnergy) ")
 
                 channels = determineChannels(multiplet.levels[f], multiplet.levels[i], settings) 
                 push!( lines, Einstein.Line(multiplet.levels[i], multiplet.levels[f], omega, EmProperty(0., 0.), EmProperty(0., 0.),
@@ -284,7 +284,7 @@ module Einstein
                sa  = "  ";    sym = LevelSymmetry( lines[i].initialLevel.J, lines[i].initialLevel.parity )
                sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(lines[i].initialLevel.index); na=2)
                sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-               sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", lines[i].initialLevel.energy)) * "    "
+               sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", lines[i].initialLevel.energy)) * "    "
                push!( ilevels, ii);    push!( istr, sa )   
             end
         end
@@ -320,13 +320,13 @@ module Einstein
         for  ii = 1:length(ilevels)
             sa = istr[ii]
             sa = sa * "Coulomb          " * @sprintf("%.8e",              1.0/irates[ii].Coulomb)     * "  "
-            sa = sa * @sprintf("%.8e", Constants.convert("time: from atomic",   1.0/irates[ii].Coulomb) )   * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic",     irates[ii].Coulomb) )
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("time: from atomic",   1.0/irates[ii].Coulomb) )   * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic",     irates[ii].Coulomb) )
             println(stream, sa)
             sa = repeat(" ", length(istr[ii]) )
             sa = sa * "Babushkin        " * @sprintf("%.8e",              1.0/irates[ii].Babushkin)   * "  "
-            sa = sa * @sprintf("%.8e", Constants.convert("time: from atomic",   1.0/irates[ii].Babushkin) ) * "    "
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic",     irates[ii].Babushkin) )
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("time: from atomic",   1.0/irates[ii].Babushkin) ) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic",     irates[ii].Babushkin) )
             println(stream, sa)
         end
         println(stream, "  ", JAC.TableStrings.hLine(111))
@@ -357,7 +357,7 @@ module Einstein
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.omega)) * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
             mpGaugeList = Tuple{JAC.EmMultipole,JAC.EmGauge}[]
             for  i in 1:length(line.channels)
                 push!( mpGaugeList, (line.channels[i].multipole, line.channels[i].gauge) )
@@ -401,15 +401,15 @@ module Einstein
                                fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-                sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.omega)) * "    "
+                sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
                 sa = sa * JAC.TableStrings.center(9,  string(ch.multipole); na=4)
                 sa = sa * JAC.TableStrings.flushleft(11, string(ch.gauge);  na=2)
-                chRate =  8pi * Constants.give("alpha") * line.omega / (JAC.AngularMomentum.twoJ(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) * 
+                chRate =  8pi * Defaults.getDefaults("alpha") * line.omega / (JAC.AngularMomentum.twoJ(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) * 
                                                                  (JAC.AngularMomentum.twoJ(line.finalLevel.J) + 1)
-                sa = sa * @sprintf("%.8e", JAC.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
-                sa = sa * @sprintf("%.8e", JAC.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
-                sa = sa * @sprintf("%.8e", JAC.recast("rate: radiative, to g_f",         line, chRate)) * "    "
-                sa = sa * @sprintf("%.8e", JAC.recast("rate: radiative, to decay width", line, chRate)) * "    "
+                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
+                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
+                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to g_f",         line, chRate)) * "    "
+                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to decay width", line, chRate)) * "    "
                 println(stream, sa)
             end
         end
