@@ -227,7 +227,7 @@ module PairAnnihilation1Photon
             for  f = 1:length(finalMultiplet.levels)
                 if  selectLines  &&  !(haskey(selectedLines, (i,f)) )    continue   end
                 for  ep in settings.positronEnergies
-                    omega = ep - (finalMultiplet.levels[f].energy - initialMultiplet.levels[i].energy) + 2* JAC.give("mc^2")
+                    omega = ep - (finalMultiplet.levels[f].energy - initialMultiplet.levels[i].energy) + 2* Constants.give("mc^2")
                     if  omega < 0    continue   end  
 
                     channels = JAC.PairAnnihilation1Photon.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
@@ -265,9 +265,9 @@ module PairAnnihilation1Photon
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
             energy = line.initialLevel.energy - line.finalLevel.energy
-            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic", energy))              * "  "
-            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic", line.positronEnergy)) * "  "
-            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic", line.photonEnergy))   * "    "
+            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic", energy))              * "  "
+            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic", line.positronEnergy)) * "  "
+            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic", line.photonEnergy))   * "    "
             kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
             for  i in 1:length(line.channels)
                 push!( kappaMultipoleSymmetryList, (line.channels[i].kappa, line.channels[i].multipole, line.channels[i].gauge, 
@@ -311,17 +311,17 @@ module PairAnnihilation1Photon
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
             energy = line.initialLevel.energy - line.finalLevel.energy
-            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic", energy))              * "  "
-            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic", line.positronEnergy)) * "  "
-            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic", line.photonEnergy))   * "     "
+            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic", energy))              * "  "
+            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic", line.positronEnergy)) * "  "
+            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic", line.photonEnergy))   * "     "
             multipoles = EmMultipole[]
             for  ch in line.channels
                 multipoles = push!( multipoles, ch.multipole)
             end
             multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
             sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=2)
-            sa = sa * @sprintf("%.6e", Basics.convert("cross section: from atomic", line.crossSection.Coulomb))     * "    "
-            sa = sa * @sprintf("%.6e", Basics.convert("cross section: from atomic", line.crossSection.Babushkin))   * "    "
+            sa = sa * @sprintf("%.6e", Constants.convert("cross section: from atomic", line.crossSection.Coulomb))     * "    "
+            sa = sa * @sprintf("%.6e", Constants.convert("cross section: from atomic", line.crossSection.Babushkin))   * "    "
             println(sa)
         end
         println("  ", JAC.TableStrings.hLine(128))

@@ -2,7 +2,7 @@
 export  interpolate
 
 """
-`JAC.interpolate()`  ... interpolates a one- or two-dimensional function by different numerical methods, either by value or on a whole grid.
+`Basic.interpolate()`  ... interpolates a one- or two-dimensional function by different numerical methods, either by value or on a whole grid.
 
   + `("function: to new radial grid, Grasp92", (F::Array{Float64,1}, oldGrid::Radial.Grid), (G::Void, newGrid::Radial.Grid) )`  ... to 
                                        interpolate the (radial) function F from the oldgrid to newgrid, by a call to the Grasp92
@@ -22,7 +22,7 @@ end
 
 
 """
-`JAC.interpoalteOnGridGrasp92()`  ... interpolates ... by using Grasp92 Fortran procedures; see JAC.interpolate().
+`JAC.Basics.interpolateOnGridGrasp92()`  ... interpolates ... by using Grasp92 Fortran procedures; see Basic.interpolate().
 """
 function interpoalteOnGridGrasp92(from::Tuple{Array{Float64,1},JAC.Radial.Grid}, to::Tuple{DataType,JAC.Radial.Grid})
     # First prepare all fields and settings to call quad_grasp92()
@@ -31,7 +31,7 @@ end
 
 
 """
-`JAC.interpolateOnGridTrapezRule()`  ... interpolates ... by using trapez rule from Numerical Recipies; see JAC.interpolate().
+`JAC.Basics.interpolateOnGridTrapezRule()`  ... interpolates ... by using trapez rule from Numerical Recipies; see Basic.interpolate().
 """
 function interpolateOnGridTrapezRule(from::Tuple{Array{Float64,1},JAC.Radial.Grid}, to::Tuple{DataType,JAC.Radial.Grid})
     error("Not yet implemented !")

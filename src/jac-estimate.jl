@@ -2,7 +2,7 @@
 export  estimate
 
 """
-`JAC.estimate()`  ... estimates various quantities, typically, due to semi-empirical formulas and parametrizations.
+`JAC.Basics.estimate()`  ... estimates various quantities, typically, due to semi-empirical formulas and parametrizations.
 
   + `("ionization potential: inner-shell", shell::Shell, Z::Int64)`  ... to estimate the ionization potential = mean binding energy of an
                              electron in the given shell; an energy value::Float64 is returned. These ionization potentials are taken from the

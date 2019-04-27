@@ -2,7 +2,7 @@
 export  modify
 
 """
-`JAC.modify()`  ... modifies some data, either interactively or due to some given rule.
+`JAC.Basics.modify()`  ... modifies some data, either interactively or due to some given rule.
 
   + `("level energies: interactive", multiplet::Multiplet)`  ... to shift the total energies of the atomic levels in multiplet interactively; 
                        a (new) multiplet::Multiplet is returned in which the total energies are just modified accordingly.  

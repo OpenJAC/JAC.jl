@@ -5,7 +5,7 @@
 """
 module FormFactor
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, ..BasicTypes,  ..Basics,  ..Constants, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
@@ -134,7 +134,7 @@ module FormFactor
     """
     function modifiedF(q::Float64, level::Level, grid::Radial.Grid)
         wa  = zeros( grid.nr )
-        wc  = JAC.give("speed of light: c")
+        wc  = Constants.give("speed of light: c")
         pot = JAC.compute("radial potential: Dirac-Fock-Slater", grid, level)
         # Compute the total density
         for  sh in level.basis.subshells
@@ -194,7 +194,7 @@ module FormFactor
         end
         # Print all results to screen
         JAC.FormFactor.displayResults(stdout, newOutcomes)
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary    JAC.FormFactor.displayResults(iostream, newOutcomes)   end
         #
         if    output    return( newOutcomes )
@@ -244,7 +244,7 @@ module FormFactor
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", outcome.level.energy)) * "    "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy)) * "    "
             if  length(outcome.qValues) >= 1   sa = sa * @sprintf("%.2e", outcome.qValues[1] ) * ",  "   end
             if  length(outcome.qValues) >= 2   sa = sa * @sprintf("%.2e", outcome.qValues[2] ) * ",  "   end
             if  length(outcome.qValues) >= 3   sa = sa * @sprintf("%.2e", outcome.qValues[3] ) * ",  "   end
@@ -281,7 +281,7 @@ module FormFactor
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", outcome.level.energy)) * "    "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy)) * "    "
             sa = sa * @sprintf("%.5e", outcome.qValues[1])                                       * "    "
             sa = sa * @sprintf("%.5e", outcome.standardFs[1])                                    * "    "
             sa = sa * @sprintf("%.5e", outcome.modifiedFs[1])                                    * "    "

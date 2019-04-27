@@ -5,7 +5,7 @@
 """
 module ParityNonConservation
 
-    using Printf, JAC, JAC.ManyElectron
+    using Printf,  JAC, ..Constants,  ..ManyElectron
 
 
     """
@@ -37,7 +37,7 @@ module ParityNonConservation
             println("   Schiff moment amplitude:   "                                                                               *
                     "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(Schiff) ($(nm.model)) ||"   *
                     " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
-            printSummary, iostream = JAC.give("summary flag/stream")
+            printSummary, iostream = Constants.give("summary flag/stream")
             if  printSummary
                 println(iostream, "   Schiff moment amplitude:   "                                                                               *
                                   "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(Schiff) ($(nm.model)) ||"   *
@@ -71,7 +71,7 @@ module ParityNonConservation
             println("   Anapole moment amplitude:  "                                                                  *
                     "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(anapole) ||"   *
                     " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
-            printSummary, iostream = JAC.give("summary flag/stream")
+            printSummary, iostream = Constants.give("summary flag/stream")
             if  printSummary
                 println(iostream, "   Anapole moment amplitude:  "                                                                  *
                                   "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(anapole) ||"   *
@@ -112,7 +112,7 @@ module ParityNonConservation
             println("   weak-charge amplitude:     "                                                         *
                     "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(weak-charge) ($(nm.model)) ||"   *
                     " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
-            printSummary, iostream = JAC.give("summary flag/stream")
+            printSummary, iostream = Constants.give("summary flag/stream")
             if  printSummary
                 println(iostream, "   weak-charge amplitude:     "                                                         *
                                   "< level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || H^(weak-charge) ($(nm.model)) ||"   *

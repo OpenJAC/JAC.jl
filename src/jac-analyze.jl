@@ -88,9 +88,9 @@ function analyzeConvergence(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital)
     else     wa = 0.;   wa = max(wa, abs( (a.energy-b.energy) / (a.energy+b.energy) ));   nx = min(length(a.P), length(b.P))
              #=== for  i = 1:nx 
                  wp = abs(a.P[i])+abs(b.P[i]);    if  wp > 1.0e-10   wa = max(wa, abs( (a.P[i]-b.P[i]) / wp ))   end 
-                 ##x if  abs( (a.P[i]-b.P[i]) / wp ) > 1.01    JAC.warn(AddWarning, "analyzeConv: P, i = $i Pa=$(a.P[i]) Pb=$(b.P[i])")   end
+                 ##x if  abs( (a.P[i]-b.P[i]) / wp ) > 1.01    Constants.warn(AddWarning, "analyzeConv: P, i = $i Pa=$(a.P[i]) Pb=$(b.P[i])")   end
                  wp = abs(a.Q[i])+abs(b.Q[i]);    if  wp > 1.0e-10   wa = max(wa, abs( (a.Q[i]-b.Q[i]) / wp ))   end   
-                 ##x if  abs( (a.Q[i]-b.Q[i]) / wp ) > 1.01    JAC.warn(AddWarning, "analyzeConv: Q, i = $i Qa=$(a.Q[i]) Qb=$(b.Q[i]) ")   end
+                 ##x if  abs( (a.Q[i]-b.Q[i]) / wp ) > 1.01    Constants.warn(AddWarning, "analyzeConv: Q, i = $i Qa=$(a.Q[i]) Qb=$(b.Q[i]) ")   end
              end ===#
     end
     return( wa )

@@ -2,7 +2,7 @@
 export  integrate
 
 """
-`JAC.integrate()`  ... integrates a one- or two-dimensional function by different numerical methods, either on a given grid or for a general
+`JAC.Basicsintegrate()`  ... integrates a one- or two-dimensional function by different numerical methods, either on a given grid or for a general
                        function.
 
   + `("function: on radial grid, Newton-Cotes", F::Array{Float64,1}, grid::Radial.Grid)`  ... to integrate the (radial) function F over the given
@@ -26,7 +26,7 @@ end
 
 
 """
-`JAC.integrateOnGridNewtonCotes()`  ... integrates by using a 5-point Newton-Cotes integration formula; see JAC.integrate().
+`JAC.Basics.integrateOnGridNewtonCotes()`  ... integrates by using a 5-point Newton-Cotes integration formula; see Basic.integrate().
 """
 function integrateOnGridNewtonCotes(F::Array{Float64,1}, grid::Radial.Grid)
     coefficients = Array{Float64}([2 * 7, 32, 12, 32, 7]) * 2 / 45 * grid.h
@@ -54,7 +54,7 @@ end
 
 
 """
-`JAC.integrateOnGridSimpsonRule()`  ... integrates by using Simpson's rule; see JAC.integrate().
+`JAC.Basics.integrateOnGridSimpsonRule()`  ... integrates by using Simpson's rule; see JAC.Basics.integrate().
 """
 function integrateOnGridSimpsonRule(F::Array{Float64,1}, grid::Radial.Grid)
     coefficients = Array{Float64}([2 * 1, 4, 1]) / 3 * grid.h
@@ -75,7 +75,7 @@ end
 
 
 """
-`JAC.integrateOnGridTrapezRule()`  ... integrates by using a simple trapez rule; see JAC.integrate().
+`JAC.BasicsintegrateOnGridTrapezRule()`  ... integrates by using a simple trapez rule; see JAC.Basics.integrate().
 """
 function integrateOnGridTrapezRule(F::Array{Float64,1}, grid::Radial.Grid)
     coefficients = Array{Float64}([2 * 1, 1]) / 2 * grid.h

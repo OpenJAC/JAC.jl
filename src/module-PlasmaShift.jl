@@ -5,7 +5,7 @@
 """
 module PlasmaShift
 
-    using Printf, JAC, JAC.BasicTypes, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
+    using Printf, ..BasicTypes,  ..Basics,  ..Constants, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
 
 
     """
@@ -196,7 +196,7 @@ module PlasmaShift
         newMultiplet = JAC.perform("computation: CI for plasma", basis, nm, grid, asfSettings, settings)
         # Print all results to screen
         JAC.PlasmaShift.displayResults(stdout, multiplet, newMultiplet, settings)
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary    JAC.PlasmaShift.displayResults(iostream, multiplet, newMultiplet, settings)   end
         #
         if    output    return( newMultiplet )
@@ -239,9 +239,9 @@ module PlasmaShift
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(multiplet.levels[i].index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=6)
             energy = multiplet.levels[i].energy
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", energy))              * "     "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", energy))              * "     "
             if  sym == newsym   deltaE = pMultiplet.levels[i].energy - energy;    
-                                sa     = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", deltaE))   
+                                sa     = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", deltaE))   
             else                sa     = sa * "Level crossing."
             end
             println(stream, sa )

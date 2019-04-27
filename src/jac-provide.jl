@@ -2,7 +2,7 @@ using JAC.BasicTypes
 export  provide
 
 """
-`JAC.provide()`  ... provides various data and transformations. 
+`JAC.Basics.provide()`  ... provides various data and transformations. 
 
   + `("subshell states: antisymmetric, seniority", sh::Subshell, occ::Int64)`   ... to provide all antisymmetric SubshellStates within the
                         relativistic seniority scheme for the given shell and occupation; an Array{SubshellStateR,1} is returned.
@@ -93,7 +93,7 @@ function provide(sa::String, Z::Int64, sh::Subshell)
     end
     #
     if     wb == -1.   error("No binding energy available for Z = $Z and subshell $sh ")
-    else   wb = Basics.convert("energy: from eV to atomic", wb)
+    else   wb = Constants.convert("energy: from eV to atomic", wb)
     end
     # 
     return( wb )
@@ -125,7 +125,7 @@ function provide(sa::String, Z::Int64, conf::Configuration)
     else   error("Unsupported keystring")
     end
     #
-    wb = Basics.convert("energy: from eV to atomic", wb)
+    wb = Constants.convert("energy: from eV to atomic", wb)
     # 
     return( wb )
 end

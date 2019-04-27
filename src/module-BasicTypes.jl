@@ -6,7 +6,7 @@
 """
 module BasicTypes
 
-    using Printf
+    using Printf, JAC
 
     export  AngularJ, AngularJ64, AngularM, AngularM64, HalfInt, HalfInteger, SolidAngle, Parity, 
             LevelSymmetry, Shell, Subshell,
@@ -1119,7 +1119,7 @@ module BasicTypes
 
     """
     `@enum   Warnings`  ... defines a enumeration for dealing with warnings that are made during a run or REPL session.
-                            Cf. JAC.warn().
+                            Cf. Constants.warn().
 
         + AddWarning    ... add a Warning to a warningList.
         + PrintWarnings ... print all warnings into a jac-war.report file.
@@ -1162,6 +1162,6 @@ module BasicTypes
             end
         end
     end
-
+    
 end # module
 

@@ -75,12 +75,10 @@ global JAC_counter = 0
 # Basic data and data structures
 include("module-BasicTypes.jl")
 include("module-Radial.jl")
-include("module-ManyElectron.jl")
 include("module-Math.jl")
+include("module-Constants.jl")
+include("module-ManyElectron.jl")
 include("module-Nuclear.jl")
-include("module-Bsplines.jl")
-include("module-Continuum.jl")
-include("module-PeriodicTable.jl")
 
 # Basic functions/methods to manipulate these data
 include("module-Basics.jl")
@@ -88,16 +86,19 @@ include("module-Basics.jl")
 # Specialized functions/methods to manipulate these data
 include("module-AngularMomentum.jl")
 include("module-AngularCoefficients-Ratip2013.jl")
+include("module-Bsplines.jl")
+include("module-Continuum.jl")
 include("module-HydrogenicIon.jl")
 include("module-InteractionStrength.jl")
 include("module-InteractionStrengthQED.jl")
 include("module-MessageHandling.jl")
+include("module-PeriodicTable.jl")
 include("module-RadialIntegrals.jl")
 include("module-Tools.jl")
 
 # Constants and inline documentation
-using  JAC.BasicTypes
-include("jac-constants.jl")
+##x using  JAC.BasicTypes
+##x include("jac-constants.jl")
 include("jac-document.jl")
 
 # Functions/methods for atomic amplitudes
@@ -197,7 +198,7 @@ include("jac-tabulate.jl")
 
 include("jac-test.jl")
 ##x include("jac-tools.jl")
-
+    
 function __init__()
     # The following variables need to be initialized at runtime to enable precompilation
     global JAC_SUMMARY_IOSTREAM = stdout

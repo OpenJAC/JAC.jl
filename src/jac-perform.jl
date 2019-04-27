@@ -204,8 +204,8 @@ function perform(computation::Atomic.Computation; output::Bool=false)
         end
     end
        
-    JAC.warn(PrintWarnings)
-    JAC.warn(ResetWarnings)
+    Constants.warn(PrintWarnings)
+    Constants.warn(ResetWarnings)
     return( results )
 end
 
@@ -221,7 +221,7 @@ end
 """
 function perform(comp::Cascade.Computation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
-    printSummary, iostream = JAC.give("summary flag/stream")
+    printSummary, iostream = Constants.give("summary flag/stream")
     #
     # Perform the SCF and CI computation for the intial-state multiplet and print them out with their relative occupation
     basis     = perform("computation: SCF", comp.initialConfs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
@@ -325,17 +325,17 @@ function perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nucl
     # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
     relconfList = ConfigurationR[]
     for  conf in configs
-        wa = JAC.generate("configuration list: relativistic", conf)
+        wa = Basics.generate("configuration list: relativistic", conf)
         append!( relconfList, wa)
     end
     if  printout    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
-    subshellList = JAC.generate("subshells: ordered list for relativistic configurations", relconfList)
-    JAC.define("relativistic subshell list", subshellList; printout=printout)
+    subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+    Constants.define("relativistic subshell list", subshellList; printout=printout)
 
     # Generate the relativistic CSF's for the given subshell list
     csfList = CsfR[]
     for  relconf in relconfList
-        newCsfs = generate("CSF list: from single ConfigurationR", relconf, subshellList)
+        newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
         append!( csfList, newCsfs)
     end
 
@@ -401,12 +401,12 @@ function perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Di
     # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
     relconfList = ConfigurationR[]
     for  conf in configs
-        wa = JAC.generate("configuration list: relativistic", conf)
+        wa = Basics.generate("configuration list: relativistic", conf)
         append!( relconfList, wa)
     end
     if  printout    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
-    subshellList = JAC.generate("subshells: ordered list for relativistic configurations", relconfList)
-    JAC.define("relativistic subshell list", subshellList; printout=printout)
+    subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+    Constants.define("relativistic subshell list", subshellList; printout=printout)
 
     # Generate the relativistic CSF's for the given subshell list
     csfList = CsfR[]
@@ -453,7 +453,7 @@ function perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Di
         matrix[r,r] = me
     end 
     #
-    eigen  = JAC.diagonalize("matrix: Julia, eigfact", matrix)
+    eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
     levels = Level[]
     for  ev = 1:length(eigen.values)
         vector = eigen.vectors[ev];   ns = 0
@@ -475,7 +475,7 @@ function perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Di
         JAC.tabulate("multiplet: energy relative to immediately lower level",    mp)
         JAC.tabulate("multiplet: energy of each level relative to lowest level", mp)
     end
-    printSummary, iostream = JAC.give("summary flag/stream")
+    printSummary, iostream = Constants.give("summary flag/stream")
     if  printSummary     
         JAC.tabulate("multiplet: energies", mp, stream=iostream)
         JAC.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
@@ -512,7 +512,7 @@ function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Ra
     multiplets = Multiplet[]
     for  (sym,v) in  symmetries
         matrix = compute("matrix: CI, J^P symmetry", sym, basis, nuclearModel, grid, settings; printout=printout)
-        eigen  = JAC.diagonalize("matrix: Julia, eigfact", matrix)
+        eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
         levels = Level[]
         for  ev = 1:length(eigen.values)
             # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)
@@ -528,7 +528,7 @@ function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Ra
     end
     
     # Merge all multiplets into a single one
-    mp = JAC.merge("multiplets", multiplets)
+    mp = Basics.merge("multiplets", multiplets)
     mp = JAC.sort("multiplet: by energy", mp)
     
     # Display all level energies and energy splittings
@@ -537,7 +537,7 @@ function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Ra
         JAC.tabulate("multiplet: energy relative to immediately lower level",    mp)
         JAC.tabulate("multiplet: energy of each level relative to lowest level", mp)
     end
-    printSummary, iostream = JAC.give("summary flag/stream")
+    printSummary, iostream = Constants.give("summary flag/stream")
     if  printSummary     
         JAC.tabulate("multiplet: energies", mp, stream=iostream)
         JAC.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
@@ -577,7 +577,7 @@ function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Ra
     multiplets = Multiplet[]
     for  (sym,v) in  symmetries
         matrix = compute("matrix: CI for plasma, J^P symmetry", sym, basis, nuclearModel, grid, settings, plasmaSettings; printout=printout)
-        eigen  = JAC.diagonalize("matrix: Julia, eigfact", matrix)
+        eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
         levels = Level[]
         for  ev = 1:length(eigen.values)
             # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)
@@ -593,7 +593,7 @@ function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Ra
     end
     
     # Merge all multiplets into a single one
-    mp = JAC.merge("multiplets", multiplets)
+    mp = Basics.merge("multiplets", multiplets)
     mp = JAC.sort("multiplet: by energy", mp)
     
     # Display all level energies and energy splittings
@@ -602,7 +602,7 @@ function perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Ra
         JAC.tabulate("multiplet: energy relative to immediately lower level",    mp)
         JAC.tabulate("multiplet: energy of each level relative to lowest level", mp)
     end
-    printSummary, iostream = JAC.give("summary flag/stream")
+    printSummary, iostream = Constants.give("summary flag/stream")
     if  printSummary     
         JAC.tabulate("multiplet: energies", mp, stream=iostream)
         JAC.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)

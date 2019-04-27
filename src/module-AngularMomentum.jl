@@ -469,7 +469,7 @@ module AngularMomentum
     """
     function Wigner_9j_old(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, ee::AngularJ64, f::AngularJ64,
                        g::AngularJ64, h::AngularJ64, i::AngularJ64)
-        JAC.warn(AddWarning, "JAC.AngularMomentum.Wigner_9j(): Here, we wish to call an external Julia package/interface; now set to 2.0")
+        Constants.warn(AddWarning, "JAC.AngularMomentum.Wigner_9j(): Here, we wish to call an external Julia package/interface; now set to 2.0")
         w9j = 2.0
         return( w9j )
     end

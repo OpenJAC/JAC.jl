@@ -5,7 +5,7 @@
 """
 module LandeZeeman
 
-    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
+    using Printf, JAC, ..BasicTypes,  ..Basics,  ..Constants, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
     global JAC_counter = 0
 
 
@@ -241,7 +241,7 @@ module LandeZeeman
         end
         # Print all results to screen
         JAC.LandeZeeman.displayResults(stdout, newOutcomes, nm, settings)
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary    JAC.LandeZeeman.displayResults(iostream, newOutcomes, nm, settings)   end
         #
         if    output    return( newOutcomes )
@@ -295,7 +295,7 @@ module LandeZeeman
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.Jlevel.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", outcome.Jlevel.energy)) * "    "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.Jlevel.energy)) * "    "
             println( sa )
         end
         println("  ", JAC.TableStrings.hLine(43))
@@ -331,7 +331,7 @@ module LandeZeeman
                 sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.Jlevel.index); na=2)
                 sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
                 energy = 1.0
-                sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", energy))                    * "    "
+                sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", energy))                    * "    "
                 sa = sa * JAC.TableStrings.flushright(15, @sprintf("%.8e", outcome.LandeJ) )              * "    "
                 sa = sa * JAC.TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeN1.re) )      * " "
                 sa = sa * JAC.TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeN1.im) )      * "    "
@@ -361,7 +361,7 @@ module LandeZeeman
                 sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.Jlevel.index); na=2)
                 sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
                 energy = 1.0
-                sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", energy))                    * "    "
+                sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", energy))                    * "    "
                 println(stream, sa )
                 #
                 sc = JAC.TableStrings.hBlank( length(sa) + 1 )

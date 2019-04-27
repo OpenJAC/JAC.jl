@@ -5,7 +5,7 @@
 """
 module TableStrings
 
-    using Printf, JAC, JAC.BasicTypes, JAC.Hfs
+    using Printf, JAC, ..BasicTypes,  ..Constants,  ..Hfs
 
 
     """
@@ -70,10 +70,10 @@ module TableStrings
     `JAC.TableStrings.inUnits(sa::String)`  ... a string is returned that displays the requested unit in the form: '[unit]'
     """
     function  inUnits(sa::String) 
-        if       sa == "energy"             return( "[" * JAC.JAC_ENERGY_UNIT * "]" )
-        elseif   sa == "rate"               return( "[" * JAC.JAC_RATE_UNIT   * "]" )
-        elseif   sa == "time"               return( "[" * JAC.JAC_TIME_UNIT   * "]" )
-        elseif   sa == "cross section"      return( "[" * JAC.JAC_CROSS_SECTION_UNIT * "]" )
+        if       sa == "energy"             return( "[" * Constants.GBL_ENERGY_UNIT * "]" )
+        elseif   sa == "rate"               return( "[" * Constants.GBL_RATE_UNIT   * "]" )
+        elseif   sa == "time"               return( "[" * Constants.GBL_TIME_UNIT   * "]" )
+        elseif   sa == "cross section"      return( "[" * Constants.GBL_CROSS_SECTION_UNIT * "]" )
         else     error("stop a")
         end
     end

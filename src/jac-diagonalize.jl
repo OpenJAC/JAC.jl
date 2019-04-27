@@ -3,7 +3,7 @@ using   JAC.BasicTypes
 export  diagonalize
 
 """
-`JAC.diagonalize()`  ... diagonalizes matrices of various kinds and by different methods 
+`JAC.Basics.diagonalize()`  ... diagonalizes matrices of various kinds and by different methods 
 
   + `("matrix: Julia, eigfact", matrix::Array{Float64,2})`  ... to apply the standard eigfact() method from Julia for a quadratic, full matrix;
                                                                 nothing about the symmetry of the matrix is assumed here; an eigen::JAC.Eigen

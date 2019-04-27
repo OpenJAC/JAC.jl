@@ -5,7 +5,7 @@
 """
 module MultipoleMoment
 
-    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, ..BasicTypes, ..Constants,  ..ManyElectron, ..Radial
 
 
     """
@@ -24,7 +24,7 @@ module MultipoleMoment
             sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
             println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || Q^($mp) ($omega a.u., $gauge) ||" *
                     " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
-            printSummary, iostream = JAC.give("summary flag/stream")
+            printSummary, iostream = Constants.give("summary flag/stream")
             if  printSummary
                 println(iostream, "    Multipole-moment amplitude:     " *
                                   " < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || Q^($mp) ($omega a.u., $gauge) ||" *
@@ -71,7 +71,7 @@ module MultipoleMoment
             sa = @sprintf("%.5e", amplitude.re) * "  " * @sprintf("%.5e", amplitude.im)
             println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || D ||" *
                     " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
-            printSummary, iostream = JAC.give("summary flag/stream")
+            printSummary, iostream = Constants.give("summary flag/stream")
             if  printSummary
                 println(iostream, "    Dipole amplitude:  < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] || D ||" *
                                   " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
@@ -116,7 +116,7 @@ module MultipoleMoment
             println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] ||" *
                     " T^($mp, absorption) ($omega a.u., $gauge) ||" *
                     " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = " * sa)
-            printSummary, iostream = JAC.give("summary flag/stream")
+            printSummary, iostream = Constants.give("summary flag/stream")
             if  printSummary
                 println(iostream, "    Multipole-transition amplitude:      < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] ||" *
                                   " T^($mp, absorption) ($omega a.u., $gauge) ||" *

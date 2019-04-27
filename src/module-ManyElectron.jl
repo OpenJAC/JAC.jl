@@ -5,7 +5,7 @@
 """
 module ManyElectron
 
-    using  JAC, JAC.BasicTypes, JAC.Radial
+    using  JAC, ..BasicTypes, ..Constants,  ..Radial
     export Configuration, ConfigurationR, AsfSettings, CsfR, Basis, Level, Multiplet
 
 
@@ -69,7 +69,7 @@ module ManyElectron
     # `Base.string(conf::Configuration)`  ... provides a String notation for the variable conf::Configuration.
     function Base.string(conf::Configuration)
         wa = keys(conf.shells);   va = values(conf.shells)
-        wb = JAC.give("ordered shell list: non-relativistic", 7)
+        wb = Constants.give("ordered shell list: non-relativistic", 7)
 
         sa = ""
         for  k  in  wb
@@ -123,7 +123,7 @@ module ManyElectron
     # `Base.string(conf::ConfigurationR)`  ... provides a String notation for the variable conf::ConfigurationR.
     function Base.string(conf::ConfigurationR)
         wa = keys(conf.subshells);   va = values(conf.subshells)
-        wb = JAC.give("ordered subshell list: relativistic", 7)
+        wb = Constants.give("ordered subshell list: relativistic", 7)
 
         sa = ""
         for  k  in  wb
@@ -442,7 +442,7 @@ module ManyElectron
     	    while  true
     		ishell = ishell + 1
     		if  subshells[ishell] == sh
-    		    wa = JAC.provide("subshell states: antisymmetric, seniority", sh, occ);    nu = -1
+    		    wa = BasicTypes.provide("subshell states: antisymmetric, seniority", sh, occ);    nu = -1
     		    for  a in wa
     			if   AngularJ64( a.Jsub2//2 ) == subJ	 nu = a.nu;    break   end
     		    end
@@ -552,8 +552,8 @@ module ManyElectron
            #
            println("JAC.ManyElectron.Basis-aa: warning ... The standard grid is set; make an interactive request if not appropriate.") 
            grid     = JAC.Radial.Grid("grid: exponential")
-           basis    = JAC.read("CSF list: Grasp92", cslFilename)
-           orbitals = JAC.readOrbitalFileGrasp92(rwfFilename, grid)
+           basis    = BasicTypes.read("CSF list: Grasp92", cslFilename)
+           orbitals = BasicTypes.readOrbitalFileGrasp92(rwfFilename, grid)
         else  error("stop a")
         end
 
@@ -674,7 +674,7 @@ module ManyElectron
         if  sa == "from Ratip2012"
            name      = "from "*cslFilename[1:end-4] 
            basis     = JAC.ManyElectron.Basis("from Grasp2013", cslFilename, rwfFilename)
-           multiplet = JAC.readMixFileRelci(mixFilename, basis)
+           multiplet = BasicTypes.readMixFileRelci(mixFilename, basis)
         else  error("Unrecognized keystrings:  $sa")
         end
 

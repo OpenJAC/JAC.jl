@@ -397,7 +397,7 @@ module Cascade
     """
     function computeSteps(comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
         linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    linesP = PhotoIonization.Line[]    
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         ##x println(" ")
         ##x println("  Perform transition amplitude and line computations for $(length(comp.steps)) individual steps of cascade:")
         ##x println("  Adapt the present augerSettings, PhotoEmissionSettings, etc. for real computations.")
@@ -494,8 +494,8 @@ module Cascade
             sa = "   " * JAC.TableStrings.flushright( 6, string(i); na=2)
             sb = " ";         for conf  in blockList[i].confs   sb = sb * string(conf) * ", "    end
             en = Float64[];   for level in  block.multiplet.levels    push!(en, level.energy)    end
-            minEn = minimum(en);   minEn = Basics.convert("energy: from atomic", minEn)
-            maxEn = maximum(en);   maxEn = Basics.convert("energy: from atomic", maxEn)
+            minEn = minimum(en);   minEn = Constants.convert("energy: from atomic", minEn)
+            maxEn = maximum(en);   maxEn = Constants.convert("energy: from atomic", maxEn)
             sa = sa * JAC.TableStrings.flushleft(90, sb[1:end-2]; na=2) 
             sa = sa * JAC.TableStrings.flushleft(30, string( round(minEn)) * " ... " * string( round(maxEn)); na=2)
             println(stream, sa)
@@ -519,7 +519,7 @@ module Cascade
         println(stream, "  ", JAC.TableStrings.hLine(64))
         for  i = 1:length(multiplet.levels)
             lev = multiplet.levels[i]
-            en  = lev.energy - multiplet.levels[1].energy;    en_requested = Basics.convert("energy: from atomic", en)
+            en  = lev.energy - multiplet.levels[1].energy;    en_requested = Constants.convert("energy: from atomic", en)
             wx = 0.
             for  ilevel in initialLevels
                 if  i in ilevel   wx = ilevel[2];    break    end
@@ -565,7 +565,7 @@ module Cascade
                 minEn = min(minEn, steps[i].initialMultiplet.levels[p].energy - steps[i].finalMultiplet.levels[q].energy)
                 maxEn = max(maxEn, steps[i].initialMultiplet.levels[p].energy - steps[i].finalMultiplet.levels[q].energy)
             end
-            minEn = Basics.convert("energy: from atomic", minEn);   maxEn = Basics.convert("energy: from atomic", maxEn)
+            minEn = Constants.convert("energy: from atomic", minEn);   maxEn = Constants.convert("energy: from atomic", maxEn)
             sa = sa * string( round(minEn)) * " ... " * string( round(maxEn))
             println(stream, sa)
         end
@@ -582,7 +582,7 @@ module Cascade
     """
     function generateBlocks(comp::Cascade.Computation, confs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital})
         blockList = Cascade.Block[]
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         #
         if    comp.approach == AverageSCA()
             println("\n  In the cascade approach $(comp.approach), the following assumptions/simplifications are made: ")
@@ -655,13 +655,13 @@ module Cascade
         for  fur = 1:further+1
             newConfList = Configuration[]
             for conf  in cList
-                holeList = JAC.determineHoleShells(conf)
+                holeList = Basics.determineHoleShells(conf)
                 for  holeShell in holeList
                     wa = generateConfigurationsWith1OuterHole(conf,  holeShell);   append!(newConfList, wa)
                     wa = generateConfigurationsWith2OuterHoles(conf, holeShell);   append!(newConfList, wa)
                 end
             end
-            if  length(newConfList) > 0    newConfList = JAC.excludeDoubles(newConfList)    end
+            if  length(newConfList) > 0    newConfList = Basics.excludeDoubles(newConfList)    end
             cList = newConfList
             append!(confList, newConfList)
         end
@@ -671,7 +671,7 @@ module Cascade
             if  conf.NoElectrons + further >= initialNoElectrons   push!(newConfList, conf)    end
         end
         # Add further shake-displacements if appropriate
-        newConfList = JAC.excludeDoubles(newConfList)
+        newConfList = Basics.excludeDoubles(newConfList)
         return( newConfList )
     end
 
@@ -682,7 +682,7 @@ module Cascade
             A confList::Array{Configuration,1} is returned.
     """
     function generateConfigurationsWith1OuterHole(conf::Configuration,  holeShell::Shell)
-         shList = JAC.generate("shells: ordered list for NR configurations", [conf]);   i0 = 0
+         shList = Basics.generate("shells: ordered list for NR configurations", [conf]);   i0 = 0
          for  i = 1:length(shList)
              if   holeShell == shList[i]    i0 = i;    break    end
          end
@@ -708,7 +708,7 @@ module Cascade
             A confList::Array{Configuration,1} is returned.
     """
     function generateConfigurationsWith2OuterHoles(conf::Configuration,  holeShell::Shell)
-         shList = JAC.generate("shells: ordered list for NR configurations", [conf]);   i0 = 0
+         shList = Basics.generate("shells: ordered list for NR configurations", [conf]);   i0 = 0
          for  i = 1:length(shList)
              if   holeShell == shList[i]    i0 = i;    break    end
          end
@@ -752,7 +752,7 @@ module Cascade
             maxNoElectrons = max(maxNoElectrons, conf.NoElectrons)
         end
         #
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         #
         println("\n  Electron configuration used in the cascade:")
         if  printSummary   println(iostream, "\n* Electron configuration used in the cascade:")    end
@@ -764,7 +764,7 @@ module Cascade
                 if n == conf.NoElectrons   
                     nc = nc + 1
                     push!(confList, conf ) 
-                    wa = JAC.provide("binding energy", round(Int64, Z), conf);    wa = Basics.convert("energy: from atomic", wa)
+                    wa = Basics.provide("binding energy", round(Int64, Z), conf);    wa = Constants.convert("energy: from atomic", wa)
                     sa = "   av. BE = "  * string( round(-wa) ) * "  " * JAC.TableStrings.inUnits("energy")
                     println("      " * string(conf) * sa * "      ($nc)" )
                     if  printSummary   println(iostream, "      " * string(conf) * sa * "      ($nc)")      end
@@ -809,7 +809,7 @@ module Cascade
         # delete from list
         #
         println("\n  A total of $(length(newStepList)) steps are still defined in the cascade.")
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary   println(iostream, "\n* A total of $(length(newStepList)) steps are still defined in the cascade.")    end      
         
         return( newStepList )
@@ -891,7 +891,7 @@ module Cascade
             for  en in enIndices
                 if  n == levels[en].NoElectrons  ##    &&  levels[en].relativeOcc > 0
                     sb = sa * "       " * string( LevelSymmetry(levels[en].J, levels[en].parity) )     * "    "
-                    sb = sb * @sprintf("%.6e", Basics.convert("energy: from atomic", levels[en].energy))  * "      "
+                    sb = sb * @sprintf("%.6e", Constants.convert("energy: from atomic", levels[en].energy))  * "      "
                     sb = sb * @sprintf("%.5e", levels[en].relativeOcc) 
                     sa = "           "
                     println(sb)
@@ -936,7 +936,7 @@ module Cascade
             for  en in enIndices
                 if  n == levels[en].NoElectrons
                     sb = sa * "      " * string( LevelSymmetry(levels[en].J, levels[en].parity) )      * "   "
-                    sb = sb * @sprintf("%.6e", Basics.convert("energy: from atomic", levels[en].energy))  * "      "
+                    sb = sb * @sprintf("%.6e", Constants.convert("energy: from atomic", levels[en].energy))  * "      "
                     sb = sb * @sprintf("%.5e", levels[en].relativeOcc)                                 * "    "
                     pProcessSymmetryEnergyList = Tuple{JAC.AtomicProcess,Int64,LevelSymmetry,Float64}[]
                     dProcessSymmetryEnergyList = Tuple{JAC.AtomicProcess,Int64,LevelSymmetry,Float64}[]

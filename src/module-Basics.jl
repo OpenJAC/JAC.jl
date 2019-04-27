@@ -5,13 +5,13 @@
 """
 module Basics
 
-    using  Printf, Interact
-    using  JAC, ..BasicTypes, ..Radial, ..ManyElectron, ..Nuclear   ## , ..RadialIntegrals, ..InteractionStrength, ..AngularMomentum
+    using  Dates, Printf, Interact,  LinearAlgebra 
+    using  JAC, ..BasicTypes, ..Constants,  ..Radial, ..ManyElectron, ..Nuclear   ## , ..RadialIntegrals, ..InteractionStrength, ..AngularMomentum
     include("jac-add.jl")
     include("jac-analyze.jl")
     # include("jac-compute.jl")
-    include("jac-convert.jl")
-    include("jac-define.jl")
+    ##x include("jac-convert.jl")
+    ##x include("jac-define.jl")
     include("jac-determine.jl")
     include("jac-diagonalize.jl")
     include("jac-display.jl")
@@ -19,7 +19,7 @@ module Basics
     include("jac-exclude.jl")
     include("jac-evaluate.jl")
     include("jac-generate.jl")
-    include("jac-give.jl")
+    ##x include("jac-give.jl")
     include("jac-integrate.jl")
     include("jac-interpolate.jl")
     include("jac-merge.jl")
@@ -31,7 +31,7 @@ module Basics
     # include("jac-recast.jl")
     # include("jac-sort.jl")
     # include("jac-tabulate.jl")
-    include("jac-warn.jl")
+    ## include("jac-warn.jl")
     include("jac-tools.jl")
 
 end # module

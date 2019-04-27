@@ -157,11 +157,11 @@ module PhotoIonization
                                           settings::PhotoIonization.Settings)
         newChannels = PhotoIonization.Channel[];;   contSettings = JAC.Continuum.Settings(false, nrContinuum);    csC = 0.;    csB = 0.
         for channel in line.channels
-            newiLevel = JAC.generateLevelWithSymmetryReducedBasis(line.initialLevel)
-            newiLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
-            newfLevel = JAC.generateLevelWithSymmetryReducedBasis(line.finalLevel)
+            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
+            newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
+            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
             cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
-            newcLevel  = JAC.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
+            newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
             amplitude  = JAC.PhotoIonization.amplitude("photoionization", channel, line.photonEnergy, newcLevel, newiLevel, grid)
             push!( newChannels, PhotoIonization.Channel(newChannel.multipole, newChannel.gauge, newChannel.kappa, newChannel.symmetry, 
@@ -172,7 +172,7 @@ module PhotoIonization
             end
         end
         Ji2 = JAC.AngularMomentum.twoJ(line.initialLevel.J)
-        csFactor     = 4 * pi^2 * JAC.give("alpha") * line.photonEnergy / (2*(Ji2 + 1))
+        csFactor     = 4 * pi^2 * Constants.give("alpha") * line.photonEnergy / (2*(Ji2 + 1))
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         ##x println("photo cs = $crossSection")
         newLine = PhotoIonization.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, 
@@ -192,12 +192,12 @@ module PhotoIonization
     function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, settings::PlasmaShift.PhotoSettings)
         newChannels = PhotoIonization.Channel[];;   contSettings = JAC.Continuum.Settings(false, grid.nr-50);    csC = 0.;    csB = 0.
         for channel in line.channels
-            newiLevel = JAC.generateLevelWithSymmetryReducedBasis(line.initialLevel)
-            newiLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
-            newfLevel = JAC.generateLevelWithSymmetryReducedBasis(line.finalLevel)
+            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
+            newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
+            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
             @warn "Adapt a proper continuum orbital for the plasma potential"
             cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
-            newcLevel  = JAC.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
+            newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
             @warn "Adapt a proper Auger amplitude for the plasma e-e interaction"
             amplitude = 1.0
@@ -210,7 +210,7 @@ module PhotoIonization
             end
         end
         Ji2 = JAC.AngularMomentum.twoJ(line.initialLevel.J)
-        csFactor     = 4 * pi^2 * JAC.give("alpha") * line.photonEnergy / (2*(Ji2 + 1))
+        csFactor     = 4 * pi^2 * Constants.give("alpha") * line.photonEnergy / (2*(Ji2 + 1))
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         println("plasma-photo cs = $crossSection")
         newline = PhotoIonization.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, crossSection, true, newChannels)
@@ -244,7 +244,7 @@ module PhotoIonization
         end
         # Print all results to screen
         JAC.PhotoIonization.displayResults(stdout, newLines, settings)
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary   JAC.PhotoIonization.displayResults(iostream, newLines, settings)     end
         #
         if    output    return( lines )
@@ -279,7 +279,7 @@ module PhotoIonization
         end
         # Print all results to screen
         JAC.PhotoIonization.displayResults(stdout, lines, photoSettings)
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary   JAC.PhotoIonization.displayResults(iostream, lines, photoSettings)     end
         #
         if    output    return( lines )
@@ -329,7 +329,7 @@ module PhotoIonization
                 end
             end
         end
-        csFactor = 8 * pi^3 * JAC.give("alpha") / (2*line.photonEnergy * (JAC.AngularMomentum.twoJ(Ji) + 1))
+        csFactor = 8 * pi^3 * Constants.give("alpha") / (2*line.photonEnergy * (JAC.AngularMomentum.twoJ(Ji) + 1))
         wa       = csFactor * wa
 
         return( wa )
@@ -430,7 +430,7 @@ module PhotoIonization
                 if  selectLines  &&  !((i,f) in selectedLines )    continue   end
                 for  omega in settings.photonEnergies
                     # Photon energies are still in 'pre-defined' units; convert to Hartree
-                    omega_au = Basics.convert("energy: to atomic", omega)
+                    omega_au = Constants.convert("energy: to atomic", omega)
                     energy   = omega_au - (finalMultiplet.levels[f].energy - initialMultiplet.levels[i].energy)
                     if  energy < 0    continue   end  
 
@@ -473,9 +473,9 @@ module PhotoIonization
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
             energy = line.finalLevel.energy - line.initialLevel.energy
-            sa = sa * @sprintf("%.4e", Basics.convert("energy: from atomic", energy))              * "   "
-            sa = sa * @sprintf("%.4e", Basics.convert("energy: from atomic", line.photonEnergy))   * "   "
-            sa = sa * @sprintf("%.4e", Basics.convert("energy: from atomic", line.electronEnergy)) * "    "
+            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", energy))              * "   "
+            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", line.photonEnergy))   * "   "
+            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", line.electronEnergy)) * "    "
             kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
             for  i in 1:length(line.channels)
                 push!( kappaMultipoleSymmetryList, (line.channels[i].kappa, line.channels[i].multipole, line.channels[i].gauge, 
@@ -525,17 +525,17 @@ module PhotoIonization
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
             en = line.finalLevel.energy - line.initialLevel.energy
-            sa = sa * @sprintf("%.6e", Basics.convert("energy: from atomic", en))                  * "    "
-            sa = sa * @sprintf("%.6e", Basics.convert("energy: from atomic", line.photonEnergy))   * "    "
-            sa = sa * @sprintf("%.6e", Basics.convert("energy: from atomic", line.electronEnergy)) * "    "
+            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", en))                  * "    "
+            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.photonEnergy))   * "    "
+            sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.electronEnergy)) * "    "
             multipoles = EmMultipole[]
             for  ch in line.channels
                 multipoles = push!( multipoles, ch.multipole)
             end
             multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
             sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=2)
-            sa = sa * @sprintf("%.6e", Basics.convert("cross section: from atomic", line.crossSection.Coulomb))     * "    "
-            sa = sa * @sprintf("%.6e", Basics.convert("cross section: from atomic", line.crossSection.Babushkin))   * "                 "
+            sa = sa * @sprintf("%.6e", Constants.convert("cross section: from atomic", line.crossSection.Coulomb))     * "    "
+            sa = sa * @sprintf("%.6e", Constants.convert("cross section: from atomic", line.crossSection.Babushkin))   * "                 "
             sa = sa * @sprintf("%.6e", line.crossSection.Coulomb)     * "    "
             sa = sa * @sprintf("%.6e", line.crossSection.Babushkin)   * "    "
             println(stream, sa)
@@ -570,9 +570,9 @@ module PhotoIonization
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
                 en = line.finalLevel.energy - line.initialLevel.energy
-                sa = sa * @sprintf("%.6e", Basics.convert("energy: from atomic", en))                  * "    "
-                sa = sa * @sprintf("%.6e", Basics.convert("energy: from atomic", line.photonEnergy))   * "    "
-                sa = sa * @sprintf("%.6e", Basics.convert("energy: from atomic", line.electronEnergy)) * "    "
+                sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", en))                  * "    "
+                sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.photonEnergy))   * "    "
+                sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.electronEnergy)) * "    "
                 multipoles = EmMultipole[]
                 for  ch in line.channels
                     multipoles = push!( multipoles, ch.multipole)
@@ -586,8 +586,8 @@ module PhotoIonization
                     wac = JAC.PhotoIonization.computePartialCrossSectionUnpolarized(JAC.Coulomb, Mf, line)
                     wab = JAC.PhotoIonization.computePartialCrossSectionUnpolarized(JAC.Babushkin, Mf, line)
                     sb  = sb * JAC.TableStrings.flushright( 8, string(Mf))                             * "       "
-                    sb  = sb * @sprintf("%.6e", Basics.convert("cross section: from atomic", wac.re))     * "    "
-                    sb  = sb * @sprintf("%.6e", Basics.convert("cross section: from atomic", wab.re))     * "    "
+                    sb  = sb * @sprintf("%.6e", Constants.convert("cross section: from atomic", wac.re))     * "    "
+                    sb  = sb * @sprintf("%.6e", Constants.convert("cross section: from atomic", wab.re))     * "    "
                     println(stream, sb)
                 end
             end
@@ -623,9 +623,9 @@ module PhotoIonization
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
                 sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
                 en = line.finalLevel.energy - line.initialLevel.energy
-                sa = sa * @sprintf("%.6e", Basics.convert("energy: from atomic", en))                  * "    "
-                sa = sa * @sprintf("%.6e", Basics.convert("energy: from atomic", line.photonEnergy))   * "    "
-                sa = sa * @sprintf("%.6e", Basics.convert("energy: from atomic", line.electronEnergy)) * "    "
+                sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", en))                  * "    "
+                sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.photonEnergy))   * "    "
+                sa = sa * @sprintf("%.6e", Constants.convert("energy: from atomic", line.electronEnergy)) * "    "
                 multipoles = EmMultipole[]
                 for  ch in line.channels
                     multipoles = push!( multipoles, ch.multipole)
@@ -639,8 +639,8 @@ module PhotoIonization
                         rhoc = JAC.PhotoIonization.computeStatisticalTensorUnpolarized(k, q, JAC.Coulomb,   line, settings)
                         rhob = JAC.PhotoIonization.computeStatisticalTensorUnpolarized(k, q, JAC.Babushkin, line, settings)
                         sb   = sb * string(k) * " " * JAC.TableStrings.flushright( 4, string(q))             * "       "
-                        sb   = sb * @sprintf("%.6e", Basics.convert("cross section: from atomic", rhoc.re))     * "    "
-                        sb   = sb * @sprintf("%.6e", Basics.convert("cross section: from atomic", rhob.re))     * "    "
+                        sb   = sb * @sprintf("%.6e", Constants.convert("cross section: from atomic", rhoc.re))     * "    "
+                        sb   = sb * @sprintf("%.6e", Constants.convert("cross section: from atomic", rhob.re))     * "    "
                         println(stream, sb)
                     end
                 end

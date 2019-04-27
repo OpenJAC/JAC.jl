@@ -17,8 +17,8 @@ module HydrogenicIon
     """
     function energy(sh::Shell, Z::Float64)
         energy = - Z^2 / sh.n^2 / 2.
-        energx = Basics.convert("energy: from atomic to eV", energy)
-        sa     = "  Energie for shell $sh is [in $(JAC.give("unit: energy"))]: " * @sprintf("%.8e", energx)
+        energx = Constants.convert("energy: from atomic to eV", energy)
+        sa     = "  Energie for shell $sh is [in $(Constants.give("unit: energy"))]: " * @sprintf("%.8e", energx)
         println(sa)
         return( energy )
     end
@@ -32,12 +32,12 @@ module HydrogenicIon
     function energy(sh::Subshell, Z::Float64)
         if  Z <= 0.1    error("Requires nuclear charge Z >= 0.1")    end
         # Compute the energy from the Dirac formula
-        jPlusHalf = (JAC.subshell_2j(sh) + 1) / 2;   nr = sh.n - jPlusHalf;    alpha = JAC.give("alpha") 
+        jPlusHalf = (JAC.subshell_2j(sh) + 1) / 2;   nr = sh.n - jPlusHalf;    alpha = Constants.give("alpha") 
         wa = sqrt(jPlusHalf^2 - Z^2 * alpha^2 )  
         wa = sqrt(1.0 + Z^2 * alpha^2 / (nr + wa)^2)
-        wa = JAC.give("speed of light: c")^2 * (1/wa - 1.0)
-        wb = Basics.convert("energy: from atomic to eV", wa)
-        sa = "  Energie for subshell $sh is [in $(JAC.give("unit: energy"))]: " * @sprintf("%.8e", wb)
+        wa = Constants.give("speed of light: c")^2 * (1/wa - 1.0)
+        wb = Constants.convert("energy: from atomic to eV", wa)
+        sa = "  Energie for subshell $sh is [in $(Constants.give("unit: energy"))]: " * @sprintf("%.8e", wb)
         println(sa)
         return( wa )
     end

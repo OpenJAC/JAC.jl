@@ -21,22 +21,22 @@ function recast(sa::String, line::Union{Einstein.Line,PhotoEmission.Line}, wa::F
             CONVERT_CROSS_SECTION_AU_TO_BARN,  CONVERT_RATE_AU_TO_PER_SEC 
    
     if       sa == "rate: radiative, to decay width"
-        width = Basics.convert("energy: from atomic", wa)
+        width = Constants.convert("energy: from atomic", wa)
         return( width )
 
     elseif   sa == "rate: radiative, to Einstein A"
-        einsteinA = Basics.convert("rate: from atomic", wa)
+        einsteinA = Constants.convert("rate: from atomic", wa)
         return( einsteinA )
 
     elseif   sa == "rate: radiative, to Einstein B"
         einsteinB = (JAC.AngularMomentum.twoJ(line.initialLevel.J) + 1) / (JAC.AngularMomentum.twoJ(line.finalLevel.J) + 1) * pi^2 *
-                    JAC.give("speed of light: c")^3 / line.omega^3  * wa
-        einsteinB = Basics.convert("Einstein B: from atomic", einsteinB)
+                    Constants.give("speed of light: c")^3 / line.omega^3  * wa
+        einsteinB = Constants.convert("Einstein B: from atomic", einsteinB)
         return( einsteinB )
 
     elseif   sa == "rate: radiative, to g_f"
         gf = (JAC.AngularMomentum.twoJ(line.initialLevel.J) + 1) / (JAC.AngularMomentum.twoJ(line.finalLevel.J) + 1) / 2. * 
-              JAC.give("speed of light: c")^3 / line.omega^2 * wa     
+              Constants.give("speed of light: c")^3 / line.omega^2 * wa     
         return( gf )
 
     else     error("Unsupported keystring = $sa")

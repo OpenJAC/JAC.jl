@@ -5,7 +5,7 @@
 """
 module Radial
 
-    using  JAC, JAC.BasicTypes, QuadGK, Printf
+    using  JAC, ..BasicTypes, QuadGK, Printf
     export Grid, Potential, Orbital, SingleElecSpectrum
 
 
@@ -341,7 +341,7 @@ module Radial
         n = length(orbital.P)
 
         if   orbital.useStandardGrid
-            stdgrid = JAC.give("standard grid")
+            stdgrid = Constants.give("standard grid")
             stdgrid.NoPoints == 0     &&   return( print("Standard grid has not yet been defined.") )
 
             n > stdgrid.NoPoints      &&   error("length of P does not match to standard grid")    
@@ -427,7 +427,7 @@ module Radial
     `JAC.Radial.OrbitalBunge1993(subshell::Subshell, Z::Int64)`  ... to calculate the radial orbital on the standard grid.
     """
     function OrbitalBunge1993(subshell::Subshell, Z::Int64, grid::Radial.Grid)
-        #x grid = JAC.give("standard grid");    
+        #x grid = Constants.give("standard grid");    
         #x qn = JAC.SubshellQuantumNumbers( string(subshell) );    n = qn[1];    kappa = qn[2];   l = qn[3]
         n = subshell.n;    kappa = subshell.kappa;   l = JAC.subshell_l(subshell)
         ##x println("n, l = $n, $l")
@@ -480,7 +480,7 @@ module Radial
     `JAC.Radial.OrbitalMcLean1981(subshell::Subshell,Z::Int64)`  ... to calculate the radial orbital on the standard grid.  
     """
     function compute_McLean1981(subshell::Subshell,Z::Int64)
-        grid = JAC.give("standard grid");    
+        grid = Constants.give("standard grid");    
         #x qn = JAC.SubshellQuantumNumbers( string(subshell) );    n = qn[1];   l = qn[3]
         n = subshell.n;   l = subshell_l( subshell )
     
@@ -564,7 +564,7 @@ module Radial
         end
         mZbar   = sum(meanZbar) / nx;   for  i = 1:nx    devsZbar[i] = (meanZbar[i] - mZbar)^2    end
         stdZbar = sqrt( sum(devsZbar) / nx )
-        if  JAC.PRINT_DEBUG  println("Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
+        if  true  println("Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
                                      " (Delta-Zbar=" * @sprintf("%.4e",stdZbar) * ")." )    end
         
         return( mZbar )

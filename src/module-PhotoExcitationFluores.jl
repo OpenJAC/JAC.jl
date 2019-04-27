@@ -167,7 +167,7 @@ module PhotoExcitationFluores
         end
         # Print all results to screen
         JAC.PhotoExcitationFluores.displayResults(stdout, pathways, settings)
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary   JAC.PhotoExcitationFluores.displayResults(iostream, pathways, settings)     end
         #
         if    output    return( pathways )
@@ -242,8 +242,8 @@ module PhotoExcitationFluores
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=3)
             sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
-            sa = sa * @sprintf("%.4e", Basics.convert("energy: from atomic", pathway.excitEnergy))      * "   "
-            sa = sa * @sprintf("%.4e", Basics.convert("energy: from atomic", pathway.fluorEnergy))      * "   "
+            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.excitEnergy))      * "   "
+            sa = sa * @sprintf("%.4e", Constants.convert("energy: from atomic", pathway.fluorEnergy))      * "   "
             #
             multipoles = EmMultipole[]
             for  ech in pathway.excitChannels
@@ -258,8 +258,8 @@ module PhotoExcitationFluores
             end
             multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles)       * "                   "
             sa = sa * JAC.TableStrings.flushleft(16, mpString[1:16];  na=2)
-            sa = sa * @sprintf("%.4e", Basics.convert("cross section: from atomic", pathway.crossSection.Coulomb))     * "  "
-            sa = sa * @sprintf("%.4e", Basics.convert("cross section: from atomic", pathway.crossSection.Babushkin))   * "  "
+            sa = sa * @sprintf("%.4e", Constants.convert("cross section: from atomic", pathway.crossSection.Coulomb))     * "  "
+            sa = sa * @sprintf("%.4e", Constants.convert("cross section: from atomic", pathway.crossSection.Babushkin))   * "  "
             println(stream, sa)
         end
         println(stream, "  ", JAC.TableStrings.hLine(150))

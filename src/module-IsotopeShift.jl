@@ -5,7 +5,7 @@
 """
 module IsotopeShift
 
-    using Printf, JAC, JAC.BasicTypes, JAC.ManyElectron, JAC.Radial
+    using Printf, JAC, ..BasicTypes,  ..Basics,  ..Constants, JAC.ManyElectron, JAC.Radial
     global JAC_counter = 0
 
 
@@ -295,7 +295,7 @@ module IsotopeShift
         end
         # Print all results to screen
         JAC.IsotopeShift.displayResults(stdout, newOutcomes)
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary    JAC.IsotopeShift.displayResults(iostream, newOutcomes)   end
         #
         if    output    return( newOutcomes )
@@ -344,7 +344,7 @@ module IsotopeShift
             sa  = "  ";    sym = BasicTypes.LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", outcome.level.energy)) * "    "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy)) * "    "
             println( sa )
         end
         println("  ", JAC.TableStrings.hLine(43))
@@ -384,11 +384,11 @@ module IsotopeShift
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", outcome.level.energy))               * "    "
-            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic to Hz", outcome.Knms))                 * "    "
-            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic to Hz", outcome.Ksms))                 * "    "
-            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic to Hz", outcome.Knms + outcome.Ksms))  * "    "
-            sa = sa * @sprintf("%.5e", Basics.convert("energy: from atomic to Hz", outcome.F))                    * "    "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy))               * "    "
+            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic to Hz", outcome.Knms))                 * "    "
+            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic to Hz", outcome.Ksms))                 * "    "
+            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic to Hz", outcome.Knms + outcome.Ksms))  * "    "
+            sa = sa * @sprintf("%.5e", Constants.convert("energy: from atomic to Hz", outcome.F))                    * "    "
             println(stream, sa )
             sb = JAC.TableStrings.hBlank(47)
             sb = sb * @sprintf("%.5e", outcome.Knms * 1822.888 * 2)                                            * "    "
@@ -416,7 +416,7 @@ module IsotopeShift
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
             sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", outcome.level.energy))          * "    "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", outcome.level.energy))          * "    "
             sa = sa * @sprintf("%.5e %s %.5e", outcome.amplitudeKnms.re,  " ", outcome.amplitudeKnms.im)  * "    "
             sa = sa * @sprintf("%.5e %s %.5e", outcome.amplitudeKsmsA.re, " ", outcome.amplitudeKsmsA.im) * "    "
             sa = sa * @sprintf("%.5e %s %.5e", outcome.amplitudeKsmsB.re, " ", outcome.amplitudeKsmsB.im) * "    "

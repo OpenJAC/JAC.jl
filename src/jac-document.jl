@@ -304,14 +304,14 @@ Three important `design principles of JAC` are:
   + **Covers the basics functionality of other established codes:** cf. Section Comparison with other (established) atomic structure codes
     above.
   + **Tutorials and examples at different level of complexity:** Cf. the method JAC.tutorials().
-  + **Supports and (re-) definition of physical constants, frequent settings and frameworks:** See the help pages ?JAC.define and ?Basics.convert.
+  + **Supports and (re-) definition of physical constants, frequent settings and frameworks:** See the help pages ?JAC.Constants.define and ?Constants.convert.
   + **Open-code project:**  We wish to encourage other user to make suggestions, request and improvements to the code.
 
 
 ### `Program design and definition of data struct's`
 
   + **Common source code design:**  The JAC program is designed with a rather 'flat' hierarchy; in the source code, all commands should 
-    almost always be called by their full name, e.g. JAC.compute(), JAC.display(), even if these methods are 'exportet' to the user's level.
+    almost always be called by their full name, e.g. JAC.compute(), JAC.Basics.display(), even if these methods are 'exportet' to the user's level.
   + All **data struct's should be well-adapted to the underlying physics, general assumptions and frameworks:** Indeed, these structs should 
     clearly reflect the 'building blocks' of atomic struture theory, and good care has been undertaken to find a proper balance between 
     types and subtypes. Therefore, a small number of arguments often enables one to perform rather complex tasks.
@@ -628,10 +628,10 @@ Various functions (methods) are available in JAC which support the interactive g
 for example, use ? JAC.compute for all further details:
 
     +      compute()        ... to compute angular coefficients; CI matrix; radial orbitals; radial potentials; ...
-    +  Basics.convert()        ... to convert units for energy, cross sections, rates, times, etc.; wave numbers; ...
+    +  Constants.convert()        ... to convert units for energy, cross sections, rates, times, etc.; wave numbers; ...
     +      define()         ... to define the framework; units for energy, cross sections, rates, etc.; standard grid; 
                                 subshell list; methods for solving continuum orbitals and their normalization; ...
-    +  JAC.display()        ... to display constants and settings; ...
+    +  Basics.display()        ... to display constants and settings; ...
     +      estimate()       ... to estimate ionization potentials; ...
     +      generate()       ... to generate condensed multiplets; relativistic and non-relativistic configuration lists;
                                 order shell and subshell lists; single-electron spectra; ...

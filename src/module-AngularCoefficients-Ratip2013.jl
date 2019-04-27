@@ -8,7 +8,7 @@ module AngularCoefficientsRatip2013
 
     # using ..JAC: AngularJ64, twice, CsfR, getsubshells, have_same_subshells, Parity, plus, minus, Subshell, SubshellQuantumNumbers
     # using ..JAC: AngularJ64, CsfR, Parity, plus, minus, Subshell # , SubshellQuantumNumbers
-    using  JAC, JAC.BasicTypes, JAC.ManyElectron
+    using  JAC, ..BasicTypes, ..Constants,  ..ManyElectron
     using Libdl: dlopen, dlsym
 
     export AngularTcoeff, AngularVcoeff
@@ -26,7 +26,7 @@ module AngularCoefficientsRatip2013
     `JAC.AngularCoefficientsRatip2013.getsubshells(csf::CsfR)`  ... returns the array of subshells of a relativistic configuration state 
                                                                     function.
     """
-    getsubshells(csf::CsfR) = csf.useStandardSubshells ?   JAC.JAC_STANDARD_SUBSHELL_LIST : csf.subshells
+    getsubshells(csf::CsfR) = csf.useStandardSubshells ?   Constants.GBL_STANDARD_SUBSHELL_LIST : csf.subshells
 
 
     """

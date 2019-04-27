@@ -2,7 +2,7 @@
 ## export  merge
 
 """
-`JAC.merge()`  ... to merge data from different instances into a single one.
+`JAC.Basics.merge()`  ... to merge data from different instances into a single one.
 
   + `("atomic bases", bases::Array{Basis,1})`  ... to merge two (or more) atomic bases into a single basis::Basis. This method assumes the same 
                       number of electrons in all basis and that the subshell lists are the same or can be made 'consistent' to each other. 
@@ -15,10 +15,10 @@ function merge(sa::String, bases::Array{Basis,1})
 
     if  length(bases) > 2 
         println("Number of bases = $(length(bases)) ...")   
-        bs       = JAC.merge("atomic bases", [ bases[1], bases[2] ])
+        bs       = Basics.merge("atomic bases", [ bases[1], bases[2] ])
         basesNew = [bs]
         for i = 3:length(bases)    push!( basesNew, bases[i])    end
-        JAC.merge("atomic bases", basesNew )
+        Basics.merge("atomic bases", basesNew )
     elseif  length(bases) == 1    return( basis[1] )
     elseif  length(bases) == 2
         # This is the essential step here; first create a consistent subshell list
@@ -61,9 +61,9 @@ function merge(sa::String, multiplets::Array{Multiplet,1})
         mp = Multiplet( multiplets[1].name * "+" * multiplets[2].name, levels )
         return( mp )
     elseif  length(multiplets) > 2
-        mp = JAC.merge("multiplets", [ multiplets[1], multiplets[2] ])
+        mp = Basics.merge("multiplets", [ multiplets[1], multiplets[2] ])
         for  k = 3:length(multiplets)
-            mp = JAC.merge("multiplets", [ mp, multiplets[k] ])
+            mp = Basics.merge("multiplets", [ mp, multiplets[k] ])
         end
         return( mp )
     else    error("stop a")

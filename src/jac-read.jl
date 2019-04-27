@@ -2,7 +2,7 @@
 ## export  read
 
 """
-`JAC.read()`  ... reads in data from different files and sources.
+`JAC.Basics.read()`  ... reads in data from different files and sources.
 
   + `("CSF list: Grasp92", "cslFilename")`  ... reads in the CSF list as given by the (existing) .csl file cslFilename; an basis::Basis
                  is returned with basis.isDefined = true and with a proper sequence of orbitals, but with basis.orbitals = Orbital[].
@@ -22,7 +22,7 @@ end
 
 
 """
-`JAC.readCslFileGrasp92(filename::String)`  ... reads in the CSF list from a Grasp92 .csl file; a basis::Basis is returned.
+`JAC.Basics.readCslFileGrasp92(filename::String)`  ... reads in the CSF list from a Grasp92 .csl file; a basis::Basis is returned.
 """
 function readCslFileGrasp92(filename::String)
     coreSubshells = Subshell[];    peelSubshells =  Subshell[]
@@ -48,7 +48,7 @@ function readCslFileGrasp92(filename::String)
     # Now, read the CSF in turn until the EOF
     readline(f)
     NoCSF = 0;    csfs = CsfR[]
-    JAC.define("relativistic subshell list", subshells)
+    Constants.define("relativistic subshell list", subshells)
 
     while true
         sa = readline(f);      if length(sa) == 0   break    end
@@ -65,7 +65,7 @@ end
 
 
 """
-`JAC.readOrbitalFileGrasp92(filename::String, grid.JAC.Radial.Grid)`  ... reads in the orbitals list from a Grasp92 .rwf or .out file; 
+`JAC.Basics.readOrbitalFileGrasp92(filename::String, grid.JAC.Radial.Grid)`  ... reads in the orbitals list from a Grasp92 .rwf or .out file; 
                             a dictionary orbitals::Dict{JAC.Subshell,JAC.Radial.Orbital} is returned.
 """
 function readOrbitalFileGrasp92(filename::String, grid::JAC.Radial.Grid)
@@ -79,7 +79,7 @@ function readOrbitalFileGrasp92(filename::String, grid::JAC.Radial.Grid)
 	  error("File \"", filename, "\" is not a proper Grasp92 RWF file")
     end
 
-    JAC.define("standard grid", grid);   
+    Constants.define("standard grid", grid);   
 
     while true
 	  try
@@ -90,7 +90,7 @@ function readOrbitalFileGrasp92(filename::String, grid::JAC.Radial.Grid)
             subshell = Subshell( Int64(n), Int64(kappa) )   
             if  energy < 0   isBound = true    else    isBound = false   end 
             useStandardGrid = true
-            println("JAC.readOrbitalFileGrasp92-aa: warning ... Radial functions still need to be interpolated upon the given grid.")
+            println("JAC.Basics.readOrbitalFileGrasp92-aa: warning ... Radial functions still need to be interpolated upon the given grid.")
             Px = P
             Qx = Q 
 
@@ -108,7 +108,7 @@ end
 
 
 """
-`JAC.readMixFileRelci(filename::String)`  ... reads in the mixing coefficients from a RELCI .mix file; a multiplet::Multiplet is returned.
+`JAC.Basics.readMixFileRelci(filename::String)`  ... reads in the mixing coefficients from a RELCI .mix file; a multiplet::Multiplet is returned.
 """
 function readMixFileRelci(filename::String, basis::Basis)
     levels = Level[];    name =  "from Relci"
@@ -153,7 +153,7 @@ end
 
 
 """
-`JAC.readMixingFileGrasp92(filename::String, basis::Basis)`  ... reads in the mixing coefficients from a Grasp92 .mix file by using
+`JAC.Basics.readMixingFileGrasp92(filename::String, basis::Basis)`  ... reads in the mixing coefficients from a Grasp92 .mix file by using
                            the given basis; A multiplet::Multiplet is returned.
 """
 function readMixingFileGrasp92(filename::String, basis::Basis)

@@ -2,7 +2,7 @@ using JAC.BasicTypes
 # export  determine
 
 """
-`JAC.determineEnergySharings(energy::Float64, NoEnergySharings::Int64)`  ... to determine the NoEnergySharings sharings by using the
+`JAC.Basics.determineEnergySharings(energy::Float64, NoEnergySharings::Int64)`  ... to determine the NoEnergySharings sharings by using the
                              Gauss-Legendre integration points in the interval [0., energy]; an Array{Tuple{Float64,Float64},1} is returned.
                              This methods assumes that the package GaussQuadrature is 'used'.
 """
@@ -19,7 +19,7 @@ end
 
 
 """
-`JAC.determineHoleShells(conf::Configuration)`  ... to determine the hole-shells of a given non-relativistic configuration; 
+`JAC.Basics.determineHoleShells(conf::Configuration)`  ... to determine the hole-shells of a given non-relativistic configuration; 
                                                       a shellList::Array{Shell,1} is returned.
 """
 function determineHoleShells(conf::Configuration)
@@ -35,7 +35,7 @@ end
 
 
 """
-`JAC.determineParity(conf::Configuration)`  ... to determine the parity of a given non-relativistic configuration.
+`JAC.Basics.determineParity(conf::Configuration)`  ... to determine the parity of a given non-relativistic configuration.
 """
 function determineParity(conf::Configuration)
 
@@ -53,7 +53,7 @@ end
 
 
 """
-`JAC.determineParity(conf::ConfigurationR)`  ... to determine the parity of a given relativistic configuration.
+`JAC.Basics.determineParity(conf::ConfigurationR)`  ... to determine the parity of a given relativistic configuration.
 """
 function determineParity(conf::ConfigurationR)
 
@@ -72,7 +72,7 @@ end
 
 
 """
-`JAC.determineSelectedLines(lineList::Array{Tuple{Int64,Int64},1}, initialMultiplet::Multiplet, finalMultiplet::Multiplet)`  ... to determine 
+`JAC.Basics.determineSelectedLines(lineList::Array{Tuple{Int64,Int64},1}, initialMultiplet::Multiplet, finalMultiplet::Multiplet)`  ... to determine 
                             the specified lines as tupels of initial- and final levels. A level index is 0 in lineList always refers to
                             all levels from the corresponding multiplet. A (unique) newList::Array{Tuple{Int64,Int64},1} is returned.
 """
@@ -93,7 +93,7 @@ end
 
 
 """
-`JAC.determineSelectedPathways(pathwayList::Array{Tuple{Int64,Int64,Int64},1}, initialMultiplet::Multiplet, intermediateMultiplet::Multiplet, 
+`JAC.Basics.determineSelectedPathways(pathwayList::Array{Tuple{Int64,Int64,Int64},1}, initialMultiplet::Multiplet, intermediateMultiplet::Multiplet, 
                                finalMultiplet::Multiplet)`  ... to determine the specified pathways as tupels of initial-, intermediate-
                                and final levels. A level index 0 in pathwayList always refers to all levels from the corresponding multiplet. 
                                A (unique) newList::Array{Tuple{Int64,Int64,Int64},1} is returned.

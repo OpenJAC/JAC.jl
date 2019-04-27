@@ -173,11 +173,11 @@ module AutoIonization
             initial level. A newChannel::AutoIonization.Channel is returned.
     """
     function channelAmplitude(kind::String, channel::AutoIonization.Channel, energy::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid)
-        newiLevel = JAC.generateLevelWithSymmetryReducedBasis(initialLevel)
-        newiLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
-        newfLevel = JAC.generateLevelWithSymmetryReducedBasis(finalLevel)
+        newiLevel = Basics.generateLevelWithSymmetryReducedBasis(initialLevel)
+        newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
+        newfLevel = Basics.generateLevelWithSymmetryReducedBasis(finalLevel)
         cOrbital, phase  = JAC.Continuum.generateOrbital(energy, Subshell(101, channel.kappa), newfLevel, grid, contSettings)
-        newcLevel  = JAC.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
+        newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
         newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
         amplitude = JAC.AutoIonization.amplitude(kind, channel, newcLevel, newiLevel, grid)
 
@@ -196,11 +196,11 @@ module AutoIonization
                                          settings::AutoIonization.Settings; printout::Bool=true) 
         newChannels = AutoIonization.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
-            newiLevel = JAC.generateLevelWithSymmetryReducedBasis(line.initialLevel)
-            newiLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
-            newfLevel = JAC.generateLevelWithSymmetryReducedBasis(line.finalLevel)
+            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
+            newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
+            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
             cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
-            newcLevel  = JAC.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
+            newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
             amplitude = JAC.AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
             rate      = rate + conj(amplitude) * amplitude
@@ -227,12 +227,12 @@ module AutoIonization
                                                settings::PlasmaShift.AugerSettings; printout::Bool=true) 
         newChannels = AutoIonization.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
-            newiLevel = JAC.generateLevelWithSymmetryReducedBasis(line.initialLevel)
-            newiLevel = JAC.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
-            newfLevel = JAC.generateLevelWithSymmetryReducedBasis(line.finalLevel)
+            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
+            newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
+            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
             @warn "Adapt a proper continuum orbital for the plasma potential"
             cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
-            newcLevel  = JAC.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
+            newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
             @warn "Adapt a proper Auger amplitude for the plasma e-e interaction"
             amplitude = 1.0
@@ -310,7 +310,7 @@ module AutoIonization
         # Print all results to screen
         JAC.AutoIonization.displayRates(stdout, newLines, settings)
         JAC.AutoIonization.displayLifetimes(stdout, newLines)
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary   JAC.AutoIonization.displayRates(iostream, newLines, settings);   JAC.AutoIonization.displayLifetimes(iostream, newLines)     end
         #
         if    output    return( lines )
@@ -343,7 +343,7 @@ module AutoIonization
             push!( newLines, newLine)
         end
         # Print all results to a summary file, if requested
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary   JAC.AutoIonization.displayRates(iostream, newLines, settings)     end
         #
         if    output    return( lines )
@@ -381,7 +381,7 @@ module AutoIonization
         # Print all results to screen
         JAC.AutoIonization.displayRates(stdout, newLines, augerSettings)
         JAC.AutoIonization.displayLifetimes(stdout, newLines)
-        printSummary, iostream = JAC.give("summary flag/stream")
+        printSummary, iostream = Constants.give("summary flag/stream")
         if  printSummary   JAC.AutoIonization.displayRates(iostream, newLines, augerSettings);   JAC.AutoIonization.displayLifetimes(iostream, newLines)     end
         #
         if    output    return( lines )
@@ -414,7 +414,7 @@ module AutoIonization
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::AutoIonization.Settings)
         if    settings.selectLines    selectLines   = true
-            selectedLines = JAC.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
+            selectedLines = Basics.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
         else                          selectLines   = false
         end
     
@@ -459,8 +459,8 @@ module AutoIonization
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.initialLevel.energy))  * "    "
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.electronEnergy))       * "   "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.initialLevel.energy))  * "    "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.electronEnergy))       * "   "
             kappaSymmetryList = Tuple{Int64,LevelSymmetry}[]
             for  i in 1:length(line.channels)
                 push!( kappaSymmetryList, (line.channels[i].kappa, line.channels[i].symmetry) )
@@ -505,11 +505,11 @@ module AutoIonization
                 sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                 sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(line.initialLevel.index); na=2)
                 sa = sa * JAC.TableStrings.center( 8, string(isym); na=4)
-                sa = sa * @sprintf("%.8e", Basics.convert("time: from atomic",  1/totalRate))            * "     "
-                sa = sa * @sprintf("%.8e", Basics.convert("rate: from atomic",    totalRate))            * "      "
+                sa = sa * @sprintf("%.8e", Constants.convert("time: from atomic",  1/totalRate))            * "     "
+                sa = sa * @sprintf("%.8e", Constants.convert("rate: from atomic",    totalRate))            * "      "
                 sa = sa * @sprintf("%.8e", totalRate)                                                 * "    "
-                sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic to Kayser",  totalRate))  * "    "
-                sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic to eV",      totalRate))  * "    "
+                sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic to Kayser",  totalRate))  * "    "
+                sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic to eV",      totalRate))  * "    "
                 println(stream, sa)
             end
         end
@@ -546,9 +546,9 @@ module AutoIonization
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.initialLevel.energy))  * "    "
-            sa = sa * @sprintf("%.8e", Basics.convert("energy: from atomic", line.electronEnergy))       * "    "
-            sa = sa * @sprintf("%.8e", Basics.convert("rate: from atomic", line.totalRate))              * "    "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.initialLevel.energy))  * "    "
+            sa = sa * @sprintf("%.8e", Constants.convert("energy: from atomic", line.electronEnergy))       * "    "
+            sa = sa * @sprintf("%.8e", Constants.convert("rate: from atomic", line.totalRate))              * "    "
             sa = sa * JAC.TableStrings.flushright(13, @sprintf("%.5e", line.angularAlpha))            * "    "
             println(stream, sa)
         end

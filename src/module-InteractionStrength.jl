@@ -5,7 +5,7 @@
 """
 module InteractionStrength
 
-    using  GSL, JAC, JAC.BasicTypes, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
+    using  GSL, JAC, ..BasicTypes,  ..Basics,  ..Constants, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
     global JAC_counter = 0
 
 
@@ -61,7 +61,7 @@ module InteractionStrength
     function hfs_t1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
-        ##x wa = - JAC.give("alpha") * (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell) *
+        ##x wa = - Constants.give("alpha") * (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell) *
         wb =   - (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell)
         wc =   JAC.RadialIntegrals.rkNonDiagonal(-2, a, b, grid)
         wa =   wb * wc
@@ -107,7 +107,7 @@ module InteractionStrength
          A value::Float64 is returned.  
     """
     function MbaEmissionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
-        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / JAC.give("speed of light: c") 
+        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Constants.give("speed of light: c") 
         #
         if       gauge == JAC.Magnetic
             ChengI = JAC.AngularMomentum.ChengI(-kapa, kapb, AngularJ64(mp.L))
@@ -144,7 +144,7 @@ module InteractionStrength
          is returned. At present, only the magnetic matrix elements are implemented. 
     """
     function MbaEmissionAndrey(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
-        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / JAC.give("speed of light: c") 
+        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Constants.give("speed of light: c") 
         ja   = JAC.subshell_j(a.subshell);   jb   = JAC.subshell_j(b.subshell);   
         #
         if       gauge == JAC.Magnetic
@@ -174,7 +174,7 @@ module InteractionStrength
     function multipoleTransition(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
         function besselPrime_jl(L::Int64, x::Float64)    return( GSL.sf_bessel_jl(L-1, x) - (L+1)/x * GSL.sf_bessel_jl(L, x) )       end
 
-        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / JAC.give("speed of light: c") 
+        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Constants.give("speed of light: c") 
         mtp  = min(size(a.P, 1), size(b.P, 1))
         !(grid.mesh == MeshGL)  &&  error("Only for MeshGL implemented so far.")
         #
@@ -531,7 +531,7 @@ module InteractionStrength
     function zeeman_Delta_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
-        wa = (JAC.give("electron g-factor") - 2) / 2. * (a.subshell.kappa + b.subshell.kappa + 1) * 
+        wa = (Constants.give("electron g-factor") - 2) / 2. * (a.subshell.kappa + b.subshell.kappa + 1) * 
              JAC.AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) * JAC.RadialIntegrals.rkDiagonal(0, a, b, grid)
         return( wa )
     end
@@ -544,7 +544,7 @@ module InteractionStrength
     function zeeman_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
-        wa = - JAC.AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) / (2 * JAC.give("alpha")) *
+        wa = - JAC.AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) / (2 * Constants.give("alpha")) *
                JAC.RadialIntegrals.rkNonDiagonal(1, a, b, grid)
         return( wa )
     end

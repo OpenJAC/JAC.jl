@@ -20,13 +20,13 @@ module InteractionStrengthQED
         qgrid = JAC.Radial.GridGL("QED",  7)
         # Re-define the hydrogenic values of the 
         if  nm.Z != JAC.JAC_QED_NUCLEAR_CHARGE
-            alpha = JAC.give("alpha")
+            alpha = Constants.give("alpha")
             ax  = JAC.HydrogenicIon.radialOrbital(Subshell("1s_1/2"), nm.Z, grid);    wc1 = JAC.RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
             ax  = JAC.HydrogenicIon.radialOrbital(Subshell("2p_1/2"), nm.Z, grid);    wc2 = JAC.RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
             ax  = JAC.HydrogenicIon.radialOrbital(Subshell("2p_3/2"), nm.Z, grid);    wc3 = JAC.RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
             ax  = JAC.HydrogenicIon.radialOrbital(Subshell("3d_3/2"), nm.Z, grid);    wc4 = JAC.RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
             ax  = JAC.HydrogenicIon.radialOrbital(Subshell("3d_5/2"), nm.Z, grid);    wc5 = JAC.RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            JAC.define("QED: damped-hydrogenic", nm.Z, [wc1, wc2, wc3, wc4, wc5] )
+            Constants.define("QED: damped-hydrogenic", nm.Z, [wc1, wc2, wc3, wc4, wc5] )
             println("Redefined damped radial integrals JAC_QED_HYDROGENIC_LAMBDAC = $(JAC.JAC_QED_HYDROGENIC_LAMBDAC)")
         end
         
@@ -62,7 +62,7 @@ module InteractionStrengthQED
         else    error("stop a")
         end
         
-        alpha       = JAC.give("alpha");  
+        alpha       = Constants.give("alpha");  
         whydrogenic = JAC.InteractionStrengthQED.tabulateFzeOverHydrogenic(nm.Z, a.subshell) * alpha / pi * (alpha*nm.Z)^4 / nn^3 / alpha^2
         wb          = JAC.RadialIntegrals.qedDampedOverlap(alpha, a, a, grid)
         wa          = whydrogenic * wb

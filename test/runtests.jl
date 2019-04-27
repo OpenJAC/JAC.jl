@@ -4,7 +4,7 @@ using JAC
 @testset "Name" begin
     ##x global short = true
     printstyled("\nPerform tests on the JAC program; this may take a while ... \n", color=:cyan)
-    JAC.define("print test: open", pwd() * "/runtests.report")
+    ## JAC.Constants.define("print test: open", pwd() * "/runtests.report")
 
     include("inc-halfintegers.jl")
     include("inc-wignersymbols.jl")
@@ -53,5 +53,5 @@ using JAC
     ##x @test JAC.testProperties(short=short)
     ##x @test JAC.testProcesses(short=short)
 
-    JAC.define("print test: close", "")
+    ## JAC.define("print test: close", "")
 end

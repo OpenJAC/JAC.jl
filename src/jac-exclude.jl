@@ -2,7 +2,7 @@
 ## export  exclude
 
 """
-`JAC.excludeDoubles()  ... exclude 'double entries' from various list; see below:
+`JAC.Basics.excludeDoubles()  ... exclude 'double entries' from various list; see below:
 
   + `(confList::Array{Configuration,1})`  ... to exlude from the (non-relativistic) confList all 'doubles', ie. configurations 
                                               that occured before in the list; a new confList::Array{Configuration,1} is returned.

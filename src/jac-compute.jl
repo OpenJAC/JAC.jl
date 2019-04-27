@@ -256,10 +256,10 @@ end
 function computeDiracEnergy(sh::Subshell, Z::Float64)
     if  Z <= 0.1    error("Requires nuclear charge Z >= 0.1")    end
     # Compute the energy from the Dirac formula
-    jPlusHalf = (JAC.subshell_2j(sh) + 1) / 2;   nr = sh.n - jPlusHalf;    alpha = JAC.give("alpha") 
+    jPlusHalf = (JAC.subshell_2j(sh) + 1) / 2;   nr = sh.n - jPlusHalf;    alpha = Constants.give("alpha") 
     wa = sqrt(jPlusHalf^2 - Z^2 * alpha^2 )  
     wa = sqrt(1.0 + Z^2 * alpha^2 / (nr + wa)^2)
-    wa = JAC.give("speed of light: c")^2 * (1/wa - 1.0)
+    wa = Constants.give("speed of light: c")^2 * (1/wa - 1.0)
     return( wa )
 end
 

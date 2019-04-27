@@ -1,4 +1,4 @@
-using JAC, JAC.BasicTypes
+using JAC, ..BasicTypes, ..Constants
 ## export  tabulate
 
 """
@@ -20,7 +20,7 @@ function tabulate(sa::String, multiplet::Multiplet; stream::IO=stdout)
         println(stream, "\n", sb, "\n")
         for  i = 1:length(multiplet.levels)
             lev = multiplet.levels[i]
-            en  = lev.energy;    en_eV = convert("energy: from atomic to eV", en);    en_requested = convert("energy: from atomic", en)
+            en  = lev.energy;    en_eV = Constants.convert("energy: from atomic to eV", en);    en_requested = Constants.convert("energy: from atomic", en)
             sc  = " " * JAC.TableStrings.level(i) * "    " * string(LevelSymmetry(lev.J, lev.parity)) * "    "
             @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
         end
@@ -32,7 +32,7 @@ function tabulate(sa::String, multiplet::Multiplet; stream::IO=stdout)
         for  i = 2:length(multiplet.levels)
             lev = multiplet.levels[i]
             en    = lev.energy - multiplet.levels[i-1].energy;    
-            en_eV = convert("energy: from atomic to eV", en);    en_requested = convert("energy: from atomic", en)
+            en_eV = Constants.convert("energy: from atomic to eV", en);    en_requested = Constants.convert("energy: from atomic", en)
             sc  = " " * JAC.TableStrings.level(i) * "    " * string(LevelSymmetry(lev.J, lev.parity)) * "    "
             @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
         end
@@ -44,7 +44,7 @@ function tabulate(sa::String, multiplet::Multiplet; stream::IO=stdout)
         for  i = 2:length(multiplet.levels)
             lev = multiplet.levels[i]
             en    = lev.energy - multiplet.levels[1].energy;    
-            en_eV = convert("energy: from atomic to eV", en);    en_requested = convert("energy: from atomic", en)
+            en_eV = Constants.convert("energy: from atomic to eV", en);    en_requested = Constants.convert("energy: from atomic", en)
             sc  = " " * JAC.TableStrings.level(i) * "    " * string(LevelSymmetry(lev.J, lev.parity)) * "    "
             @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
         end
@@ -71,7 +71,7 @@ function tabulate(sa::String, multiplet::JAC.Hfs.IJF_Multiplet; stream::IO=stdou
         println(stream, "\n", sb, "\n")
         for  i = 1:length(multiplet.levelFs)
             lev = multiplet.levelFs[i]
-            en  = lev.energy;    en_eV = convert("energy: from atomic to eV", en);    en_requested = convert("energy: from atomic", en)
+            en  = lev.energy;    en_eV = Constants.convert("energy: from atomic to eV", en);    en_requested = Constants.convert("energy: from atomic", en)
             sc  = " " * JAC.TableStrings.level(i) * "    " * string(LevelSymmetry(lev.F, lev.parity)) * "    "
             @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
         end
@@ -83,7 +83,7 @@ function tabulate(sa::String, multiplet::JAC.Hfs.IJF_Multiplet; stream::IO=stdou
         for  i = 2:length(multiplet.levelFs)
             lev = multiplet.levelFs[i]
             en    = lev.energy - multiplet.levelFs[1].energy;    
-            en_eV = convert("energy: from atomic to eV", en);    en_requested = convert("energy: from atomic", en)
+            en_eV = Constants.convert("energy: from atomic to eV", en);    en_requested = Constants.convert("energy: from atomic", en)
             sc  = " " * JAC.TableStrings.level(i) * "    " * string(LevelSymmetry(lev.F, lev.parity))  * "    "
             @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
         end
