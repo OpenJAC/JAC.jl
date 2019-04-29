@@ -1,15 +1,29 @@
 
 """
-`module  JAC.InteractionStrengthQED`  ... a submodel of JAC that contains methods for computing local single-electron QED corrections; 
-                                          it is using JAC, JAC.ManyElectron, JAC.Radial.
+`module  JAC.InteractionStrengthQED`  
+    ... a submodel of JAC that contains methods for computing local single-electron QED corrections.
 """
 module InteractionStrengthQED
 
-    using Printf, JAC.Basics, JAC.Radial, JAC.Nuclear
+    using Printf, ..Basics, ..Defaults, ..HydrogenicIon, ..ManyElectron, ..Radial, ..RadialIntegrals, ..Nuclear
+    
+    #                   Z/10       1s_1/2      2p_1/2      2p_3/2      3d_3/2      3d_5/2        Zi
+    const   fez_qed =         [    4.6542     -0.1148      0.1304     -0.0427      0.0408   ;   #  10
+                                   3.2462     -0.0925      0.1438     -0.0420      0.0417   ;   #  20
+                                   2.5518     -0.0643      0.1606     -0.0410      0.0432   ;   #  30
+                                   2.1347     -0.0310      0.1796     -0.0396      0.0452   ;   #  40
+                                   1.8633      0.0080      0.2001     -0.0378      0.0475   ;   #  50
+                                   1.6820      0.0547      0.2216     -0.0353      0.0503   ;   #  60
+                                   1.5637      0.1126      0.2441     -0.0321      0.0536   ;   #  70
+                                   1.4955      0.1877      0.2671     -0.0279      0.0572   ;   #  80
+                                   1.4721      0.2912      0.2904     -0.0229      0.0612   ;   #  90
+                                   1.4961      0.4450      0.3135     -0.0154      0.0654   ;   # 100
+                                   1.5771      0.6961      0.3356     -0.0063      0.0699   ;   # 110
+                                   1.7335      1.1559      0.3548      0.0051      0.0745   ]   # 120
 
-
+                                   
     """
-    `JAC.InteractionStrengthQED.qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid)`  
+    `InteractionStrengthQED.qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid)`  
         ... to calculate the local, single-electron QED correction due to a chosen QedModel.  The function also determines whether 
             the 'stored' hydrogenic values for the lambda_C-dampled overlap integrals belong the given Z-value, and re-calculates 
             these overlap integrals whenever necessary.  A single-electron amplitud wa::Float64 is returned.
@@ -17,28 +31,28 @@ module InteractionStrengthQED
     function qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid)
         global  JAC_QED_MODEL,  JAC_QED_NUCLEAR_CHARGE,  JAC_QED_HYDROGENIC_LAMBDAC
         # Define a grid for the t-integration
-        qgrid = JAC.Radial.GridGL("QED",  7)
+        qgrid = Radial.GridGL("QED",  7)
         # Re-define the hydrogenic values of the 
-        if  nm.Z != JAC.JAC_QED_NUCLEAR_CHARGE
+        if  nm.Z != Defaults.JAC_QED_NUCLEAR_CHARGE
             alpha = Defaults.getDefaults("alpha")
-            ax  = JAC.HydrogenicIon.radialOrbital(Subshell("1s_1/2"), nm.Z, grid);    wc1 = JAC.RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = JAC.HydrogenicIon.radialOrbital(Subshell("2p_1/2"), nm.Z, grid);    wc2 = JAC.RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = JAC.HydrogenicIon.radialOrbital(Subshell("2p_3/2"), nm.Z, grid);    wc3 = JAC.RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = JAC.HydrogenicIon.radialOrbital(Subshell("3d_3/2"), nm.Z, grid);    wc4 = JAC.RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = JAC.HydrogenicIon.radialOrbital(Subshell("3d_5/2"), nm.Z, grid);    wc5 = JAC.RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ax  = HydrogenicIon.radialOrbital(Subshell("1s_1/2"), nm.Z, grid);    wc1 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ax  = HydrogenicIon.radialOrbital(Subshell("2p_1/2"), nm.Z, grid);    wc2 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ax  = HydrogenicIon.radialOrbital(Subshell("2p_3/2"), nm.Z, grid);    wc3 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ax  = HydrogenicIon.radialOrbital(Subshell("3d_3/2"), nm.Z, grid);    wc4 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ax  = HydrogenicIon.radialOrbital(Subshell("3d_5/2"), nm.Z, grid);    wc5 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
             Defaults.setDefaults("QED: damped-hydrogenic", nm.Z, [wc1, wc2, wc3, wc4, wc5] )
-            println("Redefined damped radial integrals JAC_QED_HYDROGENIC_LAMBDAC = $(JAC.JAC_QED_HYDROGENIC_LAMBDAC)")
+            println("Redefined damped radial integrals JAC_QED_HYDROGENIC_LAMBDAC = $(Defaults.GBL_QED_HYDROGENIC_LAMBDAC)")
         end
         
-        if      JAC.JAC_QED_MODEL == QedSydney
-            wa = JAC.RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
-                 ## JAC.RadialIntegrals.qedWichmannKrollSimple(a, b, pot, grid, qgrid) + 
-                 ## JAC.RadialIntegrals.qedElectricFormFactor(a, b, pot, grid, qgrid) + 
-                 ## JAC.RadialIntegrals.qedMagneticFormFactor(a, b, pot, grid, qgrid) + 
-                 JAC.RadialIntegrals.qedLowFrequency(a, b, nm, grid, qgrid) 
-        elseif  JAC.JAC_QED_MODEL == QedPetersburg
-            wa = JAC.RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
-                 JAC.InteractionStrengthQED.selfEnergyVolotka(a, b, nm, pot, grid, qgrid)
+        if      Defaults.GBL_QED_MODEL == QedSydney
+            wa = RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
+                 ## RadialIntegrals.qedWichmannKrollSimple(a, b, pot, grid, qgrid) + 
+                 ## RadialIntegrals.qedElectricFormFactor(a, b, pot, grid, qgrid) + 
+                 ## RadialIntegrals.qedMagneticFormFactor(a, b, pot, grid, qgrid) + 
+                 RadialIntegrals.qedLowFrequency(a, b, nm, grid, qgrid) 
+        elseif   Defaults.GBL_QED_MODEL == QedPetersburg
+            wa = RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
+                 InteractionStrengthQED.selfEnergyVolotka(a, b, nm, pot, grid, qgrid)
         else    error("stop a")
         end
         return( wa )
@@ -46,12 +60,12 @@ module InteractionStrengthQED
 
 
     """
-    `JAC.InteractionStrengthQED.selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, 
-                                                  pot::Radial.Potential, grid::Radial.Grid,qgrid::Radial.GridGL)`
+    `InteractionStrengthQED.selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid,
+                                              qgrid::Radial.GridGL)`
         ... to calculate the local, single-electron self-energy contribution due to the Petersburg model (PRA, 2013), further
-        simplified by Andrey Volotka. A non-zero self-energy contribution is returned only for orbitals with 1 <= n <= 4 and 
-        kappa = -1, 1, -2, 2, -3, since the method appears rather inaccurate for higher (n, kappa). 
-        A single-electron self-energy amplitude wa::Float64 is returned.
+            simplified by Andrey Volotka. A non-zero self-energy contribution is returned only for orbitals with 1 <= n <= 4 and 
+            kappa = -1, 1, -2, 2, -3, since the method appears rather inaccurate for higher (n, kappa). 
+            A single-electron self-energy amplitude wa::Float64 is returned.
     """
     function selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid,qgrid::Radial.GridGL)
         # Non-zero local amplitudes only for kappa_a = kappa_b
@@ -63,8 +77,8 @@ module InteractionStrengthQED
         end
         
         alpha       = Defaults.getDefaults("alpha");  
-        whydrogenic = JAC.InteractionStrengthQED.tabulateFzeOverHydrogenic(nm.Z, a.subshell) * alpha / pi * (alpha*nm.Z)^4 / nn^3 / alpha^2
-        wb          = JAC.RadialIntegrals.qedDampedOverlap(alpha, a, a, grid)
+        whydrogenic = InteractionStrengthQED.tabulateFzeOverHydrogenic(nm.Z, a.subshell) * alpha / pi * (alpha*nm.Z)^4 / nn^3 / alpha^2
+        wb          = RadialIntegrals.qedDampedOverlap(alpha, a, a, grid)
         wa          = whydrogenic * wb
         
         # Printout the corresponding  F(alpha Z) value for the given orbital if a == b
@@ -79,7 +93,7 @@ module InteractionStrengthQED
 
 
     """
-    `JAC.InteractionStrengthQED.tabulateFzeOverHydrogenic(Z::Float64, sh::Subshell)`  
+    `InteractionStrengthQED.tabulateFzeOverHydrogenic(Z::Float64, sh::Subshell)`  
         ... to return the value of the FZE() table as shown by Shabaev et al., PRA 88, 012513  (2013) but just for the lowest 
             possible subshell of a given kappa-value; this tabulated value is devided by the lambda_C-dampled overlap integral,
             calculated with hydrogenic functions; a Float64 is returned. The table below only includes the data for extended
@@ -110,23 +124,8 @@ module InteractionStrengthQED
         else    error("stop c")
         end
        
-        return( wa / JAC.JAC_QED_HYDROGENIC_LAMBDAC[k] )
+        return( wa / Defaults.GBL_QED_HYDROGENIC_LAMBDAC[k] )
     end
-    
-    #                   Z/10       1s_1/2      2p_1/2      2p_3/2      3d_3/2      3d_5/2        Zi
-    const   fez_qed =         [    4.6542     -0.1148      0.1304     -0.0427      0.0408   ;   #  10
-                                   3.2462     -0.0925      0.1438     -0.0420      0.0417   ;   #  20
-                                   2.5518     -0.0643      0.1606     -0.0410      0.0432   ;   #  30
-                                   2.1347     -0.0310      0.1796     -0.0396      0.0452   ;   #  40
-                                   1.8633      0.0080      0.2001     -0.0378      0.0475   ;   #  50
-                                   1.6820      0.0547      0.2216     -0.0353      0.0503   ;   #  60
-                                   1.5637      0.1126      0.2441     -0.0321      0.0536   ;   #  70
-                                   1.4955      0.1877      0.2671     -0.0279      0.0572   ;   #  80
-                                   1.4721      0.2912      0.2904     -0.0229      0.0612   ;   #  90
-                                   1.4961      0.4450      0.3135     -0.0154      0.0654   ;   # 100
-                                   1.5771      0.6961      0.3356     -0.0063      0.0699   ;   # 110
-                                   1.7335      1.1559      0.3548      0.0051      0.0745   ]   # 120
-    
 
 end # module
 

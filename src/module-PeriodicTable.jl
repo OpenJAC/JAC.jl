@@ -3,16 +3,15 @@
 `module  JAC.PeriodicTable`  
     ... a submodel of JAC that contains methods and data from the periodic table of elements. Although we here collect 
         data for various elements, no attempt will be made to set-up a full compilation. Instead, useful information
-        and some semi-empirical data are compiled to simplify the use of the JAC package in the future;
-        it is using JAC, JAC.Radial.
+        and some semi-empirical data are compiled to simplify the use of the JAC package in the future.
 """
 module PeriodicTable
 
-    using  Printf, JAC
+    using  Printf
 
     
     """
-    `struct  Isotope`  ... defines a type for collecting data for an individual isotope.
+    `struct  PeriodicTable.Isotope`  ... defines a type for collecting data for an individual isotope.
 
         + something     ::Int64                 ... Something
     """
@@ -21,7 +20,7 @@ module PeriodicTable
 
 
     """
-    `JAC.PeriodicTable.Isotope()`  ... simple constructur for an empty instance of an isotope.
+    `PeriodicTable.Isotope()`  ... simple constructur for an empty instance of an isotope.
     """
     function Isotope(i::Int64)
         Isotope()
@@ -29,7 +28,7 @@ module PeriodicTable
     
    
     """
-    `struct  Element`  ... defines a type for collecting data for each element.
+    `struct  PeriodicTable.Element`  ... defines a type for collecting data for each element.
 
         + nuclearCharge     ::Int64                 ... Nuclear charge
         + symbol            ::Symbol                ... Symbol of the element.
@@ -49,7 +48,7 @@ module PeriodicTable
 
 
     """
-    `JAC.PeriodicTable.Element(charge::Int64, symbol::Symbol)`  ... simple constructur for defining an element
+    `PeriodicTable.Element(charge::Int64, symbol::Symbol)`  ... simple constructur for defining an element
     """
     function Element(charge::Int64, symbol::Symbol)
         Element(charge, symbol, "not defined", 999.99, Isotope[])
@@ -64,7 +63,7 @@ module PeriodicTable
 
     
     """
-    `JAC.PeriodicTable.data::Dict{Int64,PeriodicTable.Element}`
+    `PeriodicTable.data::Dict{Int64,PeriodicTable.Element}`
         ... provides all available data for an element with given nuclear charge Z::Int64 by PeriodicTable.data[Z].
     """
     const data = Dict{Int64,PeriodicTable.Element}(
@@ -189,7 +188,7 @@ module PeriodicTable
 
 
     """
-    `JAC.PeriodicTable.bindingEnergies_Williams2000(Z::Int64)`  ... former  JAC.store_Williams2000(Z::Int64)
+    `PeriodicTable.bindingEnergies_Williams2000(Z::Int64)`  ... former  JAC.store_Williams2000(Z::Int64)
         ... to return the `stored values' of Williams et al. (2000), ... for the element with nuclear charge Z.
     """
     function bindingEnergies_Williams2000(Z::Int64)

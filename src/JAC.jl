@@ -84,16 +84,16 @@ include("module-AngularCoefficients-Ratip2013.jl")
 include("module-Bsplines.jl")
 include("module-Continuum.jl")
 include("module-Details.jl")
+include("module-RadialIntegrals.jl")
 include("module-HydrogenicIon.jl")
 include("module-InteractionStrength.jl")
 include("module-InteractionStrengthQED.jl")
 include("module-PeriodicTable.jl")
-include("module-RadialIntegrals.jl")
 include("module-Tools.jl")
 
 # Functions/methods for atomic amplitudes
 include("module-MultipoleMoment.jl")
-include("module-ParityNonConservation.jl")
+include("module-ParityNonConservation.jl")   ## up to here
 
 # Functions/methods for atomic properties
 include("module-Einstein.jl")

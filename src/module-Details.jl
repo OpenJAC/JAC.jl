@@ -1,7 +1,7 @@
 
 """
 `module  JAC.Details`  
-    ... a submodel to collect Doc string information about further details about JAC.
+    ... a submodel to collect Doc string information about further details about the JAC program.
 """
 module Details
 
@@ -13,14 +13,14 @@ module Details
     + Auger.amplitude()                 ...... Amplitude for the Auger electron emission of an electron.
     + FormFactor.amplitude()            ...... Amplitude for the momentum transfer q.
     + Hfs.amplitude()                   ...... Amplitude for the hyperfine interaction with the magnetic-dipole or
-                                                electric-quadrupole field of the nucleus.
+                                               electric-quadrupole field of the nucleus.
     + LandeZeeman.amplitude()           ...... Amplitude for the interaction with an external magnetic field.
     + ParityNonConservation.amplitude() ...... PNC, anapole and EDM amplitudes.
     + PhotoIonization.amplitude()       ...... Photoionization amplitudes for the absorption of a photon and the release of a 
-                                                free electron.
+                                               free electron.
     + PhotoRecombination.amplitude()    ...... Photorecombination amplitudes for the emission of a photon due to the capture of a 
-                                                free electron.
-    + PhotoEmission.amplitude()             ...... Transition amplitude for the emission or absorption of an multipole photon.
+                                               free electron.
+    + PhotoEmission.amplitude()         ...... Transition amplitude for the emission or absorption of an multipole photon.
 
     """
     function amplitudes()  end
@@ -70,15 +70,15 @@ module Details
         see below.
 
 
-    #### `Atomic cascade computations` (not yet fully implemented)
+    #### `Atomic cascade computations`
 
         > computation = Atomic.Cascade(..)    ... specify the computation, either by Atomic.Cascade("interactive") 
-                                                    or by the use of explicit constructors.
+                                                  or by the use of explicit constructors.
         > perform(computation)                ... run the cascade computation, i.e. to determine all specifiec 
-                                                    transition amplitudes between levels from two or more charge states.
+                                                  transition amplitudes between levels from two or more charge states.
         > evaluate(data::CascadeData)         ... evaluate the set of lines and amplitudes due to different criteria 
-                                                    in order to obtain information about the cascade, such as ion yield,
-                                                    branching fractions, major decay pathes, etc.
+                                                  in order to obtain information about the cascade, such as ion yield,
+                                                  branching fractions, major decay pathes, etc.
                                                     
     + A cascade computation typically refers to three or more charge states of an atom that are connected by various processes, 
         such as photoionization, dielectronic recombination, Auger decay, radiative transitions, etc.
@@ -97,13 +97,13 @@ module Details
     #### `Time evolution of statistical tensors in (intense) light pusles` (not yet implemented)
 
         > pulse1 = Pulse.ExperimentalCharacterization(..)      ... specify one or several light pulses for the 
-                                                                    interaction of the atom with the radiation field.
+                                                                   interaction of the atom with the radiation field.
         > adapt(pulse1, pulse2, ...)                           ... to adapt the internal representation of the light 
-                                                                    pulses to a form that is suitable for the time 
-                                                                    evolution of the statistical tensors of the atom.
+                                                                   pulses to a form that is suitable for the time 
+                                                                   evolution of the statistical tensors of the atom.
         > frame = Atomic.LevelFrame(..)                        ... specify the level frame for the time evolution, 
-                                                                    either by Atomic.LevelFrame("interactive") or by 
-                                                                    the use of explicit constructors.
+                                                                   either by Atomic.LevelFrame("interactive") or by 
+                                                                   the use of explicit constructors.
         
         > evolve(tensors::Array{Statistical.Tensor,1}, ..)     ... perform the time evolution of the statistical 
         > evaluate(tensors::Array{Statistical.Tensor,1}, ..)       tensor due to the given information.
@@ -121,9 +121,9 @@ module Details
     #### `Semi-empirical estimates of cross sections, etc.` (not yet properly implemented)
 
         > estimation = Semiempirical.Estimation(..)       ... specify some properties and parameters that are to 
-                                                                be estimated.
+                                                              be estimated.
         > perform(estimation, ...)                        ... perform this estimation explicitly, often by 
-                                                                providing some additional information and parameters.                  
+                                                              providing some additional information and parameters.                  
                     
 
     + A semi-empirical `estimation' refers to simple model computation or the evaluation of some fit functions 
@@ -133,6 +133,13 @@ module Details
         tabulation, the total or shell-dependent electron-impact ionization cross sections as well as ...
     + Estimations are obtained without the explicit computation of matrix elements or quantum amplitudes and 
         are typically derived much faster than any ab-initio computation.
+
+
+    #### `Symbolic evaluation of expressions from Racah's algebra` (not yet properly implemented)
+
+    + We here hope for further support from outside-users.                                 
+
+
     """
     function kindsOfComputation()  end
 
@@ -306,14 +313,16 @@ module Details
     + **Covers the basics functionality of other established codes:** cf. Section Comparison with other (established) atomic structure codes
         above.
     + **Tutorials and examples at different level of complexity:** Cf. the method JAC.tutorials().
-    + **Supports and (re-) definition of physical constants, frequent settings and frameworks:** See the help pages ?JAC.Defaults.setDefaults and ?Defaults.convertUnits.
+    + **Supports and (re-) definition of physical constants, frequent settings and frameworks:** See the help pages ?JAC.Defaults.setDefaults 
+        and ?Defaults.convertUnits.
     + **Open-code project:**  We wish to encourage other user to make suggestions, request and improvements to the code.
 
 
     ### `Program design and definition of data struct's`
 
     + **Common source code design:**  The JAC program is designed with a rather 'flat' hierarchy; in the source code, all commands should 
-        almost always be called by their full name, e.g. Basics.compute(), JAC.Basics.display(), even if these methods are 'exportet' to the user's level.
+        almost always be called by their full name, e.g. Basics.compute(), JAC.Basics.display(), even if these methods are 'exportet' to the 
+        user's level.
     + All **data struct's should be well-adapted to the underlying physics, general assumptions and frameworks:** Indeed, these structs should 
         clearly reflect the 'building blocks' of atomic struture theory, and good care has been undertaken to find a proper balance between 
         types and subtypes. Therefore, a small number of arguments often enables one to perform rather complex tasks.
@@ -626,22 +635,22 @@ module Details
     """
     **`Interactive use of JAC procedures`**
 
-    Various functions (methods) are available in JAC which support the interactive generation and manipulation of data; 
+    Various functions (methods) are available in JAC.Basics which support the interactive generation and manipulation of data; 
     for example, use ? Basics.compute for all further details:
 
-        +      compute()        ... to compute angular coefficients; CI matrix; radial orbitals; radial potentials; ...
-        +  Defaults.convertUnits()        ... to convert units for energy, cross sections, rates, times, etc.; wave numbers; ...
-        +      define()         ... to define the framework; units for energy, cross sections, rates, etc.; standard grid; 
-                                    subshell list; methods for solving continuum orbitals and their normalization; ...
-        +  Basics.display()        ... to display constants and settings; ...
-        +      estimate()       ... to estimate ionization potentials; ...
-        +      generate()       ... to generate condensed multiplets; relativistic and non-relativistic configuration lists;
-                                    order shell and subshell lists; single-electron spectra; ...
-        +      give()           ... to give various physical constants; order shell and subshell lists; ...
-        +      integrate()      ... to integrate a function on a grid; ...
-        +      merge()          ... to merge (two or more) atomic basis; multiplete; ...
-        +      sort()           ... to sort the levels of (hyperfine) mutliplets by energy; ...
-        +      tabulate()       ... to tabulate (hyperfine) mutliplets by energy; ...
+        +      compute()            ... to compute angular coefficients; CI matrix; radial orbitals; radial potentials; ...
+        +  Defaults.convertUnits()  ... to convert units for energy, cross sections, rates, times, etc.; wave numbers; ...
+        +  Basics.display()         ... to display constants and settings; ...
+        +      estimate()           ... to estimate ionization potentials; ...
+        +      generate()           ... to generate condensed multiplets; relativistic and non-relativistic configuration lists;
+                                        order shell and subshell lists; single-electron spectra; ...
+        +      getDefaults()        ... to give various physical constants; order shell and subshell lists; ...
+        +      integrate()          ... to integrate a function on a grid; ...
+        +      merge()              ... to merge (two or more) atomic basis; multiplete; ...
+        +      setDefaults()        ... to define the framework; units for energy, cross sections, rates, etc.; standard grid; 
+                                        subshell list; methods for solving continuum orbitals and their normalization; ...
+        +      sort()               ... to sort the levels of (hyperfine) mutliplets by energy; ...
+        +      tabulate()           ... to tabulate (hyperfine) mutliplets by energy; ...
 
     """
     function interactive()  end
@@ -699,20 +708,20 @@ module Details
 
     Apart from approximate level energies and eigenvectors, JAC supports the computation of the following level properties:
 
-        + AlphaX         ... alpha variations; differential sensitivity parameters.
-        + Einstein       ... Einstein A, B coefficients and oscillator strength; although these coefficients are not an original level property, 
+        + AlphaX        ... alpha variations; differential sensitivity parameters.
+        + Einstein      ... Einstein A, B coefficients and oscillator strength; although these coefficients are not an original level property, 
                             Einstein treats these computations within a single basis/multiplet and, hence, cannot include relaxation effects, 
                             etc. The Einstein feature of JAC can be used, however, for a quick overwiew to transition probabilities or in order 
                             to simplify cascade computations.
-        + FormF          ... Standard and modified atomic form factors.
-        + Greens         ... Greens function of an atomic level.
-        + HFS            ... Hyperfine A and B parameters.
-        + Isotope        ... Isotope shift M and F parameters.
-        + LandeJ         ... Lande g_J factors.
-        + LandeF         ... Lande g_F factors.
-        + Polarity       ... Static and dynamic polarizibilities of atomic levels.
-        + Plasma         ... CI computations including interactions from various plasma models.
-        + Yields         ... Fluoerescence and Auger yields of atomic levels.
+        + FormF         ... Standard and modified atomic form factors.
+        + Greens        ... Greens function of an atomic level.
+        + HFS           ... Hyperfine A and B parameters.
+        + Isotope       ... Isotope shift M and F parameters.
+        + LandeJ        ... Lande g_J factors.
+        + LandeF        ... Lande g_F factors.
+        + Polarity      ... Static and dynamic polarizibilities of atomic levels.
+        + Plasma        ... CI computations including interactions from various plasma models.
+        + Yields        ... Fluoerescence and Auger yields of atomic levels.
 
     """
     function properties()  end
@@ -822,20 +831,20 @@ module Details
                             combinations of data types (classes). Julia shows that this is remarkably well-suited for numerical computing.
 
     + `Code re-use`: In good language design, on should be able to write a general implementation and, as long as the necessary operations are
-                    available, the code should just work.
+                        available, the code should just work.
 
     + `Type system`: Julia's expressive type system that allows opional type annotations; this type system supports an agressive code specializiation
-                    against run-time types. Over a large extent, however, Julia code can be used without any mentioning of types (in contrast to
-                    C and Fortran); this is achieved by data-flow interference.-- User's own types are also first class in Julia, that is there 
-                    is not meaningful distinction between built-in and user-defined types. There are mutable and (default: immutable) 
-                    composite types.
+                        against run-time types. Over a large extent, however, Julia code can be used without any mentioning of types (in contrast to
+                        C and Fortran); this is achieved by data-flow interference.-- User's own types are also first class in Julia, that is there 
+                        is not meaningful distinction between built-in and user-defined types. There are mutable and (default: immutable) 
+                        composite types.
 
     + `Parallelization`: One of the central motivation to built Julia was the design of a parallel computing language. Therefore, Julia provides
-                        different facilities for parallelism. Two important concepts are 'remote calls'  and 'remote references'; cf.
-                        @parallel. In contrast, vectorization is in Julia NOT considered as a pre-requisite for performance.
+                            different facilities for parallelism. Two important concepts are 'remote calls'  and 'remote references'; cf.
+                            @parallel. In contrast, vectorization is in Julia NOT considered as a pre-requisite for performance.
 
     + `Performance`: There are helpful macros, such as @timing function_call(parameters) or @benchmark function_call(parameters) to analyze the
-                    performance of the program and to find (and resolve) bottlenecks.
+                        performance of the program and to find (and resolve) bottlenecks.
 
     + `Code developers`: In numerical and scientific computing, people with special skills are sometimes called library or package writers, while 
                         many others just use these libraries and packages.
@@ -847,10 +856,10 @@ module Details
                 inserted into the code for later compilation. The output of macros is often 'inlined' into the code.
 
     + `Physical models`: However, better physics is more important than better computer science. It is recommended to use modern but well-proven
-                        computer-science techniques, and a 'physics code' should not be a computer-science research project. Instead, one should
-                        use best engineering practices to improve quality rather tha processes. Emphasis should be given to improvements of the 
-                        physics capabilities. Do not use the latest computer-science features; let the new ideas mature first. Better physics is the
-                        most important product of the code.
+                            computer-science techniques, and a 'physics code' should not be a computer-science research project. Instead, one should
+                            use best engineering practices to improve quality rather tha processes. Emphasis should be given to improvements of the 
+                            physics capabilities. Do not use the latest computer-science features; let the new ideas mature first. Better physics is the
+                            most important product of the code.
     
     + The scale of code-development can be truly immense; a good overview/quantitative database about (previously) successful software projects is
         required for good estimation for resources and schedules. It is easy to loose motivation on a project that last years and which has few

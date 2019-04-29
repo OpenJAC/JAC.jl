@@ -1,12 +1,12 @@
 
 """
-`module  JAC.Bsplines`  ... a submodel of JAC that contains all structs and methods to deal with the B-spline generation and the self-consistent
-                            field; it is using Printf, JAC, JAC.ManyElectron, JAC.Radial.
+`module  JAC.Bsplines`  
+    ... a submodel of JAC that contains all structs and methods to deal with the B-spline generation and the self-consistent field.
 """
 module Bsplines
 
-    using  Printf,  JAC, ..Basics, ..Defaults,  ..Basics, ..ManyElectron, ..Radial, ..Nuclear
-    global JAC_counter = 0
+    using  Printf, ..AngularMomentum, ..Basics, ..Defaults,  ..Basics, ..ManyElectron, ..Radial, ..Nuclear, JAC
+    ##x global JAC_counter = 0
 
 
     """
@@ -52,14 +52,14 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.generateMatrix!(kappa::Int64, TTp::String, primitives::Bsplines.Primitives, storage::Dict{Array{Any,1},Array{Float64,2}})`  
+    `Bsplines.generateMatrix!(kappa::Int64, TTp::String, primitives::Bsplines.Primitives, storage::Dict{Array{Any,1},Array{Float64,2}})`  
          ... generates some (specified part of the Hamiltonian) matrix for the generalized eigenvalue problem and stores them into 
-         the dictionary storage. The methods first tests of whether this matrix has been computed before alreay. Apart from the 
-         overlap matrices (kappa = 0), all matrices belong to a particular single-electron angular momentum and to some matrix-block 
-         of the overall eigenvalue problem. TTp = { 'LL', 'LS', 'SL', 'SS'} specifies the particular block, for which the B-splines 
-         are given by primitivesT and primitivesTp. All B-splines are supposed to be defined with regard to the same (radial) grid; 
-         an error message is issued if this is not the case. -- A matrix::Array{Float64,2} is returned which is quadratic for 
-         'LL' and 'SS' and whose dimension depends on the number of B-splines for the large and small component, otherwise.
+            the dictionary storage. The methods first tests of whether this matrix has been computed before alreay. Apart from the 
+            overlap matrices (kappa = 0), all matrices belong to a particular single-electron angular momentum and to some matrix-block 
+            of the overall eigenvalue problem. TTp = { 'LL', 'LS', 'SL', 'SS'} specifies the particular block, for which the B-splines 
+            are given by primitivesT and primitivesTp. All B-splines are supposed to be defined with regard to the same (radial) grid; 
+            an error message is issued if this is not the case. -- A matrix::Array{Float64,2} is returned which is quadratic for 
+            'LL' and 'SS' and whose dimension depends on the number of B-splines for the large and small component, otherwise.
     """
     function generateMatrix!(kappa::Int64, TTp::String, primitives::Bsplines.Primitives, storage::Dict{Array{Any,1},Array{Float64,2}})
         # Look up the dictioniary of whether the requested matrix was calculated before
@@ -108,9 +108,9 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.generateOrbitalFromPrimitives(sh::Subshell, wc::Basics.Eigen, primitives::Bsplines.Primitives)`  ... generates the large 
-         and small components for the subshell sh from the primitives and their eigenvalues & eigenvectors. A (normalized) 
-         orbital::Orbital is returned.
+    `Bsplines.generateOrbitalFromPrimitives(sh::Subshell, wc::Basics.Eigen, primitives::Bsplines.Primitives)`  
+        ... generates the large and small components for the subshell sh from the primitives and their eigenvalues & eigenvectors. 
+            A (normalized) orbital::Orbital is returned.
     """
     function generateOrbitalFromPrimitives(sh::Subshell, wc::Basics.Eigen, primitives::Bsplines.Primitives)
         nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
@@ -146,21 +146,21 @@ module Bsplines
         wSign     = sum( Px[1:20] )
         if  wSign < 0.   Px[1:mtp] = -Px[1:mtp];   Qx[1:mtp] = -Qx[1:mtp]   
                          Pprimex[1:mtp] = -Pprimex[1:mtp];   Qprimex[1:mtp] = -Qprimex[1:mtp]   end
-        orbital   = Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, JAC.Radial.Grid())
+        orbital   = Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, Radial.Grid())
         
         # Renormalize the radial orbital   
         wN        = sqrt( JAC.RadialIntegrals.overlap(orbital, orbital, primitives.grid) )
         Px[1:mtp] = Px[1:mtp] / wN;    Qx[1:mtp] = Qx[1:mtp] / wN
         Pprimex[1:mtp] = Pprimex[1:mtp] / wN;    Qprimex[1:mtp] = Qprimex[1:mtp] / wN    
         
-        return( Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, JAC.Radial.Grid()) )   
+        return( Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, Radial.Grid()) )   
     end
 
 
     """
-    `JAC.Bsplines.generateOrbitalFromPrimitives(energy::Float64, sh::Subshell, mtp::Int64, ev::Array{Float64,1}, primitives::Bsplines.Primitives)`  
+    `Bsplines.generateOrbitalFromPrimitives(energy::Float64, sh::Subshell, mtp::Int64, ev::Array{Float64,1}, primitives::Bsplines.Primitives)`  
          ... generates the large and small components for the subshell sh from the primitives and the eigenvector ev. 
-         A (non-normalized) orbital::Orbital is returned.
+            A (non-normalized) orbital::Orbital is returned.
     """
     function generateOrbitalFromPrimitives(energy::Float64, sh::Subshell, mtp::Int64, ev::Array{Float64,1}, primitives::Bsplines.Primitives)
         nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
@@ -201,15 +201,16 @@ module Bsplines
         
         ##x println("nr = $(primitives.grid.nr),  mtp = $mtp")                 
       
-        return( Orbital(sh, false, true, energy, Px, Qx, Pprimex, Qprimex, JAC.Radial.Grid()) )   
+        return( Orbital(sh, false, true, energy, Px, Qx, Pprimex, Qprimex, Radial.Grid()) )   
     end
 
 
     """
-    `JAC.Bsplines.generatePrimitives(grid::Radial.Grid)`  ... generates the knots and the B-spline primitives of order k, both for the large
-         ad small components. The function applies the given grid parameters; no primitive is defined beyond grid[n_max]. The definition of 
-         the primitives follow the work of Zatsarinny and Froese Fischer, CPC 202 (2016) 287. --- A (set of) primitives::Bsplines.Primitives 
-         is returned.
+    `Bsplines.generatePrimitives(grid::Radial.Grid)`  
+        ... generates the knots and the B-spline primitives of order k, both for the large and small components. 
+            The function applies the given grid parameters; no primitive is defined beyond grid[n_max]. The definition of 
+            the primitives follow the work of Zatsarinny and Froese Fischer, CPC 202 (2016) 287. --- A (set of) 
+            primitives::Bsplines.Primitives is returned.
     """
     function generatePrimitives(grid::Radial.Grid)
         !(1 <= grid.orderL <= 11)   &&   error("Order should be 2 <= grid.orderL <= 11; obtained order = $(grid.orderL)")
@@ -233,7 +234,7 @@ module Bsplines
             # 
             for  j = lower:upper   bprime[j] = Bsplines.generateSplinePrime(i, grid.orderL, grid.t, grid.r[j])    end
             #
-            push!( primitivesL, JAC.Bsplines.Bspline( i, grid.orderL, lower, upper, copy(bspline), copy(bprime) ) )
+            push!( primitivesL, Bsplines.Bspline( i, grid.orderL, lower, upper, copy(bspline), copy(bprime) ) )
         end
         #
         for  i = 2:grid.nsS+1
@@ -250,17 +251,18 @@ module Bsplines
             # 
             for  j = lower:upper   bprime[j] = Bsplines.generateSplinePrime(i, grid.orderS, grid.t, grid.r[j])    end
             #
-            push!( primitivesS, JAC.Bsplines.Bspline( i, grid.orderS, lower, upper, copy(bspline), copy(bprime) ) )
+            push!( primitivesS, Bsplines.Bspline( i, grid.orderS, lower, upper, copy(bspline), copy(bprime) ) )
         end
         
-        return( JAC.Bsplines.Primitives(grid, primitivesL, primitivesS) )
+        return( Bsplines.Primitives(grid, primitivesL, primitivesS) )
     end
 
 
 
     """
-    `JAC.Bsplines.generateSpline(i::Int64, k::Int64, tlist::Array{Float64,1}, r::Float64)`  ... generates the i-th B-spline of
-         order k at the radial point r; this generation is carried out recursively. A value::Float64 is returned.
+    `Bsplines.generateSpline(i::Int64, k::Int64, tlist::Array{Float64,1}, r::Float64)`  
+        ... generates the i-th B-spline of order k at the radial point r; this generation is carried out recursively. 
+            A value::Float64 is returned.
     """
     function generateSpline(i::Int64, k::Int64, tlist::Array{Float64,1}, r::Float64)
         if      i == 1   &&   0  ==  r                      return( 1.0 )    
@@ -278,8 +280,9 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.generateSplinePrime(i::Int64, k::Int64, tlist::Array{Float64,1}, r::Float64)` ... generates the first derivative of the 
-         i-th B-spline of order k at the radial point r; it uses the values of related B-splines at the same point. A value::Float64 is returned.
+    `Bsplines.generateSplinePrime(i::Int64, k::Int64, tlist::Array{Float64,1}, r::Float64)` 
+        ... generates the first derivative of the i-th B-spline of order k at the radial point r; it uses the values of related
+            B-splines at the same point. A value::Float64 is returned.
     """
     function generateSplinePrime(i::Int64, k::Int64, tlist::Array{Float64,1}, r::Float64)
         wa = 0.
@@ -302,9 +305,9 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.setupLocalMatrix(kappa::Int64, primitives::Bsplines.Primitives, pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}}) 
+    `Bsplines.setupLocalMatrix(kappa::Int64, primitives::Bsplines.Primitives, pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}}) 
          ...setp-up the local parts of the generalized eigenvalue problem for the symmetry block kappa and the given (local) potential. 
-         The B-spline (basis) functions are defined by primitivesL for the large component and primitivesS for the small one, respectively.
+            The B-spline (basis) functions are defined by primitivesL for the large component and primitivesS for the small one, respectively.
     """
     function setupLocalMatrix(kappa::Int64, primitives::Bsplines.Primitives, pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}})
         nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
@@ -350,7 +353,7 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.generateGalerkinMatrix(primitives::Bsplines.Primitives, energy::Float64, sh::Subshell, pot::Radial.Potential)`  
+    `Bsplines.generateGalerkinMatrix(primitives::Bsplines.Primitives, energy::Float64, sh::Subshell, pot::Radial.Potential)`  
         ... generates the Galerkin-A matrix for the given potential and B-spline primitives; a matrix::Array{Float64,2} is returned.
     """
     function generateGalerkinMatrix(primitives::Bsplines.Primitives, energy::Float64, sh::Subshell, pot::Radial.Potential)
@@ -372,23 +375,24 @@ module Bsplines
 
 
     #==  """
-    `JAC.Bsplines.generateOrbitalContinuum(subshell::Subshell, energy::Float64, potential::Radial.Potential, grid::Radial.Grid, mtp::Int64, 
-                                           basis::Basis)`  ... generates a continuum orbital for given subshell, energy and potential
-         (effective charge Z(r)) within a B-spline basis. This orbital is constructed by setting up and solving a linear system of equations and 
-         orthogonal to all (bound) orbitals in the given basis. For this, the one-particle Dirac equation is re-written as matrix equation in 
-         order to determine coefficients in a B-spline basis. A continuum orbital::Radial.Orbital is returned.
+    `Bsplines.generateOrbitalContinuum(subshell::Subshell, energy::Float64, potential::Radial.Potential, grid::Radial.Grid, mtp::Int64, 
+                                           basis::Basis)`  
+        ... generates a continuum orbital for given subshell, energy and potential (effective charge Z(r)) within a B-spline basis. 
+            This orbital is constructed by setting up and solving a linear system of equations and orthogonal to all (bound) 
+            orbitals in the given basis. For this, the one-particle Dirac equation is re-written as matrix equation in 
+            order to determine coefficients in a B-spline basis. A continuum orbital::Radial.Orbital is returned.
     """
     function generateOrbitalContinuum(subshell::Subshell, energy::Float64, potential::Radial.Potential, grid::Radial.Grid, mtp::Int64, basis::Basis)
         println("Now prepare a continuum orbital for $sh ")
         N = 19;   K = 0
-        waL = JAC.Bsplines.generatePrimitives(4, N, grid )
-        waS = JAC.Bsplines.generatePrimitives(5, N, grid )
+        waL = Bsplines.generatePrimitives(4, N, grid )
+        waS = Bsplines.generatePrimitives(5, N, grid )
         whe = zeros(N-1, N-1);   wd = zeros(N-1)
         # First set up the matrix and overlap for the bound orbitals of the same symmetry
         for   sh in basis.subshells
             if  sh.kappa == subshell.kappa 
                K = K + 1
-               ## for  n = 1:N-1   whe[K, n] = JAC. 
+               ## for  n = 1:N-1   whe[K, n] =  
             end
         end 
 
@@ -399,7 +403,7 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.generateOrbitalsHydrogenic(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, 
+    `Bsplines.generateOrbitalsHydrogenic(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, 
                                              subshells::Array{Subshell,1}; printout::Bool=true)`  
         ... generates the hydrogenic orbitals for the nuclear model and for the given subshells. A set of 
             orbitals::Dict{Subshell, Orbital}() is returned.
@@ -432,11 +436,11 @@ module Bsplines
         # Define the nuclear potential for the give nuclear model
         if  printout    println("Nuclear model = $(nuclearModel) ")    end
         if       nuclearModel.model == "point"
-            pot = JAC.Nuclear.pointNucleus(nuclearModel.Z, primitives.grid)
+            pot = Nuclear.pointNucleus(nuclearModel.Z, primitives.grid)
         elseif   nuclearModel.model == "Fermi"
-            pot = JAC.Nuclear.fermiDistributedNucleus(nuclearModel.radius, nuclearModel.Z, primitives.grid) 
+            pot = Nuclear.fermiDistributedNucleus(nuclearModel.radius, nuclearModel.Z, primitives.grid) 
         elseif   nuclearModel.model == "uniform"
-            pot = JAC.Nuclear.uniformNucleus(nuclearModel.radius, nuclearModel.Z, primitives.grid)
+            pot = Nuclear.uniformNucleus(nuclearModel.radius, nuclearModel.Z, primitives.grid)
         else
             error("stop a")
         end
@@ -447,7 +451,7 @@ module Bsplines
             # 
             sh = subshells[i]
             if  printout    println("Generate hydrogenic orbital for subshell $sh ")    end
-            wa = JAC.Bsplines.setupLocalMatrix(sh.kappa, primitives, pot, storage)
+            wa = Bsplines.setupLocalMatrix(sh.kappa, primitives, pot, storage)
             w2 = Basics.diagonalize("generalized eigenvalues: Julia, eigfact", wa, wb)
             nsi = nsS;    if sh.kappa > 0   nsi = nsi + 1   end
             if  printout    Basics.tabulateKappaSymmetryEnergiesDirac(sh.kappa, w2.values, nsi, nuclearModel)    end
@@ -468,7 +472,7 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.solveSelfConsistentFieldOptimized(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis,
+    `Bsplines.solveSelfConsistentFieldOptimized(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis,
                                                     settings::AsfSettings; printout::Bool=true)` 
         ... solves the self-consistent field for ...     A basis::Basis is returned.
     """
@@ -487,7 +491,7 @@ module Bsplines
 
 
     """
-    `JAC.Bsplines.solveSelfConsistentFieldMean(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
+    `Bsplines.solveSelfConsistentFieldMean(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
                                                settings::AsfSettings; printout::Bool=true)` 
         ... solves the self-consistent field for a given local mean-field potential as specified by the settings::AsfSettings. 
             A basis::Basis is returned.
@@ -516,7 +520,7 @@ module Bsplines
         bsplineBlock = Dict{Int64,Basics.Eigen}();   previousOrbitals = deepcopy(basis.orbitals)
         for  kappa  in  kappas           bsplineBlock[kappa]  = Basics.Eigen( zeros(2), [zeros(2), zeros(2)])   end
         # Determine te nuclear potential once at the beginning
-        nuclearPotential  = JAC.Nuclear.nuclearPotential(nuclearModel, grid)
+        nuclearPotential  = Nuclear.nuclearPotential(nuclearModel, grid)
         
         # Start the SCF procedure for all symmetries
         isNotSCF = true;   NoIteration = 0
@@ -533,7 +537,7 @@ module Bsplines
                 wBasis = Basis(true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, previousOrbitals)
                 NoCsf  = length(wBasis.csfs)
                 wmc    = zeros( NoCsf );   wN = 0.
-                for i = 1:NoCsf   wmc[i] = JAC.AngularMomentum.twoJ(wBasis.csfs[i].J) + 1.0;   wN = wN + abs(wmc[i])^2    end
+                for i = 1:NoCsf   wmc[i] = AngularMomentum.twoJ(wBasis.csfs[i].J) + 1.0;   wN = wN + abs(wmc[i])^2    end
                 for i = 1:NoCsf   wmc[i] = wmc[i] / sqrt(wN)   end
                 wLevel = Level( AngularJ64(0), AngularM64(0), Basics.plus, 0, -1., 0., true, wBasis, wmc)
                 # (2) Re-compute the local potential
@@ -551,7 +555,7 @@ module Bsplines
                 end
                 pot = Basics.add(nuclearPotential, wp)
                 # (3) Set-up the diagonal part of the Hamiltonian matrix
-                wa = JAC.Bsplines.setupLocalMatrix(kappa, primitives, pot, storage)
+                wa = Bsplines.setupLocalMatrix(kappa, primitives, pot, storage)
                 # (4) Solve the generalized eigenvalue problem
                 wc = Basics.diagonalize("generalized eigenvalues: Julia, eigfact", wa, wb)
                 # (5) Analyse and print information about the convergence of the symmetry blocks and the occupied orbitals

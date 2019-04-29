@@ -1,17 +1,18 @@
 
 """
-`module  JAC.Tools`  ... a submodel of JAC that contains all methods for providing a toolbox for -- more o less --
-                         simple tools for the JAC program; it is using JAC.
+`module  JAC.Tools`  
+    ... a submodel of JAC that contains all methods for providing a toolbox for -- more o less --
+        simple tools for the JAC program.
 """
 module Tools
 
-    using Interact, JAC
-
+    using Interact
 
     """
-    `struct  Tools.Settings`  ... defines a type for the settings in estimating double-Auger and autoionization rates.
+    `struct  Tools.Settings`  
+        ... defines a type for the settings in estimating double-Auger and autoionization rates.
 
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBeforeComputation  ::Bool   ... True, if all energies and lines are printed before their evaluation.
     """
     struct Settings
         printBeforeComputation    ::Bool
@@ -20,13 +21,13 @@ module Tools
 
 
     """
-    `JAC.Tools.perform(obs::Observable{Any})`  ... performs different tasks due to the given Observable.
+    `Tools.perform(obs::Observable{Any})`  ... performs different tasks due to the given Observable.
     """
     function perform(obs::Observable{Any})
         ##x println(obs[])
         #
         if      obs[] == "Start task"          println("Nothing is implemented here.")
-        elseif  obs[] == "Grid calculator"     JAC.Tools.taskGridCalculator()
+        elseif  obs[] == "Grid calculator"     Tools.taskGridCalculator()
         else                                   error("stop a")
         end
         return( nothing )
@@ -34,7 +35,7 @@ module Tools
 
 
     """
-    `JAC.Tools.select()`  ... select different tools from a menu for which no further input is required.
+    `Tools.select()`  ... select different tools from a menu for which no further input is required.
     """
     function select()
         t1 = "Simple tools JAC without input: "
@@ -50,16 +51,17 @@ module Tools
 
 
     """
-    `JAC.Tools.select(dict::Dict)`  ... select different tools from a menu if proper results::dict are given in terms of a dictionary as obtained
-                                        usually from an Atomic.Computation.
+    `Tools.select(dict::Dict)`  
+        ... select different tools from a menu if proper results::dict are given in terms of a dictionary as obtained
+            usually from an Atomic.Computation.
     """
     function select(dict::Dict)
-        println("JAC.Tools.select(): A menu if a dict comes in; $dict ")
+        println("Tools.select(): A menu if a dict comes in; $dict ")
     end
 
 
     """
-    `JAC.Tools.taskGridCalculator()`  ... grid calculator to determine useful grid parameters
+    `Tools.taskGridCalculator()`  ... grid calculator to determine useful grid parameters
     """
     function taskGridCalculator()
         t1 = "Grid calculator: Determine 'one' of the grid parameters if all others are given explicitly by the user. " *
@@ -87,7 +89,7 @@ module Tools
 
 
     """
-    `JAC.Tools.taskGridCalculatorResults()`  ... prints the results of the grid computations
+    `Tools.taskGridCalculatorResults()`  ... prints the results of the grid computations
     """
     function taskGridCalculatorResults(rnt::Float64, h::Float64, hp::Float64, rmax::Float64)
         println("** $rnt  $h  $hp  $rmax")

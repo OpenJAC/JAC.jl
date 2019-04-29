@@ -1,23 +1,24 @@
 
 """
-`module JAC.RadialIntegrals`  ... a submodel of JAC that contains methods for calculating radial one- and two-particle matrix elements. 
-                                  These integrals occur frequently in atomic structure and collision theory, and their fast computations 
-                                  often appears essential. This submodul is using GSL, QuadGK, and JAC, JAC.Radial, JAC.Math.
+`module JAC.RadialIntegrals`  
+    ... a submodel of JAC that contains methods for calculating radial one- and two-particle matrix elements. These integrals occur 
+        frequently in atomic structure and collision theory, and their fast computations often appears essential.
 """
 module  RadialIntegrals
 
-    using  JAC, ..Basics, ..Defaults,  ..Radial, ..Math, GSL, QuadGK
-    global JAC_counter = 0
+    using  GSL, QuadGK
+    using  ..AngularMomentum, ..Basics, ..Bsplines, ..Defaults,  ..Radial, ..Math, ..Nuclear
+    ##x global JAC_counter = 0
   
   
     """
-    `JAC.RadialIntegrals.GrantIab(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, potential::Radial.Potential)`  ... computes the 
-         (radial) single-electron energy integral:
+    `RadialIntegrals.GrantIab(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, potential::Radial.Potential)`  
+        ... computes the (radial) single-electron energy integral:
 
-         `I(ab) = <a | h_D | b> = delta_{kappa_a, kappa_b} int_0^infty dr  [ c Q_a ( d/dr + kappa_a/r ) P_b +  c P_a (-d/dr + kappa_a/r ) Q_b
-                                                                             - 2c^2 Q_a Q_b + V_nuc (r) (P_a P_b + Q_a Q_b) ]`
+            `I(ab) = <a | h_D | b> = delta_{kappa_a, kappa_b} int_0^infty dr  [ c Q_a ( d/dr + kappa_a/r ) P_b +  c P_a (-d/dr + kappa_a/r ) Q_b
+                                                                                - 2c^2 Q_a Q_b + V_nuc (r) (P_a P_b + Q_a Q_b) ]`
                                   
-         for the orbitals a and b on the grid. potential.Zr must provide the effective nuclear charge Z(r) on this grid.
+            for the orbitals a and b on the grid. potential.Zr must provide the effective nuclear charge Z(r) on this grid.
     """
     function GrantIab(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, potential::Radial.Potential)
         if  a.subshell.kappa != b.subshell.kappa    return( 0 )    end
@@ -27,20 +28,20 @@ module  RadialIntegrals
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGrasp
     
-            function f1(i::Int64)   dPb(j) = JAC.Math.derivative(b.P, j)
-                                    dQb(j) = JAC.Math.derivative(b.Q, j)
+            function f1(i::Int64)   dPb(j) = Math.derivative(b.P, j)
+                                    dQb(j) = Math.derivative(b.Q, j)
                                     return( a.Q[i] * dPb(i) - a.P[i] * dQb(i) )                          end
             function f2(i::Int64)   return( (a.Q[i] * b.P[i] + a.P[i] * b.Q[i]) / grid.r[i] )            end
             function f3(i::Int64)   return( a.Q[i] * b.Q[i] )                                            end
             function f4(i::Int64)   return( -Zr[i] * (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) / grid.r[i] )   end
     
-            I1 = JAC.Math.integrateFit(f1, min(size(a.P, 1), size(b.P, 1)), grid) / grid.h
-            I2 = JAC.Math.integrateFitTransform(f2, min(size(a.P, 1), size(b.P, 1)), grid)
-            I3 = JAC.Math.integrateFitTransform(f3, min(size(a.P, 1), size(b.P, 1)), grid)
-            I4 = JAC.Math.integrateFitTransform(f4, min(size(a.P, 1), size(b.P, 1)), grid)
+            I1 = Math.integrateFit(f1, min(size(a.P, 1), size(b.P, 1)), grid) / grid.h
+            I2 = Math.integrateFitTransform(f2, min(size(a.P, 1), size(b.P, 1)), grid)
+            I3 = Math.integrateFitTransform(f3, min(size(a.P, 1), size(b.P, 1)), grid)
+            I4 = Math.integrateFitTransform(f4, min(size(a.P, 1), size(b.P, 1)), grid)
     
-            return( JAC.INVERSE_FINE_STRUCTURE_CONSTANT * I1 + JAC.INVERSE_FINE_STRUCTURE_CONSTANT * kappa * I2 -
-                    2 * JAC.INVERSE_FINE_STRUCTURE_CONSTANT^2 * I3 + I4 )
+            return( Defaults.INVERSE_FINE_STRUCTURE_CONSTANT * I1 + Defaults.INVERSE_FINE_STRUCTURE_CONSTANT * kappa * I2 -
+                    2 * Defaults.INVERSE_FINE_STRUCTURE_CONSTANT^2 * I3 + I4 )
                     
         elseif  grid.mesh == MeshGL
             wa = 0.
@@ -58,16 +59,17 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.GrantILminus(L::Int64, q::Float64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)`  ... computes  
-         Grant's (radial) integral for two relativistic orbitals:  I_L^- (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a Q_b - Q_a P_b ] .
+    `RadialIntegrals.GrantILminus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
+        ... computes Grant's (radial) integral for two relativistic orbitals:  
+            I_L^- (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a Q_b - Q_a P_b ] .
     """
-    function GrantILminus(L::Int64, q::Float64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)
+    function GrantILminus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGrasp
             function f(i :: Int64)    return( (a.P[i] * b.Q[i] - a.Q[i] * b.P[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) )       end
-            return( JAC.Math.integrateFitTransform(f, mtp, grid) )
+            return( Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 2:mtp   wa = wa + (a.P[i] * b.Q[i] - a.Q[i] * b.P[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) * grid.wr[i]   end
@@ -79,16 +81,17 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.GrantILplus(L::Int64, q::Float64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)`  ... computes  
-         Grant's (radial) integral for two relativistic orbitals:  I_L^+ (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a Q_b + Q_a P_b ] .
+    `RadialIntegrals.GrantILplus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
+        ... computes Grant's (radial) integral for two relativistic orbitals:  
+            I_L^+ (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a Q_b + Q_a P_b ] .
     """
-    function GrantILplus(L::Int64, q::Float64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)
+    function GrantILplus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGrasp
             function f(i :: Int64)    return( (a.P[i] * b.Q[i] + a.Q[i] * b.P[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) )       end
-            return( JAC.Math.integrateFitTransform(f, mtp, grid) )
+            return( Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 2:mtp   wa = wa + (a.P[i] * b.Q[i] + a.Q[i] * b.P[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) * grid.wr[i]   end
@@ -100,16 +103,17 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.GrantIL0(L::Int64, q::Float64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)`  ... computes  
-         Grant's (radial) integral for two relativistic orbitals:  I_L^0 (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a Q_b ] .
+    `RadialIntegrals.GrantIL0(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
+        ... computes Grant's (radial) integral for two relativistic orbitals:  
+            I_L^0 (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a Q_b ] .
     """
-    function GrantIL0(L::Int64, q::Float64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)
+    function GrantIL0(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGrasp
             function f(i :: Int64)    return( (a.P[i] * b.Q[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) )       end
-            return( JAC.Math.integrateFitTransform(f, mtp, grid) )
+            return( Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 2:mtp   wa = wa + (a.P[i] * b.Q[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) * grid.wr[i]   end
@@ -121,16 +125,17 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.GrantJL(L::Int64, q::Float64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)`  ... computes  
-         Grant's (radial) integral for two relativistic orbitals:  J_L (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a P_b + Q_a Q_b ] .
+    `RadialIntegrals.GrantJL(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
+        ... computes Grant's (radial) integral for two relativistic orbitals:  
+            J_L (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a P_b + Q_a Q_b ] .
     """
-    function GrantJL(L::Int64, q::Float64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)
+    function GrantJL(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGrasp
             function f(i :: Int64)    return( (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) )       end
-            return( JAC.Math.integrateFitTransform(f, mtp, grid) )
+            return( Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 2:mtp   wa = wa + (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) * grid.wr[i]   end
@@ -142,8 +147,8 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.isotope_nms(a::Orbital, b::Orbital, Z::Float64, grid::Radial.Grid)`  ... computes the normal mass shift 
-         radial integral int_o^infty ... A value::Float64 is returned.
+    `RadialIntegrals.isotope_nms(a::Orbital, b::Orbital, Z::Float64, grid::Radial.Grid)`  
+        ... computes the normal mass shift radial integral int_o^infty ... A value::Float64 is returned.
     """
     function isotope_nms(a::Orbital, b::Orbital, Z::Float64, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(b.P, 1));   lb = Basics.subshell_l(b.subshell);    jb2   = Basics.subshell_2j(b.subshell)
@@ -169,8 +174,8 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.isotope_smsB(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)`  ... computes the specific mass shift 
-         radial integral int_o^infty ... A value::Float64 is returned.
+    `RadialIntegrals.isotope_smsB(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)`  
+        ... computes the specific mass shift radial integral int_o^infty ... A value::Float64 is returned.
     """
     function isotope_smsB(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(c.P, 1));   alphaZ = Defaults.getDefaults("alpha") * Z
@@ -182,8 +187,8 @@ module  RadialIntegrals
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 2:mtp   
-                wb = (- a.Q[i] * c.P[i] * JAC.AngularMomentum.sigma_reduced_me(minusa, c.subshell)  +
-                        c.Q[i] * a.P[i] * JAC.AngularMomentum.sigma_reduced_me(a.subshell, minusc)  )
+                wb = (- a.Q[i] * c.P[i] * AngularMomentum.sigma_reduced_me(minusa, c.subshell)  +
+                        c.Q[i] * a.P[i] * AngularMomentum.sigma_reduced_me(a.subshell, minusc)  )
                 wa = wa - alphaZ / grid.r[i] * wb * grid.wr[i]   
             end
             return( wa )
@@ -194,8 +199,8 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.isotope_smsC(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)`  ... computes the specific mass shift 
-         radial integral int_o^infty ... A value::Float64 is returned.
+    `RadialIntegrals.isotope_smsC(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)`  
+        ... computes the specific mass shift radial integral int_o^infty ... A value::Float64 is returned.
     """
     function isotope_smsC(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(c.P, 1));   alphaZ = Defaults.getDefaults("alpha") * Z
@@ -216,11 +221,11 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.nondiagonalD(pm::Int64, kappa::Int64, bspline1::JAC.Bsplines.Bspline, bspline2::JAC.Bsplines.Bspline, grid::Radial.Grid)`  
-         ... computes the (radial and non-diagonal) D_kappa^+/- integral two the bsplines, all defined on grid
-              <bspline1| +/- d/dr + kappa/r | bspline2>. -- pm = +1/-1 provides the phase for taking the derivative.
+    `RadialIntegrals.nondiagonalD(pm::Int64, kappa::Int64, bspline1::Bsplines.Bspline, bspline2::Bsplines.Bspline, grid::Radial.Grid)`  
+        ... computes the (radial and non-diagonal) D_kappa^+/- integral two the bsplines, all defined on grid
+            <bspline1| +/- d/dr + kappa/r | bspline2>. -- pm = +1/-1 provides the phase for taking the derivative.
     """
-    function nondiagonalD(pm::Int64, kappa::Int64, bspline1::JAC.Bsplines.Bspline, bspline2::JAC.Bsplines.Bspline, grid::Radial.Grid) 
+    function nondiagonalD(pm::Int64, kappa::Int64, bspline1::Bsplines.Bspline, bspline2::Bsplines.Bspline, grid::Radial.Grid) 
         if  bspline1.upper <= bspline2.lower  ||  bspline2.upper <= bspline1.lower    return( 0. )   end
         mtp = min( bspline1.upper, bspline2.upper)
         n0  = max( bspline1.lower, bspline2.lower)
@@ -238,8 +243,8 @@ module  RadialIntegrals
                 return( wa )
             end
     
-            I1 = JAC.Math.integrateTransform(f1, n0, mtp, grid)
-            I2 = JAC.Math.integrateTransform(f2, n0, mtp, grid)
+            I1 = Math.integrateTransform(f1, n0, mtp, grid)
+            I2 = Math.integrateTransform(f2, n0, mtp, grid)
             return( I1+I2 )
         elseif  grid.mesh == MeshGL
             wa = 0.
@@ -256,12 +261,13 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.overlap()
+    `RadialIntegrals.overlap()`
 
-       + (orbital1::JAC.Radial.Orbital, orbital2::JAC.Radial.Orbital, grid::Radial.Grid)`  ... computes the (radial) overlap integral  
-         <orbital_a|orbital_b>  for two relativistic orbitals of the same symmetry (kappa).
+    + (orbital1::Radial.Orbital, orbital2::Radial.Orbital, grid::Radial.Grid)`  
+        ... computes the (radial) overlap integral <orbital_a|orbital_b>  for two relativistic orbitals of the same 
+            symmetry (kappa).
     """
-    function overlap(orbital1::JAC.Radial.Orbital, orbital2::JAC.Radial.Orbital, grid::Radial.Grid)
+    function overlap(orbital1::Radial.Orbital, orbital2::Radial.Orbital, grid::Radial.Grid)
         mtp = min(size(orbital1.P, 1), size(orbital2.P, 1))
         
         # Distinguish the radial integration for different grid definitions
@@ -271,7 +277,7 @@ module  RadialIntegrals
                 return( orbital1.P[i] * orbital2.P[i] + orbital1.Q[i] * orbital2.Q[i] )
             end
     
-            return( JAC.Math.integrateFitTransform(f, mtp, grid) )
+            return( Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 1:grid.nr 
@@ -286,10 +292,10 @@ module  RadialIntegrals
 
 
     """
-       + (bspline1::JAC.Bsplines.Bspline, bspline2::JAC.Bsplines.Bspline, grid::Radial.Grid)`  ... computes the (radial) overlap integral  
-         <bspline1|bsplines>  for two bpslines as defined on grid.
+    + (bspline1::Bsplines.Bspline, bspline2::Bsplines.Bspline, grid::Radial.Grid)`  
+        ... computes the (radial) overlap integral <bspline1|bsplines>  for two bpslines as defined on grid.
     """
-    function overlap(bspline1::JAC.Bsplines.Bspline, bspline2::JAC.Bsplines.Bspline, grid::Radial.Grid)
+    function overlap(bspline1::Bsplines.Bspline, bspline2::Bsplines.Bspline, grid::Radial.Grid)
         
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == Basics.MeshGrasp
@@ -301,7 +307,7 @@ module  RadialIntegrals
                 return( bspline1.bs[i] * bspline2.bs[i] )
             end
     
-            return( JAC.Math.integrateTransform(f, n0, mtp, grid) )
+            return( Math.integrateTransform(f, n0, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 1:grid.nr   wa = wa + bspline1.bs[i] * bspline2.bs[i] * grid.wr[i]   end
@@ -313,8 +319,8 @@ module  RadialIntegrals
 
 
     """
-       + (p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)`  ... computes the (radial) overlap integral of two 
-         (non-relativistic) radial orbital functions <p1|p2>  as defined on grid.
+    + (p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)`  
+        ... computes the (radial) overlap integral of two (non-relativistic) radial orbital functions <p1|p2>  as defined on grid.
     """
     function overlap(p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)
         
@@ -327,7 +333,7 @@ module  RadialIntegrals
                 return( p1List[i] * p2List[i] )
             end
     
-            return( JAC.Math.integrateTransform(f, 1, mtp, grid) )
+            return( Math.integrateTransform(f, 1, mtp, grid) )
         elseif  grid.mesh == MeshGL
             error("stop a")
         else
@@ -337,11 +343,11 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.qedDampedOverlap(lambda::Float64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)` 
-         ... computes the damped (radial) integral  int_0^infty (P_a P_b  +  Q_a Q_b) * e^{r/lambda} for the radial orbitals a, b 
-         on the given grid. A value::Float64 is returned.
+    `RadialIntegrals.qedDampedOverlap(lambda::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)` 
+        ... computes the damped (radial) integral  int_0^infty (P_a P_b  +  Q_a Q_b) * e^{r/lambda} for the radial 
+            orbitals a, b on the given grid. A value::Float64 is returned.
     """
-    function qedDampedOverlap(lambda::Float64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)
+    function qedDampedOverlap(lambda::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(b.P, 1))
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGL
@@ -355,11 +361,11 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.qedLowFrequency(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, nm::Nuclear.Model,
-                                         grid::Radial.Grid, qgrid::Radial.GridGL)` ... computes the (radial) integral for the
-         low-frequency QED potential for the radial orbitals a, b on the given grid. A value::Float64 is returned.
+    `RadialIntegrals.qedLowFrequency(a::Radial.Orbital, b::Radial.Orbital, nm::Nuclear.Model, grid::Radial.Grid, qgrid::Radial.GridGL)` 
+        ... computes the (radial) integral for the low-frequency QED potential for the radial orbitals a, b on the given grid. 
+            A value::Float64 is returned.
     """
-    function qedLowFrequency(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, nm::Nuclear.Model, grid::Radial.Grid, qgrid::Radial.GridGL)
+    function qedLowFrequency(a::Radial.Orbital, b::Radial.Orbital, nm::Nuclear.Model, grid::Radial.Grid, qgrid::Radial.GridGL)
         alpha = Defaults.getDefaults("alpha");    BZ = 0.074 + 0.035 * nm.Z * alpha
         mtp = min(size(a.P, 1), size(b.P, 1))
         # Distinguish the radial integration for different grid definitions
@@ -377,12 +383,12 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.qedUehling(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, pot::Radial.Potential,
-                                    grid::Radial.Grid, qgrid::Radial.GridGL)` ... computes the (radial) integral for the
-         Uehling potential for the radial orbitals a, b on the given grid. This included a formal t-integration that is
-         performed internally on the (QED) grid qgrid. A value::Float64 is returned.
+    `RadialIntegrals.qedUehling(a::Radial.Orbital, b::Radial.Orbital, pot::Radial.Potential,
+                                grid::Radial.Grid, qgrid::Radial.GridGL)` 
+        ... computes the (radial) integral for the Uehling potential for the radial orbitals a, b on the given grid. This included a 
+            formal t-integration that is performed internally on the (QED) grid qgrid. A value::Float64 is returned.
     """
-    function qedUehling(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, pot::Radial.Potential, grid::Radial.Grid, qgrid::Radial.GridGL)
+    function qedUehling(a::Radial.Orbital, b::Radial.Orbital, pot::Radial.Potential, grid::Radial.Grid, qgrid::Radial.GridGL)
         # Define the internal t-integration that is specific to the (simplified) Uehling potential; cf. PRA 72, 052115 (2005); eq. (9)
         function tIntegral(r::Float64)
             wx = 0.;
@@ -409,12 +415,12 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.qedUehlingSimple(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, pot::Radial.Potential,
-                                          grid::Radial.Grid, qgrid::Radial.GridGL)` ... computes the (radial) integral for the
-         Uehling potential for the radial orbitals a, b on the given grid. This included a formal t-integration that is
-         performed internally on the (QED) grid qgrid. A value::Float64 is returned.
+    `RadialIntegrals.qedUehlingSimple(a::Radial.Orbital, b::Radial.Orbital, pot::Radial.Potential,
+                                      grid::Radial.Grid, qgrid::Radial.GridGL)` 
+        ... computes the (radial) integral for the Uehling potential for the radial orbitals a, b on the given grid. This 
+            included a formal t-integration that is performed internally on the (QED) grid qgrid. A value::Float64 is returned.
     """
-    function qedUehlingSimple(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, pot::Radial.Potential, grid::Radial.Grid, qgrid::Radial.GridGL)
+    function qedUehlingSimple(a::Radial.Orbital, b::Radial.Orbital, pot::Radial.Potential, grid::Radial.Grid, qgrid::Radial.GridGL)
         # Define the internal t-integration that is specific to the (simplified) Uehling potential; cf. PRA 72, 052115 (2005); eq. (9)
         function tIntegral(r::Float64)
             wx = 0.;
@@ -441,18 +447,18 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.rkDiagonal()  ... computes the (radial and diagonal) integral of r^k for two radial orbital functions.
+    `RadialIntegrals.rkDiagonal()`   ... computes the (radial and diagonal) integral of r^k for two radial orbital functions.
     
-       + (k::Int64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)`  ... computes this integral for two relativistic 
-         orbitals:   < r^k >_ab = int_0^\\infty  dr  [P_a P_b + Q_a Q_b]  r^k
+    + (k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
+        ... computes this integral for two relativistic orbitals:   < r^k >_ab = int_0^\\infty  dr  [P_a P_b + Q_a Q_b]  r^k
     """
-    function rkDiagonal(k::Int64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)
+    function rkDiagonal(k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGrasp
             function f(i :: Int64)    return( (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * (grid.r[i]^k) )    end
-            return( JAC.Math.integrateFitTransform(f, mtp, grid) )
+            return( Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             if  k > -3   m0 = 2   else   m0 = 6   end    # Don't allow too small r-values
@@ -465,8 +471,8 @@ module  RadialIntegrals
 
 
     """
-       + (k::Int64, p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)`  ... computes this integral for two non-relativistic 
-         orbitals:   < r^k >_ab = int_0^\\infty  dr  [P_a P_b]  r^k
+    + (k::Int64, p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)`  
+        ... computes this integral for two non-relativistic orbitals:   < r^k >_ab = int_0^\\infty  dr  [P_a P_b]  r^k
     """
     function rkDiagonal(k::Int64, p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)
         mtp = min( length(p1List), length(p2List))
@@ -478,7 +484,7 @@ module  RadialIntegrals
                 return( p1List[i] * p2List[i] * (grid.r[i]^k) )
             end
     
-            return( JAC.Math.integrateTransform(f, 2, mtp, grid) )
+            return( Math.integrateTransform(f, 2, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 2:mtp   wa = wa + p1List[i] * p2List[i] * (grid.r[i]^k) * grid.wr[i]   end
@@ -490,17 +496,17 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.rkNonDiagonal(k::Int64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)` ... computes the 
-         (radial and non-diagonal) integral of r^k for two relativistic orbitals:
-         [ r^k ]_ab = int_0^\\infty dr [P_a Q_b + Q_a P_b] r^k
+    `RadialIntegrals.rkNonDiagonal(k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)` 
+        ... computes the (radial and non-diagonal) integral of r^k for two relativistic orbitals:
+            [ r^k ]_ab = int_0^\\infty dr [P_a Q_b + Q_a P_b] r^k
     """
-    function rkNonDiagonal(k::Int64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital, grid::Radial.Grid)
+    function rkNonDiagonal(k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGrasp
             function f(i :: Int64)    return( (a.P[i] * b.Q[i] + a.Q[i] * b.P[i]) * (grid.r[i]^k) )    end
-            return( JAC.Math.integrateFitTransform(f, mtp, grid) )
+            return( Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 2:mtp   wa = wa + (a.P[i] * b.Q[i] + a.Q[i] * b.P[i]) * (grid.r[i]^k) * grid.wr[i]   end
@@ -512,8 +518,8 @@ module  RadialIntegrals
   
   
     """
-    `JAC.RadialIntegrals.SlaterRk_2dim(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
-         ... computes the (relativistic) Slater integral
+    `RadialIntegrals.SlaterRk_2dim(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
+        ... computes the (relativistic) Slater integral
 
          R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d)
 
@@ -536,10 +542,10 @@ module  RadialIntegrals
     
             function f(r :: Int64) :: Float64
             function ff(i :: Int64) :: Float64    return( fs(r, i) )    end
-            return( (a.P[r] * c.P[r] + a.Q[r] * c.Q[r] ) * JAC.Math.integrateFitTransform(ff, min(size(b.P, 1), size(d.P, 1)), grid) )
+            return( (a.P[r] * c.P[r] + a.Q[r] * c.Q[r] ) * Math.integrateFitTransform(ff, min(size(b.P, 1), size(d.P, 1)), grid) )
             end
     
-            return JAC.Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
+            return Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
         elseif  grid.mesh == MeshGL
             mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
             wa = 0.
@@ -556,8 +562,8 @@ module  RadialIntegrals
   
   
     """
-    `JAC.RadialIntegrals.SlaterRk_new(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
-         ... computes the (relativistic) Slater integral
+    `RadialIntegrals.SlaterRk_new(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
+        ... computes the (relativistic) Slater integral
 
          R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d)
 
@@ -619,14 +625,14 @@ module  RadialIntegrals
   
   
     """
-    `JAC.RadialIntegrals.SlaterRk_DebyeHueckel_2dim(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, 
-                                                    grid::Radial.Grid, lambda::Float64)`  
-         ... computes the (relativistic) Slater-Debye-Hueckel integral
+    `RadialIntegrals.SlaterRk_DebyeHueckel_2dim(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, 
+                                                grid::Radial.Grid, lambda::Float64)`  
+        ... computes the (relativistic) Slater-Debye-Hueckel integral
 
-         R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) [r_<^k / r_>^(k+1)]^(DH screened) (P_b P_d + Q_b Q_d)
+            R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) [r_<^k / r_>^(k+1)]^(DH screened) (P_b P_d + Q_b Q_d)
 
-         of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration scheme; a 
-         value::Float64 is returned.
+            of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration 
+            scheme; a value::Float64 is returned.
     """
     function SlaterRk_DebyeHueckel_2dim(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Radial.Orbital, 
                                         grid::Radial.Grid, lambda::Float64)
@@ -660,10 +666,10 @@ module  RadialIntegrals
     
             function f(r :: Int64) :: Float64
             function ff(i :: Int64) :: Float64    return( fs(r, i) )    end
-            return( (a.P[r] * c.P[r] + a.Q[r] * c.Q[r] ) * JAC.Math.integrateFitTransform(ff, min(size(b.P, 1), size(d.P, 1)), grid) )
+            return( (a.P[r] * c.P[r] + a.Q[r] * c.Q[r] ) * Math.integrateFitTransform(ff, min(size(b.P, 1), size(d.P, 1)), grid) )
             end
     
-            return JAC.Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
+            return Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
         elseif  grid.mesh == MeshGL
             mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
             wa = 0.
@@ -679,14 +685,14 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.Vinti(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)` ... computes the (radial) Vinti integral for the two
-         radia integrals a and b:
+    `RadialIntegrals.Vinti(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)` 
+        ... computes the (radial) Vinti integral for the two radia integrals a and b:
                 
-                                         [ d        kappa_a (kappa_a+1) - kappa_b (kappa_b+1) ]
-         R^(Vinti) = int_0^infty dr  P_a [ --   -  ------------------------------------------ ] P_b    +  similar (not equal) in Q_a, Q_b
-                                         [ dr                          2 r                    ]
+                                            [ d        kappa_a (kappa_a+1) - kappa_b (kappa_b+1) ]
+            R^(Vinti) = int_0^infty dr  P_a [ --   -  ------------------------------------------ ] P_b    +  similar (not equal) in Q_a, Q_b
+                                            [ dr                          2 r                    ]
          
-         a value::Float64 is returned.
+            a value::Float64 is returned.
     """
     function  Vinti(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
         
@@ -709,11 +715,11 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.Vlocal(bspline1::JAC.Bsplines.Bspline, bspline2::JAC.Bsplines.Bspline, potential::Radial.Potential, grid::Radial.Grid)`  
-         ... computes the (radial) integral for the local potential and for two bpslines, all defined on grid <bspline1| potential.Zr | bspline2>. 
-         -- Here, potential. V must provide the effective charge zz(r) = - V * r.
+    `RadialIntegrals.Vlocal(bspline1::Bsplines.Bspline, bspline2::Bsplines.Bspline, potential::Radial.Potential, grid::Radial.Grid)`  
+        ... computes the (radial) integral for the local potential and for two bpslines, all defined on grid 
+            <bspline1| potential.Zr | bspline2>. -- Here, potential. V must provide the effective charge zz(r) = - V * r.
     """
-    function Vlocal(bspline1::JAC.Bsplines.Bspline, bspline2::JAC.Bsplines.Bspline, potential::Radial.Potential, grid::Radial.Grid)
+    function Vlocal(bspline1::Bsplines.Bspline, bspline2::Bsplines.Bspline, potential::Radial.Potential, grid::Radial.Grid)
         ## if  bspline1.upper <= bspline2.lower  ||  bspline2.upper <= bspline1.lower    return( 0. )   end
         mtp = min( bspline1.upper, bspline2.upper)
         n0  = max( bspline1.lower, bspline2.lower)
@@ -727,7 +733,7 @@ module  RadialIntegrals
                 return( wa )
             end
     
-            return( JAC.Math.integrateTransform(f, n0, mtp, grid) )
+            return( Math.integrateTransform(f, n0, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = n0:mtp  
@@ -742,15 +748,15 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.V0(wa::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)` ... computes the (radial) integral int_0^infty dr wa; 
-         a value::Float64 is returned.
+    `RadialIntegrals.V0(wa::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)` 
+        ... computes the (radial) integral int_0^infty dr wa; a value::Float64 is returned.
     """
     function V0(wa::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)
         
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGrasp
             function f(i :: Int64)    return( wa[i] )     end
-            return( JAC.Math.integrateFitTransform(f, mtp, grid) )
+            return( Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wb = 0.
             for  i = 1:mtp   wb = wb + wa[i] * grid.wr[i]   end
@@ -762,16 +768,16 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.W5_Integral(mu::Int64, nu::Int64, orbitala::JAC.Radial.Orbital, orbitalc::JAC.Radial.Orbital,  
-                                                           orbitalb::JAC.Radial.Orbital, orbitald::JAC.Radial.Orbital, grid::Radial.Grid)`  
-                            ... computes the (radial) integral for four relativistic orbitals: 
+    `RadialIntegrals.W5_Integral(mu::Int64, nu::Int64, orbitala::Radial.Orbital, orbitalc::Radial.Orbital,  
+                                                       orbitalb::Radial.Orbital, orbitald::Radial.Orbital, grid::Radial.Grid)`  
+        ... computes the (radial) integral for four relativistic orbitals: 
                              
-                            W_5 [ac|bd] = int_0^infty dr   int_0^r ds   [Pa Qc]_{r}  * ( s^nu / r^(nu+1) ) * [Pb Qd]_{s}
+            W_5 [ac|bd] = int_0^infty dr   int_0^r ds   [Pa Qc]_{r}  * ( s^nu / r^(nu+1) ) * [Pb Qd]_{s}
 
-                            as it frequently occurs in the frequency-independent Breit interaction.
+            as it frequently occurs in the frequency-independent Breit interaction.
     """
-    function W5_Integral(mu::Int64, nu::Int64, a::JAC.Radial.Orbital, b::JAC.Radial.Orbital,  
-                                               c::JAC.Radial.Orbital, d::JAC.Radial.Orbital, grid::Radial.Grid)
+    function W5_Integral(mu::Int64, nu::Int64, a::Radial.Orbital, b::Radial.Orbital,  
+                                               c::Radial.Orbital, d::Radial.Orbital, grid::Radial.Grid)
         # Note mu = 5 is fixed historically and not used for this integral.
         !(mu == 5)   &&   error("mu = 5 required.")
         mtp = min(size(b.P, 1), size(d.P, 1))
@@ -783,13 +789,13 @@ module  RadialIntegrals
             end
     
             function f(r :: Int64) :: Float64
-            function ff(i :: Int64) :: Float64  return( JAC.Math.integrateFitTransform(fs, i, grid) )  end
+            function ff(i :: Int64) :: Float64  return( Math.integrateFitTransform(fs, i, grid) )  end
                 if  r > mtp   return( 0. )
                 else          return(  a.P[r] * c.Q[r] * ff(r) / grid.r[r]^(nu+1) )
                 end
             end
     
-            return JAC.Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
+            return Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
         elseif  grid.mesh == MeshGL
             mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
             wa = 0.
@@ -809,20 +815,21 @@ module  RadialIntegrals
 
 
     """
-    `JAC.RadialIntegrals.Yk_ab(k::Int64, r::Float64, rho_ab::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)`  ... computes the (radial) integral
+    `RadialIntegrals.Yk_ab(k::Int64, r::Float64, rho_ab::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)`  
+        ... computes the (radial) integral
 
-                                                                                        r<^k
-                                                     Y_ab^k (r) = r * int_0^infty dr'  ------   rho_ab(r')
-                                                                                       r>^k+1
+                                               r<^k
+            Y_ab^k (r) = r * int_0^infty dr'  ------   rho_ab(r')
+                                              r>^k+1
 
-                                                     a value::Float64 is returned.
+            a value::Float64 is returned.
     """
     function Yk_ab(k::Int64, r::Float64, rho_ab::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)
         
        # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGrasp
             function f(i :: Int64)    rl = min(r, grid.r[i]);   rg = max(r, grid.r[i]);   return( rho_ab[i] * rl^k / rg^(k+1) )     end
-            return( r * JAC.Math.integrateFitTransform(f, mtp, grid) )
+            return( r * Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.mesh == MeshGL
             wa = 0.
             for  i = 2:mtp   

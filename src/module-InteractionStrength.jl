@@ -1,16 +1,17 @@
 
 """
-`module JAC.InteractionStrength`  ... a submodel of JAC that contains all methods for evaluating the interaction strength (reduced 
-                                      matrix elements) for various atomic interactions; it is using JAC, JAC.Radial, JAC.ManyElectron.
+`module JAC.InteractionStrength`  
+    ... a submodel of JAC that contains all methods for evaluating the interaction strength (reduced matrix elements) 
+        for various atomic interactions.
 """
 module InteractionStrength
 
-    using  GSL, JAC, ..Basics,  ..Basics,  ..Defaults, JAC.Radial, JAC.Nuclear, JAC.ManyElectron
-    global JAC_counter = 0
+    using  GSL, ..AngularMomentum, ..Basics, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals
+    ##x global JAC_counter = 0
 
 
     """
-    `struct  XLCoefficient`  ... defines a type for coefficients of the two-electron (Breit) interaction
+    `struct  InteractionStrength.XLCoefficient`  ... defines a type for coefficients of the two-electron (Breit) interaction
 
         + mu        ::Int64      ... Kind of integral, presently fixed to mu = 5 to keep similarity with RATIP during development.
         + nu        ::Int64      ... Rank of the integral.
@@ -32,38 +33,40 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.dipole(a::Orbital, b::Orbital, grid::Radial.Grid)`  ... computes the  <a|| d ||b>  reduced 
-         matrix element of the dipole operator for orbital functions a, b. A value::Float64 is returned. 
+    `InteractionStrength.dipole(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+        ... computes the  <a|| d ||b>  reduced matrix element of the dipole operator for orbital functions a, b. 
+            A value::Float64 is returned. 
     """
     function dipole(a::Orbital, b::Orbital, grid::Radial.Grid)
-        wa = JAC.AngularMomentum.CL_reduced_me(a.subshell, 1, b.subshell) * JAC.RadialIntegrals.rkDiagonal(1, a, b, grid)
+        wa = AngularMomentum.CL_reduced_me(a.subshell, 1, b.subshell) * RadialIntegrals.rkDiagonal(1, a, b, grid)
         return( wa )
     end
 
 
     """
-    `JAC.InteractionStrength.hamiltonian_nms(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  ... computes the  <a|| h_nms ||b>  reduced 
-         matrix element of the normal-mass-shift Hamiltonian for orbital functions a, b. A value::Float64 is returned.  For details, 
-         see Naze et al., CPC 184 (2013) 2187, Eq. (37).
+    `InteractionStrength.hamiltonian_nms(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
+        ... computes the  <a|| h_nms ||b>  reduced matrix element of the normal-mass-shift Hamiltonian for orbital 
+            functions a, b. A value::Float64 is returned.  For details, see Naze et al., CPC 184 (2013) 2187, Eq. (37).
     """
     function hamiltonian_nms(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
         if  a.subshell.kappa != b.subshell.kappa   return( 0. )   end
-        wa = JAC.RadialIntegrals.isotope_nms(a, b, nm.Z, grid) / (2 * nm.mass)
+        wa = RadialIntegrals.isotope_nms(a, b, nm.Z, grid) / (2 * nm.mass)
         println("**  <$(a.subshell) || h^nms || $(b.subshell)>  = $wa" )
         return( wa )
     end
 
 
     """
-    `JAC.InteractionStrength.hfs_t1(a::Orbital, b::Orbital, grid::Radial.Grid)`  ... computes the <a|| t^(1) ||b> reduced matrix 
-         element for the HFS coupling to the magnetic-dipole moment of the nucleus for orbital functions a, b. A value::Float64 is returned.  
+    `InteractionStrength.hfs_t1(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+        ... computes the <a|| t^(1) ||b> reduced matrix element for the HFS coupling to the magnetic-dipole moment 
+            of the nucleus for orbital functions a, b. A value::Float64 is returned.  
     """
     function hfs_t1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
-        ##x wa = - Defaults.getDefaults("alpha") * (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell) *
-        wb =   - (a.subshell.kappa + b.subshell.kappa) * JAC.AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell)
-        wc =   JAC.RadialIntegrals.rkNonDiagonal(-2, a, b, grid)
+        ##x wa = - Defaults.getDefaults("alpha") * (a.subshell.kappa + b.subshell.kappa) * AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell) *
+        wb =   - (a.subshell.kappa + b.subshell.kappa) * AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell)
+        wc =   RadialIntegrals.rkNonDiagonal(-2, a, b, grid)
         wa =   wb * wc
         #
         ##x println("**  <$(a.subshell) || t1 || $(b.subshell)>  = $wa   = $wb * $wc" )
@@ -72,14 +75,15 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.hfs_t2(a::Orbital, b::Orbital, grid::Radial.Grid)`  ... computes the <a|| t^(2) ||b> reduced matrix 
-         element for the HFS coupling to the electric-quadrupole moment of the nucleus for orbital functions a, b. A value::Float64 is returned.  
+    `InteractionStrength.hfs_t2(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+        ... computes the <a|| t^(2) ||b> reduced matrix element for the HFS coupling to the electric-quadrupole moment of 
+            the nucleus for orbital functions a, b. A value::Float64 is returned.  
      """
     function hfs_t2(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
-        wb = - JAC.AngularMomentum.CL_reduced_me_rb(a.subshell, 2, b.subshell)
-        ## wc =   JAC.RadialIntegrals.rkDiagonal(-3, a, b, grid)
-        wc =   JAC.RadialIntegrals.rkDiagonal(-3, a, b, grid)
+        wb = - AngularMomentum.CL_reduced_me_rb(a.subshell, 2, b.subshell)
+        ## wc =   RadialIntegrals.rkDiagonal(-3, a, b, grid)
+        wc =   RadialIntegrals.rkDiagonal(-3, a, b, grid)
         wa =   wb * wc
         #
         ##x println("**  <$(a.subshell) || t2 || $(b.subshell)>  = $wa   = $wb * $wc" )
@@ -88,10 +92,10 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.MbaAbsorptionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`
-         ... to compute the (single-electron reduced matrix element) interaction strength <b || O^(Mp, absorption) || a> for the interaction
-         with the Mp multipole component of the radiation field and the transition frequency omega, and within the given gauge. 
-         A value::Float64 is returned.  
+    `InteractionStrength.MbaAbsorptionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`
+        ... to compute the (single-electron reduced matrix element) interaction strength <b || O^(Mp, absorption) || a> 
+            for the interaction with the Mp multipole component of the radiation field and the transition frequency omega, and 
+            within the given gauge. A value::Float64 is returned.  
     """
     function MbaAbsorptionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
         wa = MbaEmissionCheng(mp, gauge, omega, b, a, grid)
@@ -101,33 +105,33 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.MbaEmissionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`
-         ... to compute the (single-electron reduced matrix element) interaction strength <b || O^(Mp,emission) || a> for the interaction
-         with the Mp multipole component of the radiation field and the transition frequency omega, and within the given gauge. 
-         A value::Float64 is returned.  
+    `InteractionStrength.MbaEmissionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`
+        ... to compute the (single-electron reduced matrix element) interaction strength <b || O^(Mp,emission) || a> 
+            for the interaction with the Mp multipole component of the radiation field and the transition frequency omega, and 
+            within the given gauge. A value::Float64 is returned.  
     """
     function MbaEmissionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
         kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
         #
-        if       gauge == JAC.Magnetic
-            ChengI = JAC.AngularMomentum.ChengI(-kapa, kapb, AngularJ64(mp.L))
-            wa     = -1.0im / sqrt(mp.L*(mp.L+1)) * ChengI * (kapb + kapa) * JAC.RadialIntegrals.GrantILplus(mp.L, q, a, b, grid::Radial.Grid)
+        if       gauge == Basics.Magnetic
+            ChengI = AngularMomentum.ChengI(-kapa, kapb, AngularJ64(mp.L))
+            wa     = -1.0im / sqrt(mp.L*(mp.L+1)) * ChengI * (kapb + kapa) * RadialIntegrals.GrantILplus(mp.L, q, a, b, grid::Radial.Grid)
         #
-        elseif   gauge == JAC.Babushkin
-            ChengI = JAC.AngularMomentum.ChengI(kapa, kapb, AngularJ64(mp.L))
-            wr     = (mp.L+1) * JAC.RadialIntegrals.GrantJL(mp.L, q, a, b, grid::Radial.Grid)
-            wr     = wr +  (kapb-kapa-mp.L-1) * JAC.RadialIntegrals.GrantIL0(mp.L+1, q, a, b, grid::Radial.Grid)
-            wr     = wr +  (kapb-kapa+mp.L+1) * JAC.RadialIntegrals.GrantIL0(mp.L+1, q, b, a, grid::Radial.Grid)
+        elseif   gauge == Basics.Babushkin
+            ChengI = AngularMomentum.ChengI(kapa, kapb, AngularJ64(mp.L))
+            wr     = (mp.L+1) * RadialIntegrals.GrantJL(mp.L, q, a, b, grid::Radial.Grid)
+            wr     = wr +  (kapb-kapa-mp.L-1) * RadialIntegrals.GrantIL0(mp.L+1, q, a, b, grid::Radial.Grid)
+            wr     = wr +  (kapb-kapa+mp.L+1) * RadialIntegrals.GrantIL0(mp.L+1, q, b, a, grid::Radial.Grid)
             wa     = 1.0im / sqrt(mp.L*(mp.L+1)) * ChengI * wr
         #
-        elseif   gauge == JAC.Coulomb
-            ChengI = JAC.AngularMomentum.ChengI(kapa, kapb, AngularJ64(mp.L))
-            wr     = (mp.L+1) * (kapb-kapa+mp.L) / (2mp.L+1) * JAC.RadialIntegrals.GrantIL0(mp.L-1, q, a, b, grid::Radial.Grid)
+        elseif   gauge == Basics.Coulomb
+            ChengI = AngularMomentum.ChengI(kapa, kapb, AngularJ64(mp.L))
+            wr     = (mp.L+1) * (kapb-kapa+mp.L) / (2mp.L+1) * RadialIntegrals.GrantIL0(mp.L-1, q, a, b, grid::Radial.Grid)
             wr     = wr +  ((mp.L+1) * (kapb-kapa+mp.L) - (2mp.L+1) * (kapb-kapa)) / (2mp.L+1) * 
-                                                               JAC.RadialIntegrals.GrantIL0(mp.L+1, q, a, b, grid::Radial.Grid)
-            wr     = wr + (mp.L+1) * (kapb-kapa-mp.L) / (2mp.L+1) * JAC.RadialIntegrals.GrantIL0(mp.L-1, q, b, a, grid::Radial.Grid)
+                                                               RadialIntegrals.GrantIL0(mp.L+1, q, a, b, grid::Radial.Grid)
+            wr     = wr + (mp.L+1) * (kapb-kapa-mp.L) / (2mp.L+1) * RadialIntegrals.GrantIL0(mp.L-1, q, b, a, grid::Radial.Grid)
             wr     = wr +  ((mp.L+1) * (kapb-kapa-mp.L) - (2mp.L+1) * (kapb-kapa)) / (2mp.L+1) * 
-                                                               JAC.RadialIntegrals.GrantIL0(mp.L+1, q, b, a, grid::Radial.Grid) 
+                                                               RadialIntegrals.GrantIL0(mp.L+1, q, b, a, grid::Radial.Grid) 
             wa     = 1.0im / sqrt(mp.L*(mp.L+1)) * ChengI * wr
         else     error("stop a")
         end
@@ -138,25 +142,26 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.MbaEmissionAndrey(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`  
-         ... to compute the (single-electron reduced matrix element) interaction strength <b || O^(Mp, emission) || a>  for the interaction with 
-         the Mp multipole component of the radiation field and the transition frequency omega, and within the given gauge. A value::Float64 
-         is returned. At present, only the magnetic matrix elements are implemented. 
+    `InteractionStrength.MbaEmissionAndrey(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`  
+        ... to compute the (single-electron reduced matrix element) interaction strength <b || O^(Mp, emission) || a>  
+            for the interaction with the Mp multipole component of the radiation field and the transition frequency omega,
+            and within the given gauge. A value::Float64 is returned. At present, only the magnetic matrix elements are 
+            implemented. 
     """
     function MbaEmissionAndrey(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
         kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
         ja   = Basics.subshell_j(a.subshell);   jb   = Basics.subshell_j(b.subshell);   
         #
-        if       gauge == JAC.Magnetic
+        if       gauge == Basics.Magnetic
             wa = -1.0im * sqrt( (2mp.L+1) * (Basics.subshell_2j(a.subshell)+1) ) / sqrt(4pi) / sqrt(mp.L * (mp.L+1)) * (-1)^mp.L * (kapb + kapa)
-            wa = wa * JAC.AngularMomentum.ClebschGordan(ja, AngularM64(1//2), AngularJ64(mp.L), AngularM64(0), jb, AngularM64(1//2)) 
-            wa = wa * JAC.RadialIntegrals.GrantILplus(mp.L, q, a, b, grid::Radial.Grid)
+            wa = wa * AngularMomentum.ClebschGordan(ja, AngularM64(1//2), AngularJ64(mp.L), AngularM64(0), jb, AngularM64(1//2)) 
+            wa = wa * RadialIntegrals.GrantILplus(mp.L, q, a, b, grid::Radial.Grid)
             wa = conj(wa)
         #
-        elseif   gauge == JAC.Babushkin
+        elseif   gauge == Basics.Babushkin
             wa = 0.
         #
-        elseif   gauge == JAC.Coulomb
+        elseif   gauge == Basics.Coulomb
             wa = 0.
         else     error("stop a")
         end
@@ -166,10 +171,10 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.multipoleTransition(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`
-         ... to compute the (single-electron reduced matrix element) multipole-transition interaction strength <b || T^(Mp, absorption) || a> 
-         due to Johnson (2007) for the interaction with the Mp multipole component of the radiation field and the transition frequency omega, 
-         and within the given gauge. A value::Float64 is returned.  
+    `InteractionStrength.multipoleTransition(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`
+        ... to compute the (single-electron reduced matrix element) multipole-transition interaction strength 
+            <b || T^(Mp, absorption) || a> due to Johnson (2007) for the interaction with the Mp multipole component of the
+            radiation field and the transition frequency omega, and within the given gauge. A value::Float64 is returned.  
     """
     function multipoleTransition(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
         function besselPrime_jl(L::Int64, x::Float64)    return( GSL.sf_bessel_jl(L-1, x) - (L+1)/x * GSL.sf_bessel_jl(L, x) )       end
@@ -178,16 +183,16 @@ module InteractionStrength
         mtp  = min(size(a.P, 1), size(b.P, 1))
         !(grid.mesh == MeshGL)  &&  error("Only for MeshGL implemented so far.")
         #
-        if       gauge == JAC.Magnetic
-            ChengI = JAC.AngularMomentum.ChengI(-kapa, kapb, AngularJ64(mp.L));   if  abs(ChengI) < 1.0e-10  return( 0. )   end
+        if       gauge == Basics.Magnetic
+            ChengI = AngularMomentum.ChengI(-kapa, kapb, AngularJ64(mp.L));   if  abs(ChengI) < 1.0e-10  return( 0. )   end
             wa = Complex(0.)
             for  i = 2:mtp
                 wa = wa + (kapa+kapb) / (mp.L+1) * GSL.sf_bessel_jl(mp.L, q * grid.r[i]) * (a.P[i] * b.Q[i] + a.Q[i] * b.P[i]) * grid.wr[i]  
             end
             wa = ChengI * wa
             #
-        elseif   gauge == JAC.Velocity
-            ChengI = JAC.AngularMomentum.ChengI(kapa, kapb, AngularJ64(mp.L));    if  abs(ChengI) < 1.0e-10  return( 0. )   end
+        elseif   gauge == Basics.Velocity
+            ChengI = AngularMomentum.ChengI(kapa, kapb, AngularJ64(mp.L));    if  abs(ChengI) < 1.0e-10  return( 0. )   end
             wa = Complex(0.)
             for  i = 2:mtp
                 wa = wa - (kapa-kapb) / (mp.L+1) * 
@@ -197,8 +202,8 @@ module InteractionStrength
             end
             wa = ChengI * wa
             #
-        elseif   gauge == JAC.Length
-            ChengI = JAC.AngularMomentum.ChengI(kapa, kapb, AngularJ64(mp.L));    if  abs(ChengI) < 1.0e-10  return( 0. )   end
+        elseif   gauge == Basics.Length
+            ChengI = AngularMomentum.ChengI(kapa, kapb, AngularJ64(mp.L));    if  abs(ChengI) < 1.0e-10  return( 0. )   end
             wa = Complex(0.)
             for  i = 2:mtp
                 wa = wa + GSL.sf_bessel_jl(mp.L, q * grid.r[i]) * (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * grid.wr[i] 
@@ -216,9 +221,9 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.schiffMoment(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
-         ... computes the  <a|| h^(Schiff-moment) ||b>  reduced matrix element of the Schiff-moment Hamiltonian for orbital functions 
-         a, b and for the nuclear density as given by the nuclear model. A value::Float64 is returned.  
+    `InteractionStrength.schiffMoment(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
+        ... computes the  <a|| h^(Schiff-moment) ||b>  reduced matrix element of the Schiff-moment Hamiltonian for orbital 
+            functions a, b and for the nuclear density as given by the nuclear model. A value::Float64 is returned.  
     """
     function schiffMoment(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
         printstyled("\nWarning -- InteractionStrength.schiffMoment():: Not yet implemented.", color=:cyan)
@@ -228,9 +233,9 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.weakCharge(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
-         ... computes the  <a|| h^(weak-charge) ||b>  reduced matrix element of the weak-charge Hamiltonian for orbital functions 
-         a, b and for the nuclear density as given by the nuclear model. A value::Float64 is returned.  
+    `InteractionStrength.weakCharge(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
+        ... computes the  <a|| h^(weak-charge) ||b>  reduced matrix element of the weak-charge Hamiltonian for orbital functions 
+            a, b and for the nuclear density as given by the nuclear model. A value::Float64 is returned.  
     """
     function weakCharge(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
         printstyled("\nWarning -- InteractionStrength.weakCharge():: Not yet implemented.", color=:cyan)
@@ -240,16 +245,17 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  ... computes the the 
-         effective Breit interaction strengths X^L_Breit (abcd) for given rank L and orbital functions a, b, c and d  at the given grid. 
-         A value::Float64 is returned. At present, only the zero-frequency Breit interaction is taken into account.
+    `InteractionStrength.XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  
+        ... computes the the effective Breit interaction strengths X^L_Breit (abcd) for given rank L and orbital functions 
+            a, b, c and d  at the given grid. A value::Float64 is returned. At present, only the zero-frequency Breit 
+            interaction is taken into account.
     """
     function XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
         ja2 = Basics.subshell_2j(a.subshell)
         jb2 = Basics.subshell_2j(b.subshell)
         jc2 = Basics.subshell_2j(c.subshell)
         jd2 = Basics.subshell_2j(d.subshell)
-        if  JAC.AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * JAC.AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||  L == 0  
+        if  AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||  L == 0  
             return( 0. )
         end
         #
@@ -259,7 +265,7 @@ module InteractionStrength
         #
         ##x XL_Breit = 0.
         ##x for  xc in xcList
-        ##x     wb = JAC.RadialIntegrals.W5_Integral(xc.mu, xc.nu, xc.a ,xc.c ,xc.b ,xc.d, grid)
+        ##x     wb = RadialIntegrals.W5_Integral(xc.mu, xc.nu, xc.a ,xc.c ,xc.b ,xc.d, grid)
         ##x     println("Breit0: nu=$(xc.nu), a=$(xc.a.subshell), b=$(xc.b.subshell), c=$(xc.c.subshell), d=$(xc.d.subshell), " *
         ##x             "coeff=$(xc.coeff), wx=$wb, wges= $(xc.coeff * wb)")
         ##x     XL_Breit = XL_Breit + xc.coeff * wb
@@ -270,9 +276,10 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.XL_Breit0_coefficients(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital)`  ... evaluates the combinations 
-         and pre-coefficients for the zero-frequency Breit interaction  X^L_Breit (omega=0.; abcd) for given rank L and orbital functions a, b, 
-         c and d. A list of coefficients xcList::Array{XLCoefficient,1} is returned.
+    `InteractionStrength.XL_Breit0_coefficients(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital)`  
+        ... evaluates the combinations and pre-coefficients for the zero-frequency Breit interaction  
+            X^L_Breit (omega=0.; abcd) for given rank L and orbital functions a, b, c and d. A list of coefficients 
+            xcList::Array{XLCoefficient,1} is returned.
     """
     function XL_Breit0_coefficients(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital)
         xcList = XLCoefficient[]
@@ -282,7 +289,7 @@ module InteractionStrength
         lc = Basics.subshell_l(c.subshell);    jc2 = Basics.subshell_2j(c.subshell)
         ld = Basics.subshell_l(d.subshell);    jd2 = Basics.subshell_2j(d.subshell)
 
-        xc = JAC.AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * JAC.AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
+        xc = AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
         if   rem(L,2) == 1    xc = - xc                end 
         if   abs(xc)  <  1.0e-10    return( xcList )   end
 
@@ -392,10 +399,10 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.XL_Breit0_densities(xcList::Array{XLCoefficient,1}, grid::Radial.Grid)`  ... computes the the 
-         effective Breit interaction strengths X^L,0_Breit (abcd) for given rank L and a list of orbital functions a, b, c, d 
-         and angular coefficients at the given grid. A value::Float64 is returned. 
-         At present, only the zero-frequency Breit interaction is taken into account.
+    `InteractionStrength.XL_Breit0_densities(xcList::Array{XLCoefficient,1}, grid::Radial.Grid)`  
+        ... computes the the effective Breit interaction strengths X^L,0_Breit (abcd) for given rank L and a list of 
+            orbital functions a, b, c, d and angular coefficients at the given grid. A value::Float64 is returned. 
+            At present, only the zero-frequency Breit interaction is taken into account.
     """
     function XL_Breit0_densities(xcList::Array{XLCoefficient,1}, grid::Radial.Grid)
         
@@ -424,9 +431,9 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.XL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  ... computes the the 
-         effective Coulomb interaction strengths X^L_Coulomb (abcd) for given rank L and orbital functions a, b, c and d at the given grid. 
-         A value::Float64 is returned.
+    `InteractionStrength.XL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  
+        ... computes the the effective Coulomb interaction strengths X^L_Coulomb (abcd) for given rank L and orbital functions 
+            a, b, c and d at the given grid. A value::Float64 is returned.
     """
     function XL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
         # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
@@ -435,26 +442,27 @@ module InteractionStrength
         lc = Basics.subshell_l(c.subshell);    jc2 = Basics.subshell_2j(c.subshell)
         ld = Basics.subshell_l(d.subshell);    jd2 = Basics.subshell_2j(d.subshell)
 
-        if  JAC.AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * JAC.AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
+        if  AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
             rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
             return( 0. )
         end
-        xc = JAC.AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * JAC.AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
+        xc = AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
         if   rem(L,2) == 1    xc = - xc    end 
         
-        ##x za = JAC.RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid);   zb = JAC.RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
+        ##x za = RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid);   zb = RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
         ##x if abs( (za-zb)/za ) > 1.0e-12    println("XL_Coulomb: Slater  za = $za   zb = $zb  ")   end
 
-        XL_Coulomb = xc * JAC.RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid)
-        ##x XL_Coulomb = xc * JAC.RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
+        XL_Coulomb = xc * RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid)
+        ##x XL_Coulomb = xc * RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
         return( XL_Coulomb )
     end
 
 
     """
-    `JAC.InteractionStrength.XL_Coulomb_DH(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid, lambda::Float64)`  
-        ... computes the the effective Coulomb-Debye-Hückel interaction strengths X^L_Coulomb_DH (abcd) for given rank L and orbital functions a, b, c and d 
-            at the given grid and for the given screening parameter lambda. A value::Float64 is returned.
+    `InteractionStrength.XL_Coulomb_DH(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid, lambda::Float64)`  
+        ... computes the the effective Coulomb-Debye-Hückel interaction strengths X^L_Coulomb_DH (abcd) for given rank L and 
+            orbital functions a, b, c and d at the given grid and for the given screening parameter lambda. A value::Float64 is 
+            returned.
     """
     function XL_Coulomb_DH(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid, lambda::Float64)
         # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
@@ -463,22 +471,22 @@ module InteractionStrength
         lc = Basics.subshell_l(c.subshell);    jc2 = Basics.subshell_2j(c.subshell)
         ld = Basics.subshell_l(d.subshell);    jd2 = Basics.subshell_2j(d.subshell)
 
-        if  JAC.AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * JAC.AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
+        if  AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
             rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
             return( 0. )
         end
-        xc = JAC.AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * JAC.AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
+        xc = AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
         if   rem(L,2) == 1    xc = - xc    end 
 
-        XL_Coulomb_DH = xc * JAC.RadialIntegrals.SlaterRk_DebyeHueckel_2dim(L, a, b, c, d, grid, lambda)
+        XL_Coulomb_DH = xc * RadialIntegrals.SlaterRk_DebyeHueckel_2dim(L, a, b, c, d, grid, lambda)
         return( XL_Coulomb_DH )
     end
 
 
     """
-    `JAC.InteractionStrength.XL_plasma_ionSphere(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, lambda::Float64)`  ... computes the 
-         effective interaction strengths X^L_ion-sphere (abcd) for given rank L and orbital functions a, b, c and d and for the plasma parameter 
-         lambda. A value::Float64 is returned.  **Not yet implemented !**
+    `InteractionStrength.XL_plasma_ionSphere(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, lambda::Float64)`  
+        ... computes the effective interaction strengths X^L_ion-sphere (abcd) for given rank L and orbital functions 
+            a, b, c and d and for the plasma parameter lambda. A value::Float64 is returned.  **Not yet implemented !**
     """
     function XL_plasma_ionSphere(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, lambda::Float64)
         error("Not yet implemented")
@@ -486,66 +494,67 @@ module InteractionStrength
 
 
     """
-    `JAC.InteractionStrength.X1_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  ... computes the the effective
-         interaction strengths X^1_sms,A (abcd) for fixed rank 1 and orbital functions a, b, c and d at the given grid. A value::Float64 is 
-         returned.
+    `InteractionStrength.X1_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
+        ... computes the the effective interaction strengths X^1_sms,A (abcd) for fixed rank 1 and orbital functions 
+            a, b, c and d at the given grid. A value::Float64 is returned.
     """
     function X1_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
-        wa = JAC.AngularMomentum.CL_reduced_me(a.subshell, 1, c.subshell) * JAC.AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) *
-             JAC.RadialIntegrals.Vinti(a, c, grid) * JAC.RadialIntegrals.Vinti(b, d, grid) / (2 * nm.mass)
-        ## println("**  <$(a.subshell) || Vinti || $(c.subshell)>  = $(JAC.RadialIntegrals.Vinti(a, c, grid)) " )
-        ## println("**  <$(b.subshell) || Vinti || $(d.subshell)>  = $(JAC.RadialIntegrals.Vinti(b, d, grid)) " )
+        wa = AngularMomentum.CL_reduced_me(a.subshell, 1, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) *
+             RadialIntegrals.Vinti(a, c, grid) * RadialIntegrals.Vinti(b, d, grid) / (2 * nm.mass)
+        ## println("**  <$(a.subshell) || Vinti || $(c.subshell)>  = $(RadialIntegrals.Vinti(a, c, grid)) " )
+        ## println("**  <$(b.subshell) || Vinti || $(d.subshell)>  = $(RadialIntegrals.Vinti(b, d, grid)) " )
         return( wa )
     end
 
 
     """
-    `JAC.InteractionStrength.X1_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  ... computes the the effective 
-         interaction strengths X^1_sms,B (abcd) for fixed rank 1 and orbital functions a, b, c and d at the given grid. A value::Float64 is 
-         returned.
+    `InteractionStrength.X1_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
+        ... computes the the effective interaction strengths X^1_sms,B (abcd) for fixed rank 1 and orbital functions 
+            a, b, c and d at the given grid. A value::Float64 is returned.
     """
     function X1_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
-        wa = - JAC.AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) * JAC.RadialIntegrals.Vinti(b, d, grid) *
-               JAC.RadialIntegrals.isotope_smsB(a, c, nm.Z, grid) / (2 * nm.mass) 
+        wa = - AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) * RadialIntegrals.Vinti(b, d, grid) *
+               RadialIntegrals.isotope_smsB(a, c, nm.Z, grid) / (2 * nm.mass) 
         return( wa )
     end
 
 
     """
-    `JAC.InteractionStrength.X1_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)` ... computes the the effective 
-         interaction strengths X^1_sms,C (abcd) for fixed rank 1 and orbital functions a, b, c and d at the given grid. A value::Float64 is 
-         returned.
+    `InteractionStrength.X1_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)` 
+        ... computes the the effective interaction strengths X^1_sms,C (abcd) for fixed rank 1 and orbital functions 
+            a, b, c and d at the given grid. A value::Float64 is returned.
     """
     function X1_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
-        wa = - JAC.AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) * JAC.AngularMomentum.CL_reduced_me(a.subshell, 1, c.subshell) * 
-               JAC.RadialIntegrals.Vinti(b, d, grid) * JAC.RadialIntegrals.isotope_smsC(a, c, nm.Z, grid) / (2 * nm.mass) 
+        wa = - AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) * AngularMomentum.CL_reduced_me(a.subshell, 1, c.subshell) * 
+               RadialIntegrals.Vinti(b, d, grid) * RadialIntegrals.isotope_smsC(a, c, nm.Z, grid) / (2 * nm.mass) 
         return( wa )
     end
 
 
     """
-    `JAC.InteractionStrength.zeeman_Delta_n1(a::Orbital, b::Orbital, grid::Radial.Grid)`  ... computes the <a|| Delta n^(1) ||b> reduced matrix element for 
-         the Zeeman-Schwinger contribution to the coupling to an external magnetic field for orbital functions a, b. A value::Float64 is 
-         returned.
+    `InteractionStrength.zeeman_Delta_n1(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+        ... computes the <a|| Delta n^(1) ||b> reduced matrix element for the Zeeman-Schwinger contribution to the coupling 
+            to an external magnetic field for orbital functions a, b. A value::Float64 is returned.
     """
     function zeeman_Delta_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
         wa = (Defaults.getDefaults("electron g-factor") - 2) / 2. * (a.subshell.kappa + b.subshell.kappa + 1) * 
-             JAC.AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) * JAC.RadialIntegrals.rkDiagonal(0, a, b, grid)
+             AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) * RadialIntegrals.rkDiagonal(0, a, b, grid)
         return( wa )
     end
 
 
     """
-    `JAC.InteractionStrength.zeeman_n1(a::Orbital, b::Orbital, grid::Radial.Grid)`  ... computes the <a|| n^(1) ||b> reduced matrix element for the Zeeman
-         coupling to an external magnetic field for orbital functions a, b. A value::Float64 is returned. 
+    `InteractionStrength.zeeman_n1(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+        ... computes the <a|| n^(1) ||b> reduced matrix element for the Zeeman coupling to an external magnetic field for 
+            orbital functions a, b. A value::Float64 is returned. 
     """
     function zeeman_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
-        wa = - JAC.AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) / (2 * Defaults.getDefaults("alpha")) *
-               JAC.RadialIntegrals.rkNonDiagonal(1, a, b, grid)
+        wa = - AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) / (2 * Defaults.getDefaults("alpha")) *
+               RadialIntegrals.rkNonDiagonal(1, a, b, grid)
         return( wa )
     end
 

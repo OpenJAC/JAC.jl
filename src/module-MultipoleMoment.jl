@@ -1,19 +1,20 @@
 
 """
-`module  JAC.MultipoleMoment`  ... a submodel of JAC that contains all methods for computing (electric) dipole D_z amplitudes 
-                                   between two bound-state levels.
+`module  JAC.MultipoleMoment`  
+    ... a submodel of JAC that contains all methods for computing (electric) dipole D_z amplitudes 
+        between two bound-state levels.
 """
 module MultipoleMoment
 
-    using Printf, JAC, ..Basics, ..Defaults,  ..ManyElectron, ..Radial
-
+    using Printf, JAC, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..InteractionStrength
 
     """
-    `JAC.MultipoleMoment.amplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
-                                   grid::Radial.Grid; display::Bool=false)`  .. to compute the multipole-moment amplitude  
-         <alpha_f J_f || Q^(M) (omega, gauge) || alpha_i J_i>  for the given final and initial level. All the amplitudes are 
-         calculated by means of Johnson's (2007) multipole-transition amplitudes from which also all constrains w.r.t the 
-         allowed gauges are inherited. A value::ComplexF64 is returned.
+    `MultipoleMoment.amplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
+                                   grid::Radial.Grid; display::Bool=false)`  
+        ... to compute the multipole-moment amplitude  
+            <alpha_f J_f || Q^(M) (omega, gauge) || alpha_i J_i>  for the given final and initial level. All the amplitudes are 
+            calculated by means of Johnson's (2007) multipole-transition amplitudes from which also all constrains w.r.t the 
+            allowed gauges are inherited. A value::ComplexF64 is returned.
     """
     function amplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
                        grid::Radial.Grid; display::Bool=false)
@@ -37,10 +38,9 @@ module MultipoleMoment
 
 
     """
-    `JAC.MultipoleMoment.dipoleAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)`  
-         ... to compute the dipole amplitude  
-             <(alpha_f J_f, kappa) J_i || D || alpha_i J_i>  
-         for the given final and initial level. A value::ComplexF64 is returned.
+    `MultipoleMoment.dipoleAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)`  
+         ... to compute the dipole amplitude   <(alpha_f J_f, kappa) J_i || D || alpha_i J_i>  for the given final 
+            and initial level. A value::ComplexF64 is returned.
     """
     function dipoleAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)
         
@@ -84,10 +84,11 @@ module MultipoleMoment
 
     """
     `JAC.MultipoleMoment.transitionAmplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
-                                             grid::Radial.Grid; display::Bool=false)`  .. to compute Johnson's (2007) multipole-transition
-         amplitude  <alpha_f J_f || T^(M, absorption) (omega, gauge) || alpha_i J_i>  for the given final and initial level. Allowed
-         gauges are {Velocity, Length} for the electric-multipole transition amplitudes and Magnetic for the magnetic-multipole transition
-         amplitudes, respectively. A value::ComplexF64 is returned.
+                                             grid::Radial.Grid; display::Bool=false)`  
+        ... to compute Johnson's (2007) multipole-transition amplitude  <alpha_f J_f || T^(M, absorption) (omega, gauge) || alpha_i J_i>  
+            for the given final and initial level. Allowed gauges are {Velocity, Length} for the electric-multipole transition 
+            amplitudes and Magnetic for the magnetic-multipole transition amplitudes, respectively. A value::ComplexF64 is 
+            returned.
     """
     function transitionAmplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
                                  grid::Radial.Grid; display::Bool=false)

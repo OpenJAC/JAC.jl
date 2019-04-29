@@ -1,18 +1,18 @@
 
 """
-`module  JAC.ParityNonConservation`  ... a submodel of JAC that contains all methods for computing P-odd and/or T-odd amplitudes between two 
-                                         bound-state levels.
+`module  JAC.ParityNonConservation`  
+    ... a submodel of JAC that contains all methods for computing P-odd and/or T-odd amplitudes between two 
+        bound-state levels.
 """
 module ParityNonConservation
 
-    using Printf,  JAC, ..Defaults,  ..ManyElectron
-
+    using Printf,  ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, ..Radial
 
     """
-    `JAC.ParityNonConservation.schiffMomentAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, 
-                                                     grid::Radial.Grid; display::Bool=false)`  ... to compute the Schiff moment amplitude  
-         <alpha_f J_f || H^(Schiff) || alpha_i J_i>  for the given final and initial level and for the nuclear density as given by the 
-         nuclear model. A value::ComplexF64 is returned.
+    `ParityNonConservation.schiffMomentAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, 
+                                                     grid::Radial.Grid; display::Bool=false)`  
+        ... to compute the Schiff moment amplitude  <alpha_f J_f || H^(Schiff) || alpha_i J_i>  for the given final 
+            and initial level and for the nuclear density as given by the nuclear model. A value::ComplexF64 is returned.
     """
     function schiffMomentAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, grid::Radial.Grid; display::Bool=false)
         nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
@@ -24,7 +24,7 @@ module ParityNonConservation
             for  s = 1:ni
                 wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                 for  coeff in wa
-                    tamp  = JAC.InteractionStrength.schiffMoment(finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], nm, grid)
+                    tamp  = InteractionStrength.schiffMoment(finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], nm, grid)
                     matrix[r,s] = matrix[r,s] + coeff.T * tamp  
                 end
             end
@@ -50,10 +50,9 @@ module ParityNonConservation
 
 
     """
-    `JAC.ParityNonConservation.anapoleMomentAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)`  
-         ... to compute the anapole moment amplitude  
-             <(alpha_f J_f, kappa) J_i || H^(anapole) || alpha_i J_i>  
-         for the given final and initial level. A value::ComplexF64 is returned.
+    `ParityNonConservation.anapoleMomentAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)`  
+        ... to compute the anapole moment amplitude <(alpha_f J_f, kappa) J_i || H^(anapole) || alpha_i J_i>  
+            for the given final and initial level. A value::ComplexF64 is returned.
     """
     function anapoleMomentAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)
         nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
@@ -84,10 +83,10 @@ module ParityNonConservation
 
 
     """
-    `JAC.ParityNonConservation.weakChargeAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, 
-                                                   grid::Radial.Grid; display::Bool=false)`  ... to compute the weak-charge amplitude  
-             <alpha_f J_f || H^(weak-charge) || alpha_i J_i>  for the given final and initial level and for the nuclear density as 
-             given by the nuclear model. A value::ComplexF64 is returned.
+    `ParityNonConservation.weakChargeAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, 
+                                                   grid::Radial.Grid; display::Bool=false)`  
+        ... to compute the weak-charge amplitude  <alpha_f J_f || H^(weak-charge) || alpha_i J_i>  for the given final and 
+            initial level and for the nuclear density as given by the nuclear model. A value::ComplexF64 is returned.
     """
     function weakChargeAmplitude(finalLevel::Level, initialLevel::Level, nm::Nuclear.Model, grid::Radial.Grid; display::Bool=false)
         nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
@@ -99,7 +98,7 @@ module ParityNonConservation
             for  s = 1:ni
                 wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                 for  coeff in wa
-                    tamp  = JAC.InteractionStrength.weakCharge(finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], nm, grid)
+                    tamp  = InteractionStrength.weakCharge(finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], nm, grid)
                     matrix[r,s] = matrix[r,s] + coeff.T * tamp  
                 end
             end

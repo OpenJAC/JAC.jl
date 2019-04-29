@@ -1,12 +1,14 @@
 
 """
-`module  JAC.Continuum`  ... a submodel of JAC that contains all functions and methods for computing, either in a given potential or with
-                             regard to a well-defined bound state; it is using GSL, SpecialFunctions, JAC, JAC.ManyElectron, JAC.Radial.
+`module  JAC.Continuum`  
+    ... a submodel of JAC that contains all functions and methods for computing, either in a given potential or with
+        regard to a well-defined bound state.
 """
 module Continuum
 
-    using  GSL, Printf, SpecialFunctions, JAC, JAC.Basics, ..Basics, ..Defaults, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
-    global JAC_counter = 0
+    using  GSL, Printf, SpecialFunctions
+    using  ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear
+    ##x global JAC_counter = 0
 
 
     """
@@ -22,20 +24,20 @@ module Continuum
 
 
     """
-    `JAC.Continuum.generateOrbitalAsymptoticCoulomb(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`   
-         ... to generate a simple relativistic and non-normalized continuum orbital but by assuming an asymptotic sin/cos behaviour for both
-         components at all mesh points. For this behaviour, both components and their derivatives can be calculated analytically.
-         The effective charge Zbar is determined for the given potential and the non-Coulombic phase shifts is set to zero.
-         An non-normalized cOrbital::Orbital is returned.
+    `Continuum.generateOrbitalAsymptoticCoulomb(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`   
+        ... to generate a simple relativistic and non-normalized continuum orbital but by assuming an asymptotic sin/cos behaviour 
+            for both components at all mesh points. For this behaviour, both components and their derivatives can be calculated 
+            analytically. The effective charge Zbar is determined for the given potential and the non-Coulombic phase shifts is set 
+            to zero. An non-normalized cOrbital::Orbital is returned.
          
-         Warning: At present, only the real part eta.re is taken into account; check for consistency !!
+            Warning: At present, only the real part eta.re is taken into account; check for consistency !!
     """
     function generateOrbitalAsymptoticCoulomb(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)  
         P = zeros(settings.mtp);    Q = zeros(settings.mtp);   Pprime = zeros(settings.mtp);    Qprime = zeros(settings.mtp)
         
         phi0 = 0.3
         wc   = Defaults.getDefaults("speed of light: c");    q = sqrt( 2*energy + energy/(wc*wc));    kappa = sh.kappa
-        Zbar = JAC.Radial.determineZbar(pot)
+        Zbar = Radial.determineZbar(pot)
         y    = Zbar * (energy + wc^2) / (wc^2 * q);   gammaBar = sqrt(kappa^2 - Zbar^2 / wc^2)
         eta  = - (kappa - im*y) / (energy + wc^2) / (gammaBar + im*y) / (2im)
         NP   = sqrt( (energy + 2*wc^2)/(pi*wc^2*q) );   NQ = -sqrt( energy / (pi*wc^2*q) )
@@ -57,17 +59,17 @@ module Continuum
 
 
     """
-    `JAC.Continuum.generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm::Nuclear.Model, grid::Radial.Grid, basis::Basis,
-                                           settings::Continuum.Settings)`   ... to generate a continuum orbital for the (continuum) 
-         subshell sh, the 
-         energy and the effective charge within the given potential. The continuum orbital is generated orthogonal with regard to all subshells 
-         of the same symmetry in the basis. All further specifications about this generations are made by proper settings. A tupel of a 
-         (continuum) (orbital::Orbital, phase::Float64) is returned.
+    `Continuum.generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm::Nuclear.Model, grid::Radial.Grid, basis::Basis,
+                                       settings::Continuum.Settings)`   
+        ... to generate a continuum orbital for the (continuum) subshell sh, the energy and the effective charge within the given 
+            potential. The continuum orbital is generated orthogonal with regard to all subshells of the same symmetry in the basis. 
+            All further specifications about this generations are made by proper settings. A tupel of a (continuum) 
+            (orbital::Orbital, phase::Float64) is returned.
     """
     function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm::Nuclear.Model, grid::Radial.Grid, settings::Continuum.Settings)  
         #
         # Generate a (local) potential for the given level
-        nuclearPotential  = JAC.Nuclear.nuclearPotential(nm, grid)
+        nuclearPotential  = Nuclear.nuclearPotential(nm, grid)
         ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
         ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
         ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
@@ -79,24 +81,24 @@ module Continuum
         # Generate a continuum orbital due to the given solution method
         ##x println("Defaults.GBL_CONT_SOLUTION = $(Defaults.GBL_CONT_SOLUTION)")
         if      Defaults.GBL_CONT_SOLUTION  ==  ContBessel 
-            cOrbital = JAC.Continuum.generateOrbitalBessel(energy, sh, grid::Radial.Grid, settings)
+            cOrbital = Continuum.generateOrbitalBessel(energy, sh, grid::Radial.Grid, settings)
         elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb 
-            cOrbital = JAC.Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
+            cOrbital = Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
         elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb 
-            cOrbital = JAC.Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
+            cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
         elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin
-            cOrbital = JAC.Continuum.generateOrbitalGalerkin(energy, sh, pot, settings)
+            cOrbital = Continuum.generateOrbitalGalerkin(energy, sh, pot, settings)
         else    error("stop a")
         end
         #
         #
         # Normalize the continuum orbital and determine its phase
         if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSine
-            cOrbital, phase = JAC.Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
+            cOrbital, phase = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
         elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSine
-            cOrbital, phase = JAC.Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
+            cOrbital, phase = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
         elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussek
-            cOrbital, phase = JAC.Continuum.normalizeOrbitalOngRussek(cOrbital, pot.grid, settings)
+            cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot.grid, settings)
         else    error("stop b")
         end
         
@@ -105,37 +107,37 @@ module Continuum
 
 
     """
-    `JAC.Continuum.generateOrbitalLocalPotential(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`   
-         ... to generate a continuum orbital for the (continuum) subshell sh, the energy and the given potential. The effective charge for the
-         normalization of the continuum orbital is derived from the potential. All further specifications about this generations are made by 
-         proper settings; however, the function termintates if the settings.includeExchange = true. A tupel of a (continuum) 
-         (orbital::Orbital, phase::Float64) is returned.
+    `Continuum.generateOrbitalLocalPotential(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`   
+        ... to generate a continuum orbital for the (continuum) subshell sh, the energy and the given potential. The effective 
+            charge for the normalization of the continuum orbital is derived from the potential. All further specifications about 
+            this generations are made by proper settings; however, the function termintates if the settings.includeExchange = true. 
+            A tupel of a (continuum) (orbital::Orbital, phase::Float64) is returned.
     """
     function generateOrbitalLocalPotential(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)
         settings.includeExchange   &&   error("Continuum orbital for local potential does not allow 'exchange'.")
         
         # Generate a continuum orbital due to the given solution method
         if      Defaults.GBL_CONT_SOLUTION  ==  ContBessel 
-            cOrbital = JAC.Continuum.generateOrbitalBessel(energy, sh, pot.grid, settings)
+            cOrbital = Continuum.generateOrbitalBessel(energy, sh, pot.grid, settings)
         elseif  Defaults.GBL_CONT_SOLUTION  ==  ContSine 
-            cOrbital = JAC.Continuum.generateOrbitalPureSine(energy, sh, pot.grid, settings)
+            cOrbital = Continuum.generateOrbitalPureSine(energy, sh, pot.grid, settings)
         elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb 
-            cOrbital = JAC.Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
+            cOrbital = Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
         elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb 
-            cOrbital = JAC.Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
+            cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
         elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin
-            cOrbital = JAC.Continuum.generateOrbitalGalerkin(energy, sh, pot, settings)
+            cOrbital = Continuum.generateOrbitalGalerkin(energy, sh, pot, settings)
         else    error("stop a")
         end
         #
         #
         # Normalize the continuum orbital and determine its phase
         if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSine
-            cOrbital, phase = JAC.Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
+            cOrbital, phase = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
         elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSine
-            cOrbital, phase = JAC.Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
+            cOrbital, phase = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
         elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussek
-            cOrbital, phase = JAC.Continuum.normalizeOrbitalOngRussek(cOrbital, pot.grid, settings)
+            cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot.grid, settings)
         else    error("stop b")
         end
         #
@@ -145,10 +147,10 @@ module Continuum
 
 
     """
-    `JAC.Continuum.generateOrbitalBessel(energy::Float64, sh::Subshell, grid::Radial.Grid, settings::Continuum.Settings)`   
-         ... to generate a simple, non-relativistic and non-normalized Bessel wave for the large component of the continuum
-         orbital and a small component due to the kinetic-balance condition. A (non-normalized) orbital::Orbital is returned.
-         While Pprime is obtained from the analytical expression of the large component, Qprime is set to zero here.
+    `Continuum.generateOrbitalBessel(energy::Float64, sh::Subshell, grid::Radial.Grid, settings::Continuum.Settings)`   
+        ... to generate a simple, non-relativistic and non-normalized Bessel wave for the large component of the continuum
+            orbital and a small component due to the kinetic-balance condition. A (non-normalized) orbital::Orbital is returned.
+            While Pprime is obtained from the analytical expression of the large component, Qprime is set to zero here.
     """
     function generateOrbitalBessel(energy::Float64, sh::Subshell, grid::Radial.Grid, settings::Continuum.Settings)  
         P = zeros(settings.mtp);    Q = zeros(settings.mtp);   Pprime = zeros(settings.mtp);    Qprime = zeros(settings.mtp)
@@ -169,22 +171,22 @@ module Continuum
 
 
     """
-    `JAC.Continuum.generateOrbitalGalerkin(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`   
-         ... to generate a non-normalized continuum orbital within the given local potential by using the Galerkin method and a given B-spline
-        basis. A (non-normalized) orbital::Orbital is returned.
+    `Continuum.generateOrbitalGalerkin(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`   
+        ... to generate a non-normalized continuum orbital within the given local potential by using the Galerkin method and a 
+            given B-spline basis. A (non-normalized) orbital::Orbital is returned.
     """
     function generateOrbitalGalerkin(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)  
         P = zeros(settings.mtp);    Q = zeros(settings.mtp);   Pprime = zeros(settings.mtp);    Qprime = zeros(settings.mtp)
         
-        wa = JAC.Bsplines.generatePrimitives(pot.grid)
-        wb = JAC.Bsplines.generateGalerkinMatrix(wa, energy, sh, pot)
+        wa = Bsplines.generatePrimitives(pot.grid)
+        wb = Bsplines.generateGalerkinMatrix(wa, energy, sh, pot)
         wc = wb * adjoint(wb)
         wd  = Basics.diagonalize("matrix: Julia, eigfact", wc)
         wx  =  adjoint(wd.vectors[1]) * wd.vectors[1]
         println("*** wx-norm = $wx")
         ##x println("Galerkin: A-eigenvalues = $(wd.values)")
         
-        cOrbital = JAC.Bsplines.generateOrbitalFromPrimitives(energy, sh, settings.mtp, wd.vectors[1], wa)  
+        cOrbital = Bsplines.generateOrbitalFromPrimitives(energy, sh, settings.mtp, wd.vectors[1], wa)  
         mtp = size(cOrbital.P,1)
         println("Continuum B-spline-Galerkin orbital for energy=" * @sprintf("%.4e",energy) * ",  kappa=$(sh.kappa) " *
                 "[mpt=$mtp, r[mtp]=" * @sprintf("%.4e",pot.grid.r[mtp]) * ", smallest eigenvalue=" * @sprintf("%.4e",wd.values[1]) * "].")
@@ -193,11 +195,13 @@ module Continuum
     end
 
     """
-    `JAC.Continuum.generateOrbitalNonrelativisticCoulomb(energy::Float64, sh::Subshell, Zeff::Float64, grid::Radial.Grid, settings::Continuum.Settings)`   
-         ... to generate a simple, non-relativistic and non-normalized Coulomb wave for the (continuum) subshell sh, the small component is
-         simply obtained by the kinetic-balance condition. A orbital::Orbital is returned.
-         
-         This function does not yet work because there is no Julia implementation of the hypergeometric function with complex arguments available.
+    `Continuum.generateOrbitalNonrelativisticCoulomb(energy::Float64, sh::Subshell, Zeff::Float64, grid::Radial.Grid, 
+                                                     settings::Continuum.Settings)`   
+        ... to generate a simple, non-relativistic and non-normalized Coulomb wave for the (continuum) subshell sh, 
+            the small component is simply obtained by the kinetic-balance condition. A orbital::Orbital is returned.
+            *****
+            This function does not yet work because there is no Julia implementation of the hypergeometric function with 
+            complex arguments available.
     """
     function generateOrbitalNonrelativisticCoulomb(energy::Float64, sh::Subshell, Zeff::Float64, grid::Radial.Grid, settings::Continuum.Settings) 
         println("\n error: presently, NO Julia implementation of the hypergeometric function with complex arguments available.")
@@ -228,24 +232,25 @@ module Continuum
 
 
     """
-        + `(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`   
-         ... to generate a simple, non-relativistic and non-normalized Coulomb wave for the (continuum) subshell sh, the small component is
-         simply obtained by the kinetic-balance condition. A orbital::Orbital is returned.
+    + `(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`   
+        ... to generate a simple, non-relativistic and non-normalized Coulomb wave for the (continuum) subshell sh, 
+            the small component is simply obtained by the kinetic-balance condition. A orbital::Orbital is returned.
     """
     function generateOrbitalNonrelativisticCoulomb(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings) 
-        Zbar     = JAC.Radial.determineZbar(pot)
-        cOrbital = JAC.Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, Zbar, pot.grid, settings)
+        Zbar     = Radial.determineZbar(pot)
+        cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, Zbar, pot.grid, settings)
         
         return( cOrbital )
     end
 
 
     """
-    `JAC.Continuum.gridConsistency(maxEnergy::Float64, grid::Radial.Grid)`   
-         ... to check the consistency of the given grid with the maximum energy of the required continuum electrons; an error message
-             is issued if the grid.hp = 0.   or  15 * grid.hp < wavelength(maxEnergy)   or  if the grid has less than 600 grid points.
-             The function also returns the recommended grid point where the normalization and phase is to be determined. This number 
-             is currently set to nrContinuum = grid.nr - 200  ... to correct for the wrong 'phase behaviour' at large r-values.
+    `Continuum.gridConsistency(maxEnergy::Float64, grid::Radial.Grid)`   
+        ... to check the consistency of the given grid with the maximum energy of the required continuum electrons; 
+            an error message is issued if the grid.hp = 0.   or  15 * grid.hp < wavelength(maxEnergy)   or  if the grid has 
+            less than 600 grid points. The function also returns the recommended grid point where the normalization and phase 
+            is to be determined. This number is currently set to nrContinuum = grid.nr - 200  ... to correct for the wrong 
+            'phase behaviour' at large r-values.
     """
     function gridConsistency(maxEnergy::Float64, grid::Radial.Grid)
         Defaults.warn(AddWarning, "Continuum.gridConsistency(): Improve the grid point for normalization; currently 600.")
@@ -267,10 +272,10 @@ module Continuum
 
 
     """
-    `JAC.Continuum.generateOrbitalPureSine(energy::Float64, sh::Subshell, grid::Radial.Grid, settings::Continuum.Settings)`   
-         ... to generate a simple, non-relativistic and non-normalized Bessel wave for the large component of the continuum
-         orbital and a small component due to the kinetic-balance condition. A (non-normalized) orbital::Orbital is returned.
-         While Pprime is obtained from the analytical expression of the large component, Qprime is set to zero here.
+    `Continuum.generateOrbitalPureSine(energy::Float64, sh::Subshell, grid::Radial.Grid, settings::Continuum.Settings)`   
+        ... to generate a simple, non-relativistic and non-normalized Bessel wave for the large component of the continuum
+            orbital and a small component due to the kinetic-balance condition. A (non-normalized) orbital::Orbital is returned.
+            While Pprime is obtained from the analytical expression of the large component, Qprime is set to zero here.
     """
     function generateOrbitalPureSine(energy::Float64, sh::Subshell, grid::Radial.Grid, settings::Continuum.Settings)  
         P = zeros(settings.mtp);    Q = zeros(settings.mtp);   Pprime = zeros(settings.mtp);    Qprime = zeros(settings.mtp)
@@ -290,9 +295,9 @@ module Continuum
 
 
     """
-    `JAC.Continuum.normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings::Continuum.Settings)`   
-         ... to normalize the given continuum orbital with regard to a (asymptotic) pure sine-function. 
-         An (on-energy-scale-normalized) orbital::Orbital and its relative phase phi w.r.t.  sin(kr + phi) is returned.
+    `Continuum.normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings::Continuum.Settings)`   
+        ... to normalize the given continuum orbital with regard to a (asymptotic) pure sine-function. 
+            An (on-energy-scale-normalized) orbital::Orbital and its relative phase phi w.r.t.  sin(kr + phi) is returned.
     """
     function normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings::Continuum.Settings) 
         
@@ -329,16 +334,16 @@ module Continuum
 
 
     """
-    `JAC.Continuum.normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)`   
-         ... to normalize the given continuum orbital with regard to a (asymptotic) pure sine-function. 
-         An (on-energy-scale-normalized) orbital::Orbital is returned.
+    `Continuum.normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)`   
+        ... to normalize the given continuum orbital with regard to a (asymptotic) pure sine-function. 
+            An (on-energy-scale-normalized) orbital::Orbital is returned.
     """
     function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings) 
         
         nx = 21   # Number of grid points for determining the phase and normalization constants
         mtp = size( cOrbital.P, 1);   energy = cOrbital.energy    
         wc   = Defaults.getDefaults("speed of light: c");    q = sqrt( 2*energy + energy/(wc*wc));      kappa = cOrbital.subshell.kappa
-        Zbar = JAC.Radial.determineZbar(pot);    y = Zbar * (energy + wc^2) / (wc^2 * q);   gammaBar = sqrt(kappa^2 - Zbar^2 / wc^2)
+        Zbar = Radial.determineZbar(pot);    y = Zbar * (energy + wc^2) / (wc^2 * q);   gammaBar = sqrt(kappa^2 - Zbar^2 / wc^2)
         eta  = - (kappa - im*y) / (energy + wc^2) / (gammaBar + im*y) / (2im)
         NP   = sqrt( (energy + 2*wc^2)/(pi*wc^2*q) );   NQ = -sqrt( energy / (pi*wc^2*q) )
 
