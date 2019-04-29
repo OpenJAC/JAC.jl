@@ -6,7 +6,7 @@
 """
 module AutoIonization
 
-    using  Printf, JAC, JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.Nuclear, JAC.PlasmaShift
+    using  Printf, JAC, ..Continuum, JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.Nuclear, JAC.PlasmaShift
     global JAC_counter = 0
 
     
@@ -46,10 +46,14 @@ module AutoIonization
 
     # `Base.show(io::IO, settings::AutoIonization.Settings)`  ... prepares a proper printout of the variable settings::AutoIonization.Settings.
     function Base.show(io::IO, settings::AutoIonization.Settings) 
-        println(io, "AutoIonization.Settings(with printBeforeComputation = $(settings.printBeforeComputation), selectLines = $(settings.selectLines), " *
-                    "selectedLines = $(settings.selectedLines), ")
-        println(io, "                 minAugerEnergy = $(settings.minAugerEnergy), maxAugerEnergy = $(settings.maxAugerEnergy), " *
-                    "maxKappa = $(settings.maxKappa), calcAnisotropy = $(settings.calcAnisotropy), operator = $(settings.operator)) ")
+        println(io, "calcAnisotropy:                $(settings.calcAnisotropy)  ")
+        println(io, "printBeforeComputation:        $(settings.printBeforeComputation)  ")
+        println(io, "selectLines:                   $(settings.selectLines)  ")
+        println(io, "selectedLines:                 $(settings.selectedLines)  ")
+        println(io, "minAugerEnergy:                $(settings.minAugerEnergy)  ")
+        println(io, "maxAugerEnergy:                $(settings.maxAugerEnergy)  ")
+        println(io, "maxKappa:                      $(settings.maxKappa)  ")
+        println(io, "operator:                      $(settings.operator)  ")
     end
 
 
@@ -300,7 +304,7 @@ module AutoIonization
         if  settings.printBeforeComputation    JAC.AutoIonization.displayLines(lines)    end  
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
-        nrContinuum = JAC.Continuum.gridConsistency(maxEnergy, grid)
+        nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = AutoIonization.Line[]
         for  line in lines
@@ -335,7 +339,7 @@ module AutoIonization
         # if  settings.printBeforeComputation    JAC.AutoIonization.displayLines(lines)    end  
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
-        nrContinuum = JAC.Continuum.gridConsistency(maxEnergy, grid)
+        nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = AutoIonization.Line[]
         for  line in lines
@@ -371,7 +375,7 @@ module AutoIonization
         if  settings.printBeforeComputation    JAC.AutoIonization.displayLines(lines)    end
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
-        nrContinuum = JAC.gridConsistency(maxEnergy, grid)
+        nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = AutoIonization.Line[]
         for  line in lines

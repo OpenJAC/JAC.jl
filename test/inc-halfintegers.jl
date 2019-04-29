@@ -1,5 +1,5 @@
 using JAC: HalfInt
-using JAC.BasicTypes: twice
+using JAC.Basics: twice
 
 @testset "HalfInt" begin
     @testset "Construction" begin

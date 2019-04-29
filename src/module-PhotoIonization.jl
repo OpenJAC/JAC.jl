@@ -6,7 +6,7 @@
 """
 module PhotoIonization
 
-    using Printf, JAC, JAC.Basics, JAC.Radial, JAC.Nuclear, JAC.ManyElectron, JAC.PlasmaShift
+    using Printf, JAC, ..Basics, ..Continuum, JAC.Radial, JAC.Nuclear, JAC.ManyElectron, JAC.PlasmaShift
     
     global JAC_counter = 0
 
@@ -44,7 +44,8 @@ module PhotoIonization
     `JAC.PhotoIonization.Settings()`  ... constructor for the default values of photoionization line computations
     """
     function Settings()
-        Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], Float64[], false, false, false, false, false, Tuple{Int64,Int64}[])
+        Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb], Float64[], false, false, false, false, 
+                 false, Tuple{Int64,Int64}[], Basics.ExpStokes())
     end
 
 
@@ -235,7 +236,7 @@ module PhotoIonization
         if  settings.printBeforeComputation    JAC.PhotoIonization.displayLines(lines)    end
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
-        nrContinuum = JAC.Continuum.gridConsistency(maxEnergy, grid)
+        nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = PhotoIonization.Line[]
         for  line in lines

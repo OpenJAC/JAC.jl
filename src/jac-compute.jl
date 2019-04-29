@@ -146,7 +146,7 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
     if  settings.qedCI    error("No QED estimates supported for plasma computations; use qedCI=false  in the asfSettings.")   end   
     
     # Now distinguis the CI matrix for different plasma models
-    if  plasmaSettings.plasmaModel == JAC.PlasmaShift.DebyeHueckel
+    if  plasmaSettings.plasmaModel == JAC.PlasmaShift.DebyeHueckel()
         if printout    print("Compute DebyeHueckel-CI matrix of dimension $n x $n for the symmetry $(string(JP.J))^$(string(JP.parity)) ...")    end
 
         # Generate an effective nuclear charge Z(r) for a screened Debye-Hueckel potential on the given grid
@@ -323,7 +323,7 @@ function Basics.computePotentialCoreHartree(grid::Radial.Grid, level::Level)
     for  sh in basis.coreSubshells
     ## for  sh in basis.subshells
         orb  = basis.orbitals[sh]
-        occ  = computeMeanSubshellOccupation(sh, [level])    ## (Basics.subshell_2j(sh) + 1.0)  for closed-shells
+        occ  = Basics.computeMeanSubshellOccupation(sh, [level])    ## (Basics.subshell_2j(sh) + 1.0)  for closed-shells
         nrho = length(orb.P)
         for    i = 1:nrho   rhoc[i] = rhoc[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
     end
@@ -353,7 +353,7 @@ function Basics.computePotentialHartree(grid::Radial.Grid, level::Level)
     basis = level.basis;    npoints = grid.nr;    wx = zeros( npoints )
     # Sum_a ...
     for  a in basis.subshells
-        occa = computeMeanSubshellOccupation(a, [level])
+        occa = Basics.computeMeanSubshellOccupation(a, [level])
         orba = basis.orbitals[a];   nrho = length(orba.P);      rhoaa  = zeros(nrho)
         for  i = 1:nrho    rhoaa[i] = orba.P[i]^2 + orba.Q[i]^2    end
         for  i = 1:nrho    wx[i]    = wx[i] - occa * JAC.RadialIntegrals.Yk_ab(0, grid.r[i], rhoaa, nrho, grid)   end
@@ -381,7 +381,7 @@ function Basics.computePotentialHartreeSlater(grid::Radial.Grid, level::Level)
     basis = level.basis;    npoints = grid.nr;    wx = zeros( npoints );    rho = zeros( npoints )
     # Sum_a ...
     for  a in basis.subshells
-        occa = computeMeanSubshellOccupation(a, [level])
+        occa = Basics.computeMeanSubshellOccupation(a, [level])
         orba = basis.orbitals[a];   nrho = length(orba.P);      rhoaa  = zeros(nrho)
         for  i = 1:nrho    rhoaa[i] = orba.P[i]^2 + orba.Q[i]^2    end
         for  i = 1:nrho    wx[i]    = wx[i]  - occa * JAC.RadialIntegrals.Yk_ab(0, grid.r[i], rhoaa, nrho, grid)   end

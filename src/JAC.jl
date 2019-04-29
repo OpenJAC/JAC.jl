@@ -32,16 +32,16 @@
 
 **`Further details and information`**
 
-        + Kinds of atomic implementation                                             [cf. ? Details.kindsOfComputation]
-        + Atomic amplitudes (partly) implemented in JAC                              [cf. ? Details.amplitudes]
-        + Atomic level properties (partly) implemented in JAC                        [cf. ? Details.properties]
-        + Atomic processes (partly) implemented in JAC                               [cf. ? Details.processes]
-        + Interactive use of JAC procedures                                          [cf. ? Details.interactive]
-        + Design principles and limitations of the JAC program                       [cf. ? Details.design]
-        + Data types, structs and name conventions of the JAC module                 [cf. ? Details.datatypes]
-        + Atomic cascade computations and approximations                             [cf. ? Details.decayCascades]
-        + Use of (em) light pulses in the time evolution of statistical tensors      [cf. ? Details.pulses]
-        + Why Julia ?                                                                [cf. ? Details.whyJulia]
+        + Kinds of atomic implementation                                       [cf. ? Details.kindsOfComputation]
+        + Atomic amplitudes (partly) implemented in JAC                        [cf. ? Details.amplitudes]
+        + Atomic level properties (partly) implemented in JAC                  [cf. ? Details.properties]
+        + Atomic processes (partly) implemented in JAC                         [cf. ? Details.processes]
+        + Interactive use of JAC procedures                                    [cf. ? Details.interactive]
+        + Design principles and limitations of the JAC program                 [cf. ? Details.design]
+        + Data types, structs and name conventions of the JAC module           [cf. ? Details.datatypes]
+        + Atomic cascade computations and approximations                       [cf. ? Details.decayCascades]
+        + Use of (em) light pulses in the time evolution of statist. tensors   [cf. ? Details.pulses]
+        + Why Julia ?                                                          [cf. ? Details.whyJulia]
 
 """
 module JAC
@@ -49,14 +49,15 @@ module JAC
 using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD
 
 export @racahsum, 
-       AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AsfSettings, Atomic, AutoIonization, 
+       add, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AsfSettings, Atomic, Auger, AutoIonization, 
        Basics, Basis, 
+       convertUnits, 
        Defaults, Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
        DecayYield, Details, Dielectronic, DoubleAuger,
        ElectricDipoleMoment, Einstein, EmMultipole, 
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor,
-       GreenFunction, getDefaults,
+       GreenFunction, getDefaults, Gui,
        Hfs, HydrogenicIon,
        ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, 
        LandeZeeman, Level, LevelSymmetry,
@@ -66,9 +67,9 @@ export @racahsum,
        PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
        PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, perform,
-       Radial, RadiativeAuger, RayleighCompton, REDA, READI,
+       Radial, RadialIntegrals, Radiative, RadiativeAuger, RayleighCompton, REDA, READI,
        SchiffMoment, Shell, Subshell, setDefaults,
-       UseCoulomb, UseBabushkin, convertUnits
+       UseCoulomb, UseBabushkin, UseGauge
     
 # Basic data and data structures
 include("module-Basics.jl")
@@ -89,6 +90,7 @@ include("module-HydrogenicIon.jl")
 include("module-InteractionStrength.jl")
 include("module-InteractionStrengthQED.jl")
 include("module-PeriodicTable.jl")
+include("module-TableStrings.jl")
 include("module-Tools.jl")
 
 # Functions/methods for atomic amplitudes
@@ -139,7 +141,6 @@ include("module-PairAnnihilation2Photon.jl")  =#
 # Functions/methods for atomic and cascade computations
 include("module-Atomic.jl")
 include("module-Cascade.jl")
-include("module-TableStrings.jl")
 
 # Functions/methods for atomic time evolutions
 # include("module-Pulse.jl")

@@ -84,6 +84,8 @@ module Defaults
     GBL_PRINT_SUMMARY           = false
     GBL_PRINT_TEST              = false
     GBL_PRINT_DEBUG             = false
+    
+    GBL_SUMMARY_IOSTREAM        = nothing
 
     GBL_STANDARD_GRID           = Radial.Grid("grid: exponential", printout=false)        
         

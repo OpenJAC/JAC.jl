@@ -566,9 +566,9 @@ module Bsplines
                         newOrbital = generateOrbitalFromPrimitives(sh, wc, primitives)
                         wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
                         if  wcOrbital > settings.accuracyScf   go_on = true   end
-                           sa = "  $sh::  en [a.u.] = " * @sprintf("%.8e", newOrbital.energy) * ";   self-consistency = "  
-                           sa = sa * @sprintf("%.6e", wcOrbital)   * "  ["
-                           sa = sa * @sprintf("%.6e", wcBlock)             * " for symmetry block kappa = $kappa]"
+                           sa = "  $sh::  en [a.u.] = " * @sprintf("%.7e", newOrbital.energy) * ";   self-cons'cy = "  
+                           sa = sa * @sprintf("%.4e", wcOrbital)   * "  ["
+                           sa = sa * @sprintf("%.4e", wcBlock)             * " for sym-block kappa = $kappa]"
                            if  printout    println(sa)    end
                         ## println("  $sh  en [a.u.] = $(newOrbital.energy)   self-consistency = $(wcOrbital), $(wcBlock) [kappa=$kappa] ") 
                         previousOrbitals[sh] = newOrbital

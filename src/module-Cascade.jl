@@ -19,7 +19,7 @@ module Cascade
 
     
     """
-    `abstract type Cascade.Approach` 
+    `abstract type Cascade.AbstractApproach` 
         ... defines an abstract and a number of singleton types for the computational approach/model that is applied to generate and evaluate 
             a cascade.
 
@@ -28,10 +28,10 @@ module Cascade
         + struct SCA                ... to evaluate the level structure and transitions of all involved levels in single-configuration 
                                         approach but by calculating all fine-structure resolved transitions.
     """
-    abstract type  Approach                   end
-    struct         AverageSCA  <:  Approach   end
-    struct         SCA         <:  Approach   end
-    struct         UserMCA     <:  Approach   end
+    abstract type  AbstractApproach                   end
+    struct         AverageSCA  <:  AbstractApproach   end
+    struct         SCA         <:  AbstractApproach   end
+    struct         UserMCA     <:  AbstractApproach   end
     
 
 
@@ -126,7 +126,7 @@ module Cascade
         + nuclearModel       ::Nuclear.Model                  ... Model, charge and parameters of the nucleus.
         + grid               ::Radial.Grid                    ... The radial grid to be used for the computation.
         + asfSettings        ::AsfSettings                    ... Provides the settings for the SCF process.
-        + approach           ::Cascade.Approach               ... Computational approach/model that is applied to generate and evaluate the 
+        + approach           ::Cascade.AbstractApproach       ... Computational approach/model that is applied to generate and evaluate the 
                                                                   cascade; possible approaches are: {'single-configuration', ...}
         + processes          ::Array{Basics.AtomicProcess,1}   ... List of the atomic processes that are supported and should be included into the 
                                                                   cascade.
@@ -149,7 +149,7 @@ module Cascade
         nuclearModel         ::Nuclear.Model
         grid                 ::Radial.Grid
         asfSettings          ::AsfSettings
-        approach             ::Union{Cascade.Approach}
+        approach             ::Union{Cascade.AbstractApproach}
         processes            ::Array{Basics.AtomicProcess,1}
         initialConfs         ::Array{Configuration,1}
         initialLevels        ::Array{Tuple{Int64,Float64},1}

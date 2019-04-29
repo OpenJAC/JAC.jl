@@ -10,14 +10,14 @@ module Basics
 
     using Printf
 
-    export  AngularJ, AngularJ64, AngularM, AngularM64, 
+    export  add, AngularJ, AngularJ64, AngularM, AngularM64, Auger,
             compute,
             EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
             HalfInt, HalfInteger, 
             LevelSymmetry, 
             oplus,
             Parity, perform,  
-            RadialMesh, 
+            RadialMesh, Radiative,
             SolidAngle, Shell, Subshell, subshell_2j,
             TensorComp, UseCoulomb, UseBabushkin
 
@@ -277,10 +277,11 @@ module Basics
     end
 
 
+    #============================================
     # `Base.show(io::IO, p::Parity)`  ... prepares a proper printout of the variable p::Parity.
     function Base.show(io::IO, p::Parity) 
         print(io, string(p) )
-    end
+    end  ==================================#
 
 
     # `Base.string(p::Parity)`  ... provides a proper printout of the variable p::Parity.
@@ -693,10 +694,11 @@ module Basics
     end
 
 
+    #===========================
     # `Base.show(io::IO, process::AtomicProcess)`  ... prepares a proper printout of the variable process::AtomicProcess.
     function Base.show(io::IO, process::AtomicProcess) 
         print(io, string(process) )
-    end
+    end   =======================#
 
 
     # `Base.string(process::AtomicProcess)`  ... provides a proper printout of the variable process::AtomicProcess.
@@ -815,10 +817,11 @@ module Basics
     end
 
 
+    #===========================
     # `Base.show(io::IO, gauge::EmGauge)`  ... prepares a proper printout of the variable gauge::EmGauge.
     function Base.show(io::IO, gauge::EmGauge) 
         print(io, string(gauge) )
-    end
+    end  ====================#
 
 
     # `Base.string(gauge::EmGauge)`  ... provides a proper printout of the variable gauge::EmGauge.
@@ -852,10 +855,11 @@ module Basics
     end
 
 
+    #===========================
     # `Base.show(io::IO, gauge::UseGauge)`  ... prepares a proper printout of the variable gauge::UseGauge.
     function Base.show(io::IO, gauge::UseGauge) 
         print(io, string(gauge) )
-    end
+    end    ==========================#
 
 
     # `Base.string(gauge::UseGauge)`  ... provides a proper printout of the variable gauge::EmGauge.
@@ -1050,11 +1054,11 @@ module Basics
         AtomicLevelProperty(wa)
     end
 
-
+    #===========================
     # `Base.show(io::IO, property::AtomicLevelProperty)`  ... prepares a proper printout of the variable property::AtomicLevelProperty.
     function Base.show(io::IO, property::AtomicLevelProperty) 
         print(io, string(property) )
-    end
+    end   ======================#
 
 
     # `Base.string(property::AtomicLevelProperty)`  ... provides a proper printout of the variable property::AtomicLevelProperty.

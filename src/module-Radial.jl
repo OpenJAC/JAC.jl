@@ -244,7 +244,8 @@ module Radial
     `struct  Radial.Potential`  ... defines a struct for the radial potential which contains all information about its physical content.
 
         + name           ::String            ... A name for the potential.
-        + Zr             ::Array{Float64,1}  ... radial potential function Z(r) = - r * V(r) as usual in atomic structure theory.
+        + Zr             ::Array{Float64,1}  ... radial potential function Z(r) = - r * V(r) as usual in atomic 
+                                                 structure theory.
         + grid           ::RadialGrid        ... radial grid on which the potential is defined.
     """
     struct  Potential
@@ -284,14 +285,17 @@ module Radial
 
 
     """
-    `struct  Orbital`  ... defines a type for a single-electron radial orbital function with a large and small component, and which can refer to
-             either the standard or an explicitly given grid due to the logical flag isStandardGrid. Bound-state orbitals with energy < 0 are 
-             distinguished from free-electron orbitals by the flag isBound. -- Note that the arrays P, Q and grid cannot be defined only by the 
-             standard constructor but are typically set explicitly after an instance of this type has been created.
+    `struct  Radial.Orbital`  
+        ... defines a type for a single-electron radial orbital function with a large and small component, and which can refer to
+            either the standard or an explicitly given grid due to the logical flag isStandardGrid. Bound-state orbitals with energy < 0 are 
+            distinguished from free-electron orbitals by the flag isBound. -- Note that the arrays P, Q and grid cannot be defined only by the 
+            standard constructor but are typically set explicitly after an instance of this type has been created.
 
         + subshell        ::Subshell          ... Relativistic subshell.
-        + isBound         ::Bool              ... Logical flag to distinguish between bound (true) and free-electron orbitals (false).
-        + useStandardGrid ::Bool              ... Logical flag for using the standard grid (true) or an explicitly given grid (false).
+        + isBound         ::Bool              ... Logical flag to distinguish between bound (true) and free-electron 
+                                                  orbitals (false).
+        + useStandardGrid ::Bool              ... Logical flag for using the standard grid (true) or an explicitly 
+                                                  given grid (false).
         + energy          ::Float64           ... Single-electron energies of bound orbitals are always negative.
         + P               ::Array{Float64,1}  ... Large and ..
         + Q               ::Array{Float64,1}  ... small component of the radial orbital.
@@ -315,8 +319,7 @@ module Radial
     """
     `Radial.Orbital(subshell::Subshell, energy::Float64)`  
         ... constructor for given subshell and energy, and where isStandardGrid is set to true; the grid must be defined 
-            explicitly and the large and small components are not yet defined in 
-this case.
+            explicitly and the large and small components are not yet defined in this case.
     """
     function Orbital(subshell::Subshell, energy::Float64)
         if energy < 0    isBound = true    else    isBound = false    end

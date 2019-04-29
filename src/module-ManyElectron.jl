@@ -160,10 +160,13 @@ module ManyElectron
         ... a struct for defining the settings for the atomic state functions, i.e. the self-consistent-field (SCF) 
             and CI computations
 
-        + generateScf          ::Bool               ... True, if a SCF need to be generated, and false otherwise (frozen orbitals).
-        + breitScf             ::Bool               ... True, if Breit interaction is to be included into the SCF computations.
+        + generateScf          ::Bool               ... True, if a SCF need to be generated, and false otherwise 
+                                                        (frozen orbitals).
+        + breitScf             ::Bool               ... True, if Breit interaction is to be included into the SCF 
+                                                        computations.
         + methodScf            ::String             ... Specify the SCF method: ["AL", "OL", "EOL", "meanDFS", "meanHS"].
-        + startScf             ::String             ... Specify how the start orbitals are obtained ["fromNRorbitals", "fromGrasp", "hydrogenic"].
+        + startScf             ::String             ... Specify how the start orbitals are obtained 
+                                                        ["fromNRorbitals", "fromGrasp", "hydrogenic"].
         + orbitalFileScf       ::String             ... Filename of orbitals, if taken from Grasp.
         + levelsScf            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
         + maxIterationsScf     ::Int64              ... maximum number of SCF iterations
@@ -174,10 +177,10 @@ module ManyElectron
     	+ breitCI              ::Bool               ... logical flag to include Breit interactions.
     	+ qedCI                ::Bool               ... logical flag to include QED interactions.
     	+ methodCI             ::String             ... method for diagonalizing the matrix.
-    	+ selectLevelsCI       ::Bool               ... true, if specific level (number)s have been selected for computation.
+    	+ selectLevelsCI       ::Bool               ... true, if specific level (number)s have been selected.
     	+ selectedLevelsCI     ::Array{Int64,1}     ... Level number that have been selected.
-    	+ selectSymmetriesCI   ::Bool               ... true, if specific level symmetries have been selected for computation.
-    	+ selectedSymmetriesCI ::Array{LevelSymmetry,1}       ... Level symmetries that have been selected.
+    	+ selectSymmetriesCI   ::Bool               ... true, if specific level symmetries have been selected.
+    	+ selectedSymmetriesCI ::Array{LevelSymmetry,1}    ... Level symmetries that have been selected.
     """
     struct  AsfSettings
         generateScf            ::Bool 
