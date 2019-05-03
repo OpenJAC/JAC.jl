@@ -57,17 +57,6 @@ module TableStrings
     end
 
 
-    #==  routine need to be adapted for Hfs. ...
-    """
-    `TableStrings.ijfVector(i::Int64, vector::Hfs.IJF_Vector)`  ... a string of "....i)  (J^P) F" is returned.
-    """
-    function  ijfVector(i::Int64, vector::Hfs.IJF_Vector) 
-        si = string(i);   ni = length(si);    sa = repeat(" ", 5);    sa = sa[1:5-ni] * si * ")  "
-        sa = sa * "[" * string( LevelSymmetry(vector.levelJ.J, vector.levelJ.parity) ) * "] " * string(vector.F) * repeat(" ", 4)
-        return( sa )
-    end  ==#
-
-
     """
     `TableStrings.inUnits(sa::String)`  ... a string is returned that displays the requested unit in the form: '[unit]'
     """

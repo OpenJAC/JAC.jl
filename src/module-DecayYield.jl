@@ -1,19 +1,18 @@
 
 """
-`module  JAC.DecayYield`  ... a submodel of JAC that contains all methods for computing fluorescence and Auger yields for some level; 
-                              it is using JAC, JAC.ManyElectron, JAC.Radial.
+`module  JAC.DecayYield`  
+    ... a submodel of JAC that contains all methods for computing fluorescence and Auger yields for some level(s).
 """
 module DecayYield
 
-    using Printf, JAC, ..Basics,  ..Basics,  ..Defaults, JAC.ManyElectron, JAC.Radial
-    global JAC_counter = 0
-
+    using Printf, JAC, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..TableStrings
 
     """
     `struct  DecayYield.Settings`  ... defines a type for the details and parameters of computing fluorescence and Auger yields.
 
         + calcX                    ::Bool             ... True if the ... need to be calculated, and false otherwise.
-        + printBeforeComputation   ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
+        + printBeforeComputation   ::Bool             ... True if a list of selected levels is to be printed before the 
+                                                          actual computations start. 
         + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
         + selectedLevels           ::Array{Level,1}   ... List of selected levels.
     """
@@ -26,7 +25,8 @@ module DecayYield
 
 
     """
-    `JAC.DecayYield.Settings()`  ... constructor for an `empty` instance of DecayYield.Settings for the computation of fluorescence and Auger yields.
+    `DecayYield.Settings()`  
+        ... constructor for an `empty` instance of DecayYield.Settings for the computation of fluorescence and Auger yields.
     """
     function Settings()
         Settings(false, false, false, Level[])
@@ -44,8 +44,8 @@ module DecayYield
 
     
     """
-    `struct  DecayYield.Outcome`  ... defines a type to keep the outcome of a fluorescence and Auger yield computation
-                                      as well other results.
+    `struct  DecayYield.Outcome`  
+        ... defines a type to keep the outcome of a fluorescence and Auger yield computation as well other results.
 
         + level                     ::Level              ... Atomic level to which the outcome refers to.
         + K                         ::Float64            ... K enhancement parameter
@@ -57,7 +57,8 @@ module DecayYield
 
 
     """
-    `JAC.DecayYield.Outcome()`  ... constructor for an `empty` instance of DecayYield.Outcome for the computation of fluorescence and Auger yields.
+    `DecayYield.Outcome()`  
+        ... constructor for an `empty` instance of DecayYield.Outcome for the computation of fluorescence and Auger yields.
     """
     function Outcome()
         Outcome(Level(), 0.)
@@ -72,29 +73,29 @@ module DecayYield
 
 
     """
-    `JAC.DecayYield.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::DecayYield.Settings; output=true)` 
-         ... to compute (as selected) the alpha-variation parameters for the levels of the given multiplet and as specified by the given settings. 
-         The results are printed in neat tables to screen but nothing is returned otherwise.
+    `DecayYield.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::DecayYield.Settings; output=true)` 
+        ... to compute (as selected) the alpha-variation parameters for the levels of the given multiplet and as specified by 
+            the given settings. The results are printed in neat tables to screen but nothing is returned otherwise.
     """
     function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::DecayYield.Settings; output=true)
         println("")
-        printstyled("JAC.DecayYield.computeOutcomes(): The computation of the fluorescence & Auger yields starts now ... \n", color=:light_green)
-        printstyled("--------------------------------------------------------------------------------------------------- \n", color=:light_green)
+        printstyled("DecayYield.computeOutcomes(): The computation of the fluorescence & Auger yields starts now ... \n", color=:light_green)
+        printstyled("----------------------------------------------------------------------------------------------- \n", color=:light_green)
         #
-        outcomes = JAC.DecayYield.determineOutcomes(multiplet, settings)
+        outcomes = DecayYield.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    JAC.DecayYield.displayOutcomes(outcomes)    end
+        if  settings.printBeforeComputation    DecayYield.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         newOutcomes = DecayYield.Outcome[]
         for  outcome in outcomes
-            ## newOutcome = JAC.DecayYield.computeAmplitudesProperties(outcome, nm, grid, settings) 
-            newOutcome = JAC.DecayYield.Outcome(outcome.level, 2.0)
+            ## newOutcome = DecayYield.computeAmplitudesProperties(outcome, nm, grid, settings) 
+            newOutcome = DecayYield.Outcome(outcome.level, 2.0)
             push!( newOutcomes, newOutcome)
         end
         # Print all results to screen
-        JAC.DecayYield.displayResults(stdout, newOutcomes)
+        DecayYield.displayResults(stdout, newOutcomes)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    JAC.DecayYield.displayResults(iostream, newOutcomes)   end
+        if  printSummary    DecayYield.displayResults(iostream, newOutcomes)   end
         #
         if    output    return( newOutcomes )
         else            return( nothing )
@@ -103,10 +104,11 @@ module DecayYield
 
 
     """
-    `JAC.DecayYield.determineOutcomes(multiplet::Multiplet, settings::DecayYield.Settings)`  ... to determine a list of Outcomes's for 
-         the computation of the alpha-variation parameters for the given multiplet. It takes into account the particular selections and 
-         settings. An Array{DecayYield.Outcome,1} is returned. Apart from the level specification, all physical properties are set to zero 
-         during the initialization process.
+    `DecayYield.determineOutcomes(multiplet::Multiplet, settings::DecayYield.Settings)`  
+        ... to determine a list of Outcomes's for the computation of the alpha-variation parameters for the given 
+            multiplet. It takes into account the particular selections and settings. An Array{DecayYield.Outcome,1} is 
+            returned. Apart from the level specification, all physical properties are set to zero during the 
+            initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::DecayYield.Settings) 
         if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
@@ -123,62 +125,64 @@ module DecayYield
 
 
     """
-    `JAC.DecayYield.displayOutcomes(outcomes::Array{DecayYield.Outcome,1})`  ... to display a list of levels that have been selected 
-         for the computations. A small neat table of all selected levels and their energies is printed but nothing is returned otherwise.
+    `DecayYield.displayOutcomes(outcomes::Array{DecayYield.Outcome,1})`  
+        ... to display a list of levels that have been selected for the computations. A small neat table of all 
+            selected levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{DecayYield.Outcome,1})
         println(" ")
         println("  Selected DecayYield levels:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(43))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=4);              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(43)) 
+        sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(14, "Energy"; na=4);              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(43)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
-            sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
-            sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
+            sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
+            sa = sa * TableStrings.center(10, string(sym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             println( sa )
         end
-        println("  ", JAC.TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(43))
         #
         return( nothing )
     end
 
 
     """
-    `JAC.DecayYield.displayResults(stream::IO, outcomes::Array{DecayYield.Outcome,1})`  ... to display the energies, M_ms and F-parameters, etc. for the 
-         selected levels. A neat table is printed but nothing is returned otherwise.
+    `DecayYield.displayResults(stream::IO, outcomes::Array{DecayYield.Outcome,1})`  
+        ... to display the energies, M_ms and F-parameters, etc. for the selected levels. A neat table is printed but nothing 
+            is returned otherwise.
     """
     function  displayResults(stream::IO, outcomes::Array{DecayYield.Outcome,1})
         println(stream, " ")
         println(stream, "  Fluorescence and Auger decay yields:")
         println(stream, " ")
-        println(stream, "  ", JAC.TableStrings.hLine(64))
+        println(stream, "  ", TableStrings.hLine(64))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=4)              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.center(14, "K";     na=4)              
-        sb = sb * JAC.TableStrings.center(14, "    " ; na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(64)) 
+        sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(14, "Energy"; na=4)              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(14, "K";     na=4)              
+        sb = sb * TableStrings.center(14, "    " ; na=4)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(64)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
-            sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
-            sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
+            sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
+            sa = sa * TableStrings.center(10, string(sym); na=4)
             energy = 1.0
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))              * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))    * "    "
             sa = sa * @sprintf("%.8e", outcome.K)                                               * "    "
             println(stream, sa )
         end
-        println(stream, "  ", JAC.TableStrings.hLine(64), "\n\n")
+        println(stream, "  ", TableStrings.hLine(64), "\n\n")
         #
         return( nothing )
     end

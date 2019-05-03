@@ -95,16 +95,16 @@ include("module-Tools.jl")
 
 # Functions/methods for atomic amplitudes
 include("module-MultipoleMoment.jl")
-include("module-ParityNonConservation.jl")   ## up to here
+include("module-ParityNonConservation.jl") 
 
 # Functions/methods for atomic properties
-include("module-Einstein.jl")
+include("module-Einstein.jl")    
 include("module-Hfs.jl")
 include("module-IsotopeShift.jl")
 include("module-LandeZeeman.jl")
 include("module-AlphaVariation.jl")
 include("module-FormFactor.jl")
-include("module-DecayYield.jl")
+include("module-DecayYield.jl")     ## up to here
 include("module-GreenFunction.jl")
 include("module-MultipolePolarizibility.jl")
 include("module-PlasmaShift.jl")

@@ -1,12 +1,11 @@
 
 """
-`module  JAC.LandeZeeman`  ... a submodel of JAC that contains all methods for computing Lande factors and Zeeman properties for some level; 
-                               it is using JAC, JAC.ManyElectron, JAC.Radial.
+`module  JAC.LandeZeeman`  
+    ... a submodel of JAC that contains all methods for computing Lande factors and Zeeman properties for some level(s).
 """
 module LandeZeeman
 
-    using Printf, JAC, ..Basics,  ..Basics,  ..Defaults, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
-    global JAC_counter = 0
+    using Printf, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
 
 
     """
@@ -50,7 +49,8 @@ module LandeZeeman
 
 
     """
-    `struct  LandeZeeman.Outcome`  ... defines a type to keep the Lande Factors and Zeeman spittling parameters of a fine-structure level.
+    `struct  LandeZeeman.Outcome`  
+        ... defines a type to keep the Lande Factors and Zeeman spittling parameters of a fine-structure level.
 
         + Jlevel                 ::Level             ... Fine-structure levels to which the results refer to.
         + LandeJ                 ::Float64           ... Lande-J factor of this fine-structure level 
@@ -79,7 +79,7 @@ module LandeZeeman
 
 
     """
-    `JAC.LandeZeeman.Outcome()`  ... constructor for an `empty` instance of LandeZeeman.Outcome.
+    `LandeZeeman.Outcome()`  ... constructor for an `empty` instance of LandeZeeman.Outcome.
     """
     function Outcome()
         Outcome(Level(), 0., 0., 0., AngularJ64(0), false, SublevelJ[],  false, SublevelF[])
@@ -101,13 +101,15 @@ module LandeZeeman
 
 
     """
-    `struct  LandeZeeman.Settings`  ... defines a type for the details and parameters of computing the Lande Factors and Zeeman spittling 
-                                        of fine-structure levels.
+    `struct  LandeZeeman.Settings`  
+        ... defines a type for the details and parameters of computing the Lande Factors and Zeeman spittling 
+            of fine-structure levels.
 
         + calcLandeJ             ::Bool              ... True if Lande-J factors are to be calculated.
         + calcLandeF             ::Bool              ... True if Lande-F factors are to be calculated.
         + calcZeeman             ::Bool              ... True if Zeeman splittings are to be calculated.
-        + includeSchwinger       ::Bool              ... True if Schwinger's QED correction ``\\Delta N^(1)`` is to be included, and false otherwise.
+        + includeSchwinger       ::Bool              ... True if Schwinger's QED correction ``\\Delta N^(1)`` is to be included, 
+                                                         and false otherwise.
         + BField                 ::Float64           ... Strength of the magnetic field in [Tesla]
         + printBeforeComputation ::Bool              ... True if a list of selected levels is printed before the actual computations start. 
         + selectLevels           ::Bool              ... true, if specific level (number)s have been selected for computation.
@@ -126,7 +128,8 @@ module LandeZeeman
 
 
     """
-    `JAC.LandeZeeman.Settings()`  ... constructor for an `empty` instance of ZeemanSettings for the computation of isotope M and F parameters.
+    `LandeZeeman.Settings()`  
+        ... constructor for an `empty` instance of ZeemanSettings for the computation of isotope M and F parameters.
      """
      function Settings()
          Settings(false, false, false, false, 0., false, false, Level[])
@@ -147,9 +150,9 @@ module LandeZeeman
 
 
     """
-    `JAC.LandeZeeman.amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Grid)` ... to compute either 
-         the  N^(1) or Delta N^(1) Zeeman amplitude <alpha_r J_r || N^(1)) || alpha_s J_s>  for a given pair of levels. 
-         A value::ComplexF64 is returned.
+    `LandeZeeman.amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Grid)` 
+        ... to compute either the  N^(1) or Delta N^(1) Zeeman amplitude <alpha_r J_r || N^(1)) || alpha_s J_s>  
+            for a given pair of levels. A value::ComplexF64 is returned.
     """
     function  amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Grid)
         nr = length(rLevel.basis.csfs);    ns = length(sLevel.basis.csfs);    matrix = zeros(ComplexF64, nr, ns)
@@ -170,7 +173,7 @@ module LandeZeeman
                     for  coeff in wa
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                        tamp  = JAC.InteractionStrength.zeeman_n1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
+                        tamp  = InteractionStrength.zeeman_n1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
                         me = me + coeff.T * tamp  
                     end
                 #
@@ -180,7 +183,7 @@ module LandeZeeman
                     for  coeff in wa
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                        tamp  = JAC.InteractionStrength.zeeman_Delta_n1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
+                        tamp  = InteractionStrength.zeeman_Delta_n1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
                         me = me + coeff.T * tamp  
                     end
                 #
@@ -199,16 +202,16 @@ module LandeZeeman
 
 
     """
-    `JAC.LandeZeeman.computeAmplitudesProperties(outcome::LandeZeeman.Outcome, grid::Radial.Grid, settings::LandeZeeman.Settings)`  ... to compute 
-         all amplitudes and properties of for a given level; an outcome::LandeZeeman.Outcome is returned for which the amplitudes and all 
-         requested properties are now evaluated explicitly.
+    `LandeZeeman.computeAmplitudesProperties(outcome::LandeZeeman.Outcome, grid::Radial.Grid, settings::LandeZeeman.Settings)`  
+        ... to compute all amplitudes and properties of for a given level; an outcome::LandeZeeman.Outcome is returned for 
+            which the amplitudes and all requested properties are now evaluated explicitly.
     """
     function  computeAmplitudesProperties(outcome::LandeZeeman.Outcome, grid::Radial.Grid, settings::LandeZeeman.Settings)
-        LandeJ = 0.0;   amplitudeN1 = 0.0;   amplitudeDeltaN1 = 0.0;    J = JAC.AngularMomentum.oneJ(outcome.Jlevel.J) 
-        amplitudeN1 = JAC.LandeZeeman.amplitude("N^(1) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
+        LandeJ = 0.0;   amplitudeN1 = 0.0;   amplitudeDeltaN1 = 0.0;    J = AngularMomentum.oneJ(outcome.Jlevel.J) 
+        amplitudeN1 = LandeZeeman.amplitude("N^(1) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
         #
         if  settings.includeSchwinger
-            amplitudeDeltaN1 = JAC.LandeZeeman.amplitude("Delta N^(1) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
+            amplitudeDeltaN1 = LandeZeeman.amplitude("Delta N^(1) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
         end
         #
         if  settings.calcLandeJ    LandeJ = 2*(amplitudeN1 + amplitudeDeltaN1) / sqrt(J*(J+1))    end
@@ -221,28 +224,28 @@ module LandeZeeman
 
 
     """
-    `JAC.LandeZeeman.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::LandeZeeman.Settings; output=true)`  
-         ... to compute (as selected) the Lande J or F factors for the levels of the given multiplet and as specified by the given settings. The 
-             results are printed in neat tables to screen but nothing is returned otherwise.
+    `LandeZeeman.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::LandeZeeman.Settings; output=true)`  
+        ... to compute (as selected) the Lande J or F factors for the levels of the given multiplet and as specified by the given settings. The 
+            results are printed in neat tables to screen but nothing is returned otherwise.
     """
     function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::LandeZeeman.Settings; output=true)
         println("")
-        printstyled("JAC.LandeZeeman.computeOutcomes(): The computation of the Zeeman amplitudes and Lande factors starts now ... \n", color=:light_green)
-        printstyled("------------------------------------------------------------------------------------------------------------ \n", color=:light_green)
+        printstyled("LandeZeeman.computeOutcomes(): The computation of the Zeeman amplitudes and Lande factors starts now ... \n", color=:light_green)
+        printstyled("-------------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
         outcomes = LandeZeeman.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    JAC.LandeZeeman.displayOutcomes(outcomes)    end
+        if  settings.printBeforeComputation    LandeZeeman.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         newOutcomes = LandeZeeman.Outcome[]
         for  outcome in outcomes
-            newOutcome = JAC.LandeZeeman.computeAmplitudesProperties(outcome, grid, settings) 
+            newOutcome = LandeZeeman.computeAmplitudesProperties(outcome, grid, settings) 
             push!( newOutcomes, newOutcome)
         end
         # Print all results to screen
-        JAC.LandeZeeman.displayResults(stdout, newOutcomes, nm, settings)
+        LandeZeeman.displayResults(stdout, newOutcomes, nm, settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    JAC.LandeZeeman.displayResults(iostream, newOutcomes, nm, settings)   end
+        if  printSummary    LandeZeeman.displayResults(iostream, newOutcomes, nm, settings)   end
         #
         if    output    return( newOutcomes )
         else            return( nothing )
@@ -251,10 +254,11 @@ module LandeZeeman
 
 
     """
-    `JAC.LandeZeeman.determineOutcomes(multiplet::Multiplet, settings::LandeZeeman.Settings)`  ... to determine a list of Outcomes's for the 
-         computation of Lande factors and/or Zeeman splittings for levels from the given multiplet. It takes into account the particular 
-         selections and settings. An Array{LandeZeeman.Outcome,1} is returned. Apart from the level specification, all physical properties are 
-         still set to zero during the initialization process.
+    `LandeZeeman.determineOutcomes(multiplet::Multiplet, settings::LandeZeeman.Settings)`  
+        ... to determine a list of Outcomes's for the computation of Lande factors and/or Zeeman splittings for 
+            levels from the given multiplet. It takes into account the particular selections and settings. 
+            An Array{LandeZeeman.Outcome,1} is returned. Apart from the level specification, all physical properties are 
+            still set to zero during the initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::LandeZeeman.Settings) 
         if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
@@ -276,38 +280,39 @@ module LandeZeeman
 
 
     """
-    `JAC.LandeZeeman.displayOutcomes(outcomes::Array{LandeZeeman.Outcome,1})`  ... to display a list of levels that have been selected for 
-         the computations. A small neat table of all selected levels and their energies is printed but nothing is returned otherwise.
+    `LandeZeeman.displayOutcomes(outcomes::Array{LandeZeeman.Outcome,1})`  
+        ... to display a list of levels that have been selected for the computations. A small neat table of all selected 
+            levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{LandeZeeman.Outcome,1})
         println(" ")
         println("  Selected Lande-Zeeman levels:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(43))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=4);              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(43)) 
+        sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(14, "Energy"; na=4);              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(43)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
-            sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.Jlevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
+            sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
+            sa = sa * TableStrings.center(10, string(sym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.Jlevel.energy)) * "    "
             println( sa )
         end
-        println("  ", JAC.TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(43))
         #
         return( nothing )
     end
 
 
     """
-    `JAC.LandeZeeman.displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm::Nuclear.Model, settings::LandeZeeman.Settings)`  
-         ... to display the energies, Lande factors, Zeeman amplitudes etc. for the selected levels. A neat table is printed but nothing is 
-             returned otherwise.
+    `LandeZeeman.displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm::Nuclear.Model, settings::LandeZeeman.Settings)`  
+        ... to display the energies, Lande factors, Zeeman amplitudes etc. for the selected levels. A neat table is printed but nothing is 
+            returned otherwise.
     """
     function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm::Nuclear.Model, settings::LandeZeeman.Settings)
         #
@@ -315,75 +320,75 @@ module LandeZeeman
             println(stream, " ")
             println(stream, "  Lande g_J factors and Zeeman amplitudes:")
             println(stream, " ")
-            println(stream, "  ", JAC.TableStrings.hLine(135))
+            println(stream, "  ", TableStrings.hLine(135))
             sa = "  ";   sb = "  "
-            sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
-            sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-            sa = sa * JAC.TableStrings.center(14, "Energy"; na=5)              
-            sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=5)
-            sa = sa * JAC.TableStrings.center(12, "Lande-J"; na=8);                           sb = sb * JAC.TableStrings.hBlank(20)          
-            sa = sa * JAC.TableStrings.center(62, "N1   -- Zeeman Amplitudes --   Delta N1"    ; na=4) 
-            sb = sb * JAC.TableStrings.center(62, "   Re              Im                 Re              Im"; na=5)
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(135)) 
+            sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+            sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+            sa = sa * TableStrings.center(14, "Energy"; na=5)              
+            sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=5)
+            sa = sa * TableStrings.center(12, "Lande-J"; na=8);                           sb = sb * TableStrings.hBlank(20)          
+            sa = sa * TableStrings.center(62, "N1   -- Zeeman Amplitudes --   Delta N1"    ; na=4) 
+            sb = sb * TableStrings.center(62, "   Re              Im                 Re              Im"; na=5)
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(135)) 
             #  
             for  outcome in outcomes
                 sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
-                sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.Jlevel.index); na=2)
-                sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
+                sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
+                sa = sa * TableStrings.center(10, string(sym); na=4)
                 energy = 1.0
                 sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))                    * "    "
-                sa = sa * JAC.TableStrings.flushright(15, @sprintf("%.8e", outcome.LandeJ) )              * "    "
-                sa = sa * JAC.TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeN1.re) )      * " "
-                sa = sa * JAC.TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeN1.im) )      * "    "
-                sa = sa * JAC.TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeDeltaN1.re) ) * " "
-                sa = sa * JAC.TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeDeltaN1.im) ) * "    "
+                sa = sa * TableStrings.flushright(15, @sprintf("%.8e", outcome.LandeJ) )              * "    "
+                sa = sa * TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeN1.re) )      * " "
+                sa = sa * TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeN1.im) )      * "    "
+                sa = sa * TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeDeltaN1.re) ) * " "
+                sa = sa * TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeDeltaN1.im) ) * "    "
                 println(stream, sa )
             end
-            println(stream, "  ", JAC.TableStrings.hLine(135))
+            println(stream, "  ", TableStrings.hLine(135))
         end
         #
         if  settings.calcLandeF
             println(stream, " ")
             println(stream, "  Hyperfine levels and Lande g_F factors:")
             println(stream, " ")
-            println(stream, "  ", JAC.TableStrings.hLine(80))
+            println(stream, "  ", TableStrings.hLine(80))
             sa = "  ";   sb = "  "
-            sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
-            sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-            sa = sa * JAC.TableStrings.center(14, "Energy"; na=5)              
-            sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=5)
-            sa = sa * JAC.TableStrings.center(10, "F^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-            sa = sa * JAC.TableStrings.center(12, "Lande-F"; na=8);                           sb = sb * JAC.TableStrings.hBlank(20)          
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(80)) 
+            sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+            sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+            sa = sa * TableStrings.center(14, "Energy"; na=5)              
+            sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=5)
+            sa = sa * TableStrings.center(10, "F^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+            sa = sa * TableStrings.center(12, "Lande-F"; na=8);                           sb = sb * TableStrings.hBlank(20)          
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(80)) 
             #
             for  outcome in outcomes
                 sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
-                sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.Jlevel.index); na=2)
-                sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
+                sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
+                sa = sa * TableStrings.center(10, string(sym); na=4)
                 energy = 1.0
                 sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))                    * "    "
                 println(stream, sa )
                 #
-                sc = JAC.TableStrings.hBlank( length(sa) + 1 )
-                Flist = JAC.oplus(nm.spinI, outcome.Jlevel.J)
+                sc = TableStrings.hBlank( length(sa) + 1 )
+                Flist = oplus(nm.spinI, outcome.Jlevel.J)
                 for  F in Flist
-                    symf   = LevelSymmetry( F, outcome.Jlevel.parity);      Fx = JAC.AngularMomentum.oneJ(F)
-                    Jx     = JAC.AngularMomentum.oneJ(outcome.Jlevel.J);    Ix = JAC.AngularMomentum.oneJ(nm.spinI)
+                    symf   = LevelSymmetry( F, outcome.Jlevel.parity);      Fx = AngularMomentum.oneJ(F)
+                    Jx     = AngularMomentum.oneJ(outcome.Jlevel.J);    Ix = AngularMomentum.oneJ(nm.spinI)
                     LandeF = (Fx*(Fx+1) + Jx*(Jx+1) - Ix*(Ix+1)) / (2*Fx*(Fx+1)) * outcome.LandeJ
-                    sa = sc * JAC.TableStrings.center(10, string(symf); na=4)
-                    sa = sa * JAC.TableStrings.flushright(15, @sprintf("%.8e", LandeF) )   
+                    sa = sc * TableStrings.center(10, string(symf); na=4)
+                    sa = sa * TableStrings.flushright(15, @sprintf("%.8e", LandeF) )   
                     println(stream, sa )
                 end
             end
-            println(stream, "  ", JAC.TableStrings.hLine(80))
+            println(stream, "  ", TableStrings.hLine(80))
         end
         #
         if  settings.calcZeeman
             println(stream, " ")
             println(stream, "  Zeeman splittings of (hyper-) fine-structure levels:")
             println(stream, " ")
-            println(stream, "  ", JAC.TableStrings.hLine(135))
-            println(stream, "  ", JAC.TableStrings.hLine(135))
+            println(stream, "  ", TableStrings.hLine(135))
+            println(stream, "  ", TableStrings.hLine(135))
         end
         #
         return( nothing )

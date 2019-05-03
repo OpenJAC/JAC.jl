@@ -1,16 +1,17 @@
 
 """
-`module  JAC.IsotopeShift`  ... a submodel of JAC that contains all methods for computing isotope-dependent properties for some level or 
-                                between some initial and final-state multiplets; it is using JAC, JAC.ManyElectron, JAC.Radial.
+`module  JAC.IsotopeShift`  
+    ... a submodel of JAC that contains all methods for computing isotope-dependent properties for some level(s).
 """
 module IsotopeShift
 
-    using Printf, JAC, ..Basics,  ..Basics,  ..Defaults, JAC.ManyElectron, JAC.Radial
+    using Printf, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
     global JAC_counter = 0
 
 
     """
-    `struct  IsotopeShift.Settings`  ... defines a type for the details and parameters of computing isotope-shift M and F parameters.
+    `struct  IsotopeShift.Settings`  
+        ... defines a type for the details and parameters of computing isotope-shift M and F parameters.
 
         + calcNMS                  ::Bool             ... True if mass-shift parameters M_nmn need to be calculated, and false otherwise.
         + calcSMS                  ::Bool             ... True if mass-shift parameters M_sms need to be calculated, and false otherwise.
@@ -32,7 +33,8 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.Settings()`  ... constructor for an `empty` instance of IsotopeSettings for the computation of isotope M and F parameters.
+    `IsotopeShift.Settings()`  
+        ... constructor for an `empty` instance of IsotopeSettings for the computation of isotope M and F parameters.
     """
     function Settings()
         Settings(false, false, false, false, false, Level[], "")
@@ -53,8 +55,9 @@ module IsotopeShift
 
     
     """
-    `struct  IsotopeShift.Outcome`  ... defines a type to keep the outcome of a isotope-shift computation, such as the K and F parameters
-                                        as well other results.
+    `struct  IsotopeShift.Outcome`  
+        ... defines a type to keep the outcome of a isotope-shift computation, such as the K and F parameters as well other 
+            results.
 
         + level                     ::Level              ... Atomic level to which the outcome refers to.
         + Knms                      ::Float64            ... K_nms parameter
@@ -78,7 +81,7 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.Outcome()`  ... constructor for an `empty` instance of Hfs.Outcome for the computation of isotope-shift properties.
+    `IsotopeShift.Outcome()`  ... constructor for an `empty` instance of Hfs.Outcome for the computation of isotope-shift properties.
     """
     function Outcome()
         Outcome(Level(), 0., 0., 0.,   0., 0., 0., 0.)
@@ -99,9 +102,9 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.amplitude(kind::String, rLevel::Level, sLevel::Level, nm::Nuclear.Model, grid::Radial.Grid)` 
-         ... to compute either the  H^(NMS),  H^(SMS,A),  H^(SMS,B) or  H^(SMS,C) normal and specific mass-shift amplitudes
-             <alpha_r J_r || H^(A)) || alpha_s J_s>  for a given pair of levels. A value::ComplexF64 is returned.
+    `IsotopeShift.amplitude(kind::String, rLevel::Level, sLevel::Level, nm::Nuclear.Model, grid::Radial.Grid)` 
+        ... to compute either the  H^(NMS),  H^(SMS,A),  H^(SMS,B) or  H^(SMS,C) normal and specific mass-shift amplitudes
+            <alpha_r J_r || H^(A)) || alpha_s J_s>  for a given pair of levels. A value::ComplexF64 is returned.
     """
     function  amplitude(kind::String, rLevel::Level, sLevel::Level, nm::Nuclear.Model, grid::Radial.Grid)
         nr = length(rLevel.basis.csfs);    ns = length(sLevel.basis.csfs);    matrix = zeros(ComplexF64, nr, ns)
@@ -122,7 +125,7 @@ module IsotopeShift
                     for  coeff in wa[1]
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                        tamp  = JAC.InteractionStrength.hamiltonian_nms(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], nm, grid)
+                        tamp  = InteractionStrength.hamiltonian_nms(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], nm, grid)
                         me = me + coeff.T  * sqrt( ja + 1) * tamp  
                     end 
                 #
@@ -133,8 +136,8 @@ module IsotopeShift
                         if  coeff.nu != 1  continue   end
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                        tamp  = JAC.InteractionStrength.X1_smsA(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
-                                                                sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
+                        tamp  = InteractionStrength.X1_smsA(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
+                                                            sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
                         me = me + coeff.V * sqrt( ja + 1) * tamp  
                     end
                 #
@@ -145,8 +148,8 @@ module IsotopeShift
                         if  coeff.nu != 1  continue   end
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                        tamp  = JAC.InteractionStrength.X1_smsB(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
-                                                                sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
+                        tamp  = InteractionStrength.X1_smsB(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
+                                                            sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
                         me = me + coeff.V * sqrt( ja + 1) * tamp  
                     end
                 #
@@ -157,8 +160,8 @@ module IsotopeShift
                         if  coeff.nu != 1  continue   end
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                        tamp  = JAC.InteractionStrength.X1_smsC(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
-                                                                sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
+                        tamp  = InteractionStrength.X1_smsC(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
+                                                            sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
                         me = me + coeff.V * sqrt( ja + 1) * tamp  
                     end
                 #
@@ -177,29 +180,29 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::Nuclear.Model, grid::Radial.Grid, 
+    `IsotopeShift.computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::Nuclear.Model, grid::Radial.Grid, 
                                                   settings::IsotopeShift.Settings) 
-         ... to compute all amplitudes and properties for a given level; an outcome::IsotopeShift.Outcome is returned for which the amplitudes 
-         and properties are now evaluated explicitly.
+        ... to compute all amplitudes and properties for a given level; an outcome::IsotopeShift.Outcome is returned for 
+            which the amplitudes and properties are now evaluated explicitly.
     """
     function  computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings)
         global JAC_counter
         Knms  = 0.0;    Ksms  = 0.0;    F  = 0.0;    
         amplitudeKnms  = 0.0;    amplitudeKsmsA  = 0.0;   amplitudeKsmsB  = 0.0;  amplitudeKsmsC  = 0.0;
         if  settings.calcNMS
-            amplitudeKnms  = JAC.IsotopeShift.amplitude("H^(NMS)   amplitude", outcome.level, outcome.level, nm, grid)
+            amplitudeKnms  = IsotopeShift.amplitude("H^(NMS)   amplitude", outcome.level, outcome.level, nm, grid)
         end
         
         if  settings.calcSMS
-            amplitudeKsmsA = JAC.IsotopeShift.amplitude("H^(SMS,A) amplitude", outcome.level, outcome.level, nm, grid)
-            amplitudeKsmsB = JAC.IsotopeShift.amplitude("H^(SMS,B) amplitude", outcome.level, outcome.level, nm, grid)
-            amplitudeKsmsC = JAC.IsotopeShift.amplitude("H^(SMS,C) amplitude", outcome.level, outcome.level, nm, grid)
+            amplitudeKsmsA = IsotopeShift.amplitude("H^(SMS,A) amplitude", outcome.level, outcome.level, nm, grid)
+            amplitudeKsmsB = IsotopeShift.amplitude("H^(SMS,B) amplitude", outcome.level, outcome.level, nm, grid)
+            amplitudeKsmsC = IsotopeShift.amplitude("H^(SMS,C) amplitude", outcome.level, outcome.level, nm, grid)
             Knms = amplitudeKnms / nm.mass
             Ksms = (amplitudeKsmsA + amplitudeKsmsB + amplitudeKsmsC) / nm.mass
         end
         
         if  settings.calcF
-            ##x F = JAC.Radial.amplitude("Delta V^nuc amplitude/(R-R')", nm, outcome.level, outcome.level, grid)
+            ##x F = Radial.amplitude("Delta V^nuc amplitude/(R-R')", nm, outcome.level, outcome.level, grid)
             F = 1.0
         end
         newOutcome = IsotopeShift.Outcome( outcome.level, Knms, Ksms, F, 
@@ -210,10 +213,10 @@ module IsotopeShift
 
     #==
     """
-    `JAC.IsotopeShift.computeMatrixMnms_old(basis::Basis, grid::Radial.Grid, settings::IsotopeShift.Settings)`  ... to compute the matrix 
-         M_nms = (<csf_r|| H_nms ||csf_s>) of the normal mass shift for the given CSF basis; a (length(basis.csfs) x length(basis.csfs)}-dimensional
-         matrix::Array{Float64,2) is returned. See Naze et al., CPC 184 (2013) 2187, section 4.1 for further details on the decomposition of 
-         H_nms.  
+    `IsotopeShift.computeMatrixMnms_old(basis::Basis, grid::Radial.Grid, settings::IsotopeShift.Settings)`     
+        ... to compute the matrix M_nms = (<csf_r|| H_nms ||csf_s>) of the normal mass shift for the given CSF basis; 
+            a (length(basis.csfs) x length(basis.csfs)}-dimensional matrix::Array{Float64,2) is returned. See Naze 
+            et al., CPC 184 (2013) 2187, section 4.1 for further details on the decomposition of H_nms.  
     """
     function  computeMatrixMnms_old(basis::Basis, grid::Radial.Grid, settings::IsotopeShift.Settings) 
         n = length(basis.csfs)
@@ -227,7 +230,7 @@ module IsotopeShift
                 for  coeff in wa[1]
                     jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                     me = me + coeff.T * sqrt( jj + 1) * 
-                                        JAC.InteractionStrength.hamiltonian_nms(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
+                                        InteractionStrength.hamiltonian_nms(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
                 end
                 matrix[r,s] = me
             end
@@ -239,10 +242,10 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.computeMatrixMsms_old(k::Int64, basis::Basis, grid::Radial.Grid, settings::IsotopeShift.Settings)` ... to compute the matrix 
-         M_sms (k=1,2,3) = (<csf_r|| H_sms,k ||csf_s>) of the specific mass shift for the given CSF basis; a (length(basis.csfs) x 
-         length(basis.csfs)}-dimensional matrix::Array{Float64,2) is returned. See Naze et al., CPC 184 (2013) 2187, section 4.2 for further 
-         details on the decomposition of H_sms.  
+    `IsotopeShift.computeMatrixMsms_old(k::Int64, basis::Basis, grid::Radial.Grid, settings::IsotopeShift.Settings)` 
+        ... to compute the matrix M_sms (k=1,2,3) = (<csf_r|| H_sms,k ||csf_s>) of the specific mass shift for the given 
+            CSF basis; a (length(basis.csfs) x length(basis.csfs)}-dimensional matrix::Array{Float64,2) is returned. 
+            See Naze et al., CPC 184 (2013) 2187, section 4.2 for further details on the decomposition of H_sms.  
     """
     function  computeMatrixMsms_old(k::Int64, basis::Basis, grid::Radial.Grid, settings::IsotopeShift.Settings) 
         n = length(basis.csfs)
@@ -255,11 +258,11 @@ module IsotopeShift
                 me = 0.
                 for  coeff in wa[2]
                     jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
-                    if       k == 1    wa = JAC.InteractionStrength.X1_sms1(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
+                    if       k == 1    wa = InteractionStrength.X1_sms1(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
                                                                                       basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)
-                    elseif   k == 2    wa = JAC.InteractionStrength.X1_sms2(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
+                    elseif   k == 2    wa = InteractionStrength.X1_sms2(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
                                                                                       basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid) 
-                    elseif   k == 3    wa = JAC.InteractionStrength.X1_sms3(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
+                    elseif   k == 3    wa = InteractionStrength.X1_sms3(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
                                                                                       basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)
                     else   error("stop a")
                     end
@@ -275,28 +278,28 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings; output=true)` 
-         ... to compute (as selected) the isotope-shift M and F parameters for the levels of the given multiplet and as specified by the given settings. 
-         The results are printed in neat tables to screen but nothing is returned otherwise.
+    `IsotopeShift.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings; output=true)` 
+        ... to compute (as selected) the isotope-shift M and F parameters for the levels of the given multiplet and as 
+            specified by the given settings. The results are printed in neat tables to screen but nothing is returned otherwise.
     """
     function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings; output=true)
         println("")
-        printstyled("JAC.IsotopeShift.computeOutcomes(): The computation of the isotope-shift parameters starts now ... \n", color=:light_green)
+        printstyled("IsotopeShift.computeOutcomes(): The computation of the isotope-shift parameters starts now ... \n", color=:light_green)
         printstyled("-------------------------------------------------------------------------------------------------- \n", color=:light_green)
         #
-        outcomes = JAC.IsotopeShift.determineOutcomes(multiplet, settings)
+        outcomes = IsotopeShift.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    JAC.IsotopeShift.displayOutcomes(outcomes)    end
+        if  settings.printBeforeComputation    IsotopeShift.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         newOutcomes = IsotopeShift.Outcome[]
         for  outcome in outcomes
-            newOutcome = JAC.IsotopeShift.computeAmplitudesProperties(outcome, nm, grid, settings) 
+            newOutcome = IsotopeShift.computeAmplitudesProperties(outcome, nm, grid, settings) 
             push!( newOutcomes, newOutcome)
         end
         # Print all results to screen
-        JAC.IsotopeShift.displayResults(stdout, newOutcomes)
+        IsotopeShift.displayResults(stdout, newOutcomes)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    JAC.IsotopeShift.displayResults(iostream, newOutcomes)   end
+        if  printSummary    IsotopeShift.displayResults(iostream, newOutcomes)   end
         #
         if    output    return( newOutcomes )
         else            return( nothing )
@@ -305,10 +308,10 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.determineOutcomes(multiplet::Multiplet, settings::IsotopeShift.Settings)`  ... to determine a list of Outcomes's for 
-         the computation of the isotope-shift M and F parameters for the given multiplet. It takes into account the particular selections and 
-         settings. An Array{IsotopeShift.Outcome,1} is returned. Apart from the level specification, all physical properties are set to zero 
-         during the initialization process.
+    `IsotopeShift.determineOutcomes(multiplet::Multiplet, settings::IsotopeShift.Settings)`  
+        ... to determine a list of Outcomes's for the computation of the isotope-shift M and F parameters for the given multiplet. 
+            It takes into account the particular selections and settings. An Array{IsotopeShift.Outcome,1} is returned. Apart from 
+            the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::IsotopeShift.Settings) 
         if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
@@ -325,97 +328,99 @@ module IsotopeShift
 
 
     """
-    `JAC.IsotopeShift.displayOutcomes(outcomes::Array{IsotopeShift.Outcome,1})`  ... to display a list of levels that have been selected 
-         for the computations. A small neat table of all selected levels and their energies is printed but nothing is returned otherwise.
+    `IsotopeShift.displayOutcomes(outcomes::Array{IsotopeShift.Outcome,1})`  
+        ... to display a list of levels that have been selected for the computations. A small neat table of all 
+            selected levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{IsotopeShift.Outcome,1})
         println(" ")
         println("  Selected IsotopeShift levels:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(43))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=4);              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(43)) 
+        sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(14, "Energy"; na=4);              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(43)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = Basics.LevelSymmetry( outcome.level.J, outcome.level.parity)
-            sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
-            sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
+            sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
+            sa = sa * TableStrings.center(10, string(sym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             println( sa )
         end
-        println("  ", JAC.TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(43))
         #
         return( nothing )
     end
 
 
     """
-    `JAC.IsotopeShift.displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1})`  ... to display the energies, M_ms and F-parameters, etc. for the 
-         selected levels. A neat table is printed but nothing is returned otherwise.
+    `IsotopeShift.displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1})`  
+        ... to display the energies, M_ms and F-parameters, etc. for the selected levels. A neat table is printed but nothing 
+            is returned otherwise.
     """
     function  displayResults(stream::IO, outcomes::Array{IsotopeShift.Outcome,1})
         println(stream, " ")
         println(stream, "  IsotopeShift parameters and amplitudes:")
         println(stream, " ")
-        println(stream, "  ", JAC.TableStrings.hLine(102))
+        println(stream, "  ", TableStrings.hLine(102))
         sa = "  ";   sb = "  ";   sc = "  "
-        sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=5)
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=5);  sc = sc * JAC.TableStrings.hBlank(45)
-        sa = sa * JAC.TableStrings.center(11, "K_nms"; na=4)              
-        sb = sb * JAC.TableStrings.center(11, "[Hz]" ; na=4)
-        sc = sc * JAC.TableStrings.center(11, "[a.u.]" ; na=4)
-        sa = sa * JAC.TableStrings.center(11, "K_sms"; na=4)             
-        sb = sb * JAC.TableStrings.center(11, "[Hz]" ; na=4)
-        sc = sc * JAC.TableStrings.center(11, "[a.u.]" ; na=4)
-        sa = sa * JAC.TableStrings.center(11, "K_ms "; na=4)              
-        sb = sb * JAC.TableStrings.center(11, "[Hz]" ; na=4)
-        sc = sc * JAC.TableStrings.center(11, "[a.u.]" ; na=4)
-        sa = sa * JAC.TableStrings.center(11, " F ";   na=4)              
-        sb = sb * JAC.TableStrings.center(11, "[..]" ; na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, sc);    println(stream, "  ", JAC.TableStrings.hLine(102)) 
+        sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(14, "Energy"; na=5)
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=5);  sc = sc * TableStrings.hBlank(45)
+        sa = sa * TableStrings.center(11, "K_nms"; na=4)              
+        sb = sb * TableStrings.center(11, "[Hz]" ; na=4)
+        sc = sc * TableStrings.center(11, "[a.u.]" ; na=4)
+        sa = sa * TableStrings.center(11, "K_sms"; na=4)             
+        sb = sb * TableStrings.center(11, "[Hz]" ; na=4)
+        sc = sc * TableStrings.center(11, "[a.u.]" ; na=4)
+        sa = sa * TableStrings.center(11, "K_ms "; na=4)              
+        sb = sb * TableStrings.center(11, "[Hz]" ; na=4)
+        sc = sc * TableStrings.center(11, "[a.u.]" ; na=4)
+        sa = sa * TableStrings.center(11, " F ";   na=4)              
+        sb = sb * TableStrings.center(11, "[..]" ; na=4)
+        println(stream, sa);    println(stream, sb);    println(stream, sc);    println(stream, "  ", TableStrings.hLine(102)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
-            sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
-            sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
+            sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
+            sa = sa * TableStrings.center(10, string(sym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy))               * "    "
             sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Knms))                 * "    "
             sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Ksms))                 * "    "
             sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Knms + outcome.Ksms))  * "    "
             sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.F))                    * "    "
             println(stream, sa )
-            sb = JAC.TableStrings.hBlank(47)
+            sb = TableStrings.hBlank(47)
             sb = sb * @sprintf("%.5e", outcome.Knms * 1822.888 * 2)                                            * "    "
             sb = sb * @sprintf("%.5e", outcome.Ksms * 1822.888 * 2)                                            * "    "
             sb = sb * @sprintf("%.5e", (outcome.Knms + outcome.Ksms) * 1822.888 * 2)                           * "    "
             sb = sb * @sprintf("%.5e", outcome.F)                                                              * "    "
             println(stream, sb )
         end
-        println(stream, "  ", JAC.TableStrings.hLine(102), "\n\n")
+        println(stream, "  ", TableStrings.hLine(102), "\n\n")
         #
         # Now printout the individual amplitudes in an extra table
-        println(stream, "  ", JAC.TableStrings.hLine(158))
+        println(stream, "  ", TableStrings.hLine(158))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=4);              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.center(26, "H^(nms) amplitude"    ; na=3);             sb = sb * JAC.TableStrings.hBlank(35)
-        sa = sa * JAC.TableStrings.center(26, "H^(sms,A) amplitude"  ; na=3);             sb = sb * JAC.TableStrings.hBlank(35)
-        sa = sa * JAC.TableStrings.center(26, "H^(sms,B) amplitude"  ; na=3);             sb = sb * JAC.TableStrings.hBlank(35)
-        sa = sa * JAC.TableStrings.center(26, "H^(sms,C) amplitude"  ; na=3);             sb = sb * JAC.TableStrings.hBlank(35)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(158)) 
+        sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(14, "Energy"; na=4);              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(26, "H^(nms) amplitude"    ; na=3);             sb = sb * TableStrings.hBlank(35)
+        sa = sa * TableStrings.center(26, "H^(sms,A) amplitude"  ; na=3);             sb = sb * TableStrings.hBlank(35)
+        sa = sa * TableStrings.center(26, "H^(sms,B) amplitude"  ; na=3);             sb = sb * TableStrings.hBlank(35)
+        sa = sa * TableStrings.center(26, "H^(sms,C) amplitude"  ; na=3);             sb = sb * TableStrings.hBlank(35)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(158)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
-            sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
-            sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
+            sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
+            sa = sa * TableStrings.center(10, string(sym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy))          * "    "
             sa = sa * @sprintf("%.5e %s %.5e", outcome.amplitudeKnms.re,  " ", outcome.amplitudeKnms.im)  * "    "
             sa = sa * @sprintf("%.5e %s %.5e", outcome.amplitudeKsmsA.re, " ", outcome.amplitudeKsmsA.im) * "    "
@@ -423,7 +428,7 @@ module IsotopeShift
             sa = sa * @sprintf("%.5e %s %.5e", outcome.amplitudeKsmsC.re, " ", outcome.amplitudeKsmsC.im) * "    "
             println(stream, sa )
         end
-        println(stream, "  ", JAC.TableStrings.hLine(158))
+        println(stream, "  ", TableStrings.hLine(158))
 
         return( nothing )
     end

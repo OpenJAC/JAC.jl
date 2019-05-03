@@ -1,13 +1,11 @@
 
 """
-`module  JAC.FormFactor`  ... a submodel of JAC that contains all methods for computing atomic form factors for some level; 
-                              it is using JAC, JAC.ManyElectron, JAC.Radial.
+`module  JAC.FormFactor`  
+    ... a submodel of JAC that contains all methods for computing atomic form factors for some level(s).
 """
 module FormFactor
 
-    using Printf, JAC, ..Basics,  ..Basics,  ..Defaults, JAC.ManyElectron, JAC.Radial
-    global JAC_counter = 0
-
+    using Printf, ..Basics, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals, ..TableStrings
 
     """
     `struct  FormFactor.Settings`  ... defines a type for the details and parameters of computing alpha-variation parameters.
@@ -26,7 +24,7 @@ module FormFactor
 
 
     """
-    `JAC.FormFactor.Settings()`  ... constructor for an `empty` instance of FormFactor.Settings for the computation of atomic form factors.
+    `FormFactor.Settings()`  ... constructor for an `empty` instance of FormFactor.Settings for the computation of atomic form factors.
     """
     function Settings()
         Settings(Float64[0., 0.1, 1.0, 10.], false, false, Level[])
@@ -49,8 +47,8 @@ module FormFactor
 
         + level                     ::Level              ... Atomic level to which the outcome refers to.
         + qValues                   ::Array{Float64,1}   ... momentum transfer |q|.
-        + standardFs                ::Array{Float64,1}   ... standard atomic form factor F(q) for an (assumed) spherical charge distribution.
-        + modifiedFs                ::Array{Float64,1}   ... modified atomic form factor F(q) for an (assumed) spherical charge distribution.
+        + standardFs                ::Array{Float64,1}   ... standard atomic form factor F(q) for an (assumed) spherical charge distr.
+        + modifiedFs                ::Array{Float64,1}   ... modified atomic form factor F(q) for such a charge distribution.
     """
     struct Outcome 
         level                       ::Level 
@@ -61,7 +59,8 @@ module FormFactor
 
 
     """
-    `JAC.FormFactor.Outcome()`  ... constructor for an `empty` instance of FormFactor.Outcome for the computation of atomic form factors.
+    `FormFactor.Outcome()`  
+        ... constructor for an `empty` instance of FormFactor.Outcome for the computation of atomic form factors.
     """
     function Outcome()
         Outcome(Level(), Float64[], Float64[], Float64[])
@@ -78,16 +77,15 @@ module FormFactor
 
 
     """
-    `JAC.FormFactor.amplitude(q::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)`  
-         ... to compute the momentum transfer amplitude  <(alpha_f J_f, kappa) J_i || T^(1) || alpha_i J_i>  
-         for the given final and initial level. A value::ComplexF64 is returned.
+    `FormFactor.amplitude(q::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)`  
+        ... to compute the momentum transfer amplitude  <(alpha_f J_f, kappa) J_i || T^(1) || alpha_i J_i>  for the given 
+            final and initial level. A value::ComplexF64 is returned.
     """
     function amplitude(q::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)
         nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
         printstyled("Compute (single-electron) momentum transfer matrix of dimension $nf x $ni in the final- and initial-state bases " *
                     "for the transition [$(initialLevel.index)- $(finalLevel.index)] ... ", color=:light_green)
         matrix = zeros(ComplexF64, nf, ni)
-        #
         #
         printstyled("done. \n", color=:light_green)
         printstyled("\nWarning -- FormFactor.amplitude():: Not yet implemented.", color=:cyan)
@@ -105,7 +103,7 @@ module FormFactor
 
 
     """
-    `JAC.FormFactor.standardF(q::Float64, level::Level, grid::Radial.Grid)`  
+    `FormFactor.standardF(q::Float64, level::Level, grid::Radial.Grid)`  
          ... to compute the (real) Fourier transform of the (spherically-symmetric) charge distribution. A value::Float64 is returned.
     """
     function standardF(q::Float64, level::Level, grid::Radial.Grid)
@@ -121,16 +119,16 @@ module FormFactor
         if     q == 0.   
         else             for    i = 2:grid.nr   wa[i] = wa[i] / grid.r[i] * sin(q*grid.r[i]) / q    end
         end
-        sF = JAC.RadialIntegrals.V0(wa, grid.nr, grid::Radial.Grid)
+        sF = RadialIntegrals.V0(wa, grid.nr, grid::Radial.Grid)
         
         return( sF )
     end
 
 
     """
-    `JAC.FormFactor.modifiedF(q::Float64, level::Level, grid::Radial.Grid)`  
-         ... to compute the (real) Fourier transform of the (spherically-symmetric) charge distribution but including a correction
-             due to the local (DFS) potential, relative to the rest mass of the electron. A value::Float64 is returned.
+    `FormFactor.modifiedF(q::Float64, level::Level, grid::Radial.Grid)`  
+        ... to compute the (real) Fourier transform of the (spherically-symmetric) charge distribution but including a correction
+            due to the local (DFS) potential, relative to the rest mass of the electron. A value::Float64 is returned.
     """
     function modifiedF(q::Float64, level::Level, grid::Radial.Grid)
         wa  = zeros( grid.nr )
@@ -150,15 +148,15 @@ module FormFactor
                 end
             end
         end
-        mF = JAC.RadialIntegrals.V0(wa, grid.nr, grid::Radial.Grid)
+        mF = RadialIntegrals.V0(wa, grid.nr, grid::Radial.Grid)
         
         return( mF )
     end
 
 
     """
-    `JAC.FormFactor.computeAmplitudesProperties(outcome::FormFactor.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings)`  
-         ... to compute all form factors, etc. for the given outcome; a newOutcome::FormFactor.Outcome is returned.
+    `FormFactor.computeAmplitudesProperties(outcome::FormFactor.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings)`  
+        ... to compute all form factors, etc. for the given outcome; a newOutcome::FormFactor.Outcome is returned.
     """
     function computeAmplitudesProperties(outcome::FormFactor.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings)
         standardFs = Float64[];    modifiedFs = Float64[]
@@ -167,35 +165,35 @@ module FormFactor
             mF = FormFactor.modifiedF(outcome.qValues[i]::Float64, outcome.level::Level, grid::Radial.Grid)
             push!( standardFs, sF);    push!( modifiedFs, mF)
         end
-        newOutcome = JAC.FormFactor.Outcome(outcome.level, outcome.qValues, standardFs, modifiedFs)
+        newOutcome = FormFactor.Outcome(outcome.level, outcome.qValues, standardFs, modifiedFs)
         return( newOutcome )
     end
 
 
     """
-    `JAC.FormFactor.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings; output=true)` 
-         ... to compute (as selected) the alpha-variation parameters for the levels of the given multiplet and as specified by the given settings. 
-         The results are printed in neat tables to screen but nothing is returned otherwise.
+    `FormFactor.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings; output=true)` 
+        ... to compute (as selected) the alpha-variation parameters for the levels of the given multiplet and as specified 
+            by the given settings. The results are printed in neat tables to screen but nothing is returned otherwise.
     """
     function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::FormFactor.Settings; output=true)
         println("")
-        printstyled("JAC.FormFactor.computeOutcomes(): The computation of the atomic form factors starts now ... \n", color=:light_green)
+        printstyled("FormFactor.computeOutcomes(): The computation of the atomic form factors starts now ... \n", color=:light_green)
         printstyled("------------------------------------------------------------------------------------------- \n", color=:light_green)
         #
-        outcomes = JAC.FormFactor.determineOutcomes(multiplet, settings)
+        outcomes = FormFactor.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    JAC.FormFactor.displayOutcomes(outcomes)    end
+        if  settings.printBeforeComputation    FormFactor.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         newOutcomes = FormFactor.Outcome[]
         for  outcome in outcomes
             ##x standardFs = Float64[];    modifiedFs = Float64[]
-            newOutcome = JAC.FormFactor.computeAmplitudesProperties(outcome, nm, grid, settings) 
+            newOutcome = FormFactor.computeAmplitudesProperties(outcome, nm, grid, settings) 
             push!( newOutcomes, newOutcome)
         end
         # Print all results to screen
-        JAC.FormFactor.displayResults(stdout, newOutcomes)
+        FormFactor.displayResults(stdout, newOutcomes)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    JAC.FormFactor.displayResults(iostream, newOutcomes)   end
+        if  printSummary    FormFactor.displayResults(iostream, newOutcomes)   end
         #
         if    output    return( newOutcomes )
         else            return( nothing )
@@ -204,10 +202,11 @@ module FormFactor
 
 
     """
-    `JAC.FormFactor.determineOutcomes(multiplet::Multiplet, settings::FormFactor.Settings)`  ... to determine a list of Outcomes's for 
-         the computation of the alpha-variation parameters for the given multiplet. It takes into account the particular selections and 
-         settings. An Array{FormFactor.Outcome,1} is returned. Apart from the level specification, all physical properties are set to zero 
-         during the initialization process.
+    `FormFactor.determineOutcomes(multiplet::Multiplet, settings::FormFactor.Settings)`  
+        ... to determine a list of Outcomes's for the computation of the alpha-variation parameters for the given 
+            multiplet. It takes into account the particular selections and settings. An Array{FormFactor.Outcome,1} 
+            is returned. Apart from the level specification, all physical properties are set to zero during the 
+            initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::FormFactor.Settings) 
         if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
@@ -224,26 +223,27 @@ module FormFactor
 
 
     """
-    `JAC.FormFactor.displayOutcomes(outcomes::Array{FormFactor.Outcome,1})`  ... to display a list of levels that have been selected 
-         for the computations. A small neat table of all selected levels and their energies is printed but nothing is returned otherwise.
+    `FormFactor.displayOutcomes(outcomes::Array{FormFactor.Outcome,1})`  
+        ... to display a list of levels that have been selected for the computations. A small neat table of all 
+            selected levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{FormFactor.Outcome,1})
         println(" ")
         println("  Selected FormFactor levels:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(86))
+        println("  ", TableStrings.hLine(86))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=4);              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(14, "Energy"; na=4);              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
         sa = sa * "  q-values  ...";                                                      sb = sb * "   [a.u.]"
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(86)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(86)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
-            sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
-            sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
+            sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
+            sa = sa * TableStrings.center(10, string(sym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             if  length(outcome.qValues) >= 1   sa = sa * @sprintf("%.2e", outcome.qValues[1] ) * ",  "   end
             if  length(outcome.qValues) >= 2   sa = sa * @sprintf("%.2e", outcome.qValues[2] ) * ",  "   end
@@ -251,36 +251,37 @@ module FormFactor
             if  length(outcome.qValues) >  3   sa = sa * "...    "   else   sa = sa * "    "             end
             println( sa ) 
         end
-        println("  ", JAC.TableStrings.hLine(86))
+        println("  ", TableStrings.hLine(86))
         #
         return( nothing )
     end
 
 
     """
-    `JAC.FormFactor.displayResults(stream::IO, outcomes::Array{FormFactor.Outcome,1})`  ... to display the energies, M_ms and F-parameters, etc. for the 
-         selected levels. A neat table is printed but nothing is returned otherwise.
+    `FormFactor.displayResults(stream::IO, outcomes::Array{FormFactor.Outcome,1})`  
+        ... to display the energies, M_ms and F-parameters, etc. for the selected levels. A neat table is printed but 
+            nothing is returned otherwise.
     """
     function  displayResults(stream::IO, outcomes::Array{FormFactor.Outcome,1})
         println(stream, " ")
         println(stream, "  Standard and modified atomic form factors [note F^(standard) (0) = N_e]:")
         println(stream, " ")
-        println(stream, "  ", JAC.TableStrings.hLine(88))
+        println(stream, "  ", TableStrings.hLine(88))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=3)              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=3)
-        sa = sa * JAC.TableStrings.center(14, "q [a.u.]";       na=1) 
-        sa = sa * JAC.TableStrings.center(14, "standard F";     na=1) 
-        sa = sa * JAC.TableStrings.center(14, "modified F";     na=4) 
-        sb = sb * JAC.TableStrings.center(14, "    " ; na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(88)) 
+        sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(14, "Energy"; na=3)              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(14, "q [a.u.]";       na=1) 
+        sa = sa * TableStrings.center(14, "standard F";     na=1) 
+        sa = sa * TableStrings.center(14, "modified F";     na=4) 
+        sb = sb * TableStrings.center(14, "    " ; na=4)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(88)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
-            sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(outcome.level.index); na=2)
-            sa = sa * JAC.TableStrings.center(10, string(sym); na=4)
+            sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
+            sa = sa * TableStrings.center(10, string(sym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             sa = sa * @sprintf("%.5e", outcome.qValues[1])                                       * "    "
             sa = sa * @sprintf("%.5e", outcome.standardFs[1])                                    * "    "
@@ -294,11 +295,9 @@ module FormFactor
                 println(stream, sa )
             end
         end
-        println(stream, "  ", JAC.TableStrings.hLine(88), "\n\n")
+        println(stream, "  ", TableStrings.hLine(88), "\n\n")
         #
         return( nothing )
     end
-
-
 
 end # module
