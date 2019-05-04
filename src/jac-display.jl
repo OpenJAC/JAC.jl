@@ -1,7 +1,8 @@
 
 """
-`Basics.display()`  ... reports/displays various information about the (present) settings or some given data, often in some separate window; 
-                     nothing is returned if not indicated otherwise. Cf. JAC.Defaults.setDefaults(). 
+`Basics.display()`  
+    ... reports/displays various information about the (present) settings or some given data, often in some separate window; 
+        nothing is returned if not indicated otherwise. Cf. JAC.Defaults.setDefaults(). 
 
   + `("constants")`  or  `("physical constants")`  ... to display (all) currently defined physical constants.
 

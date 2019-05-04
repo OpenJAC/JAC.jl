@@ -1,8 +1,9 @@
 
 """
-`Basics.determineEnergySharings(energy::Float64, NoEnergySharings::Int64)`  ... to determine the NoEnergySharings sharings by using the
-                             Gauss-Legendre integration points in the interval [0., energy]; an Array{Tuple{Float64,Float64},1} is returned.
-                             This methods assumes that the package GaussQuadrature is 'used'.
+`Basics.determineEnergySharings(energy::Float64, NoEnergySharings::Int64)`  
+    ... to determine the NoEnergySharings sharings by using the Gauss-Legendre integration points in the interval
+        [0., energy]; an Array{Tuple{Float64,Float64},1} is returned. This methods assumes that the package 
+        GaussQuadrature is 'used'.
 """
 function Basics.determineEnergySharings(energy::Float64, NoEnergySharings::Int64)
     xx, ww = GaussQuadrature.legendre(NoEnergySharings)
@@ -17,8 +18,8 @@ end
 
 
 """
-`Basics.determineHoleShells(conf::Configuration)`  ... to determine the hole-shells of a given non-relativistic configuration; 
-                                                      a shellList::Array{Shell,1} is returned.
+`Basics.determineHoleShells(conf::Configuration)`  
+    ... to determine the hole-shells of a given non-relativistic configuration; a shellList::Array{Shell,1} is returned.
 """
 function Basics.determineHoleShells(conf::Configuration)
 

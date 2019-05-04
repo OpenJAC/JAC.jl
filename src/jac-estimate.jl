@@ -1,12 +1,11 @@
 
-export  estimate
-
 """
-`Basics.estimate()`  ... estimates various quantities, typically, due to semi-empirical formulas and parametrizations.
+`Basics.estimate()`  
+    ... estimates various quantities, typically, due to semi-empirical formulas and parametrizations.
 
-  + `("ionization potential: inner-shell", shell::Shell, Z::Int64)`  ... to estimate the ionization potential = mean binding energy of an
-                             electron in the given shell; an energy value::Float64 is returned. These ionization potentials are taken from the
-                             tabulation ....
+  + `("ionization potential: inner-shell", shell::Shell, Z::Int64)`  
+    ... to estimate the ionization potential = mean binding energy of an electron in the given shell; an energy value::Float64 
+        is returned. These ionization potentials are taken from the tabulation ....
 """
 function Basics.estimate(sa::String, shell::Shell, Z::Int64)
     if      sa == "ionization potential: inner-shell"

@@ -1,14 +1,14 @@
 
-## export  exclude
-
 """
 `Basics.excludeDoubles()  ... exclude 'double entries' from various list; see below:
 
-  + `(confList::Array{Configuration,1})`  ... to exlude from the (non-relativistic) confList all 'doubles', ie. configurations 
-                                              that occured before in the list; a new confList::Array{Configuration,1} is returned.
+  + `(confList::Array{Configuration,1})`  
+    ... to exlude from the (non-relativistic) confList all 'doubles', ie. configurations that occured before in the list; 
+        a new confList::Array{Configuration,1} is returned.
 
-  + `(csfList::Array{CsfR,1})`  ... to exlude from the (relativistic) csfList all 'doubles', ie. CSF that occured already before in the list; 
-                                    a new csfList::Array{CsfR,1} is returned.
+  + `(csfList::Array{CsfR,1})`  
+    ... to exlude from the (relativistic) csfList all 'doubles', ie. CSF that occured already before in the list; 
+        a new csfList::Array{CsfR,1} is returned.
 """
 function Basics.excludeDoubles(confList::Array{Configuration,1})
     confListNew = [ deepcopy(confList[1]) ]

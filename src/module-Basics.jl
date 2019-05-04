@@ -10,11 +10,11 @@ module Basics
 
     using Printf
 
-    export  add, AngularJ, AngularJ64, AngularM, AngularM64, Auger,
-            compute,
-            EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
+    export  add, analyze, AngularJ, AngularJ64, AngularM, AngularM64, Auger,
+            compute, diagonalize,
+            estimate, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
             HalfInt, HalfInteger, 
-            LevelSymmetry, 
+            LevelSymmetry, LevelKey,
             oplus,
             Parity, perform,  
             RadialMesh, Radiative,
@@ -351,6 +351,80 @@ module Basics
         elseif  sym.parity == minus    return( "$(sym.J) -" )  
         else    error("stop a")
         end
+    end
+
+
+    """
+    `struct  Basics.LevelKey`  ... defines a struct for identifying a level by its symmetry, energy, etc.
+
+        + sym          ::LevelSymmetry    ... Level symmetry.
+        + index        ::Int64            ... Index of this level in its original multiplet, or 0.
+        + energy       ::Float64          ... Total energy.
+        + relativeOcc  ::Float64          ... Relative occupation of this level, if part of some multiplet/cascade.
+    """
+    struct  LevelKey
+        sym            ::LevelSymmetry
+        index          ::Int64    
+        energy         ::Float64 
+        relativeOcc    ::Float64 
+    end
+
+
+    """
+    `Basics.LevelKey()`  ... constructor for an empty instance of a LevelKey.
+    """
+    function  LevelKey()
+        LevelKey( LevelSymmetry(0,Basics.plus), 0, 0., 0.)    
+    end
+
+
+    # `Base.show(io::IO, key::LevelKey)`  ... prepares a proper printout of the variable key::LevelKey.
+    function Base.show(io::IO, key::LevelKey) 
+        print(io, string(key) )
+    end
+
+
+    # `Base.string(key::LevelKey)`  ... provides a proper printout of the variable key::LevelKey.
+    function Base.string(key::LevelKey) 
+        return( "LevelKey[$(key.sym) ($(key.index)), en=$(key.energy), occ=$(key.relativeOcc)]")
+    end
+
+
+    """
+    `struct  Basics.LineKey`  
+        ... defines a struct for identifying a line by the keys of the initial and final level, its transition energy,
+            decay strength, etc.
+
+        + iLevelKey    ::LevelKey         ... Key of the initial level.
+        + fLevelKey    ::LevelKey         ... Key of the final level.
+        + energy       ::Float64          ... Total energy.
+        + strength     ::Float64          ... Strength of the given line.
+    """
+    struct  LineKey
+        iLevelKey      ::LevelKey  
+        fLevelKey      ::LevelKey
+        energy         ::Float64   
+        strength       ::Float64 
+    end
+
+
+    """
+    `Basics.LineKey()`  ... constructor for an empty instance of a LineKey.
+    """
+    function  LineKey()
+        LineKey( LevelKey(), LevelKey(), 0., 0.)    
+    end
+
+
+    # `Base.show(io::IO, key::LineKey)`  ... prepares a proper printout of the variable key::LineKey.
+    function Base.show(io::IO, key::LineKey) 
+        print(io, string(key) )
+    end
+
+
+    # `Base.string(key::LineKey)`  ... provides a proper printout of the variable key::LevelKey.
+    function Base.string(key::LineKey) 
+        return( "LineKey[i=$(key.iLevelKey) --> f=$(key.fLevelKey), en=$(key.energy), strength=$(key.strength)]")
     end
 
 
@@ -883,9 +957,20 @@ module Basics
         Babushkin         ::Float64
     end 
 
+
+    """
+    `Basics.EmProperty(wa::Float64)`  ... constructor for an `constant` instance of EmProperty.
+    """
+    function EmProperty(wa::Float64)
+        EmProperty(wa, wa)
+    end
+
+    
     Base.:+(a::EmProperty, b::EmProperty) = EmProperty(a.Coulomb + b.Coulomb, a.Babushkin + b.Babushkin)
     Base.:+(a::EmProperty, b) = EmProperty(a.Coulomb + b, a.Babushkin + b)
     Base.:+(a, b::EmProperty) = b + a
+    Base.:/(a::EmProperty, b::EmProperty) = EmProperty(a.Coulomb / b.Coulomb, a.Babushkin / b.Babushkin)
+    Base.:/(a, b::EmProperty) = EmProperty(a / b.Coulomb, a / b.Babushkin)
 
 
     # `Base.show(io::IO, property::EmProperty)`  ... prepares a proper printout of the variable property::EmProperty.
@@ -1178,26 +1263,26 @@ module Basics
 
     
     # Functions/methods that are later added to the module Basics
-    function add()                              end
-    function addZerosToCsfR()                   end
-    function analyze()                          end
-    function analyzeConvergence()               end
-    function compute()                          end
-    function computeDiracEnergy()               end
-    function computeMeanSubshellOccupation()    end
-    function computePotentialCoreHartree()      end
-    function computePotentialHartree()          end
-    function computePotentialHartreeSlater()    end
-    function computePotentialKohnSham()         end
-    function computePotentialDFS()              end
-    function computePotentialExtendedHartree()  end
-    function determineEnergySharings()          end
-    function determineHoleShells()              end
-    function determineParity()                  end
-    function determineSelectedLines()           end
-    function determineSelectedPathways()        end
-    function diagonalize()                      end
-    function display()                          end
+    function add()                                      end
+    function addZerosToCsfR()                           end
+    function analyze()                                  end
+    function analyzeConvergence()                       end
+    function compute()                                  end
+    function computeDiracEnergy()                       end
+    function computeMeanSubshellOccupation()            end
+    function computePotentialCoreHartree()              end
+    function computePotentialHartree()                  end
+    function computePotentialHartreeSlater()            end
+    function computePotentialKohnSham()                 end
+    function computePotentialDFS()                      end
+    function computePotentialExtendedHartree()          end
+    function determineEnergySharings()                  end
+    function determineHoleShells()                      end
+    function determineParity()                          end
+    function determineSelectedLines()                   end
+    function determineSelectedPathways()                end
+    function diagonalize()                              end
+    function display()                                  end
     function estimate()                                 end
     function excludeDoubles()                           end
     function generate()                                 end
@@ -1211,6 +1296,7 @@ module Basics
     function interpolate()                              end
     function interpolateOnGridGrasp92()                 end
     function interpolateOnGridTrapezRule()              end
+    function isSimilar()                                end
     function merge()                                    end
     function modify()                                   end
     function perform()                                  end

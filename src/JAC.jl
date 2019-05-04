@@ -49,24 +49,23 @@ module JAC
 using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD
 
 export @racahsum, 
-       add, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AsfSettings, Atomic, Auger, AutoIonization, 
+       add, analyze, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AsfSettings, Atomic, Auger, AutoIonization, 
        Basics, Basis, 
-       convertUnits, 
-       Defaults, Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
-       DecayYield, Details, Dielectronic, DoubleAuger,
-       ElectricDipoleMoment, Einstein, EmMultipole, 
+       compute, convertUnits, Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
+       diagonalize, Defaults, DecayYield, Details, Dielectronic, DoubleAuger,
+       estimate, ElectricDipoleMoment, Einstein, EmMultipole, 
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor,
        GreenFunction, getDefaults, Gui,
        Hfs, HydrogenicIon,
        ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, 
        LandeZeeman, Level, LevelSymmetry,
-       MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment,  MultipolePolarizibility, Multiplet, 
+       MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment, MultipolePolarizibility, Multiplet, 
        NoAmplitude, NoProcess, Nuclear, Model,
        Orbital, 
-       PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
+       perform, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
        PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
-       PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, perform,
+       PhotoIonizationAutoion, PhotoRecombination, PlasmaShift,
        Radial, RadialIntegrals, Radiative, RadiativeAuger, RayleighCompton, REDA, READI,
        SchiffMoment, Shell, Subshell, setDefaults,
        UseCoulomb, UseBabushkin, UseGauge
@@ -104,10 +103,10 @@ include("module-IsotopeShift.jl")
 include("module-LandeZeeman.jl")
 include("module-AlphaVariation.jl")
 include("module-FormFactor.jl")
-include("module-DecayYield.jl")     ## up to here
+include("module-DecayYield.jl")
 include("module-GreenFunction.jl")
 include("module-MultipolePolarizibility.jl")
-include("module-PlasmaShift.jl")
+include("module-PlasmaShift.jl")      ## up to here + up to jac-exclude
 
 # Functions/methods for atomic processes
 include("module-PhotoEmission.jl")

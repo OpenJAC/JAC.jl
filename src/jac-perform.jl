@@ -61,7 +61,8 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             if output    results = Base.merge( results, Dict("Form factor outcomes:" => outcome) )            end
         end
         if  JAC.Yields         in computation.properties   
-            outcome = JAC.DecayYield.computeOutcomes(multiplet, nModel, computation.grid, computation.yieldSettings)         
+            outcome = JAC.DecayYield.computeOutcomes(computation.configs, computation.asfSettings, 
+                                                     multiplet, nModel, computation.grid, computation.yieldSettings)     
             if output    results = Base.merge( results, Dict("Fluorescence and AutoIonization yield outcomes:" => outcome) )   end
         end
         if  JAC.Green          in computation.properties   
@@ -254,7 +255,8 @@ function Basics.perform(comp::Cascade.Computation; output::Bool=false)
                                              "\n   results = load($filename)    ... to load the results back from file." )      end      
         save(filename, results)
     end
-    return( results )
+    ## return( results )
+    return( data )
 end
 
 
@@ -409,7 +411,7 @@ function Basics.perform(sa::String, configs::Array{Configuration,1}, initalOrbit
     # Generate the relativistic CSF's for the given subshell list
     csfList = CsfR[]
     for  relconf in relconfList
-        newCsfs = generate("CSF list: from single ConfigurationR", relconf, subshellList)
+        newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
         append!( csfList, newCsfs)
     end
 

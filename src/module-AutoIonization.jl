@@ -350,7 +350,7 @@ module AutoIonization
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   JAC.AutoIonization.displayRates(iostream, newLines, settings)     end
         #
-        if    output    return( lines )
+        if    output    return( newLines )
         else            return( nothing )
         end
     end

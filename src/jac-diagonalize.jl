@@ -2,9 +2,9 @@
 """
 `Basics.diagonalize()`  ... diagonalizes matrices of various kinds and by different methods 
 
-  + `("matrix: Julia, eigfact", matrix::Array{Float64,2})`  ... to apply the standard eigfact() method from Julia for a quadratic, full matrix;
-                                                                nothing about the symmetry of the matrix is assumed here; an eigen::JAC.Eigen
-                                                                is returned.
+  + `("matrix: Julia, eigfact", matrix::Array{Float64,2})`  
+    ... to apply the standard eigfact() method from Julia for a quadratic, full matrix; nothing about the symmetry of 
+        the matrix is assumed here; an eigen::JAC.Eigen is returned.
 """
 function Basics.diagonalize(sa::String, matrix::Array{Float64,2})
     if       sa == "matrix: Julia, eigfact" 
@@ -24,8 +24,8 @@ end
 
 """
   + `("generalized eigenvalues: Julia, eigfact", matrixA::Array{Float64,2}, matrixB::Array{Float64,2})`  
-                                ... to apply the standard eigfact() method from Julia for a generalized eigenvalue problem with two quadratic   
-                                    (full) matrices; nothing about the symmetry of the matrix is assumed here; an eigen::JAC.Eigen is returned.
+    ... to apply the standard eigfact() method from Julia for a generalized eigenvalue problem with two quadratic   
+        (full) matrices; nothing about the symmetry of the matrix is assumed here; an eigen::JAC.Eigen is returned.
 """
 function Basics.diagonalize(sa::String, matrixA::Array{Float64,2}, matrixB::Array{Float64,2})
     if       sa == "generalized eigenvalues: Julia, eigfact" 

@@ -1,11 +1,10 @@
-export  analyze
 
 """
 `Basics.analyze()`  ... analyzes various data structures with regard to requested details.
 
-  + `("level decomposition: % of NR configurations", level::Level)`  ... to analyze and list the non-relativistic configurations with
-                              a weight larger than 5%. A list of NR configurations with their corresponding weights are printed, but nothing
-                              is returned.  **Not yet implemented !**
+  + `("level decomposition: % of NR configurations", level::Level)`  
+    ... to analyze and list the non-relativistic configurations with a weight larger than 5%. A list of NR configurations with their 
+        corresponding weights are printed, but nothing is returned.
 """
 function Basics.analyze(sa::String, level::Level)
     !(sa == "level decomposition: % of NR configurations")   &&   error("Unsupported keystring = $sa")
@@ -45,9 +44,9 @@ end
 
 
 """
-  + `("level decomposition: % of jj-coupled CSF", level::Level, N::Int64)`  ... to anaylze and list (up to) N relativistic CSF, together
-                              with their weight |c_n|^2 in the expansion of the given level. A list of CSF and their corresponding weights are
-                              printed, but nothing is returned otherwise.  **Not yet implemented !**
+  + `("level decomposition: % of jj-coupled CSF", level::Level, N::Int64)`  
+    ... to anaylze and list (up to) N relativistic CSF, together with their weight |c_n|^2 in the expansion of the given level. 
+        A list of CSF and their corresponding weights are printed, but nothing is returned otherwise.  **Not yet implemented !**
 """
 function Basics.analyze(sa::String, level::Level, N::Int64)
     !(sa == "level decomposition: % of jj-coupled CSF")   &&   error("Unsupported keystring = $sa")
@@ -59,12 +58,14 @@ end
 
     
 """
-`Basics.analyzeConvergence()`  ... analyzes the convergence for two (subsequently generated) orbitals or related quantities; a value::Float64 is
-                                returned if not indicated otherwise.
+`Basics.analyzeConvergence()`  
+    ... analyzes the convergence for two (subsequently generated) orbitals or related quantities; a value::Float64 is
+        returned if not indicated otherwise.
 
-  + `(blocka::JAC.Eigen, blockb::JAC.Eigen)`  ... to analyze the convergence for two blocks of eigenvalues und eigenvectors; the value > 0
-                                                  indicates the relative maximum difference abs( a-b/a+b ) between two eigenvalues. The value is
-                                                  set arbitrarely set to 1.0e+2 if the number of eigenvalues differ in the two blocks.
+  + `(blocka::JAC.Eigen, blockb::JAC.Eigen)`  
+    ... to analyze the convergence for two blocks of eigenvalues und eigenvectors; the value > 0 indicates the relative maximum 
+        difference abs( a-b/a+b ) between two eigenvalues. The value is set arbitrarely set to 1.0e+2 if the number of eigenvalues
+        differ in the two blocks.
 """
 function Basics.analyzeConvergence(blocka::Basics.Eigen, blockb::Basics.Eigen)
     va = blocka.values;   vb = blockb.values
@@ -77,10 +78,10 @@ end
 
     
 """
-  + `(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital)`  ... to analyze the convergence for two radial orbitals; the value > 0 indicates the 
-                              relative maximum difference abs( a-b/a+b ) between the energies or (large or small) components of the orbitals. 
-                              The function assumes that the orbitals are represented on the same grid and that the components are zero if only 
-                              one of the orbitals is defined beyond some maximum grid point.
+  + `(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital)`  
+    ... to analyze the convergence for two radial orbitals; the value > 0 indicates the relative maximum difference abs( a-b/a+b ) 
+        between the energies or (large or small) components of the orbitals. The function assumes that the orbitals are represented 
+        on the same grid and that the components are zero if only one of the orbitals is defined beyond some maximum grid point.
 """
 function Basics.analyzeConvergence(a::JAC.Radial.Orbital, b::JAC.Radial.Orbital)
     if       a.subshell !=  b.subshell                                             error("stop a")   
