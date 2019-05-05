@@ -19,8 +19,9 @@ end
 
 
 """
-`Basics.tools(dict::Dict)`  ... select different tools from a menu if proper results::dict are given in terms of a dictionary as obtained
-                             usually from an Atomic.Computation.
+`Basics.tools(dict::Dict)`  
+    ... select different tools from a menu if proper results::dict are given in terms of a dictionary as obtained
+        usually from an Atomic.Computation.
 """
 function Basics.tools(dict::Dict)
     println("JAC.Tools.select(): A menu if a dict comes in; $dict ")

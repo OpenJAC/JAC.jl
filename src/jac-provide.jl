@@ -2,8 +2,9 @@
 """
 `Basics.provide()`  ... provides various data and transformations. 
 
-  + `("subshell states: antisymmetric, seniority", sh::Subshell, occ::Int64)`   ... to provide all antisymmetric SubshellStates within the
-                        relativistic seniority scheme for the given shell and occupation; an Array{SubshellStateR,1} is returned.
+  + `("subshell states: antisymmetric, seniority", sh::Subshell, occ::Int64)`   
+    ... to provide all antisymmetric SubshellStates within the relativistic seniority scheme for the given 
+        shell and occupation; an Array{SubshellStateR,1} is returned.
 """
 function Basics.provide(sa::String, sh::Subshell, occ::Int64)
 
@@ -67,8 +68,9 @@ end
 
 
 """
-  + `("binding energy", Z::Float64, sh::Subshell)`   ... to provide the binding energy of a subshell electron, taken from a semi-empirical 
-                        tabulations by Williams et al., https://userweb.jlab.org/~gwyn/ebindene.html. A energy::Float64 in  Hartree is returned.
+  + `("binding energy", Z::Float64, sh::Subshell)`   
+    ... to provide the binding energy of a subshell electron, taken from a semi-empirical tabulations by Williams et al., 
+        https://userweb.jlab.org/~gwyn/ebindene.html. A energy::Float64 in  Hartree is returned.
 """
 function Basics.provide(sa::String, Z::Int64, sh::Subshell)
     if     sa == "binding energy"
@@ -100,10 +102,11 @@ end
 
 
 """
-  + `("binding energy", Z::Float64, conf::Configuration)`  ... to provide an approximate binding energy of a given electron 
-                        configuration. This estimate adds the binding energies of all subshell, taken frogm a semi-empirical tabulations by 
-                        Williams et al., https://userweb.jlab.org/~gwyn/ebindene.html. No relaxation effects are included if several hole states
-                        occur with regard to the neutral atom. An energy::Float64 in  Hartree is returned.
+  + `("binding energy", Z::Float64, conf::Configuration)`  
+    ... to provide an approximate binding energy of a given electron configuration. This estimate adds the binding 
+        energies of all subshell, taken frogm a semi-empirical tabulations by Williams et al., 
+        https://userweb.jlab.org/~gwyn/ebindene.html. No relaxation effects are included if several hole states
+        occur with regard to the neutral atom. An energy::Float64 in  Hartree is returned.
 """
 function Basics.provide(sa::String, Z::Int64, conf::Configuration)
     if     sa == "binding energy"

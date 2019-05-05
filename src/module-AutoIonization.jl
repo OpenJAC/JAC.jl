@@ -2,13 +2,13 @@
 """
 `module  JAC.AutoIonization`  
     ... a submodel of JAC that contains all methods for computing Auger properties between some initial and final-state 
-        multiplets; it is using JAC.Basics, JAC.Radial, JAC.Nuclear, JAC.PlasmaShift.
+        multiplets.
 """
 module AutoIonization
 
-    using  Printf, JAC, ..Continuum, JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.Nuclear, JAC.PlasmaShift
-    global JAC_counter = 0
-
+    using  Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, 
+                   ..PlasmaShift, ..Radial, ..TableStrings
+    ##x global JAC_counter = 0
     
     """
     `struct  Settings`  ... defines a type for the details and parameters of computing Auger lines.
@@ -37,7 +37,7 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.Settings()`  ... constructor for the default values of AutoIonization line computations
+    `AutoIonization.Settings()`  ... constructor for the default values of AutoIonization line computations
     """
     function Settings()
         Settings(false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 10e5, 100, "Coulomb")
@@ -58,8 +58,9 @@ module AutoIonization
 
 
     """
-    `struct  Channel`   ... defines a type for a AutoIonization channel to help characterize a scattering (continuum) state of many electron-states with 
-                            a single free electron.
+    `struct  Channel`   
+        ... defines a type for a AutoIonization channel to help characterize a scattering (continuum) state of many 
+            electron-states with a single free electron.
 
         + kappa          ::Int64                ... partial-wave of the free electron
         + symmetry       ::LevelSymmetry        ... total angular momentum and parity of the scattering state
@@ -75,15 +76,18 @@ module AutoIonization
 
 
     """
-    `struct  Line`  ... defines a type for a AutoIonization line that may include the definition of sublines and their corresponding amplitudes.
+    `struct  Line`  
+        ... defines a type for a AutoIonization line that may include the definition of sublines and their 
+            corresponding amplitudes.
 
         + initialLevel   ::Level           ... initial-(state) level
         + finalLevel     ::Level           ... final-(state) level
         + electronEnergy ::Float64         ... Energy of the (incoming free) electron.
         + totalRate      ::Float64         ... Total rate of this line.
         + angularAlpha   ::Float64         ... Angular alpha_2 coefficient.
-        + hasChannels    ::Bool            ... Determines whether the individual scattering (sub-) channels are defined in terms of their 
-                                               free-electron energy, kappa and the total angular momentum/parity as well as the amplitude, or not.
+        + hasChannels    ::Bool            ... Determines whether the individual scattering (sub-) channels are defined 
+                                               in terms of their free-electron energy, kappa and the total angular 
+                                               momentum/parity as well as the amplitude, or not.
         + channels       ::Array{AutoIonization.Channel,1}  ... List of AutoIonization channels of this line.
     """
     struct  Line
@@ -98,7 +102,7 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.Line(initialLevel::Level, finalLevel::Level, totalRate::Float64)`  
+    `AutoIonization.Line(initialLevel::Level, finalLevel::Level, totalRate::Float64)`  
         ... constructor for an AutoIonization line between a specified initial and final level.
     """
     function Line(initialLevel::Level, finalLevel::Level, totalRate::Float64)
@@ -119,8 +123,8 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.amplitude(kind::String, channel::AutoIonization.Channel, continuumLevel::Level, initialLevel::Level, grid::Radial.Grid; 
-                         printout::Bool=true)`  
+    `AutoIonization.amplitude(kind::String, channel::AutoIonization.Channel, continuumLevel::Level, initialLevel::Level, 
+                              grid::Radial.Grid; printout::Bool=true)`  
         ... to compute the kind = (Coulomb,  Breit  or Coulomb+Breit) Auger amplitude 
             <(alpha_f J_f, kappa) J_i || O^(Auger, kind) || alpha_i J_i>  due to the interelectronic interaction for the given 
             final and initial level. A value::ComplexF64 is returned.
@@ -143,11 +147,11 @@ module AutoIonization
                     me = 0.
                     for  coeff in wa[2]
                         if   kind in [ "Coulomb", "Coulomb+Breit"]    
-                            me = me + coeff.V * JAC.InteractionStrength.XL_Coulomb(coeff.nu, 
+                            me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 
                                                     continuumLevel.basis.orbitals[coeff.a], continuumLevel.basis.orbitals[coeff.b],
                                                     initialLevel.basis.orbitals[coeff.c],   initialLevel.basis.orbitals[coeff.d], grid)   end
                         if   kind in [ "Breit", "Coulomb*Breit"]    
-                            me = me + coeff.V * JAC.InteractionStrength.XL_Breit(coeff.nu, 
+                            me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, 
                                                     continuumLevel.basis.orbitals[coeff.a], continuumLevel.basis.orbitals[coeff.b],
                                                     initialLevel.basis.orbitals[coeff.c],   initialLevel.basis.orbitals[coeff.d], grid)   end
                     end
@@ -171,19 +175,21 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.channelAmplitude(kind::String, channel::AutoIonization.Channel, energy::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid)`  
+    `AutoIonization.channelAmplitude(kind::String, channel::AutoIonization.Channel, energy::Float64, finalLevel::Level, 
+                                     initialLevel::Level, grid::Radial.Grid)`  
         ... to compute the kind = (Coulomb,  Breit  or Coulomb+Breit) Auger amplitude  
             <(alpha_f J_f, kappa) J_i || O^(Auger, kind) || alpha_i J_i>  due to the interelectronic interaction for the given final and 
             initial level. A newChannel::AutoIonization.Channel is returned.
     """
-    function channelAmplitude(kind::String, channel::AutoIonization.Channel, energy::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid)
+    function channelAmplitude(kind::String, channel::AutoIonization.Channel, energy::Float64, finalLevel::Level, 
+                              initialLevel::Level, grid::Radial.Grid)
         newiLevel = Basics.generateLevelWithSymmetryReducedBasis(initialLevel)
         newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
         newfLevel = Basics.generateLevelWithSymmetryReducedBasis(finalLevel)
-        cOrbital, phase  = JAC.Continuum.generateOrbital(energy, Subshell(101, channel.kappa), newfLevel, grid, contSettings)
+        cOrbital, phase  = Continuum.generateOrbital(energy, Subshell(101, channel.kappa), newfLevel, grid, contSettings)
         newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
         newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
-        amplitude = JAC.AutoIonization.amplitude(kind, channel, newcLevel, newiLevel, grid)
+        amplitude = AutoIonization.amplitude(kind, channel, newcLevel, newiLevel, grid)
 
         newChannel = AutoIonization.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude)    
         return( newChannel )
@@ -191,29 +197,29 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
-                                           settings::AutoIonization.Settings; printout::Bool=true)` 
-        ... to compute all amplitudes and properties of the given line; a line::Euer.Line is returned for which the amplitudes and properties 
-            are now evaluated.
+    `AutoIonization.computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+                                                settings::AutoIonization.Settings; printout::Bool=true)` 
+        ... to compute all amplitudes and properties of the given line; a line::Euer.Line is returned for which the amplitudes 
+            and properties are now evaluated.
     """
     function computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                          settings::AutoIonization.Settings; printout::Bool=true) 
-        newChannels = AutoIonization.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum);   rate = 0.
+        newChannels = AutoIonization.Channel[];   contSettings = Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
             newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
             newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
-            cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
+            cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
-            amplitude = JAC.AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
+            amplitude = AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
             rate      = rate + conj(amplitude) * amplitude
             push!( newChannels, AutoIonization.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )
         end
         totalRate = 2pi* rate;   angularAlpha = 0.
         newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, true, newChannels)
         #
-        if  settings.calcAnisotropy    angularAlpha = JAC.AutoIonization.computeIntrinsicAlpha(2, newLine)
+        if  settings.calcAnisotropy    angularAlpha = AutoIonization.computeIntrinsicAlpha(2, newLine)
             newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, true, newChannels)
         end
         
@@ -222,25 +228,25 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeAmplitudesPropertiesPlasma(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
-                                                 settings::PlasmaShift.AugerSettings; printout::Bool=true)`  
+    `AutoIonization.computeAmplitudesPropertiesPlasma(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+                                                      settings::PlasmaShift.AugerSettings; printout::Bool=true)`  
         ... to compute all amplitudes and properties of the given line but for the given plasma model; a line::AutoIonization.Line is returned 
             for which the amplitudes and properties are now evaluated.
     """
     function computeAmplitudesPropertiesPlasma(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                                settings::PlasmaShift.AugerSettings; printout::Bool=true) 
-        newChannels = AutoIonization.Channel[];   contSettings = JAC.Continuum.Settings(false, nrContinuum);   rate = 0.
+        newChannels = AutoIonization.Channel[];   contSettings = Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
             newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
             newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
             @warn "Adapt a proper continuum orbital for the plasma potential"
-            cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
+            cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
             @warn "Adapt a proper Auger amplitude for the plasma e-e interaction"
             amplitude = 1.0
-            # amplitude  = JAC.AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid)
+            # amplitude  = AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid)
             rate       = rate + conj(amplitude) * amplitude
             push!( newChannels, AutoIonization.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )
         end
@@ -253,7 +259,7 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeIntrinsicAlpha(k::Int64, line::AutoIonization.Line)`  
+    `AutoIonization.computeIntrinsicAlpha(k::Int64, line::AutoIonization.Line)`  
         ... to compute the intrinsic alpha_k anisotropy parameter for the given line. A value::Float64 is returned.
     """
     function  computeIntrinsicAlpha(k::Int64, line::AutoIonization.Line)
@@ -262,24 +268,24 @@ module AutoIonization
         wn = 0.;    for  channel in line.channels    wn = wn + conj(channel.amplitude) * channel.amplitude   end
         wa = 0.;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J;
         for  cha  in line.channels  
-            j = JAC.AngularMomentum.kappa_j(cha.kappa);    l = JAC.AngularMomentum.kappa_l(cha.kappa)
+            j = AngularMomentum.kappa_j(cha.kappa);    l = AngularMomentum.kappa_l(cha.kappa)
             ##x println("wn = $wn   j = $j   l =$l")
             for  chp  in line.channels  
-                jp = JAC.AngularMomentum.kappa_j(chp.kappa);    lp = JAC.AngularMomentum.kappa_l(chp.kappa)
-                ##x println("bracket = $(JAC.AngularMomentum.bracket([l, lp, j, jp])) ")
-                ##x println("CG      = $(JAC.AngularMomentum.ClebschGordan(l, AngularM64(0), lp, AngularM64(0), AngularJ64(k), AngularM64(0))) ")
-                ##x println("w-6     = $(JAC.AngularMomentum.Wigner_6j(Ji, j, Jf, jp, Ji, AngularJ64(k))) ")
-                ##x println("w-6     = $(JAC.AngularMomentum.Wigner_6j(l,  j, AngularJ64(1//2), jp, lp, AngularJ64(k))) ")
-                wa = wa + JAC.AngularMomentum.bracket([l, lp, j, jp]) *  
-                          JAC.AngularMomentum.ClebschGordan(l, AngularM64(0), lp, AngularM64(0), AngularJ64(k), AngularM64(0)) *
-                          JAC.AngularMomentum.Wigner_6j(Ji, j, Jf, jp, Ji, AngularJ64(k)) * 
-                          JAC.AngularMomentum.Wigner_6j(l,  j, AngularJ64(1//2), jp, lp, AngularJ64(k)) * 
+                jp = AngularMomentum.kappa_j(chp.kappa);    lp = AngularMomentum.kappa_l(chp.kappa)
+                ##x println("bracket = $(AngularMomentum.bracket([l, lp, j, jp])) ")
+                ##x println("CG      = $(AngularMomentum.ClebschGordan(l, AngularM64(0), lp, AngularM64(0), AngularJ64(k), AngularM64(0))) ")
+                ##x println("w-6     = $(AngularMomentum.Wigner_6j(Ji, j, Jf, jp, Ji, AngularJ64(k))) ")
+                ##x println("w-6     = $(AngularMomentum.Wigner_6j(l,  j, AngularJ64(1//2), jp, lp, AngularJ64(k))) ")
+                wa = wa + AngularMomentum.bracket([l, lp, j, jp]) *  
+                          AngularMomentum.ClebschGordan(l, AngularM64(0), lp, AngularM64(0), AngularJ64(k), AngularM64(0)) *
+                          AngularMomentum.Wigner_6j(Ji, j, Jf, jp, Ji, AngularJ64(k)) * 
+                          AngularMomentum.Wigner_6j(l,  j, AngularJ64(1//2), jp, lp, AngularJ64(k)) * 
                           cha.amplitude * conj(chp.amplitude)
                 ##x println("wa = $wa")
             end    
         end
-        value = JAC.AngularMomentum.phaseFactor([Ji, +1, Jf, +1, AngularJ64(k), -1, AngularJ64(1//2)]) * 
-                sqrt(JAC.AngularMomentum.twoJ(Ji) + 1) * wa / wn
+        value = AngularMomentum.phaseFactor([Ji, +1, Jf, +1, AngularJ64(k), -1, AngularJ64(1//2)]) * 
+                sqrt(AngularMomentum.twoJ(Ji) + 1) * wa / wn
         ##x println("value = $value")
 
         return( value )
@@ -288,34 +294,34 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                            settings::AutoIonization.Settings; output=true, printout::Bool=true)`  
+    `AutoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+                                 settings::AutoIonization.Settings; output=true, printout::Bool=true)`  
         ... to compute the Auger transition amplitudes and all properties as requested by the given settings. A list of 
             lines::Array{AutoIonization.Lines} is returned.
     """
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                            settings::AutoIonization.Settings; output=true, printout::Bool=true)
         println("")
-        printstyled("JAC.AutoIonization.computeLines(): The computation of Auger rates and properties starts now ... \n", color=:light_green)
-        printstyled("----------------------------------------------------------------------------------------------- \n", color=:light_green)
+        printstyled("AutoIonization.computeLines(): The computation of Auger rates and properties starts now ... \n", color=:light_green)
+        printstyled("------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        lines = JAC.AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
+        lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.AutoIonization.displayLines(lines)    end  
+        if  settings.printBeforeComputation    AutoIonization.displayLines(lines)    end  
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = AutoIonization.Line[]
         for  line in lines
-            newLine = JAC.AutoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings) 
+            newLine = AutoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        JAC.AutoIonization.displayRates(stdout, newLines, settings)
-        JAC.AutoIonization.displayLifetimes(stdout, newLines)
+        AutoIonization.displayRates(stdout, newLines, settings)
+        AutoIonization.displayLifetimes(stdout, newLines)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   JAC.AutoIonization.displayRates(iostream, newLines, settings);   JAC.AutoIonization.displayLifetimes(iostream, newLines)     end
+        if  printSummary   AutoIonization.displayRates(iostream, newLines, settings);   AutoIonization.displayLifetimes(iostream, newLines)     end
         #
         if    output    return( lines )
         else            return( nothing )
@@ -325,8 +331,8 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                            settings::AutoIonization.Settings; output=true, printout::Bool=true)`  
+    `AutoIonization.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+                                        settings::AutoIonization.Settings; output=true, printout::Bool=true)`  
         ... to compute the Auger transition amplitudes and all properties as requested by the given settings. The computations
             and printout is adapted for large cascade computations by including only lines with at least one channel and by sending
             all printout to a summary file only. A list of lines::Array{AutoIonization.Lines} is returned.
@@ -334,21 +340,21 @@ module AutoIonization
     function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                   settings::AutoIonization.Settings; output=true, printout::Bool=true)
         
-        lines = JAC.AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
+        lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        # if  settings.printBeforeComputation    JAC.AutoIonization.displayLines(lines)    end  
+        # if  settings.printBeforeComputation    AutoIonization.displayLines(lines)    end  
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = AutoIonization.Line[]
         for  line in lines
-            newLine = JAC.AutoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
+            newLine = AutoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
             push!( newLines, newLine)
         end
         # Print all results to a summary file, if requested
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   JAC.AutoIonization.displayRates(iostream, newLines, settings)     end
+        if  printSummary   AutoIonization.displayRates(iostream, newLines, settings)     end
         #
         if    output    return( newLines )
         else            return( nothing )
@@ -358,35 +364,35 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                                  settings::PlasmaShift.AugerSettings; output=true)`  
+    `AutoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+                                       settings::PlasmaShift.AugerSettings; output=true)`  
         ... to compute the Auger transition amplitudes and all properties as requested by the given settings. A list of 
             lines::Array{AutoIonization.Lines} is returned.
     """
     function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                  settings::PlasmaShift.AugerSettings; output=true)
         println("")
-        printstyled("JAC.AutoIonization.computeLinesPlasma(): The computation of Auger rates starts now ... \n", color=:light_green)
-        printstyled("-------------------------------------------------------------------------------------- \n", color=:light_green)
+        printstyled("AutoIonization.computeLinesPlasma(): The computation of Auger rates starts now ... \n", color=:light_green)
+        printstyled("---------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        augerSettings = JAC.AutoIonization.Settings(false, settings.printBeforeComputation, settings.selectLines, settings.selectedLines, 0., 1.0e6, 100, "Coulomb")
-        lines = JAC.AutoIonization.determineLines(finalMultiplet, initialMultiplet, augerSettings)
+        augerSettings = AutoIonization.Settings(false, settings.printBeforeComputation, settings.selectLines, settings.selectedLines, 0., 1.0e6, 100, "Coulomb")
+        lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, augerSettings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.AutoIonization.displayLines(lines)    end
+        if  settings.printBeforeComputation    AutoIonization.displayLines(lines)    end
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = AutoIonization.Line[]
         for  line in lines
-            newLine = JAC.AutoIonization.computeAmplitudesPropertiesPlasma(line, nm, grid, nrContinuum, settings) 
+            newLine = AutoIonization.computeAmplitudesPropertiesPlasma(line, nm, grid, nrContinuum, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        JAC.AutoIonization.displayRates(stdout, newLines, augerSettings)
-        JAC.AutoIonization.displayLifetimes(stdout, newLines)
+        AutoIonization.displayRates(stdout, newLines, augerSettings)
+        AutoIonization.displayLifetimes(stdout, newLines)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   JAC.AutoIonization.displayRates(iostream, newLines, augerSettings);   JAC.AutoIonization.displayLifetimes(iostream, newLines)     end
+        if  printSummary   AutoIonization.displayRates(iostream, newLines, augerSettings);   AutoIonization.displayLifetimes(iostream, newLines)     end
         #
         if    output    return( lines )
         else            return( nothing )
@@ -395,14 +401,14 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.determineChannels(finalLevel::Level, initialLevel::Level, settings::AutoIonization.Settings)`  
+    `AutoIonization.determineChannels(finalLevel::Level, initialLevel::Level, settings::AutoIonization.Settings)`  
         ... to determine a list of Auger Channel for a transitions from the initial to final level and by taking into account the particular 
             settings of for this computation; an Array{AutoIonization.Channel,1} is returned.
     """
     function determineChannels(finalLevel::Level, initialLevel::Level, settings::AutoIonization.Settings)
         channels  = AutoIonization.Channel[];   
         symi      = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
-        kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symi, symf)
+        kappaList = AngularMomentum.allowedKappaSymmetries(symi, symf)
         for  kappa in kappaList
             push!(channels, AutoIonization.Channel(kappa, symi, 0., Complex(0.)) )
         end
@@ -411,7 +417,7 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::AutoIonization.Settings)`  
+    `AutoIonization.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::AutoIonization.Settings)`  
         ... to determine a list of AutoIonization.Line's for transitions between levels from the initial- and final-state multiplets, and  
             by taking into account the particular selections and settings for this computation; an Array{AutoIonization.Line,1} is returned. 
             Apart from the level specification, all physical properties are set to zero during the initialization process.
@@ -429,7 +435,7 @@ module AutoIonization
                 energy = initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy
                 if   energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
 
-                channels = JAC.AutoIonization.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
+                channels = AutoIonization.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
                 push!( lines, AutoIonization.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], energy, 0., 0., true, channels) )
             end
         end
@@ -438,7 +444,7 @@ module AutoIonization
 
 
     """
-    `JAC.AutoIonization.displayLines(lines::Array{AutoIonization.Line,1})`  
+    `AutoIonization.displayLines(lines::Array{AutoIonization.Line,1})`  
         ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all selected 
             transitions and energies is printed but nothing is returned otherwise.
     """
@@ -446,57 +452,57 @@ module AutoIonization
         println(" ")
         println("  Selected Auger lines:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(150))
+        println("  ", TableStrings.hLine(150))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * JAC.TableStrings.hBlank(20)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"; na=4);                                sb = sb * JAC.TableStrings.hBlank(22)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=4);              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.center(14, "Energy e_A"; na=4);              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.flushleft(37, "List of kappas and total symmetries"; na=4)  
-        sb = sb * JAC.TableStrings.flushleft(37, "partial (total J^P)                "; na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(150)) 
+        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                                sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(14, "Energy"; na=4);              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(14, "Energy e_A"; na=4);              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.flushleft(37, "List of kappas and total symmetries"; na=4)  
+        sb = sb * TableStrings.flushleft(37, "partial (total J^P)                "; na=4)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(150)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "    "
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.electronEnergy))       * "   "
             kappaSymmetryList = Tuple{Int64,LevelSymmetry}[]
             for  i in 1:length(line.channels)
                 push!( kappaSymmetryList, (line.channels[i].kappa, line.channels[i].symmetry) )
             end
-            sa = sa * JAC.TableStrings.kappaSymmetryTupels(80, kappaSymmetryList)
+            sa = sa * TableStrings.kappaSymmetryTupels(80, kappaSymmetryList)
             println( sa )
         end
-        println("  ", JAC.TableStrings.hLine(150), "\n")
+        println("  ", TableStrings.hLine(150), "\n")
         #
         return( nothing )
     end
 
 
     """
-    `JAC.AutoIonization.displayLifetimes(stream::IO, lines::Array{AutoIonization.Line,1})`  
+    `AutoIonization.displayLifetimes(stream::IO, lines::Array{AutoIonization.Line,1})`  
         ... to list all lifetimes as associated with the selected lines. A neat table is printed but nothing is returned otherwise.
     """
     function  displayLifetimes(stream::IO, lines::Array{AutoIonization.Line,1})
         println(stream, " ")
         println(stream, "  Auger lifetimes, total rates and widths:")
         println(stream, " ")
-        println(stream, "  ", JAC.TableStrings.hLine(115))
+        println(stream, "  ", TableStrings.hLine(115))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(10, "Level";    na=2);                           sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center( 8, "J^P";      na=4);                           sb = sb * JAC.TableStrings.hBlank(12)
-        sa = sa * JAC.TableStrings.center(14, "Lifetime"; na=4);               
-        sb = sb * JAC.TableStrings.center(14,JAC.TableStrings.inUnits("time"); na=4)
-        sa = sa * JAC.TableStrings.center(16, "Total rate"; na=6);               
-        sb = sb * JAC.TableStrings.center(16,JAC.TableStrings.inUnits("rate"); na=4)
-        sa = sa * JAC.TableStrings.center(48, "Widths"; na=2);       
-        sb = sb * JAC.TableStrings.center(48, "Hartrees           Kaysers             eV"; na=2)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(115)) 
+        sa = sa * TableStrings.center(10, "Level";    na=2);                           sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center( 8, "J^P";      na=4);                           sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(14, "Lifetime"; na=4);               
+        sb = sb * TableStrings.center(14,TableStrings.inUnits("time"); na=4)
+        sa = sa * TableStrings.center(16, "Total rate"; na=6);               
+        sb = sb * TableStrings.center(16,TableStrings.inUnits("rate"); na=4)
+        sa = sa * TableStrings.center(48, "Widths"; na=2);       
+        sb = sb * TableStrings.center(48, "Hartrees           Kaysers             eV"; na=2)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(115)) 
         # 
         notYetDone = trues(1000)
         for  line in lines
@@ -507,24 +513,24 @@ module AutoIonization
                     if  ln.initialLevel.index == line.initialLevel.index   totalRate = totalRate + ln.totalRate    end
                 end
                 sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
-                sa = sa * JAC.TableStrings.center(10, JAC.TableStrings.level(line.initialLevel.index); na=2)
-                sa = sa * JAC.TableStrings.center( 8, string(isym); na=4)
+                sa = sa * TableStrings.center(10, TableStrings.level(line.initialLevel.index); na=2)
+                sa = sa * TableStrings.center( 8, string(isym); na=4)
                 sa = sa * @sprintf("%.8e", Defaults.convertUnits("time: from atomic",  1/totalRate))            * "     "
                 sa = sa * @sprintf("%.8e", Defaults.convertUnits("rate: from atomic",    totalRate))            * "      "
-                sa = sa * @sprintf("%.8e", totalRate)                                                 * "    "
+                sa = sa * @sprintf("%.8e", totalRate)                                                           * "    "
                 sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic to Kayser",  totalRate))  * "    "
                 sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic to eV",      totalRate))  * "    "
                 println(stream, sa)
             end
         end
-        println(stream, "  ", JAC.TableStrings.hLine(115))
+        println(stream, "  ", TableStrings.hLine(115))
         #
         return( nothing )
     end
 
 
     """
-    `JAC.AutoIonization.displayRates(stream::IO, lines::Array{AutoIonization.Line,1}, settings::AutoIonization.Settings)`  
+    `AutoIonization.displayRates(stream::IO, lines::Array{AutoIonization.Line,1}, settings::AutoIonization.Settings)`  
         ... to list all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is returned 
             otherwise.
     """
@@ -532,31 +538,31 @@ module AutoIonization
         println(stream, " ")
         if  settings.calcAnisotropy    println(stream, "  Auger rates and intrinsic angular parameters: \n")
         else                           println(stream, "  Auger rates (without angular parameters): \n")        end
-        println(stream, "  ", JAC.TableStrings.hLine(115))
+        println(stream, "  ", TableStrings.hLine(115))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * JAC.TableStrings.hBlank(20)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * JAC.TableStrings.hBlank(22)
-        sa = sa * JAC.TableStrings.center(14, "Energy"   ; na=4);               
-        sb = sb * JAC.TableStrings.center(14,JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.center(16, "Electron energy"   ; na=2);               
-        sb = sb * JAC.TableStrings.center(16,JAC.TableStrings.inUnits("energy"); na=2)
-        sa = sa * JAC.TableStrings.center(16, "Auger rate"; na=2);       
-        sb = sb * JAC.TableStrings.center(16, JAC.TableStrings.inUnits("rate"); na=2)
-        sa = sa * JAC.TableStrings.center(16, "alpha_2"; na=2);                           sb = sb * JAC.TableStrings.hBlank(18)     
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(115)) 
+        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(14, "Energy"   ; na=4);               
+        sb = sb * TableStrings.center(14,TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(16, "Electron energy"   ; na=2);               
+        sb = sb * TableStrings.center(16,TableStrings.inUnits("energy"); na=2)
+        sa = sa * TableStrings.center(16, "Auger rate"; na=2);       
+        sb = sb * TableStrings.center(16, TableStrings.inUnits("rate"); na=2)
+        sa = sa * TableStrings.center(16, "alpha_2"; na=2);                           sb = sb * TableStrings.hBlank(18)     
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(115)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "    "
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.electronEnergy))       * "    "
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("rate: from atomic", line.totalRate))              * "    "
-            sa = sa * JAC.TableStrings.flushright(13, @sprintf("%.5e", line.angularAlpha))            * "    "
+            sa = sa * TableStrings.flushright(13, @sprintf("%.5e", line.angularAlpha))            * "    "
             println(stream, sa)
         end
-        println(stream, "  ", JAC.TableStrings.hLine(115))
+        println(stream, "  ", TableStrings.hLine(115))
         #
         return( nothing )
     end

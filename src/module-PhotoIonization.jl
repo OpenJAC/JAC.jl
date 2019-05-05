@@ -1,15 +1,14 @@
 
 """
 `module  JAC.PhotoIonization`  
-    ... a submodel of JAC that contains all methods for computing photoionization properties between some initial and final-state 
-        multiplets; it is using JAC, JAC.ManyElectron, JAC.Radial.
+    ... a submodel of JAC that contains all methods for computing photoionization properties between some initial 
+        and final-state multiplets.
 """
 module PhotoIonization
 
-    using Printf, JAC, ..Basics, ..Continuum, JAC.Radial, JAC.Nuclear, JAC.ManyElectron, JAC.PlasmaShift
-    
-    global JAC_counter = 0
-
+    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Radial, ..Nuclear, ..ManyElectron, ..PhotoEmission, 
+                  ..PlasmaShift, ..TableStrings
+    ##x global JAC_counter = 0
 
     """
     `struct  PhotoIonization.Settings`  ... defines a type for the details and parameters of computing photoionization lines.
@@ -41,7 +40,7 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.Settings()`  ... constructor for the default values of photoionization line computations
+    `PhotoIonization.Settings()`  ... constructor for the default values of photoionization line computations
     """
     function Settings()
         Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb], Float64[], false, false, false, false, 
@@ -65,8 +64,9 @@ module PhotoIonization
 
 
     """
-    `struct  PhotoIonization.Channel`  ... defines a type for a photoionization channel to help characterize a single multipole and scattering 
-                                           (continuum) state of many electron-states with a single free electron.
+    `struct  PhotoIonization.Channel`  
+        ... defines a type for a photoionization channel to help characterize a single multipole and scattering (continuum) state 
+            of many electron-states with a single free electron.
 
         + multipole      ::EmMultipole          ... Multipole of the photon absorption.
         + gauge          ::EmGauge              ... Gauge for dealing with the (coupled) radiation field.
@@ -109,7 +109,7 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.Line(initialLevel::Level, finalLevel::Level, crossSection::Float64)`  
+    `PhotoIonization.Line(initialLevel::Level, finalLevel::Level, crossSection::Float64)`  
         ... constructor for an photoionization line between a specified initial and final level.
     """
     function Line(initialLevel::Level, finalLevel::Level, crossSection::EmProperty)
@@ -128,16 +128,16 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.amplitude(kind::String, channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, 
+    `PhotoIonization.amplitude(kind::String, channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, 
                                    initialLevel::Level, grid::Radial.Grid)`  
         ... to compute the kind = (photoionization) amplitude  <(alpha_f J_f, epsilon kappa) J_t || O^(photoionization) || alpha_i J_i>  
-            due to the electron-photon interaction for the given final and initial level, the partial wave of the outgoing electron as well as 
-            the given multipole and gauge. A value::ComplexF64 is returned.
+            due to the electron-photon interaction for the given final and initial level, the partial wave of the outgoing 
+            electron as well as the given multipole and gauge. A value::ComplexF64 is returned.
     """
     function amplitude(kind::String, channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, initialLevel::Level, grid::Radial.Grid)
         if      kind in [ "photoionization"]
         #-----------------------------------
-            amplitude = JAC.PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, energy, continuumLevel, initialLevel, grid)
+            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, energy, continuumLevel, initialLevel, grid)
             amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
         else    error("stop b")
         end
@@ -149,30 +149,30 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+    `PhotoIonization.computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                                      settings::PhotoIonization.Settings)`  
         ... to compute all amplitudes and properties of the given line; a line::PhotoIonization.Line is returned for which the amplitudes and 
             properties are now evaluated.
     """
     function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                           settings::PhotoIonization.Settings)
-        newChannels = PhotoIonization.Channel[];;   contSettings = JAC.Continuum.Settings(false, nrContinuum);    csC = 0.;    csB = 0.
+        newChannels = PhotoIonization.Channel[];;   contSettings = Continuum.Settings(false, nrContinuum);    csC = 0.;    csB = 0.
         for channel in line.channels
             newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
             newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
-            cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
+            cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
-            amplitude  = JAC.PhotoIonization.amplitude("photoionization", channel, line.photonEnergy, newcLevel, newiLevel, grid)
+            amplitude  = PhotoIonization.amplitude("photoionization", channel, line.photonEnergy, newcLevel, newiLevel, grid)
             push!( newChannels, PhotoIonization.Channel(newChannel.multipole, newChannel.gauge, newChannel.kappa, newChannel.symmetry, 
                                                         newChannel.phase, amplitude) )
-            if       channel.gauge == JAC.Coulomb     csC = csC + abs(amplitude)^2
-            elseif   channel.gauge == JAC.Babushkin   csB = csB + abs(amplitude)^2
-            elseif   channel.gauge == JAC.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
+            if       channel.gauge == Basics.Coulomb     csC = csC + abs(amplitude)^2
+            elseif   channel.gauge == Basics.Babushkin   csB = csB + abs(amplitude)^2
+            elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
             end
         end
-        Ji2 = JAC.AngularMomentum.twoJ(line.initialLevel.J)
+        Ji2 = AngularMomentum.twoJ(line.initialLevel.J)
         csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.photonEnergy / (2*(Ji2 + 1))
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         ##x println("photo cs = $crossSection")
@@ -185,32 +185,32 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
+    `PhotoIonization.computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
                                                            settings::PlasmaShift.PhotoSettings)`  
         ... to compute all amplitudes and properties of the given line but for the given plasma model; 
             a line::PhotoIonization.Line is returned for which the amplitudes and properties are now evaluated.
     """
     function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, settings::PlasmaShift.PhotoSettings)
-        newChannels = PhotoIonization.Channel[];;   contSettings = JAC.Continuum.Settings(false, grid.nr-50);    csC = 0.;    csB = 0.
+        newChannels = PhotoIonization.Channel[];;   contSettings = Continuum.Settings(false, grid.nr-50);    csC = 0.;    csB = 0.
         for channel in line.channels
             newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
             newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
             @warn "Adapt a proper continuum orbital for the plasma potential"
-            cOrbital, phase  = JAC.Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
+            cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
             @warn "Adapt a proper Auger amplitude for the plasma e-e interaction"
             amplitude = 1.0
-            # amplitude  = JAC.PhotoIonization.amplitude("photoionization", channel, line.photonEnergy, newcLevel, newiLevel, grid)
+            # amplitude  = PhotoIonization.amplitude("photoionization", channel, line.photonEnergy, newcLevel, newiLevel, grid)
             push!( newChannels, PhotoIonization.Channel(newChannel.multipole, newChannel.gauge, newChannel.kappa, newChannel.symmetry, 
                                                         newChannel.phase, amplitude) )
-            if       channel.gauge == JAC.Coulomb     csC = csC + abs(amplitude)^2
-            elseif   channel.gauge == JAC.Babushkin   csB = csB + abs(amplitude)^2
-            elseif   channel.gauge == JAC.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
+            if       channel.gauge == Basics.Coulomb     csC = csC + abs(amplitude)^2
+            elseif   channel.gauge == Basics.Babushkin   csB = csB + abs(amplitude)^2
+            elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
             end
         end
-        Ji2 = JAC.AngularMomentum.twoJ(line.initialLevel.J)
+        Ji2 = AngularMomentum.twoJ(line.initialLevel.J)
         csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.photonEnergy / (2*(Ji2 + 1))
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         println("plasma-photo cs = $crossSection")
@@ -220,7 +220,7 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+    `PhotoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                       settings::PhotoIonization.Settings; output::Bool=true)`  
         ... to compute the photoIonization transition amplitudes and all properties as requested by the given settings. 
             A list of lines::Array{PhotoIonization.Lines} is returned.
@@ -228,25 +228,25 @@ module PhotoIonization
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                            settings::PhotoIonization.Settings; output::Bool=true)
         println("")
-        printstyled("JAC.PhotoIonization.computeLines(): The computation of photo-ionization and properties starts now ... \n", color=:light_green)
-        printstyled("----------------------------------------------------------------------------------------------------- \n", color=:light_green)
+        printstyled("PhotoIonization.computeLines(): The computation of photo-ionization and properties starts now ... \n", color=:light_green)
+        printstyled("------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        lines = JAC.PhotoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
+        lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.PhotoIonization.displayLines(lines)    end
+        if  settings.printBeforeComputation    PhotoIonization.displayLines(lines)    end
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = PhotoIonization.Line[]
         for  line in lines
-            newLine = JAC.PhotoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings) 
+            newLine = PhotoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        JAC.PhotoIonization.displayResults(stdout, newLines, settings)
+        PhotoIonization.displayResults(stdout, newLines, settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   JAC.PhotoIonization.displayResults(iostream, newLines, settings)     end
+        if  printSummary   PhotoIonization.displayResults(iostream, newLines, settings)     end
         #
         if    output    return( lines )
         else            return( nothing )
@@ -255,7 +255,7 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+    `PhotoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                             settings::PlasmaShift.PhotoSettings; output::Bool=true)`  
         ... to compute the photoIonization transition amplitudes and all properties as requested by the given settings. 
             A list of lines::Array{PhotoIonization.Lines} is returned.
@@ -263,25 +263,25 @@ module PhotoIonization
     function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                  settings::PlasmaShift.PhotoSettings; output::Bool=true)
         println("")
-        printstyled("JAC.PhotoIonization.computeLinesPlasma(): The computation of photo-ionization cross sections starts now ... \n", color=:light_green)
-        printstyled("----------------------------------------------------------------------------------------------------------- \n", color=:light_green)
+        printstyled("PhotoIonization.computeLinesPlasma(): The computation of photo-ionization cross sections starts now ... \n", color=:light_green)
+        printstyled("------------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        photoSettings = JAC.PhotoIonization.Settings(settings.multipoles, settings.gauges, settings.photonEnergies, false, false, false,
+        photoSettings = PhotoIonization.Settings(settings.multipoles, settings.gauges, settings.photonEnergies, false, false, false,
                                                      settings.printBeforeComputation, settings.selectLines, settings.selectedLines)
         
-        lines = JAC.PhotoIonization.determineLines(finalMultiplet, initialMultiplet, photoSettings)
+        lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, photoSettings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.PhotoIonization.displayLines(lines)    end
+        if  settings.printBeforeComputation    PhotoIonization.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = PhotoIonization.Line[]
         for  line in lines
-            newLine = JAC.PhotoIonization.computeAmplitudesPropertiesPlasma(line, nm, grid, settings) 
+            newLine = PhotoIonization.computeAmplitudesPropertiesPlasma(line, nm, grid, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        JAC.PhotoIonization.displayResults(stdout, lines, photoSettings)
+        PhotoIonization.displayResults(stdout, lines, photoSettings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   JAC.PhotoIonization.displayResults(iostream, lines, photoSettings)     end
+        if  printSummary   PhotoIonization.displayResults(iostream, lines, photoSettings)     end
         #
         if    output    return( lines )
         else            return( nothing )
@@ -291,7 +291,7 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.computePartialCrossSectionUnpolarized(gauge::EmGauge, Mf::AngularM64, line::PhotoIonization.Line)`  
+    `PhotoIonization.computePartialCrossSectionUnpolarized(gauge::EmGauge, Mf::AngularM64, line::PhotoIonization.Line)`  
         ... to compute the partial photoionization cross section for initially unpolarized atoms by unpolarized plane-wave photons.
             A value::Float64 is returned.
     """
@@ -300,15 +300,15 @@ module PhotoIonization
         function Racahexpr(kappa::Int64, Ji::AngularJ64, Jf::AngularJ64, Mf::AngularM64, J::AngularJ64, Jp::AngularJ64, 
                            L::Int64, Lp::Int64, p::Int64, pp::Int64)
             # Determine the allowed values of t
-            t1 = JAC.oplus( AngularJ64(Lp), Jf);    t2 = JAC.oplus( AngularJ64(L), Jf);    tList = intersect(t1, t2)
+            t1 = Basics.oplus( AngularJ64(Lp), Jf);    t2 = Basics.oplus( AngularJ64(L), Jf);    tList = intersect(t1, t2)
             wb = 0.
             for  t  in tList
                 for  lambda = -1:2:1
-                    j = JAC.AngularMomentum.kappa_j(kappa);   Mf_lambda = Basics.add(AngularM64(lambda), Mf)
+                    j = AngularMomentum.kappa_j(kappa);   Mf_lambda = Basics.add(AngularM64(lambda), Mf)
                     wb = wb + (1.0im * lambda)^p * (-1.0im * lambda)^pp * 
-                         JAC.AngularMomentum.ClebschGordan( AngularJ64(Lp), AngularM64(lambda), Jf, Mf, t, Mf_lambda) *
-                         JAC.AngularMomentum.ClebschGordan( AngularJ64(L),  AngularM64(lambda), Jf, Mf, t, Mf_lambda) *
-                         JAC.AngularMomentum.Wigner_9j(j, Jp, Jf, J, Ji, AngularJ64(L), Jf, AngularJ64(Lp), t)
+                         AngularMomentum.ClebschGordan( AngularJ64(Lp), AngularM64(lambda), Jf, Mf, t, Mf_lambda) *
+                         AngularMomentum.ClebschGordan( AngularJ64(L),  AngularM64(lambda), Jf, Mf, t, Mf_lambda) *
+                         AngularMomentum.Wigner_9j(j, Jp, Jf, J, Ji, AngularJ64(L), Jf, AngularJ64(Lp), t)
                 end
             end
             
@@ -317,20 +317,20 @@ module PhotoIonization
         
         if  !line.hasChannels   error("No channels are defined for the given PhotoIonization.line.")         end
         wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J;
-        kappaList = JAC.PhotoIonization.getLineKappas(line)
+        kappaList = PhotoIonization.getLineKappas(line)
         for  kappa in kappaList
             for  cha  in line.channels
-                if  kappa != cha.kappa  ||  (gauge != cha.gauge  &&  gauge != JAC.Magnetic)   continue    end
+                if  kappa != cha.kappa  ||  (gauge != cha.gauge  &&  gauge != Basics.Magnetic)   continue    end
                 J = cha.symmetry.J;    L = cha.multipole.L;    if  cha.multipole.electric   p = 1   else    p = 0   end
                 for  chp  in line.channels  
-                    if  kappa != chp.kappa  ||  (gauge != cha.gauge  &&  gauge != JAC.Magnetic)    continue    end
+                    if  kappa != chp.kappa  ||  (gauge != cha.gauge  &&  gauge != Basics.Magnetic)    continue    end
                     Jp = chp.symmetry.J;    Lp = chp.multipole.L;    if  chp.multipole.electric   pp = 1   else    pp = 0   end
-                    wa = wa + 1.0im^(L - Lp) * (-1)^(L + Lp) * JAC.AngularMomentum.bracket([AngularJ64(L), AngularJ64(Lp), J, Jp]) *  
+                    wa = wa + 1.0im^(L - Lp) * (-1)^(L + Lp) * AngularMomentum.bracket([AngularJ64(L), AngularJ64(Lp), J, Jp]) *  
                          Racahexpr(kappa, Ji, Jf, Mf, J, Jp, L, Lp, p, pp) * cha.amplitude * conj(chp.amplitude)
                 end
             end
         end
-        csFactor = 8 * pi^3 * Defaults.getDefaults("alpha") / (2*line.photonEnergy * (JAC.AngularMomentum.twoJ(Ji) + 1))
+        csFactor = 8 * pi^3 * Defaults.getDefaults("alpha") / (2*line.photonEnergy * (AngularMomentum.twoJ(Ji) + 1))
         wa       = csFactor * wa
 
         return( wa )
@@ -339,7 +339,7 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.computeStatisticalTensorUnpolarized(k::Int64, q::Int64, gauge::EmGauge, line::PhotoIonization.Line, 
+    `PhotoIonization.computeStatisticalTensorUnpolarized(k::Int64, q::Int64, gauge::EmGauge, line::PhotoIonization.Line, 
                                                              settings::PhotoIonization.Settings)`  
         ... to compute the statistical tensor of the photoion in its final level after the photoionization of initially unpolarized atoms 
             by plane-wave photons with given Stokes parameters (density matrix). A value::ComplexF64 is returned.
@@ -348,26 +348,26 @@ module PhotoIonization
                                                   settings::PhotoIonization.Settings)
         if  !line.hasChannels   error("No channels are defined for the given PhotoIonization.line.")         end
         wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J   
-        kappaList = JAC.PhotoIonization.getLineKappas(line);    P1 = settings.stokes.P1;   P2 = settings.stokes.P2;   P3 = settings.stokes.P3
+        kappaList = PhotoIonization.getLineKappas(line);    P1 = settings.stokes.P1;   P2 = settings.stokes.P2;   P3 = settings.stokes.P3
         for  kappa in kappaList
-            j = JAC.AngularMomentum.kappa_j(kappa)
+            j = AngularMomentum.kappa_j(kappa)
             for  cha  in line.channels
-                if  kappa != cha.kappa  ||  (gauge != cha.gauge  &&  gauge != JAC.Magnetic)   continue    end
+                if  kappa != cha.kappa  ||  (gauge != cha.gauge  &&  gauge != Basics.Magnetic)   continue    end
                 J = cha.symmetry.J;    L = cha.multipole.L;    if  cha.multipole.electric   p = 1   else    p = 0   end
                 for  chp  in line.channels  
-                    if  kappa != chp.kappa  ||  (gauge != cha.gauge  &&  gauge != JAC.Magnetic)    continue    end
+                    if  kappa != chp.kappa  ||  (gauge != cha.gauge  &&  gauge != Basics.Magnetic)    continue    end
                     Jp = chp.symmetry.J;    Lp = chp.multipole.L;    if  chp.multipole.electric   pp = 1   else    pp = 0   end
                     #
                     for  lambda = -1:2:1
                         for  lambdap = -1:2:1
                             if  lambda == lambdap   wb = (1.0 + 0.0im +lambda*P3)    else    wb = P1 - lambda * P2 * im    end
                             wa = wa + wb * 1.0im^(L - Lp + p - pp) * lambda^p * lambdap^pp *
-                                 sqrt( JAC.AngularMomentum.bracket([AngularJ64(L), AngularJ64(Lp), J, Jp]) ) *  
-                                 JAC.AngularMomentum.phaseFactor([J, +1, Jp, +1, Jf, +1, Ji, +1, j, +1, AngularJ64(1)]) *
-                                 JAC.AngularMomentum.ClebschGordan( AngularJ64(L),  AngularM64(lambda), AngularJ64(Lp),  AngularM64(-lambda), 
+                                 sqrt( AngularMomentum.bracket([AngularJ64(L), AngularJ64(Lp), J, Jp]) ) *  
+                                 AngularMomentum.phaseFactor([J, +1, Jp, +1, Jf, +1, Ji, +1, j, +1, AngularJ64(1)]) *
+                                 AngularMomentum.ClebschGordan( AngularJ64(L),  AngularM64(lambda), AngularJ64(Lp),  AngularM64(-lambda), 
                                                                     AngularJ64(k),  AngularM64(q)) *
-                                 JAC.AngularMomentum.Wigner_6j(Jf, j, Jp, J, AngularJ64(k), Jf) * 
-                                 JAC.AngularMomentum.Wigner_6j(Jp, Ji, AngularJ64(Lp), AngularJ64(L), AngularJ64(k), J) * 
+                                 AngularMomentum.Wigner_6j(Jf, j, Jp, J, AngularJ64(k), Jf) * 
+                                 AngularMomentum.Wigner_6j(Jp, Ji, AngularJ64(Lp), AngularJ64(L), AngularJ64(k), J) * 
                                  cha.amplitude * conj(chp.amplitude)
                         end
                     end
@@ -375,14 +375,14 @@ module PhotoIonization
             end
         end
         
-        wa = pi / (JAC.AngularMomentum.twoJ(Ji) + 1) * wa
+        wa = pi / (AngularMomentum.twoJ(Ji) + 1) * wa
         return( wa )
     end
 
     
 
     """
-    `JAC.PhotoIonization.determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoIonization.Settings)`  
+    `PhotoIonization.determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoIonization.Settings)`  
         ... to determine a list of photoionization Channel for a transitions from the initial to final level and by taking into account 
             the particular settings of for this computation; an Array{PhotoIonization.Channel,1} is returned.
     """
@@ -392,18 +392,18 @@ module PhotoIonization
         if  Basics.UseCoulomb  in  settings.gauges   gaugeM = Basics.UseCoulomb    else   gaugeM = Basics.UseBabushkin    end
         for  mp in settings.multipoles
             for  gauge in settings.gauges
-                symList = JAC.AngularMomentum.allowedMultipoleSymmetries(symi, mp)
+                symList = AngularMomentum.allowedMultipoleSymmetries(symi, mp)
                 ##x println("mp = $mp   symi = $symi   symList = $symList")
                 for  symt in symList
-                    kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symt, symf)
+                    kappaList = AngularMomentum.allowedKappaSymmetries(symt, symf)
                     for  kappa in kappaList
                         # Include further restrictions if appropriate
                         if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
-                            push!(channels, PhotoIonization.Channel(mp, JAC.Coulomb,   kappa, symt, 0., Complex(0.)) )
+                            push!(channels, PhotoIonization.Channel(mp, Basics.Coulomb,   kappa, symt, 0., Complex(0.)) )
                         elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
-                            push!(channels, PhotoIonization.Channel(mp, JAC.Babushkin, kappa, symt, 0., Complex(0.)) )  
+                            push!(channels, PhotoIonization.Channel(mp, Basics.Babushkin, kappa, symt, 0., Complex(0.)) )  
                         elseif string(mp)[1] == 'M'  &&   gauge == gaugeM                               
-                            push!(channels, PhotoIonization.Channel(mp, JAC.Magnetic,  kappa, symt, 0., Complex(0.)) ) 
+                            push!(channels, PhotoIonization.Channel(mp, Basics.Magnetic,  kappa, symt, 0., Complex(0.)) ) 
                         end 
                     end
                 end
@@ -414,7 +414,7 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoIonization.Settings)`  
+    `PhotoIonization.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoIonization.Settings)`  
         ... to determine a list of PhotoIonization.Line's for transitions between levels from the initial- and final-state multiplets, 
             and  by taking into account the particular selections and settings for this computation; an Array{PhotoIonization.Line,1} 
             is returned. Apart from the level specification, all physical properties are set to zero during the initialization process.
@@ -435,7 +435,7 @@ module PhotoIonization
                     energy   = omega_au - (finalMultiplet.levels[f].energy - initialMultiplet.levels[i].energy)
                     if  energy < 0    continue   end  
 
-                    channels = JAC.PhotoIonization.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
+                    channels = PhotoIonization.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
                     push!( lines, PhotoIonization.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], energy, omega_au, 
                                                        EmProperty(0., 0.), true, channels) )
                 end
@@ -446,7 +446,7 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.displayLines(lines::Array{PhotoIonization.Line,1})`  
+    `PhotoIonization.displayLines(lines::Array{PhotoIonization.Line,1})`  
         ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all selected 
             transitions and energies is printed but nothing is returned otherwise.
     """
@@ -454,25 +454,25 @@ module PhotoIonization
         println(" ")
         println("  Selected photoionization lines:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(175))
+        println("  ", TableStrings.hLine(175))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * JAC.TableStrings.hBlank(18)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * JAC.TableStrings.hBlank(20)
-        sa = sa * JAC.TableStrings.center(10, "Energy_fi"; na=3);              
-        sb = sb * JAC.TableStrings.center(10, JAC.TableStrings.inUnits("energy"); na=3)
-        sa = sa * JAC.TableStrings.center(10, "omega"; na=3);              
-        sb = sb * JAC.TableStrings.center(10, JAC.TableStrings.inUnits("energy"); na=2)
-        sa = sa * JAC.TableStrings.center(12, "Energy e_p"; na=3);              
-        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
-        sb = sb * JAC.TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(175)) 
+        sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(18)
+        sa = sa * TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(10, "Energy_fi"; na=3);              
+        sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(10, "omega"; na=3);              
+        sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=2)
+        sa = sa * TableStrings.center(12, "Energy e_p"; na=3);              
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
+        sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(175)) 
         #   
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                          fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=3)
             energy = line.finalLevel.energy - line.initialLevel.energy
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", energy))              * "   "
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "   "
@@ -483,20 +483,20 @@ module PhotoIonization
                                                     line.channels[i].symmetry) )
             end
             ##x println("PhotoIonization-diplayLines-ad: kappaMultipoleSymmetryList = ", kappaMultipoleSymmetryList)
-            wa = JAC.TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
+            wa = TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
             sb = sa * wa[1];    println( sb )  
             for  i = 2:length(wa)
-                sb = JAC.TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
+                sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
             end
         end
-        println("  ", JAC.TableStrings.hLine(175), "\n")
+        println("  ", TableStrings.hLine(175), "\n")
         #
         return( nothing )
     end
 
 
     """
-    `JAC.PhotoIonization.displayResults(stream::IO, lines::Array{PhotoIonization.Line,1}, settings::PhotoIonization.Settings)`  
+    `PhotoIonization.displayResults(stream::IO, lines::Array{PhotoIonization.Line,1}, settings::PhotoIonization.Settings)`  
         ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing 
             is returned otherwise.
     """
@@ -504,27 +504,27 @@ module PhotoIonization
         println(stream, " ")
         println(stream, "  Total photoionization cross sections for initially unpolarized atoms by unpolarized plane-wave photons:")
         println(stream, " ")
-        println(stream, "  ", JAC.TableStrings.hLine(130))
+        println(stream, "  ", TableStrings.hLine(130))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * JAC.TableStrings.hBlank(18)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * JAC.TableStrings.hBlank(22)
-        sa = sa * JAC.TableStrings.center(12, "f--Energy--i"; na=4)               
-        sb = sb * JAC.TableStrings.center(12,JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.center(12, "omega"     ; na=4)             
-        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.center(12, "Energy e_p"; na=3)             
-        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=3)
-        sa = sa * JAC.TableStrings.center(10, "Multipoles"; na=1);                              sb = sb * JAC.TableStrings.hBlank(13)
-        sa = sa * JAC.TableStrings.center(30, "Cou -- Cross section -- Bab"; na=3)      
-        sb = sb * JAC.TableStrings.center(30, JAC.TableStrings.inUnits("cross section") * "          " * 
-                                              JAC.TableStrings.inUnits("cross section"); na=3)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(130)) 
+        sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(18)
+        sa = sa * TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(12, "f--Energy--i"; na=4)               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(12, "omega"     ; na=4)             
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(12, "Energy e_p"; na=3)             
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(10, "Multipoles"; na=1);                              sb = sb * TableStrings.hBlank(13)
+        sa = sa * TableStrings.center(30, "Cou -- Cross section -- Bab"; na=3)      
+        sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section") * "          " * 
+                                              TableStrings.inUnits("cross section"); na=3)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(130)) 
         #   
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                          fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=3)
             en = line.finalLevel.energy - line.initialLevel.energy
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                  * "    "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "    "
@@ -533,43 +533,43 @@ module PhotoIonization
             for  ch in line.channels
                 multipoles = push!( multipoles, ch.multipole)
             end
-            multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
-            sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=2)
+            multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
+            sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=2)
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Coulomb))     * "    "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin))   * "                 "
             sa = sa * @sprintf("%.6e", line.crossSection.Coulomb)     * "    "
             sa = sa * @sprintf("%.6e", line.crossSection.Babushkin)   * "    "
             println(stream, sa)
         end
-        println(stream, "  ", JAC.TableStrings.hLine(130))
+        println(stream, "  ", TableStrings.hLine(130))
         #
         #
         if  settings.calcPartialCs   
             println(stream, " ")
             println(stream, "  Partial cross sections for initially unpolarized atoms by unpolarized plane-wave photons:")
             println(stream, " ")
-            println(stream, "  ", JAC.TableStrings.hLine(144))
+            println(stream, "  ", TableStrings.hLine(144))
                 sa = "  ";   sb = "  "
-            sa = sa * JAC.TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * JAC.TableStrings.hBlank(18)
-            sa = sa * JAC.TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * JAC.TableStrings.hBlank(22)
-            sa = sa * JAC.TableStrings.center(12, "f--Energy--i"; na=4)               
-            sb = sb * JAC.TableStrings.center(12,JAC.TableStrings.inUnits("energy"); na=4)
-            sa = sa * JAC.TableStrings.center(12, "omega"     ; na=4)             
-            sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=4)
-            sa = sa * JAC.TableStrings.center(12, "Energy e_p"; na=3)             
-            sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=3)
-            sa = sa * JAC.TableStrings.center(10, "Multipoles"; na=1);                              sb = sb * JAC.TableStrings.hBlank(13)
-            sa = sa * JAC.TableStrings.center( 7, "M_f"; na=1);                                     sb = sb * JAC.TableStrings.hBlank(11)
-            sa = sa * JAC.TableStrings.center(30, "Cou -- Partial cross section -- Bab"; na=3)      
-            sb = sb * JAC.TableStrings.center(30, JAC.TableStrings.inUnits("cross section") * "          " * 
-                                                  JAC.TableStrings.inUnits("cross section"); na=3)
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(144)) 
+            sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(18)
+            sa = sa * TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * TableStrings.hBlank(22)
+            sa = sa * TableStrings.center(12, "f--Energy--i"; na=4)               
+            sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
+            sa = sa * TableStrings.center(12, "omega"     ; na=4)             
+            sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
+            sa = sa * TableStrings.center(12, "Energy e_p"; na=3)             
+            sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
+            sa = sa * TableStrings.center(10, "Multipoles"; na=1);                              sb = sb * TableStrings.hBlank(13)
+            sa = sa * TableStrings.center( 7, "M_f"; na=1);                                     sb = sb * TableStrings.hBlank(11)
+            sa = sa * TableStrings.center(30, "Cou -- Partial cross section -- Bab"; na=3)      
+            sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section") * "          " * 
+                                                  TableStrings.inUnits("cross section"); na=3)
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(144)) 
             #   
             for  line in lines
                 sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                              fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-                sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-                sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
+                sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+                sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=3)
                 en = line.finalLevel.energy - line.initialLevel.energy
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                  * "    "
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "    "
@@ -578,21 +578,21 @@ module PhotoIonization
                 for  ch in line.channels
                     multipoles = push!( multipoles, ch.multipole)
                 end
-                multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
-                sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=2)
+                multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
+                sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=2)
                 println(stream, sa)
                 MfList = Basics.projections(line.finalLevel.J)
                 for  Mf in MfList
-                    sb  = JAC.TableStrings.hBlank(97)
-                    wac = JAC.PhotoIonization.computePartialCrossSectionUnpolarized(JAC.Coulomb, Mf, line)
-                    wab = JAC.PhotoIonization.computePartialCrossSectionUnpolarized(JAC.Babushkin, Mf, line)
-                    sb  = sb * JAC.TableStrings.flushright( 8, string(Mf))                             * "       "
+                    sb  = TableStrings.hBlank(97)
+                    wac = PhotoIonization.computePartialCrossSectionUnpolarized(Basics.Coulomb, Mf, line)
+                    wab = PhotoIonization.computePartialCrossSectionUnpolarized(Basics.Babushkin, Mf, line)
+                    sb  = sb * TableStrings.flushright( 8, string(Mf))                             * "       "
                     sb  = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", wac.re))     * "    "
                     sb  = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", wab.re))     * "    "
                     println(stream, sb)
                 end
             end
-            println(stream, "  ", JAC.TableStrings.hLine(144))
+            println(stream, "  ", TableStrings.hLine(144))
         end
         #
         #
@@ -603,26 +603,26 @@ module PhotoIonization
             println(stream, "\n     + tensors are printed for k = 0, 1, 2 and if non-zero only.")
             println(stream,   "     + Stokes parameters are:  P1 = $(settings.stokes.P1),  P2 = $(settings.stokes.P2),  P3 = $(settings.stokes.P3) ")
             println(stream, " ")
-            println(stream, "  ", JAC.TableStrings.hLine(144))
+            println(stream, "  ", TableStrings.hLine(144))
                 sa = "  ";   sb = "  "
-            sa = sa * JAC.TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * JAC.TableStrings.hBlank(18)
-            sa = sa * JAC.TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * JAC.TableStrings.hBlank(22)
-            sa = sa * JAC.TableStrings.center(12, "f--Energy--i"; na=4)               
-            sb = sb * JAC.TableStrings.center(12,JAC.TableStrings.inUnits("energy"); na=4)
-            sa = sa * JAC.TableStrings.center(12, "omega"     ; na=4)             
-            sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=4)
-            sa = sa * JAC.TableStrings.center(12, "Energy e_p"; na=3)             
-            sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=3)
-            sa = sa * JAC.TableStrings.center(10, "Multipoles"; na=1);                              sb = sb * JAC.TableStrings.hBlank(13)
-            sa = sa * JAC.TableStrings.center(10, "k    q"; na=4);                                  sb = sb * JAC.TableStrings.hBlank(11)
-            sa = sa * JAC.TableStrings.center(30, "Cou --  rho_kq (J_f)  -- Bab"; na=3)      
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(144)) 
+            sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(18)
+            sa = sa * TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * TableStrings.hBlank(22)
+            sa = sa * TableStrings.center(12, "f--Energy--i"; na=4)               
+            sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
+            sa = sa * TableStrings.center(12, "omega"     ; na=4)             
+            sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
+            sa = sa * TableStrings.center(12, "Energy e_p"; na=3)             
+            sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
+            sa = sa * TableStrings.center(10, "Multipoles"; na=1);                              sb = sb * TableStrings.hBlank(13)
+            sa = sa * TableStrings.center(10, "k    q"; na=4);                                  sb = sb * TableStrings.hBlank(11)
+            sa = sa * TableStrings.center(30, "Cou --  rho_kq (J_f)  -- Bab"; na=3)      
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(144)) 
             #   
             for  line in lines
                 sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                              fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-                sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-                sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=3)
+                sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+                sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=3)
                 en = line.finalLevel.energy - line.initialLevel.energy
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                  * "    "
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "    "
@@ -631,22 +631,22 @@ module PhotoIonization
                 for  ch in line.channels
                     multipoles = push!( multipoles, ch.multipole)
                 end
-                multipoles = unique(multipoles);   mpString = JAC.TableStrings.multipoleList(multipoles) * "          "
-                sa = sa * JAC.TableStrings.flushleft(11, mpString[1:10];  na=2)
+                multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
+                sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=2)
                 println(stream, sa)
                 for  k = 0:2
                     for q = -k:k
-                        sb   = JAC.TableStrings.hBlank(102)
-                        rhoc = JAC.PhotoIonization.computeStatisticalTensorUnpolarized(k, q, JAC.Coulomb,   line, settings)
-                        rhob = JAC.PhotoIonization.computeStatisticalTensorUnpolarized(k, q, JAC.Babushkin, line, settings)
-                        sb   = sb * string(k) * " " * JAC.TableStrings.flushright( 4, string(q))             * "       "
+                        sb   = TableStrings.hBlank(102)
+                        rhoc = PhotoIonization.computeStatisticalTensorUnpolarized(k, q, Basics.Coulomb,   line, settings)
+                        rhob = PhotoIonization.computeStatisticalTensorUnpolarized(k, q, Basics.Babushkin, line, settings)
+                        sb   = sb * string(k) * " " * TableStrings.flushright( 4, string(q))             * "       "
                         sb   = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", rhoc.re))     * "    "
                         sb   = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", rhob.re))     * "    "
                         println(stream, sb)
                     end
                 end
             end
-            println(stream, "  ", JAC.TableStrings.hLine(144))
+            println(stream, "  ", TableStrings.hLine(144))
         end
         #
         return( nothing )
@@ -654,7 +654,7 @@ module PhotoIonization
 
 
     """
-    `JAC.PhotoIonization.getLineKappas(line::PhotoIonization.Line)`  
+    `PhotoIonization.getLineKappas(line::PhotoIonization.Line)`  
         ... returns a list of kappa-values (partial waves) which contribute to the given line, to which one or several channels are 
             assigned. An kappaList::Array{Int64,1} is returned.
     """

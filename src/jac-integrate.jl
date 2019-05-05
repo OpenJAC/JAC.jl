@@ -1,17 +1,19 @@
 
 """
-`Basics.integrate()`  ... integrates a one- or two-dimensional function by different numerical methods, either on a given grid or for a general
-                       function.
+`Basics.integrate()`  
+    ... integrates a one- or two-dimensional function by different numerical methods, either on a given grid or for a general function.
 
-  + `("function: on radial grid, Newton-Cotes", F::Array{Float64,1}, grid::Radial.Grid)`  ... to integrate the (radial) function F over the given
-                                 (radial) grid, int_0^infinity dr F(r) by using a 5-point Newton-Cotes integration formula; a value::Float64 
-                                 is returned.   
+  + `("function: on radial grid, Newton-Cotes", F::Array{Float64,1}, grid::Radial.Grid)`  
+    ... to integrate the (radial) function F over the given (radial) grid, int_0^infinity dr F(r) by using a 5-point Newton-Cotes 
+        integration formula; a value::Float64 is returned.   
 
-  + `("function: on radial grid, Simpson rule", F::Array{Float64,1}, grid::Radial.Grid)`  ... to integrate the (radial) function F over the given
-                                 (radial) grid, int_0^infinity dr F(r) by using Simpson's rule; a value::Float64 is returned. 
+  + `("function: on radial grid, Simpson rule", F::Array{Float64,1}, grid::Radial.Grid)`  
+    ... to integrate the (radial) function F over the given (radial) grid, int_0^infinity dr F(r) by using Simpson's rule; 
+        a value::Float64 is returned. 
 
-  + `("function: on radial grid, trapez rule", F::Array{Float64,1}, grid::Radial.Grid)`  ... to integrate the (radial) function F over the given
-                                 (radial) grid, int_0^infinity dr F(r), by using a simple trapez rule; a value::Float64 is returned. 
+  + `("function: on radial grid, trapez rule", F::Array{Float64,1}, grid::Radial.Grid)`  
+    ... to integrate the (radial) function F over the given (radial) grid, int_0^infinity dr F(r), by using a simple trapez rule; 
+        a value::Float64 is returned. 
 """
 function Basics.integrate(sa::String, F::Array{Float64,1}, grid::Radial.Grid)
     if       sa == "function: on radial grid, Newton-Cotes"     wa = integrateOnGridNewtonCotes(F, grid)   

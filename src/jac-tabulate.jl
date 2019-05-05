@@ -3,13 +3,13 @@
 `Basics.tabulate()`  ... tabulates the data from various objects due to different criteria.
 
   + `("multiplet: energies", multiplet::Multiplet; stream::IO=stdout)`  
-                             ... to tabulate the energies of all levels of the given multiplet into a neat format; nothing is returned.
+    ... to tabulate the energies of all levels of the given multiplet into a neat format; nothing is returned.
   + `("multiplet: energy relative to immediately lower level", multiplet::Multiplet; stream::IO=stdout)`  
-                             ... to tabulate the energy splitting between neighboured levels of all levels of the given multiplet into a neat
-                                 format; nothing is returned.
+    ... to tabulate the energy splitting between neighboured levels of all levels of the given multiplet into a neat
+        format; nothing is returned.
   + `("multiplet: energy of each level relative to lowest level", multiplet::Multiplet; stream::IO=stdout)`  
-                             ... to tabulate the energy splitting of all levels with regard to the lowest level of the given multiplet into 
-                                 a neat format; nothing is returned.
+    ... to tabulate the energy splitting of all levels with regard to the lowest level of the given multiplet into 
+        a neat format; nothing is returned.
 """
 function Basics.tabulate(sa::String, multiplet::Multiplet; stream::IO=stdout)
     if        sa == "multiplet: energies"
@@ -57,10 +57,10 @@ end
 
 """
   + `("multiplet: energies", multiplet::JAC.Hfs.IJF_Multiplet; stream::IO=stdout)`  
-                             ... to tabulate the energies of all hyperfine levels of the given multiplet into a neat format; nothing is returned.
+    ... to tabulate the energies of all hyperfine levels of the given multiplet into a neat format; nothing is returned.
   + `("multiplet: energy of each level relative to lowest level", multiplet::JAC.Hfs.IJF_Multiplet; stream::IO=stdout)`  
-                             ... to tabulate the energy splitting of all levels with regard to the lowest level of the given multiplet into 
-                                 a neat format; nothing is returned.
+    ... to tabulate the energy splitting of all levels with regard to the lowest level of the given multiplet into 
+        a neat format; nothing is returned.
 """
 function Basics.tabulate(sa::String, multiplet::JAC.Hfs.IJF_Multiplet; stream::IO=stdout)
     if        sa == "multiplet: energies"
@@ -94,9 +94,10 @@ end
 
 
 """
-`Basics.tabulateKappaSymmetryEnergiesDirac(kappa::Int64, evalues::Array{Float64,1}, ns::Int64, nuclearModel::Nuclear.Model)`  ... tabulates the 
-             eigenenergies for a given symmetry block kappa together with the corresponding Dirac energies for a point-like nucleus. The index 
-             ns tells the number of 'negative-continnum' energies in the given evalues. nothing is returned.
+`Basics.tabulateKappaSymmetryEnergiesDirac(kappa::Int64, evalues::Array{Float64,1}, ns::Int64, nuclearModel::Nuclear.Model)`  
+    ... tabulates the eigenenergies for a given symmetry block kappa together with the corresponding Dirac energies for a 
+        point-like nucleus. The index ns tells the number of 'negative-continnum' energies in the given evalues. nothing is 
+        returned.
 """
 function Basics.tabulateKappaSymmetryEnergiesDirac(kappa::Int64, evalues::Array{Float64,1}, ns::Int64, nuclearModel::Nuclear.Model)
     Z = nuclearModel.Z

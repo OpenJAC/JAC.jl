@@ -2,11 +2,13 @@
 """
 `Basics.perform()`  ... performs various computations.
 
-  + `(computation::Atomic.Computation)`  ... to perform the computation as prescribed by comp. All relevant intermediate and final
-                                             results are printed to screen (stdout). Nothing is returned.
+  + `(computation::Atomic.Computation)`  
+    ... to perform the computation as prescribed by comp. All relevant intermediate and final results are printed to screen (stdout). 
+        Nothing is returned.
 
-  + `(computation::Atomic.Computation; output=true)`  ... to perform the same but to return the complete output in a dictionary;  the particular
-                 output depends on the type and specifications of the computations but can easily accessed by the keys of this dictionary.
+  + `(computation::Atomic.Computation; output=true)`  
+    ... to perform the same but to return the complete output in a dictionary; the particular output depends on the type and 
+        specifications of the computations but can easily accessed by the keys of this dictionary.
 """
 function Basics.perform(computation::Atomic.Computation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
@@ -40,10 +42,6 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             outcome = JAC.Hfs.computeOutcomes(multiplet, nModel,  computation.grid, computation.hfsSettings)         
             if output    results = Base.merge( results, Dict("HFS outcomes:" => outcome) )                    end
         end
-        ##x if  JAC.IJF_Expansion  in computation.properties   
-        ##x     outcome = JAC.Hfs.computeHyperfineMultiplet(multiplet, nModel, computation.grid, computation.hfsSettings)         
-        ##x     if output    results = Base.merge( results, Dict("IJF multiplet:" => outcome) )                   end
-        ##x end
         if  JAC.LandeJ         in computation.properties   
             outcome = JAC.LandeZeeman.computeOutcomes(multiplet, nModel,  computation.grid, computation.zeemanSettings)      
             if output    results = Base.merge( results, Dict("Zeeman parameter outcomes:" => outcome) )       end
@@ -211,12 +209,15 @@ end
 
 
 """
-  + `(comp::Cascade.Computation)`  ... to set-up and perform a cascade computation that starts from a given set of initial configurations and
-            proceeds via various steps until a given number of electrons has been removed or the decay stops at some stable levels with regard 
-            to the given atomic processes. The results of all individual steps are printed to screen but nothing is returned otherwise.
+  + `(comp::Cascade.Computation)`  
+    ... to set-up and perform a cascade computation that starts from a given set of initial configurations and proceeds via 
+        various steps until a given number of electrons has been removed or the decay stops at some stable levels with regard 
+        to the given atomic processes. The results of all individual steps are printed to screen but nothing is returned 
+        otherwise.
 
-  + `(comp::Cascade.Computation; output=true)`   ... to perform the same but to return the complete output in a dictionary;  the particular
-            output depends on the type and specifications of the cascade but can easily accessed by the keys of this dictionary.
+  + `(comp::Cascade.Computation; output=true)`   
+    ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
+        and specifications of the cascade but can easily accessed by the keys of this dictionary.
 """
 function Basics.perform(comp::Cascade.Computation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
@@ -228,7 +229,7 @@ function Basics.perform(comp::Cascade.Computation; output::Bool=false)
     multiplet = Multiplet("initial states", multiplet.levels)
     JAC.Cascade.displayInitialLevels(stdout, multiplet, comp.initialLevels)
     if  printSummary   JAC.Cascade.displayInitialLevels(iostream, multiplet, comp.initialLevels)    end      
-    if output    results = Base.merge( results, Dict("initial multiplet:" => multiplet) )    end
+    if output    results = Base.merge( results, Dict("initial multiplet:" => multiplet) )           end
     #
     # Generate subsequent cascade configurations as well as display and group them together
     wa = JAC.Cascade.generateConfigurationList(comp.initialConfs, comp.maxElectronLoss, comp.NoShakeDisplacements)
@@ -262,15 +263,16 @@ end
 
 
 """
-  + `(simulation::Cascade.Simulation, data::Cascade.Data)`  ... to simulate a cascade decay (and excitation) by using the given 
-                  data::Cascade.Data. Different computational methods and different properties of the ionic system, such as the ion distribution 
-                  or final-level distribution can be derived and displayed from these simulations. Of course, the details of these simulations 
-                  strongly depend on the atomic processes and data that have been generated before by performing a computation::Cascade.Computation.
-                  The results of all individual steps are printed to screen but nothing is returned otherwise.
+  + `(simulation::Cascade.Simulation, data::Cascade.Data)`  
+    ... to simulate a cascade decay (and excitation) by using the given data::Cascade.Data. Different computational methods and 
+        different properties of the ionic system, such as the ion distribution or final-level distribution can be derived and 
+        displayed from these simulations. Of course, the details of these simulations strongly depend on the atomic processes 
+        and data that have been generated before by performing a computation::Cascade.Computation. The results of all individual 
+        steps are printed to screen but nothing is returned otherwise.
 
-  + `(simulation::Cascade.Simulation, data::Cascade.Data; output=true)`   ... to perform the same but to return the complete output in a 
-                  dictionary;  the particular output depends on the method and specifications of the cascade but can easily accessed by the keys 
-                  of this dictionary.
+  + `(simulation::Cascade.Simulation, data::Cascade.Data; output=true)`   
+    ... to perform the same but to return the complete output in a dictionary; the particular output depends on the method and 
+        specifications of the cascade but can easily accessed by the keys of this dictionary.
 """
 function Basics.perform(simulation::Cascade.Simulation, data::Cascade.Data; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
@@ -302,9 +304,11 @@ end
 
 
 """
-  + `(computation::Atomic.CasComputation)`  ... to perform the computation ... . Nothing is returned.  **Not yet implemented !**
+  + `(computation::Atomic.CasComputation)`  
+    ... to perform the computation ... . Nothing is returned.  **Not yet implemented !**
 
-  + `(computation::Atomic.CasComputation; output=true)`  ... to perform the same ....  **Not yet implemented !**
+  + `(computation::Atomic.CasComputation; output=true)`  
+    ... to perform the same ....  **Not yet implemented !**
 """
 function Basics.perform(computation::Atomic.CasComputation; output::Bool=false)
     error("Not yet implemented")
@@ -314,8 +318,9 @@ end
 
 """
   + `("computation: SCF", configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
-                          printout::Bool=true)`  ... to generate an atomic basis and to compute the self-consistent field (SCF) for this basis 
-                          due to the given settings; a basis::Basis is returned.  
+                          printout::Bool=true)`  
+    ... to generate an atomic basis and to compute the self-consistent field (SCF) for this basis due to the given settings; 
+        a basis::Basis is returned.  
 """
 function Basics.perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
                  printout::Bool=true)
@@ -390,8 +395,8 @@ end
 """
   + `("computation: mutiplet from orbitals, no CI, CSF diagonal", configs::Array{Configuration,1}, 
         initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)` 
-        ... to generate from the given initial orbitals a multiplet of single-CSF levels by just using the diagonal part of the
-            Hamiltonian matrix; a multiplet::Multiplet is returned.  
+    ... to generate from the given initial orbitals a multiplet of single-CSF levels by just using the diagonal 
+        part of the Hamiltonian matrix; a multiplet::Multiplet is returned.  
 """
 function Basics.perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
                  grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
@@ -488,9 +493,8 @@ end
 
 """
   + `("computation: CI", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)`  
-                         ... to  set-up and diagonalize from the (SCF) basis the configuration-interaction matrix and to derive and
-                         display the level structure of the corresponding multiplet due to the given settings; 
-                         a multiplet::Multiplet is returned.   
+    ... to  set-up and diagonalize from the (SCF) basis the configuration-interaction matrix and to derive and display the 
+        level structure of the corresponding multiplet due to the given settings; a multiplet::Multiplet is returned.   
 """
 function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
     !(sa == "computation: CI")   &&   error("Unsupported keystring = $sa")
@@ -550,10 +554,10 @@ end
 
 """
   + `("computation: CI for plasma", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
-                                    settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
-        ... to  set-up and diagonalize from the given (SCF) basis the configuration-interaction matrix and to derive and
-            display the level structure of the corresponding multiplet due to the given settings. Here, the CI matrix
-            includes the modifications of the Hamiltonian due to the given plasmaSettings; a multiplet::Multiplet is returned.   
+    settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
+    ... to  set-up and diagonalize from the given (SCF) basis the configuration-interaction matrix and to derive and
+        display the level structure of the corresponding multiplet due to the given settings. Here, the CI matrix
+        includes the modifications of the Hamiltonian due to the given plasmaSettings; a multiplet::Multiplet is returned.   
 """
 function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
                  settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)

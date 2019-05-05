@@ -2,11 +2,13 @@
 """
 `Basics.read()`  ... reads in data from different files and sources.
 
-  + `("CSF list: Grasp92", "cslFilename")`  ... reads in the CSF list as given by the (existing) .csl file cslFilename; an basis::Basis
-                 is returned with basis.isDefined = true and with a proper sequence of orbitals, but with basis.orbitals = Orbital[].
+  + `("CSF list: Grasp92", "cslFilename")`  
+    ... reads in the CSF list as given by the (existing) .csl file cslFilename; an basis::Basis is returned with 
+        basis.isDefined = true and with a proper sequence of orbitals, but with basis.orbitals = Orbital[].
 
-  + `("orbital list: Grasp92", "orbFilename")`  ... read in the orbitals from a (formatted) .rwf file orbFilename; a list of 
-                 orbitals::Array{OrbitalsR,1} is returned with all subfields specified.
+  + `("orbital list: Grasp92", "orbFilename")`  
+    ... read in the orbitals from a (formatted) .rwf file orbFilename; a list of orbitals::Array{OrbitalsR,1} 
+        is returned with all subfields specified.
 """
 function Basics.read(sa::String, filename::String)
     if      sa == "CSF list: Grasp92"                          wa = readCslFileGrasp92(filename)
@@ -20,7 +22,8 @@ end
 
 
 """
-Basics.readCslFileGrasp92(filename::String)`  ... reads in the CSF list from a Grasp92 .csl file; a basis::Basis is returned.
+Basics.readCslFileGrasp92(filename::String)`  
+    ... reads in the CSF list from a Grasp92 .csl file; a basis::Basis is returned.
 """
 function Basics.readCslFileGrasp92(filename::String)
     coreSubshells = Subshell[];    peelSubshells =  Subshell[]
@@ -63,8 +66,9 @@ end
 
 
 """
-`Basics.readOrbitalFileGrasp92(filename::String, grid.JAC.Radial.Grid)`  ... reads in the orbitals list from a Grasp92 .rwf or .out file; 
-                            a dictionary orbitals::Dict{JAC.Subshell,JAC.Radial.Orbital} is returned.
+`Basics.readOrbitalFileGrasp92(filename::String, grid.JAC.Radial.Grid)`  
+    ... reads in the orbitals list from a Grasp92 .rwf or .out file; a dictionary 
+        orbitals::Dict{JAC.Subshell,JAC.Radial.Orbital} is returned.
 """
 function Basics.readOrbitalFileGrasp92(filename::String, grid::JAC.Radial.Grid)
     # using FortranFiles
@@ -106,7 +110,8 @@ end
 
 
 """
-`Basics.readMixFileRelci(filename::String)`  ... reads in the mixing coefficients from a RELCI .mix file; a multiplet::Multiplet is returned.
+`Basics.readMixFileRelci(filename::String)`  
+    ... reads in the mixing coefficients from a RELCI .mix file; a multiplet::Multiplet is returned.
 """
 function Basics.readMixFileRelci(filename::String, basis::Basis)
     levels = Level[];    name =  "from Relci"
@@ -151,8 +156,9 @@ end
 
 
 """
-`Basics.readMixingFileGrasp92(filename::String, basis::Basis)`  ... reads in the mixing coefficients from a Grasp92 .mix file by using
-                           the given basis; A multiplet::Multiplet is returned.
+`Basics.readMixingFileGrasp92(filename::String, basis::Basis)`  
+    ... reads in the mixing coefficients from a Grasp92 .mix file by using the given basis; A multiplet::Multiplet 
+        is returned.
 """
 function Basics.readMixingFileGrasp92(filename::String, basis::Basis)
     name = "from Grasp"

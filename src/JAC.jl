@@ -56,18 +56,19 @@ export @racahsum,
        estimate, ElectricDipoleMoment, Einstein, EmMultipole, 
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor,
-       GreenFunction, getDefaults, Gui,
+       generate, GreenFunction, getDefaults, Gui,
        Hfs, HydrogenicIon,
-       ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, 
+       interpolate, integrate, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, 
        LandeZeeman, Level, LevelSymmetry,
-       MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment, MultipolePolarizibility, Multiplet, 
+       modify, MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment, MultipolePolarizibility, Multiplet, 
        NoAmplitude, NoProcess, Nuclear, Model,
        Orbital, 
-       perform, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
+       perform, provide, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
        PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift,
        Radial, RadialIntegrals, Radiative, RadiativeAuger, RayleighCompton, REDA, READI,
        SchiffMoment, Shell, Subshell, setDefaults,
+       tabulate, tools,
        UseCoulomb, UseBabushkin, UseGauge
     
 # Basic data and data structures
@@ -106,7 +107,7 @@ include("module-FormFactor.jl")
 include("module-DecayYield.jl")
 include("module-GreenFunction.jl")
 include("module-MultipolePolarizibility.jl")
-include("module-PlasmaShift.jl")      ## up to here + up to jac-exclude
+include("module-PlasmaShift.jl")
 
 # Functions/methods for atomic processes
 include("module-PhotoEmission.jl")
@@ -116,7 +117,7 @@ include("module-PhotoRecombination.jl")
 include("module-AutoIonization.jl")
 include("module-Dielectronic.jl")
 include("module-PhotoExcitationFluores.jl")
-include("module-PhotoExcitationAutoion.jl")
+include("module-PhotoExcitationAutoion.jl")      ## up to here + up to jac-tools
 include("module-RayleighCompton.jl")
 include("module-MultiPhotonDeExcitation.jl")
 include("module-CoulombExcitation.jl")

@@ -1,4 +1,19 @@
 
+
+
+
+export isless
+
+function isless(x :: JAC.ManyElectron.Level, y :: JAC.ManyElectron.Level)
+    return x.energy < y.energy
+end
+
+
+function isless(x :: JAC.Hfs.IJF_Level, y :: JAC.Hfs.IJF_Level)
+    return x.energy < y.energy
+end
+
+    
 """
 `Basics.isSimilar()`  ... returns true if two instances are similar to each other, and false otherwise.
 

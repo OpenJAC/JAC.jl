@@ -13,13 +13,17 @@ module Basics
     export  add, analyze, AngularJ, AngularJ64, AngularM, AngularM64, Auger,
             compute, diagonalize,
             estimate, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
+            generate,
             HalfInt, HalfInteger, 
+            interpolate, integrate, 
             LevelSymmetry, LevelKey,
+            modify, 
             oplus,
-            Parity, perform,  
+            Parity, perform, provide,
             RadialMesh, Radiative,
             SolidAngle, Shell, Subshell, subshell_2j,
-            TensorComp, UseCoulomb, UseBabushkin
+            tabulate, tools, TensorComp, 
+            UseCoulomb, UseBabushkin
 
 
     include("inc-halfintegers.jl")

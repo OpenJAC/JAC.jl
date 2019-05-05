@@ -2,11 +2,11 @@
 """
 `Basics.merge()`  ... to merge data from different instances into a single one.
 
-  + `("atomic bases", bases::Array{Basis,1})`  ... to merge two (or more) atomic bases into a single basis::Basis. This method assumes the same 
-                      number of electrons in all basis and that the subshell lists are the same or can be made 'consistent' to each other. 
-                      Two bases have a consistent subshell list if all subshells, that appear in any of the two lists appear always in the same 
-                      sequence (if they are not missing at all). In the merged basis, the radial orbitals are taken from the basis (in the
-                      bases-array}, from where they are found first.
+  + `("atomic bases", bases::Array{Basis,1})`  
+    ... to merge two (or more) atomic bases into a single basis::Basis. This method assumes the same number of electrons in all basis and 
+        that the subshell lists are the same or can be made 'consistent' to each other. Two bases have a consistent subshell list if all 
+        subshells, that appear in any of the two lists appear always in the same sequence (if they are not missing at all). In the merged 
+        basis, the radial orbitals are taken from the basis (in the bases-array}, from where they are found first.
 """
 function Basics.merge(sa::String, bases::Array{Basis,1})
     sa != "atomic bases"   &&   error("Unsupported keystring = $sa")
@@ -43,9 +43,9 @@ end
 
 
 """
-  + `("multiplets", multiplets::Array{Multiplet,1})`  ... to merge two (or more) atomic multiplets into a single multiplet::Multiplet.
-                    This method assumes (and checks) that all levels have level.hasStateRep = true and that all levels
-                    refer to the same basis.
+  + `("multiplets", multiplets::Array{Multiplet,1})`  
+    ... to merge two (or more) atomic multiplets into a single multiplet::Multiplet. This method assumes (and checks) that all 
+        levels have level.hasStateRep = true and that all levels refer to the same basis.
 """
 function Basics.merge(sa::String, multiplets::Array{Multiplet,1})
     sa != "multiplets"   &&   error("Unsupported keystring = $sa")
