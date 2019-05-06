@@ -1,13 +1,11 @@
 
 """
-`module  JAC.RadiativeAuger`  ... a submodel of JAC that contains all methods for computing radiative Auger and autoionization amplitudes 
-                                  and rates; it is using JAC, JAC.Radial, JAC.ImpactExcitation, JAC.Auger.
+`module  JAC.RadiativeAuger`  
+    ... a submodel of JAC that contains all methods for computing radiative Auger and autoionization amplitudes and rates.
 """
 module RadiativeAuger
 
-    using Printf, JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, JAC.AutoIonization
-    global JAC_counter = 0
-
+    using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
 
     """
     `struct  RadiativeAuger.Settings`  ... defines a type for the settings in estimating radiative-Auger and autoionization rates.
@@ -36,7 +34,7 @@ module RadiativeAuger
 
 
     """
-    `JAC.RadiativeAuger.Settings()`  ... constructor for the default values of RadiativeAuger line computations
+    `RadiativeAuger.Settings()`  ... constructor for the default values of RadiativeAuger line computations
     """
     function Settings()
         Settings(EmMultipole[], UseGauge[], 0, false, false, Array{Tuple{Int64,Int64},1}[], 0., 10e5, 100)
@@ -58,8 +56,9 @@ module RadiativeAuger
 
 
     """
-    `struct  Channel`  ... defines a type for a RadiativeAuger channel to help characterize a scattering (continuum) state of many 
-                           electron-states with a single free electron.
+    `struct  Channel`  
+        ... defines a type for a RadiativeAuger channel to help characterize a scattering (continuum) state of many electron-states with 
+            a single free electron.
 
         + multipole      ::EmMultipole          ... Multipole of the photon absorption.
         + gauge          ::EmGauge              ... Gauge for dealing with the (coupled) radiation field.
@@ -79,8 +78,9 @@ module RadiativeAuger
 
 
     """
-    `struct  Sharing`  ... defines a type for a RadiativeAuger sharing to help characterize energy sharing between the emitted photon and
-             the scattering (continuum) state with a single free electron.
+    `struct  Sharing`  
+        ... defines a type for a RadiativeAuger sharing to help characterize energy sharing between the emitted photon and
+            the scattering (continuum) state with a single free electron.
 
         + photonEnergy   ::Float64         ... Energy of the emitted photon.
         + electronEnergy ::Float64         ... Energy of the (outgoing free) electron.
@@ -131,9 +131,9 @@ module RadiativeAuger
 
 
     """
-    `JAC.RadiativeAuger.computeAmplitudesProperties(line::RadiativeAuger.Line, grid::Radial.Grid, settings::RadiativeAuger.Settings)`  
-         ... to compute all amplitudes and properties of the given line; a line::RadiativeAuger.Line is returned for which the amplitudes 
-         and properties have now been evaluated.
+    `RadiativeAuger.computeAmplitudesProperties(line::RadiativeAuger.Line, grid::Radial.Grid, settings::RadiativeAuger.Settings)`  
+        ... to compute all amplitudes and properties of the given line; a line::RadiativeAuger.Line is returned for which the amplitudes 
+            and properties have now been evaluated.
     """
     function  computeAmplitudesProperties(line::RadiativeAuger.Line, grid::Radial.Grid, settings::RadiativeAuger.Settings)
         global JAC_counter
@@ -151,7 +151,7 @@ module RadiativeAuger
                 # Compute the transition matrix for the continuum and the initial-state basis
                 JAC_counter = JAC_counter + 1
                 if   JAC_counter < 20   println("RadiativeAuger.computeAmplitudesProperties-ac: warning ... no transition matrix is computed.") end
-                # matrix    = JAC.RadiativeAuger.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
+                # matrix    = RadiativeAuger.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
                 #                                              line.initialLevel.basis, grid, settings)
                 # amplitude = line.finalLevel.mc * matrix * line.initialLevel.mc 
                 amplitude = 1.0 
@@ -169,28 +169,29 @@ module RadiativeAuger
 
 
     """
-    `JAC.RadiativeAuger.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
-                                     settings::RadiativeAuger.Settings; output=true)`  ... to compute the radiative Auger transition amplitudes and 
-         all properties as requested by the given settings. A list of lines::Array{RadiativeAuger.Lines} is returned.
+    `RadiativeAuger.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+                                 settings::RadiativeAuger.Settings; output=true)`  
+        ... to compute the radiative Auger transition amplitudes and all properties as requested by the given settings. A list of 
+            lines::Array{RadiativeAuger.Lines} is returned.
     """
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
                            settings::RadiativeAuger.Settings; output=true)
         println("")
-        printstyled("JAC.RadiativeAuger.computeLines(): The computation of radiative Auger rates starts now ... \n", color=:light_green)
-        printstyled("------------------------------------------------------------------------------------------ \n", color=:light_green)
+        printstyled("RadiativeAuger.computeLines(): The computation of radiative Auger rates starts now ... \n", color=:light_green)
+        printstyled("-------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
         #
-        lines = JAC.RadiativeAuger.determineLines(finalMultiplet, initialMultiplet, settings)
+        lines = RadiativeAuger.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.RadiativeAuger.displayLines(lines)    end
+        if  settings.printBeforeComputation    RadiativeAuger.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = RadiativeAuger.Line[]
         for  line in lines
-            newLine = JAC.RadiativeAuger.computeAmplitudesProperties(line, grid, settings) 
+            newLine = RadiativeAuger.computeAmplitudesProperties(line, grid, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        JAC.RadiativeAuger.displayResults(lines)
+        RadiativeAuger.displayResults(lines)
         #
         if    output    return( lines )
         else            return( nothing )
@@ -199,10 +200,10 @@ module RadiativeAuger
 
 
     """
-    `JAC.RadiativeAuger.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::RadiativeAuger.Settings)` ... to determine 
-         a list of RadiativeAuger.Line's for transitions between levels from the initial- and final-state multiplets, and  by taking into account 
-         the particular selections and settings for this computation; an Array{RadiativeAuger.Line,1} is returned. Apart from the level 
-         specification, all physical properties are set to zero during the initialization process.
+    `RadiativeAuger.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::RadiativeAuger.Settings)` 
+        ... to determine a list of RadiativeAuger.Line's for transitions between levels from the initial- and final-state multiplets, 
+            and  by taking into account the particular selections and settings for this computation; an Array{RadiativeAuger.Line,1} is 
+            returned. Apart from the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::RadiativeAuger.Settings)
         if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
@@ -216,7 +217,7 @@ module RadiativeAuger
                 energy    = initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy
                 if  energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
 
-                channels = JAC.RadiativeAuger.determineSharingsAndChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], energy, settings) 
+                channels = RadiativeAuger.determineSharingsAndChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], energy, settings) 
                 push!( lines, RadiativeAuger.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], EmProperty(0., 0.,), true, channels) )
             end
         end
@@ -225,9 +226,9 @@ module RadiativeAuger
 
 
     """
-    `JAC.RadiativeAuger.determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, energy::Float64, settings::RadiativeAuger.Settings)`  
-         ... to determine a list of RadiativeAuger Sharing's and Channel's for a transitions from the initial to final level and by taking into 
-         account the particular settings of for this computation; an Array{RadiativeAuger.Sharing,1} is returned.
+    `RadiativeAuger.determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, energy::Float64, settings::RadiativeAuger.Settings)`  
+        ... to determine a list of RadiativeAuger Sharing's and Channel's for a transitions from the initial to final level and by taking into 
+            account the particular settings of for this computation; an Array{RadiativeAuger.Sharing,1} is returned.
     """
     function determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, energy::Float64, settings::RadiativeAuger.Settings)
         sharings  = RadiativeAuger.Sharing[];    eSharings = Basics.determineEnergySharings(energy, settings.NoEnergySharings) 
@@ -237,17 +238,17 @@ module RadiativeAuger
             symi      = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
             for  mp in settings.multipoles
                 for  gauge in settings.gauges
-                    symList = JAC.AngularMomentum.allowedMultipoleSymmetries(symi, mp)
+                    symList = AngularMomentum.allowedMultipoleSymmetries(symi, mp)
                     for  symt in symList
-                        kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symt, symf)
+                        kappaList = AngularMomentum.allowedKappaSymmetries(symt, symf)
                         for  kappa in kappaList
                             # Include further restrictions if appropriate
                             if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
-                                push!(channels, RadiativeAuger.Channel(mp, JAC.Coulomb,   kappa, symt, 0., Complex(0.)) )
+                                push!(channels, RadiativeAuger.Channel(mp, Bascis.Coulomb,   kappa, symt, 0., Complex(0.)) )
                             elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
-                                push!(channels, RadiativeAuger.Channel(mp, JAC.Babushkin, kappa, symt, 0., Complex(0.)) )  
+                                push!(channels, RadiativeAuger.Channel(mp, Bascis.Babushkin, kappa, symt, 0., Complex(0.)) )  
                             elseif string(mp)[1] == 'M'                                
-                                push!(channels, RadiativeAuger.Channel(mp, JAC.Magnetic,  kappa, symt, 0., Complex(0.)) ) 
+                                push!(channels, RadiativeAuger.Channel(mp, Bascis.Magnetic,  kappa, symt, 0., Complex(0.)) ) 
                             end 
                         end
                     end
@@ -260,28 +261,29 @@ module RadiativeAuger
 
 
     """
-    `JAC.RadiativeAuger.displayLines(lines::Array{RadiativeAuger.Line,1})`  ... to display a list of lines, sharings and channels that have been 
-         selected due to the prior settings. A neat table of all selected transitions and energies is printed but nothing is returned otherwise.
+    `RadiativeAuger.displayLines(lines::Array{RadiativeAuger.Line,1})`  
+        ... to display a list of lines, sharings and channels that have been selected due to the prior settings. A neat table 
+            of all selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{RadiativeAuger.Line,1})
         println(" ")
         println("  Selected radiative-Auger lines:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(170))
+        println("  ", TableStrings.hLine(170))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * JAC.TableStrings.hBlank(20)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * JAC.TableStrings.hBlank(22)
-        sa = sa * JAC.TableStrings.center(34, "Energy  " * JAC.TableStrings.inUnits("energy"); na=4);              
-        sb = sb * JAC.TableStrings.center(34, "i -- f        omega     e_Auger  "; na=4)
-        sa = sa * JAC.TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
-        sb = sb * JAC.TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(170)) 
+        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(34, "Energy  " * TableStrings.inUnits("energy"); na=4);              
+        sb = sb * TableStrings.center(34, "i -- f        omega     e_Auger  "; na=4)
+        sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
+        sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(170)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
             energy = line.initialLevel.energy - line.finalLevel.energy
             sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "  "
             #
@@ -293,44 +295,44 @@ module RadiativeAuger
                     push!( kappaMultipoleSymmetryList, (sharing.channels[i].kappa, sharing.channels[i].multipole, sharing.channels[i].gauge, 
                                                         sharing.channels[i].symmetry) )
                 end
-                wa = JAC.TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
+                wa = TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
                 sc = sa * sb * wa[1];    println( sc )  
                 for  i = 2:length(wa)
-                    sc = JAC.TableStrings.hBlank( length(sa*sb) ) * wa[i];    println( sc )
+                    sc = TableStrings.hBlank( length(sa*sb) ) * wa[i];    println( sc )
                 end
             end
         end
-        println("  ", JAC.TableStrings.hLine(170))
+        println("  ", TableStrings.hLine(170))
         #
         return( nothing )
     end
 
 
     """
-    `JAC.RadiativeAuger.displayResults(lines::Array{RadiativeAuger.Line,1})`  ... to list all results, energies, rates, etc. of the selected 
-         lines. A neat table is printed but nothing is returned otherwise.
+    `RadiativeAuger.displayResults(lines::Array{RadiativeAuger.Line,1})`  
+        ... to list all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
     """
     function  displayResults(lines::Array{RadiativeAuger.Line,1})
         println(" ")
         println("  Radiative-Auger rates:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(148))
+        println("  ", TableStrings.hLine(148))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * JAC.TableStrings.hBlank(20)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * JAC.TableStrings.hBlank(22)
-        sa = sa * JAC.TableStrings.center(36, "Energy  " * JAC.TableStrings.inUnits("energy"); na=4);              
-        sb = sb * JAC.TableStrings.center(36, "i -- f        omega     e_Auger  "; na=4)
-        sa = sa * JAC.TableStrings.center(30, "Cou -- differ. rate -- Bab"; na=3)      
-        sb = sb * JAC.TableStrings.center(30, JAC.TableStrings.inUnits("rate") * "          " * JAC.TableStrings.inUnits("rate"); na=3)
-        sa = sa * JAC.TableStrings.center(30, "Cou -- total rate -- Bab"; na=3)      
-        sb = sb * JAC.TableStrings.center(30, JAC.TableStrings.inUnits("rate") * "          " * JAC.TableStrings.inUnits("rate"); na=3)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(148)) 
+        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(36, "Energy  " * TableStrings.inUnits("energy"); na=4);              
+        sb = sb * TableStrings.center(36, "i -- f        omega     e_Auger  "; na=4)
+        sa = sa * TableStrings.center(30, "Cou -- differ. rate -- Bab"; na=3)      
+        sb = sb * TableStrings.center(30, TableStrings.inUnits("rate") * "          " * TableStrings.inUnits("rate"); na=3)
+        sa = sa * TableStrings.center(30, "Cou -- total rate -- Bab"; na=3)      
+        sb = sb * TableStrings.center(30, TableStrings.inUnits("rate") * "          " * TableStrings.inUnits("rate"); na=3)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(148)) 
         #  
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
             energy = line.initialLevel.energy - line.finalLevel.energy
             sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "    "
             #
@@ -347,7 +349,7 @@ module RadiativeAuger
                 println(sa*sb)
             end
         end
-        println("  ", JAC.TableStrings.hLine(148))
+        println("  ", TableStrings.hLine(148))
         #
         return( nothing )
     end

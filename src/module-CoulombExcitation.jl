@@ -1,14 +1,12 @@
 
 """
-`module  JAC.CoulombExcitation`  ... a submodel of JAC that contains all methods for computing Coulomb excitation cross sections and alignment
-                                     parameters for the excitation of target or projectile electrons by fast ion impact; it is using JAC.Basics. 
-                                     JAC.ManyElectron, JAC.Radial.
+`module  JAC.CoulombExcitation`  
+    ... a submodel of JAC that contains all methods for computing Coulomb excitation cross sections and alignment parameters 
+        for the excitation of target or projectile electrons by fast ion impact.
 """
 module CoulombExcitation
 
-    using JAC.Basics, JAC.ManyElectron, JAC.Radial
-    global JAC_counter = 0
-
+    using ..Basics, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
 
     """
     `struct  CoulombExcitation.Settings`  ... defines a type for the details and parameters of computing Coulomb-excitation lines.
@@ -33,7 +31,7 @@ module CoulombExcitation
 
 
     """
-    `JAC.CoulombExcitation.Settings()`  ... constructor for the default values of Coulomb-excitation line computations.
+    `CoulombExcitation.Settings()`  ... constructor for the default values of Coulomb-excitation line computations.
     """
     function Settings()
         Settings(EmMultipole[], UseGauge[], Float64[], false, false, false, Tuple{Int64,Int64}[])
@@ -53,8 +51,8 @@ module CoulombExcitation
 
 
     """
-    `struct  CoulombExcitation.Channel`  ... defines a type for a Coulomb-excitation channel to help characterize a single magnetic substate.
-                                             !!! This need to adapted !!!
+    `struct  CoulombExcitation.Channel`  
+        ... defines a type for a Coulomb-excitation channel to help characterize a single magnetic substate. !!! This need to adapted !!!
 
         + multipole      ::EmMultipole          ... Multipole of the photon absorption.
         + gauge          ::EmGauge              ... Gauge for dealing with the (coupled) radiation field.
@@ -104,14 +102,14 @@ module CoulombExcitation
 
 
     """
-    `JAC.CoulombExcitation.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::CoulombExcitation.Settings; output=true)`  
-               ... to compute the Coulomb excitation amplitudes and all properties as requested by the given settings. A list of 
-                   lines::Array{CoulombExcitation.Lines} is returned.
+    `CoulombExcitation.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::CoulombExcitation.Settings; output=true)`  
+        ... to compute the Coulomb excitation amplitudes and all properties as requested by the given settings. A list of 
+            lines::Array{CoulombExcitation.Lines} is returned.
     """
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::CoulombExcitation.Settings; output=true)
         println("")
-        printstyled("JAC.CoulombExcitation.computeLines(): The computation of Coulomb excitation cross sections starts now ... \n", color=:light_green)
-        printstyled("--------------------------------------------------------------------------------------------------------- \n", color=:light_green)
+        printstyled("CoulombExcitation.computeLines(): The computation of Coulomb excitation cross sections starts now ... \n", color=:light_green)
+        printstyled("----------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
         #
         println("Not yet implemented: Data structures and properties still need to be worked out.")

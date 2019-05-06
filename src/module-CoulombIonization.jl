@@ -1,14 +1,12 @@
 
 """
-`module  JAC.CoulombIonization`  ... a submodel of JAC that contains all methods for computing Coulomb ionization cross sections and alignment
-                                     parameters for the excitation of target or projectile electrons by fast ion impact; it is using JAC, 
-                                     JAC.ManyElectron, JAC.Radial.
+`module  JAC.CoulombIonization`  
+    ... a submodel of JAC that contains all methods for computing Coulomb ionization cross sections and alignment parameters 
+        for the excitation of target or projectile electrons by fast ion impact.
 """
 module CoulombIonization
 
-    using JAC.Basics, JAC.ManyElectron, JAC.Radial
-    global JAC_counter = 0
-
+    using ..Basics, ..ManyElectron, ..Radial
 
     """
     `struct  CoulombIonization.Settings`  ... defines a type for the details and parameters of computing Coulomb-ionization lines.
@@ -33,7 +31,7 @@ module CoulombIonization
 
 
     """
-    `JAC.CoulombIonization.Settings()`  ... constructor for the default values of Coulomb-excitation line computations.
+    `CoulombIonization.Settings()`  ... constructor for the default values of Coulomb-excitation line computations.
     """
     function Settings()
         Settings(EmMultipole[], UseGauge[], Float64[], false, false, false, Tuple{Int64,Int64}[])
@@ -53,8 +51,8 @@ module CoulombIonization
 
 
     """
-    `struct  CoulombIonization.Channel`  ... defines a type for a Coulomb-excitation channel to help characterize a single magnetic substate.
-                                             !!! This need to adapted !!!
+    `struct  CoulombIonization.Channel`  
+        ... defines a type for a Coulomb-excitation channel to help characterize a single magnetic substate. !!! This need to adapted !!!
 
         + multipole      ::EmMultipole          ... Multipole of the photon absorption.
         + gauge          ::EmGauge              ... Gauge for dealing with the (coupled) radiation field.

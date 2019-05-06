@@ -1,11 +1,11 @@
 
 """
-`module  JAC.RayleighCompton`  ... a submodel of JAC that contains all methods for computing elastic Rayleigh and inelastic Compton 
-                                    photon scattering cross sections; it is using JAC, JAC.ManyElectron.
+`module  JAC.RayleighCompton`  
+    ... a submodel of JAC that contains all methods for computing elastic Rayleigh and inelastic Compton photon scattering cross sections.
 """
 module RayleighCompton
 
-    using JAC.Basics, JAC.ManyElectron, JAC.Radial
+    using ..Basics, ..ManyElectron, ..Radial, ..TableStrings
 
 
     """
@@ -31,7 +31,7 @@ module RayleighCompton
 
 
     """
-    `JAC.RayleighCompton.Settings()`  ... constructor for the default values of Rayleigh-Compton photon-scattering estimates.
+    `RayleighCompton.Settings()`  ... constructor for the default values of Rayleigh-Compton photon-scattering estimates.
     """
     function Settings()
         Settings(EmMultipole[], UseGauge[], Float64[], false, false, Tuple{Int64,Int64}[])
@@ -50,8 +50,8 @@ module RayleighCompton
 
 
     """
-    `struct  RayleighCompton.Channel`  ... defines a type for a Rayleigh-Compton channel to help characterize the scattering of a single photon
-                                           with well-defined multipolarities.
+    `struct  RayleighCompton.Channel`  
+        ... defines a type for a Rayleigh-Compton channel to help characterize the scattering of a single photon with well-defined multipolarities.
 
         + inMultipole    ::EmMultipole          ... Multipole of the incoming photon.
         + outMultipole   ::EmMultipole          ... Multipole of the outgoing, scattered photon.
@@ -74,8 +74,8 @@ module RayleighCompton
         + inPhotonEnergy   ::Float64         ... Energy of the incoming photon.
         + outPhotonEnergy  ::Float64         ... Energy of the outgoing, scattered photon.
         + crossSection     ::EmProperty      ... Cross section for this photoionization.
-        + hasChannels      ::Bool            ... Determines whether the individual (sub-) channels are defined in terms of their multipolarities, 
-                                                 etc., or not.
+        + hasChannels      ::Bool            ... Determines whether the individual (sub-) channels are defined in terms 
+                                                 of their multipolarities, etc., or not.
         + channels         ::Array{RayleighCompton.Channel,1}  ... List of RayleighCompton.Channels of this line.
     """
     struct  Line
@@ -103,14 +103,14 @@ module RayleighCompton
 
 
     """
-    `JAC.RayleighCompton.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::RayleighCompton.Settings; output=true)`  
-               ... to compute the Rayleigh-Compton transition amplitudes and all properties as requested by the given settings. A list of 
-                   lines::Array{RayleighCompton.Lines} is returned.
+    `RayleighCompton.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::RayleighCompton.Settings; output=true)`  
+        ... to compute the Rayleigh-Compton transition amplitudes and all properties as requested by the given settings. A list of 
+            lines::Array{RayleighCompton.Lines} is returned.
     """
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::RayleighCompton.Settings; output=true)
         println("")
-        printstyled("JAC.RayleighCompton.computeLines(): The computation of Rayleigh-ComptonAuger cross sections starts now ... \n", color=:light_green)
-        printstyled("---------------------------------------------------------------------------------------------------------- \n", color=:light_green)
+        printstyled("RayleighCompton.computeLines(): The computation of Rayleigh-ComptonAuger cross sections starts now ... \n", color=:light_green)
+        printstyled("------------------------------------------------------------------------------------------------------ \n", color=:light_green)
         println("")
         #
         println("Not yet implemented: Data structures and properties still need to be worked out.")

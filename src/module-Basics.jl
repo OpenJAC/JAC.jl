@@ -1241,6 +1241,36 @@ module Basics
     @enum   Guint    Gui    GuiSettings   GuiCascade
     export  Guint,   Gui,   GuiSettings,  GuiCascade
 
+    
+    
+    """
+    `abstract type Basics.AbstractConfigurationScheme` 
+        ... defines an abstract and a number of singleton types to distinguish between different schemes for
+            generating configuration lists as they frequently occur in Green function and cascade computations.
+
+      + struct NoExcitationScheme        
+        ... dummy scheme for (unsupported) initialization of this abstract tpye.
+
+      + struct DeExciteSingleElectron        
+        ... generates all excitations and de-excitations of a single electron from a given list of bound
+            electron configurations. The number of electrons of the generated configurations is the same as 
+            for the given bound configurations.
+
+      + struct DeExciteTwoElectrons       
+        ... generates all excitations and de-excitations of one or two electrons from a given list of bound
+            electron configurations. The number of electrons of the generated configurations is the same as 
+            for the given bound configurations.
+            
+      + struct AddSingleElectron             
+        ... generates configurations by just adding a single electrons to a given list of bound
+            electron configurations. The number of electrons of the generated configurations is N+1.
+    """
+    abstract type  AbstractConfigurationScheme                               end
+    struct         NoExcitationScheme      <:  AbstractConfigurationScheme   end
+    struct         DeExciteSingleElectron  <:  AbstractConfigurationScheme   end
+    struct         DeExciteTwoElectrons    <:  AbstractConfigurationScheme   end
+    struct         AddSingleElectron       <:  AbstractConfigurationScheme   end
+
 
 
     """

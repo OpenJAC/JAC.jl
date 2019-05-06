@@ -1,13 +1,11 @@
 
 """
-`module  JAC.ImpactExcitation`  ... a submodel of JAC that contains all methods for computing electron impact excitation cross sections and 
-                                    collision strengths; it is using JAC, JAC.ManyElectron, JAC.Radial.
+`module  JAC.ImpactExcitation`  
+    ... a submodel of JAC that contains all methods for computing electron impact excitation cross sections and collision strengths.
 """
 module ImpactExcitation 
 
-    using Printf, JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.Nuclear
-    global JAC_counter = 0
-
+    using Printf, ..AngularMomentum, ..Basics, ..ManyElectron, ..Radial, ..Nuclear, ..TableStrings
 
     """
     `struct  ImpactExcitationSettings`  ... defines a type for the details and parameters of computing electron-impact excitation lines.
@@ -32,7 +30,7 @@ module ImpactExcitation
 
 
     """
-    `JAC.ImpactExcitation.Settings()`  ... constructor for the default values of electron-impact excitation line computations.
+    `ImpactExcitation.Settings()`  ... constructor for the default values of electron-impact excitation line computations.
     """
     function Settings()
        Settings( Float64[], false, false, false, Tuple{Int64,Int64}[], 0, 0.)
@@ -52,8 +50,9 @@ module ImpactExcitation
 
 
     """
-    `struct  ImpactExcitation.Channel`  ... defines a type for a electron-impact excitaiton channel to help characterize the incoming and 
-                                            outgoing (continuum) states of many electron-states with a single free electron
+    `struct  ImpactExcitation.Channel`  
+        ... defines a type for a electron-impact excitaiton channel to help characterize the incoming and outgoing (continuum) states of 
+            many electron-states with a single free electron
 
         + initialKappa     ::Int64              ... partial-wave of the incoming free electron
         + finalKappa       ::Int64              ... partial-wave of the outgoing free electron
@@ -84,8 +83,8 @@ module ImpactExcitation
 
 
     """
-    `struct  ImpactExcitation.Line`  ... defines a type for a electron-impact excitation line that may include the definition of channels and 
-                                         their corresponding amplitudes.
+    `struct  ImpactExcitation.Line`  
+        ... defines a type for a electron-impact excitation line that may include the definition of channels and their corresponding amplitudes.
 
         + initialLevel           ::Level         ... initial- (bound-state) level
         + finalLevel             ::Level         ... final- (bound-state) level
@@ -108,7 +107,7 @@ module ImpactExcitation
 
 
     """
-    `JAC.ImpactExcitation.Line()`  ... 'empty' constructor for an electron-impact excitation line between a specified initial and final level.
+    `ImpactExcitation.Line()`  ... 'empty' constructor for an electron-impact excitation line between a specified initial and final level.
     """
     function Line()
         Line(Level(), Level(), 0., 0., 0., false, ImpactExcitation.Channel[] )
@@ -116,8 +115,8 @@ module ImpactExcitation
 
 
     """
-    `JAC.ImpactExcitation.Line(initialLevel::Level, finalLevel::Level, crossSection::Float64)`  ... constructor for an 
-         electron-impact excitation line between a specified initial and final level.
+    `ImpactExcitation.Line(initialLevel::Level, finalLevel::Level, crossSection::Float64)`  
+        ... constructor for an electron-impact excitation line between a specified initial and final level.
     """
     function Line(initialLevel::Level, finalLevel::Level, crossSection::Float64)
         Line(initialLevel, finalLevel, 0., 0., crossSection, false, ImpactExcitation.Channel[] )
@@ -137,9 +136,9 @@ module ImpactExcitation
 
 
     """
-    `JAC.ImpactExcitation.computeAmplitudesProperties(line::ImpactExcitation.Line, grid::Radial.Grid, settings::ImpactExcitation.Settings)`  
-         ... to compute all amplitudes and properties of the given line; a line::ImpactExcitation.Line is returned for which the amplitudes and
-         properties are now evaluated.
+    `ImpactExcitation.computeAmplitudesProperties(line::ImpactExcitation.Line, grid::Radial.Grid, settings::ImpactExcitation.Settings)`  
+        ... to compute all amplitudes and properties of the given line; a line::ImpactExcitation.Line is returned for which the amplitudes and
+            properties are now evaluated.
     """
     function  computeAmplitudesProperties(line::ImpactExcitation.Line, grid::Radial.Grid, settings::ImpactExcitation.Settings)
         global JAC_counter
@@ -155,7 +154,7 @@ module ImpactExcitation
             # Compute the transition matrix for the two constructed continuum bases
             JAC_counter = JAC_counter + 1
             if   JAC_counter < 20   println("ImpactExcitation.computeAmplitudesProperties-ac: warning ... no transition matrix is computed.") end
-            # matrix    = JAC.ImpactExcitation.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
+            # matrix    = ImpactExcitation.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
             #                                                line.initialLevel.basis, grid, settings)
             # amplitude = line.finalLevel.mc * matrix * line.initialLevel.mc 
             amplitude = 1.0 
@@ -173,28 +172,29 @@ module ImpactExcitation
 
 
     """
-    `JAC.ImpactExcitation.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                                       settings::ImpactExcitation.Settings; output=true)`  ... to compute the electron-impact excitation 
-         transition amplitudes and all properties as requested by the given settings. A list of lines::Array{ImpactExcitation.Lines} is returned.
+    `ImpactExcitation.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+                                   settings::ImpactExcitation.Settings; output=true)`  
+        ... to compute the electron-impact excitation transition amplitudes and all properties as requested by the given settings. 
+            A list of lines::Array{ImpactExcitation.Lines} is returned.
     """
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::ImpactExcitation.Settings; 
                            output=true)
         println("")
-        printstyled("JAC.ImpactExcitation.computePathways(): The computation of electron-impact excitation cross sections starts now ... \n", color=:light_green)
-        printstyled("------------------------------------------------------------------------------------------------------------------- \n", color=:light_green)
+        printstyled("ImpactExcitation.computePathways(): The computation of electron-impact excitation cross sections starts now ... \n", color=:light_green)
+        printstyled("--------------------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
         #
-        lines = JAC.ImpactExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
+        lines = ImpactExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.ImpactExcitation.displayLines(lines)    end
+        if  settings.printBeforeComputation    ImpactExcitation.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = ImpactExcitation.Line[]
         for  line in lines
-            newLine = JAC.ImpactExcitation.computeAmplitudesProperties(line, grid, settings) 
+            newLine = ImpactExcitation.computeAmplitudesProperties(line, grid, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        JAC.ImpactExcitation.displayResults(lines)
+        ImpactExcitation.displayResults(lines)
         #
         if    output    return( lines )
         else            return( nothing )
@@ -203,11 +203,12 @@ module ImpactExcitation
 
 
     """
-    `JAC.ImpactExcitation.computeMatrix(finalBasis::Basis, initialBasis::Basis, settings::ImpactExcitation.Settings)`  ... to compute the 
-         transition matrix  (<finalContinuumCSF_r|| V(e-e) ||initialContinuumCSF_s>)  between the CSF_r from the finalContinuumBasis and 
-         the CSF_s from the initialContinuumBasis. A (non-quadratic) matrix::Array{Float64,2} with dimensions [length(finalContinuumBasis.csfs) 
-         x length(initialContinuumBasis.csfs)] is returned. Note that this transition matrix is typically specific to just one Eimex channel due 
-         to the different energies, partial waves and overall symmetry of the scattering states. **Not yet implemented !**
+    `ImpactExcitation.computeMatrix(finalBasis::Basis, initialBasis::Basis, settings::ImpactExcitation.Settings)`  
+        ... to compute the transition matrix  (<finalContinuumCSF_r|| V(e-e) ||initialContinuumCSF_s>)  between the CSF_r from the 
+            finalContinuumBasis and the CSF_s from the initialContinuumBasis. A (non-quadratic) matrix::Array{Float64,2} with 
+            dimensions [length(finalContinuumBasis.csfs) x length(initialContinuumBasis.csfs)] is returned. Note that this transition 
+            matrix is typically specific to just one Eimex channel due to the different energies, partial waves and overall symmetry 
+            of the scattering states. **Not yet implemented !**
     """
     function computeMatrix(finalBasis::Basis, initialBasis::Basis, settings::ImpactExcitation.Settings)   
         error("Not yet implemented.")
@@ -216,9 +217,9 @@ module ImpactExcitation
 
 
     """
-    `JAC.ImpactExcitation.determineChannels(finalLevel::Level, initialLevel::Level, settings::ImpactExcitation.Settings)`  ... to 
-         determine a list of electron-impact excitation Channels for a transitions from the initial to the final level and by taking into account 
-         the particular settings of for this computation; an Array{ImpactExcitation.Channel,1} is returned.
+    `ImpactExcitation.determineChannels(finalLevel::Level, initialLevel::Level, settings::ImpactExcitation.Settings)`  
+        ... to determine a list of electron-impact excitation Channels for a transitions from the initial to the final level and by 
+            taking into account the particular settings of for this computation; an Array{ImpactExcitation.Channel,1} is returned.
     """
     function determineChannels(finalLevel::Level, initialLevel::Level, settings::ImpactExcitation.Settings)
         channels = ImpactExcitation.Channel[];   
@@ -226,9 +227,9 @@ module ImpactExcitation
         #
         for  inKappa = -(settings.maxKappa+1):settings.maxKappa
             if  inKappa == 0    continue    end
-            symtList = JAC.AngularMomentum.allowedTotalSymmetries(symi, inKappa)
+            symtList = AngularMomentum.allowedTotalSymmetries(symi, inKappa)
             for  symt in symtList
-                outKappaList = JAC.AngularMomentum.allowedKappaSymmetries(symt, symf)
+                outKappaList = AngularMomentum.allowedKappaSymmetries(symt, symf)
                 for  outKappa in outKappaList
                     push!(channels, ImpactExcitation.Channel( inKappa, outKappa, symt, 0., 0.,Complex(0.)) )
                 end
@@ -239,10 +240,10 @@ module ImpactExcitation
 
 
     """
-    `JAC.ImpactExcitation.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::ImpactExcitation.Settings)`  
-         ... to determine a list of ImpactExcitation.Line's for transitions between levels from the initial- and final-state multiplets, and 
-         by taking into account the particular selections and settings for this computation; an Array{ImpactExcitation.Line,1} is returned. 
-         Apart from the level specification, all physical properties are set to zero during the initialization process.
+    `ImpactExcitation.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::ImpactExcitation.Settings)`  
+        ... to determine a list of ImpactExcitation.Line's for transitions between levels from the initial- and final-state multiplets, 
+            and by taking into account the particular selections and settings for this computation; an Array{ImpactExcitation.Line,1} is 
+            returned. Apart from the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::ImpactExcitation.Settings)
         if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
@@ -258,7 +259,7 @@ module ImpactExcitation
                     finalElectronEnergy    = en - (initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy) + settings.energyShift
                     if  finalElectronEnergy < 0    continue   end  
 
-                    channels = JAC.ImpactExcitation.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
+                    channels = ImpactExcitation.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
                     push!( lines, ImpactExcitation.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], 
                                                         initialElectronEnergy, finalElectronEnergy, 0., true, channels) )
                 end
@@ -269,34 +270,35 @@ module ImpactExcitation
 
 
     """
-    `JAC.ImpactExcitation.displayLines(lines::Array{ImpactExcitation.Line,1})`  ... to display a list of lines and channels that have been 
-         selected due to the prior settings. A neat table of all selected transitions and energies is printed but nothing is returned otherwise.
+    `ImpactExcitation.displayLines(lines::Array{ImpactExcitation.Line,1})`  
+        ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all 
+            selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{ImpactExcitation.Line,1})
         println(" ")
         println("  Selected electron-impact ionization lines:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(180))
+        println("  ", TableStrings.hLine(180))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * JAC.TableStrings.hBlank(20)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"; na=3);                                sb = sb * JAC.TableStrings.hBlank(22)
-        sa = sa * JAC.TableStrings.center(12, "f--Energy--i"; na=4)               
-        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=5)
-        sa = sa * JAC.TableStrings.center(12, "Energy e_in"; na=3);              
-        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=3)
-        sa = sa * JAC.TableStrings.center(12, "Energy e_out"; na=4);              
-        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.flushleft(57, "List of partial waves and total symmetries"; na=4)  
-        sb = sb * JAC.TableStrings.flushleft(57, "partial-in [total J^P] partial-out        "; na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(180)) 
+        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=3);                                sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(12, "f--Energy--i"; na=4)               
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=5)
+        sa = sa * TableStrings.center(12, "Energy e_in"; na=3);              
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(12, "Energy e_out"; na=4);              
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.flushleft(57, "List of partial waves and total symmetries"; na=4)  
+        sb = sb * TableStrings.flushleft(57, "partial-in [total J^P] partial-out        "; na=4)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(180)) 
         #
         NoLines = 0   
         for  line in lines
             NoLines = NoLines + 1
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
             en = line.finalLevel.energy - line.initialLevel.energy
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                          * "    "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialElectronEnergy))  * "    "
@@ -305,51 +307,52 @@ module ImpactExcitation
             for  i in 1:length(line.channels)
                 push!( kappaInOutSymmetryList, (line.channels[i].initialKappa, line.channels[i].finalKappa, line.channels[i].symmetry) ) 
             end
-            wa = JAC.TableStrings.kappaKappaSymmetryTupels(95, kappaInOutSymmetryList)
+            wa = TableStrings.kappaKappaSymmetryTupels(95, kappaInOutSymmetryList)
             sb = sa * wa[1];    println( sb )  
             for  i = 2:length(wa)
                 NoLines = NoLines + 1
-                sb = JAC.TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
+                sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
             end
             # Avoid long table printouts
-            if NoLines > 100  println("\n  JAC.ImpactExcitation.displayLines():  A maximum of 100 lines are printed in this table. \n")
+            if NoLines > 100  println("\n  ImpactExcitation.displayLines():  A maximum of 100 lines are printed in this table. \n")
                break   
             end
         end
-        println("  ", JAC.TableStrings.hLine(180))
+        println("  ", TableStrings.hLine(180))
         #
         return( nothing )
     end
 
 
     """
-    `JAC.ImpactExcitation.displayResults(lines::Array{ImpactExcitation.Line,1})`  ... to list all results, energies, cross sections, etc. 
-         of the selected lines. A neat table is printed but nothing is returned otherwise.
+    `ImpactExcitation.displayResults(lines::Array{ImpactExcitation.Line,1})`  
+        ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing is 
+            returned otherwise.
     """
     function  displayResults(lines::Array{ImpactExcitation.Line,1})
         println(" ")
         println("  Electron-impact excitation cross sections:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(113))
+        println("  ", TableStrings.hLine(113))
         sa = "  ";   sb = "  "
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * JAC.TableStrings.hBlank(20)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"; na=3);                                sb = sb * JAC.TableStrings.hBlank(22)
-        sa = sa * JAC.TableStrings.center(12, "f--Energy--i"; na=4)               
-        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=5)
-        sa = sa * JAC.TableStrings.center(12, "Energy e_in"; na=3);              
-        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=3)
-        sa = sa * JAC.TableStrings.center(12, "Energy e_out"; na=3);              
-        sb = sb * JAC.TableStrings.center(12, JAC.TableStrings.inUnits("energy"); na=3)
-        sa = sa * JAC.TableStrings.center(15, "Cross section"; na=3)      
-        sb = sb * JAC.TableStrings.center(15, JAC.TableStrings.inUnits("cross section"); na=3)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(113)) 
+        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=3);                                sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(12, "f--Energy--i"; na=4)               
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=5)
+        sa = sa * TableStrings.center(12, "Energy e_in"; na=3);              
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(12, "Energy e_out"; na=3);              
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(15, "Cross section"; na=3)      
+        sb = sb * TableStrings.center(15, TableStrings.inUnits("cross section"); na=3)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(113)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
             en = line.finalLevel.energy - line.initialLevel.energy
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                          * "    "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialElectronEnergy))  * "    "
@@ -357,7 +360,7 @@ module ImpactExcitation
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection))    * "    "
             println(sa)
         end
-        println("  ", JAC.TableStrings.hLine(113))
+        println("  ", TableStrings.hLine(113))
         #
         return( nothing )
     end

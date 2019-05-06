@@ -1,17 +1,17 @@
 
 """
-`module  JAC.InternalConversion`  ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross 
-                                          sections and rates; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization.
+`module  JAC.InternalConversion`  
+    ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross sections and 
+        rates.
 """
 module InternalConversion 
 
-    using JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
-    global JAC_counter = 0
-
+    using Printf, ..AutoIonization, ..Basics, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
 
     """
-    `struct  InternalConversion.Settings`  ... defines a type for the details and parameters of computing photon-impact 
-                                                   excitation-autoionization pathways |i(N)>  --> |m(N)>  --> |f(N-1)>.
+    `struct  InternalConversion.Settings`  
+        ... defines a type for the details and parameters of computing photon-impact excitation-autoionization 
+            pathways |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
         + multipoles              ::Array{EmMultipole,1}               ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge,1}                  ... Specifies the gauges to be included into the computations.
@@ -31,10 +31,10 @@ module InternalConversion
 
 
     """
-    `JAC.InternalConversion.Settings()`  ... constructor for the default values of photon-impact excitation-autoionizaton settings.
+    `InternalConversion.Settings()`  ... constructor for the default values of photon-impact excitation-autoionizaton settings.
     """
     function Settings()
-        Settings( JAC.EmMultipole[], UseGauge[], false,  false, Tuple{Int64,Int64,Int64}[], 0)
+        Settings( Basics.EmMultipole[], Basics.UseGauge[], false,  false, Tuple{Int64,Int64,Int64}[], 0)
     end
 
 
@@ -52,11 +52,12 @@ module InternalConversion
 
 
     """
-    `struct  JAC.InternalConversion.Channel`  ... defines a type for a photon-impact excitaton & autoionization channel that specifies 
-                                                      all quantum numbers, phases and amplitudes.
+    `struct  InternalConversion.Channel`  
+        ... defines a type for a photon-impact excitaton & autoionization channel that specifies all quantum numbers, 
+            phases and amplitudes.
 
-        + excitationChannel  ::PhotoEmission.Channel       ... Channel that describes the photon-impact excitation process.
-        + augerChannel       ::AutoIonization.Channel  ... Channel that describes the subsequent Auger/autoionization process.
+        + excitationChannel  ::PhotoEmission.Channel     ... Channel that describes the photon-impact excitation process.
+        + augerChannel       ::AutoIonization.Channel    ... Channel that describes the subsequent Auger/autoionization process.
     """
     struct  Channel
         excitationChannel    ::PhotoEmission.Channel
@@ -65,8 +66,9 @@ module InternalConversion
 
 
     """
-    `struct  JAC.InternalConversion.Pathway`  ... defines a type for a photon-impact excitation pathway that may include the definition 
-                                                      of different excitation and autoionization channels and their corresponding amplitudes.
+    `struct  InternalConversion.Pathway`  
+        ... defines a type for a photon-impact excitation pathway that may include the definition of different excitation and 
+            autoionization channels and their corresponding amplitudes.
 
         + initialLevel        ::Level                  ... initial-(state) level
         + intermediateLevel   ::Level                  ... intermediate-(state) level
@@ -92,8 +94,9 @@ module InternalConversion
 
 
     """
-    `JAC.InternalConversion.Pathway()`  ... 'empty' constructor for an photon-impact excitation-autoionization pathway between a specified 
-                                                initial, intermediate and final level.
+    `InternalConversion.Pathway()`  
+        ... 'empty' constructor for an photon-impact excitation-autoionization pathway between a specified initial, intermediate and 
+            final level.
     """
     function Pathway()
         Pathway(Level(), Level(), Level(), 0., 0., 0., false, InternalConversion.Channel[] )
@@ -116,18 +119,18 @@ module InternalConversion
 
 
     """
-    `JAC.InternalConversion.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
-                                              settings::InternalConversion.Settings; output=true)` ... to compute the multiphoton transition 
-         amplitudes and all properties as requested by the given settings. A list of lines::Array{InternalConversion.Lines} is returned.
+    `InternalConversion.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+                                     settings::InternalConversion.Settings; output=true)` 
+        ... to compute the multiphoton transition amplitudes and all properties as requested by the given settings. A list of 
+            lines::Array{InternalConversion.Lines} is returned.
     """
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
                            settings::InternalConversion.Settings; output=true)
         println("")
-        printstyled("JAC.InternalConversion.computeLines(): The computation of internal conversion amplitudes starts now ... \n", color=:light_green)
-        printstyled("-------------------------------------------------------- ---------------------------------------------- \n", color=:light_green)
+        printstyled("InternalConversion.computeLines(): The computation of internal conversion amplitudes starts now ... \n", color=:light_green)
+        printstyled("---------------------------------------------------- ---------------------------------------------- \n", color=:light_green)
         println("")
-        #
-        #
+        #   
         pathways = "Not yet implemented !"
         #
         if    output    return( pathways )

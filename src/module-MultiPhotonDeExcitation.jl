@@ -1,13 +1,11 @@
 
 """
-`module  JAC.MultiPhotonDeExcitation`  ... a submodel of JAC that contains all methods for computing multi-photon excitation and decay rates;
-                                           it is using JAC, JAC.Radial.
+`module  JAC.MultiPhotonDeExcitation`  
+    ... a submodel of JAC that contains all methods for computing multi-photon excitation and decay rates.
 """
 module MultiPhotonDeExcitation
 
-    using Printf, JAC.Basics, JAC.ManyElectron, JAC.Radial
-    global JAC_counter = 0
-
+    using Printf, ..Basics, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
 
     """
     `struct  MultiPhotonDeExcitation.Settings`  ... defines a type for the settings in estimating multi-photon excitation and decay rates.
@@ -31,7 +29,7 @@ module MultiPhotonDeExcitation
 
 
     """
-    `JAC.MultiPhotonDeExcitation.Settings()`  ... constructor for the default values of multi-photon excitation and decay rates.
+    `MultiPhotonDeExcitation.Settings()`  ... constructor for the default values of multi-photon excitation and decay rates.
     """
     function Settings()
         Settings(0, EmMultipole[], UseGauge[], false, false, Tuple{Int64,Int64}[])
@@ -51,8 +49,9 @@ module MultiPhotonDeExcitation
 
 
     """
-    `struct  MultiPhotonDeExcitation.Channel`  ... defines a type for a multi-photon channel to help characterize multi-photon 
-             (single-electron) ionization with well-defined multipolarities.
+    `struct  MultiPhotonDeExcitation.Channel`  
+        ... defines a type for a multi-photon channel to help characterize multi-photon (single-electron) ionization with well-defined 
+            multipolarities.
 
         + multipoles     ::Array{EmMultipole,1}   ... Multipoles of all N incoming/outgoing photons.
         + gauge          ::UseGauge               ... Gauge for dealing with the (coupled) radiation field.
@@ -98,15 +97,16 @@ module MultiPhotonDeExcitation
 
 
     """
-    `JAC.MultiPhotonDeExcitation.computeAmplitudesProperties(line::MultiPhotonDeExcitation.Line, grid::Radial.Grid, 
-                                                             settings::MultiPhotonDeExcitation.Settings)`  ... to compute all amplitudes and 
-         properties of the given line; a line::Einstein.Line is returned for which the amplitudes and properties are now evaluated.
+    `MultiPhotonDeExcitation.computeAmplitudesProperties(line::MultiPhotonDeExcitation.Line, grid::Radial.Grid, 
+                                                             settings::MultiPhotonDeExcitation.Settings)` 
+        ... to compute all amplitudes and properties of the given line; a line::Einstein.Line is returned for which the amplitudes 
+            and properties are now evaluated.
     """
     function  computeAmplitudesProperties(line::MultiPhotonDeExcitation.Line, grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)
         global JAC_counter
         newChannels = MultiPhotonDeExcitation.Channel[]
         for channel in line.channels
-            # matrix    = JAC.MultiPhotonDeExcitation.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
+            # matrix    = MultiPhotonDeExcitation.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
             #                                                                                         line.initialLevel.basis, grid, settings)
             # amplitude = line.finalLevel.mc * matrix * line.initialLevel.mc 
             JAC_counter = JAC_counter + 1
@@ -125,30 +125,31 @@ module MultiPhotonDeExcitation
 
 
     """
-    `JAC.MultiPhotonDeExcitation.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
-                                              settings::MultiPhotonDeExcitation.Settings; output=true)` ... to compute the multiphoton transition 
-         amplitudes and all properties as requested by the given settings. A list of lines::Array{MultiPhotonDeExcitation.Lines} is returned.
+    `MultiPhotonDeExcitation.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+                                          settings::MultiPhotonDeExcitation.Settings; output=true)` 
+        ... to compute the multiphoton transition amplitudes and all properties as requested by the given settings. A list of 
+            lines::Array{MultiPhotonDeExcitation.Lines} is returned.
     """
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
                            settings::MultiPhotonDeExcitation.Settings; output=true)
         println("")
-        printstyled("JAC.MultiPhotonDeExcitation.computeLines(): The computation of multiphoton transition amplitudes starts now ... \n", color=:light_green)
-        printstyled("--------------------------------------------------------------------------------------------------------------- \n", color=:light_green)
+        printstyled("MultiPhotonDeExcitation.computeLines(): The computation of multiphoton transition amplitudes starts now ... \n", color=:light_green)
+        printstyled("----------------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
         #
-        lines = JAC.MultiPhotonDeExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
+        lines = MultiPhotonDeExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.MultiPhotonDeExcitation.displayLines(lines)    end
+        if  settings.printBeforeComputation    MultiPhotonDeExcitation.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = MultiPhotonDeExcitation.Line[]
         for  line in lines
-            newLine = JAC.MultiPhotonDeExcitation.computeAmplitudesProperties(line, grid, settings) 
+            newLine = MultiPhotonDeExcitation.computeAmplitudesProperties(line, grid, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        JAC.MultiPhotonDeExcitation.displayRates(stdout, lines)
+        MultiPhotonDeExcitation.displayRates(stdout, lines)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    JAC.MultiPhotonDeExcitation.displayRates(iostream, lines)   end
+        if  printSummary    MultiPhotonDeExcitation.displayRates(iostream, lines)   end
         #
         if    output    return( lines )
         else            return( nothing )
@@ -157,20 +158,20 @@ module MultiPhotonDeExcitation
 
 
     """
-    `JAC.MultiPhotonDeExcitation.determineChannels(finalLevel::Level, initialLevel::Level, settings::MultiPhotonDeExcitation.Settings)`  
-         ... to determine a list of MultiPhotonDeExcitation.Channel for a transitions from the initial to final level and by taking into account 
-         the particular settings of for this computation; an Array{MultiPhotonDeExcitation.Channel,1} is returned.
+    `MultiPhotonDeExcitation.determineChannels(finalLevel::Level, initialLevel::Level, settings::MultiPhotonDeExcitation.Settings)`  
+        ... to determine a list of MultiPhotonDeExcitation.Channel for a transitions from the initial to final level and by taking into account 
+            the particular settings of for this computation; an Array{MultiPhotonDeExcitation.Channel,1} is returned.
     """
     function determineChannels(finalLevel::Level, initialLevel::Level, settings::MultiPhotonDeExcitation.Settings)
         global JAC_counter
         channels = MultiPhotonDeExcitation.Channel[];   
         symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
-        mpListList = Array{JAC.EmMultipole,1}[];    morePhotons = true;    NoPhotons = 1
+        mpListList = Array{Basics.EmMultipole,1}[];    morePhotons = true;    NoPhotons = 1
         for  mp in settings.multipoles    push!( mpListList, [mp] )    end
         if  NoPhotons + 1 > settings.NoPhotons    error("stop a")      end
         while  morePhotons
             NoPhotons     = NoPhotons + 1
-            newMpListList = Array{JAC.EmMultipole,1}[]
+            newMpListList = Array{Basics.EmMultipole,1}[]
             for  mpList in mpListList
                 for  mp in settings.multipoles
                     mppList = deepcopy(mpList)
@@ -195,10 +196,10 @@ module MultiPhotonDeExcitation
 
 
     """
-    `JAC.MultiPhotonDeExcitation.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::MultiPhotonDeExcitation.Settings)`
-         ... to determine a list of MultiPhotonDeExcitation Line's for transitions between the levels from the given initial- and final-state 
-         multiplets and by taking into account the particular selections and settings for this computation; an Array{MultiPhotonDeExcitation.Line,1}
-         is returned. Apart from the level specification, all physical properties are set to zero during the initialization process.  
+    `MultiPhotonDeExcitation.determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::MultiPhotonDeExcitation.Settings)`
+        ... to determine a list of MultiPhotonDeExcitation Line's for transitions between the levels from the given initial- and final-state 
+            multiplets and by taking into account the particular selections and settings for this computation; an Array{MultiPhotonDeExcitation.Line,1}
+            is returned. Apart from the level specification, all physical properties are set to zero during the initialization process.  
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::MultiPhotonDeExcitation.Settings)
         if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
@@ -212,7 +213,7 @@ module MultiPhotonDeExcitation
                 ##x println("MultiPhotonDeExcitation.determineLines-aa: angular i = $i, f = $f")
                 omega    = abs( initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy)
 
-                channels = JAC.MultiPhotonDeExcitation.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
+                channels = MultiPhotonDeExcitation.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
                 push!( lines, MultiPhotonDeExcitation.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], omega, EmProperty(0., 0.), 
                                                            true, channels) )
             end
@@ -222,75 +223,77 @@ module MultiPhotonDeExcitation
 
 
     """
-    `JAC.MultiPhotonDeExcitation.displayLines(lines::Array{Einstein.Line,1})`  ... to display a list of lines and channels that have been 
-         selected due to the prior settings. A neat table of all selected transitions and energies is printed but nothing is returned otherwise.
+    `MultiPhotonDeExcitation.displayLines(lines::Array{Einstein.Line,1})`  
+        ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all selected 
+            transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{MultiPhotonDeExcitation.Line,1})
         println(" ")
         println("  Selected multi-photon excitation or decay lines:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(165))
+        println("  ", TableStrings.hLine(165))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * JAC.TableStrings.hBlank(20)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * JAC.TableStrings.hBlank(22)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=4);              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
-        sa = sa * JAC.TableStrings.flushleft(70, "List of multipoles"; na=4)            
-        sb = sb * JAC.TableStrings.flushleft(70, "Used gauge [multipolo_1, multipole_2, ...]"; na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(165)) 
+        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(14, "Energy"; na=4);              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.flushleft(70, "List of multipoles"; na=4)            
+        sb = sb * TableStrings.flushleft(70, "Used gauge [multipolo_1, multipole_2, ...]"; na=4)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(165)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.photonEnergy)) * "    "
-            mpGaugeList = Tuple{UseGauge, Array{JAC.EmMultipole,1}}[]
+            mpGaugeList = Tuple{UseGauge, Array{Basics.EmMultipole,1}}[]
             for  i in 1:length(line.channels)
                 push!( mpGaugeList, (line.channels[i].gauge, line.channels[i].multipoles) )
             end
-            wa = JAC.TableStrings.gaugeMultipolesTupels(105, mpGaugeList)
+            wa = TableStrings.gaugeMultipolesTupels(105, mpGaugeList)
             if  length(wa) > 0    sb = sa * wa[1];    println( sb )    end  
             for  i = 2:length(wa)
-                sb = JAC.TableStrings.hBlank( length(sa) );    sb = sb * wa[i];    println( sb )
+                sb = TableStrings.hBlank( length(sa) );    sb = sb * wa[i];    println( sb )
             end
         end
-        println("  ", JAC.TableStrings.hLine(165))
+        println("  ", TableStrings.hLine(165))
         #
         return( nothing )
     end
 
 
     """
-    `JAC.MultiPhotonDeExcitation.displayRates(stream::IO, lines::Array{MultiPhotonDeExcitation.Line,1})`  ... to display all results, energies, rates, etc. 
-         of the selected lines. A neat table is printed but nothing is returned otherwise.
+    `MultiPhotonDeExcitation.displayRates(stream::IO, lines::Array{MultiPhotonDeExcitation.Line,1})`  
+        ... to display all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is 
+            returned otherwise.
     """
     function  displayRates(stream::IO, lines::Array{MultiPhotonDeExcitation.Line,1})
         println(stream, " ")
         println(stream, "  Multi-photon excitation or decay lines:")
         println(stream, " ")
-        println(stream, "  ", JAC.TableStrings.hLine(95))
+        println(stream, "  ", TableStrings.hLine(95))
         sa = "  ";   sb = "  "
-        sa = sa * JAC.TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * JAC.TableStrings.hBlank(20)
-        sa = sa * JAC.TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * JAC.TableStrings.hBlank(22)
-        sa = sa * JAC.TableStrings.center(14, "Energy"; na=4);              
-        sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=3)
-        sa = sa * JAC.TableStrings.center(32, "Cou -- Rate -- Bab"; na=4);              
-        sb = sb * JAC.TableStrings.center(32, JAC.TableStrings.inUnits("rate") * "           " * JAC.TableStrings.inUnits("rate"); na=4)
+        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(14, "Energy"; na=4);              
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(32, "Cou -- Rate -- Bab"; na=4);              
+        sb = sb * TableStrings.center(32, TableStrings.inUnits("rate") * "           " * TableStrings.inUnits("rate"); na=4)
 
-        println(stream, sa);    println(stream, b);    println(stream, "  ", JAC.TableStrings.hLine(95)) 
+        println(stream, sa);    println(stream, b);    println(stream, "  ", TableStrings.hLine(95)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(18, JAC.TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))         * "    "
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("rate: from atomic",   line.totalRate.Coulomb))    * "    "
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("rate: from atomic",   line.totalRate.Babushkin))  * "    "
             println(stream, sa )
         end
-        println(stream, "  ", JAC.TableStrings.hLine(95))
+        println(stream, "  ", TableStrings.hLine(95))
         #
         return( nothing )
     end

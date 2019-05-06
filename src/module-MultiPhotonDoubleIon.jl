@@ -1,16 +1,16 @@
 
 """
-`module  JAC.MultiPhotonDoubleIon`  ... a submodel of JAC that contains all methods for computing multi-photon two-electron (double) ionization  
-                                        cross sections; it is using JAC, JAC.ManyElectron.
+`module  JAC.MultiPhotonDoubleIon`  
+... a submodel of JAC that contains all methods for computing multi-photon two-electron (double) ionization cross sections.
 """
 module MultiPhotonDoubleIon
 
-    using JAC.Basics, JAC.ManyElectron, JAC.Radial
+    using ..Basics, ..ManyElectron, ..Radial
 
 
     """
-    `struct  MultiPhotonDoubleIon.Settings`  ... defines a type for the settings in estimating multi-photon two-electron (double) 
-                                                 ionization cross sections
+    `struct  MultiPhotonDoubleIon.Settings`  
+        ... defines a type for the settings in estimating multi-photon two-electron (double) ionization cross sections.
 
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
@@ -33,7 +33,7 @@ module MultiPhotonDoubleIon
 
 
     """
-    `JAC.MultiPhotonDoubleIon.Settings()`  ... constructor for the default values of multi-photon two-electron (double) ionization estimates.
+    `MultiPhotonDoubleIon.Settings()`  ... constructor for the default values of multi-photon two-electron (double) ionization estimates.
     """
     function Settings()
         Settings(EmMultipole[], UseGauge[], 0, Float64[], false, false, Tuple{Int64,Int64}[])
@@ -54,8 +54,9 @@ module MultiPhotonDoubleIon
 
 
     """
-    `struct  MultiPhotonDoubleIon.Channel`  ... defines a type for a multi-photon channel to help characterize multi-photon (single-electron) 
-                                                ionization with well-defined multipolarities.
+    `struct  MultiPhotonDoubleIon.Channel`  
+        ... defines a type for a multi-photon channel to help characterize multi-photon (single-electron) ionization with 
+            well-defined multipolarities.
 
         + NoPhotons      ::EmMultipole            ... Number of photons in the multi-photon ionization
         + multipoles     ::Array{EmMultipole,1}   ... Multipoles of all N incoming photons.
@@ -93,8 +94,8 @@ module MultiPhotonDoubleIon
         + NoPhotons        ::Int64           ... Number of photons in the multi-photon process
         + photonEnergy     ::Float64         ... Energy of the incoming photons; all photons are assumed to have equal energy.
         + crossSection     ::EmProperty      ... Cross section for this multi-photon ionization.
-        + hasChannels      ::Bool            ... Determines whether the individual (sub-) channels are defined in terms of their multipolarities, 
-                                                 etc., or not.
+        + hasChannels      ::Bool            ... Determines whether the individual (sub-) channels are defined in terms of 
+                                                 their multipolarities, etc., or not.
         + channels         ::Array{MultiPhotonDoubleIon.Channel,1}  ... List of MultiPhotonDoubleIon.Channels of this line.
     """
     struct  Line
@@ -122,15 +123,16 @@ module MultiPhotonDoubleIon
 
 
     """
-    `JAC.MultiPhotonDoubleIon.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
-                                              settings::MultiPhotonDoubleIon.Settings; output=true)` ... to compute the multiphoton transition 
-         amplitudes and all properties as requested by the given settings. A list of lines::Array{MultiPhotonDoubleIon.Lines} is returned.
+    `MultiPhotonDoubleIon.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+                                       settings::MultiPhotonDoubleIon.Settings; output=true)` 
+        ... to compute the multiphoton transition amplitudes and all properties as requested by the given settings. 
+            A list of lines::Array{MultiPhotonDoubleIon.Lines} is returned.
     """
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
                            settings::MultiPhotonDoubleIon.Settings; output=true)
         println("")
-        printstyled("JAC.MultiPhotonDoubleIon.computeLines(): The computation of multi-photon double ionization amplitudes starts now ... \n", color=:light_green)
-        printstyled("-------------------------------------------------------- ---------------------------------------------------------- \n", color=:light_green)
+        printstyled("MultiPhotonDoubleIon.computeLines(): The computation of multi-photon double ionization amplitudes starts now ... \n", color=:light_green)
+        printstyled("----------------------------------------------------- ---------------------------------------------------------- \n", color=:light_green)
         println("")
         #
         #

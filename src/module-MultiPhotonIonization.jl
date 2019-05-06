@@ -1,15 +1,15 @@
 
 """
-`module  JAC.MultiPhotonIonization`  ... a submodel of JAC that contains all methods for computing multi-photon (single-electron) ionization  
-                                         cross sections; it is using JAC.Basics, JAC.ManyElectron.
+`module  JAC.MultiPhotonIonization`  
+    ... a submodel of JAC that contains all methods for computing multi-photon (single-electron) ionization cross sections.
 """
 module MultiPhotonIonization
 
-    using JAC.Basics, JAC.ManyElectron, JAC.Radial
+    using ..Basics, ..ManyElectron, ..Radial
 
     """
-    `struct  MultiPhotonIonization.Settings`  ... defines a type for the settings in estimating multi-photon (single-electron) ionization 
-                                                  cross sections
+    `struct  MultiPhotonIonization.Settings`  
+        ... defines a type for the settings in estimating multi-photon (single-electron) ionization cross sections
 
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
@@ -30,7 +30,7 @@ module MultiPhotonIonization
 
 
     """
-    `JAC.MultiPhotonIonization.Settings()`  ... constructor for the default values of multi-photon (single-electron) ionization estimates.
+    `MultiPhotonIonization.Settings()`  ... constructor for the default values of multi-photon (single-electron) ionization estimates.
     """
     function Settings()
         Settings(EmMultipole[], UseGauge[], Float64[], false, false, Tuple{Int64,Int64}[])
@@ -50,8 +50,9 @@ module MultiPhotonIonization
 
 
     """
-    `struct  MultiPhotonIonization.Channel`  ... defines a type for a multi-photon channel to help characterize multi-photon (single-electron) 
-                                                 ionization with well-defined multipolarities.
+    `struct  MultiPhotonIonization.Channel`  
+        ... defines a type for a multi-photon channel to help characterize multi-photon (single-electron)ionization with 
+            well-defined multipolarities.
 
         + NoPhotons      ::EmMultipole            ... Number of photons in the multi-photon ionization
         + multipoles     ::Array{EmMultipole,1}   ... Multipoles of all N incoming photons.
@@ -106,15 +107,16 @@ module MultiPhotonIonization
 
 
     """
-    `JAC.MultiPhotonIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
-                                              settings::MultiPhotonIonization.Settings; output=true)` ... to compute the multiphoton transition 
-         amplitudes and all properties as requested by the given settings. A list of lines::Array{MultiPhotonIonization.Lines} is returned.
+    `MultiPhotonIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+                                              settings::MultiPhotonIonization.Settings; output=true)` 
+        ... to compute the multiphoton transition amplitudes and all properties as requested by the given settings. 
+            A list of lines::Array{MultiPhotonIonization.Lines} is returned.
     """
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
                            settings::MultiPhotonIonization.Settings; output=true)
         println("")
-        printstyled("JAC.MultiPhotonIonization.computeLines(): The computation of multi-photon ionization amplitudes starts now ... \n", color=:light_green)
-        printstyled("-------------------------------------------------------- ----------------------------------------------------- \n", color=:light_green)
+        printstyled("MultiPhotonIonization.computeLines(): The computation of multi-photon ionization amplitudes starts now ... \n", color=:light_green)
+        printstyled("---------------------------------------------------- ----------------------------------------------------- \n", color=:light_green)
         println("")
         #
         #

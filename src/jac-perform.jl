@@ -64,7 +64,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             if output    results = Base.merge( results, Dict("Fluorescence and AutoIonization yield outcomes:" => outcome) )   end
         end
         if  JAC.Green          in computation.properties   
-            outcome = JAC.GreenFunction.computeOutcomes(multiplet, nModel, computation.grid, computation.greenSettings)         
+            outcome = JAC.GreenFunction.computeRepresentation(multiplet, nModel, computation.grid, computation.greenSettings)         
             if output    results = Base.merge( results, Dict("Green function outcomes:" => outcome) )         end
         end
         if  JAC.Polarity       in computation.properties   

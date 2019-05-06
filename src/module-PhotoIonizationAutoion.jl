@@ -1,18 +1,16 @@
 
 """
-`module  JAC.PhotoIonizationAutoion`  ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross 
-                                          sections and rates; it is using JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, 
-                                          JAC.AutoIonization.
+`module  JAC.PhotoIonizationAutoion`  
+    ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross sections and rates.
 """
 module PhotoIonizationAutoion 
 
-    using JAC.Basics, JAC.ManyElectron, JAC.Radial, JAC.PhotoEmission, JAC.AutoIonization
-    global JAC_counter = 0
-
+    using ..AutoIonization, ..Basics, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
 
     """
-    `struct  PhotoIonizationAutoion.Settings`  ... defines a type for the details and parameters of computing photon-impact 
-                                                   excitation-autoionization pathways |i(N)>  --> |m(N)>  --> |f(N-1)>.
+    `struct  PhotoIonizationAutoion.Settings`  
+        ... defines a type for the details and parameters of computing photon-impact excitation-autoionization pathways 
+            |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
         + multipoles              ::Array{EmMultipole,1}               ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge,1}                  ... Specifies the gauges to be included into the computations.
@@ -32,10 +30,10 @@ module PhotoIonizationAutoion
 
 
     """
-    `JAC.PhotoIonizationAutoion.Settings()`  ... constructor for the default values of photon-impact excitation-autoionizaton settings.
+    `PhotoIonizationAutoion.Settings()`  ... constructor for the default values of photon-impact excitation-autoionizaton settings.
     """
     function Settings()
-        Settings( JAC.EmMultipole[], UseGauge[], false,  false, Tuple{Int64,Int64,Int64}[], 0)
+        Settings( Basics.EmMultipole[], Basics.UseGauge[], false,  false, Tuple{Int64,Int64,Int64}[], 0)
     end
 
 
@@ -53,11 +51,12 @@ module PhotoIonizationAutoion
 
 
     """
-    `struct  JAC.PhotoIonizationAutoion.Channel`  ... defines a type for a photon-impact excitaton & autoionization channel that specifies 
-                                                      all quantum numbers, phases and amplitudes.
+    `struct  PhotoIonizationAutoion.Channel`  
+        ... defines a type for a photon-impact excitaton & autoionization channel that specifies all quantum numbers, phases and 
+            amplitudes.
 
         + excitationChannel  ::PhotoEmission.Channel       ... Channel that describes the photon-impact excitation process.
-        + augerChannel       ::AutoIonization.Channel           ... Channel that describes the subsequent Auger/autoionization process.
+        + augerChannel       ::AutoIonization.Channel      ... Channel that describes the subsequent Auger/autoionization process.
     """
     struct  Channel
         excitationChannel    ::PhotoEmission.Channel
@@ -66,19 +65,19 @@ module PhotoIonizationAutoion
 
 
     """
-    `struct  JAC.PhotoIonizationAutoion.Pathway`  ... defines a type for a photon-impact excitation pathway that may include the definition 
+    `struct  PhotoIonizationAutoion.Pathway`  ... defines a type for a photon-impact excitation pathway that may include the definition 
                                                       of different excitation and autoionization channels and their corresponding amplitudes.
 
-        + initialLevel        ::Level                  ... initial-(state) level
-        + intermediateLevel   ::Level                  ... intermediate-(state) level
-        + finalLevel          ::Level                  ... final-(state) level
-        + photonEnergy        ::Float64                 ... energy of the (incoming) electron
-        + electronEnergy      ::Float64                 ... energy of the (finally outgoing, scattered) electron
-        + crossSection        ::EmProperty              ... total cross section of this pathway
-        + hasChannels         ::Bool                    ... Determines whether the individual excitation and autoionization channels are defined 
-                                                            in terms of their multipole, gauge, free-electron kappa, phases and the total 
-                                                            angular momentum/parity as well as the amplitude, or not.
-        + channels            ::Array{PhotoIonizationAutoion.Channel,1}  ... List of channels of this pathway.
+        + initialLevel        ::Level           ... initial-(state) level
+        + intermediateLevel   ::Level           ... intermediate-(state) level
+        + finalLevel          ::Level           ... final-(state) level
+        + photonEnergy        ::Float64         ... energy of the (incoming) electron
+        + electronEnergy      ::Float64         ... energy of the (finally outgoing, scattered) electron
+        + crossSection        ::EmProperty      ... total cross section of this pathway
+        + hasChannels         ::Bool            ... Determines whether the individual excitation and autoionization channels 
+                                                    are defined in terms of their multipole, gauge, free-electron kappa, 
+                                                    phases and the total angular momentum/parity as well as the amplitude, or not.
+        + channels            ::Array{PhotoIonizationAutoion.Channel,1}     ... List of channels of this pathway.
     """
     struct  Pathway
         initialLevel          ::Level
@@ -93,8 +92,9 @@ module PhotoIonizationAutoion
 
 
     """
-    `JAC.PhotoIonizationAutoion.Pathway()`  ... 'empty' constructor for an photon-impact excitation-autoionization pathway between a specified 
-                                                initial, intermediate and final level.
+    `PhotoIonizationAutoion.Pathway()`  
+        ... 'empty' constructor for an photon-impact excitation-autoionization pathway between a specified initial, intermediate and 
+            final level.
     """
     function Pathway()
         Pathway(Level(), Level(), Level(), 0., 0., 0., false, PhotoIonizationAutoion.Channel[] )
@@ -117,16 +117,16 @@ module PhotoIonizationAutoion
 
 
     """
-    `JAC.PhotoIonizationAutoion.computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
-                                                grid::Radial.Grid, settings::PhotoIonizationAutoion.Settings; output=true)`  ... to compute the 
-         photo-excitation-fluorescence amplitudes and all properties as requested by the given settings. A list of 
-         lines::Array{PhotoIonizationAutoion.Lines} is returned.
+    `PhotoIonizationAutoion.computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
+                                            grid::Radial.Grid, settings::PhotoIonizationAutoion.Settings; output=true)`  
+        ... to compute the photo-excitation-fluorescence amplitudes and all properties as requested by the given settings. A list of 
+            lines::Array{PhotoIonizationAutoion.Lines} is returned.
     """
     function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
                               settings::PhotoIonizationAutoion.Settings; output=true)
         println("")
-        printstyled("JAC.PhotoIonizationAutoion.computePathways(): The computation of photo-excitation-fluorescence amplitudes starts now ... \n", color=:light_green)
-        printstyled("------------------------------------------------------------------------------------------------------------------------ \n", color=:light_green)
+        printstyled("PhotoIonizationAutoion.computePathways(): The computation of photo-excitation-fluorescence amplitudes starts now ... \n", color=:light_green)
+        printstyled("-------------------------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
         #
         println("Not yet implemented: Data structures and properties still need to be worked out.")

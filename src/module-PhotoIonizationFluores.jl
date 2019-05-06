@@ -7,8 +7,6 @@
 module PhotoIonizationFluores 
 
     using ..AutoIonization, ..Basics, ..ManyElectron, ..Radial, ..Nuclear, ..PhotoEmission
-    global JAC_counter = 0
-
 
     """
     `struct  PhotoIonizationFluores.Settings`  

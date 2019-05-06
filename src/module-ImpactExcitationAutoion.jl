@@ -1,18 +1,17 @@
 
 """
-`module  JAC.ImpactExcitationAutoion`  ... a submodel of JAC that contains all methods for computing electron impact excitation cross 
-                                           sections and collision strengths; it is using JAC, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, 
-                                           JAC.AutoIonization.
+`module  JAC.ImpactExcitationAutoion`  
+    ... a submodel of JAC that contains all methods for computing electron impact excitation cross sections and 
+        collision strengths.
 """
 module ImpactExcitationAutoion 
 
-    using Printf, JAC, JAC.ManyElectron, JAC.Radial, JAC.ImpactExcitation, JAC.AutoIonization
-    global JAC_counter = 0
-
+    using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..ManyElectron, ..Radial, ..ImpactExcitation, ..TableStrings
 
     """
-    `struct  ImpactExcitationAutoion.Settings`  ... defines a type for the details and parameters of computing electron-impact 
-                                                    excitation-autoionization pathways |i(N)>  --> |m(N)>  --> |f(N-1)>.
+    `struct  ImpactExcitationAutoion.Settings`  
+        ... defines a type for the details and parameters of computing electron-impact excitation-autoionization pathways 
+            |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
         + electronEnergies        ::Array{Float64,1}                   ... List of impact-energies of the incoming elecgtrons.
         + printBeforeComputation  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
@@ -30,7 +29,7 @@ module ImpactExcitationAutoion
 
 
     """
-    `JAC.ImpactExcitationAutoion.Settings()`  ... constructor for the default values of electron-impact excitation-autoionizaton settings.
+    `ImpactExcitationAutoion.Settings()`  ... constructor for the default values of electron-impact excitation-autoionizaton settings.
     """
     function Settings()
        Settings( Float64[], false, false, Tuple{Int64,Int64,Int64}[], 0)
@@ -49,21 +48,23 @@ module ImpactExcitationAutoion
 
 
     """
-    `struct  ImpactExcitationAutoion.Channel`  ... defines a type for a electron-impact excitaton & autoionization channel that specifies 
-                                                   all quantum numbers, phases and amplitudes.
+    `struct  ImpactExcitationAutoion.Channel`  
+        ... defines a type for a electron-impact excitaton & autoionization channel that specifies all quantum numbers, phases and 
+            amplitudes.
 
-        + excitationChannel  ::JAC.ImpactExcitation.Channel      ... Channel that describes the electron-impact excitation process.
-        + augerChannel       ::JAC.AutoIonization.Channel                 ... Channel that describes the subsequent Auger/autoionization process.
+        + excitationChannel  ::ImpactExcitation.Channel      ... Channel that describes the electron-impact excitation process.
+        + augerChannel       ::AutoIonization.Channel        ... Channel that describes the subsequent Auger/autoionization process.
     """
     struct  Channel
-        excitationChannel    ::JAC.ImpactExcitation.Channel
-        augerChannel         ::JAC.AutoIonization.Channel
+        excitationChannel    ::ImpactExcitation.Channel
+        augerChannel         ::AutoIonization.Channel
     end 
 
 
     """
-    `struct  ImpactExcitationAutoion.Pathway`  ... defines a type for a electron-impact excitation pathway that may include the definition 
-                                                   of different excitation and autoionization channels and their corresponding amplitudes.
+    `struct  ImpactExcitationAutoion.Pathway`  
+        ... defines a type for a electron-impact excitation pathway that may include the definition of different excitation and 
+            autoionization channels and their corresponding amplitudes.
 
         + initialLevel        ::Level       ... initial-(state) level
         + intermediateLevel   ::Level       ... intermediate-(state) level
@@ -72,9 +73,9 @@ module ImpactExcitationAutoion
         + electronOutEnergy   ::Float64     ... energy of the (outgoing, scattered) electron
         + electronAugerEnergy ::Float64     ... energy of the (emitted Auger) electron
         + crossSection        ::Float64     ... total cross section of this pathway
-        + hasChannels         ::Bool        ... Determines whether the individual excitation and autoionization channels are defined in terms of 
-                                                their free-electron kappa's, phases and the total angular momentum/parity as well as the 
-                                                amplitude, or not.
+        + hasChannels         ::Bool        ... Determines whether the individual excitation and autoionization 
+                                                channels are defined in terms of their free-electron kappa's, phases 
+                                                and the total angular momentum/parity as well as the amplitude, or not.
         + channels            ::Array{ImpactExcitationAutoion.Channel,1}  ... List of channels of this pathway.
     """
     struct  Pathway
@@ -91,8 +92,9 @@ module ImpactExcitationAutoion
 
 
     """
-    `JAC.ImpactExcitationAutoion.Pathway()`  ... constructor for an electron-impact excitation-autoionization pathway between a specified 
-         initial, intermediate and final level.
+    `ImpactExcitationAutoion.Pathway()`  
+        ... constructor for an electron-impact excitation-autoionization pathway between a specified initial, intermediate and 
+            final level.
     """
     function Line()
         Pathway(Level(), Level(), Level(), 0., 0., 0., 0., false, ImpactExcitationAutoion.Channel[] )
@@ -115,10 +117,10 @@ module ImpactExcitationAutoion
 
 
     """
-    `JAC.ImpactExcitationAutoion.computeAmplitudesProperties(pathway::ImpactExcitationAutoion.Pathway, grid::Radial.Grid, 
-                                                             settings::ImpactExcitationAutoion.Settings)`  ... to compute all amplitudes and 
-         properties of the given line; a line::ImpactExcitationAutoion.Line is returned for which the amplitudes and properties have now been 
-         evaluated.
+    `ImpactExcitationAutoion.computeAmplitudesProperties(pathway::ImpactExcitationAutoion.Pathway, grid::Radial.Grid, 
+                                                         settings::ImpactExcitationAutoion.Settings)`  
+        ... to compute all amplitudes and properties of the given line; a line::ImpactExcitationAutoion.Line is returned for 
+            which the amplitudes and properties have now been evaluated.
     """
     function  computeAmplitudesProperties(pathway::ImpactExcitationAutoion.Pathway, grid::Radial.Grid, settings::ImpactExcitationAutoion.Settings)
         global JAC_counter
@@ -134,7 +136,7 @@ module ImpactExcitationAutoion
             # Compute the transition matrix for the continuum and the initial-state basis
             JAC_counter = JAC_counter + 1
             if   JAC_counter < 20   println("ImpactExcitationAutoion.computeAmplitudesProperties-ac: warning ... no trans-matrix computed.") end
-            # matrix    = JAC.PhotoExcitationAutoion.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
+            # matrix    = PhotoExcitationAutoion.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
             #                                                      line.initialLevel.basis, grid, settings)
             # amplitude = line.finalLevel.mc * matrix * line.initialLevel.mc 
             amplitude = 1.0 
@@ -156,29 +158,29 @@ module ImpactExcitationAutoion
 
 
     """
-    `JAC.ImpactExcitationAutoion.computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
-                                                 grid::Radial.Grid, settings::ImpactExcitationAutoion.Settings; output=true)`  ... to compute the 
-         electron-impact-excitation-autoionization amplitudes and all properties as requested by the given settings. A list of 
-         lines::Array{ImpactExcitationAutoion.Lines} is returned.
+    `ImpactExcitationAutoion.computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
+                                             grid::Radial.Grid, settings::ImpactExcitationAutoion.Settings; output=true)`  
+        ... to compute the electron-impact-excitation-autoionization amplitudes and all properties as requested by the given settings. 
+            A list of lines::Array{ImpactExcitationAutoion.Lines} is returned.
     """
     function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
                               settings::ImpactExcitationAutoion.Settings; output=true)
         println("")
-        printstyled("JAC.ImpactExcitationAutoion.computePathways(): The computation of e-impact excitation-autoionization cross sections starts now ... \n", color=:light_green)
-        printstyled("---------------------------------------------------------------------------------------------------------------------------------- \n", color=:light_green)
+        printstyled("ImpactExcitationAutoion.computePathways(): The computation of e-impact excitation-autoionization cross sections starts now ... \n", color=:light_green)
+        printstyled("------------------------------------------------------------------------------------------------------------------------------ \n", color=:light_green)
         println("")
         #
-        pathways = JAC.ImpactExcitationAutoion.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
+        pathways = ImpactExcitationAutoion.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.ImpactExcitationAutoion.displayPathways(pathways)    end
+        if  settings.printBeforeComputation    ImpactExcitationAutoion.displayPathways(pathways)    end
         # Calculate all amplitudes and requested properties
         newPathways = ImpactExcitationAutoion.Pathway[]
         for  pathway in pathways
-            newPathway = JAC.ImpactExcitationAutoion.computeAmplitudesProperties(pathway, grid, settings) 
+            newPathway = ImpactExcitationAutoion.computeAmplitudesProperties(pathway, grid, settings) 
             push!( newPathways, newPathway)
         end
         # Print all results to screen
-        JAC.ImpactExcitationAutoion.displayResults(pathways)
+        ImpactExcitationAutoion.displayResults(pathways)
         #
         if    output    return( pathways )
         else            return( nothing )
@@ -187,11 +189,12 @@ module ImpactExcitationAutoion
 
 
     """
-    `JAC.ImpactExcitationAutoion.determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
-                                                   settings::ImpactExcitationAutoion.Settings)`  ... to determine a list of electron-impact
-         excitation-autoionization pathways between the levels from the given initial-, intermediate- and final-state multiplets and by taking 
-         into account the particular selections and settings for this computation; an Array{ImpactExcitationAutoion.Line,1} is returned. Apart 
-         from the level specification, all physical properties are set to zero during the initialization process.  
+    `ImpactExcitationAutoion.determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
+                                               settings::ImpactExcitationAutoion.Settings)`  
+        ... to determine a list of electron-impact excitation-autoionization pathways between the levels from the given initial-, 
+            intermediate- and final-state multiplets and by taking into account the particular selections and settings for this 
+            computation; an Array{ImpactExcitationAutoion.Line,1} is returned. Apart from the level specification, all physical 
+            properties are set to zero during the initialization process.  
     """
     function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                 settings::ImpactExcitationAutoion.Settings)
@@ -210,7 +213,7 @@ module ImpactExcitationAutoion
                         eAEnergy   = intermediateMultiplet.levels[n].energy - finalMultiplet.levels[f].energy
                         if  eOutEnergy < 0.   ||   eAEnergy < 0    continue    end
 
-                        channels = JAC.ImpactExcitationAutoion.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], 
+                        channels = ImpactExcitationAutoion.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], 
                                                                                  initialMultiplet.levels[i], settings) 
                         push!( pathways, ImpactExcitationAutoion.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[n], 
                                                                          finalMultiplet.levels[f], eInEnergy, eOutEnergy, eAEnergy, 
@@ -224,11 +227,11 @@ module ImpactExcitationAutoion
 
 
     """
-    `JAC.ImpactExcitationAutoion.determineChannels(finalLevel::Level, intermediateLevel::Level, initialLevel::Level, 
-                                                   settings::ImpactExcitationAutoion.Settings)`  ... to determine a list of electron-impact
-                                                   excitation-autoionization Channels for a pathway from the initial to an intermediate and 
-                                                   to a final level, and by taking into account the particular settings of for this computation; 
-                                                   an Array{ImpactExcitationAutoion.Channel,1} is returned.
+    `ImpactExcitationAutoion.determineChannels(finalLevel::Level, intermediateLevel::Level, initialLevel::Level, 
+                                                   settings::ImpactExcitationAutoion.Settings)`  
+        ... to determine a list of electron-impact excitation-autoionization Channels for a pathway from the initial to an 
+            intermediate and to a final level, and by taking into account the particular settings of for this computation; 
+            an Array{ImpactExcitationAutoion.Channel,1} is returned.
     """
     function determineChannels(finalLevel::Level, intermediateLevel::Level, initialLevel::Level, settings::ImpactExcitationAutoion.Settings)
         symi      = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
@@ -237,9 +240,9 @@ module ImpactExcitationAutoion
         eChannels = ImpactExcitation.Channel[];   
         for  inKappa = -(settings.maxKappa+1):settings.maxKappa
             if  inKappa == 0    continue    end
-            symtList = JAC.AngularMomentum.allowedTotalSymmetries(symi, inKappa)
+            symtList = AngularMomentum.allowedTotalSymmetries(symi, inKappa)
             for  symt in symtList
-                outKappaList = JAC.AngularMomentum.allowedKappaSymmetries(symt, symn)
+                outKappaList = AngularMomentum.allowedKappaSymmetries(symt, symn)
                 for  outKappa in outKappaList
                     push!(eChannels, ImpactExcitation.Channel( inKappa, outKappa, symt, 0., 0.,Complex(0.)) )
                 end
@@ -248,7 +251,7 @@ module ImpactExcitationAutoion
 
         # Determine next the AutoIonization channels
         aChannels = AutoIonization.Channel[];   
-        kappaList = JAC.AngularMomentum.allowedKappaSymmetries(symn, symf)
+        kappaList = AngularMomentum.allowedKappaSymmetries(symn, symf)
         for  kappa in kappaList
             push!(aChannels, AutoIonization.Channel(kappa, symn, 0., Complex(0.)) )
         end
@@ -266,31 +269,31 @@ module ImpactExcitationAutoion
 
 
     """
-    `JAC.ImpactExcitationAutoion.displayPathways(pathways::Array{ImpactExcitationAutoion.Line,1})`  ... to display a list of pathways and 
-         channels that have been selected due to the prior settings. A neat table of all selected transitions and energies is printed but 
-         nothing is returned otherwise.
+    `ImpactExcitationAutoion.displayPathways(pathways::Array{ImpactExcitationAutoion.Line,1})`  
+        ... to display a list of pathways and channels that have been selected due to the prior settings. A neat table of all 
+            selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayPathways(pathways::Array{ImpactExcitationAutoion.Pathway,1})
         println(" ")
         println("  Selected electron-impact excitation-autoionization pathways:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(179))
+        println("  ", TableStrings.hLine(179))
         sa = "     ";   sb = "     "
-        sa = sa * JAC.TableStrings.center(23, "Levels"; na=2);            sb = sb * JAC.TableStrings.center(23, "i  --  m  --  f"; na=2);          
-        sa = sa * JAC.TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * JAC.TableStrings.center(23, "i  --  m  --  f"; na=3);
-        sa = sa * JAC.TableStrings.center(58, "Energies  " * JAC.TableStrings.inUnits("energy");           na=4);              
-        sb = sb * JAC.TableStrings.center(58, "  m--i        m--f     e^-(in)     e^-(out)    e^-(Auger)"; na=4)
-        sa = sa * JAC.TableStrings.flushleft(57, "List of partial waves and total symmetries"; na=4)  
-        sb = sb * JAC.TableStrings.flushleft(57, "(partial_in -> partial_out) J_total^P [partial_Auger] "; na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(179)) 
+        sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);          
+        sa = sa * TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=3);
+        sa = sa * TableStrings.center(58, "Energies  " * TableStrings.inUnits("energy");           na=4);              
+        sb = sb * TableStrings.center(58, "  m--i        m--f     e^-(in)     e^-(out)    e^-(Auger)"; na=4)
+        sa = sa * TableStrings.flushleft(57, "List of partial waves and total symmetries"; na=4)  
+        sb = sb * TableStrings.flushleft(57, "(partial_in -> partial_out) J_total^P [partial_Auger] "; na=4)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(179)) 
         #   
         for  pathway in pathways
             sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                            msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
                            fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
+            sa = sa * TableStrings.center(23, TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
+            sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
             en_mi = pathway.intermediateLevel.energy - pathway.initialLevel.energy
             en_mf = pathway.intermediateLevel.energy - pathway.finalLevel.energy
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", en_mi))   * "  "
@@ -303,10 +306,10 @@ module ImpactExcitationAutoion
                 eChannel = pathway.channels[i].excitationChannel;    aChannel = pathway.channels[i].augerChannel;  
                 push!( kappaSymmetryList, (eChannel.initialKappa, eChannel.finalKappa, aChannel.kappa, eChannel.symmetry) )
             end
-            wa = JAC.TableStrings.kappaKappaKappaSymmetryTupels(57, kappaSymmetryList)
+            wa = TableStrings.kappaKappaKappaSymmetryTupels(57, kappaSymmetryList)
             if  length(wa) > 0    sb = sa * wa[1];    println( sb )    end  
             for  i = 2:length(wa)
-                sb = JAC.TableStrings.hBlank( length(sa) )  
+                sb = TableStrings.hBlank( length(sa) )  
                 if       i == 7   sb = sb * "... " * string( length(kappaSymmetryList) ) * " in total"
                 elseif   i >  7   continue
                 else     sb = sb * wa[i]
@@ -314,37 +317,38 @@ module ImpactExcitationAutoion
                 println( sb )
             end
         end
-        println("  ", JAC.TableStrings.hLine(179))
+        println("  ", TableStrings.hLine(179))
         #
         return( nothing )
     end
 
 
     """
-    `JAC.ImpactExcitationAutoion.displayResults(pathways::Array{ImpactExcitationAutoion.Line,1})`  ... to list all results, energies, 
-         cross sections, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
+    `ImpactExcitationAutoion.displayResults(pathways::Array{ImpactExcitationAutoion.Line,1})`  
+        ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing is returned 
+            otherwise.
     """
     function  displayResults(pathways::Array{ImpactExcitationAutoion.Pathway,1})
         println(" ")
         println("  Electron-impact excitation-autoionization cross sections:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(133))
+        println("  ", TableStrings.hLine(133))
         sa = "     ";   sb = "     "
-        sa = sa * JAC.TableStrings.center(23, "Levels"; na=2);            sb = sb * JAC.TableStrings.center(23, "i  --  m  --  f"; na=2);          
-        sa = sa * JAC.TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * JAC.TableStrings.center(23, "i  --  m  --  f"; na=3);
-        sa = sa * JAC.TableStrings.center(58, "Energies  " * JAC.TableStrings.inUnits("energy");           na=3);              
-        sb = sb * JAC.TableStrings.center(58, "  m--i        m--f     e^-(in)     e^-(out)    e^-(Auger)"; na=3)
-        sa = sa * JAC.TableStrings.center(16, "Cross sections"; na=2);       
-        sb = sb * JAC.TableStrings.center(16, JAC.TableStrings.inUnits("cross section"); na=2)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(133)) 
+        sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);          
+        sa = sa * TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=3);
+        sa = sa * TableStrings.center(58, "Energies  " * TableStrings.inUnits("energy");           na=3);              
+        sb = sb * TableStrings.center(58, "  m--i        m--f     e^-(in)     e^-(out)    e^-(Auger)"; na=3)
+        sa = sa * TableStrings.center(16, "Cross sections"; na=2);       
+        sb = sb * TableStrings.center(16, TableStrings.inUnits("cross section"); na=2)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(133)) 
         #   
         for  pathway in pathways
             sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                            msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
                            fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
-            sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
+            sa = sa * TableStrings.center(23, TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=2)
-            sa = sa * JAC.TableStrings.center(23, JAC.TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
+            sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
             en_mi = pathway.intermediateLevel.energy - pathway.initialLevel.energy
             en_mf = pathway.intermediateLevel.energy - pathway.finalLevel.energy
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", en_mi))   * "  "
@@ -355,7 +359,7 @@ module ImpactExcitationAutoion
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection))   * "  "
             println(sa)
         end
-        println("  ", JAC.TableStrings.hLine(133))
+        println("  ", TableStrings.hLine(133))
         #
         return( nothing )
     end

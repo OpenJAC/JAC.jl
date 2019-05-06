@@ -56,7 +56,7 @@ export @racahsum,
        estimate, ElectricDipoleMoment, Einstein, EmMultipole, 
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor,
-       generate, GreenFunction, getDefaults, Gui,
+       generate, Green, GreenFunction, getDefaults, Gui,
        Hfs, HydrogenicIon,
        interpolate, integrate, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, 
        LandeZeeman, Level, LevelSymmetry,
@@ -117,7 +117,7 @@ include("module-PhotoRecombination.jl")
 include("module-AutoIonization.jl")
 include("module-Dielectronic.jl")
 include("module-PhotoExcitationFluores.jl")
-include("module-PhotoExcitationAutoion.jl")      ## up to here + up to jac-tools
+include("module-PhotoExcitationAutoion.jl")
 include("module-RayleighCompton.jl")
 include("module-MultiPhotonDeExcitation.jl")
 include("module-CoulombExcitation.jl")
@@ -129,7 +129,7 @@ include("module-ImpactExcitationAutoion.jl")
 include("module-RadiativeAuger.jl")
 include("module-MultiPhotonIonization.jl")
 include("module-MultiPhotonDoubleIon.jl")
-include("module-InternalConversion.jl")
+include("module-InternalConversion.jl")      ## up to here + up to jac-tools
 #= Further processes, not yet included into the code
 include("module-DoubleAuger.jl")
 include("module-REDA.jl")
