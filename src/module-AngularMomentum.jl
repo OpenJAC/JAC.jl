@@ -6,6 +6,7 @@
 """
 module AngularMomentum
 
+    using HalfIntegers: HalfInt, twice
     using SpecialFunctions, ..Basics
     using GSL: sf_coupling_3j, sf_coupling_6j, sf_coupling_9j
 
@@ -130,10 +131,9 @@ module AngularMomentum
             a proper call to a Wigner 3-j symbol. A value::Float64 is returned.
     """
     function ClebschGordan(ja, ma, jb, mb, Jab, Mab)
-        mab = - Basics.twice(Mab) / 2
-        pp  = (Basics.twice(ja) - Basics.twice(jb) + Basics.twice(Jab))/2
-        cg  = (-1)^pp * sqrt(Basics.twice(Jab) + 1) * sf_coupling_3j(Basics.twice(ja), Basics.twice(jb), Basics.twice(Jab),
-                                                                     Basics.twice(ma), Basics.twice(mb), Basics.twice(mab))
+        pp  = Integer((twice(ja) - twice(jb) + twice(Jab))÷2)
+        cg  = ifelse(iseven(pp), 1, -1) * sqrt(twice(Jab) + 1) * sf_coupling_3j(twice(ja), twice(jb), twice(Jab),
+                                                                                twice(ma), twice(mb), -twice(Mab))
         return( cg )
     end
 
@@ -346,8 +346,8 @@ module AngularMomentum
             it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
     """
     function Wigner_3j(a, b, c, m_a, m_b, m_c)
-        sf_coupling_3j(Basics.twice(a),   Basics.twice(b),   Basics.twice(c),
-                       Basics.twice(m_a), Basics.twice(m_b), Basics.twice(m_c))
+        sf_coupling_3j(twice(a),   twice(b),   twice(c),
+                       twice(m_a), twice(m_b), twice(m_c))
     end
 
 
@@ -404,8 +404,8 @@ module AngularMomentum
             it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
     """
     function Wigner_6j(a, b, c, d, e, f)
-        sf_coupling_6j(Basics.twice(a), Basics.twice(b), Basics.twice(c),
-                       Basics.twice(d), Basics.twice(e), Basics.twice(f))
+        sf_coupling_6j(twice(a), twice(b), twice(c),
+                       twice(d), twice(e), twice(f))
     end
 
 
@@ -464,9 +464,9 @@ module AngularMomentum
             it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
     """
     function Wigner_9j(a, b, c, d, e, f, g, h, i)
-        sf_coupling_9j(Basics.twice(a), Basics.twice(b), Basics.twice(c),
-                       Basics.twice(d), Basics.twice(e), Basics.twice(f),
-                       Basics.twice(g), Basics.twice(h), Basics.twice(i))
+        sf_coupling_9j(twice(a), twice(b), twice(c),
+                       twice(d), twice(e), twice(f),
+                       twice(g), twice(h), twice(i))
     end
 
 
@@ -500,7 +500,7 @@ module AngularMomentum
         exp = mM-J₁+J₂
         isinteger(exp) || return 0.0
         phase = ifelse(iseven(Integer(exp)), 1, -1)
-        phase * sqrt(Basics.twice(J)+1) * wigner3j(J₁, J₂, J, m₁, m₂, mM)
+        phase * sqrt(twice(J)+1) * wigner3j(J₁, J₂, J, m₁, m₂, mM)
     end
 
     """
@@ -516,8 +516,8 @@ module AngularMomentum
     by calling the corresponding function from the GNU Scientific Library.
     """
     function wigner3j(j₁, j₂, j₃, m₁, m₂, m₃)
-        sf_coupling_3j(Basics.twice(j₁), Basics.twice(j₂), Basics.twice(j₃),
-                       Basics.twice(m₁), Basics.twice(m₂), Basics.twice(m₃))
+        sf_coupling_3j(twice(j₁), twice(j₂), twice(j₃),
+                       twice(m₁), twice(m₂), twice(m₃))
     end
 
     """
@@ -533,8 +533,8 @@ module AngularMomentum
     by calling the corresponding function from the GNU Scientific Library.
     """
     function wigner6j(j₁, j₂, j₃, j₄, j₅, j₆)
-        sf_coupling_6j(Basics.twice(j₁), Basics.twice(j₂), Basics.twice(j₃),
-                       Basics.twice(j₄), Basics.twice(j₅), Basics.twice(j₆))
+        sf_coupling_6j(twice(j₁), twice(j₂), twice(j₃),
+                       twice(j₄), twice(j₅), twice(j₆))
     end
 
     """
@@ -551,9 +551,9 @@ module AngularMomentum
     by calling the corresponding function from the GNU Scientific Library.
     """
     function wigner9j(j₁, j₂, j₃, j₄, j₅, j₆, j₇, j₈, j₉)
-        sf_coupling_9j(Basics.twice(j₁), Basics.twice(j₂), Basics.twice(j₃),
-                       Basics.twice(j₄), Basics.twice(j₅), Basics.twice(j₆),
-                       Basics.twice(j₇), Basics.twice(j₈), Basics.twice(j₉))
+        sf_coupling_9j(twice(j₁), twice(j₂), twice(j₃),
+                       twice(j₄), twice(j₅), twice(j₆),
+                       twice(j₇), twice(j₈), twice(j₉))
     end
 
 end # module

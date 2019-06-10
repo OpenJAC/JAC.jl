@@ -6,7 +6,6 @@ using JAC
     printstyled("\nPerform tests on the JAC program; this may take a while ... \n", color=:cyan)
     ## JAC.Constants.define("print test: open", pwd() * "/runtests.report")
 
-    include("inc-halfintegers.jl")
     include("inc-wignersymbols.jl")
     include("inc-racahsum.jl")
 

@@ -1,3 +1,4 @@
+using HalfIntegers: HalfInt
 using JAC.AngularMomentum: clebschgordan, wigner3j, wigner6j, wigner9j
 
 @testset "@racahsum" begin

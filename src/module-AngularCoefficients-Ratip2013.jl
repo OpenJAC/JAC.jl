@@ -9,17 +9,12 @@ module AngularCoefficientsRatip2013
     ##x using ..JAC: AngularJ64, twice, CsfR, getsubshells, have_same_subshells, Parity, plus, minus, Subshell, SubshellQuantumNumbers
     ##x using ..JAC: AngularJ64, CsfR, Parity, plus, minus, Subshell # , SubshellQuantumNumbers
     using  ..Basics,  ..Defaults,  ..ManyElectron
+    using  HalfIntegers: twice
     using  Libdl: dlopen, dlsym
 
     export AngularTcoeff, AngularVcoeff
 
     const ANCOPATH = joinpath(@__DIR__, "..", "deps", "bin", "libanco-ratip2013.so")
-
-
-    """
-    `AngularCoefficientsRatip2013.twice(j::AngularJ64)`  ... returns `2*j` for a given angular momentum quantum number `j`.
-    """
-    twice(j::AngularJ64) = Int(2*j.num//j.den)
 
 
     """

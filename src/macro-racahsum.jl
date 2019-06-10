@@ -1,3 +1,4 @@
+using HalfIntegers: HalfInt, onehalf
 using MacroTools: @capture, postwalk
 
 using ..Basics: ⊕, projections
@@ -163,9 +164,9 @@ end
 function _append_typerange!(ranges, typ, isnonnegative)
     if typ === :AngularJ
         if isempty(ranges)
-            push!(ranges, 0:HalfInt(1,2):CUTOFF)
+            push!(ranges, 0:onehalf(HalfInt):CUTOFF)
         elseif !isnonnegative
-            push!(ranges, 0:HalfInt(1,2):typemax(HalfInt))
+            push!(ranges, 0:onehalf(HalfInt):typemax(HalfInt))
         end
     elseif typ === :AngularL
         isempty(ranges) ? push!(ranges, 0:CUTOFF) : push!(ranges, 0:typemax(HalfInt))

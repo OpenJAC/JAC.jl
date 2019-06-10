@@ -8,13 +8,15 @@
 """
 module Basics
 
+    import HalfIntegers
+
+    using HalfIntegers: HalfInt, half, twice
     using Printf
 
     export  add, analyze, AngularJ, AngularJ64, AngularM, AngularM64, Auger,
             compute, diagonalize,
             estimate, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
             generate,
-            HalfInt, HalfInteger, 
             interpolate, integrate, 
             LevelSymmetry, LevelKey,
             modify, 
@@ -25,8 +27,6 @@ module Basics
             tabulate, tools, TensorComp, 
             UseCoulomb, UseBabushkin
 
-
-    include("inc-halfintegers.jl")
 
     abstract type  AngularJ  end
 
@@ -191,7 +191,9 @@ module Basics
 
     # Conversion between HalfInt and AngularJ64, AngularM64
 
-    twice(x::Union{AngularJ64,AngularM64}) = ifelse(isone(x.den), twice(x.num), x.num)
+    HalfIntegers.HalfInt(x::Union{AngularJ64,AngularM64}) = half(HalfInt, twice(x))
+
+    HalfIntegers.twice(x::Union{AngularJ64,AngularM64}) = ifelse(isone(x.den), twice(x.num), x.num)
 
     AngularJ64(x::HalfInt) = isinteger(x) ? AngularJ64(Integer(x)) : AngularJ64(twice(x), 2)
     AngularM64(x::HalfInt) = isinteger(x) ? AngularM64(Integer(x)) : AngularM64(twice(x), 2)
