@@ -1,4 +1,9 @@
 
+%  atomic radii from 2002.ijms-ghosh-atomic-radii.pdf  into PSE uebernehmen
+%  atomic polarizibilities from 2002.ijms-ghosh-atomic-radii.pdf  into PSE uebernehmen
+
+
+
 using IJulia
 notebook()
 
@@ -18,3 +23,12 @@ uk = button("hallo") |> display
 s = dropdown(OrderedDict("a" => "Value 1", "b" => "Value 2"))
 display(s)
 observe(s)[]
+
+
+perform{::Cascade.Computations{SCA}}
+perform{::Cascade.Computations{AveragedSCA}}
+
+struct Cascade.Computation{T <: AbstractApproach}
+   field1 ::Int64
+   field2 ::T
+end

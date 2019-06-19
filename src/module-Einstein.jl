@@ -6,7 +6,7 @@
 """
 module Einstein
 
-    using Printf, ..AngularMomentum, ..Basics, ..InteractionStrength, ..ManyElectron, ..Radial, ..TableStrings
+    using Printf, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..PhotoEmission, ..Radial, ..TableStrings
     ##x global JAC_counter = 0
 
 

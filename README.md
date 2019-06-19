@@ -28,7 +28,7 @@ towards new applications**.
 
 ## *Kinds* of computations
 
-In some more detail, JAC distinguishes and aims to support (partly still in the future) **seven kinds of 
+In some more detail, JAC distinguishes and aims to support (partly still in the future) **eight kinds of 
 computations** which can be summarized as follows:
 
 1. **Atomic computations**, based on explicitly specified electron configurations: This kind refers to the 
@@ -69,12 +69,20 @@ computations** which can be summarized as follows:
     behaviour, etc. These *estimates* often refer to simple model computations or the use of fit functions.
     They are only implemented when data are needed but no *ab-initio* computations of the properties are 
     feasible otherwise.
+8. **Symbolic evaluation of expressions from Racah's algebra**: We here wish to focus on the algebraic transformation
+    of (Racah) expressions which may generally include any number of Wigner n-j symbols of different kind as well as 
+    (various integrals over) the spherical harmonics and Kronecker and triangular deltas. Of course, the complexity 
+    of such Racah expressions increases very rapidly as more Wigner symbols are involved in the product terms.
+    This symbolic evaluation is naturally based on the knowledge of a large set of special values, orthogonality
+    relations and sum rules that may include rules with a (multiple) summations over dummy indices, cf. Varshalovich 
+    *et al* (1988).
+
 
        
 
 ## Documentation & News
 
-A detailed [Manual, Compendium & Theoretical Background to JAC](Manual-Jac-dist.pdf)  is available that
+A detailed [User Guide, Compendium & Theoretical Background to JAC](UserGuide-Jac.pdf)  is available that
 describes the **use and underlying atomic theory** of the JAC code. News about recent developments of JAC
 are summarized [here](NEWS.rst)
 
@@ -82,13 +90,13 @@ are summarized [here](NEWS.rst)
 
 ## Licence & Reference
 
-The code in this repository is distributed under the [MIT licence](LICENSE.md). The associated manual 
-[Manual, Compendium & Theoretical Background to JAC](Manual-Jac-dist.pdf) is distributed under the Creative 
+The code in this repository is distributed under the [MIT licence](LICENSE.md). The associated Guide
+[User Guide, Compendium & Theoretical Background to JAC](UserGuide-Jac.pdf) is distributed under the Creative 
 Commons Attribution 4.0 International (CC BY 4.0) license.
 
 For reference, please, use the Computer Physics Communications publication on JAC:
 
-* S. Fritzsche, [Computer Physics Communications xx, yy (2019)](https://doi.org/10.1016/j.cpc.2019.01.012)
+* S. Fritzsche, [Computer Physics Communications 240, 1 (2019)](https://doi.org/10.1016/j.cpc.2019.01.012)
 
 
 
@@ -117,8 +125,8 @@ The JAC code makes use of:
 
 The numerous features of JAC can be easily understood by following the tutorials that are distributed together
 with the code. Further details can then be found from the 
-[Manual, Compendium & Theoretical Background to JAC](Manual-Jac-dist.pdf). Make use the index or a
-full-text search to find selected items in this (.pdf) manual.
+[User Guide, Compendium & Theoretical Background to JAC](UserGuide-Jac.pdf). Make use the index or a
+full-text search to find selected items in this (.pdf) User Guide.
 
 A very first **simple example** has been discussed in the reference above and refers to the low-lying level 
 structure and the Einstein A and B coefficients of the 3s 3p^6 + 3s^2 3p^4 3d -> 3s^2 3p^5
@@ -185,7 +193,7 @@ if solutions are provided. One of the simplest way to start contributing to JAC 
 to those provided above, in order to navigate others to the task of a new user. Also, new graphical user 
 interface and plotting features on different outcomes of atomic computations will be very helpful for the community. 
 A few further suggestions can be found in section 1.7 in the 
-[Manual, Compendium & Theoretical Background to JAC](Manual-Jac-dist.pdf).
+[User Guide, Compendium & Theoretical Background to JAC](UserGuide-Jac.pdf).
 
 
 
