@@ -218,9 +218,10 @@ function testModule_DecayYield(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-DecayYield-new.sum")
     printstyled("\n\nTest the module  DecayYield  ... \n", color=:cyan)
     ### Make the tests
-    wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[JAC.Yields], 
-                            configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                            yieldSettings=DecayYield.Settings(true, true, false, Int64[]) )
+    wa = Atomic.Computation("xx",  Nuclear.Model(12.); properties=[JAC.Yields],
+                            grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600),
+                            configs=[Configuration("1s 2s^2 2p^6")],
+                            yieldSettings=DecayYield.Settings("SCA", true, false, Int64[]) )
     wb = perform(wa)
     ###
     Defaults.setDefaults("print summary: close", "")

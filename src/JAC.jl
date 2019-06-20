@@ -97,6 +97,8 @@ include("module-Tools.jl")
 include("module-MultipoleMoment.jl")
 include("module-ParityNonConservation.jl") 
 
+include("module-PhotoEmission.jl")
+
 # Functions/methods for atomic properties
 include("module-Einstein.jl")    
 include("module-Hfs.jl")
@@ -110,7 +112,6 @@ include("module-MultipolePolarizibility.jl")
 include("module-PlasmaShift.jl")
 
 # Functions/methods for atomic processes
-include("module-PhotoEmission.jl")
 include("module-PhotoExcitation.jl")
 include("module-PhotoIonization.jl")
 include("module-PhotoRecombination.jl")
