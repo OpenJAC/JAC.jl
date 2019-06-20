@@ -29,7 +29,7 @@ using JAC
         @test JAC.testModule_AlphaVariation() 
         @test JAC.testModule_FormFactor() 
         @test JAC.testModule_DecayYield() 
-        @test JAC.testModule_GreenFunction()
+        ## @test JAC.testModule_GreenFunction()
         @test JAC.testModule_MultipolePolarizibility()
         @test JAC.testModule_PlasmaShift() 
     end

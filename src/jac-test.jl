@@ -227,7 +227,7 @@ function testModule_DecayYield(; short::Bool=true)
     Defaults.setDefaults("print summary: close", "")
     # Make the comparison with approved data
     success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-DecayYield-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-DecayYield-new.sum"), "Fluorescence and Auger decay yields:", 6) 
+                                joinpath(@__DIR__, "..", "test", "test-DecayYield-new.sum"), "Auger rates (without", 6) 
     testPrint("testModule_DecayYield()::", success)
     return(success)  
 end

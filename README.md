@@ -26,7 +26,7 @@ language. Shortly speaking, JAC aims to provide a powerful **platform for daily 
 towards new applications**.
 
 **Remark**: Although major efforts have been undertaken during the past two years, JAC is still in a very early state 
-of its development and includes various features that are only partly implemented or not yet tested in all detail. 
+of its development and includes features that are only partly implemented or not yet tested in all detail. 
 Despite of possible failures and deficiencies of the present code, however, I here annouce JAC and kindly ask the users
 and developers for response, support and encouragement.
 
@@ -92,7 +92,7 @@ computations** which can be summarized as follows:
 
 A detailed [User Guide, Compendium & Theoretical Background to JAC](UserGuide-Jac.pdf)  is available that
 describes the **use and underlying atomic theory** of the JAC code. News about recent developments of JAC
-are summarized [here](NEWS.rst).
+are summarized [here](NEWS.md).
 
 
 
