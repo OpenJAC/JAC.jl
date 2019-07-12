@@ -1181,7 +1181,7 @@ module Basics
     export  RadialMesh,   MeshGrasp,   MeshGL
 
 
-
+    #==
     """
     `@enum   Basics.QedModel`  ... defines a enumeration for dealing with the radiative (QED) contribution to the Hamiltonian matrix.
 
@@ -1189,7 +1189,7 @@ module Basics
         + QedPetersburg   ... to use the local QED potential similar as suggested by Shabaev et al., PRA 88, 012513 (2013). 
     """
     @enum   QedModel    QedSydney    QedPetersburg
-    export  QedModel,   QedSydney,   QedPetersburg
+    export  QedModel,   QedSydney,   QedPetersburg   ==#
 
 
 
@@ -1244,7 +1244,7 @@ module Basics
     
     
     """
-    `abstract type Basics.AbstractConfigurationScheme` 
+    `abstract type Basics.AbstractExcitationScheme` 
         ... defines an abstract and a number of singleton types to distinguish between different schemes for
             generating configuration lists as they frequently occur in Green function and cascade computations.
 
@@ -1265,11 +1265,11 @@ module Basics
         ... generates configurations by just adding a single electrons to a given list of bound
             electron configurations. The number of electrons of the generated configurations is N+1.
     """
-    abstract type  AbstractConfigurationScheme                               end
-    struct         NoExcitationScheme      <:  AbstractConfigurationScheme   end
-    struct         DeExciteSingleElectron  <:  AbstractConfigurationScheme   end
-    struct         DeExciteTwoElectrons    <:  AbstractConfigurationScheme   end
-    struct         AddSingleElectron       <:  AbstractConfigurationScheme   end
+    abstract type  AbstractExcitationScheme                               end
+    struct         NoExcitationScheme      <:  AbstractExcitationScheme   end
+    struct         DeExciteSingleElectron  <:  AbstractExcitationScheme   end
+    struct         DeExciteTwoElectrons    <:  AbstractExcitationScheme   end
+    struct         AddSingleElectron       <:  AbstractExcitationScheme   end
 
 
 
@@ -1319,10 +1319,19 @@ module Basics
     function display()                                  end
     function estimate()                                 end
     function excludeDoubles()                           end
-    function generate()                                 end
+    function extractNoOpenShells()                          end
+    function extractNonrelativisticShellList()              end
+    function extractNonrelativisticConfigurations()         end
+    function extractNonrelativisticConfigurationFromCsfR()  end
+    function extractOpenShellQNfromCsfNR()                  end
+    function extractOpenShellQNfromCsfR()                   end
+    function extractShellOccupationFromCsfR()               end
+    function generate()                                     end
+    function generateConfigurationsForExcitationScheme()    end
     function generateLevelWithExtraElectron()           end
     function generateLevelWithExtraSubshell()           end
     function generateLevelWithSymmetryReducedBasis()    end
+    function generateShellList()                        end
     function integrate()                                end
     function integrateOnGridNewtonCotes()               end
     function integrateOnGridSimpsonRule()               end
@@ -1331,6 +1340,7 @@ module Basics
     function interpolateOnGridGrasp92()                 end
     function interpolateOnGridTrapezRule()              end
     function isSimilar()                                end
+    function isStandardSubshellList()                   end
     function merge()                                    end
     function modify()                                   end
     function perform()                                  end

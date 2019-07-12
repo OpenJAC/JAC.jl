@@ -176,8 +176,8 @@ end
 """
 function Basics.generate(sa::String, conf::ConfigurationR, subshellList::Array{Subshell,1})
     parity  = Basics.determineParity(conf)
-    csfList = CsfR[];   useStandardSubshells = true;    subhshellList = Subshell[];   first = true;    previousCsfs = CsfR[]
-    # 
+    csfList = CsfR[];   useStandardSubshells = true;    first = true;    previousCsfs = CsfR[]
+    # subhshellList = Subshell[];   
     for  subsh in subshellList
         if   subsh in keys(conf.subshells)    occ = conf.subshells[subsh]    else    occ = 0    end
         if   first
@@ -348,6 +348,76 @@ function Basics.generate(sa::String, N::Int64, potential::Radial.Potential, grid
 end
 
 
+
+"""
+`Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.NoExcitationScheme, 
+                                                  nMax::Int64, lValues::Array{Int64,1})`  
+    ... generates a list of non-relativistic configurations for the given (reference) confs and the excitation scheme. 
+        All orbitals in standard order are considered up to maxShell = (n_max, l_max).
+"""
+function Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.NoExcitationScheme, 
+                                                          nMax::Int64, lValues::Array{Int64,1})
+    @warn(  "No excitations are included if exScheme::NoExcitationScheme. ")
+    println("No excitations are included if exScheme::NoExcitationScheme. ")
+    #
+    newConfList = confs
+    return( newConfList )
+end
+
+
+
+"""
+`Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.DeExciteSingleElectron, 
+                                                  nMax::Int64, lValues::Array{Int64,1})`  
+    ... generates a list of non-relativistic configurations for the given (reference) confs and the excitation scheme. 
+        All orbitals in standard order are considered up to maxShell = (n_max, l_max).
+"""
+function Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.DeExciteSingleElectron, 
+                                                          nMax::Int64, lValues::Array{Int64,1})
+    confList = Configuration[];    NoElectrons = confs[1].NoElectrons
+    shellList   = Basics.generateShellList(confs, nMax, lValues)
+    
+    # Create all configurations with single excitations from the given list of configurations
+    for  conf in confs
+        # Take one electron fromShell and add toShell
+        for  (fromShell,occ)  in  conf.shells
+            for  toShell  in  shellList
+                newShells = deepcopy( conf.shells )
+                print("newShells = $newShells   fromShell = $fromShell    toShell = $toShell")
+                if      fromShell == toShell    
+                elseif  haskey(conf.shells, toShell )   fromOcc = occ;   toOcc = conf.shells[toShell]
+                        if  fromOcc - 1 < 0                        println("");    continue    end
+                        if  toOcc   + 1 > 2*(2*toShell.l + 1)      println("");    continue    end
+                        newShells[fromShell] = newShells[fromShell] - 1
+                        newShells[toShell]   = newShells[toShell] + 1
+                else    fromOcc = occ
+                        if  fromOcc - 1 < 0                        println("");    continue    end
+                        newShells[fromShell] = newShells[fromShell] - 1
+                        newShells = Base.merge( newShells, Dict( toShell => 1))
+                end
+                # Add a new configuration
+                push!( confList, Configuration( newShells, NoElectrons))
+                println("  newconf = $(Configuration( newShells, NoElectrons))")
+            end
+        end
+    end
+
+    nbefore     = length(confList)
+    newConfList = Configuration[]
+    for  conf  in  confList
+        if  conf in newConfList    continue;    else    push!( newConfList,  conf)    end
+    end
+    nafter      = length(newConfList)
+    println("Basics.generateConfigurationsForExcitationScheme():: Number of configs is $nbefore (before) and $nafter (after).")
+
+    #
+    ##x push!( newConfList, confs[1])
+    ##x push!( newConfList, Configuration("[Ne] 3s 3p^6 4s") )
+    ##x push!( newConfList, Configuration("[Ne] 3s 3p^6 5s") )
+    return( newConfList )
+end
+
+
 """
 `Basics.generateLevelWithExtraElectron(newOrbital, symt::LevelSymmetry, level::Level)`  
     ... generates a (new) level with one extra electron in subshell newOrbital.subshell and with overall symmetry symt. The function 
@@ -432,6 +502,40 @@ function Basics.generateLevelWithSymmetryReducedBasis(level::Level)
     newBasis = Basis(true, basis.NoElectrons, basis.subshells, newCsfs, basis.coreSubshells, basis.orbitals)
     newLevel = Level(level.J, level.M, level.parity, level.index, level.energy, level.relativeOcc, true, newBasis, newMc)
     return( newLevel )
+end
+
+
+
+"""
+`Basics.generateShellList(confs::Array{Configuration,1}, nMax::Int64, lValues::Array{Int64,1})`  
+    ... generates a list of (non-relativistic) shells in standard order that contains all shells from the given list of
+        configurations as well as the shells up to the principal quantum number nMax and the list of orbital quantum
+        numbers lValues. A shellList::Array{Shell,1} is returned.
+"""
+function Basics.generateShellList(confs::Array{Configuration,1}, nMax::Int64, lValues::Array{Int64,1})
+    shellList = Shell[]
+    # Add all shells from the given configurations
+    for  conf in confs
+        for (k,v) in conf.shells    push!( shellList, k)    end
+    end
+    # Add all shells for the given quantum numbers
+    for  n = 1:nMax
+        for  ll in  lValues  
+            if  n >= ll + 1     push!( shellList, Shell(n,ll))      end    
+        end
+    end
+    ##x println("shellList = $shellList ")
+    
+    # Now bring the shells in standard order
+    newShellList = Shell[]
+    for  n = 1:nMax
+        for  l = 0:30  
+            if  n >= l + 1  && Shell(n,l) in shellList    push!( newShellList, Shell(n,l))     end    
+        end
+    end
+    println("newShellList = $newShellList ")
+    
+    return( newShellList )
 end
 
 

@@ -23,17 +23,18 @@ module InteractionStrengthQED
 
                                    
     """
-    `InteractionStrengthQED.qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid)`  
+    `InteractionStrengthQED.qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, qed::ManyElectron.AbstractQedModel, 
+                                     pot::Radial.Potential, grid::Radial.Grid)`  
         ... to calculate the local, single-electron QED correction due to a chosen QedModel.  The function also determines whether 
             the 'stored' hydrogenic values for the lambda_C-dampled overlap integrals belong the given Z-value, and re-calculates 
             these overlap integrals whenever necessary.  A single-electron amplitud wa::Float64 is returned.
     """
-    function qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid)
-        global  JAC_QED_MODEL,  JAC_QED_NUCLEAR_CHARGE,  JAC_QED_HYDROGENIC_LAMBDAC
+    function qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, qed::ManyElectron.AbstractQedModel, pot::Radial.Potential, grid::Radial.Grid)
+        ##x global  JAC_QED_MODEL,  JAC_QED_NUCLEAR_CHARGE,  JAC_QED_HYDROGENIC_LAMBDAC
         # Define a grid for the t-integration
         qgrid = Radial.GridGL("QED",  7)
         # Re-define the hydrogenic values of the 
-        if  nm.Z != Defaults.JAC_QED_NUCLEAR_CHARGE
+        if  nm.Z != Defaults.GBL_QED_NUCLEAR_CHARGE
             alpha = Defaults.getDefaults("alpha")
             ax  = HydrogenicIon.radialOrbital(Subshell("1s_1/2"), nm.Z, grid);    wc1 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
             ax  = HydrogenicIon.radialOrbital(Subshell("2p_1/2"), nm.Z, grid);    wc2 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
@@ -41,16 +42,16 @@ module InteractionStrengthQED
             ax  = HydrogenicIon.radialOrbital(Subshell("3d_3/2"), nm.Z, grid);    wc4 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
             ax  = HydrogenicIon.radialOrbital(Subshell("3d_5/2"), nm.Z, grid);    wc5 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
             Defaults.setDefaults("QED: damped-hydrogenic", nm.Z, [wc1, wc2, wc3, wc4, wc5] )
-            println("Redefined damped radial integrals JAC_QED_HYDROGENIC_LAMBDAC = $(Defaults.GBL_QED_HYDROGENIC_LAMBDAC)")
+            println("Redefined damped radial integrals GBL_QED_HYDROGENIC_LAMBDAC = $(Defaults.GBL_QED_HYDROGENIC_LAMBDAC)")
         end
         
-        if      Defaults.GBL_QED_MODEL == QedSydney
+        if      qed == QedSydney()
             wa = RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
                  ## RadialIntegrals.qedWichmannKrollSimple(a, b, pot, grid, qgrid) + 
                  ## RadialIntegrals.qedElectricFormFactor(a, b, pot, grid, qgrid) + 
                  ## RadialIntegrals.qedMagneticFormFactor(a, b, pot, grid, qgrid) + 
                  RadialIntegrals.qedLowFrequency(a, b, nm, grid, qgrid) 
-        elseif   Defaults.GBL_QED_MODEL == QedPetersburg
+        elseif   qed == QedPetersburg()
             wa = RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
                  InteractionStrengthQED.selfEnergyVolotka(a, b, nm, pot, grid, qgrid)
         else    error("stop a")

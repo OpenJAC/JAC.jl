@@ -44,8 +44,8 @@ function Basics.determineParity(conf::Configuration)
        par = par * (p^v)
     end
 
-    if       par == 1    return( JAC.plus )  
-    elseif   par == -1   return( JAC.minus )
+    if       par == 1    return( Basics.plus )  
+    elseif   par == -1   return( Basics.minus )
     else     error("stop b")
     end  
 end
@@ -63,8 +63,8 @@ function Basics.determineParity(conf::ConfigurationR)
        par = par * (p^v)
     end
 
-    if       par == 1    return( JAC.Basics.plus )  
-    elseif   par == -1   return( JAC.Basics.minus )
+    if       par == 1    return( Basics.plus )  
+    elseif   par == -1   return( Basics.minus )
     else     error("stop b")
     end  
 end

@@ -396,7 +396,6 @@ module Radial
         ... defines a type for a (relativistic and quasi-complete) single-electron spectrum for symmetry kappa with N positive 
             and/or N negative states. All these states are defined with regard to the same grid.
 
-        + name         ::String                ... A name for this spectrum, may contain information about the original type of basis functions.
         + kappa        ::Int64                 ... symmetry of the one-electron spectrum
         + NoStates     ::Int64                 ... Number of positive and negative states (if onlyPositive = true)
         + onlyPositive ::Bool                  ... True if only the positive part is kept.
@@ -405,7 +404,6 @@ module Radial
         + grid         ::RadialGrid            ... radial grid on which the states are represented.
     """
     struct SingleSymOrbitals
-        name           ::String
         kappa          ::Int64
         NoStates       ::Int64
         onlyPositive   ::Bool
@@ -419,16 +417,48 @@ module Radial
      `Radial.SingleSymOrbitals()`  ... constructor for providing an 'empty' instance of this struct.
     """
     function SingleSymOrbitals()
-        SingleSymOrbitals("", 0, 0, true, Orbital[], Orbital[], Radial.Grid() )
+        SingleSymOrbitals(0, 0, true, Orbital[], Orbital[], Radial.Grid() )
+    end
+
+
+    # `Base.show(io::IO, symOrbitals::SingleSymOrbitals)`  ... prepares a proper printout of the variable symOrbitals::SingleSymOrbitals.
+    function Base.show(io::IO, symOrbitals::SingleSymOrbitals) 
+        sa = "Single-symmetry orbital set for kappa=$(symOrbitals.kappa) with $(symOrbitals.NoStates) states "
+        if  symOrbitals.onlyPositive   sa = sa * "from just the positive part of the spectrum."
+        else                           sa = sa * "from the positive and negative part of the spectrum."
+        end
+        println(io, sa) 
+   end
+
+
+    """
+    `struct  Radial.SingleElecSpectrum`  
+        ... defines a type for a (relativistic and quasi-complete) single-electron spectrum for different symmetries kappa and either
+            (individually) N_kappa positive  or  N_kappa positive and negative states. All these orbitals are defined with regard to 
+            the same grid.
+
+        + name         ::String                      ... A name for this spectrum, may contain information about the original 
+                                                         type of basis functions.
+        + symOrbitals  ::Array{SingleSymOrbitals,1}  ... Set of orbitals of the same kappa-symmetry.
+    """
+    struct  SingleElecSpectrum
+        name           ::String
+        symOrbitals    ::Array{SingleSymOrbitals,1}
+    end
+
+
+    """
+     `Radial.SingleElecSpectrum()`  ... constructor for providing an 'empty' instance of this struct.
+    """
+    function SingleElecSpectrum()
+        SingleSymOrbitals("", SingleSymOrbitals[])
     end
 
 
     # `Base.show(io::IO, spectrum::SingleElecSpectrum)`  ... prepares a proper printout of the variable spectrum::SingleElecSpectrum.
-    function Base.show(io::IO, spectrum::SingleSymOrbitals) 
-        sa = "Single-electron spectrum $(spectrum.name) for symmetry kappa=$(spectrum.kappa) with $(spectrum.NoStates) states "
-        if  spectrum.onlyPositive   sa = sa * "from just the positive spectrum."
-        else                        sa = sa * "from the positive and negative spectrum."
-        end
+    function Base.show(io::IO, spectrum::SingleElecSpectrum) 
+        sa = "Single-electron spectrum $(spectrum.name) for different kappa-symmetries and (individual) number of orbitals " *
+             "positive and/or positive & negative energy."
         println(io, sa) 
    end
 

@@ -72,7 +72,7 @@ module Defaults
     GBL_CONT_NORMALIZATION      = PureSine                  ###  PureSine    CoulombSine    OngRussek
     GBL_QED_HYDROGENIC_LAMBDAC  = [1.0,  1.0,  1.0,  1.0,  1.0]
     GBL_QED_NUCLEAR_CHARGE      = 0.1
-    GBL_QED_MODEL               = QedPetersburg             ###  QedPetersburg  QedSydney    
+    ##x GBL_QED_MODEL               = QedPetersburg             ###  QedPetersburg  QedSydney    
     ##x GBL_CONT_PHASE              = WrtSin                ###  WrtSin
     GBL_WARNINGS                = String[]
 
@@ -88,7 +88,8 @@ module Defaults
     GBL_SUMMARY_IOSTREAM        = nothing
 
     GBL_STANDARD_GRID           = Radial.Grid("grid: exponential", printout=false)        
-        
+
+    
     """
     `Defaults.convertUnits()`  
         ... converts some data from one format/unit into another one; cf. the supported keystrings and return values.
@@ -292,7 +293,7 @@ module Defaults
         ... to (pre-) define the unit for the printout and communications of times with the JAC module.
     """
     function setDefaults(sa::String)
-        global GBL_FRAMEWORK, GBL_CONT_SOLUTION, GBL_CONT_NORMALIZATION, GBL_QED_MODEL
+        global GBL_FRAMEWORK, GBL_CONT_SOLUTION, GBL_CONT_NORMALIZATION  ##x , GBL_QED_MODEL
 
         if        sa == "framework: relativistic"                            GBL_FRAMEWORK           = "relativistic"    
         elseif    sa == "framework: non-relativistic"                        GBL_FRAMEWORK           = "non-relativistic"  
@@ -303,8 +304,8 @@ module Defaults
         elseif    sa == "method: continuum, Galerkin"                        GBL_CONT_SOLUTION       = BsplineGalerkin   
         elseif    sa == "method: normalization, pure sine"                   GBL_CONT_NORMALIZATION  = PureSine   
         elseif    sa == "method: normalization, pure Coulomb"                GBL_CONT_NORMALIZATION  = CoulombSine  
-        elseif    sa == "QED model: Petersburg"                              GBL_QED_MODEL           = QedPetersburg
-        elseif    sa == "QED model: Sydney"                                  GBL_QED_MODEL           = QedSydney
+        ##x elseif    sa == "QED model: Petersburg"                              GBL_QED_MODEL           = QedPetersburg
+        ##x elseif    sa == "QED model: Sydney"                                  GBL_QED_MODEL           = QedSydney
         else      error("Unsupported keystring:: $sa")
         end
         nothing

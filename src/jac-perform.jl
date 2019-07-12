@@ -26,6 +26,8 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         ##x end =#
         basis     = perform("computation: SCF", computation.configs, nModel, computation.grid, computation.asfSettings)
         multiplet = perform("computation: CI", basis, nModel, computation.grid, computation.asfSettings)
+        LSjj.expandLevelsIntoLS(multiplet, computation.asfSettings.jjLS)
+        #
         if output    results = Base.merge( results, Dict("multiplet:" => multiplet) ) 
                      results = Base.merge( results, Dict("grid:"      => computation.grid) )  end
         
@@ -64,7 +66,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             if output    results = Base.merge( results, Dict("Fluorescence and AutoIonization yield outcomes:" => outcome) )   end
         end
         if  JAC.Green          in computation.properties   
-            outcome = JAC.GreenFunction.computeRepresentation(multiplet, nModel, computation.grid, computation.greenSettings)         
+            outcome = JAC.GreenFunction.computeRepresentation(computation.configs, multiplet, nModel, computation.grid, computation.greenSettings)         
             if output    results = Base.merge( results, Dict("Green function outcomes:" => outcome) )         end
         end
         if  JAC.Polarity       in computation.properties   

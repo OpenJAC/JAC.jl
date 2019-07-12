@@ -91,7 +91,7 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
 
     # Generate an effective nuclear charge Z(r) on the given grid
     potential = JAC.Nuclear.nuclearPotential(nuclearModel, grid)
-    if  settings.qedCI    meanPot = compute("radial potential: Dirac-Fock-Slater", grid, basis)   end   
+    if  settings.qedModel in [QedPetersburg(), QedSydney()]    meanPot = compute("radial potential: Dirac-Fock-Slater", grid, basis)   end   
 
     
     matrix = zeros(Float64, n, n)
@@ -102,8 +102,9 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
             for  coeff in wa[1]
                 jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                 me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
-                if  settings.qedCI    
-                    me = me + JAC.InteractionStrengthQED.qedLocal(basis.orbitals[coeff.a], basis.orbitals[coeff.b], nuclearModel, meanPot, grid)  
+                if  settings.qedModel != NoneQed()  
+                    me = me + JAC.InteractionStrengthQED.qedLocal(basis.orbitals[coeff.a], basis.orbitals[coeff.b], nuclearModel, settings.qedModel, 
+                                                                  meanPot, grid)  
                 end
             end
 
@@ -142,8 +143,8 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
     end
     n = length(idx_csf)
     
-    if  settings.breitCI  error("No Breit interaction supported for plasma computations; use breitCI=false  in the asfSettings.")   end   
-    if  settings.qedCI    error("No QED estimates supported for plasma computations; use qedCI=false  in the asfSettings.")   end   
+    if  settings.breitCI                 error("No Breit interaction supported for plasma computations; use breitCI=false  in the asfSettings.")    end   
+    if  settings.qedModel != NoneQed()   error("No QED estimates supported for plasma computations; use qedModel=NoneQed()  in the asfSettings.")   end   
     
     # Now distinguis the CI matrix for different plasma models
     if  plasmaSettings.plasmaModel == JAC.PlasmaShift.DebyeHueckel()
@@ -491,7 +492,7 @@ function Basics.computePotentialDFS(grid::Radial.Grid, basis::Basis)
     # Compute the charge density of the core orbitals for the given level
     for  sh in basis.subshells
         orb  = basis.orbitals[sh]
-        occ  = computeMeanSubshellOccupation(sh, basis)
+        occ  = Basics.computeMeanSubshellOccupation(sh, basis)
         nrho = length(orb.P)
         for    i = 1:nrho   rhot[i] = rhot[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
     end
@@ -521,12 +522,12 @@ function Basics.computePotentialExtendedHartree(grid::Radial.Grid, level::Level)
     rhoab = zeros( npoints );    wx = zeros( npoints );    wg = zeros( npoints )
     # First term Sum_ab ...
     for  a in basis.subshells
-        occa = computeMeanSubshellOccupation(a, [level])
+        occa = Basics.computeMeanSubshellOccupation(a, [level])
         orba = basis.orbitals[a]
         nrho = length(orba.P);      rhoa  = zeros(nrho)
         for  i = 1:nrho    rhoa[i] = orba.P[i]^2 + orba.Q[i]^2    end
         for  b in basis.subshells
-            occb = computeMeanSubshellOccupation(b, [level])
+            occb = Basics.computeMeanSubshellOccupation(b, [level])
             orbb = basis.orbitals[b]
             nrho = length(orbb.P);   rhobb = zeros(nrho)
             if  a != b  wc = occa*occb   else   wc = occa * (occb -1.0)   end
@@ -537,7 +538,7 @@ function Basics.computePotentialExtendedHartree(grid::Radial.Grid, level::Level)
     end
     # Second term Sum_a ...
     for  a in basis.subshells
-        occa = computeMeanSubshellOccupation(a, [level])
+        occa = Basics.computeMeanSubshellOccupation(a, [level])
         orba = basis.orbitals[a]
         nrho = length(orba.P);      rhoa  = zeros(nrho)
         for  i = 1:nrho    rhoa[i] = orba.P[i]^2 + orba.Q[i]^2   end
@@ -551,8 +552,8 @@ function Basics.computePotentialExtendedHartree(grid::Radial.Grid, level::Level)
     # Third term Sum_a != b ...
     for  a in basis.subshells,   b in basis.subshells
         if  a == b   continue   end 
-        occa = computeMeanSubshellOccupation(a, [level])
-        occb = computeMeanSubshellOccupation(b, [level])
+        occa = Basics.computeMeanSubshellOccupation(a, [level])
+        occb = Basics.computeMeanSubshellOccupation(b, [level])
         orba = basis.orbitals[a]
         orbb = basis.orbitals[b]
         nrho = min(length(orba.P), length(orbb.P));      rhoab  = zeros(nrho)
@@ -565,7 +566,7 @@ function Basics.computePotentialExtendedHartree(grid::Radial.Grid, level::Level)
     end
     # Weight factor
     for  a in basis.subshells
-        occa = computeMeanSubshellOccupation(a, [level])
+        occa = Basics.computeMeanSubshellOccupation(a, [level])
         orba = basis.orbitals[a]
         nrho = length(orba.P);      rhoa  = zeros(nrho)
         for  i = 1:nrho    rhoa[i] = orba.P[i]^2 + orba.Q[i]^2   end

@@ -13,6 +13,11 @@ function isless(x :: JAC.Hfs.IJF_Level, y :: JAC.Hfs.IJF_Level)
     return x.energy < y.energy
 end
 
+
+function isless(x :: JAC.Basics.AngularJ64, y :: JAC.Basics.AngularJ64)
+    return x.num < y.num
+end
+
     
 """
 `Basics.isSimilar()`  ... returns true if two instances are similar to each other, and false otherwise.
@@ -27,3 +32,28 @@ function Basics.isSimilar(keya::LevelKey, keyb::LevelKey, relAcc::Float64)
     else                                                                                       return(false)
     end
 end
+
+    
+"""
+`Basics.isStandardSubshellList(basis::Basis)`  
+    ... returns true if the subshell list basis.subshells is in standard order, and false otherwise.
+        It requests especially that both subshells of the same shell (n,l) occur in the sequence j = l-1/2, j = l+1/2
+        and that l increases before n increases.
+"""
+function Basics.isStandardSubshellList(basis::Basis)
+    function  decimal(n,l,jnum)
+        return( 10000n + 100l + jnum)
+    end
+    subshells = basis.subshells
+    na = subshells[1].n;    la = Basics.subshell_l(subshells[1]);    ja = Basics.subshell_j(subshells[1])
+    
+    for  i = 2:length(subshells)
+        nb = subshells[i].n;    lb = Basics.subshell_l(subshells[i]);    jb = Basics.subshell_j(subshells[1])
+        if  decimal(nb,lb,jb.num) <= decimal(na,la,ja.num)    return( false )   end
+    end
+    
+    return( true )
+end
+
+
+

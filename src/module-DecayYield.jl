@@ -10,12 +10,11 @@ module DecayYield
     """
     `struct  DecayYield.Settings`  ... defines a type for the details and parameters of computing fluorescence and Auger yields.
 
-        + approach                 ::String           ... Identifier to determine the cascade approach that is applied for the 
-                                                          yield computation: {AverageSCA, SCA}
-        + printBeforeComputation   ::Bool             ... True if a list of selected levels is to be printed before the 
-                                                          actual computations start. 
-        + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
-        + selectedLevels           ::Array{Level,1}   ... List of selected levels.
+        + approach                 ::String         ... Identifier to determine the cascade approach that is applied for the yield computation: 
+                                                          {"AverageSCA", SCA}
+        + printBeforeComputation   ::Bool           ... True if a list of selected levels is to be printed before the actual computations start. 
+        + selectLevels             ::Bool           ... True if individual levels are selected for the computation.
+        + selectedLevels           ::Array{Level,1} ... List of selected levels.
     """
     struct Settings 
         approach                   ::String 
@@ -30,7 +29,7 @@ module DecayYield
         ... constructor for an `empty` instance of DecayYield.Settings for the computation of fluorescence and Auger yields.
     """
     function Settings()
-        Settings("not defined", false, false, Level[])
+        Settings("AverageSCA", false, false, Level[])
     end
 
 

@@ -5,7 +5,7 @@ wa = Atomic.Computation("xx",  Nuclear.Model(18., "point"); grid=JAC.Radial.Grid
                         properties=JAC.AtomicLevelProperty[],
                         configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],  ## 
                         asfSettings=AsfSettings(true, false, "meanDFS", "hydrogenic", "xxx", [1], 40, 1.0e-6, JAC.Subshell[], 
-                                                true, false, false, "yyy", false, [1,2,3,4], false, JAC.LevelSymmetry[] ) )
+                                                true, false, NoneQed(), "yyy", false, [1,2,3,4], false, JAC.LevelSymmetry[] ) )
                         ##x scfSettings=ScfSettings(false, "hydrogenic", " ", [1], false, 24, 1.0e-8, JAC.Subshell[]) )
 
 wb = perform(wa)

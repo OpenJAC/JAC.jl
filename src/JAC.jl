@@ -59,13 +59,15 @@ export @racahsum,
        generate, Green, GreenFunction, getDefaults, Gui,
        Hfs, HydrogenicIon,
        interpolate, integrate, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, 
-       LandeZeeman, Level, LevelSymmetry,
-       modify, MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment, MultipolePolarizibility, Multiplet, 
-       NoAmplitude, NoProcess, Nuclear, Model,
+       LandeZeeman, Level, LevelSymmetry, LSjj, LSjjSettings,
+       ManyElectron, Model, modify, MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment, 
+       MultipolePolarizibility, Multiplet, 
+       NoAmplitude, NoProcess, Nuclear, NoneQed,
        Orbital, 
        perform, provide, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation,
        PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift,
+       QedPetersburg, QedSydney,
        Radial, RadialIntegrals, Radiative, RadiativeAuger, RayleighCompton, REDA, READI,
        SchiffMoment, Shell, Subshell, setDefaults,
        tabulate, tools,
@@ -92,6 +94,7 @@ include("module-InteractionStrengthQED.jl")
 include("module-PeriodicTable.jl")
 include("module-TableStrings.jl")
 include("module-Tools.jl")
+include("module-LSjj.jl")
 
 # Functions/methods for atomic amplitudes
 include("module-MultipoleMoment.jl")
