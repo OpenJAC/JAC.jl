@@ -27,8 +27,8 @@ towards new applications**.
 
 **Remark**: Although major efforts have been undertaken during the past two years, JAC is still in a very early state 
 of its development and includes features that are only partly implemented or not yet tested in all detail. 
-Despite of possible failures and deficiencies of the present code, however, I here annouce JAC and kindly ask the users
-and developers for response, support and encouragement.
+Despite of possible failures and deficiencies of the present code, however, I here annouce JAC and kindly ask potential
+users and developers for response, support and encouragement.
 
 
 
@@ -172,6 +172,15 @@ In order to modify the cell-output of the notebooks and to better print *wide ta
 * [Energies and Einstein coefficients for Fe X](tutorials/06-compute-Fe-X-spectrum.ipynb)
 * [Computation of K-LL Auger rates of atomic neon](tutorials/07-compute-Ne-KLL-Auger-spectrum.ipynb)
 * Several other tutorials are available, and this list will be extended with the further development of JAC.
+
+
+
+## Current limitations of JAC
+
+Although JAC has been designed for all atoms and ions across the periodic table, a number of limitations
+occur:
+* All self-consistent-field computations are based on a local potential (e.g. core-Hartree, Kohn-Sham, 
+  Dirac-Hartree-Slater, ...) that can be controlled by the user.
 
 
 
