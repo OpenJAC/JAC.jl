@@ -49,7 +49,8 @@ module JAC
 using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD
 
 export @racahsum, 
-       add, analyze, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AsfSettings, Atomic, Auger, AutoIonization, 
+       add, analyze, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AngularMomentum, 
+       AsfSettings, Atomic, Auger, AutoIonization, 
        Basics, Basis, 
        compute, convertUnits, Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
        diagonalize, Defaults, DecayYield, Details, Dielectronic, DoubleAuger,

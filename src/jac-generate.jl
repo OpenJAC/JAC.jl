@@ -383,7 +383,7 @@ function Basics.generateConfigurationsForExcitationScheme(confs::Array{Configura
         for  (fromShell,occ)  in  conf.shells
             for  toShell  in  shellList
                 newShells = deepcopy( conf.shells )
-                print("newShells = $newShells   fromShell = $fromShell    toShell = $toShell")
+                ##x print("newShells = $newShells   fromShell = $fromShell    toShell = $toShell")
                 if      fromShell == toShell    
                 elseif  haskey(conf.shells, toShell )   fromOcc = occ;   toOcc = conf.shells[toShell]
                         if  fromOcc - 1 < 0                        println("");    continue    end

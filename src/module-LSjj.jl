@@ -428,45 +428,83 @@ end
 
 """
 `LSjj.expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)`
-    ... to expand a relativistic CsfR with one nonrelativistic open shell into the given nonrelativistic basis; 
+    ... to expand a relativistic CsfR with two nonrelativistic open shells into the given nonrelativistic basis; 
         a mcVector::Array{Float64,1} is returned with the same lengths as length(basisNR.csfs). It is checked that the 
         expansion is complete, and a warning is issued if this is not the case.
 """
 function expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
-    println("expandCsfRintoNonrelativisticBasis():: Not yet fully implemented for two open shells.")
     mcVector      = Float64[]
     # Find the open subshells and determine all the quantum numbers
     rQN           = Basics.extractOpenShellQNfromCsfR(csfR, basisR)
     rShells, rOCC = Basics.extractShellOccupationFromCsfR(csfR, basisR)
+    rKeys         = keys(rQN)
     
-    if  length( keys(rQN) ) != 1    error("stop a")     end
+    if  length(rKeys) != 2          error("stop a")     end
     if  rShells != basisNR.shells   error("stop b")     end
     
-    for  (rsh, rv)  in  rQN
-        rQNm = rv[1];   rQNp = rv[2]    # Get QN of the relativistic subshells
-        for  s = 1:length(basisNR.csfs)
-            csfNR = basisNR.csfs[s]
-            if  csfR.J != csfNR.J   
-                ##x println("yyy: Jr = $(csfR.J)  Jnr = $(csfNR.J) ")
-                push!( mcVector, 0.)
-            else
-                me = 0.
-                if  rOCC == csfNR.occupation
-                    nrQN = LSjj.extractOpenShellQNfromCsfNR(csfNR, basisNR)
-                    if  length( keys(nrQN) ) != 1    error("stop c")     end
-                    for  (nrsh, nrv)  in  nrQN
-                        if  rsh != nrsh              error("stop d")     end
-                        # Determine the jj-LS overlap coefficient from the tabulation; no re-coupling coefficients need to be
-                        # considered for a single nonrelativistic open shell
-                        if  rsh.l == 0  twojm = 1    else    twojm = 2*rsh.l - 1  end
-                        twojp = 2*rsh.l + 1 
-                        QQm = Int64( (twojm+1)/2 - rQNm[3]);     QQp = Int64( (twojp+1)/2 - rQNp[3])
-                        me  = LSjj.getLSjjCoefficient(rsh.l, nrv[2], 
-                                LS_jj_qn(nrv[3], nrv[4], nrv[5], nrv[6], rQNp[5], rQNm[2], QQm, rQNm[4], QQp, rQNp[4]) )
+    # Initialize all quantum numbers that occur in loops below
+    rsh1 = rsh2 = nrsh1 = nrsh2 = Shell("9m")   
+    Nm1 = JJm1 = JJp1 = XXp1 = QQm1 = QQp1 = Nm2 = JJm2 = JJp2 = XXm2 = QQm2 = QQp2 = 0  
+    Jm2 = Jp2 = Xm2 = L1 = S1 = L2 = S2 = L12 = S12 = J = AngularJ64(0)
+    N1 = w1 = QQ1 = LL1 = SS1 = N2 = w2 = QQ2 = LL2 = SS2 =  0 
+    
+    # Set open-shell QN for the given csfR
+    ns = 0
+    for  rsh in rShells
+        if  rsh in rKeys
+            ns = ns + 1;    rv = rQN[rsh];    rQNm = rv[1];    rQNp = rv[2]
+            twojp = 2*rsh.l + 1;        if  rsh.l == 0  twojm = 1    else    twojm = 2*rsh.l - 1  end
+            #
+            if      ns == 1  Nm1 = rQNm[2];    JJm1 = rQNm[4];       JJp1 = rQNp[4];         XXp1 = rQNp[5];    rsh1 = rsh
+                             QQm1 = Int64( (twojm+1)/2 - rQNm[3]);   QQp1 = Int64( (twojp+1)/2 - rQNp[3])
+            elseif  ns == 2  Nm2 = rQNm[2];    JJm2 = rQNm[4];       JJp2 = rQNp[4];         XXm2 = rQNm[5];    rsh2 = rsh
+                             QQm2 = Int64( (twojm+1)/2 - rQNm[3]);   QQp2 = Int64( (twojp+1)/2 - rQNp[3])
+                             Jm2  = AngularJ64(JJm2//2);             Jp2  = AngularJ64(JJp2//2);    Xm2  = AngularJ64(XXm2//2)
+            else    error("stop c")     
+            end
+        end
+    end
+    
+    # Now cycle over all nonrelativistic csfNR in the given basis
+    for  s = 1:length(basisNR.csfs)
+        csfNR = basisNR.csfs[s]
+        if  csfR.J != csfNR.J   
+            push!( mcVector, 0.)
+        else
+            me = 0.
+            if  rOCC == csfNR.occupation
+                nrQN   = LSjj.extractOpenShellQNfromCsfNR(csfNR, basisNR)
+                nrKeys = keys(nrQN)
+                # Set open-shell QN for the given csfNR in the loop
+                ns = 0
+                for  rsh in rShells
+                    if  rsh in nrKeys
+                        ns = ns + 1;    nrv = nrQN[rsh]
+                        if      ns == 1     N1 = nrv[2];     w1 = nrv[3];   QQ1 = nrv[4];    LL1 = nrv[5];    SS1 = nrv[6];    nrsh1 = rsh
+                                            L1 = AngularJ64(LL1//2);        S1  = AngularJ64(SS1//2)
+                        elseif  ns == 2     N2 = nrv[2];     w2 = nrv[3];   QQ2 = nrv[4];    LL2 = nrv[5];    SS2 = nrv[6];    nrsh2 = rsh
+                                            L2 = AngularJ64(LL2//2);        S2  = AngularJ64(SS2//2)
+                                            L12 = AngularJ64(nrv[7]//2);    S12 = AngularJ64(nrv[8]//2);      J = csfR.J
+                        else    error("stop d")     
+                        end
                     end
                 end
-                push!( mcVector, me)
+                #
+                if  rsh1 != nrsh1   ||   rsh2 != nrsh2      error("stop e")     end
+                
+                # Cycle over all intermediate angular momenta T1, T2
+                T1List = oplus(L1, S1);     T2List = oplus(L2, S2)
+                for  T1 in T1List
+                    for  T2 in T2List
+                        wa1 = LSjj.getLSjjCoefficient(rsh1.l, N1, LS_jj_qn(w1, QQ1, LL1, SS1, Basics.twice(T1), Nm1, QQm1, JJm1, QQp1, JJp1) )
+                        wa2 = LSjj.getLSjjCoefficient(rsh2.l, N2, LS_jj_qn(w2, QQ2, LL2, SS2, Basics.twice(T2), Nm2, QQm2, JJm2, QQp2, JJp2) )
+                        me  = me + sqrt(AngularMomentum.bracket([T1, T2, L12, S12])) * AngularMomentum.Wigner_9j(L1,S1,T1, L2,S2,T2, L12,S12,J) *
+                                   AngularMomentum.phaseFactor([Jm2, 1, Jp2, 1, T1, 1, J]) * 
+                                   sqrt(AngularMomentum.bracket([T2, Xm2])) * AngularMomentum.Wigner_6j(T1, Jm2, Xm2, Jp2, J, T2) * wa1 * wa2
+                    end
+                end
             end
+            push!( mcVector, me)
         end
     end
     #
@@ -514,7 +552,7 @@ end
 `LSjj.extractOpenShellQNfromCsfNR(csfNR::CsfNR, basisNR::BasisNR)`  
     ... extracts the quantum numbers of the nonrelativistic open shells from the given csfNR. Here, we assume that csfNR is 
         defined in the given basis. An nrQN::Dict{Shell,NTuple{8,Int64}} = Dict(shell => qn ) is returned with 
-        qn = (idx, N, QQ, LL, SS, LLx, SSx) which contains all the shell quantum numbers and their coupling in csfNR.
+        qn = (idx, N, w, QQ, LL, SS, LLx, SSx) which contains all the shell quantum numbers and their coupling in csfNR.
 """
 function extractOpenShellQNfromCsfNR(csfNR::CsfNR, basisNR::BasisNR)
     wa = Dict{Shell,NTuple{8,Int64}}()
@@ -1832,6 +1870,6 @@ end
                           
                               
     # Include coupling matrix elements for open f-shell
-    include("../src/inc-module-LSjj.jl")
+    ## include("../src/inc-module-LSjj.jl")
     
 end # module			
