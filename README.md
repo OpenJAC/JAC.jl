@@ -98,7 +98,7 @@ are summarized [here](NEWS.md).
 
 ## Licence & Reference
 
-The code in this repository is distributed under the [MIT licence](LICENSE.md). The associated 
+The code in this repository is distributed under the [MIT licence](LICENSE). The associated 
 [User Guide, Compendium & Theoretical Background to JAC](UserGuide-Jac.pdf) is distributed under the Creative 
 Commons Attribution 4.0 International (CC BY 4.0) license.
 
