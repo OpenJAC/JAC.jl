@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.com/OpenJAC/JAC.jl.svg?branch=master)](https://travis-ci.com/OpenJAC/JAC.jl)
 [![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)
+[![License](https://img.shields.io/badge/license-%20MIT-blue.svg)](LICENSE)
 
 
 
