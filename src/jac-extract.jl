@@ -121,9 +121,12 @@ function Basics.extractOpenShellQNfromCsfR(csfR::CsfR, basis::Basis)
         end
         # Now collect the quantum numbers into tuples
         if  l == 0   &&   0 < occ < 2
-            wa = Base.merge( wa, Dict( shell => ( (s, csfR.occupation[s], csfR.seniority[s], 
-                                                   Basics.twice(csfR.subshellJ[s]), Basics.twice(csfR.subshellX[s]) ), 
-                                                  (-9, -9, -9, -9, -9) ) ) )
+            ## wa = Base.merge( wa, Dict( shell => ( (s, csfR.occupation[s], csfR.seniority[s], 
+            ##                                        Basics.twice(csfR.subshellJ[s]), Basics.twice(csfR.subshellX[s]) ), 
+            ##                                        (-9, 0, -9, 0, Basics.twice(csfR.subshellX[s]) ) ) ) )
+            wa = Base.merge( wa, Dict( shell => ( (-9, 0, -9, 0, 0 ),
+                                                  (s, csfR.occupation[s], csfR.seniority[s], 
+                                                   Basics.twice(csfR.subshellJ[s]), Basics.twice(csfR.subshellX[s]) ) ) ) )
         elseif  2l + 1 == j2    continue
         elseif  2l - 1 == j2    &&    (n != nx  ||  l != lx  ||  j2x != j2 + 2)
                 error("stop a")

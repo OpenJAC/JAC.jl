@@ -5,17 +5,13 @@
 """
 module HydrogenicIon 
 
-    using Printf, ..Basics, ..Defaults, ..Math, ..Radial, ..RadialIntegrals,  GSL
+    using Printf, ..Basics, ..Defaults, ..Math, ..Nuclear, ..Radial, ..RadialIntegrals,  GSL
 
 
     """
-    `HydrogenicIon.energy()` 
-        ... to compute the energy of some -- nonrelativistic or relativistic orbital.
-    
-    + `(sh::Shell, Z::Float64)`  
+    `HydrogenicIon.energy(sh::Shell, Z::Float64)` 
         ... to compute the (non-relativistic) energy for the given shell and for a point-like nuclear charge Z; the energy is 
-            printed in the current energy units to screen but is returned in Hartree.
-         A energy::Float64 is returned.
+            printed in the current energy units to screen but is returned in Hartree. A energy::Float64 is returned.
     """
     function energy(sh::Shell, Z::Float64)
         energy = - Z^2 / sh.n^2 / 2.
@@ -27,7 +23,7 @@ module HydrogenicIon
 
 
     """
-    + `(sh::Subshell, Z::Float64)`  
+    `HydrogenicIon.energy(sh::Subshell, Z::Float64)` 
         ... to computes the Dirac energy for the hydrogenic subshell sh and for point-like nucleus with nuclear charge Z; 
             a energy::Float64 in atomic units and without the rest energy of the electron is returned. That is the binding 
             energy of a 1s_1/2 electron for Z=1 is -0.50000665.
@@ -47,9 +43,7 @@ module HydrogenicIon
 
 
     """
-    `HydrogenicIon.radialOrbital()`
-    
-    + `(sh::Shell, Z::Float64, r::Float64)`  
+    `HydrogenicIon.radialOrbital(sh::Shell, Z::Float64, r::Float64)`
         ... to compute the (non-relativistic) orbital function P(r) for the given shell and nuclear charge Z; 
             a value::Float64 is returned.
     """
@@ -67,7 +61,7 @@ module HydrogenicIon
 
 
     """
-    + `(sh::Shell, Z::Float64, grid::Radial.Grid)`  
+    `HydrogenicIon.radialOrbital(sh::Shell, Z::Float64, grid::Radial.Grid)`
         ... to compute the same but for all r-values as specified by the given grid; a PList::Array{Float64,1} is returned.
     """
     function radialOrbital(sh::Shell, Z::Float64, grid::Radial.Grid)
@@ -78,7 +72,7 @@ module HydrogenicIon
 
 
     """
-    + `(sh::Shell, Z::Float64, rlist::Array{Float64,1})`  
+    `HydrogenicIon.radialOrbital(sh::Shell, Z::Float64, rlist::Array{Float64,1})`
         ... to compute the same but for an array of r-values [r_1, r_2, ...]; a PList::Array{Float64,1} is returned.
     """
     function radialOrbital(sh::Shell, Z::Float64, rlist::Array{Float64,1})
@@ -89,7 +83,7 @@ module HydrogenicIon
 
 
     """
-    + `(sh::Subshell, Z::Float64, grid::Radial.Grid)`  
+    `HydrogenicIon.radialOrbital(sh::Subshell, Z::Float64, grid::Radial.Grid)`
         ... to compute a relativstic hydrogenic Dirac orbital on the given grid by applying the kinetic-balance to a 
             corresponding non-relavistic orbital; an orbital::Radial.Orbital is returned.
     """
@@ -117,6 +111,17 @@ module HydrogenicIon
         normb = RadialIntegrals.overlap(orb, orb, grid)
         println("HydrogenicIon.radialOrbital():  for subshell $sh : norm-before = $norma, norm-after = $normb")
         
+        return( orb )
+    end
+
+
+    """
+    `HydrogenicIon.radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)`
+        ... to compute a relativstic hydrogenic Dirac orbital for the given nuclear model by using an explicit diagonalization
+            of the Dirac Hamiltonian in a B-spline basis; an orbital::Radial.Orbital is returned.
+    """
+    function radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)
+        error("HydrogenicIon.radialOrbital() Not yet implemented.")
         return( orb )
     end
     

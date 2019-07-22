@@ -445,7 +445,7 @@ function expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::Csf
     # Initialize all quantum numbers that occur in loops below
     rsh1 = rsh2 = nrsh1 = nrsh2 = Shell("9m")   
     Nm1 = JJm1 = JJp1 = XXp1 = QQm1 = QQp1 = Nm2 = JJm2 = JJp2 = XXm2 = QQm2 = QQp2 = 0  
-    Jm2 = Jp2 = Xm2 = L1 = S1 = L2 = S2 = L12 = S12 = J = AngularJ64(0)
+    Jm1 = Jp1 = Xp1 = Jm2 = Jp2 = Xm2 = L1 = S1 = L2 = S2 = L12 = S12 = J = AngularJ64(0)
     N1 = w1 = QQ1 = LL1 = SS1 = N2 = w2 = QQ2 = LL2 = SS2 =  0 
     
     # Set open-shell QN for the given csfR
@@ -457,6 +457,7 @@ function expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::Csf
             #
             if      ns == 1  Nm1 = rQNm[2];    JJm1 = rQNm[4];       JJp1 = rQNp[4];         XXp1 = rQNp[5];    rsh1 = rsh
                              QQm1 = Int64( (twojm+1)/2 - rQNm[3]);   QQp1 = Int64( (twojp+1)/2 - rQNp[3])
+                             Jm1  = AngularJ64(JJm1//2);             Jp1  = AngularJ64(JJp1//2);    Xp1  = AngularJ64(XXp1//2)
             elseif  ns == 2  Nm2 = rQNm[2];    JJm2 = rQNm[4];       JJp2 = rQNp[4];         XXm2 = rQNm[5];    rsh2 = rsh
                              QQm2 = Int64( (twojm+1)/2 - rQNm[3]);   QQp2 = Int64( (twojp+1)/2 - rQNp[3])
                              Jm2  = AngularJ64(JJm2//2);             Jp2  = AngularJ64(JJp2//2);    Xm2  = AngularJ64(XXm2//2)
@@ -498,9 +499,12 @@ function expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::Csf
                     for  T2 in T2List
                         wa1 = LSjj.getLSjjCoefficient(rsh1.l, N1, LS_jj_qn(w1, QQ1, LL1, SS1, Basics.twice(T1), Nm1, QQm1, JJm1, QQp1, JJp1) )
                         wa2 = LSjj.getLSjjCoefficient(rsh2.l, N2, LS_jj_qn(w2, QQ2, LL2, SS2, Basics.twice(T2), Nm2, QQm2, JJm2, QQp2, JJp2) )
-                        me  = me + sqrt(AngularMomentum.bracket([T1, T2, L12, S12])) * AngularMomentum.Wigner_9j(L1,S1,T1, L2,S2,T2, L12,S12,J) *
-                                   AngularMomentum.phaseFactor([Jm2, 1, Jp2, 1, T1, 1, J]) * 
-                                   sqrt(AngularMomentum.bracket([T2, Xm2])) * AngularMomentum.Wigner_6j(T1, Jm2, Xm2, Jp2, J, T2) * wa1 * wa2
+                        ##x println("T1 = $T1   T2 = $T2   wa1 = $wa1   wa2 = $wa2")
+                        if AngularMomentum.triangularDelta(T1,Jm1,Jp1) == 1  &&  T1 == Xp1
+                            me  = me + sqrt(AngularMomentum.bracket([T1, T2, L12, S12])) * AngularMomentum.Wigner_9j(L1,S1,T1, L2,S2,T2, L12,S12,J) *
+                                       AngularMomentum.phaseFactor([Jm2, 1, Jp2, 1, T1, 1, J]) * 
+                                       sqrt(AngularMomentum.bracket([T2, Xm2])) * AngularMomentum.Wigner_6j(T1, Jm2, Xm2, Jp2, J, T2) * wa1 * wa2
+                        end
                     end
                 end
             end

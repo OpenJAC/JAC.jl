@@ -432,8 +432,8 @@ module  RadialIntegrals
         # Distinguish the radial integration for different grid definitions
         if  grid.mesh == MeshGL
             wa = 0.
-            for  i = 1:mtp   
-                wb = tIntegral(grid.r[i]) * (-pot.Zr[i] * grid.r[i])     
+            for  i = 2:mtp   
+                wb = tIntegral(grid.r[i]) * (-pot.Zr[i] / grid.r[i])     
                 wa = wa + (a.P[i]*wb*b.P[i] + a.Q[i]*wb*b.Q[i]) * grid.wr[i]   
             end
             wa = 2. * Defaults.getDefaults("alpha") / (3pi) * wa

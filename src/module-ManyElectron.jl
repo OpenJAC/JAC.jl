@@ -7,7 +7,7 @@ module ManyElectron
 
     using  ..Basics, ..Defaults,  ..Radial
     export Configuration, ConfigurationR, AsfSettings, CsfR, Basis, Level, Multiplet, 
-           AbstractQedModel, NoneQed, QedPetersburg, QedSydney
+           AbstractQedModel, NoneQed, QedPetersburg, QedSydney, LSjjSettings
 
     
     

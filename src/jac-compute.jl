@@ -91,7 +91,12 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
 
     # Generate an effective nuclear charge Z(r) on the given grid
     potential = JAC.Nuclear.nuclearPotential(nuclearModel, grid)
-    if  settings.qedModel in [QedPetersburg(), QedSydney()]    meanPot = compute("radial potential: Dirac-Fock-Slater", grid, basis)   end   
+    if  settings.qedModel in [QedPetersburg(), QedSydney()]    
+        meanPot = potential
+        ## meanPot = compute("radial potential: Dirac-Fock-Slater", grid, basis)
+        ## meanPot = Basics.add(potential, meanPot)   
+    end   
+    ##x println("*** meanPot = $meanPot ")
 
     
     matrix = zeros(Float64, n, n)

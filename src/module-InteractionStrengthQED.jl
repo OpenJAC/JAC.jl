@@ -34,13 +34,14 @@ module InteractionStrengthQED
         # Define a grid for the t-integration
         qgrid = Radial.GridGL("QED",  7)
         # Re-define the hydrogenic values of the 
-        if  nm.Z != Defaults.GBL_QED_NUCLEAR_CHARGE
+        if  false  ##  nm.Z != Defaults.GBL_QED_NUCLEAR_CHARGE
+            @warn("Calculate hydrogenic values only if necessary.")
             alpha = Defaults.getDefaults("alpha")
-            ax  = HydrogenicIon.radialOrbital(Subshell("1s_1/2"), nm.Z, grid);    wc1 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = HydrogenicIon.radialOrbital(Subshell("2p_1/2"), nm.Z, grid);    wc2 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = HydrogenicIon.radialOrbital(Subshell("2p_3/2"), nm.Z, grid);    wc3 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = HydrogenicIon.radialOrbital(Subshell("3d_3/2"), nm.Z, grid);    wc4 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = HydrogenicIon.radialOrbital(Subshell("3d_5/2"), nm.Z, grid);    wc5 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ax  = HydrogenicIon.radialOrbital(Subshell("1s_1/2"), nm, grid);    wc1 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ax  = HydrogenicIon.radialOrbital(Subshell("2p_1/2"), nm, grid);    wc2 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ax  = HydrogenicIon.radialOrbital(Subshell("2p_3/2"), nm, grid);    wc3 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ax  = HydrogenicIon.radialOrbital(Subshell("3d_3/2"), nm, grid);    wc4 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ax  = HydrogenicIon.radialOrbital(Subshell("3d_5/2"), nm, grid);    wc5 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
             Defaults.setDefaults("QED: damped-hydrogenic", nm.Z, [wc1, wc2, wc3, wc4, wc5] )
             println("Redefined damped radial integrals GBL_QED_HYDROGENIC_LAMBDAC = $(Defaults.GBL_QED_HYDROGENIC_LAMBDAC)")
         end
@@ -53,7 +54,7 @@ module InteractionStrengthQED
                  RadialIntegrals.qedLowFrequency(a, b, nm, grid, qgrid) 
         elseif   qed == QedPetersburg()
             wa = RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
-                 InteractionStrengthQED.selfEnergyVolotka(a, b, nm, pot, grid, qgrid)
+                 InteractionStrengthQED.selfEnergyVolotka(a, b, nm, grid, qgrid)
         else    error("stop a")
         end
         return( wa )
@@ -61,14 +62,14 @@ module InteractionStrengthQED
 
 
     """
-    `InteractionStrengthQED.selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid,
+    `InteractionStrengthQED.selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid,
                                               qgrid::Radial.GridGL)`
         ... to calculate the local, single-electron self-energy contribution due to the Petersburg model (PRA, 2013), further
             simplified by Andrey Volotka. A non-zero self-energy contribution is returned only for orbitals with 1 <= n <= 4 and 
             kappa = -1, 1, -2, 2, -3, since the method appears rather inaccurate for higher (n, kappa). 
             A single-electron self-energy amplitude wa::Float64 is returned.
     """
-    function selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, pot::Radial.Potential, grid::Radial.Grid,qgrid::Radial.GridGL)
+    function selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid, qgrid::Radial.GridGL)
         # Non-zero local amplitudes only for kappa_a = kappa_b
         if      a.subshell != b.subshell  ||  a.subshell.n > 4   return( 0. )    end
         
@@ -87,7 +88,7 @@ module InteractionStrengthQED
         ## FalphaZ = wa / FalphaZ
         ## println("Self-energy function for $(a.subshell) and $(a.subshell) is F(alpha Z) = $FalphaZ,  wdamped = $wb,  wa = $wa ")
         
-        println("QED single-electron strength <$(a.subshell)| h^(SE, Volotka) | $(b.subshell)> = $wa ")
+        println("QED single-electron strength <$(a.subshell)| h^(SE, Volotka) | $(b.subshell)> = $wa  e^-alpha r = $wb")
         
         return( wa )
     end
@@ -124,6 +125,9 @@ module InteractionStrengthQED
         elseif  110.0 <= Z < 120.0    wa = fez_qed[11,k] + (Z - 110.) / 10. *(fez_qed[12,k] - fez_qed[11,k])
         else    error("stop c")
         end
+        
+        wb = Defaults.GBL_QED_HYDROGENIC_LAMBDAC[k]
+        println("QED  <$(sh)| h^(SE, hydrogenic) | $(sh)> = $wa  e^-alpha r, hydrogenic = $wb")
        
         return( wa / Defaults.GBL_QED_HYDROGENIC_LAMBDAC[k] )
     end
