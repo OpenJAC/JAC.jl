@@ -48,7 +48,7 @@ module PhotoExcitation
     `PhotoExcitation.Settings()`  ... 'empty' constructor for the default values of photo-excitation line computations
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], false, false, false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0.)
+        Settings(EmMultipole[], UseGauge[], false, false, false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0., Basics.ExpStokes())
     end
 
 
@@ -58,7 +58,7 @@ module PhotoExcitation
         println(io, "use-gauges:               $(settings.gauges)  ")
         println(io, "calcForStokes:            $(settings.calcForStokes)  ")
         println(io, "calcPhotonDm:             $(settings.calcPhotonDm)  ")
-        println(io, "calcTensor:               $(settings.calcTensor)  ")
+        println(io, "calcTensors:              $(settings.calcTensors)  ")
         println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
         println(io, "selectLines:              $(settings.selectLines)  ")
         println(io, "selectedLines:            $(settings.selectedLines)  ")

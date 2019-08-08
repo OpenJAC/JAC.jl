@@ -1,6 +1,8 @@
 
 println("Aa) Test of the radial integration in CI computations (Randolf).")
 
+@warn("\n\n !!! This example does not work properly at present !!! \n\n")
+
 function printList(list)
   for element in list
     println(element)

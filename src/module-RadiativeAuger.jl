@@ -5,7 +5,7 @@
 """
 module RadiativeAuger
 
-    using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
+    using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
 
     """
     `struct  RadiativeAuger.Settings`  ... defines a type for the settings in estimating radiative-Auger and autoionization rates.
@@ -136,7 +136,7 @@ module RadiativeAuger
             and properties have now been evaluated.
     """
     function  computeAmplitudesProperties(line::RadiativeAuger.Line, grid::Radial.Grid, settings::RadiativeAuger.Settings)
-        global JAC_counter
+        JAC_counter = 1
         newSharings = RadiativeAuger.Sharing[]
         for sharing in line.sharings
             newChannels = RadiativeAuger.Channel[]
@@ -244,11 +244,11 @@ module RadiativeAuger
                         for  kappa in kappaList
                             # Include further restrictions if appropriate
                             if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
-                                push!(channels, RadiativeAuger.Channel(mp, Bascis.Coulomb,   kappa, symt, 0., Complex(0.)) )
+                                push!(channels, RadiativeAuger.Channel(mp, Basics.Coulomb,   kappa, symt, 0., Complex(0.)) )
                             elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
-                                push!(channels, RadiativeAuger.Channel(mp, Bascis.Babushkin, kappa, symt, 0., Complex(0.)) )  
+                                push!(channels, RadiativeAuger.Channel(mp, Basics.Babushkin, kappa, symt, 0., Complex(0.)) )  
                             elseif string(mp)[1] == 'M'                                
-                                push!(channels, RadiativeAuger.Channel(mp, Bascis.Magnetic,  kappa, symt, 0., Complex(0.)) ) 
+                                push!(channels, RadiativeAuger.Channel(mp, Basics.Magnetic,  kappa, symt, 0., Complex(0.)) ) 
                             end 
                         end
                     end

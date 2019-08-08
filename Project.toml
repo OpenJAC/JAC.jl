@@ -17,6 +17,7 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
 
 [compat]
 julia = "≥1.0"

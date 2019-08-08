@@ -458,7 +458,7 @@ module AngularMomentum
 
 
     """
-    `AngularMomentum.Wigner_3j(a, b, c, d, e, f, g, h, i)`  
+    `AngularMomentum.Wigner_9j(a, b, c, d, e, f, g, h, i)`  
         ... calculates the value of a Wigner 3-j symbol for given quantum numbers as displayed in many texts on the theory of 
             angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, p. 142); 
             it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
@@ -485,6 +485,7 @@ module AngularMomentum
     end
     
     
+    #========================  Currently not in use
 
     """
         clebschgordan(j₁, m₁, j₂, m₂, J, M)
@@ -555,5 +556,6 @@ module AngularMomentum
                        Basics.twice(j₄), Basics.twice(j₅), Basics.twice(j₆),
                        Basics.twice(j₇), Basics.twice(j₈), Basics.twice(j₉))
     end
+    ===========================#
 
 end # module

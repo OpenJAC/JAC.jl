@@ -1,6 +1,8 @@
 
 #
 println("Cj) Test of the GreenFunction module for a given list of bound-state configurations.")
+
+@warn("\n\n !!! This example does not work properly at present !!! \n\n")
 #
 setDefaults("print summary: open", "zzz-GreenFunction.sum")
 wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[Green], 

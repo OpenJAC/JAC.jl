@@ -6,7 +6,7 @@
 """
 module PhotoExcitationFluores 
 
-    using Printf, ..AutoIonization, ..Basics, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
+    using Printf, ..AutoIonization, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
     #x global JAC_counter = 0
 
     """

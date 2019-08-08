@@ -1,8 +1,10 @@
 
 println("Ac) Test of several radial e-e potentials.")
+
+@warn("\n\n !!! This example does not work properly at present !!! \n\n")
 #
 grid      = JAC.Radial.Grid("grid: exponential")
-multiplet = JAC.ManyElectron.Multiplet("from Grasp2013", "TestAuger/belike-ground-a-csl.inp",
+multiplet = JAC.ManyElectron.Multiplet("from Ratip2012", "TestAuger/belike-ground-a-csl.inp",
                                                          "TestAuger/belike-ground-a-scf.out", "TestAuger/belike-ground-a-relci.mix") 
 level     = multiplet.levels[1]
 basis     = multiplet.levels[1].basis  

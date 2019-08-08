@@ -9,7 +9,7 @@ wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=JAC.Radial.Grid("grid: b
                         initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                         finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
                         process = JAC.PhotoInPlasma, 
-                        processSettings=PlasmaShift.PhotoSettings(PlasmaShift.DebyeHueckel, 0.25, 0., 0, [E1], [JAC.UseCoulomb], 
+                        processSettings=PlasmaShift.PhotoSettings(PlasmaShift.DebyeHueckel(), 0.25, 0., 0, [E1], [JAC.UseCoulomb], 
                                                                   [3000., 3200.], true, false, Tuple{Int64,Int64}[]) )
 
 wb = perform(wa)

@@ -5,7 +5,7 @@ setDefaults("print summary: open", "zzz-MultiPhotonIonization.sum")
 wa = Atomic.Computation("xx",  Nuclear.Model(36.);
                         initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                         finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
-                        process = MultiPI, 
+                        process = JAC.MultiPI, 
                         processSettings=MultiPhotonIonization.Settings() )
 
 wb = perform(wa)

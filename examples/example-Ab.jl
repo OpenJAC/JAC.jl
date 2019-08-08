@@ -1,5 +1,7 @@
 
 println("Ab) Read in a full multiplet representation from files compatible to Ratip2012 and Grasp2018.")
+
+@warn("\n\n !!! This example does not work properly at present !!! \n\n")
 #
 wa = JAC.ManyElectron.Multiplet("from Ratip2012", "../test/files/ratip2012-at-is-a1-csl.inp", "../test/files/ratip2012-at-is-a1-scf.out", 
                                                   "../test/files/ratip2012-at-is-a1-relci.mix")

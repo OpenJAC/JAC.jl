@@ -1,5 +1,5 @@
 #
-println("Ba) Tests of the dipole and em multipole amplitudes.")
+println("Ba) Tests of the dipole, em multipole and momentum-transfer amplitudes.")
 #
 grid = Radial.Grid("grid: exponential")
 wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=grid, properties=JAC.AtomicLevelProperty[],
@@ -24,8 +24,8 @@ println("\n\nElectromagnetic multipole-transition (absorption) amplitudes from P
 for  finalLevel in wma.levels
     for  initialLevel in wma.levels
         if  flow <= finalLevel.index <= fup   &&    ilow <= initialLevel.index <= iup
-            PhotoEmission.amplitude("absorption", E1, Coulomb,  1.0, finalLevel, initialLevel, grid; display=true)
-            PhotoEmission.amplitude("absorption", M1, Magnetic, 1.0, finalLevel, initialLevel, grid; display=true)
+            PhotoEmission.amplitude("absorption", E1, Basics.Coulomb,  1.0, finalLevel, initialLevel, grid; display=true)
+            PhotoEmission.amplitude("absorption", M1, Basics.Magnetic, 1.0, finalLevel, initialLevel, grid; display=true)
         end
     end
 end
@@ -35,8 +35,8 @@ println("\n\nElectromagnetic multipole-transition (absorption) amplitudes from M
 for  finalLevel in wma.levels
     for  initialLevel in wma.levels
         if  flow <= finalLevel.index <= fup   &&    ilow <= initialLevel.index <= iup
-            MultipoleMoment.transitionAmplitude(E1, Velocity, 1.0, finalLevel, initialLevel, grid; display=true)
-            MultipoleMoment.transitionAmplitude(M1, Magnetic, 1.0, finalLevel, initialLevel, grid; display=true)
+            MultipoleMoment.transitionAmplitude(E1, Basics.Velocity, 1.0, finalLevel, initialLevel, grid; display=true)
+            MultipoleMoment.transitionAmplitude(M1, Basics.Magnetic, 1.0, finalLevel, initialLevel, grid; display=true)
         end
     end
 end
@@ -46,8 +46,8 @@ println("\n\nElectromagnetic multipole-moment amplitudes from MultipoleMoment.am
 for  finalLevel in wma.levels
     for  initialLevel in wma.levels
         if  flow <= finalLevel.index <= fup   &&    ilow <= initialLevel.index <= iup
-            MultipoleMoment.amplitude(E1, Velocity, 1.0, finalLevel, initialLevel, grid; display=true)
-            MultipoleMoment.amplitude(M1, Magnetic, 1.0, finalLevel, initialLevel, grid; display=true)
+            MultipoleMoment.amplitude(E1, Basics.Velocity, 1.0, finalLevel, initialLevel, grid; display=true)
+            MultipoleMoment.amplitude(M1, Basics.Magnetic, 1.0, finalLevel, initialLevel, grid; display=true)
         end
     end
 end

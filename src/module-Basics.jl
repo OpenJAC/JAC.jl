@@ -14,7 +14,7 @@ module Basics
             compute, diagonalize,
             estimate, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
             generate,
-            HalfInt, HalfInteger, 
+            ##x HalfInt, HalfInteger, 
             interpolate, integrate, 
             LevelSymmetry, LevelKey,
             modify, 
@@ -26,7 +26,7 @@ module Basics
             UseCoulomb, UseBabushkin
 
 
-    include("inc-halfintegers.jl")
+    ##x include("inc-halfintegers.jl")
 
     abstract type  AngularJ  end
 
@@ -85,10 +85,10 @@ module Basics
     end
     
     
-    oplus(ja, jb) = oplus(HalfInt(ja), HalfInt(jb))
-    oplus(ja::Union{HalfInt,Integer}, jb::Union{HalfInt,Integer}) = abs(ja-jb):ja+jb
+    ##x oplus(ja, jb) = oplus(HalfInt(ja), HalfInt(jb))
+    ##x oplus(ja::Union{HalfInt,Integer}, jb::Union{HalfInt,Integer}) = abs(ja-jb):ja+jb
     
-    const ⊕ = oplus
+    ##x const ⊕ = oplus
 
 
     """
@@ -102,8 +102,8 @@ module Basics
         return( mList )
     end
 
-    projections(j) = projections(HalfInt(j))
-    projections(j::Union{HalfInt,Integer}) = j≥0 ? (-j:j) : throw(DomainError(j, "angular momentum j must be non-negative."))
+    ##x projections(j) = projections(HalfInt(j))
+    ##x projections(j::Union{HalfInt,Integer}) = j≥0 ? (-j:j) : throw(DomainError(j, "angular momentum j must be non-negative."))
 
 
     abstract type  AngularM  end
@@ -192,9 +192,10 @@ module Basics
     # Conversion between HalfInt and AngularJ64, AngularM64
 
     twice(x::Union{AngularJ64,AngularM64}) = ifelse(isone(x.den), twice(x.num), x.num)
+    twice(x) = x + x
 
-    AngularJ64(x::HalfInt) = isinteger(x) ? AngularJ64(Integer(x)) : AngularJ64(twice(x), 2)
-    AngularM64(x::HalfInt) = isinteger(x) ? AngularM64(Integer(x)) : AngularM64(twice(x), 2)
+    ##x AngularJ64(x::HalfInt) = isinteger(x) ? AngularJ64(Integer(x)) : AngularJ64(twice(x), 2)
+    ##x AngularM64(x::HalfInt) = isinteger(x) ? AngularM64(Integer(x)) : AngularM64(twice(x), 2)
 
 
 

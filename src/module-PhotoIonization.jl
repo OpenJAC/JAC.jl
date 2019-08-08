@@ -6,7 +6,7 @@
 """
 module PhotoIonization
 
-    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Radial, ..Nuclear, ..ManyElectron, ..PhotoEmission, 
+    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Radial, ..Nuclear, ..ManyElectron, ..PhotoEmission, 
                   ..PlasmaShift, ..TableStrings
     ##x global JAC_counter = 0
 
@@ -267,7 +267,7 @@ module PhotoIonization
         printstyled("------------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
         photoSettings = PhotoIonization.Settings(settings.multipoles, settings.gauges, settings.photonEnergies, false, false, false,
-                                                     settings.printBeforeComputation, settings.selectLines, settings.selectedLines)
+                                                 settings.printBeforeComputation, settings.selectLines, settings.selectedLines, Basics.ExpStokes() )
         
         lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, photoSettings)
         # Display all selected lines before the computations start

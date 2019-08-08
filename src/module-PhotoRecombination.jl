@@ -6,7 +6,7 @@
 """
 module PhotoRecombination
 
-    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..ManyElectron, ..PhotoEmission, ..Radial, ..Nuclear, ..TableStrings
+    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..PhotoEmission, ..Radial, ..Nuclear, ..TableStrings
     ##x global JAC_counter = 0
 
     """

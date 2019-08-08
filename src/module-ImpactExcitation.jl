@@ -5,7 +5,7 @@
 """
 module ImpactExcitation 
 
-    using Printf, ..AngularMomentum, ..Basics, ..ManyElectron, ..Radial, ..Nuclear, ..TableStrings
+    using Printf, ..AngularMomentum, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear, ..TableStrings
 
     """
     `struct  ImpactExcitationSettings`  ... defines a type for the details and parameters of computing electron-impact excitation lines.

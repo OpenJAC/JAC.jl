@@ -6,9 +6,9 @@ using JAC
     printstyled("\nPerform tests on the JAC program; this may take a while ... \n", color=:cyan)
     ## JAC.Constants.define("print test: open", pwd() * "/runtests.report")
 
-    include("inc-halfintegers.jl")
-    include("inc-wignersymbols.jl")
-    include("inc-racahsum.jl")
+    ##x include("inc-halfintegers.jl")
+    ##x include("inc-wignersymbols.jl")
+    ##x include("inc-racahsum.jl")
 
     ##x redirect_stdout(streamDummy) do
     @testset "JAC methods" begin
@@ -47,11 +47,6 @@ using JAC
         ## @test JAC.testModule_MultiPhotonDeExcitation() 
         ## @test JAC.testModule_CoulombExcitation() 
     end
-
-    ##x @test JAC.testMethods(short=short)
-    ##x @test JAC.testAmplitudes(short=short)
-    ##x @test JAC.testProperties(short=short)
-    ##x @test JAC.testProcesses(short=short)
 
     ## JAC.define("print test: close", "")
 end

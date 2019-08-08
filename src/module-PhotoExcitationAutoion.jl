@@ -6,9 +6,8 @@
 """
 module PhotoExcitationAutoion 
 
-    using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Continuum, ..ManyElectron, ..Nuclear, ..PhotoEmission, 
+    using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..PhotoEmission, 
                   ..Radial, ..TableStrings
-    ##x global JAC_counter = 0
 
     """
     `struct  PhotoExcitationAutoion.Settings`  

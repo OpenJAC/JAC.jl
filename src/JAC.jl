@@ -46,15 +46,15 @@
 """
 module JAC
 
-using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD
+using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD, SymEngine
 
-export @racahsum, 
-       add, analyze, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AngularMomentum, 
+##x export @racahsum, 
+export add, analyze, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AngularMomentum, 
        AsfSettings, Atomic, Auger, AutoIonization, 
        Basics, Basis, 
        compute, convertUnits, Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
        diagonalize, Defaults, DecayYield, Details, Dielectronic, DoubleAuger,
-       estimate, ElectricDipoleMoment, Einstein, EmMultipole, 
+       estimate, ElectricDipoleMoment, Einstein, EmMultipole,
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor,
        generate, Green, GreenFunction, getDefaults, Gui,
@@ -69,9 +69,9 @@ export @racahsum,
        PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift,
        QedPetersburg, QedSydney,
-       Radial, RadialIntegrals, Radiative, RadiativeAuger, RayleighCompton, REDA, READI,
+       RacahAlgebra, Radial, RadialIntegrals, Radiative, RadiativeAuger, RayleighCompton, REDA, READI,
        SchiffMoment, Shell, Subshell, setDefaults,
-       tabulate, tools,
+       tabulate, tools, Tigner, W3j, W6j,
        UseCoulomb, UseBabushkin, UseGauge
     
 # Basic data and data structures
@@ -156,13 +156,13 @@ include("module-Cascade.jl")
 # include("module-Semiempirical.jl")
 
 # Functions/methods for symbolic computations
-# include("module-Racah.jl")
+include("module-RacahAlgebra.jl");  using ..RacahAlgebra
 
 # Basic functions/methods to manipulate these data
 include("inc-module-Basics.jl")
 
 # Specialized macros
-include("macro-racahsum.jl")
+##x include("macro-racahsum.jl")
 
 # All test functions/methods stay with the JAC root module
 include("jac-test.jl")

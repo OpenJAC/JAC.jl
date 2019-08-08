@@ -1,8 +1,8 @@
 
 #
-println("Bb) Tests of the parity non-conservation, Schiff moment and ... amplitudes.")
+println("Bb) Tests of the parity non-conservation, Schiff moment and anapole moment amplitudes.")
 #
-grid = give("standard grid")
+grid = getDefaults("standard grid")
 wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=JAC.AtomicLevelProperty[],
                         configs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")] )
 

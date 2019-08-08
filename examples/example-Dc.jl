@@ -10,7 +10,7 @@ wa = Atomic.Computation("xx",  Nuclear.Model(20.); grid=JAC.Radial.Grid("grid: b
                         finalConfigs  =[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6") ], 
                         process = JAC.Photo, 
                         processSettings=PhotoIonization.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [50., 60., 70., 80., 90., 100.], false, true, true, true, 
-                                        false, Tuple{Int64,Int64}[], ExpStokes(1., 0., 0.)) )
+                                        false, Tuple{Int64,Int64}[], JAC.ExpStokes(1., 0., 0.)) )
 
 wb = perform(wa)
 setDefaults("print summary: close", "")
