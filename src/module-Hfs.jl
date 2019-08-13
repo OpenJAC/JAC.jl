@@ -375,7 +375,7 @@ module Hfs
         hfsBasis     = Hfs.defineHyperfineBasis(multiplet, nm, settings)
         hfsMultiplet = Hfs.computeHyperfineRepresentation(hfsBasis, nm, grid, settings)
         # Print all results to screen
-        hfsMultiplet = Basics.sort("multiplet: by energy", hfsMultiplet)
+        hfsMultiplet = Basics.sortByEnergy(hfsMultiplet)
         Basics.tabulate("multiplet: energies",                                      hfsMultiplet) 
         Basics.tabulate("multiplet: energy of each level relative to lowest level", hfsMultiplet) 
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")

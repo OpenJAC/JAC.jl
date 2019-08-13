@@ -461,7 +461,7 @@ module ManyElectron
     	    while  true
     		ishell = ishell + 1
     		if  subshells[ishell] == sh
-    		    wa = Basics.provide("subshell states: antisymmetric, seniority", sh, occ);    nu = -1
+    		    wa = ManyElectron.provideSubshellStates(sh, occ);    nu = -1
     		    for  a in wa
     			if   AngularJ64( a.Jsub2//2 ) == subJ	 nu = a.nu;    break   end
     		    end
@@ -740,8 +740,10 @@ module ManyElectron
         selectSymmetries	     ::Bool
         selectedSymmetries	     ::Array{LevelSymmetry,1}
     end
-
     
+    
+    # Functions/methods that are later added to the module ManyElectron
+    function provideSubshellStates                                  end
     
 end # module
     

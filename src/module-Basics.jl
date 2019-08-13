@@ -1273,90 +1273,65 @@ module Basics
     struct         AddSingleElectron       <:  AbstractExcitationScheme   end
 
 
-
-    """
-    `Basics.yesno(question::String, sa::String)`  
-        ... Returns true if the answer 'yes' or 'y' is found, and false otherwise; sa = {"Y", "N"} determines how the zero-String 
-            "" is interpreted. The given question is repeated until a proper answer is obtained.
-    """
-    function yesno(question::String, sa::String)
-        while  true
-            print(question * "  ");    reply = strip( readline(STDIN) )
-            if      sa == "Y"
-                if      reply in ["", "Y", "Yes", "y", "yes"]   return( true )
-                elseif  reply in [    "N", "No",  "n", "no" ]   return( false )
-                        println("... answer not recognized ... redo:")
-                end
-            elseif  sa == "N"
-                if      reply in [    "Y", "Yes", "y", "yes"]   return( true )
-                elseif  reply in ["", "N", "No",  "n", "no" ]   return( false )
-                        println("... answer not recognized ... redo:")
-                end
-            end
-        end
-    end
-
     
     # Functions/methods that are later added to the module Basics
-    function add()                                      end
-    function addZerosToCsfR()                           end
-    function analyze()                                  end
-    function analyzeConvergence()                       end
-    function compute()                                  end
-    function computeDiracEnergy()                       end
-    function computeMeanSubshellOccupation()            end
-    function computePotentialCoreHartree()              end
-    function computePotentialHartree()                  end
-    function computePotentialHartreeSlater()            end
-    function computePotentialKohnSham()                 end
-    function computePotentialDFS()                      end
-    function computePotentialExtendedHartree()          end
-    function determineEnergySharings()                  end
-    function determineHoleShells()                      end
-    function determineParity()                          end
-    function determineSelectedLines()                   end
-    function determineSelectedPathways()                end
-    function diagonalize()                              end
-    function display()                                  end
-    function estimate()                                 end
-    function excludeDoubles()                           end
-    function extractNoOpenShells()                          end
-    function extractNonrelativisticShellList()              end
-    function extractNonrelativisticConfigurations()         end
-    function extractNonrelativisticConfigurationFromCsfR()  end
-    function extractOpenShellQNfromCsfNR()                  end
-    function extractOpenShellQNfromCsfR()                   end
-    function extractShellOccupationFromCsfR()               end
+    function add                                            end
+    function addZerosToCsfR                                 end
+    function analyze                                        end
+    function analyzeConvergence                             end
+    function compute                                        end
+    function computeDiracEnergy                             end
+    function computeMeanSubshellOccupation                  end
+    function computePotentialCoreHartree                    end
+    function computePotentialHartree                        end
+    function computePotentialHartreeSlater                  end
+    function computePotentialKohnSham                       end
+    function computePotentialDFS                            end
+    function computePotentialExtendedHartree                end
+    function determineEnergySharings                        end
+    function determineHoleShells                            end
+    function determineParity                                end
+    function determineSelectedLines                         end
+    function determineSelectedPathways                      end
+    function diagonalize                                    end
+    function display                                        end
+    function excludeDoubles                                 end
+    function extractNoOpenShells                            end
+    function extractNonrelativisticShellList                end
+    function extractNonrelativisticConfigurations           end
+    function extractNonrelativisticConfigurationFromCsfR    end
+    function extractOpenShellQNfromCsfNR                    end
+    function extractOpenShellQNfromCsfR                     end
+    function extractShellOccupationFromCsfR                 end
     function generate()                                     end
-    function generateConfigurationsForExcitationScheme()    end
-    function generateLevelWithExtraElectron()           end
-    function generateLevelWithExtraSubshell()           end
-    function generateLevelWithSymmetryReducedBasis()    end
-    function generateShellList()                        end
-    function integrate()                                end
-    function integrateOnGridNewtonCotes()               end
-    function integrateOnGridSimpsonRule()               end
-    function integrateOnGridTrapezRule()                end
-    function interpolate()                              end
-    function interpolateOnGridGrasp92()                 end
-    function interpolateOnGridTrapezRule()              end
-    function isSimilar()                                end
-    function isStandardSubshellList()                   end
-    function merge()                                    end
-    function modify()                                   end
-    function perform()                                  end
-    function plot()                                     end
-    function provide()                                  end
-    function read()                                     end
-    function readCslFileGrasp92()                       end
-    function readOrbitalFileGrasp92()                   end
-    function readMixFileRelci()                         end
-    function readMixingFileGrasp92()                    end
-    function recast()                                   end
-    function sort()                                     end
-    function tabulate()                                 end
-    function tabulateKappaSymmetryEnergiesDirac()       end
-    function tools()                                    end
+    function generateConfigurationsForExcitationScheme      end
+    function generateLevelWithExtraElectron                 end
+    function generateLevelWithExtraSubshell                 end
+    function generateLevelWithSymmetryReducedBasis          end
+    function generateShellList                              end
+    function integrate                                      end
+    function integrateOnGridNewtonCotes                     end
+    function integrateOnGridSimpsonRule                     end
+    function integrateOnGridTrapezRule                      end
+    function interpolateOnGridGrasp92                       end
+    function interpolateOnGridTrapezRule                    end
+    function isSimilar                                      end
+    function isStandardSubshellList                         end
+    function merge                                          end
+    function modifyLevelEnergies                            end
+    function perform                                        end
+    function plot                                           end
+    function read                                           end
+    function readCslFileGrasp92                             end
+    function readOrbitalFileGrasp92                         end
+    function readMixFileRelci                               end
+    function readMixingFileGrasp92                          end
+    function recast                                         end
+    function sortByEnergy                                   end
+    function tabulate                                       end
+    function tabulateKappaSymmetryEnergiesDirac             end
+    function tools                                          end
+    function yesno                                          end
     
 end # module
 

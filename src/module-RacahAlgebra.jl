@@ -264,7 +264,7 @@ module  RacahAlgebra
 
     # `Base.show(io::IO, rex::RacahExpression)`  ... prepares a proper printout of the variable  rex::RacahExpression.
     function Base.show(io::IO, rex::RacahExpression)
-        sa = "\n"
+        sa = ""
         if  rex.summations != Basic[]    sa = sa * "Sum_[$(rex.summations)]  "      end
         if  rex.phase      != Basic(0)   sa = sa * "(-1)^($(rex.phase))  "          end
         if  rex.weight     != Basic(1)   sa = sa * "($(rex.weight))  "              end
@@ -276,6 +276,20 @@ module  RacahAlgebra
         print(io, sa)
     end
 
+    
+    function  Base.:(*)(rexa::RacahExpression, rexb::RacahExpression)
+        newSummations = rexa.summations;    for  su in rexb.summations         push!(newSummations, su)         end
+        newPhase      = rexa.phase  + rexb.phase
+        newWeight     = rexa.weight * rexb.weight
+        newDeltas     = rexa.deltas;        for  delta in rexb.deltas          push!(newDeltas, delta)          end
+        newTriangles  = rexa.triangles;     for  triangle in rexb.triangles    push!(newTriangles, triangle)    end
+        newW3js       = rexa.w3js;          for  w3j in rexb.w3js              push!(newW3js, w3j)              end
+        newW6js       = rexa.w6js;          for  w6j in rexb.w6js              push!(newW6js, w6j)              end
+        newW9js       = rexa.w9js;          for  w9j in rexb.w9js              push!(newW9js, w9j)              end
+        
+        return( RacahExpression(newSummations, newPhase, newWeight, newDeltas, newTriangles, newW3js, newW6js, newW9js) )
+    end
+    
     
     """
     `abstract type RacahAlgebra.AbstractRecursionW3j` 
@@ -327,7 +341,7 @@ module  RacahAlgebra
     function equivalentForm(w9j::RacahAlgebra.W9j; regge::Bool=false)
         wa  = RacahAlgebra.symmetricForms(w9j, regge=regge)
         if  regge   n = rand(1:72)    else     n = rand(1:72)   end
-        println("** Select $(n)th equivalent form for $w6j    ==>   $( wa[n])")
+        println("** Select $(n)th equivalent form for $w9j    ==>   $( wa[n])")
         return( wa[n] )
     end
 
@@ -359,6 +373,16 @@ module  RacahAlgebra
         end
         newRex = RacahExpression( newRex.summations, newPhase, newRex.weight, newRex.deltas, 
                                   newRex.triangles,  newRex.w3js, newW6js, newRex.w9js )
+                                  
+        # Generate random equivalent forms of all Wigner 9-j symbols
+        newPhase = newRex.phase;    newW9js  = W9j[] 
+        for (iaW9j, aW9j)  in  enumerate(newRex.w9js)
+            xaRex    = RacahAlgebra.equivalentForm(aW9j, regge=regge)
+            newPhase = newPhase + xaRex.phase
+            push!( newW9js, xaRex.w9js[1])
+        end
+        newRex = RacahExpression( newRex.summations, newPhase, newRex.weight, newRex.deltas, 
+                                  newRex.triangles,  newRex.w3js, newRex.w6js, newW9js )
         
         
         return( newRex )
@@ -371,23 +395,43 @@ module  RacahAlgebra
     """
     function  evaluate(wj::Union{W3j,W6j})
         wa = RacahAlgebra.specialValue(wj)
-        if    wa[1]   return( wa[2] )
-        else          println("No special value found for:  $wj ");  
-                      return( nothing )
+        if    wa[1]   println("** Special value found for  $wj = $(wa[2]) ")
+        else          println("** No special value found for  $wj ")
         end
+        return( wa )
     end
 
 
     """
-    `RacahAlgebra.evaluate(rex::RacahExpression)`  
-        ... attempts to evaluate and symbolically simplify a Racah expression by means of special values and/or 
-            sum rules. A newrex::RacahExpression is returned once a simplification has been found, and nothing
-            otherwise. No attempt is presently made to find further simplication, once a rule has been applied.
+    `RacahAlgebra.evaluate(rex::RacahExpression; special::Bool=false)`  
+        ... attempts to evaluate and symbolically simplify a Racah expression by means of special values, if
+            special=true, or by sum rules. A newrex::RacahExpression is returned once a (single) simplification 
+            has been found, and nothing otherwise. No attempt is presently made to find further simplication, 
+            once a rule has been applied.
     """
-    function  evaluate(rex::RacahExpression)
-        wa = sumRulesForOneW3j(rex);         if    wa[1]  return( wa[2] )  end
-        wa = sumRulesForOneW6j(rex);         if    wa[1]  return( wa[2] )  end
-        wa = sumRulesForOneW9j(rex);         if    wa[1]  return( wa[2] )  end
+    function  evaluate(rex::RacahExpression; special::Bool=false)
+        if  special
+            # Simplify by means of special values if this is requested
+            for  (iaW3j, aW3j) in enumerate(rex.w3js)    wa = evaluate(aW3j)
+                if wa[1]    newW3js = W3j[]     
+                    for  (ibW3j, bW3j) in enumerate(rex.w3js)   if  iaW3j == ibW3j  else  push!(newW3js, ibW3j)   end    end
+                    return( RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, newW3js, rex.w6js, rex.w9js) * wa[2] )
+                end
+            end
+            for  (iaW6j, aW6j) in enumerate(rex.w6js)    wa = evaluate(aW6j)
+                if wa[1]    newW6js = W6j[]     
+                    for  (ibW6j, bW6j) in enumerate(rex.w6js)   if  iaW6j == ibW6j  else  push!(newW6js, ibW6j)   end    end
+                    return( RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, rex.w3js, newW6js, rex.w9js) * wa[2] )
+                end
+            end
+        else
+            # Try to find sum rules
+            wa = sumRulesForOneW3j(rex);         if    wa[1]  return( wa[2] )  end
+            wa = sumRulesForOneW6j(rex);         if    wa[1]  return( wa[2] )  end
+            wa = sumRulesForOneW9j(rex);         if    wa[1]  return( wa[2] )  end
+            wa = sumRulesForTwoW3j(rex);         if    wa[1]  return( wa[2] )  end
+            wa = sumRulesForTwoW6j(rex);         if    wa[1]  return( wa[2] )  end
+        end
         
         println("\nNo simplification found for:  $rex ");  
         return( nothing )
@@ -441,12 +485,24 @@ module  RacahAlgebra
 
 
     """
+    `RacahAlgebra.hasAllVars(indexList::Array{SymEngine.Basic,1}, varList::Array{SymEngine.Basic,1})`  
+        ... returns true if all indices from indexList are in varList and false otherwise.
+    """
+    function  hasAllVars(indexList::Array{SymEngine.Basic,1}, varList::Array{SymEngine.Basic,1})
+        for  index  in  indexList
+            if  index in varList    else    return( false )   end
+        end
+        return( true )
+    end
+
+
+    """
     `RacahAlgebra.hasIndex(index::SymEngine.Basic, indexList::Array{SymEngine.Basic,1})`  
         ... returns true if index is in indexList and false otherwise; this function is implemented mainly for 
             consistency reasons.
     """
     function  hasIndex(index::SymEngine.Basic, indexList::Array{SymEngine.Basic,1})
-        if  index in indexList    return( true )    else    false   end
+        if  index in indexList    return( true )    else    return( false )   end
     end
 
 
@@ -456,7 +512,7 @@ module  RacahAlgebra
     """
     function hasIndex(index::SymEngine.Basic, expr::SymEngine.Basic)
         sList = SymEngine.free_symbols(expr)
-        if  index in sList    return( true )    else    false   end
+        if  index in sList    return( true )    else    return( false )   end
     end
 
 
@@ -467,7 +523,7 @@ module  RacahAlgebra
     function hasIndex(index::SymEngine.Basic, deltas::Array{RacahAlgebra.Kronecker,1})
         sList = Basic[]
         for  delta in deltas    push!(sList, delta.i);      push!(sList, delta.k)    end
-        if  index in sList    return( true )    else    false   end
+        if  index in sList    return( true )    else    return( false )   end
     end
 
 
@@ -480,7 +536,7 @@ module  RacahAlgebra
         for  triangle in triangles    
             push!(sList, triangle.ja);    push!(sList, triangle.jb);    push!(sList, triangle.jc)
         end
-        if  index in sList    return( true )    else    false   end
+        if  index in sList    return( true )    else    return( false )   end
     end
 
 
@@ -494,7 +550,7 @@ module  RacahAlgebra
             push!(sList, w3j.ja);    push!(sList, w3j.jb);    push!(sList, w3j.jc)
             push!(sList, w3j.ma);    push!(sList, w3j.mb);    push!(sList, w3j.mc)
         end
-        if  index in sList    return( true )    else    false   end
+        if  index in sList    return( true )    else    return( false )   end
     end
 
 
@@ -508,12 +564,12 @@ module  RacahAlgebra
             push!(sList, w6j.a);    push!(sList, w6j.b);    push!(sList, w6j.c)
             push!(sList, w6j.d);    push!(sList, w6j.e);    push!(sList, w6j.f)
         end
-        if  index in sList    return( true )    else    false   end
+        if  index in sList    return( true )    else    return( false )   end
     end
 
 
     """
-    `RacahAlgebra.hasIndex(index::SymEngine.Basic, w9js::Array{RacahAlgebra.W9,1})`  
+    `RacahAlgebra.hasIndex(index::SymEngine.Basic, w9js::Array{RacahAlgebra.W9j,1})`  
         ... returns true if the (symbolic) index occurs in the list of Wigner 9j symbols and false otherwise.
     """
     function hasIndex(index::SymEngine.Basic, w9js::Array{RacahAlgebra.W9j,1})
@@ -523,7 +579,106 @@ module  RacahAlgebra
             push!(sList, w9j.d);    push!(sList, w9j.e);    push!(sList, w9j.f)
             push!(sList, w9j.g);    push!(sList, w9j.h);    push!(sList, w9j.i)
         end
-        if  index in sList    return( true )    else    false   end
+        if  index in sList    return( true )    else    return( false )   end
+    end
+
+
+    """
+    `RacahAlgebra.hasNoVars(indexList::Array{SymEngine.Basic,1}, expr::SymEngine.Basic)`  
+        ... returns true if no (symbolic) index from indexList occurs in expression and false otherwise.
+    """
+    function hasNoVars(indexList::Array{SymEngine.Basic,1}, expr::SymEngine.Basic)
+        sList = SymEngine.free_symbols(expr)
+        for  index in indexList
+            if  index in sList   return( false )   end
+        end
+        
+        return( true )    
+    end
+
+
+    """
+    `RacahAlgebra.hasNoVars(indexList::Array{SymEngine.Basic,1}, deltas::Array{RacahAlgebra.Kronecker,1})`  
+        ... returns true if no (symbolic) index from indexList occurs in the array deltas and false otherwise.
+    """
+    function hasNoVars(indexList::Array{SymEngine.Basic,1}, deltas::Array{RacahAlgebra.Kronecker,1})
+        sList = Basic[]
+        for  delta in deltas    push!(sList, delta.i);    push!(sList, delta.k)     end
+        for  index in indexList
+            if  index in sList   return( false )   end
+        end
+        
+        return( true )    
+    end
+
+
+    """
+    `RacahAlgebra.hasNoVars(indexList::Array{SymEngine.Basic,1}, triangles::Array{RacahAlgebra.Triangle,1})`  
+        ... returns true if no (symbolic) index from indexList occurs in the array triangles and false otherwise.
+    """
+    function hasNoVars(indexList::Array{SymEngine.Basic,1}, triangles::Array{RacahAlgebra.Triangle,1})
+        sList = Basic[]
+        for  triangle in triangles    push!(sList, triangle.i);    push!(sList, triangle.j);    push!(sList, triangle.k)     end
+        for  index in indexList
+            if  index in sList   return( false )   end
+        end
+        
+        return( true )    
+    end
+
+
+    """
+    `RacahAlgebra.hasNoVars(indexList::Array{SymEngine.Basic,1}, w3js::Array{RacahAlgebra.W3j,1})`  
+        ... returns true if no (symbolic) index from indexList occurs in the array w3js and false otherwise.
+    """
+    function hasNoVars(indexList::Array{SymEngine.Basic,1}, w3js::Array{RacahAlgebra.W3j,1})
+        sList = Basic[]
+        for  w3j in w3js    
+            push!(sList, w3j.ja);    push!(sList, w3j.jb);    push!(sList, w3j.jc)
+            push!(sList, w3j.ma);    push!(sList, w3j.mb);    push!(sList, w3j.mc)
+        end
+        for  index in indexList
+            if  index in sList   return( false )   end
+        end
+        
+        return( true )    
+    end
+
+
+    """
+    `RacahAlgebra.hasNoVars(indexList::Array{SymEngine.Basic,1}, w6js::Array{RacahAlgebra.W6j,1})`  
+        ... returns true if no (symbolic) index from indexList occurs in the array w6js and false otherwise.
+    """
+    function hasNoVars(indexList::Array{SymEngine.Basic,1}, w6js::Array{RacahAlgebra.W6j,1})
+        sList = Basic[]
+        for  w6j in w6js    
+            push!(sList, w6j.a);    push!(sList, w6j.b);    push!(sList, w6j.c)
+            push!(sList, w6j.d);    push!(sList, w6j.e);    push!(sList, w6j.f)
+        end
+        for  index in indexList
+            if  index in sList   return( false )   end
+        end
+        
+        return( true )    
+    end
+
+
+    """
+    `RacahAlgebra.hasNoVars(indexList::Array{SymEngine.Basic,1}, w9js::Array{RacahAlgebra.W9j,1})`  
+        ... returns true if no (symbolic) index from indexList occurs in the array w3js and false otherwise.
+    """
+    function hasNoVars(indexList::Array{SymEngine.Basic,1}, w9js::Array{RacahAlgebra.W9j,1})
+        sList = Basic[]
+        for  w9j in w9js    
+            push!(sList, w9j.a);    push!(sList, w9j.b);    push!(sList, w9j.c)
+            push!(sList, w9j.d);    push!(sList, w9j.e);    push!(sList, w9j.f)
+            push!(sList, w9j.g);    push!(sList, w9j.h);    push!(sList, w9j.i)
+        end
+        for  index in indexList
+            if  index in sList   return( false )   end
+        end
+        
+        return( true )    
     end
 
 
@@ -641,6 +796,42 @@ module  RacahAlgebra
 
 
     """
+    `RacahAlgebra.removeIndex(indices::Array{SymEngine.Basic,1}, indexList::Array{SymEngine.Basic,1})`  
+        ... removes the indices from the given indexList; a newList::Array{SymEngine.Basic,1} is returned.
+    """
+    function  removeIndex(indices::Array{SymEngine.Basic,1}, indexList::Array{SymEngine.Basic,1})
+        newList = Basic[]
+        for  idx in indexList
+            if  idx in indices
+            else    push!( newList, idx)
+            end
+        end
+        return( newList )
+    end
+
+
+    """
+    `RacahAlgebra.rewritePhase(phase::Basic, zeroTerms::Array{SymEngine.Basic,1}, woIndex::Array{SymEngine.Basic,1})`  
+        ... attempts to rewrite the phase by adding one or several 'zero' terms so that it appears without the indices 
+            in woIndex. An equivalent newPhase::Basic either 'without' or 'with' the indicated indices is returned.
+    """
+    function rewritePhase(phase::Basic, zeroTerms::Array{SymEngine.Basic,1}, woIndex::Array{SymEngine.Basic,1})
+        # Return the phase if this is OK
+        if  RacahAlgebra.hasNoVars(woIndex, phase)    return( phase )   end
+        
+        # First simply try to add/substract multiples of each zeroTerm and see whether this solves the issue
+        for  zTerm  in  zeroTerms
+            for  k in [-2, -1, 1, 2]    
+                newPhase = SymEngine.expand( phase + k * zTerm )
+                ##x println("******** newPhase = $newPhase   woIndex = $woIndex   hasNoIndex  = $(RacahAlgebra.hasNoVars(woIndex, newPhase))")
+                if  RacahAlgebra.hasNoVars(woIndex, newPhase)    return( newPhase )   end
+            end
+        end
+        return( phase )
+    end
+
+
+    """
     `RacahAlgebra.selectW3j(n::Int64)`  
         ... selects one of various pre-defined Wigner 3j symbols for which usually special values are known;
             this function has been implemented mainly for test purposes. A w3j::W3j is returned. 
@@ -652,27 +843,26 @@ module  RacahAlgebra
             return(nothing)
         end
         
-        ja = Basic(:ja);    jb = Basic(:jb);    jc = Basic(:jc);    ma = Basic(:ma)
+        j1 = Basic(:j1);    j2 = Basic(:j2);    j3 = Basic(:j3)
+        j  = Basic(:j);     m = Basic(:m);      
         
-        if      n ==  1     w3j = W3j(ja, jb, jc, 0, 0, 0)
-        elseif  n ==  2     w3j = W3j(ja, ja, 0, ma, -ma, 0)
-        elseif  n ==  3     w3j = W3j(ja, ja-1//2, 1//2, ma, -ma-1//2, 1//2)
-        elseif  n ==  4     w3j = W3j(jb+1, jb, 1, ma, -ma-1, 1)
-        elseif  n ==  5     w3j = W3j(jb+1, jb, 1, ma, -ma, 0)
-        elseif  n ==  6     w3j = W3j(ja, ja, 1, ma, -ma-1, 1)
-        elseif  n ==  7     w3j = W3j(ja, ja, 1, ma, -ma, 0)
-        elseif  n ==  8     w3j = W3j(jb+3//2, jb, 3//2, ma, -ma-3//2, 3//2)
-        elseif  n ==  9     w3j = W3j(jb+3//2, jb, 3//2, ma, -ma-1//2, 1//2)
-        elseif  n == 10     w3j = W3j(jb+1//2, jb, 3//2, ma, -ma-1//2, 1//2)
-        elseif  n == 11     w3j = W3j(jb+2, jb, 2, ma, -ma-2, 2)
-        elseif  n == 12     w3j = FAIL
-        elseif  n == 13     w3j = FAIL
-        elseif  n == 14     w3j = FAIL
-        elseif  n == 15     w3j = FAIL
-        elseif  n == 16     w3j = FAIL
-        elseif  n == 17     w3j = FAIL
-        elseif  n == 18     w3j = FAIL
-        elseif  n == 19     w3j = FAIL
+        if      n ==  1     w3j = W3j(j1, j2, j3, 0, 0, 0)
+        elseif  n ==  2     w3j = W3j(j, j, 0, m, -m, 0)
+        elseif  n ==  3     w3j = W3j(j, j-1//2, 1//2, m, -m-1//2, 1//2)
+        elseif  n ==  4     w3j = W3j(j+1, j, 1, m, -m-1, 1)
+        elseif  n ==  5     w3j = W3j(j+1, j, 1, m, -m, 0)
+        elseif  n ==  6     w3j = W3j(j, j, 1, m, -m-1, 1)
+        elseif  n ==  7     w3j = W3j(j, j, 1, m, -m, 0)
+        elseif  n ==  8     w3j = W3j(j+3//2, j, 3//2, m, -m-3//2, 3//2)
+        elseif  n ==  9     w3j = W3j(j+3//2, j, 3//2, m, -m-1//2, 1//2)
+        elseif  n == 10     w3j = W3j(j+1//2, j, 3//2, m, -m-1//2, 1//2)
+        elseif  n == 11     w3j = W3j(j+2, j, 2, m, -m-2, 2)
+        elseif  n == 12     w3j = W3j(j+2, j, 2, m, -m, 0)
+        elseif  n == 13     w3j = W3j(j+1, j, 2, m, -m-2, 2)
+        elseif  n == 14     w3j = W3j(j+1, j, 2, m, -m-1, 1)
+        elseif  n == 15     w3j = W3j(j+1, j, 2, m, -m, 0)
+        elseif  n == 16     w3j = W3j(j, j, 2, m, -m, 0)
+
         elseif  n == 20     w3j = FAIL
         else    error("stop a")
         end
@@ -693,20 +883,33 @@ module  RacahAlgebra
             return(nothing)
         end
         
-        ja = Basic(:ja);    jb = Basic(:jb);    jc = Basic(:jc);    je = Basic(:je);    je = Basic(:je)
+        j1 = Basic(:j1);    j2 = Basic(:j2);    j3 = Basic(:j3);    l1 = Basic(:l1);   l2 = Basic(:l2)
+        j  = Basic(:j);     m = Basic(:m);      a  = Basic(:a);     b  = Basic(:b);    c  = Basic(:c)
         
-        if      n ==  1     w6j = W6j( ja, jb, jc, je, jf, 0)
-        elseif  n ==  2     w6j = W6j( ja, jb, jc, 1//2, jc -1//2,  jb +1//2)
-        elseif  n ==  3     w6j = W6j( ja, jb, jc, 1//2, jc +1//2,  jb +1//2)
-        elseif  n ==  4     w6j = W6j( ja, jb, jc, 1, jc -1,  jb -1)
-        elseif  n ==  5     w6j = FAIL
-        elseif  n ==  6     w6j = FAIL
-        elseif  n ==  7     w6j = FAIL
-        elseif  n ==  8     w6j = FAIL
-        elseif  n ==  9     w6j = FAIL
-        elseif  n == 10     w6j = FAIL
-        elseif  n == 11     w6j = FAIL
-        elseif  n == 12     w6j = FAIL
+        if      n ==  1     w6j = W6j( j1, j2, j3, l1, l2, 0)
+        elseif  n ==  2     w6j = W6j( j1, j2, j3, 1//2, j3-1//2, j2+1//2)
+        elseif  n ==  3     w6j = W6j( j1, j2, j3, 1//2, j3+1//2, j2+1//2)
+        elseif  n ==  4     w6j = W6j( j1, j2, j3, 1, j3-1, j2-1)
+        elseif  n ==  5     w6j = W6j( j1, j2, j3, 1, j3-1, j2)
+        elseif  n ==  6     w6j = W6j( j1, j2, j3, 1, j3-1, j2+1)
+        elseif  n ==  7     w6j = W6j( j1, j2, j3, 1, j3, j2)
+        elseif  n ==  8     w6j = W6j( a, b, c, 3//2, c-3//2, b-3//2)
+        elseif  n ==  9     w6j = W6j( a, b, c, 3//2, c-3//2, b-1//2)
+        elseif  n == 10     w6j = W6j( a, b, c, 3//2, c-3//2, b+1//2)
+        elseif  n == 11     w6j = W6j( a, b, c, 3//2, c-3//2, b+3//2)
+        elseif  n == 12     w6j = W6j( a, b, c, 3//2, c-1//2, b-1//2)
+        elseif  n == 13     w6j = W6j( a, b, c, 3//2, c-1//2, b+1//2)
+        elseif  n == 14     w6j = W6j( a, b, c, 2, c-2, b-2)
+        elseif  n == 15     w6j = W6j( a, b, c, 2, c-2, b-1)
+        elseif  n == 16     w6j = W6j( a, b, c, 2, c-2, b)
+        elseif  n == 17     w6j = W6j( a, b, c, 2, c-2, b+1)
+        elseif  n == 18     w6j = W6j( a, b, c, 2, c-2, b+2)
+        elseif  n == 19     w6j = W6j( a, b, c, 2, c-1, b-1)
+        elseif  n == 20     w6j = W6j( a, b, c, 2, c-1, b)
+        elseif  n == 21     w6j = W6j( a, b, c, 2, c-1, b+1)
+        elseif  n == 22     w6j = W6j( a, b, c, 2, c-1, b)
+
+        elseif  n == 30     w6j = FAIL
         else    error("stop a")
         end
         
@@ -727,657 +930,40 @@ module  RacahAlgebra
         end
         
         j = Basic(:j);    J = Basic(:J);    m = Basic(:m);    M = Basic(:M)
-        a = Basic(:a);    b = Basic(:b);    X = Basic(:X);    c = Basic(:c);   
+        a = Basic(:a);    b = Basic(:b);    X = Basic(:X);    c = Basic(:c);    d = Basic(:d);    ee = Basic(:ee);    f = Basic(:f) 
+        p = Basic(:p);    q = Basic(:q);    Y = Basic(:Y);    Z = Basic(:Z);    
+        na  = Basic(:na);    np  = Basic(:np);     nq  = Basic(:nq);     ee  = Basic(:ee);    ap  = Basic(:ap) 
+        j1  = Basic(:j1);    j2  = Basic(:j2);     j3  = Basic(:j3);     m1  = Basic(:m1);    m2  = Basic(:m2);    m3 = Basic(:m3)
+        m1p = Basic(:m1p);   m2p = Basic(:m2p);    j3p = Basic(:j3p);    m3p = Basic(:m3p);   nap = Basic(:nap)
         
         if      n ==  1     w3j = W3j(j, j, J, m, -m, M)
                             rex = RacahExpression( [m], Basic(-m), Basic(1), Kronecker[], Triangle[], [w3j], W6j[], W9j[] )
         elseif  n ==  2     w6j = W6j(a, b, X, a, b, c)
                             rex = RacahExpression( [X], Basic(0), Basic(2*X+1), Kronecker[], Triangle[], W3j[], [w6j], W9j[] )
+        elseif  n ==  3     w6j = W6j(a, b, X, b, a, c)
+                            rex = RacahExpression( [X], Basic(X), Basic(2*X+1), Kronecker[], Triangle[], W3j[], [w6j], W9j[] )
+        elseif  n ==  4     w9j = W9j(a, b, ee, c, d, f, ee, f, X)
+                            rex = RacahExpression( [X], Basic(0), Basic(2*X+1), Kronecker[], Triangle[], W3j[], W6j[], [w9j] )
+        elseif  n ==  5     w9j = W9j(a, b, ee, c, d, f, f, ee, X)
+                            rex = RacahExpression( [X], Basic(-X), Basic(2*X+1), Kronecker[], Triangle[], W3j[], W6j[], [w9j] )
+        elseif  n ==  6     aw3j = W3j(j1, j2, j3, m1, m2, m3);    bw3j = W3j(j1, j2, j3, m1p, m2p, m3)
+                            rex = RacahExpression( [j3, m3], Basic(0), Basic(2*j3+1), Kronecker[], Triangle[], [aw3j, bw3j], W6j[], W9j[] )
+        elseif  n ==  7     aw3j = W3j(j1, j2, j3, m1, m2, m3);    bw3j = W3j(j1, j2, j3p, m1, m2, m3p)
+                            rex = RacahExpression( [m1, m2], Basic(0), Basic(1), Kronecker[], Triangle[], [aw3j, bw3j], W6j[], W9j[] )
+        elseif  n ==  8     aw3j = W3j(a, p, q, -na, np, nq);    bw3j = W3j(p, q, ap, -np, -nq, nap)
+                            rex = RacahExpression( [np, nq], Basic(-np-nq), Basic(1), Kronecker[], Triangle[], [aw3j, bw3j], W6j[], W9j[] )
+        elseif  n ==  9     aw6j = W6j(X, Y, Z, a, b ,c);    bw6j = W6j(X, Y, Z, a, b ,c)
+                            rex = RacahExpression( [X, Y, Z], Basic(0), Basic((2*X+1)*(2*Y+1)*(2*Z+1)), 
+                                                   Kronecker[], Triangle[], W3j[], W6j[aw6j, bw6j], W9j[] )
+        elseif  n ==  10    aw6j = W6j(a, b, X, c, d, p);    bw6j = W6j(c, d, X, b, a, q)
+                            rex = RacahExpression( [X], Basic(X), Basic(2*X+1), Kronecker[], Triangle[], W3j[], W6j[aw6j, bw6j], W9j[] )
+        elseif  n ==  11    aw6j = W6j(a, b, X, c, d, p);    bw6j = W6j(c, d, X, a, b, q)
+                            rex = RacahExpression( [X], Basic(0), Basic(2*X+1), Kronecker[], Triangle[], W3j[], W6j[aw6j, bw6j], W9j[] )
         elseif  n == 12     rex = FAIL
         else    error("stop a")
         end
         
         return( rex )
-    end
-
-    
-    """
-    `RacahAlgebra.specialValue(w3j::RacahAlgebra.W3j)`  
-        ... attempts to find a special value for the Wigner 3j symbol w3j. 
-            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned, and where istrue determined of whether a 
-            special value is returned in rex. For istrue = false, rex has no meaning.
-    """
-    function specialValue(w3j::RacahAlgebra.W3j)
-        deltas = Kronecker[];    triangles = Triangle[];   w3js = W3j[];   w6js = W6j[];   w9js = W9j[]
-
-        rexList = RacahAlgebra.symmetricForms(w3j)
-        for  rex in rexList
-            ww = rex.w3js[1]
-            #
-            #  Rule:        ( j   j   0 )           j-m     -1/2
-            #  -----        (           )   =   (-1)      [j]
-            #               ( m  -m   0 )
-            #
-            specialW3j = W3j(ww.ja, ww.ja, 0, ww.ma, -ww.ma, 0)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.ja - ww.ma, rex.weight / sqrt(2*ww.ja+1), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule:        ( j   j-1/2   1/2 )           j-m-1   (   j - m   ) 1/2
-            #  -----        (                 )   =   (-1)        (-----------)
-            #               ( m  -m-1/2   1/2 )                   ( 2j (2j+1) )
-            #
-            specialW3j = W3j(ww.ja, ww.ja-1//2, 1//2, ww.ma, -ww.ma-1//2, 1//2)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.ja - ww.ma - 1, 
-                                      rex.weight * sqrt( (ww.ja - ww.ja)/(2*ww.ja * (2*ww.ja+1)) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule:        ( j+1    j    1 )           j-m-1  (    (j-m)(j-m+1)    ) 1/2
-            #  -----        (               )   =   (-1)       (--------------------)
-            #               (  m   -m-1   1 )                  ( (2j+3)(2j+2)(2j+1) )
-            #
-            specialW3j = W3j(ww.jb+1, ww.jb, 1, ww.ma, -ww.ma-1, 1)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma - 1, 
-                                      rex.weight * sqrt( (ww.jb - ww.ma)*(ww.jb - ww.ma + 1)/(2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule:        ( j1  j2  j3 )        J/2 [(J-2*j1)!(J-2*j2)!(J-2*j3)!] 1/2                   (J/2)!
-            #  -----        (            )  = (-1)    [---------------------------]       -----------------------------------
-            #               (  0   0   0 )            [          (J+1)!           ]       (J/2 - j1)! (J/2 - j2)! (J/2 - j3)!
-            #
-            #               with  J = j1+j2+j3  is  even; the 3j symbol is zero if J is odd.
-            #
-            specialW3j = W3j(ww.ja, ww.jb, ww.jc, 0, 0, 0);     J = ww.ja + ww.jb + ww.jc
-            if  ww == specialW3j
-                push!( deltas, Kronecker(J, Basic(:even)) )
-                wa = RacahExpression( rex.summations, rex.phase + J/2, 
-                        rex.weight * sqrt( factorial(J - 2*ww.ja) * factorial(J - 2*ww.jb) * factorial(J - 2*ww.jb) / factorial(J+1) ) * 
-                                      factorial(J/2) / ( factorial(J/2-ww.ja) * factorial(J/2-ww.jb) * factorial(J/2-ww.jc) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule:        ( j+1   j   1 )           j-m-1  (  2(j+m+1)(j-m+1)   ) 1/2
-            #  -----        (             )   =   (-1)       (--------------------)
-            #               (  m   -m   0 )                  ( (2j+3)(2j+2)(2j+1) )
-            #
-            specialW3j = W3j(ww.jb+1, ww.jb, 1, ww.ma, -ww.ma, 0)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma - 1, 
-                        rex.weight * sqrt( 2*(ww.jb + ww.ma + 1)*(ww.jb - ww.ma + 1)/(2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule:        ( j    j     1 )           j-m  (  2*(j-m)(j+m+1)  ) 1/2
-            #  -----        (              )   =   (-1)     (------------------)
-            #               ( m   -m-1   1 )                ( (2j+2)(2j+1)(2j) )
-            #
-            specialW3j = W3j(ww.ja, ww.ja, 1, ww.ma, -ww.ma-1, 1)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.ja - ww.ma, 
-                        rex.weight * sqrt( 2*(ww.ja - ww.ma)*(ww.ja + ww.ma + 1)/(2*ww.ja+2) * (2*ww.ja+1) * (2*ww.ja) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule:        ( j   j   1 )           j-m            2 m
-            #  -----        (           )   =   (-1)      -----------------------
-            #               ( m  -m   0 )                 ((2j+2)(2j+1)(2j))^(1/2)
-            #
-            specialW3j = W3j(ww.ja, ww.ja, 1, ww.ma, -ww.ma, 0)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.ja - ww.ma, 
-                                      rex.weight * 2*ww.ma / sqrt( (2*ww.ja+2) * (2*ww.ja+1) * (2*ww.ja) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 1      ( j+3/2    j    3/2 )           j-m+1/2   ( (j-m-1/2)(j-m+1/2)(j-m+3/2) ) 1/2
-            #  -------      (                   )   =   (-1)          (-----------------------------)
-            #               (   m   -m-3/2  3/2 )                     (   (2j+4)(2j+3)(2j+2)(2j+1)  )
-            #
-            specialW3j = W3j(ww.jb+3//2, ww.jb, 3//2, ww.ma, -ww.ma-3//2, 3//2)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma + 1//2, 
-                                      rex.weight * sqrt( ( (ww.jb-ww.ma-1//2) * (ww.jb-ww.ma+1//2) * (ww.jb-ww.ma-3//2) )/
-                                                         ( (2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1) ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 2      ( j+3/2    j    3/2 )           j-m+1/2 ( 3*(j-m+1/2)(j-m+3/2)(j+m+3/2) ) 1/2
-            #  -------      (                   )   =   (-1)        (-------------------------------)
-            #               (   m   -m-1/2  1/2 )                   (    (2j+4)(2j+3)(2j+2)(2j+1)   )
-            #
-            specialW3j = W3j(ww.jb+3//2, ww.jb, 3//2, ww.ma, -ww.ma-1//2, 1//2)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma + 1//2, 
-                                      rex.weight * sqrt( ( 3*(ww.jb-ww.ma+1//2) * (ww.jb-ww.ma+3//2) * (ww.jb+ww.ma+3//2) )/
-                                                         ( (2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1) ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 4      ( j+1/2    j    3/2 )            j-m-1/2           (        j-m+1/2         ) 1/2
-            #  -------      (                   )    =   (-1)      (j+3*m+3/2) (------------------------)
-            #               (   m   -m-1/2  1/2 )                              ( (2j+3)(2j+2)(2j+1)(2j) )
-            #
-            #
-            specialW3j = W3j(ww.jb+1//2, ww.jb, 3//2, ww.ma, -ww.ma-1//2, 1//2)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma - 1//2, 
-                                      rex.weight * (ww.jb + 3*ww.ma + 3//2) *
-                                      sqrt( (ww.jb-ww.ma+1//2) / ((2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1) * 2*ww.jb) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 5      ( j+2    j   2 )           j-m  (   (j-m-1)(j-m)(j-m+1)(j-m+2)   ) 1/2
-            #  -------      (              )   =   (-1)     (--------------------------------)
-            #               ( m    -m-2  2 )                ( (2j+5)(2j+4)(2j+3)(2j+2)(2j+1) )
-            #
-            specialW3j = W3j(ww.jb+2, ww.jb, 2, ww.ma, -ww.ma-2, 2)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma, 
-                                      rex.weight * sqrt( (ww.jb-ww.ma-1) * (ww.jb-ww.ma) * (ww.jb-ww.ma+1) *(ww.jb-ww.ma-2) / 
-                                                         ((2*ww.jb+5) * (2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2)  * (2*ww.jb+1) ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 7      ( j+2   j   2 )          j-m  ( 6 (j+m+2)(j+m+1)(j-m+2)(j-m+1) ) 1/2
-            #  -------      (             )  =   (-1)     (--------------------------------)
-            #               ( m    -m   0 )               ( (2j+5)(2j+4)(2j+3)(2j+2)(2j+1) )
-            #
-            specialW3j = W3j(ww.jb+2, ww.jb, 2, ww.ma, -ww.ma-2, 0)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma, 
-                                      rex.weight * sqrt( 6* (ww.jb+ww.ma+2) * (ww.jb+ww.ma+1) * (ww.jb-ww.ma+2) * (ww.jb-ww.ma+1) / 
-                                                         ((2*ww.jb+5) * (2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2)  * (2*ww.jb+1) ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 8      ( j+1    j    2 )         j-m+1    (  (j-m-1)(j-m)(j-m+1)(j+m+2)  ) 1/2
-            #  -------      (               ) =   (-1)      2* (------------------------------)
-            #               ( m    -m-2   2 )                  ( (2j+4)(2j+3)(2j+2)(2j+1)(2j) )
-            #
-            specialW3j = W3j(ww.jb+1, ww.jb, 2, ww.ma, -ww.ma-2, 2)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma + 1, 
-                                      rex.weight * 2* sqrt( (ww.jb-ww.ma-1) * (ww.jb-ww.ma) * (ww.jb-ww.ma+1) * (ww.jb-ww.ma+2) / 
-                                                            ((2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1)  * 2*ww.jb ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 9      ( j+1    j    2 )         j-m+1            (        (j-m+1)(j-m)          ) 1/2
-            #  -------      (               ) =   (-1)     2*(j+2*m+2) (------------------------------)
-            #               ( m    -m-1   1 )                          ( (2j+4)(2j+3)(2j+2)(2j+1)(2j) )
-            #
-            specialW3j = W3j(ww.jb+1, ww.jb, 2, ww.ma, -ww.ma-1, 1)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma + 1, 
-                                      rex.weight * 2* (ww.jb+2*ww.ma+2) * sqrt( (ww.jb-ww.ma-1) * (ww.jb-ww.ma) / 
-                                                           ((2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1)  * 2*ww.jb ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 10     ( j+1   j   2 )          j-m+1     (       6 (j+m+1)(j-m+1)       ) 1/2
-            #  --------     (             )  =   (-1)      2*m (------------------------------)
-            #               ( m    -m   0 )                    ( (2j+4)(2j+3)(2j+2)(2j+1)(2j) )
-            #
-            specialW3j = W3j(ww.jb+1, ww.jb, 2, ww.ma, -ww.ma, 0)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma + 1, 
-                                      rex.weight * 2*ww.ma * sqrt( 6* (ww.jb-ww.ma+1) * (ww.jb-ww.ma+1) / 
-                                                           ((2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1)  * 2*ww.jb ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 13     ( j   j   2 )          j-m         2 (3*m*m - j(j+1))
-            #  --------     (           )  =   (-1)     ------------------------------------
-            #               ( m  -m   0 )               ((2j+3)(2j+2)(2j+1)(2j)(2j-1))^(1/2)
-            #
-            specialW3j = W3j(ww.jb, ww.jb, 2, ww.ma, -ww.ma, 0)
-            if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma, 
-                                      rex.weight * 2* (3*ww.ma*ww.ma - ww.jb*(ww.jb+1)) / 
-                                                   sqrt( (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1)  * 2*ww.jb * (2*ww.jb-1) ),
-                                      deltas, triangles, w3js, w6js, w9js ) 
-                return( (true, wa) )
-            end
-        end
-        
-        return( (false, RacahExpression() ) )
-    end
-
-
-    """
-    `RacahAlgebra.specialValue(w6j::RacahAlgebra.W6j)`  
-        ... attempts to find a special value for the Wigner 6j symbol w6j. 
-            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned, and where istrue determined of whether a 
-            special value is returned in rex. For istrue = false, rex has no meaning.
-    """
-    function specialValue(w6j::RacahAlgebra.W6j)
-        deltas = Kronecker[];    triangles = Triangle[];   w3js = W3j[];   w6js = W6j[];   w9js = W9j[]
-
-        rexList = RacahAlgebra.symmetricForms(w6j)
-        for  rex in rexList
-            ww = rex.w6js[1]
-            #
-            #                                            j1+j2+j3
-            #  Rule:         ( j1   j2   j3 )        (-1)
-            #  -----        {(              )}   =  --------------  t(j1,j2,j3)  d(j1,l2) d(j2,l1)
-            #                ( l1   l2   0  )                   1/2
-            #                                         [ j1, j2 ]
-            #
-            specialW6j = W6j( ww.a, ww.b, ww.c, ww.e, ww.f, 0)
-            if  ww == specialW6j
-                push!( deltas, Kronecker(ww.a, ww.e) )
-                push!( deltas, Kronecker(ww.b, ww.d) )
-                push!( triangles, Kronecker(ww.a, ww.b, ww.c) )
-                wa = RacahExpression( rex.summations, rex.phase + ww.a + ww.b + ww.c, 
-                                      rex.weight / sqrt( (2*ww.a+1)*(2*ww.b+1)), deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule:         ( j1     j2      j3   )            j1+j2+j3    (     (j1+j3-j2)(j1+j2-j3+1)     ) 1/2
-            #  -----        {(                     )}   =   (-1)            (--------------------------------)
-            #                ( 1/2  j3-1/2  j2+1/2 )                        ( (2*j2+1)(2*j2+2)(2*j3)(2*j3+1) )
-            #
-            specialW6j = W6j( ww.a, ww.b, ww.c, 1//2, ww.c -1//2,  ww.b +1//2)
-            if  ww == specialW6j
-                wa = RacahExpression( rex.summations, rex.phase + ww.a + ww.b + ww.c, 
-                                      rex.weight * sqrt( (ww.a+ww.c-ww.b)*(ww.a+ww.b-ww.c+1) /
-                                                         (2*ww.b+1)*(2*ww.b+2)*2*ww.c*(2*ww.c+1) ), 
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule:         ( j1     j2      j3   )            j1+j2+j3+1   (     (j1+j2+j3+2)(j2+j3-j1+1)     ) 1/2
-            #  -----        {(                     )}   =   (-1)             (----------------------------------)
-            #                ( 1/2  j3+1/2  j2+1/2 )                         ( (2*j2+1)(2*j2+2)(2*j3+1)(2*j3+2) )
-            #
-            specialW6j = W6j( ww.a, ww.b, ww.c, 1//2, ww.c +1//2,  ww.b +1//2)
-            if  ww == specialW6j
-                wa = RacahExpression( rex.summations, rex.phase + ww.a + ww.b + ww.c + 1, 
-                                      rex.weight * sqrt( (ww.a+ww.b+ww.c+2)*(ww.b+ww.c-ww.a+1) /
-                                                         (2*ww.b+1)*(2*ww.b+2)*(2*ww.c+1)*(2*ww.c+2) ), 
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule:         ( j1   j2    j3  )            S       (           S(S+1)(S-2*j1)(S-2*j1-1)           ) 1/2
-            #  -----        {(                )}   =   (-1)        (----------------------------------------------)
-            #                (  1  j3-1  j2-1 )                    ( (2*j2-1)(2*j2)(2*j2+1)(2*j3-1)(2*j3)(2*j3+1) )
-            #
-            #                with  S = j1+j2+j3
-            #
-            specialW6j = W6j( ww.a, ww.b, ww.c, 1, ww.c -1,  ww.b -1)
-            if  ww == specialW6j
-                S = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + S, 
-                                      rex.weight * sqrt( S*(S+1)*(S-2*ww.a)*(S-2*ww.a -1) /
-                                                         (2*ww.b-1)* 2*ww.b * (2*ww.b+1)* (2*ww.c-1)* 2*ww.c * (2*ww.c+1) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule:         ( j1   j2   j3  )            S   (      2(S+1)(S-2*j1)(S-2*j2)(S-2*j3+1)        ) 1/2
-            #  -----        {(               )}   =   (-1)    (----------------------------------------------)
-            #                (  1  j3-1  j2  )                ( (2*j2)(2*j2+1)(2*j2+2)(2*j3-1)(2*j3)(2*j3+1) )
-            #
-            #                with  S = j1+j2+j3
-            #
-            specialW6j = W6j( ww.a, ww.b, ww.c, 1, ww.c -1,  ww.b)
-            if  ww == specialW6j
-                S = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + S, 
-                                      rex.weight * sqrt( 2*(S+1)*(S-2*ww.a)*(S-2*ww.b)*(S-2*ww.c +1) /
-                                                         2*ww.b * (2*ww.b+1) * (2*ww.b+2) * (2*ww.c-1) * 2*ww.c * (2*ww.c+1) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule:         ( j1   j2   j3    )            S   (     (S-2*j2-1)(S-2*j2)(S-2*j3+1)(S-2*j3+2)     ) 1/2
-            #  -----        {(                 )}   =   (-1)    (------------------------------------------------)
-            #                (  1  j3-1  j2+1  )                ( (2*j2+1)(2*j2+2)(2*j2+3)(2*j3-1)(2*j3)(2*j3+1) )
-            #
-            #                with  S = j1+j2+j3
-            #
-            specialW6j = W6j( ww.a, ww.b, ww.c, 1, ww.c -1,  ww.b +1)
-            if  ww == specialW6j
-                S = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + S, 
-                                      rex.weight * sqrt( (S-2*ww.b-1)*(S-2*ww.b)*(S-2*ww.c +1)*(S-2*ww.c +2) /
-                                                         (2*ww.b+1) * (2*ww.b+2) * (2*ww.b+3) * (2*ww.c-1) * 2*ww.c * (2*ww.c+1) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule:         ( j1  j2  j3  )            S+1         2 [ j2(j2+1) + j3(j3+1) -  j1(j1+1) ]
-            #  -----        {(             )}   =   (-1)       ----------------------------------------------  1/2
-            #                (  1  j3  j2  )                   ( (2*j2)(2*j2+1)(2*j2+2)(2*j3)(2*j3+1)(2*j3+2) )
-            #
-            #                with  S = j1+j2+j3
-            #
-            specialW6j = W6j( ww.a, ww.b, ww.c, 1, ww.c,  ww.b)
-            if  ww == specialW6j
-                S = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + S + 1, 
-                                      rex.weight * 2 * ( ww.b*(ww.b+1) + ww.c*(ww.c+1) - ww.a*(ww.a+1) ) /
-                                                       sqrt( 2*ww.b * (2*ww.b+1) * (2*ww.b+2) * 2*ww.c * (2*ww.c+1) * (2*ww.c+2) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 1       (  a     b      c   )            s   (         (s-1)s(s+1)(s-2*a-2)(s-2*a-1)(s-2*a)         ) 1/2
-            #  -----        {(                   )}   =   (-1)    (------------------------------------------------------)
-            #                ( 3/2  c-3/2  b-3/2 )                ( (2*b-2)(2*b-1)(2*b)(2*b+1)(2*c-2)(2*c-1)(2*c)(2*c+1) )
-            #
-            #                with  s = a + b + c
-            #
-            specialW6j = W6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-3//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (s-1)* s * (s+1) * (s-2*ww.a-2) * (s-2*ww.a-1) * (s-2*ww.a)/
-                                                         (2*ww.b-2)*(2*ww.b-1)*2*ww.b*(2*ww.b+1) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 2       (  a     b      c   )            s   (       3*s(s+1)(s-2*a-1)(s-2*a)(s-2*b)(s-2*c+1)       ) 1/2
-            #  -----        {(                   )}   =   (-1)    (------------------------------------------------------)
-            #                ( 3/2  c-3/2  b-1/2 )                ( (2*b-1)(2*b)(2*b+1)(2*b+2)(2*c-2)(2*c-1)(2*c)(2*c+1) )
-            #
-            #                with  s = a + b + c
-            #
-            specialW6j = W6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 3       (  a     b      c   )            s   (   3*(s+1)(s-2*a)(s-2*b-1)(s-2*b)(s-2*c+1)(s-2*c+2)   ) 1/2
-            #  -----        {(                   )}   =   (-1)    (------------------------------------------------------)
-            #                ( 3/2  c-3/2  b+1/2 )                ( (2*b)(2*b+1)(2*b+2)(2*b+3)(2*c-2)(2*c-1)(2*c)(2*c+1) )
-            #
-            #                with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 4       (  a     b      c   )            s    (  (s-2*b-2)(s-2*b-1)(s-2*b)(s-2*c+1)(s-2*c+2)(s-2*c+3)  ) 1/2
-            #  -----        {(                   )}   =   (-1)     (--------------------------------------------------------)
-            #                ( 3/2  c-3/2  b+3/2 )                 ( (2*b+1)(2*b+2)(2*b+3)(2*b+4)(2*c-2)(2*c-1)(2*c)(2*c+1) )
-            #
-            #                with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule: 5       (  a     b      c   )            s                                      (                     (s+1)(s-2*a)                     ) 1/2
-            #  -----        {(                   )}   =  (-1)   [2*(s-2*b)(s-2*c) - (s+2)(s-2*a-1)]  (------------------------------------------------------)
-            #                ( 3/2  c-1/2  b-1/2 )                                                   ( (2*b-1)(2*b)(2*b+1)(2*b+2)(2*c-1)(2*c)(2*c+1)(2*c+2) )
-            #
-            #      with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #   Rule: 6       (  a     b      c   )            s                                     (                   (s-2*b)(s-2*c+1)                   ) 1/2
-            #   -----        {(                   )}  =  (-1)  [ (s-2*b-1)(s-2*c) - 2*(s+2)(s-2*a)]  (------------------------------------------------------)
-            #                 ( 3/2  c-1/2  b+1/2 )                                                  ( (2*b)(2*b+1)(2*b+2)(2*b+3)(2*c-1)(2*c)(2*c+1)(2*c+2) )
-            #
-            #                 with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #   Rule: 7       ( a   b    c  )            s   (                  (s-2)(s-1)s(s+1)(s-2*a-3)(s-2*a-2)(s-2*a-1)(s-2*a) ) 1/2
-            #   -----        {(             )}   =   (-1)    (---------------------------------------------------------------------)
-            #                 ( 2  c-2  b-2 )                ( (2*b-3)(2*b-2)(2*b-1)(2*b)(2*b+1)(2*c-3)(2*c-2)(2*c-1)(2*c)(2*c+1)  )
-            #
-            #                 with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #   Rule: 8       ( a   b    c  )            s     (     (s-1)s(s+1)(s-2*a-2)(s-2*a-1)(s-2*a)(s-2*b)(s-2*c+1)            ) 1/2
-            #   -----        {(             )}   =   (-1)    2 (---------------------------------------------------------------------)
-            #                 ( 2  c-2  b-1 )                  ( (2*b-2)(2*b-1)(2*b)(2*b+1)(2*b+2)(2*c-3)(2*c-2)(2*c-1)(2*c)(2*c+1)  )
-            #
-            #                 with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #   Rule: 9       ( a   b    c  )            s  (       6*s*(s+1)(s-2*a-1)(s-2*b-1)(s-2*a)(s-2*b)(s-2*c+1)(s-2*c+2)  ) 1/2
-            #   -----        {(             )}   =   (-1)   (--------------------------------------------------------------------)
-            #                 ( 2  c-2   b  )               ( (2*b-1)(2*b)(2*b+1)(2*b+2)(2*b+3)(2*c-3)(2*c-2)(2*c-1)(2*c)(2*c+1) )
-            #
-            #                 with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #   Rule: 10      ( a   b    c  )            s    (    (s+1)(s-2*a)(s-2*b-2)(s-2*b-1)(s-2*b)(s-2*c+1)(s-2*c+2)(s-2*c+3) ) 1/2
-            #   -----        {(             )}   =   (-1)   2 (---------------------------------------------------------------------)
-            #                 ( 2  c-2  b+1 )                 ( (2*b)(2*b+1)(2*b+2)(2*b+3)(2*b+4)(2*c-3)(2*c-2)(2*c-1)(2*c)(2*c+1)  )
-            #
-            #                 with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #   Rule: 11      ( a   b    c  )            s   (  (s-2*b-3)(s-2*b-2)(s-2*b-1)(s-2*b)(s-2*c+1)(s-2*c+2)(s-2*c+3)(s-2*c+4) ) 1/2
-            #   -----        {(             )}   =   (-1)    (-------------------------------------------------------------------------)
-            #                 ( 2  c-2  b+2 )                ( (2*b+1)(2*b+2)(2*b+3)(2*b+4)(2*b+5)(2*c-3)(2*c-2)(2*c-1)(2*c)(2*c+1)    )
-            #
-            #                 with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #   Rule: 12      ( a   b    c  )        s                                    (                           s*(s+1)(s-2*a-1)(s-2*a)                  ) 1/2
-            #   -----        {(             )} = (-1)   4 [ (a+b)(a-b+1) - (c-1)(c-b+1)]  (--------------------------------------------------------------------) 
-            #                 ( 2  c-1  b-1 )                                             ( (2*b-2)(2*b-1)(2*b)(2*b+1)(2*b+2)(2*c-2)(2*c-1)(2*c)(2*c+1)(2*c+2) )
-            #
-            #      with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #   Rule: 13      ( a   b    c  )        s                                (                    6*(s+1)(s-2*a)(s-2*b)(s-2*c+1)                  ) 1/2
-            #   -----        {(             )} = (-1)   2 [ (a+b+1)(a-b) - c*c  + 1 ] (--------------------------------------------------------------------)
-            #                 ( 2  c-1   b  )                                         ( (2*b-1)(2*b)(2*b+1)(2*b+2)(2*b+3)(2*c-2)(2*c-1)(2*c)(2*c+1)(2*c+2) )
-            #
-            #                 with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #   Rule: 14      ( a   b    c  )        s                                     (                  (s-2*b-1)(s-2*b)(s-2*c+1)(s-2*c+2)                ) 1/2
-            #   -----        {(             )} = (-1)  4 [ (a+b+2)(a-b-1) - (c-1)(b+c+2) ] (--------------------------------------------------------------------)
-            #                 ( 2  c-1  b+1 )                                              ( (2*b)(2*b+1)(2*b+2)(2*b+3)(2*b+4)(2*c-2)(2*c-1)(2*c)(2*c+1)(2*c+2) )
-            #
-            #                 with  s = a + b + c
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule:  15
-            #  -----
-            #
-            #   Rule: 15      ( a   b   c )        s                                     (                                                                    ) 1/2
-            #   -----        {(           )} = (-1)  2 [ 3*X(X-1) - 4*b*(b+1)*c*(c+1) ]  (--------------------------------------------------------------------)
-            #                 ( 2   c   b )                                              ( (2*b-1)(2*b)(2*b+1)(2*b+2)(2*b+3)(2*c-1)(2*c)(2*c+1)(2*c+2)(2*c+3) )
-            #
-            #                 with  s = a + b + c   and   X = b*(b+1) + c*(c+1) - a*(a+1)
-            #
-            specialW6j = xxxW6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
-            if  ww == specialW6j
-                s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
-                                      rex.weight * sqrt( (3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
-                                                         (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-        end
-        
-        return( (false, RacahExpression() ) )
-    end
-
-
-    """
-    `RacahAlgebra.specialValue(w9j::RacahAlgebra.W9j)`  
-        ... attempts to find a special value for the Wigner 9-j symbol w9j. 
-            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned, and where istrue determined of whether a 
-            special value is returned in rex. For istrue = false, rex has no meaning.
-    """
-    function specialValue(w9j::RacahAlgebra.W9j)
-        deltas = Kronecker[];    triangles = Triangle[];   w3js = W3j[];   w6js = W6j[];   w9js = W9j[]
-
-        rexList = RacahAlgebra.symmetricForms(w9j)
-        for  rex in rexList
-            ww = rex.w9js[1]
-            #
-            #  Rule:         ( ja   ja   0 )
-            #  -----         (             )         D(ja,jc,jf)
-            #               {( jc   jc   0 )}   =  -------------- 1/2
-            #                (             )       [ ja, jc, jf ]
-            #                ( jf   jf   0 )
-            #
-            specialW9j = xxxW9j( ww.a, ww.b, ww.c, ww.e, ww.f, 0)
-            if  ww == specialW6j
-                push!( deltas, Kronecker(ww.a, ww.e) )
-                push!( deltas, Kronecker(ww.b, ww.d) )
-                push!( triangles, Kronecker(ww.a, ww.b, ww.c) )
-                wa = RacahExpression( rex.summations, rex.phase + ww.a + ww.b + ww.c, 
-                                      rex.weight / sqrt( (2*ww.a+1)*(2*ww.b+1)), deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-            #
-            #  Rule:         ( ja   jb   je )           jb+jc+je+jf      
-            #  -----         (              )       (-1)                   ( ja   jb   je )
-            #               {( jc   jd   je )}   =  --------------- 1/2   {(              )}
-            #                (              )          [ je, jf ]          ( jd   jc   jf )
-            #                ( jf   jf   0  )
-            #
-            specialW9j = xxxW9j( ww.a, ww.b, ww.c, ww.e, ww.f, 0)
-            if  ww == specialW6j
-                push!( deltas, Kronecker(ww.a, ww.e) )
-                push!( deltas, Kronecker(ww.b, ww.d) )
-                push!( triangles, Kronecker(ww.a, ww.b, ww.c) )
-                wa = RacahExpression( rex.summations, rex.phase + ww.a + ww.b + ww.c, 
-                                      rex.weight / sqrt( (2*ww.a+1)*(2*ww.b+1)), deltas, triangles, w3js, w6js, w9js )
-                return( (true, wa) )
-            end
-        end
-        
-        return( (false, RacahExpression() ) )
     end
 
 
@@ -1524,7 +1110,7 @@ module  RacahAlgebra
             push!( rexList, RacahExpression( sums, phase, weight, deltas, triangles, w3js, [W6j(j2,j1,j3, j5,j4,j6)], w9js ) )
             push!( rexList, RacahExpression( sums, phase, weight, deltas, triangles, w3js, [W6j(j2,j3,j1, j5,j6,j4)], w9js ) )
             push!( rexList, RacahExpression( sums, phase, weight, deltas, triangles, w3js, [W6j(j3,j1,j2, j6,j4,j5)], w9js ) )
-            push!( rexList, RacahExpression( sums, phase, weight, deltas, triangles, w3js, [W6j(j3,j2,j1, j6,j5,j6)], w9js ) )
+            push!( rexList, RacahExpression( sums, phase, weight, deltas, triangles, w3js, [W6j(j3,j2,j1, j6,j5,j4)], w9js ) )
             push!( rexList, RacahExpression( sums, phase, weight, deltas, triangles, w3js, [W6j(j1,j5,j6, j4,j2,j3)], w9js ) )
             push!( rexList, RacahExpression( sums, phase, weight, deltas, triangles, w3js, [W6j(j1,j6,j5, j4,j3,j2)], w9js ) )
             push!( rexList, RacahExpression( sums, phase, weight, deltas, triangles, w3js, [W6j(j5,j1,j6, j2,j4,j3)], w9js ) )
@@ -1550,620 +1136,98 @@ module  RacahAlgebra
 
 
     """
-    `RacahAlgebra.sumRulesForOneW3j(rex::RacahAlgebra.RacahExpression)`  
-        ... attempts to find a simplification of the given Racah expression by using sum rules for one Wigner 3j symbol. 
-            Once a simplification is found, no attempt is made to find another simplifcation for this set of rules.
-            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
+    `RacahAlgebra.symmetricForms(w9j::RacahAlgebra.W9j; regge::Bool=false)`  
+        ... generates a list of equivalent symmetric forms of the Wigner 9-j symbol w9j. There are 72 basic symmetric forms 
+            for a 9-j-symbol, including the given one. The keyword regge has no effect since no additional Regge symmetries 
+            are known for the Wigner 9-j symbols. A rexList:Array{RacahExpression,1} is returned.
     """
-    function sumRulesForOneW3j(rex::RacahAlgebra.RacahExpression)
+    function symmetricForms(w9j::RacahAlgebra.W9j; regge::Bool=false)
+        rexList = RacahExpression[]
+        deltas  = Kronecker[];    triangles = Triangle[];   w3js = W3j[];   w6js = W6j[];   w9js = W9j[]
+        sums    = Basic[];    phase = Basic(0);    weight = Basic(1)
         
-        # Loop through all Wigner 3j symbols
-        for  (iaW3j, aW3j) in enumerate(rex.w3js)
-            aRexList = RacahAlgebra.symmetricForms(aW3j)
-            for  xaRex in aRexList
-                ww = xaRex.w3js[1]
-                #
-                #   Rule:                  -m   ( j  j J )         -j
-                #   ----        Sum(m) (-1)     (        )  =  (-1)    (2j + 1)  delta(J,0)  delta(M,0)
-                #                               ( m -m M )
-                #
-                specialW3j = W3j(ww.ja, ww.ja, ww.jc, ww.ma, -ww.ma, ww.mc)
-                if  ww == specialW3j
-                    newPhase  = rex.phase  + xaRex.phase;       newWeight = rex.weight * xaRex.weight
-                    testPhase = newPhase   + ww.ma
-                    newW3js   = W3j[];       for (ibW3j, bW3j) in enumerate(rex.w3js)  if  iaW3j != ibW3j   push!(newW3js, bW3j)   end   end
-                    ##x println("*** newPhase = $newPhase   testPhase = $testPhase   newWeight = $newWeight")
-                    ##x println("hasIndex - summation   = $(RacahAlgebra.hasIndex(ww.ma, rex.summations))")
-                    ##x println("hasIndex - newPhase    = $(RacahAlgebra.hasIndex(ww.ma, newPhase))")
-                    ##x println("hasIndex - testPhase   = $(RacahAlgebra.hasIndex(ww.ma, testPhase))")
-                    ##x println("hasIndex - newWeight   = $(RacahAlgebra.hasIndex(ww.ma, newWeight))")
-                    #
-                    if   RacahAlgebra.hasIndex(ww.ma, rex.summations)    &&  
-                         RacahAlgebra.hasIndex(ww.ma, newPhase)          &&  !RacahAlgebra.hasIndex(ww.ma, testPhase)
-                        !RacahAlgebra.hasIndex(ww.ma, newWeight)         &&
-                        !RacahAlgebra.hasIndex(ww.ma, rex.deltas)        &&  !RacahAlgebra.hasIndex(ww.ma, rex.triangles) 
-                        !RacahAlgebra.hasIndex(ww.ma, rex.w6js)          &&  !RacahAlgebra.hasIndex(ww.ma, rex.w9js) 
-                        newSummations = RacahAlgebra.removeIndex(ww.ma, rex.summations)
-                        newDeltas = rex.deltas;      push!( newDeltas, Kronecker(ww.jc, 0));     push!( newDeltas, Kronecker(ww.mc, 0))
-                        wa = RacahExpression( newSummations, newPhase + ww.ma - ww.ja, newWeight * (2*ww.ja+1), 
-                                              newDeltas, rex.triangles, newW3js, rex.w6js, rex.w9js )
-                        println("** Apply sum rule for one W3j.")
-                        return( (true, wa) )
-                    end
-                end
-            end
+        if  true
+            j11 = w9j.a;  j12 = w9j.b;  j13 = w9j.c;  j21 = w9j.d;  j22 = w9j.e;  j23 = w9j.f;  j31 = w9j.g;  j32 = w9j.h;  j33 = w9j.i  
+            phase0 = Basic(0);          phaseS = j11 + j12 + j13 + j21 + j22 + j23 + j31 + j32 + j33
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j11, j12, j13, j21, j22, j23, j31, j32, j33)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j11, j21, j31, j12, j22, j32, j13, j23, j33)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j11, j13, j12, j21, j23, j22, j31, j33, j32)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j11, j21, j31, j13, j23, j33, j12, j22, j32)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j12, j11, j13, j22, j21, j23, j32, j31, j33)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j12, j22, j32, j11, j21, j31, j13, j23, j33)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j12, j13, j11, j22, j23, j21, j32, j33, j31)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j12, j22, j32, j13, j23, j33, j11, j21, j31)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j13, j11, j12, j23, j21, j22, j33, j31, j32)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j13, j23, j33, j11, j21, j31, j12, j22, j32)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j13, j12, j11, j23, j22, j21, j33, j32, j31)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j13, j23, j33, j12, j22, j32, j11, j21, j31)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j11, j12, j13, j31, j32, j33, j21, j22, j23)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j11, j31, j21, j12, j32, j22, j13, j33, j23)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j11, j13, j12, j31, j33, j32, j21, j23, j22)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j11, j31, j21, j13, j33, j23, j12, j32, j22)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j12, j11, j13, j32, j31, j33, j22, j21, j23)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j12, j32, j22, j11, j31, j21, j13, j33, j23)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j12, j13, j11, j32, j33, j31, j22, j23, j21)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j12, j32, j22, j13, j33, j23, j11, j31, j21)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j13, j11, j12, j33, j31, j32, j23, j21, j22)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j13, j33, j23, j11, j31, j21, j12, j32, j22)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j13, j12, j11, j33, j32, j31, j23, j22, j21)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j13, j33, j23, j12, j32, j22, j11, j31, j21)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j21, j22, j23, j11, j12, j13, j31, j32, j33)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j21, j11, j31, j22, j12, j32, j23, j13, j33)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j21, j23, j22, j11, j13, j12, j31, j33, j32)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j21, j11, j31, j23, j13, j33, j22, j12, j32)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j22, j21, j23, j12, j11, j13, j32, j31, j33)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j22, j12, j32, j21, j11, j31, j23, j13, j33)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j22, j23, j21, j12, j13, j11, j32, j33, j31)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j22, j12, j32, j23, j13, j33, j21, j11, j31)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j23, j21, j22, j13, j11, j12, j33, j31, j32)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j23, j13, j33, j21, j11, j31, j22, j12, j32)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j23, j22, j21, j13, j12, j11, j33, j32, j31)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j23, j13, j33, j22, j12, j32, j21, j11, j31)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j21, j22, j23, j31, j32, j33, j11, j12, j13)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j21, j31, j11, j22, j32, j12, j23, j33, j13)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j21, j23, j22, j31, j33, j32, j11, j13, j12)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j21, j31, j11, j23, j33, j13, j22, j32, j12)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j22, j21, j23, j32, j31, j33, j12, j11, j13)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j22, j32, j12, j21, j31, j11, j23, j33, j13)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j22, j23, j21, j32, j33, j31, j12, j13, j11)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j22, j32, j12, j23, j33, j13, j21, j31, j11)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j23, j21, j22, j33, j31, j32, j13, j11, j12)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j23, j33, j13, j21, j31, j11, j22, j32, j12)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j23, j22, j21, j33, j32, j31, j13, j12, j11)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j23, j33, j13, j22, j32, j12, j21, j31, j11)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j31, j32, j33, j11, j12, j13, j21, j22, j23)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j31, j11, j21, j32, j12, j22, j33, j13, j23)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j31, j33, j32, j11, j13, j12, j21, j23, j22)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j31, j11, j21, j33, j13, j23, j32, j12, j22)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j32, j31, j33, j12, j11, j13, j22, j21, j23)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j32, j12, j22, j31, j11, j21, j33, j13, j23)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j32, j33, j31, j12, j13, j11, j22, j23, j21)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j32, j12, j22, j33, j13, j23, j31, j11, j21)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j33, j31, j32, j13, j11, j12, j23, j21, j22)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j33, j13, j23, j31, j11, j21, j32, j12, j22)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j33, j32, j31, j13, j12, j11, j23, j22, j21)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j33, j13, j23, j32, j12, j22, j31, j11, j21)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j31, j32, j33, j21, j22, j23, j11, j12, j13)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j31, j21, j11, j32, j22, j12, j33, j23, j13)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j31, j33, j32, j21, j23, j22, j11, j13, j12)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j31, j21, j11, j33, j23, j13, j32, j22, j12)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j32, j31, j33, j22, j21, j23, j12, j11, j13)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j32, j22, j12, j31, j21, j11, j33, j23, j13)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j32, j33, j31, j22, j23, j21, j12, j13, j11)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j32, j22, j12, j33, j23, j13, j31, j21, j11)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j33, j31, j32, j23, j21, j22, j13, j11, j12)] ) )
+            push!( rexList, RacahExpression( sums, phaseS, weight, deltas, triangles, w3js, w6js, [W9j(j33, j23, j13, j31, j21, j11, j32, j22, j12)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j33, j32, j31, j23, j22, j21, j13, j12, j11)] ) )
+            push!( rexList, RacahExpression( sums, phase0, weight, deltas, triangles, w3js, w6js, [W9j(j33, j23, j13, j32, j22, j12, j31, j21, j11)] ) )
         end
         
-        return( (false, RacahExpression()) )
+        return( rexList )
     end
-
-
-    """
-    `RacahAlgebra.sumRulesForOneW6j(rex::RacahAlgebra.RacahExpression)`  
-        ... attempts to find a simplification of the given Racah expression by using sum rules for one Wigner 6-j symbol. 
-            Once a simplification is found, no attempt is made to find another simplifcation for this set of rules.
-            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
-    """
-    function sumRulesForOneW6j(rex::RacahAlgebra.RacahExpression)
-        
-        # Loop through all Wigner 6-j symbols
-        for  (iaW6j, aW6j) in enumerate(rex.w6js)
-            aRexList = RacahAlgebra.symmetricForms(aW6j)
-            for  xaRex in aRexList
-                ww = xaRex.w6js[1]
-                #
-                #   Rule:                     ( a  b  X )         2c
-                #   ----        Sum(X)  [X]  {(         )}  = (-1)    delta(a,b,c)
-                #                             ( a  b  c )
-                #
-                specialW6j = W6j(ww.a, ww.b, ww.c, ww.a, ww.b, ww.f)
-                if  ww == specialW6j
-                    newPhase   = rex.phase  + xaRex.phase;       newWeight = rex.weight * xaRex.weight
-                    testWeight = newWeight / (2*ww.c+1)
-                    newW6js    = W6j[];       for (ibW6j, bW6j) in enumerate(rex.w6js)  if  iaW6j != ibW6j   push!(newW6js, bW6j)   end   end
-                    #
-                    if   RacahAlgebra.hasIndex(ww.c, rex.summations)     &&  !RacahAlgebra.hasIndex(ww.c, newPhase)
-                         RacahAlgebra.hasIndex(ww.c, newWeight)          &&  !RacahAlgebra.hasIndex(ww.c, testWeight)
-                        !RacahAlgebra.hasIndex(ww.c, rex.deltas)         &&  !RacahAlgebra.hasIndex(ww.c, rex.triangles) 
-                        !RacahAlgebra.hasIndex(ww.c, rex.w3js)           &&  !RacahAlgebra.hasIndex(ww.c, rex.w9js) 
-                        newSummations = RacahAlgebra.removeIndex(ww.c, rex.summations)
-                        newTriangles  = rex.triangles;      push!( newTriangles, Triangle(ww.a, ww.b, ww.f) )
-                        wa = RacahExpression( newSummations, newPhase + 2*ww.f, newWeight / (2*ww.c+1), 
-                                              rex.deltas, newTriangles, rex.w3js, newW6js, rex.w9js )
-                        println("** Apply sum rule for one W6j -- Sum(X).")
-                        return( (true, wa) )
-                    end
-                end
-                #
-                #   Rule:                     ( a  b  X )         2c
-                #   ----        Sum(X)  [X]  {(         )}  = (-1)    delta(a,b,c)
-                #                             ( a  b  c )
-                #
-               #
-               #  Rule :
-               #
-               #              X       ( a  b  X )          -a-b      1/2
-               #   Sum(X) (-1)  [X]  {(         )}  =  (-1)     [a,b]    delta(c,0)
-               #                      ( b  a  c )
-               #
-                specialW6j = W6j(ww.a, ww.b, ww.c, ww.a, ww.b, ww.f)
-                if  ww == specialW6j
-                    newPhase   = rex.phase  + xaRex.phase;       newWeight = rex.weight * xaRex.weight
-                    testWeight = newWeight / (2*ww.c+1)
-                    newW6js    = W6j[];       for (ibW6j, bW6j) in enumerate(rex.w6js)  if  iaW6j != ibW6j   push!(newW6js, bW6j)   end   end
-                    println("*** newPhase = $newPhase   testWeight = $testWeight   newWeight = $newWeight")
-                    println("hasIndex - summation   = $(RacahAlgebra.hasIndex(ww.c, rex.summations))")
-                    println("hasIndex - newPhase    = $(RacahAlgebra.hasIndex(ww.c, newPhase))")
-                    println("hasIndex - testWeight  = $(RacahAlgebra.hasIndex(ww.c, testWeight))")
-                    println("hasIndex - newWeight   = $(RacahAlgebra.hasIndex(ww.c, newWeight))")
-                    #
-                    if   RacahAlgebra.hasIndex(ww.c, rex.summations)     &&  !RacahAlgebra.hasIndex(ww.c, newPhase)
-                         RacahAlgebra.hasIndex(ww.c, newWeight)          &&  !RacahAlgebra.hasIndex(ww.c, testWeight)
-                        !RacahAlgebra.hasIndex(ww.c, rex.deltas)         &&  !RacahAlgebra.hasIndex(ww.c, rex.triangles) 
-                        !RacahAlgebra.hasIndex(ww.c, rex.w3js)           &&  !RacahAlgebra.hasIndex(ww.c, rex.w9js) 
-                        newSummations = RacahAlgebra.removeIndex(ww.c, rex.summations)
-                        newTriangles  = rex.triangles;      push!( newTriangles, Triangle(ww.a, ww.b, ww.f) )
-                        wa = RacahExpression( newSummations, newPhase + 2*ww.f, newWeight / (2*ww.c+1), 
-                                              rex.deltas, newTriangles, rex.w3js, newW6js, rex.w9js )
-                        println("** Apply sum rule for one W6j.")
-                        return( (true, wa) )
-                    end
-                end
-            end
-        end
-        
-        return( (false, RacahExpression()) )
-    end
+    
+    include("inc-module-RacahAlgebra-special.jl")
+    include("inc-module-RacahAlgebra-sumrules.jl")
 
 end # module
 
-#==
-
-Sum rules for oneW6j
-
-               #
-               #  Rule :
-               #                 ( a  b  X )         2c
-               #   Sum(X)  [X]  {(         )}  = (-1)    delta(a,b,c)
-               #                 ( a  b  c )
-               #
-               if  eval(w6jas[2] - w6jas[5]) = 0  and
-                   eval(w6jas[3] - w6jas[6]) = 0  and
-                   eval(w6jas[4] - X       ) = 0  then
-                  #
-                  #  break if X appears twice in w6jas:
-                  #
-                  if  has(subsop(4=NULL,w6jas),X)  then
-                     ias := nas;
-                     break
-                  end if;
-                  #
-                  if  has(Rexpr[5],X)  then
-                     error `simplify delta factors which include summation indices before an evaluation is attempted`
-                  end if;
-                  #
-                  Rwork := Racah_addRacahexpressions(Rexpr,Racahexpras);
-                  Rwork := Racah_deletewnj(w6ja,w6jas,Rwork);
-                  Rph1  := Racah_extractphase(X,Rwork);
-                  #
-                  if  modp(Rph1/X,4) = 2  then
-                     Rwork := Racah_deletephase(Rph1,Rwork);
-                     Rwork := Racah_addphase(-2*w6jas[2]-2*w6jas[3],Rwork)
-                  end if;
-                  if  modp(Rph1/X,4) = 0  then
-                     Rwork := Racah_deletefactor(2*X+1,Rwork);
-                     Rwork := Racah_deletephase(Rph1,Rwork);
-                     Rwork := Racah_deletesummation({X},Rwork);
-                     Rwork := Racah_addphase(2*w6jas[7],Rwork);
-                     Rwork := Racah_adddeltas([`triangle#`,w6jas[2],w6jas[3],w6jas[7]],Rwork);
-                     Rwork := Racah_simplifyfactor(Rwork);
-                     #
-                     xprint( `Before RETURN(Rwork)` );
-                     Racah_xprint(Rwork);
-                     if  not has(Rwork,{X})  then
-                        return Rwork
-                     end if
-                  end if
-               end if;
-               #
-               #  Rule :
-               #
-               #              X       ( a  b  X )          -a-b      1/2
-               #   Sum(X) (-1)  [X]  {(         )}  =  (-1)     [a,b]    delta(c,0)
-               #                      ( b  a  c )
-               #
-               if  eval(w6jas[2] - w6jas[6]) = 0  and
-                   eval(w6jas[3] - w6jas[5]) = 0  and
-                   eval(w6jas[4] - X       ) = 0  then
-                  #
-
-Sum rules for oneW9j
-
-
-               w9jas := Racahexpras[6][2];
-               if  eval( w9jas[10] - X ) = 0  then
-                  #
-                  #  Rule :
-                  #
-                  #                 ( a  b  e )      1
-                  #   Sum(X)  [X]  {( c  d  f )}  = --- d(b,c) d(a,b,e) d(b,d,f)
-                  #                 ( e  f  X )     [b]
-                  #
-                  if  eval(w9jas[4] - w9jas[8]) = 0  and
-                      eval(w9jas[7] - w9jas[9]) = 0  then
-                     #
-                     if  has(subsop(10=NULL,w9jas),X)  then
-                        ias := nas;
-                        break
-                     end if;
-                     if  has(Rexpr[5],X)  then
-                        error `simplify delta factors which include summation indices before an evaluation is attempted`
-                     end if;
-                     Rwork := Racah_addRacahexpressions(Rexpr,Racahexpras);
-                     Rwork := Racah_deletewnj(w9ja,w9jas,Rwork);
-                     Rph1  := Racah_extractphase(X,Rwork);
-                     #
-                     replace := false;
-                     if  modp(Rph1/X,4) = 0  then
-                        Rwork := Racah_deletephase(Rph1,Rwork);
-                        replace := true
-                     elif  modp(Rph1/X,4) = 2  then
-                        Rwork := Racah_deletephase(Rph1,Rwork);
-                        Rwork := Racah_addphase(-2*w9jas[2]-2*w9jas[3]-2*w9jas[5]-2*w9jas[6],Rwork);
-                        replace := true
-                     end if;
-                     #
-                     if  replace  then
-                        Rwork := Racah_deletesummation({X},Rwork);
-                        Rwork := Racah_deletefactor(2*X+1,Rwork);
-                        Rwork := Racah_addfactor(1/(2*w9jas[3]+1),Rwork);
-                        Rwork := Racah_adddeltas([`delta#`,w9jas[3],w9jas[5]],
-                                                 [`triangle#`,w9jas[2],w9jas[3],w9jas[4]],
-                                                 [`triangle#`,w9jas[3],w9jas[6],w9jas[9]],Rwork);
-                        Rwork := Racah_simplifyfactor(Rwork);
-                        #
-                        xprint(`Before RETURN(Rwork)`);
-                        Racah_xprint(Rwork);
-                        if  not has(Rwork,{X})  then
-                           return Rwork
-                        end if
-                     end if
-                  end if;
-                  #
-                  #  Rule :
-                  #
-                  #              -X      ( a  b  e )
-                  #   Sum(X) (-1)  [X]  {( c  d  f )}  =
-                  #                      ( f  e  X )
-                  #
-                  #                 -a-b-c-d   1
-                  #          =  (-1)          ---  d(a,d) d(d,b,e) d(a,c,f)
-                  #                           [a]
-                  #
-
-Sum rules for twoW3j
-
-                     #
-                     #  Rule :
-                     #
-                     #                   ( j1 j2 j3 ) ( j1  j2  j3 )
-                     #   Sum(j3,m3) [j3] (          ) (            )
-                     #                   ( m1 m2 m3 ) ( m1p m2p m3 )
-                     #
-                     #
-                     #                                 =  d(m1,m1p) d(m2,m2p)
-                     #
-                     if  eval(w3jas[2] - w3jbs[2]) = 0  and
-                         eval(w3jas[3] - w3jbs[3]) = 0  and
-                         eval(w3jas[4] - w3jbs[4]) = 0  and
-                         eval(w3jas[7] - w3jbs[7]) = 0  and
-                         type(w3jas[4],name)            and
-                         type(w3jas[7],name)            and
-                         member(w3jas[4],Rsumset)       and
-                         member(w3jas[7],Rsumset)       then
-                        #
-                        j3 := w3jas[4];  m3 := w3jas[7];
-                        indep1 := Racah_extractindexdependence(j3,Rexpr);
-                        indep2 := Racah_extractindexdependence(m3,Rexpr);
-                        if  member(0,indep1)  or  member(0,indep2)  then
-                           error `simplify delta factors which include summation indices before an evaluation is attempted`
-                        else
-                           independent := true;
-                           for  i  from 2 to nops(Rexpr[6])  do
-                              if  member(i,indep1)  and  not member(i,{ia,ib})  then
-                                 independent := false;
-                                 break
-                              elif  member(i,indep2)  and  not member(i,{ia,ib})  then
-                                 independent := false;
-                                 break
-                              end if
-                           end do
-                        end if;
-                        #
-                        if  independent  then
-                           Rwork := Racah_addRacahexpressions(Rexpr,Racahexpras,Racahexprbs);
-                           Rwork := Racah_deletewnj(w3ja,w3jas,w3jb,w3jbs,Rwork);
-                           Rxf1  := Racah_extractfactor(j3,Rwork[4]);
-                           Rxf2  := Racah_extractfactor(m3,Rwork[4]);
-                           Rph1  := Racah_extractphase(j3,Rwork);
-                           Rph2  := Racah_extractphase(m3,Rwork);
-                           #
-                           replace1 := false;  replace2 := false;
-                           if  Rxf1 = 2*j3 + 1  and  Rxf2 = FAIL  then
-                              if  mods(Rph1/j3,4) = 0  then
-                                 Rwork := Racah_deletephase(Rph1,Rwork);
-                                 replace1 := true
-                              elif  mods(Rph1/j3,4) = 2  then
-                                 Rwork := Racah_deletephase(Rph1,Rwork);
-                                 Rwork := Racah_addphase(-2*w3jas[2]-2*w3jas[3],Rwork);
-                                 replace1 := true
-                              end if;
-                              #
-                              if  mods(Rph2/m3,4) = 0  then
-                                 Rwork := Racah_deletephase(Rph2, Rwork);
-                                 replace2 := true
-                              elif  mods(Rph2/m3,4) = 2  then
-                                 Rwork := Racah_deletephase(Rph2,Rwork);
-                                 Rwork := Racah_addphase(-2*w3jas[5]-2*w3jas[6],Rwork);
-                                 replace2 := true
-                              end if;
-                              #
-                              if  replace1  and  replace2  then
-                                 Rwork := Racah_deletesummation({j3,m3},Rwork);
-                                 Rwork := Racah_deletefactor(Rxf1,Rwork);
-                                 Rwork := Racah_adddeltas([`delta#`,w3jas[5],w3jbs[5]],
-                                                          [`delta#`,w3jas[6],w3jbs[6]],Rwork);
-                                 #
-                                 xprint(`Before RETURN(Rwork)`);
-                                 Racah_xprint(Rwork);
-                                 if  not has(Rwork,{j3,m3})  then
-                                    return Rwork
-                                 end if
-                              end if
-                           end if
-                        end if
-                     end if;
-                     #
-                     #  Rule :
-                     #
-                     #               ( j1 j2 j3 ) ( j1 j2 j3p )
-                     #   Sum(m1,m2)  (          ) (           )
-                     #               ( m1 m2 m3 ) ( m1 m2 m3p )
-                     #
-                     #                         d(j3,j3p) d(m3,m3p)
-                     #                     =   ------------------- d(j1,j2,j3)
-                     #                               [j3]
-                     #
-                     if  eval(w3jas[2] - w3jbs[2]) = 0  and
-                         eval(w3jas[3] - w3jbs[3]) = 0  and
-                         eval(w3jas[5] - w3jbs[5]) = 0  and
-                         eval(w3jas[6] - w3jbs[6]) = 0  and
-                         (type(w3jas[5],name)  or  type(-w3jas[5],name))            and
-                         (type(w3jas[6],name)  or  type(-w3jas[6],name))            and
-                         (member(w3jas[5],Rsumset)  or  member(-w3jas[5],Rsumset))  and
-                         (member(w3jas[6],Rsumset)  or  member(-w3jas[6],Rsumset))  then
-                        #
-                        if  type(w3jas[5],name)  then
-                           m1 :=  w3jas[5];  m1x := w3jas[5]
-                        else
-                           m1 := -w3jas[5];  m1x := w3jas[5]
-                        end if;
-                        if  type(w3jas[6],name)  then
-                           m2 :=  w3jas[6];  m2x := w3jas[6]
-                        else
-                           m2 := -w3jas[6];  m2x := w3jas[6]
-                        end if;
-                        indep1 := Racah_extractindexdependence(m1,Rexpr);
-                        indep2 := Racah_extractindexdependence(m2,Rexpr);
-                        if  member(0,indep1)  or  member(0,indep2)  then
-                           error `simplify delta factors which include summation indices before an evaluation is attempted`
-                        else
-                           independent := true;
-                           for  i  from 2 to nops(Rexpr[6])  do
-                              if  member(i,indep1)  and  not member(i,{ia,ib})  then
-                                 independent := false;
-                                 break
-                              elif  member(i,indep2)  and  not member(i,{ia,ib})  then
-                                 independent := false;
-                                 break
-                              end if
-                           end do
-                        end if;
-                        #
-                        if  independent  then
-                           Rwork := Racah_addRacahexpressions(Rexpr,Racahexpras,Racahexprbs);
-                           Rwork := Racah_deletewnj(w3ja,w3jas,w3jb,w3jbs,Rwork);
-                           if  m1 <> m1x  then  Rwork := subs(m1=m1x,Rwork)  end if;
-                           if  m2 <> m2x  then  Rwork := subs(m2=m2x,Rwork)  end if;
-                           Rxf1  := Racah_extractfactor(m1,Rwork[4]);
-                           Rxf2  := Racah_extractfactor(m2,Rwork[4]);
-                           Rph1  := Racah_extractphase(m1,Rwork);
-                           Rph2  := Racah_extractphase(m2,Rwork);
-                           #
-                           replace1 := false;  replace2 := false;
-                           if  Rxf1 = FAIL  and  Rxf2 = FAIL  then
-                              if  mods(Rph1/m1,4) = 0  then
-                                 Rwork := Racah_deletephase(Rph1, Rwork);
-                                 replace1 := true
-                              elif  mods(Rph1/m1,4) = 2  then
-                                 Rwork := Racah_deletephase(Rph1,Rwork);
-                                 Rwork := Racah_addphase(-2*w3jas[2],Rwork);
-                                 replace1 := true
-                              end if;
-                              #
-                              if  mods(Rph2/m2,4) = 0  then
-                                 Rwork := Racah_deletephase(Rph2, Rwork);
-                                 replace2 := true
-                              elif  mods(Rph2/m2,4) = 2  then
-                                 Rwork := Racah_deletephase(Rph2,Rwork);
-                                 Rwork := Racah_addphase(-2*w3jas[3],Rwork);
-                                 replace2 := true
-                              end if;
-                              #
-                              if  replace1  and  replace2  then
-                                 Rwork := Racah_deletesummation({m1,m2},Rwork);
-                                 Rwork := Racah_addfactor(1/(2*w3jas[4]+1),Rwork);
-                                 Rwork := Racah_adddeltas([`delta#`,w3jas[4],w3jbs[4]],
-                                                          [`delta#`,w3jas[7],w3jbs[7]],
-                                                          [`triangle#`,w3jas[2],w3jas[3],w3jas[4]],Rwork);
-                                 #
-                                 xprint(`Before RETURN(Rwork)`);
-                                 Racah_xprint(Rwork);
-                                 if  not has(Rwork,{m1,m2})  then
-                                    return Rwork
-                                 end if
-                              end if
-                           end if
-                        end if
-                     end if;
-                     #
-                     #  Rule :
-                     #
-                     #                  -np-nq  (  a  p  q  ) (  p   q  a'  )
-                     #   Sum(np,nq) (-1)        (           ) (             )
-                     #                          ( -na np nq ) ( -np -nq na` )
-                     #
-                     #                   a+na-p-q
-                     #               (-1)
-                     #          =   --------------  d(a,a') d(na,na') d(j1,j2,j3)
-                     #                    [a]
-                     #
-
-Sum rules for twoW3j  -- loop rule
-
-   #
-   #                ( j1 j2 j3 ) ( j1 j2 j3p )
-   #   Sum(m1,m2)   (          ) (           )
-   #                ( m1 m2 m3 ) ( m1 m2 m3p )
-   #
-   #                         d(j3,j3p) d(m3,m3p)
-   #                     =   ------------------- d(j1,j2,j3)
-   #                               [j3]
-   #
-
-
-Sum rules for twoW6j
-   
-                        #
-                        #  Rule :
-                        #                                     2
-                        #                         ( X  Y  Z )
-                        #   Sum(X,Y,Z)  [X,Y,Z]  {(         )}    =    [a,b,c]
-                        #                         ( a  b  c )
-                        #
-                        X := w6jas[2];  Y := w6jas[3];  Z := w6jas[4];
-                        if  nops({X,Y,Z}) = 3                          and
-                            Racah_extractfactor(X,Rexpr[4]) = 2*X + 1  and
-                            Racah_extractfactor(Y,Rexpr[4]) = 2*Y + 1  and
-                            Racah_extractfactor(Z,Rexpr[4]) = 2*Z + 1  then
-                           #
-                           if  has(subsop(2=NULL,3=NULL,4=NULL,w6jas),{X,Y,Z})  then
-                              ias := nas;  ibs := nbs;
-                              break
-                           end if;
-                           if  has(Rexpr[5],{X,Y,Z})  then
-                              error `simplify delta factors which include summation indices before an evaluation is attempted`
-                           end if;
-                           #
-                           Rwork := Racah_addRacahexpressions(Rexpr,Racahexpras,Racahexprbs);
-                           Rwork := Racah_deletewnj(w6ja,w6jas,w6jb,w6jbs,Rwork);
-                           Rph1  := Racah_extractphase(X,Rwork);
-                           Rph2  := Racah_extractphase(Y,Rwork);
-                           Rph3  := Racah_extractphase(Z,Rwork);
-                           #
-                           replace := true;
-                           if  mods(Rph1/X,4) = 0  then
-                              Rwork := Racah_deletephase(Rph1,Rwork)
-                           elif  mods(Rph1/X,4) = 2  then
-                              Rwork := Racah_deletephase(Rph1,Rwork);
-                              Rwork := Racah_addphase(-2*w6jas[6]-2*w6jas[7],Rwork)
-                           else
-                              replace = false
-                           end if;
-                           if  mods(Rph2/Y,4) = 0  then
-                              Rwork := Racah_deletephase(Rph2,Rwork)
-                           elif  mods(Rph2/Y,4) = 2  then
-                              Rwork := Racah_deletephase(Rph2,Rwork);
-                              Rwork := Racah_addphase(-2*w6jas[5]-2*w6jas[7],Rwork)
-                           else
-                              replace = false
-                           end if;
-                           if  mods(Rph3/Z,4) = 0  then
-                              Rwork := Racah_deletephase(Rph3,Rwork)
-                           elif  mods(Rph3/Z,4) = 2  then
-                              Rwork := Racah_deletephase(Rph3,Rwork);
-                              Rwork := Racah_addphase(-2*w6jas[5]-2*w6jas[6],Rwork)
-                           else
-                              replace = false
-                           end if;
-                           #
-                           if  replace  then
-                              Rwork := Racah_deletesummation({X,Y,Z},Rwork);
-                              Rwork := Racah_deletefactor((2*X+1)*(2*Y+1)*(2*Z+1),Rwork);
-                              Rwork := Racah_addfactor((2*w6jas[5]+1)*(2*w6jas[6]+1)*(2*w6jas[7]+1),Rwork);
-                              Rwork := Racah_simplifyfactor(Rwork);
-                              #
-                              xprint(`Before RETURN(Rwork)`);
-                              Racah_xprint(Rwork);
-                              if  not has(Rwork,{X,Y,Z})  then
-                                 return Rwork
-                              end if
-                           end if
-                        end if
-                     end if;
-                     #
-                     #  Rule :
-                     #
-                     #              X     ( a  b  X )   ( c  d  X )
-                     #   Sum(X) (-1) [X] {(         )} {(         )}
-                     #                    ( c  d  p )   ( b  a  q )
-                     #
-                     #                                   -p-q    ( c  a  q )
-                     #                            =  (-1)       {(         )}
-                     #                                           ( d  b  p )
-                     #
-                     if  eval(w6jas[2] - w6jbs[6]) = 0  and
-                         eval(w6jas[3] - w6jbs[5]) = 0  and
-                         eval(w6jas[4] - w6jbs[4]) = 0  and
-                         eval(w6jas[5] - w6jbs[2]) = 0  and
-                         eval(w6jas[6] - w6jbs[3]) = 0  and
-                         eval(w6jas[4] - X       ) = 0  then
-                        #
-                        if  has([subsop(4=NULL,w6jas),subsop(4=NULL,w6jbs)],X)  then
-                           ias := nas;  ibs := nbs;
-                           break
-                        end if;
-                        if  has(Rexpr[5],X)  then
-                           error `simplify delta factors which include summation indices before an evaluation is attempted`
-                        end if;
-                        #
-                        Rwork := Racah_addRacahexpressions(Rexpr,Racahexpras,Racahexprbs);
-                        Rwork := Racah_deletewnj(w6ja,w6jas,w6jb,w6jbs,Rwork);
-                        Rph1  := Racah_extractphase(X,Rwork);
-                        #
-                        replace := false;
-                        if  mods(Rph1/X,4) = 1  then
-                           Rwork := Racah_deletephase(Rph1,Rwork);
-                           replace := true
-                        elif  mods(Rph1/X,4) = -1  then
-                           Rwork := Racah_deletephase(Rph1,Rwork);
-                           Rwork := Racah_addphase(-2*w6jas[2]-2*w6jas[3],Rwork);
-                           replace := true
-                        end if;
-                        #
-                        if  replace  then
-                           w6jn  := Racah_setw6j(w6jas[5],w6jas[2],w6jbs[7],w6jas[6],w6jas[3],w6jas[7]);
-                           Rwork := Racah_deletesummation({X},Rwork);
-                           Rwork := Racah_deletefactor(2*X+1,Rwork);
-                           Rwork := Racah_addwnj(w6jn,Rwork);
-                           Rwork := Racah_addphase(-w6jas[7]-w6jbs[7],Rwork);
-                           Rwork := Racah_simplifyfactor(Rwork);
-                           #
-                           xprint(`Before RETURN(Rwork)`);
-                           Racah_xprint(Rwork);
-                           if  not has(Rwork,{X})  then
-                              return Rwork
-                           end if
-                        end if
-                     end if;
-                     #
-                     #  Rule :
-                     #
-                     #                ( a  b  X )   ( c  d  X )
-                     #   Sum(X) [X]  {(         )} {(         )}
-                     #                ( c  d  p )   ( a  b  q )
-                     #
-                     #                           1
-                     #                      =   ---  d(p,q) d(a,d,p) d(b,c,p)
-                     #                          [p]
-                     #
-                     if  eval(w6jas[2] - w6jbs[5]) = 0  and
-                         eval(w6jas[3] - w6jbs[6]) = 0  and
-                         eval(w6jas[4] - w6jbs[4]) = 0  and
-                         eval(w6jas[5] - w6jbs[2]) = 0  and
-                         eval(w6jas[6] - w6jbs[3]) = 0  and
-                         eval(w6jas[4] - X       ) = 0  then
-                        #
-                        if  has([subsop(4=NULL,w6jas),subsop(4=NULL,w6jbs)],X)  then
-                           ias := nas;  ibs := nbs;
-                           break
-                        end if;
-                        if  has(Rexpr[5],X)  then
-                           error `simplify delta factors which include summation indices before an evaluation is attempted`
-                        end if;
-                        #
-                        Rwork := Racah_addRacahexpressions(Rexpr,Racahexpras,Racahexprbs);
-                        Rwork := Racah_deletewnj(w6ja,w6jas,w6jb,w6jbs,Rwork);
-                        Rph1  := Racah_extractphase(X,Rwork);
-                        #
-                        replace := false;
-                        if  mods(Rph1/X,4) = 0  then
-                           Rwork := Racah_deletephase(Rph1,Rwork);
-                           replace := true
-                        elif  mods(Rph1/X,4) = 2  then
-                           Rwork := Racah_deletephase(Rph1,Rwork);
-                           Rwork := Racah_addphase(-2*w6jas[2]-2*w6jas[3],Rwork);
-   
-
-
-==#

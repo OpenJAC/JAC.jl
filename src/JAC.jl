@@ -50,11 +50,12 @@ using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, 
 
 ##x export @racahsum, 
 export add, analyze, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AngularMomentum, 
-       AsfSettings, Atomic, Auger, AutoIonization, 
+       AsfSettings, Atomic, AtomicStructure, Auger, AutoIonization, 
        Basics, Basis, 
-       compute, convertUnits, Cascade, Configuration, ConfigurationR, Continuum, CsfR, CoulombExcitation, CoulombIonization,  
+       CloseCoupling, compute, convertUnits, Cascade, Configuration, ConfigurationR, Continuum, CsfR, 
+       CoulombExcitation, CoulombIonization,  
        diagonalize, Defaults, DecayYield, Details, Dielectronic, DoubleAuger,
-       estimate, ElectricDipoleMoment, Einstein, EmMultipole,
+       estimate, ElectricDipoleMoment, Einstein, EmMultipole, evaluate,
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor,
        generate, Green, GreenFunction, getDefaults, Gui,
@@ -69,24 +70,25 @@ export add, analyze, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, Angu
        PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift,
        QedPetersburg, QedSydney,
-       RacahAlgebra, Radial, RadialIntegrals, Radiative, RadiativeAuger, RayleighCompton, REDA, READI,
-       SchiffMoment, Shell, Subshell, setDefaults,
-       tabulate, tools, Tigner, W3j, W6j,
+       RacahAlgebra, Radial, RadialIntegrals, Radiative, RadiativeAuger, RayleighCompton, recast, REDA, READI,
+       SchiffMoment, setDefaults, Shell, Spectroscopy, Subshell,
+       tabulate, TestFrames, tools, W3j, W6j,
        UseCoulomb, UseBabushkin, UseGauge
     
 # Basic data and data structures
-include("module-Basics.jl")
-include("module-Radial.jl")
-include("module-Math.jl")
-include("module-Defaults.jl")
-include("module-ManyElectron.jl")
-include("module-Nuclear.jl")
+include("module-Basics.jl");    using ..Basics
+include("module-Radial.jl");    using ..Radial
+include("module-Math.jl");      using ..Math
+include("module-Defaults.jl");  using ..Defaults
+include("module-ManyElectron.jl");  using ..ManyElectron
+include("module-Nuclear.jl");   using ..Nuclear
 
 # Specialized functions/methods to manipulate these data
 include("module-AngularMomentum.jl")
 include("module-AngularCoefficients-Ratip2013.jl")
 include("module-Bsplines.jl")
 include("module-Continuum.jl")
+include("module-ConfigurationSpace.jl")
 include("module-Details.jl")
 include("module-RadialIntegrals.jl")
 include("module-HydrogenicIon.jl")
@@ -112,6 +114,7 @@ include("module-AlphaVariation.jl")
 include("module-FormFactor.jl")
 include("module-DecayYield.jl")
 include("module-GreenFunction.jl")
+include("module-CloseCoupling.jl")
 include("module-MultipolePolarizibility.jl")
 include("module-PlasmaShift.jl")
 
@@ -143,6 +146,10 @@ include("module-PairProduction.jl")
 include("module-PairAnnihilation1Photon.jl")
 include("module-PairAnnihilation2Photon.jl")  =#
 
+# Functions/methods for semi-empirical estimations
+# include("module-ImpactIonization.jl")
+include("module-Semiempirical.jl")
+
 # Functions/methods for atomic and cascade computations
 include("module-Atomic.jl")
 include("module-Cascade.jl")
@@ -151,21 +158,23 @@ include("module-Cascade.jl")
 # include("module-Pulse.jl")
 # include("module-Statistical.jl")
 
-# Functions/methods for semi-empirical estimations
-# include("module-ImpactIonization.jl")
-# include("module-Semiempirical.jl")
-
 # Functions/methods for symbolic computations
 include("module-RacahAlgebra.jl");  using ..RacahAlgebra
 
 # Basic functions/methods to manipulate these data
-include("inc-module-Basics.jl")
+include("module-BasicsAG.jl")
+include("module-BasicsCompute.jl")
+include("module-BasicsGenerate.jl")
+include("module-BasicsHP.jl")
+include("module-BasicsPerform.jl")
+include("module-BasicsQZ.jl")
+include("module-ManyElectronAZ.jl")
 
 # Specialized macros
 ##x include("macro-racahsum.jl")
 
 # All test functions/methods stay with the JAC root module
-include("jac-test.jl")
+include("module-TestFrames.jl");  using ..TestFrames
     
 function __init__()
     # The following variables need to be initialized at runtime to enable precompilation

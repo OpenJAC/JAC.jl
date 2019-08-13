@@ -229,8 +229,8 @@ function expandLevelsIntoLS(multiplet::Multiplet, settings::ManyElectron.LSjjSet
     
     # Make the jj-LS expansion of all selected levels
     if  Basics.isStandardSubshellList(multiplet.levels[1].basis)
-        shellList = Basics.extractNonrelativisticShellList(multiplet.levels[1].basis.subshells) 
-        confList  = Basics.extractNonrelativisticConfigurations(multiplet.levels[1].basis)
+        shellList = ManyElectron.extractNonrelativisticShellList(multiplet.levels[1].basis.subshells) 
+        confList  = ManyElectron.extractNonrelativisticConfigurations(multiplet.levels[1].basis)
         csfsNR    = LSjj.generateNonrelativisticCsfList(confList, shellList)
         basisNR   = BasisNR(multiplet.levels[1].basis.NoElectrons, shellList, csfsNR)
         ncsfs     = length(basisNR.csfs)
@@ -248,8 +248,8 @@ function expandLevelsIntoLS(multiplet::Multiplet, settings::ManyElectron.LSjjSet
             csfR = multiplet.levels[1].basis.csfs[r]
             # Cycle over this CSF if it has too low weight (not yet)
             # Determine the number of open shells in CsfR
-            conf       = Basics.extractNonrelativisticConfigurationFromCsfR(csfR, multiplet.levels[1].basis)
-            openShells = Basics.extractNoOpenShells(conf)
+            conf       = ManyElectron.extractNonrelativisticConfigurationFromCsfR(csfR, multiplet.levels[1].basis)
+            openShells = ManyElectron.extractNoOpenShells(conf)
             mcCsfR     = LSjj.expandCsfRintoNonrelativisticBasis(openShells, csfR, multiplet.levels[1].basis, basisNR)
             # Cycle through all selected levels    
             for  levelR  in  multiplet.levels  
@@ -367,7 +367,7 @@ end
 function expandCsfRintoNonrelativisticBasis(openShells::ZeroOpenShell, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
     if  csfR.J != AngularJ64(0)  ||   csfR.parity != Basics.plus    error("stop a")   end
     mcVector = Float64[]
-    confR     = Basics.extractNonrelativisticConfigurationFromCsfR(csfR,  basisR)
+    confR     = ManyElectron.extractNonrelativisticConfigurationFromCsfR(csfR,  basisR)
     for  csf in basisNR.csfs
         confNR = LSjj.extractConfigurationFromCsfNR(csf, basisNR)   
         if      confR == confNR    push!( mcVector, 1.0)
@@ -387,8 +387,8 @@ end
 function expandCsfRintoNonrelativisticBasis(openShells::OneOpenShell, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
     mcVector      = Float64[]
     # Find the open subshells and determine all the quantum numbers
-    rQN           = Basics.extractOpenShellQNfromCsfR(csfR, basisR)
-    rShells, rOCC = Basics.extractShellOccupationFromCsfR(csfR, basisR)
+    rQN           = ManyElectron.extractOpenShellQNfromCsfR(csfR, basisR)
+    rShells, rOCC = ManyElectron.extractShellOccupationFromCsfR(csfR, basisR)
     
     if  length( keys(rQN) ) != 1    error("stop a")     end
     if  rShells != basisNR.shells   error("stop b")     end
@@ -435,8 +435,8 @@ end
 function expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
     mcVector      = Float64[]
     # Find the open subshells and determine all the quantum numbers
-    rQN           = Basics.extractOpenShellQNfromCsfR(csfR, basisR)
-    rShells, rOCC = Basics.extractShellOccupationFromCsfR(csfR, basisR)
+    rQN           = ManyElectron.extractOpenShellQNfromCsfR(csfR, basisR)
+    rShells, rOCC = ManyElectron.extractShellOccupationFromCsfR(csfR, basisR)
     rKeys         = keys(rQN)
     
     if  length(rKeys) != 2          error("stop a")     end
@@ -570,7 +570,7 @@ function extractOpenShellQNfromCsfNR(csfNR::CsfNR, basisNR::BasisNR)
         end
     end
     
-    ##x println("Basics.extractShellOccupationFromCsfNR()::  csfNR = $csfNR  \n  wa = $wa")
+    ##x println("ManyElectron.extractShellOccupationFromCsfNR()::  csfNR = $csfNR  \n  wa = $wa")
     return( wa )
 end
 

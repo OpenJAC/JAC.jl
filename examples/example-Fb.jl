@@ -5,7 +5,7 @@ using SymEngine
 
 if  true
     # Test for sum rules
-    rex = RacahAlgebra.selectRacahExpression(2);        println("rex-original        = $rex")
+    rex = RacahAlgebra.selectRacahExpression(14);        println("rex-original        = $rex")
     rex = RacahAlgebra.equivalentForm(rex);             println("rex-equivalent      = $rex")
     wa  = RacahAlgebra.evaluate(rex);                   println("wa-sum rule eval    = $wa")
     ## ws  = [:j => 2//1, :m => 1, :jb => 2, :jc => 1]

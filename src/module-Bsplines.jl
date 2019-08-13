@@ -5,7 +5,7 @@
 """
 module Bsplines
 
-    using  Printf, ..AngularMomentum, ..Basics, ..Defaults,  ..Basics, ..ManyElectron, ..Radial, ..Nuclear, JAC
+    using  Printf, ..AngularMomentum, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear, JAC
     ##x global JAC_counter = 0
 
 
@@ -454,7 +454,7 @@ module Bsplines
             wa = Bsplines.setupLocalMatrix(sh.kappa, primitives, pot, storage)
             w2 = Basics.diagonalize("generalized eigenvalues: Julia, eigfact", wa, wb)
             nsi = nsS;    if sh.kappa > 0   nsi = nsi + 1   end
-            if  printout    Basics.tabulateKappaSymmetryEnergiesDirac(sh.kappa, w2.values, nsi, nuclearModel)    end
+            if  printout   Basics.tabulateKappaSymmetryEnergiesDirac(sh.kappa, w2.values, nsi, nuclearModel)    end
             newOrbitals[sh] = generateOrbitalFromPrimitives(sh, w2, primitives)
             # Take over orbitals of the same symmetry
             for  j = 1:length(subshells)
@@ -583,5 +583,6 @@ module Bsplines
         newBasis = Basis(true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, previousOrbitals)
         return( newBasis )
     end
+
 
 end # module

@@ -6,7 +6,7 @@
 module Cascade
 
     using Printf, ..AutoIonization, ..Basics, ..Defaults, ..DecayYield, ..Radial, ..ManyElectron, ..Nuclear, ..PhotoEmission, 
-                  ..PhotoIonization, ..TableStrings
+                  ..PhotoIonization, ..Semiempirical, ..TableStrings
 
     """
     `abstract type Cascade.AbstractApproach` 
@@ -788,7 +788,7 @@ module Cascade
                 if n == conf.NoElectrons   
                     nc = nc + 1
                     push!(confList, conf ) 
-                    wa = Basics.provide("binding energy", round(Int64, Z), conf);    wa = Defaults.convertUnits("energy: from atomic", wa)
+                    wa = Semiempirical.estimate("binding energy", round(Int64, Z), conf);    wa = Defaults.convertUnits("energy: from atomic", wa)
                     sa = "   av. BE = "  * string( round(-wa) ) * "  " * TableStrings.inUnits("energy")
                     println("      " * string(conf) * sa * "      ($nc)" )
                     if  printSummary   println(iostream, "      " * string(conf) * sa * "      ($nc)")      end
