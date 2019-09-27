@@ -5,7 +5,7 @@
 
 
 
-# Jena Atomic Calculator (JAC) for the computation of atomic structures, processes and cascades
+# Jena Atomic Calculator (JAC) for the computation of atomic representations, processes and cascades
 
 
 ## What is JAC?
@@ -23,7 +23,7 @@ code developers. Beside of its simple use, however, I also wish to provide a mod
 detailed documentation of the code as well as features for integrated testing. In particular, many typical computations
 and the handling of atomic data should appear within the code similar to how they would appear in spoken or written 
 language. Shortly speaking, JAC aims to provide a powerful **platform for daily use and to extent atomic theory 
-towards new applications**.
+towards new applications** or, in short, a **community platform for Just Atomic Computations**.
 
 **Remark**: Although major efforts have been undertaken during the past two years, JAC is still in a very early state 
 of its development and includes features that are only partly implemented or not yet tested in all detail. 
@@ -34,17 +34,20 @@ users and developers for response, support and encouragement.
 
 ## *Kinds* of computations
 
-In some more detail, JAC distinguishes and aims to support (partly still within the future) **eight kinds of 
+In some more detail, JAC distinguishes and aims to support (partly still within the future) **nine kinds of 
 computations** which can be summarized as follows:
 
 1. **Atomic computations**, based on explicitly specified electron *configurations*: This kind refers to the 
     computation of level energies, atomic state representations and to either one or several atomic properties 
     for selected levels from a given multiplet. It also help compute **one** selected process at a time, if atomic 
     levels from two or more multiplets are involved in some atomic transition.
-2. **Restricted active-space (RAS) computations**: This kind concerns systematically-enlarged calculations
-    of atomic states and level energies due to a specified active space of orbitals as well as due to the
-    (number and/or kind of) virtual excitations that are taken to be into account. Such RAS computations are 
-    normally performed stepwise by making use of the (one-electron) orbital functions from some prior step.
+2. **Atomic representations**: This kind concerns different representations of atomic wave functions; in particular,
+    it includes systematically-enlarged restricted active-space (RAS) computations of atomic states and level 
+    energies due to a pre-specified active space of orbitals as well as due to the (number and/or kind of) virtual 
+    excitations that are taken to be into account. Such RAS computations are normally performed stepwise by making 
+    use of the (one-electron) orbital functions from some prior step. Other atomic representations refer 
+    to approximate atomic Green functions and, in the future, combined techniques with concepts from close-coupling, 
+    (exterior) complex scaling, DMRG or perturbation theory.
 3. **Interactive computations**: Here, the (large set of) methods of the JAC program are applied interactively,
     either directly from the REPL or by using some short Julia script in order to compute and evaluate
     the desired observables (atomic parameters), such as energies, expansion coefficients, transition matrices
@@ -72,11 +75,14 @@ computations** which can be summarized as follows:
     rate*, but without that the atoms can leave the *pre-specified space of sublevels*. In particular, I here plan 
     to consider the interaction of atoms and ions with pulses of different shape, polarization strength 
     and duration.
-7. **Semi-empirical estimates** of atomic properties, such as cross sections, stopping powers, asymptotic
+7. **Atomic descriptors**: In building models for machine learning, the definition of proper (atomic) descriptors 
+    or *feature transformations* is central for predicting the physical properties and behaviour of atoms and ions; 
+    here, we shall provide various of such descriptors useful for atomic physics.
+8. **Semi-empirical estimates** of atomic properties, such as cross sections, stopping powers, asymptotic
     behaviour, etc. These *estimates* often refer to simple model computations or the use of fit functions.
     They are only implemented when data are needed but no *ab-initio* computations of the properties are 
     feasible otherwise.
-8. **Symbolic evaluation of expressions from Racah's algebra**: This kind refers to the algebraic transformation
+9. **Symbolic evaluation of expressions from Racah's algebra**: This kind refers to the algebraic transformation
     and simplification of (Racah) expressions, which may generally include any number of Wigner n-j symbols 
     of different kind as well as (various integrals over) the spherical harmonics, the Wigner rotation matrices
     and the Kronecker and triangular deltas. Of course, the complexity of such *Racah expressions* increases 
@@ -117,6 +123,8 @@ and by typing
 pkg> add https://github.com/OpenJAC/JAC.jl
 ```
 Moreover, to run the tutorials, yo need to have Jupyter notebooks running.
+
+If problems occur with the installation, please, see the [Installation Guide](InstallationGuide.md).
 
 
 
