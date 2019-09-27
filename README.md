@@ -32,10 +32,11 @@ users and developers for response, support and encouragement.
 
 
 
+
 ## *Kinds* of computations
 
 In some more detail, JAC distinguishes and aims to support (partly still within the future) **nine kinds of 
-computations** which can be summarized as follows:
+computations** which can be summarized as follows [(Figure)](Overview-Jac.pdf):
 
 1. **Atomic computations**, based on explicitly specified electron *configurations*: This kind refers to the 
     computation of level energies, atomic state representations and to either one or several atomic properties 
@@ -173,12 +174,17 @@ In order to modify the cell-output of the notebooks and to better print *wide ta
 ~/.jupyter/custom/custom.css in your home directory and add the line:  div.output_area pre { font-size: 7pt;} .
 
 * [Getting started](tutorials/01-getting-started.ipynb)
-* [Simple estimates for hydrogenic atoms and ions](tutorials/02-hydrogenic-computations.ipynb)
-* [Specifying nuclear models and potentials](tutorials/03-setting-the-nucleus.ipynb)
+* [Simple estimates for hydrogenic atoms and ions](tutorials/02-obtain-hydrogenic-orbitals.ipynb)
+* [Specifying nuclear models and potentials](tutorials/03-define-nuclear-model-parameters.ipynb)
 * [Selection and use of atomic potentials](tutorials/04-compare-radial-potentials.ipynb)
 * [Self-Consistent-Field (and CI) computations for carbon](tutorials/05-compute-SCF+CI-carbon-III.ipynb)
-* [Energies and Einstein coefficients for Fe X](tutorials/06-compute-Fe-X-spectrum.ipynb)
-* [Computation of K-LL Auger rates of atomic neon](tutorials/07-compute-Ne-KLL-Auger-spectrum.ipynb)
+* [Determine LS notation for atomic levels](tutorials/06-expand-levels-into-LS-basis.ipynb)
+* [Estimate QED corrections for beryllium-like ions](tutorials/07-estimate-QED-for-beryllium-like.ipynb)
+* [Compute the atomic level structure in a Debye-Hückel plasma](tutorials/08-compute-atoms-in-DH-plasma.ipynb)
+* [Compute transition probabilities for Fe X](tutorials/09-compute-Fe-X-spectrum.ipynb)
+* [Compute the K-LL Auger rates of atomic neon](tutorials/10-compute-Ne-KLL-Auger-spectrum.ipynb)
+* [Compute K-LL Auger rates in a Debye-Hückel plasma](tutorials/11-compute-Auger-rates-in-DH-plasma.ipynb)
+* [Compute the 2s, 2p photoionization of argon](tutorials/12-compute-Ar-2s-2p-photoionization.ipynb)
 * Several other tutorials are available, and this list will be extended with the further development of JAC.
 
 
@@ -195,8 +201,8 @@ occur:
 ## Encouragement & Contribution
 
 The scope of JAC is much wider than what I can (and plan to) implement myself here in Jena. 
-With JAC's upload to GitHub, I therefore wish to encourage the users to fork the code and to report improvements,
-failures, bugs, etc. Non-trivial changes to the code can be made available via pull requests, i.e. 
+With JAC's upload to GitHub, I therefore wish to **encourage the users to fork the code and to report improvements,
+failures, bugs, etc.** Non-trivial changes to the code can be made available via pull requests, i.e. 
 by submitting code for review (by other users) prior to their merger with the master code. 
 
 In particular, **I like to encourage contributions from the atomic physics community** if the overall style of the 

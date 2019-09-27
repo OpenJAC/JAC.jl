@@ -6,7 +6,7 @@ These instructions have been written for and tested on **Ubuntu 18.04**. In part
 be able to run JAC after the following three steps:
 
 
-**1)** First, we need to install the julia (version 1.0 or later) programming language. 
+**1)** First, we need to install the **julia (version 1.0 or later) programming language**. 
 This can be done easily by typing
 ```
 > sudo apt-get install julia
