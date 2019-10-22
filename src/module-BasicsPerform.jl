@@ -315,14 +315,43 @@ module BascisPerform
 
 
     """
-    `Basics.perform(computation::Atomic.CasComputation)`  
-        ... to perform the computation ... . Nothing is returned.  **Not yet implemented !**
+    `Basics.perform(computation::Atomic.RasComputation)`  
+        ... to perform a restricted active-space computation for a single level symmetry and based on a set of reference configurations
+            and a number of pre-specified steps. All relevant intermediate and final results are printed to screen (stdout). 
+            Nothing is returned.
 
-    `Basics.perform(computation::Atomic.CasComputation; output=true)`  
-        ... to perform the same ....  **Not yet implemented !**
+    `Basics.perform(computation::Atomic.RasComputation; output=true)`  
+        ... to perform the same but to return the complete output in a dictionary; the particular output depends on the type and 
+            specifications of the computations but can easily accessed by the keys of this dictionary.
     """
-    function Basics.perform(computation::Atomic.CasComputation; output::Bool=false)
-        error("Not yet implemented")
+    function Basics.perform(comp::Atomic.RasComputation; output::Bool=false)
+        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        nModel   = comp.nuclearModel
+        # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
+        asfSettings    = ManyElectron.AsfSettings()  ## (comp.settings)
+        priorBasis     = performSCF(comp.refConfigs, nModel, comp.grid, asfSettings; printout=printout)
+        priorMultiplet = performCI(priorBasis, nModel, comp.grid, asfSettings; printout=printout)
+        meanPot        = 1 ## generate a mean potential for the levels of priorMultiplet
+        spectrum       = 1 ## generate a spectrum of sufficient size
+        
+        # Now, cycle over all steps of the RasComputation
+        for (istep, step)  in  enumerate(comp.steps)
+            println("")
+            printstyled("++ Compute the orbitals, orbitals and multiplet for step $istep ... \n", color=:light_green)
+            printstyled("------------------------------------------------------------------- \n", color=:light_green)
+            basis      = Basics.generateBasis(step)
+            orbList    = Basics.generateOrbitalList(basis, step.frozenShells, priorMultiplet.Level[1].basis, spectrum)
+            basis      = Basis()  ## add orbList to (basis + orbList)
+            basis      = performSCF(basis, nModel, comp.grid, comp.Settings; printout=printout)
+            multiplet  = performCI(basis,  nModel, comp.grid, asfSettings; printout=printout) 
+            # append to results
+            if output    results = Base.merge( results, Dict("step"*string(istep) => multiplet) )           end
+            priorMultiplet = multiplet
+        end
+        
+        Defaults.warn(PrintWarnings)
+        Defaults.warn(ResetWarnings)
+        return( results )
     end
 
 
@@ -336,7 +365,62 @@ module BascisPerform
     function Basics.perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
                     printout::Bool=true)
         !(sa == "computation: SCF")   &&   error("Unsupported keystring = $sa")
-        if  printout    println("\n... in perform('computation: SCF', ...")    end
+        return( Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
+                                  printout=printout) )
+    end
+
+
+
+    """
+    `Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", configs::Array{Configuration,1}, 
+                    initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)` 
+        ... to generate from the given initial orbitals a multiplet of single-CSF levels by just using the diagonal 
+            part of the Hamiltonian matrix; a multiplet::Multiplet is returned.  
+    """
+    function Basics.perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
+                    grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
+        !(sa == "computation: mutiplet from orbitals, no CI, CSF diagonal")   &&   error("Unsupported keystring = $sa")
+        return( Basics.performCI(configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
+                                 grid::Radial.Grid, settings::AsfSettings; printout=printout) )
+    end
+
+
+    """
+    `Basics.perform("computation: CI", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)`  
+        ... to  set-up and diagonalize from the (SCF) basis the configuration-interaction matrix and to derive and display the 
+            level structure of the corresponding multiplet due to the given settings; a multiplet::Multiplet is returned.   
+    """
+    function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
+        !(sa == "computation: CI")   &&   error("Unsupported keystring = $sa")
+        return( Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout=printout) )
+    end
+
+
+    """
+    `Basics.perform("computation: CI for plasma", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
+        settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
+        ... to  set-up and diagonalize from the given (SCF) basis the configuration-interaction matrix and to derive and
+            display the level structure of the corresponding multiplet due to the given settings. Here, the CI matrix
+            includes the modifications of the Hamiltonian due to the given plasmaSettings; a multiplet::Multiplet is returned.   
+    """
+    function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
+                    settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)
+        !(sa == "computation: CI for plasma")   &&   error("Unsupported keystring = $sa")
+        return( Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
+                                 settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout=printout) )
+    end
+                    
+
+
+    """
+    `Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
+                       printout::Bool=true)`  
+        ... to generate an atomic basis and to compute the self-consistent field (SCF) for this basis due to the given settings; 
+            a basis::Basis is returned.  
+    """
+    function Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
+                               printout::Bool=true)
+        if  printout    println("\n... in perform['computation: SCF'] ...")    end
         
         # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
         relconfList = ConfigurationR[]
@@ -402,17 +486,15 @@ module BascisPerform
     end
 
 
-
     """
-    `Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", configs::Array{Configuration,1}, 
-                    initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)` 
+    `Basics.performCI(configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
+                      grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)` 
         ... to generate from the given initial orbitals a multiplet of single-CSF levels by just using the diagonal 
             part of the Hamiltonian matrix; a multiplet::Multiplet is returned.  
     """
-    function Basics.perform(sa::String, configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
-                    grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
-        !(sa == "computation: mutiplet from orbitals, no CI, CSF diagonal")   &&   error("Unsupported keystring = $sa")
-        if  printout    println("\n... in perform('computation: mutiplet from orbitals, no CI, CSF diagonal', ...")    end
+    function Basics.performCI(configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
+                              grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
+        if  printout    println("\n... in perform['computation: mutiplet from orbitals, no CI, CSF diagonal'] ...")    end
         
         # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
         relconfList = ConfigurationR[]
@@ -500,15 +582,14 @@ module BascisPerform
     
         return( mp )
     end
-
+    
 
     """
-    `Basics.perform("computation: CI", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)`  
+    `Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)`  
         ... to  set-up and diagonalize from the (SCF) basis the configuration-interaction matrix and to derive and display the 
             level structure of the corresponding multiplet due to the given settings; a multiplet::Multiplet is returned.   
     """
-    function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
-        !(sa == "computation: CI")   &&   error("Unsupported keystring = $sa")
+    function Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
         
         # Determine the J^P symmetry blocks
         symmetries = Dict{JAC.LevelSymmetry,Int64}()
@@ -561,18 +642,17 @@ module BascisPerform
     
         return( mp )
     end
-
+    
 
     """
-    `Basics.perform("computation: CI for plasma", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
-        settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
+    `Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings, 
+                      plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
         ... to  set-up and diagonalize from the given (SCF) basis the configuration-interaction matrix and to derive and
             display the level structure of the corresponding multiplet due to the given settings. Here, the CI matrix
             includes the modifications of the Hamiltonian due to the given plasmaSettings; a multiplet::Multiplet is returned.   
     """
-    function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
-                    settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)
-        !(sa == "computation: CI for plasma")   &&   error("Unsupported keystring = $sa")
+    function Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
+                              settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)
         
         # Determine the J^P symmetry blocks
         symmetries = Dict{JAC.LevelSymmetry,Int64}()

@@ -1102,9 +1102,10 @@ module Basics
     `@enum   Basics.AtomicLevelProperty`  ... defines a enumeration for the atomic level properties that are supported in the JAC program.
 
         + NoProperty      ... No level property defined.
-        + Einstein        ... Einstein A, B coefficients and oscillator strength; although not a 'level property', `Einstein` is treated within
-                            a single basis and does not support to include relaxation effects, etc. It can be used for a quick overwiew to
-                            transition probabilities or in cascade computations, however,
+        + Einstein        ... Einstein A, B coefficients and oscillator strength; although not a 'level property', in the Einstein module
+                              these computations are treated within a single basis and without all relaxation effects, etc. The `Einstein'
+                              property therefore helps to obtain a quick overview about transition probabilities of a transition arry
+                              or if many of these Einstein coefficients need to be calculated for a cascade.
         + HFS             ... Hyperfine A and B parameters.
         + Isotope         ... Isotope shift M and F parameters.
         + LandeJ          ... Lande g_J factors.
@@ -1304,10 +1305,12 @@ module Basics
     function extractOpenShellQNfromCsfR                     end
     function extractShellOccupationFromCsfR                 end
     function generate()                                     end
+    function generateBasis                                  end
     function generateConfigurationsForExcitationScheme      end
     function generateLevelWithExtraElectron                 end
     function generateLevelWithExtraSubshell                 end
     function generateLevelWithSymmetryReducedBasis          end
+    function generateOrbitalList                            end
     function generateShellList                              end
     function integrate                                      end
     function integrateOnGridNewtonCotes                     end
@@ -1320,6 +1323,8 @@ module Basics
     function merge                                          end
     function modifyLevelEnergies                            end
     function perform                                        end
+    function performSCF                                     end
+    function performCI                                      end
     function plot                                           end
     function read                                           end
     function readCslFileGrasp92                             end

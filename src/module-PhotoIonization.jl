@@ -16,10 +16,9 @@ module PhotoIonization
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + photonEnergies          ::Array{Float64,1}             ... List of photon energies.  
-        + calcAnisotropy          ::Bool                         ... True, if the beta anisotropy parameters are to be calculated and false otherwise. 
+        + calcAnisotropy          ::Bool                         ... True, if the beta anisotropy parameters are to be calculated and false otherwise (o/w). 
         + calcPartialCs           ::Bool                         ... True, if partial cross sections are to be calculated and false otherwise.  
-        + calcTensors             ::Bool                         ... True, if the statistical tensors of the excited atom are to be calculated and 
-                                                                     false otherwise. 
+        + calcTensors             ::Bool                         ... True, if statistical tensors of the excited atom are to be calculated and false o/w. 
         + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).

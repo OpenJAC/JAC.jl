@@ -5,7 +5,7 @@
 """
 module BascisGenerate
 
-    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..ManyElectron, 
+    using Printf, ..AngularMomentum, ..Atomic, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..ManyElectron, 
                   ..PhotoEmission, ..Radial
     
     export generate
@@ -357,6 +357,71 @@ module BascisGenerate
 
 
     """
+    `Basics.generateBasis(step::Atomic.RasStep)`  
+        ... generates the CSF basis for the given reference configurations and single, double, ... excitations of
+            electrons from the corresponding fromShells --> toShells. A basis::Basis is returned but without a valid
+            representation of the radial orbitals
+    """
+    function generateBasis(step::Atomic.RasStep)
+        # Single excitations
+        if      step.seFrom == Shell[]  ||  step.seTo == Shell[]    confSingles = Configuration[]
+        else    confSingles = generateConfigurations(step.refConfigs, step.seFrom, step.seTo)
+        end
+        # Double excitations
+        if      step.deFrom == Shell[]  ||  step.deTo == Shell[]    confDoubles = Configuration[]
+        else    confDoubles = generateConfigurations(step.refConfigs, step.deFrom, step.deTo)
+                confDoubles = generateConfigurations(ConfDoubles,     step.deFrom, step.deTo)
+        end
+        # Triple excitations
+        if      step.teFrom == Shell[]  ||  step.teTo == Shell[]    confTriples = Configuration[]
+        else    confTriples = generateConfigurations(step.refConfigs, step.teFrom, step.teTo)
+                confTriples = generateConfigurations(ConfTriples,     step.teFrom, step.teTo)
+                confTriples = generateConfigurations(ConfTriples,     step.teFrom, step.teTo)
+        end
+        # Quadruple excitations
+        if      step.teFrom == Shell[]  ||  step.teTo == Shell[]    confQuadruples = Configuration[]
+        else    confQuadruples = generateConfigurations(step.refConfigs, step.qeFrom, step.qeTo)
+                confQuadruples = generateConfigurations(confQuadruples,  step.qeFrom, step.qeTo)
+                confQuadruples = generateConfigurations(confQuadruples,  step.qeFrom, step.qeTo)
+                confQuadruples = generateConfigurations(confQuadruples,  step.qeFrom, step.qeTo)
+        end
+        
+        # Now get a unique set of configurations and generate the relativistic configurations
+        configurations = Base.unique(step.refConfigs, confSingles, confDoubles, confTriples, confQuadruples)
+        relconfList = ConfigurationR[]
+        for  conf in configurations
+            wa = Basics.generate("configuration list: relativistic", conf)
+            append!( relconfList, wa)
+        end
+        ##x for  i = 1:length(relconfList)    println("generateBasis(): ", relconfList[i])    end
+        subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+        Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
+
+        # Generate the relativistic CSF's for the given subshell list
+        csfList = CsfR[]
+        for  relconf in relconfList
+            newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
+            append!( csfList, newCsfs)
+        end
+
+        # Determine the number of electrons and the list of coreSubshells
+        NoElectrons      = sum( csfList[1].occupation )
+        coreSubshellList = Subshell[]
+        for  k in 1:length(subshellList)
+            mocc = Basics.subshell_2j(subshellList[k]) + 1;    is_filled = true
+            for  csf in csfList
+                if  csf.occupation[k] != mocc    is_filled = false;    break   end
+            end
+            if   is_filled    push!( coreSubshellList, subshellList[k])    end
+        end
+        
+        basis = Basis(true, NoElectrons, subshellList, csfList, coreSubshellList, Dict{Subshell, Orbital}())
+        return( basis )
+    end
+
+
+
+    """
     `Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.NoExcitationScheme, 
                                                     nMax::Int64, lValues::Array{Int64,1})`  
         ... generates a list of non-relativistic configurations for the given (reference) confs and the excitation scheme. 
@@ -512,6 +577,20 @@ module BascisGenerate
     end
 
 
+
+    """
+    `Basics.generateOrbitalList(basis::Basis, frozenShells::Array{Shell,1}, priorBasis::Basis, spectrum::Int64)`  
+        ... generates a list of (relativistic) orbitals as specificed for basis. These orbitals are taken from priorBasis
+            if contained in frozen-shells, and from spectrum (start orbitals) otherwises. An error message is issued if some
+            requested orbital is not found. A orbList::Array{Orbital,1} is returned.
+    """
+    function generateOrbitalList(basis::Basis, frozenShells::Array{Shell,1}, priorBasis::Basis, spectrum::Int64)
+        orbList = Orbital[]
+        error("Not yet implemented.")
+        return( orbList )
+    end
+
+    
 
     """
     `Basics.generateShellList(confs::Array{Configuration,1}, nMax::Int64, lValues::Array{Int64,1})`  

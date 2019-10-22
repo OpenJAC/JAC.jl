@@ -461,7 +461,7 @@ module Bsplines
                 if  alreadyDone[j]   continue
                 elseif  sh.kappa == subshells[j].kappa   
                     newOrbitals[subshells[j]] = generateOrbitalFromPrimitives(subshells[j], w2, primitives)
-                    if  printout   println("Use hydrogenic orbital from this symmetriy block also for $(subshells[j]).")    end
+                    if  printout   println("Use hydrogenic orbital from this symmetry block also for $(subshells[j]).")    end
                     alreadyDone[j] = true
                 end
             end

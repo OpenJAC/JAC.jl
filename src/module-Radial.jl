@@ -156,7 +156,7 @@ module Radial
                 println("Define a radial grid of type $mesh with $nr grid points")
                 println(" [rnt=" * @sprintf("%.3e",rnt) * ", h=" * @sprintf("%.3e",h) * 
                         ", hp=" * @sprintf("%.3e",hp) * ", NoPoints=$NoPoints, r_max=" * @sprintf("%.3e",r[nr]) * ";")
-                println("  B-splines wit break points at every $(nth)th point, nsL=$nsL, nsS=$nsS, orderL=$orderL, orderS=$orderS, orderGL=$orderGL] ")
+                println("  B-splines with break points at every $(nth)th point, nsL=$nsL, nsS=$nsS, orderL=$orderL, orderS=$orderS, orderGL=$orderGL] ")
             end
             ## for j = 1:nr   println("j = $j,  r = $(r[j]),  wr = $(wr[j])")   end
         end
@@ -241,11 +241,10 @@ module Radial
 
 
     """
-    `struct  Radial.Potential`  ... defines a struct for the radial potential which contains all information about its physical content.
+    `struct  Radial.Potential`  ... defines a struct for a local radial potential.
 
         + name           ::String            ... A name for the potential.
-        + Zr             ::Array{Float64,1}  ... radial potential function Z(r) = - r * V(r) as usual in atomic 
-                                                 structure theory.
+        + Zr             ::Array{Float64,1}  ... radial potential function Z(r) = - r * V(r) as usual in atomic structure theory.
         + grid           ::RadialGrid        ... radial grid on which the potential is defined.
     """
     struct  Potential
@@ -287,15 +286,13 @@ module Radial
     """
     `struct  Radial.Orbital`  
         ... defines a type for a single-electron radial orbital function with a large and small component, and which can refer to
-            either the standard or an explicitly given grid due to the logical flag isStandardGrid. Bound-state orbitals with energy < 0 are 
-            distinguished from free-electron orbitals by the flag isBound. -- Note that the arrays P, Q and grid cannot be defined only by the 
-            standard constructor but are typically set explicitly after an instance of this type has been created.
+            either the standard or an explicitly given grid due to the logical flag useStandardGrid. Bound-state orbitals with energy < 0 are 
+            distinguished from free-electron orbitals by the flag isBound.
+            
 
         + subshell        ::Subshell          ... Relativistic subshell.
-        + isBound         ::Bool              ... Logical flag to distinguish between bound (true) and free-electron 
-                                                  orbitals (false).
-        + useStandardGrid ::Bool              ... Logical flag for using the standard grid (true) or an explicitly 
-                                                  given grid (false).
+        + isBound         ::Bool              ... Logical flag to distinguish between bound (true) and free-electron orbitals (false).
+        + useStandardGrid ::Bool              ... Logical flag for using the standard grid (true) or an explicitly given grid (false).
         + energy          ::Float64           ... Single-electron energies of bound orbitals are always negative.
         + P               ::Array{Float64,1}  ... Large and ..
         + Q               ::Array{Float64,1}  ... small component of the radial orbital.
@@ -318,30 +315,30 @@ module Radial
 
     """
     `Radial.Orbital(subshell::Subshell, energy::Float64)`  
-        ... constructor for given subshell and energy, and where isStandardGrid is set to true; the grid must be defined 
-            explicitly and the large and small components are not yet defined in this case.
+        ... constructor for given subshell and energy, and where useStandardGrid is set to true; the grid must be defined 
+            explicitly and neither the large and small components nor their derivatives are yet defined in this case.
     """
     function Orbital(subshell::Subshell, energy::Float64)
         if energy < 0    isBound = true    else    isBound = false    end
-        isStandardGrid = true
+        useStandardGrid = true
         P = Array{Float64,1}[];    Q = Array{Float64,1}[];    grid = RadialGrid()
 
-        Orbital(subshell, isBound, isStandardGrid, energy, P, Q, grid)
+        Orbital(subshell, isBound, useStandardGrid, energy, P, Q, grid)
     end
 
 
     """
     `Radial.Orbital(label::String, energy::Float64)`  
-        ... constructor for given string identifier and energy, and where isStandardGrid is set to true; the grid must be 
-            defined explicitly and the large and small components are not yet defined in this case.
+        ... constructor for given string identifier and energy, and where useStandardGrid is set to true; the grid must be 
+            defined explicitly and neither the large and small components nor their derivatives are yet defined in this case.
     """
     function Orbital(label::String, energy::Float64)
         if energy < 0    isBound = true    else    isBound = false    end
     
-        subshell = Subshell(label);    isStandardGrid = true
+        subshell = Subshell(label);    useStandardGrid = true
         P = Array{Float64,1}[];        Q = Array{Float64,1}[];    grid = RadialGrid()
 
-        Orbital(subshell, isBound, isStandardGrid, energy, P, Q, grid)
+        Orbital(subshell, isBound, useStandardGrid, energy, P, Q, grid)
     end
 
 
@@ -364,10 +361,14 @@ module Radial
         if n <= 6
             print(io, "Large component P: ", orbital.P[1:end], "\n") 
             print(io, "Small component Q: ", orbital.Q[1:end], "\n") 
+            print(io, "Pprime:            ", orbital.Pprime[1:end], "\n") 
+            print(io, "Qprime:            ", orbital.Qprime[1:end], "\n") 
         else 
             n = length(orbital.P)
-            print(io, "Large component P: ", orbital.P[1:25], "  ...  ", orbital.P[n-24:n], "\n") 
-            print(io, "Small component Q: ", orbital.Q[1:25], "  ...  ", orbital.P[n-24:n], "\n")
+            print(io, "Large component P: ", orbital.P[1:25], "  ...  ", orbital.P[n-10:n], "\n") 
+            print(io, "Small component Q: ", orbital.Q[1:25], "  ...  ", orbital.Q[n-10:n], "\n")
+            print(io, "Pprime:            ", orbital.Pprime[1:25], "  ...  ", orbital.Pprime[n-10:n], "\n") 
+            print(io, "Qprime:            ", orbital.Qprime[1:25], "  ...  ", orbital.Qprime[n-10:n], "\n")
         end
 
         if orbital.useStandardGrid 

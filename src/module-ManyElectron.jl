@@ -20,7 +20,10 @@ module ManyElectron
         ... to estimate the QED corrections due to the model Hamiltonian by Shabaev and coworkers (2013).
             
       + struct QedSydney                
-        ... to estimate the QED corrections by means of the radiative potential by Flambaum and Ginges .
+        ... to estimate the QED corrections by means of the radiative potential by Flambaum and Ginges (2004).
+            
+      + struct NoneQed               
+        ... No QED estimates are included into the computations.
     """
     abstract type  AbstractQedModel                      end
     struct         QedPetersburg  <:  AbstractQedModel   end
@@ -177,20 +180,18 @@ module ManyElectron
     """
     `struct  ManyElectron.LSjjSettings`  ... defines a type for the details and parameters for performing jj-LS expansions.
 
-        + makeIt        ::Bool                         ... True, if the jj-LS expansion is to be made and false otherwise.
-        + minWeight     ::Float64                      ... minimum weight with which a (relativistic) CSF much contribute to 
-                                                           (at least one) selected level.
-        + printWeight   ::Float64                      ... minimum weight of a nonrelativistic CSF to be printed out in the
-                                                           final expansion.
-        + selectLines   ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + makeIt         ::Bool            ... True, if the jj-LS expansion is to be made and false otherwise.
+        + minWeight      ::Float64         ... minimum weight with which a (relativistic) CSF must contribute to (at least one) level.
+        + printWeight    ::Float64         ... minimum weight of a nonrelativistic CSF to be printed out in the final expansion.
+        + selectLevels   ::Bool            ... True, if levels are selected individually for the computations.
+        + selectedLevels ::Array{Int64,1}  ... List of levels.
     """
     struct LSjjSettings 
         makeIt          ::Bool
         minWeight       ::Float64 
         printWeight     ::Float64
         selectLines     ::Bool
-        selectedLines   ::Array{Tuple{Int64,Int64},1}    
+        selectedLines   ::Array{Int64,1}    
     end 
 
 
@@ -198,7 +199,7 @@ module ManyElectron
     `LSjjSettings(makeIt::Bool)`  ... constructor for the default values of jj-LS transformations.
     """
     function LSjjSettings(makeIt::Bool)
-        LSjjSettings(makeIt, 0.05, 0.1, false, Tuple{Int64,Int64}[])
+        LSjjSettings(makeIt, 0.05, 0.1, false, Int64[])
     end
 
 
@@ -217,13 +218,10 @@ module ManyElectron
         ... a struct for defining the settings for the atomic state functions, i.e. the self-consistent-field (SCF) 
             and CI computations
 
-        + generateScf          ::Bool               ... True, if a SCF need to be generated, and false otherwise 
-                                                        (frozen orbitals).
-        + breitScf             ::Bool               ... True, if Breit interaction is to be included into the SCF 
-                                                        computations.
+        + generateScf          ::Bool               ... True, if a SCF need to be generated, and false otherwise (frozen orbitals).
+        + breitScf             ::Bool               ... True, if Breit interaction is to be included into the SCF computations.
         + methodScf            ::String             ... Specify the SCF method: ["AL", "OL", "EOL", "meanDFS", "meanHS"].
-        + startScf             ::String             ... Specify how the start orbitals are obtained 
-                                                        ["fromNRorbitals", "fromGrasp", "hydrogenic"].
+        + startScf             ::String             ... Specify how the start orbitals are obtained ["fromNRorbitals", "fromGrasp", "hydrogenic"].
         + orbitalFileScf       ::String             ... Filename of orbitals, if taken from Grasp.
         + levelsScf            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
         + maxIterationsScf     ::Int64              ... maximum number of SCF iterations
@@ -232,14 +230,14 @@ module ManyElectron
         
     	+ coulombCI            ::Bool               ... logical flag to include Coulomb interactions.
     	+ breitCI              ::Bool               ... logical flag to include Breit interactions.
-    	+ qedModel             ::AbstractQedModel   ... specifies the applied model for estimating QED corrections;
-    	                                                {NoneQed(), QedPetersburg(), QedSydney()}
+    	+ qedModel             ::AbstractQedModel   ... model for estimating QED corrections {NoneQed(), QedPetersburg(), QedSydney()}.
     	+ methodCI             ::String             ... method for diagonalizing the matrix.
-    	+ jjLS                 ::LSjjSettings       ... settings to enforce and control a jj-LS transformation of atomic level.
-    	+ selectLevelsCI       ::Bool               ... true, if specific level (number)s have been selected.
-    	+ selectedLevelsCI     ::Array{Int64,1}     ... Level number that have been selected.
-    	+ selectSymmetriesCI   ::Bool               ... true, if specific level symmetries have been selected.
-    	+ selectedSymmetriesCI ::Array{LevelSymmetry,1}    ... Level symmetries that have been selected.
+    	+ jjLS                 ::LSjjSettings       ... settings to control a jj-LS transformation of atomic level, if requested.
+    	
+    	+ selectLevelsCI       ::Bool                          ... true, if specific level (number)s have been selected.
+    	+ selectedLevelsCI     ::Array{Int64,1}                ... Level number that have been selected.
+    	+ selectSymmetriesCI   ::Bool                          ... true, if specific level symmetries have been selected.
+    	+ selectedSymmetriesCI ::Array{LevelSymmetry,1}        ... Level symmetries that have been selected.
     """
     struct  AsfSettings
         generateScf            ::Bool 
@@ -289,7 +287,7 @@ module ManyElectron
     	  println(io, "breitCI:              $(settings.breitCI)  ")
     	  println(io, "qedModel :            $(settings.qedModel)  ")
     	  println(io, "methodCI:             $(settings.methodCI)  ")
-    	  println(io, "jjLS :                $(settings.jjLS)  ")
+    	  println(io, "jjLS :                $(settings.jjLS.makeIt)  ")
     	  println(io, "selectLevelsCI:       $(settings.selectLevelsCI)  ")
     	  println(io, "selectedLevelsCI:     $(settings.selectedLevelsCI)  ")
     	  println(io, "selectSymmetriesCI:   $(settings.selectSymmetriesCI)  ")

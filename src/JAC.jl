@@ -11,23 +11,25 @@
         hyperfine and isotope-shift parameters] but also transition amplitudes between bound-state levels [for the anapole moment, dipole 
         operator, electron electric-dipole moment, parity non-conservation, etc.] and, in particular, (atomic) transition probabilities, 
         Auger rates, photoionization cross sections, radiative and dielectronic recombination rates as well as cross sections for many 
-        other (elementary) processes. In the future, JAC will also facilitate interactive computations, the simulation of atomic cascades, 
-        the time-evolution of statistical tensors as well as various semi-empirical estimates of atomic properties. -- 
-        In addition, the JAC module supports the display of level energies, electron and photon spectra, radial orbitals and 
-        and other atomic data.
+        other (elementary) processes. JAC also facilitates interactive computations, the simulation of atomic cascades, the time-evolution 
+        of statistical tensors, a few semi-empirical estimates of atomic properties as well as the simplification of symbolic expressions
+        from Racah's algebra. -- In addition, the JAC module supports the display of level energies, electron and photon spectra, 
+        radial orbitals and and other atomic data.
 
 
 **`Perform (atomic) computations of different complexity:`**  
-    JAC will eventually support **eight kinds** of computations which can be summarized as follows:
+    JAC will eventually support **ten kinds** of computations which can be summarized as follows:
 
    + Atomic computations, based on explicitly specified electron configurations.
-   + Restricted active-space computations (RAS; not yet properly implemented).
+   + Restricted active-space computations (RAS; partly implemented).
    + Interactive computations.
-   + Atomic cascade computations (not yet fully implemented).
+   + Atomic cascade computations (partly implemented).
+   + Atomic representations (Green and close-coupling functions, complex rotation; not yet implemented).
    + Atomic responses (not yet implemented).
+   + Atomic descriptors for machine learning algorithms (not yet implemented).
    + Time-evolution of statistical tensors in (intense) light pusles (not yet implemented).
-   + Semi-empirical estimates of cross sections, etc. (not yet properly implemented).
-   + Symbolic evaluation of expressions from Racah's algebra, etc. (not yet properly implemented).
+   + Semi-empirical estimates of cross sections, etc. (partly implemented).
+   + Symbolic evaluation of expressions from Racah's algebra, etc. (partly implemented).
 
 
 **`Further details and information`**
@@ -46,42 +48,44 @@
 """
 module JAC
 
-using  Dates, Printf,  LinearAlgebra, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD, SymEngine
+using  Dates, Printf,  LinearAlgebra, IJulia, Interact, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD, SymEngine
 
 ##x export @racahsum, 
-export add, analyze, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AngularMomentum, 
+export AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AngularMomentum, 
        AsfSettings, Atomic, AtomicStructure, Auger, AutoIonization, 
        Basics, Basis, 
        CloseCoupling, compute, convertUnits, Cascade, Configuration, ConfigurationR, Continuum, CsfR, 
        CoulombExcitation, CoulombIonization,  
        diagonalize, Defaults, DecayYield, Details, Dielectronic, DoubleAuger,
-       estimate, ElectricDipoleMoment, Einstein, EmMultipole, evaluate,
+       estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate,
        E1, M1, E2, M2, E3, M3, E4, M4,
-       FormFactor,
-       generate, Green, GreenFunction, getDefaults, Gui,
-       Hfs, HydrogenicIon,
-       interpolate, integrate, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, IsotopeShift, 
-       LandeZeeman, Level, LevelSymmetry, LSjj, LSjjSettings,
+       FormFactor, FormF, 
+       generate, Green, GreenFunction, getDefaults, Green, Gui,
+       Hfs, HFS, HydrogenicIon,
+       interpolate, integrate, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, Isotope, IsotopeShift, 
+       LandeZeeman, LandeJ,  LandeF, Level, LevelSymmetry, LSjj, LSjjSettings,
        ManyElectron, Model, modify, MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment, 
        MultipolePolarizibility, Multiplet, 
-       NoAmplitude, NoProcess, Nuclear, NoneQed,
+       NoAmplitude, NoProcess, Nuclear, NoneQed, NoProperty, 
        Orbital, 
        perform, provide, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation, PeriodicTable,
        PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
-       PhotoIonizationAutoion, PhotoRecombination, PlasmaShift,
+       PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, Plasma, Polarity, 
        QedPetersburg, QedSydney,
-       RacahAlgebra, Radial, RadialIntegrals, Radiative, RadiativeAuger, RayleighCompton, recast, REDA, READI,
+       RacahAlgebra, Radial, RadialIntegrals, Radiative, RadiativeAuger, RasSettings, RasStep, RasComputation, RayleighCompton, recast, REDA, READI,
        SchiffMoment, setDefaults, Shell, Spectroscopy, Subshell,
        tabulate, TestFrames, tools, W3j, W6j,
-       UseCoulomb, UseBabushkin, UseGauge
-    
+       UseCoulomb, UseBabushkin, UseGauge,
+       Yields, 
+       Zeeman
+     
 # Basic data and data structures
-include("module-Basics.jl");    using ..Basics
-include("module-Radial.jl");    using ..Radial
-include("module-Math.jl");      using ..Math
-include("module-Defaults.jl");  using ..Defaults
+include("module-Basics.jl");        using ..Basics
+include("module-Radial.jl");        using ..Radial
+include("module-Math.jl");          using ..Math
+include("module-Defaults.jl");      using ..Defaults
 include("module-ManyElectron.jl");  using ..ManyElectron
-include("module-Nuclear.jl");   using ..Nuclear
+include("module-Nuclear.jl");       using ..Nuclear
 
 # Specialized functions/methods to manipulate these data
 include("module-AngularMomentum.jl")
@@ -151,8 +155,8 @@ include("module-PairAnnihilation2Photon.jl")  =#
 include("module-Semiempirical.jl")
 
 # Functions/methods for atomic and cascade computations
-include("module-Atomic.jl")
-include("module-Cascade.jl")
+include("module-Atomic.jl");        using ..Atomic
+include("module-Cascade.jl");       using ..Cascade
 
 # Functions/methods for atomic time evolutions
 # include("module-Pulse.jl")
@@ -182,7 +186,7 @@ function __init__()
     global JAC_TEST_IOSTREAM    = stdout
 end
 
-println("\nWelcome to JAC:  A fresh computational approach to atomic structures, processes, casacdes and time evolutions [(C) Copyright by Stephan Fritzsche, Jena (2019)].")
+println("\nWelcome to JAC:  A community approach to the computation of atomic structures, cascades and time evolutions [(C) Copyright by Stephan Fritzsche, Jena (2019)].")
 
 end
 

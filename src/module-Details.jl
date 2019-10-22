@@ -413,7 +413,7 @@ module Details
 
     The use of a proper terminology and data structures has been found essential for developing the JAC module. Below, we list and briefly explain
     these data types and how they appear in atomic theory. Although we presently support just a (small) number of frequently requested *tasks* in 
-    atomic structure and collision theory, we tried to define data types that are flexible enough to further extent these tools in the future.
+    atomic structure and collision theory, we tried to define data types that are flexible enough to further extend these tools in the future.
     Following the Julia's standard conventions, all types (struct) are named in CamelCase notation.
 
     ### `Basic data types`
@@ -425,7 +425,7 @@ module Details
     + ContinuumPhase               ... method for determining the phase of continuum orbitals.
     + ContinuumSolutions           ... method for solving continuum orbitals.
     + Eigen                        ... represents eigenvalues and eigenvectors if different diagonalization procedures are used.
-    + EmMultipole                  ... a multiole of the em field.
+    + EmMultipole                  ... a multipole of the em field.
     + EmGauge                      ... an allowed gauge form for the em field, for instance, Coulomb, Babushkin, Magnetic, ...
     + EmProperty                   ... a given property in Coulomb (velocity) as well as Babushkin (length) gauge.
     + EmStokes                     ... (computed) Stokes parameter for the polarization of emitted radiation.
@@ -452,7 +452,7 @@ module Details
     + ConfigurationR               ... (relativistic) electron configuration as specified by its subshells and their occupation.
     + Level                        ... atomic level in terms of its quantum number, energy and a (possible) representation.
     + Multiplet                    ... an ordered list of atomic levels with a name.
-    + Orbital                      ... (relativistic) radial orbital function that appears as 'buildung block' to define many-electron 
+    + Orbital                      ... (relativistic) radial orbital function that appears as 'building block' to define many-electron 
                                         states; more often than not, it just occurs as radial orbital on a given (radial) grid while the 
                                         angular dependence is given by the subshell label.
     + Radial.Grid                  ... radial grid to represent the (radial) orbitals.
@@ -470,7 +470,7 @@ module Details
     + Einstein.Outcome             ... (results of the) Einstein A and B coefficients for a single line.
     + Hfs.Settings                 ... settings for HFS A and B coefficients.
     + Hfs.Outcome                  ... (results of the) HFS A and B coefficients for a single level.
-    + IsotopeShift.Outcome         ... (results of the) M and F isotope-shift parameters. for a single level.
+    + IsotopeShift.Outcome         ... (results of the) M and F isotope-shift parameters for a single level.
     + IsotopeShift.Settings        ... settings for the M and F isotope-shift parameters.
     + LandeZeeman.sublevelJ        ... specifies a magnetic sublevel with well-defined J.
     + LandeZeeman.sublevelF        ... specifies a magnetic hyperfine sublevel with well-defined F, M_f.
@@ -706,13 +706,13 @@ module Details
     """
     **`Atomic properties`**
 
-    Apart from approximate level energies and eigenvectors, JAC supports the computation of the following level properties:
+    Apart from approximate level energies and eigenvectors, JAC (will) support the computation of the following level properties:
 
     + AlphaX        ... alpha variations; differential sensitivity parameters.
-    + Einstein      ... Einstein A, B coefficients and oscillator strength; although these coefficients are 
-                        not an original level property, Einstein treats these computations within a single 
+    + Einstein      ... Einstein A, B coefficients and oscillator strength; although these coefficients are not an 
+                        original level property, the Einstein module treats these computations within a single 
                         basis/multiplet and, hence, cannot include relaxation effects, etc. The Einstein 
-                        feature of JAC can be used, however, for a quick overwiew to transition probabilities 
+                        feature of JAC can be used, however, for a quick overview to transition probabilities 
                         or in order to simplify cascade computations.
     + FormF         ... Standard and modified atomic form factors.
     + Greens        ... Greens function of an atomic level.

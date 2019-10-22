@@ -34,8 +34,7 @@ module Nuclear
 
     """
     `Nuclear.Model(Z::Real)`  
-        ... constructor just for a given nuclear charge Z, and where a Fermi model is defined with a = 1.0 and c = 1.0 
-            for the moment. Both, the nuclear spin and moments are all set to zero in this case.
+        ... to specify a Fermi-type nucleus with charge Z, and where the nuclear spin and nuclear moments are all set to zero.
     """
     function Model(Z::Real)
         Z < 0.1  &&  error("Z must be >= 0.1")
@@ -52,9 +51,8 @@ module Nuclear
 
     """
     `Nuclear.Model(Z::Real, model::String)`  
-        ... constructor just for a given nuclear charge Z and model = {"Fermi", "point", "uniform"}, and where 
-            further parameters are defined approximately. Both, the nuclear spin and moments are all set to zero 
-            in this case.
+        ... to specify a nucleus with charge Z, model = {"Fermi", "point", "uniform"}, and where the nuclear spin and 
+            nuclear moments are all set to zero.
     """
     function Model(Z::Real, model::String)
         Z < 0.1                                    &&  error("Z must be >= 0.1")
@@ -75,7 +73,7 @@ module Nuclear
 
 
     # `Base.show(io::IO, m::Model)`  ... prepares a proper printout of the variable  m::Model.
-     function Base.show(io::IO, m::Model) 
+    function Base.show(io::IO, m::Model) 
         if      m.model == "Fermi"   
             print(io, "Fermi nuclear model for Z = $(m.Z) with mass = $(m.mass), radius R = $(m.radius) fm and ")
         elseif  m.model == "point"   
@@ -91,7 +89,9 @@ module Nuclear
 
 
     """
-    `Nuclear.Model(gui::Guint; model::Nuclear.Model=Model(36.0))`  ... constructor that is defined by a graphical user interface.
+    `Nuclear.Model(gui::Guint; model::Nuclear.Model=Model(36.0))`  
+        ... constructor to re-fine a nuclear model by a graphical user interface, and which may starts from 
+            the parameters of a given model.
     """
     function Model(gui::Guint; model::Nuclear.Model=Model(36.0))
         nmd = model

@@ -17,222 +17,202 @@ module Atomic
           JAC.MultiPhotonIonization, JAC.MultiPhotonDoubleIon, JAC.InternalConversion
           ##x , JAC.ElectricDipoleMoment
 
+export  RasSettings, RasStep, RasComputation
 
     """
-    `struct  Atomic.CasStep`  ... a type for defining an individual step of a (relativistic) complete active space computation for a specified 
-                                  set of levels. An instance of this struct provides all information to generate the atomic basis and to perform 
-                                  the associated SCF and multiplet computations for a selected No. of levels.
+    `struct  Atomic.RasSettings`  
+        ... a struct for defining the settings for a restricted active-space computations.
 
-        + name             ::String                    ... to assign a name to the given SCF step.
-        + NoElectrons      ::Int64                     ... Number of electrons.
+        + levelsScf            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
+        + maxIterationsScf     ::Int64              ... maximum number of SCF iterations in each RAS step.
+        + accuracyScf          ::Float64            ... convergence criterion for the SCF field.
+        
+    	+ breitCI              ::Bool               ... logical flag to include Breit interactions.
+    	+ selectLevelsCI       ::Bool               ... true, if specific level (number)s have been selected.
+    	+ selectedLevelsCI     ::Array{Int64,1}     ... Level number that have been selected.
+    """
+    struct  RasSettings
+        levelsScf              ::Array{Int64,1}
+        maxIterationsScf       ::Int64  
+        accuracyScf            ::Float64 
+    	breitCI                ::Bool 
+    	selectLevelsCI         ::Bool 
+    	selectedLevelsCI       ::Array{Int64,1} 
+     end
+
+
+    """
+    `Atomic.RasSettings()`  ... constructor for setting the default values.
+    """
+    function RasSettings()
+    	RasSettings(Int64[1], 24, 1.0e-6, false, false, Int64[])
+    end
+    
+    
+    # `Base.show(io::IO, settings::RasSettings)`  ... prepares a proper printout of the settings::RasSettings.
+    function Base.show(io::IO, settings::RasSettings)
+    	  println(io, "levelsScf:            $(settings.levelsScf)  ")
+    	  println(io, "maxIterationsScf:     $(settings.maxIterationsScf)  ")
+    	  println(io, "accuracyScf:          $(settings.accuracyScf)  ")
+    	  println(io, "breitCI:              $(settings.breitCI)  ")
+    	  println(io, "selectLevelsCI:       $(settings.selectLevelsCI)  ")
+    	  println(io, "selectedLevelsCI:     $(settings.selectedLevelsCI)  ")
+    end
+
+
+    """
+    `struct  Atomic.RasStep`  
+        ... specifies an individual step of a (relativistic) restricted active space computation for a set of levels. This struct 
+            comprises all information to generate the orbital basis and to perform the associated SCF and multiplet computations for a 
+            selected number of levels.
+
+        + seFrom            ::Array{Shell,1}        ... Single-excitations from shells   [sh_1, sh_2, ...]
+        + seTo              ::Array{Shell,1}        ... Single-excitations to shells  [sh_1, sh_2, ...]
+        + deFrom            ::Array{Shell,1}        ... Double-excitations from shells   [sh_1, sh_2, ...]
+        + deTo              ::Array{Shell,1}        ... Double-excitations to shells  [sh_1, sh_2, ...]
+        + teFrom            ::Array{Shell,1}        ... Triple-excitations from shells   [sh_1, sh_2, ...]
+        + teTo              ::Array{Shell,1}        ... Triple-excitations to shells  [sh_1, sh_2, ...]
+        + qeFrom            ::Array{Shell,1}        ... Quadrupole-excitations from shells   [sh_1, sh_2, ...]
+        + QeTo              ::Array{Shell,1}        ... Quadrupole-excitations to shells  [sh_1, sh_2, ...]
+        + frozenShells      ::Array{Shell,1}        ... List of shells that are kept 'frozen' in this step.
+        + constraints       ::Array{String,1}       ... List of Strings to define 'constraints/restrictions' to the generated CSF basis.
+    """
+    struct  RasStep
+        seFrom              ::Array{Shell,1}
+        seTo                ::Array{Shell,1}
+        deFrom              ::Array{Shell,1}
+        deTo                ::Array{Shell,1}
+        teFrom              ::Array{Shell,1}
+        teTo                ::Array{Shell,1}
+        qeFrom              ::Array{Shell,1}
+        qeTo                ::Array{Shell,1}
+        frozenShells        ::Array{Shell,1}
+        constraints         ::Array{String,1}
+    end
+
+    """
+    `JAC.Atomic.RasStep(b::Bool)`  ... constructor for an 'empty' instance of a variable::Atomic.RasStep for b = true/false
+    """
+    function RasStep(b::Bool)
+        RasStep(Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[],    Shell[], String[])
+    end
+
+
+    """
+    `JAC.Atomic.RasStep(;seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[], 
+                         deFrom::Array{Shell,1}=Shell[], deTo::Array{Shell,1}=Shell[], 
+                         teFrom::Array{Shell,1}=Shell[], teTo::Array{Shell,1}=Shell[], 
+                         qeFrom::Array{Shell,1}=Shell[], qeTo::Array{Shell,1}=Shell[], 
+                         frozen::Array{Shell,1}=Shell[], constraints::Array{String,1}=String[], refine::RasStep=RasStep(true)`  
+        ... constructor for specifying all excitations, frozen shells and constraints optionally.
+    """
+    function RasStep(;seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[], 
+                      deFrom::Array{Shell,1}=Shell[], deTo::Array{Shell,1}=Shell[], 
+                      teFrom::Array{Shell,1}=Shell[], teTo::Array{Shell,1}=Shell[], 
+                      qeFrom::Array{Shell,1}=Shell[], qeTo::Array{Shell,1}=Shell[], 
+                      frozen::Array{Shell,1}=Shell[], constraints::Array{String,1}=String[], refine::RasStep=RasStep(true))
+        if  seFrom == Shell[]   sxFrom = refine.seFrom   else      sxFrom = seFrom      end
+        if  seTo   == Shell[]   sxTo   = refine.seTo     else      sxTo   = seTo        end
+        if  deFrom == Shell[]   dxFrom = refine.deFrom   else      dxFrom = deFrom      end
+        if  deTo   == Shell[]   dxTo   = refine.deTo     else      dxTo   = deTo        end
+        if  teFrom == Shell[]   txFrom = refine.teFrom   else      txFrom = teFrom      end
+        if  teTo   == Shell[]   txTo   = refine.teTo     else      txTo   = teTo        end
+        if  qeFrom == Shell[]   qxFrom = refine.qeFrom   else      qxFrom = qeFrom      end
+        if  qeTo   == Shell[]   qxTo   = refine.qeTo     else      qxTo   = qeTo        end
+        if  frozen == Shell[]        frozx  = refine.frozenShells   else      frozx  = frozen             end
+        if  constraints ==String[]   consx  = refine.constraints    else      consx  = constraints        end
+        
+        RasStep( sxFrom, sxTo, dxFrom, dxTo, txFrom, txTo, qxFrom, qxTo, frozx, consx)
+    end
+
+
+    # `Base.string(step::Atomic.RasStep)`  ... provides a String notation for the variable step::Atomic.RasStep.
+    function Base.string(step::Atomic.RasStep)
+        sa = "\nRAS step with $(length(step.frozenShells)) frozen shell(s): $(step.frozenShells)  ... and virtual excitations"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, step::Atomic.RasStep)`  ... prepares a proper printout of the (individual step of computations) step::Atomic.RasStep.
+    function Base.show(io::IO, step::Atomic.RasStep)
+        sa = Base.string(step);                 print(io, sa, "\n")
+        if  length(step.seFrom) > 0
+           sa = "   Singles from:          { ";      for  sh in step.seFrom   sa = sa * string(sh) * ", "  end
+           sa = sa[1:end-2] * " }   ... to { ";      for  sh in step.seTo     sa = sa * string(sh) * ", "  end;   
+           sa = sa[1:end-2] * " }";            print(io, sa, "\n")
+        end   
+        if  length(step.deFrom) > 0
+           sa = "   Doubles from:          { ";      for  sh in step.deFrom   sa = sa * string(sh) * ", "  end
+           sa = sa[1:end-2] * " }   ... to { ";      for  sh in step.deTo     sa = sa * string(sh) * ", "  end;   
+           sa = sa[1:end-2] * " }";            print(io, sa, "\n")
+        end   
+        if  length(step.teFrom) > 0
+           sa = "   Triples from:          { ";      for  sh in step.teFrom   sa = sa * string(sh) * ", "  end
+           sa = sa[1:end-2] * " }   ... to { ";      for  sh in step.teTo     sa = sa * string(sh) * ", "  end;   
+           sa = sa[1:end-2] * " }";            print(io, sa, "\n")
+        end   
+        if  length(step.qeFrom) > 0
+           sa = "   Quadruples from:       { ";      for  sh in step.qeFrom   sa = sa * string(sh) * ", "  end
+           sa = sa[1:end-2] * " }   ... to { ";      for  sh in step.qeTo     sa = sa * string(sh) * ", "  end;   
+           sa = sa[1:end-2] * " }";            print(io, sa, "\n")
+        end   
+    end
+
+
+
+    """
+    `struct  Atomic.RasComputation`  
+        ... a struct for defining a series of restricted active space computations for a specified set of levels. 
+            This type provides all information to generate the atomic basis and to perform the corresponding SCF and 
+            multiplet computations for a specified number of levels.
+
+        + name             ::String                    ... to assign a name to the given model.
+        + nuclearModel     ::Nuclear.Model             ... Model, charge and parameters of the nucleus.
+        + grid             ::Radial.Grid               ... The radial grid to be used for the computation.
         + refConfigs       ::Array{Configuration,1}    ... List of references configurations, at least 1.
-        + Sfrom            ::Array{Shell,1}            ... Single-excitations from shells   [sh_1, sh_2, ...]
-        + Sto              ::Array{Shell,1}            ... Single-excitations to shells  [sh_1, sh_2, ...]
-        + Dfrom            ::Array{Shell,1}            ... Double-excitations from shells   [sh_1, sh_2, ...]
-        + Dto              ::Array{Shell,1}            ... Double-excitations to shells  [sh_1, sh_2, ...]
-        + Tfrom            ::Array{Shell,1}            ... Triple-excitations from shells   [sh_1, sh_2, ...]
-        + Tto              ::Array{Shell,1}            ... Triple-excitations to shells  [sh_1, sh_2, ...]
-        + Qfrom            ::Array{Shell,1}            ... Quadrupole-excitations from shells   [sh_1, sh_2, ...]
-        + Qto              ::Array{Shell,1}            ... Quadrupole-excitations to shells  [sh_1, sh_2, ...]
-        + restrictions     ::Array{String,1}           ... List of Strings to define 'restrictions' to applied to the CSF basis.
+        + symmetry         ::LevelSymmetry             ... Symmetry of the levels/CSF in the many-electron basis.
+        + NoElectrons      ::Int64                     ... Number of electrons.
         + NoIterations     ::Int64                     ... Number of SCf iterations to be applied in this step of computations.
-        + frozenSubshells  ::Array{Subshell,1}         ... List of subshells that are kept 'frozen' in this step.
-        + failureHandling  ::Array{String,1}           ... List of Strings to define subsequent steps in case of failure.
+        + steps            ::Array{Atomic.RasStep,1}   ... List of SCF steps that are to be done in this model computation.
+        + settings         ::Atomic.RasSettings        ... Settings for the given RAS computation
     """
-    struct  CasStep
-        name               ::String                    
-        NoElectrons        ::Int64  
-        refConfigs         ::Array{Configuration,1}
-        Sfrom              ::Array{Shell,1}
-        Sto                ::Array{Shell,1}
-        Dfrom              ::Array{Shell,1}
-        Dto                ::Array{Shell,1} 
-        Tfrom              ::Array{Shell,1}
-        Tto                ::Array{Shell,1}
-        Qfrom              ::Array{Shell,1}
-        Qto                ::Array{Shell,1}
-        restrictions       ::Array{String,1} 
+    struct  RasComputation
+        name               ::String  
+        nuclearModel       ::Nuclear.Model
+        grid               ::Radial.Grid
+        refConfigs         ::Array{Configuration,1} 
+        symmetry           ::LevelSymmetry
+        NoElectrons        ::Int64
         NoIterations       ::Int64 
-        frozenShells       ::Array{Subshell,1}
-        failureHandling    ::Array{String,1}
+        steps              ::Array{Atomic.RasStep,1}
+        settings           ::Atomic.RasSettings 
     end
 
 
     """
-    `JAC.Atomic.CasStep(name::String, NoElectrons::Int64)`  ... constructor for an 'initial' instance of a variable::Atomic.CasStep with just 
-                                                                a given name and No. of Electrons.
+    `JAC.Atomic.RasComputation()`  ... constructor for an 'empty' instance of the a variable::Atomic.RasComputation
     """
-    function CasStep(name::String, NoElectrons::Int64)
-        CasStep(name, NoElectrons, Configuration[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], 
-                String[], 0, Subshell[], String[])
+    function RasComputation()
+        RasComputation("", Nuclear.Model(1.0), Radial.Grid(), ManyElectron.Configuration[], Basics.LevelSymmetry(0, Basics.plus),
+                       0, 0, Atomic.RasStep[], Atomic.RasSettings())
     end
 
 
-    """
-    `JAC.Atomic.CasStep("interactive"; refine::Atomic.CasStep=..)`  ... constructor to generate a new instance of Atomic.CasStep
-                                       interactively by replying to some detailed dialog. This constructor enables one to add, modify or
-                                       refine an individual step in the complete active space computations. **Not yet implemented !**
-    """
-    function CasStep(sa::String; refine::Atomic.CasStep = Atomic.CasStep())
-        sa != "interactive"   &&    error("Unsupported keystring = $sa.")
-
-        #= print("Enter the nuclear charge Z:  ");    Zx = Base.parse(Float64, readline(STDIN) )
-
-        yes = yesno("The ...; modify ? [N|y]") 
-        while  yes     
-            print("Enter a charge distribution model {point, Fermi, uniform}:  ");    modelx = strip(readline(STDIN))
-            !(modelx in [""])   &&   println("Unsupported charge distribution model $modelx ... redo:")
-        end =#
-    end
-
-
-    # `Base.show(io::IO, step::Atomic.CasStep)`  ... prepares a proper printout of the (individual step of computations) step::Atomic.CasStep.
-    function Base.show(io::IO, step::Atomic.CasStep)
-        sa = Base.string(step);                print(io, sa, "\n")
-        sa = "Reference configurations: ";     print(io, sa, "\n")   
-        if  length(step.refConfigs) > 0
-           for  conf  in step.refConfigs          print(io, conf )  end;   print(io, "\n")
-        end
-        if  length(step.Sfrom) > 0
-           sa = "Singles from:              { ";      for  sh in step.Sfrom    sa = sa * string(sh) * ", "  end
-           sa = sa[1:end-2] *  " }   ... to { ";      for  sh in step.Sto      sa = sa * string(sh) * ", "  end;   
-           sa = sa[1:end-2] *  " }";            print(io, sa, "\n")
-        end   
-        if  length(step.Dfrom) > 0
-           sa = "Doubles from:              { ";      for  sh in step.Dfrom    sa = sa * string(sh) * ", "  end
-           sa = sa[1:end-2] *  " }   ... to { ";      for  sh in step.Dto      sa = sa * string(sh) * ", "  end;   
-           sa = sa[1:end-2] *  " }";            print(io, sa, "\n")
-        end   
-        if  length(step.Tfrom) > 0
-           sa = "Triples from:              { ";      for  sh in step.Tfrom    sa = sa * string(sh) * ", "  end
-           sa = sa[1:end-2] *  " }   ... to { ";      for  sh in step.Tto      sa = sa * string(sh) * ", "  end;   
-           sa = sa[1:end-2] *  " }";            print(io, sa, "\n")
-        end   
-        if  length(step.Qfrom) > 0
-           sa = "Quadruples from:           { ";      for  sh in step.Qfrom    sa = sa * string(sh) * ", "  end
-           sa = sa[1:end-2] *  " }   ... to { ";      for  sh in step.Qto      sa = sa * string(sh) * ", "  end;   
-           sa = sa[1:end-2] *  " }";            print(io, sa, "\n")
-        end   
-    end
-
-
-    # `Base.string(step::Atomic.CasStep)`  ... provides a String notation for the variable step::Atomic.CasStep.
-    function Base.string(step::Atomic.CasStep)
-        sa = "Step: Computational model for $(step.name) with $(step.NoElectrons) electrons and with (step.NoCoreShells) "
-        sa = sa * "core shells:"
+    # `Base.string(comp::RasComputation)`  ... provides a String notation for the variable comp::RasComputation.
+    function Base.string(comp::RasComputation)
+        sa = "RAS computation: '$(comp.name)' for symmétry $(comp.symmetry) and with $(length(comp.steps)) steps as well as with reference configurations: \n   "
+        for  refConfig  in  comp.refConfigs     sa = sa * string(refConfig) * ",  "     end
+        sa = sa * "\n" * "and the current settings:"
         return( sa )
     end
 
 
-
-    """
-    `struct  Atomic.CasComputation`  ... a struct for defining a series of complete active space computations for a specified set of levels. 
-                                         This type provides all information to generate the atomic basis and to perform the corresponding
-                                         SCF and multiplet computations for a selected No. of levels.
-
-        + name             ::String                     ... to assign a name to the given model.
-        + previousStep     ::Int64                      ... 0, if no previous steps was yet done in this series.
-        + steps            ::Array{Atomic.CasStep,1}    ... List of SCF steps that are to be done in this model computation.
-    """
-    struct  CasComputation
-        name               ::String                   
-        previousStep       ::Int64 
-        steps              ::Array{Atomic.CasStep,1}
-    end
-
-
-    """
-    `JAC.Atomic.CasComputation()`  ... constructor for an 'empty' instance of the a variable::Atomic.CasComputation
-    """
-    function CasComputation()
-        CasComputation("", 0, Array{CasStep,1}[])
-    end
-
-
-    """
-    `JAC.Atomic.CasComputation("interactive"; refine::Atomic.CasComputation=..)`  ... constructor to generate a new instance of
-                               Atomic.CasComputation interactively by replying to some detailed dialog. This constructor enables one to add,
-                               modify or refine the model for a particular complete active space computations. **Not yet implemented !**
-    """
-    function CasComputation(sa::String; refine::Atomic.CasComputation = Atomic.CasComputation())
-        sa != "interactive"   &&    error("Unsupported keystring = $sa.")
-
-        #= print("Enter the nuclear charge Z:  ");    Zx = Base.parse(Float64, readline(STDIN) )
-
-        yes = yesno("The ...; modify ? [N|y]") 
-        while  yes     
-            print("Enter a charge distribution model {point, Fermi, uniform}:  ");    modelx = strip(readline(STDIN))
-            !(modelx in [""])   &&   println("Unsupported charge distribution model $modelx ... redo:")
-        end =#
-    end
-
-
-    # `Base.show(io::IO, model::CasComputation)`  ... prepares a proper printout of the (individual step of computations) model::CasComputation.
-    function Base.show(io::IO, model::CasComputation)
-        sa = Base.string(model)
-        print(io, sa)
-    end
-
-
-    # `Base.string(model::CasComputation)`  ... provides a String notation for the variable model::CasComputation.
-    function Base.string(model::CasComputation)
-        sa = "Model: $(model.name) includes $(length(model.steps)) steps and has been calculated up to the step $(model.previousStep)."
-        return( sa )
-    end
-
-
-
-    """
-    `struct  Atomic.CasSettings`  ... a struct for defining the settings for complete active space computations
-
-        + generateScf       ::Bool               ... True, if a SCF need to be generated, and false if just the start orbitals should 
-                                                     be applied.
-        + startOrbitals     ::String             ... Specify how the start orbitals are obtained ["fromNRorbitals", "fromGrasp", "hydrogenic"].
-        + rwfFilename       ::String             ... Filename of orbitals, if taken from Grasp.
-        + levels            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
-        + includeBreit      ::Bool               ... True, if the Breit interaction is included into the SCF generation.
-        + maxIterations     ::Int64              ... maximum number of SCF iterations
-        + scfAccuracy       ::Float64            ... convergence criterion for the SCF field.
-        + iterationSequence ::Array{Subshell,1}  ... Sequence of subshells to be optimized.
-    """
-    struct  CasSettings
-        generateScf         ::Bool
-        startOrbitals       ::String
-        rwfFilename         ::String
-        levels              ::Array{Int64,1}
-        includeBreit        ::Bool
-        maxIterations       ::Int64
-        scfAccuracy         ::Float64
-        iterationSequence   ::Array{Subshell,1}
-    end
-
-
-    """
-    `JAC.Atomic.CasSettings()`  ... constructor for setting the default values.
-    """
-    function CasSettings()
-        CasSettings(false, "fromNRorbitals", "", Int64[1], false, 24, 1.0e-8, Subshell[] )
-    end
-
-
-    # `Base.show(io::IO, settings::Atomic.CasSettings)`  ... prepares a proper printout of the settings::Atomic.CasSettings.
-    function Base.show(io::IO, settings::Atomic.CasSettings)
-        println(io, "generateScf:        $(settings.generateScf)  ")
-        println(io, "startOrbitals:      $(settings.startOrbitals)  ")
-        println(io, "rwfFilename:        $(settings.rwfFilename)  ")
-        println(io, "levels:             $(settings.levels)  ")
-        println(io, "includeBreit:       $(settings.includeBreit)  ")
-        println(io, "maxIterations:      $(settings.maxIterations)  ")
-        println(io, "scfAccuracy:        $(settings.scfAccuracy)  ")
-        println(io, "iterationSequence:  $(settings.iterationSequence)  ")
-    end
-
-
-    # `Base.string(settings::Atomic.CasSettings)`  ... provides a String notation for the variable settings::Atomic.CasSettings.
-    function Base.string(settings::Atomic.CasSettings)
-        error("Not yet implemented.")
-        sa = "Cas settings: maximum No. of iterations = $(settings.maxIterations), accuracy = (settings.scfAccuracy)"
-        return( sa )
+    # `Base.show(io::IO, comp::RasComputation)`  ... prepares a proper printout of the (individual step of computations) comp::RasComputation.
+    function Base.show(io::IO, comp::RasComputation)
+        sa = Base.string(comp);            print(io, sa, "\n")
+        println(io, "NoElectrons:          $(comp.NoElectrons)  ")
+        println(io, "steps:                $(comp.steps)  ")
+        println(io, "settings:             $(comp.settings)  ")
     end
 
 

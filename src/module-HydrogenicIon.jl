@@ -16,7 +16,7 @@ module HydrogenicIon
     function energy(sh::Shell, Z::Float64)
         energy = - Z^2 / sh.n^2 / 2.
         energx = Defaults.convertUnits("energy: from atomic to eV", energy)
-        sa     = "  Energie for shell $sh is [in $(Defaults.getDefaults("unit: energy"))]: " * @sprintf("%.8e", energx)
+        sa     = "  Energy for shell $sh is [in $(Defaults.getDefaults("unit: energy"))]: " * @sprintf("%.8e", energx)
         println(sa)
         return( energy )
     end
@@ -36,7 +36,7 @@ module HydrogenicIon
         wa = sqrt(1.0 + Z^2 * alpha^2 / (nr + wa)^2)
         wa = Defaults.getDefaults("speed of light: c")^2 * (1/wa - 1.0)
         wb = Defaults.convertUnits("energy: from atomic to eV", wa)
-        sa = "  Energie for subshell $sh is [in $(Defaults.getDefaults("unit: energy"))]: " * @sprintf("%.8e", wb)
+        sa = "  Energy for subshell $sh is [in $(Defaults.getDefaults("unit: energy"))]: " * @sprintf("%.8e", wb)
         println(sa)
         return( wa )
     end
@@ -99,7 +99,7 @@ module HydrogenicIon
                 @warn("radialOrbital():: P' and Q' not yet defined.")
             end
         elseif  grid.mesh == MeshGL
-            @warn("radialOrbital():: Q[:] = zero everywhere.")
+            @warn("radialOrbital():: Q[:] = zero everywhere; kinetic-balance not yet defined for Gauss-Legendre grids.")
         else
             error("stop a")
         end

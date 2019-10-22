@@ -5,7 +5,7 @@
 """
 module BasicsAG
 
-    using Printf,  LinearAlgebra, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..ManyElectron, 
+    using Printf,  LinearAlgebra, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..LSjj, ..ManyElectron, 
                   ..PhotoEmission, ..Radial
     
     export recastAG
@@ -537,7 +537,7 @@ module BasicsAG
             length is returned that contains the nonrelativistic shells and their occupation in the specification of 
             csfR. 
     """
-    function extractShellOccupationFromCsfR(csfR::CsfR, basis::Basis)
+    function Basics.extractShellOccupationFromCsfR(csfR::CsfR, basis::Basis)
         shellList = Basics.extractNonrelativisticShellList(basis.subshells) 
         occList   = Int64[]
         
