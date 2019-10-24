@@ -61,7 +61,7 @@ export AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, An
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, 
        generate, Green, GreenFunction, getDefaults, Green, Gui,
-       Hfs, HFS, HydrogenicIon,
+       Hfs, HighHarmonic, HFS, HydrogenicIon,
        interpolate, integrate, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, Isotope, IsotopeShift, 
        LandeZeeman, LandeJ,  LandeF, Level, LevelSymmetry, LSjj, LSjjSettings,
        ManyElectron, Model, modify, MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment, 

@@ -72,4 +72,8 @@ println("")
 println("G)  Tests & development of semiempirical computations")
 println("-----------------------------------------------------")
 println("Ga) Tests of the semi-empirical computation of ADK rates.")
+println("")
+println("H)  Tests & development of atomic response computations")
+println("-----------------------------------------------------")
+println("Ha) Tests of the HighHarmonic module to calculate a high-harmonic spectrum in single-electron approximation.")
 

@@ -117,21 +117,21 @@ module HighHarmonic
     `abstract type HighHarmonic.AbstractHhgObservable` 
         ... defines an abstract and a number of singleton types for the observables that can be computed for HHG processes.
 
-      + struct UniColorSpectrum     
+      + struct HhgSpectrum     
         ... to compute a standard (single-color) high-harmonic spectrum (for a point-like target and point-like detector).       
             
-      + struct BiColorSpectrum
+      + struct HhgPolarizedSpectrum
         ... to compute a bi-color high-harmonic spectrum (for a point-like target and point-like detector).
             
       + struct AttoSecondPulse     (not yet)
       + struct IntensityProfile    (not yet)
       + struct PhaseProfile        (not yet)
             
-      + struct UniColorSpectrum
+      + struct HhgSpectrum
     """
-    abstract type  AbstractHhgObservable                         end
-    struct         UniColorSpectrum  <:  AbstractHhgObservable   end
-    struct         BiColorSpectrum   <:  AbstractHhgObservable   end
+    abstract type  AbstractHhgObservable                              end
+    struct         HhgSpectrum           <:  AbstractHhgObservable   end
+    struct         HhgPolarizedSpectrum  <:  AbstractHhgObservable   end
     
     
 
@@ -146,7 +146,7 @@ module HighHarmonic
             
       + struct HhgHydrogenicFullVolkov
         ... to apply hydrogenic orbitals for the computation of the time-dependent dipole amplitude but the full
-             Volkov phase for the dipole moments.
+            Volkov phase for the dipole moments.
     """
     abstract type  AbstractHhgApproach                                 end
     struct         HhgHydrogenicSaddlePoint  <:  AbstractHhgApproach   end
@@ -157,17 +157,20 @@ module HighHarmonic
     `abstract type HighHarmonic.AbstractHhgPulse` 
         ... defines an abstract and a number of other types to represent an incident laser pulse/field for HHG:
 
-      + struct HhgPlaneWaveLaser        ... to represent a long, plane-wave laser field 
+      + struct HhgLinearPlaneWaveLaser  ... to represent a long, linearly-polarized plane-wave laser field,
+                                            propagating into z-direction.
       + struct HhgSineSquaredPulse      ... to represent a sin^2(...) pulse  (not yet)      
     """
     abstract type  AbstractHhgPulse  end
 
     
     """
-    `struct  HighHarmonic.HhgPlaneWaveLaser  <:  AbstractHhgPulse`  
+    `struct  HighHarmonic.HhgLinearPlaneWaveLaser  <:  AbstractHhgPulse`  
         ... defines a struct for a long, plane-wave laser field of given frequency and intensity.
 
-        + omega          ::Float64   ... Frequency of the incident laser field.
+        + omega          ::Float64   ... Frequency of the incident laser field in [a.u.].
+        + E0             ::Float64   ... Electric-field amplitude E0 in [a.u.].
+        ...
         + intensity      ::Float64   ... Intensity [W/cm^2] of the incident laser field.
         + polarization   ::...       ... Polarization of the incident laser field.
         + beamProfile    ::...
@@ -175,24 +178,35 @@ module HighHarmonic
         + length         ::...
         + centralLength  ::...
     """
-    struct  HhgPlaneWaveLaser  <:  AbstractHhgPulse
+    struct  HhgLinearPlaneWaveLaser  <:  AbstractHhgPulse
         omega            ::Float64
-        intensity        ::Float64
+        E0               ::Float64
     end
 
 
     """
-    `HighHarmonic.HhgPlaneWaveLaser()`  ... constructor for an (empty instance of .
+    `HighHarmonic.HhgLinearPlaneWaveLaser()`  
+        ... constructor for an (empty) instance of a linearly-polarized plane-wave pulse.
     """
-    function HhgPlaneWaveLaser()
-        HhgPlaneWaveLaser(0., 0.)
+    function HhgLinearPlaneWaveLaser()
+        HhgLinearPlaneWaveLaser(0., 0.)
     end
 
 
-    # `Base.show(io::IO, pulse::HhgPlaneWaveLaser)`  ... prepares a proper printout of the variable pulse::HhgPlaneWaveLaser.
-    function Base.show(io::IO, pulse::HhgPlaneWaveLaser) 
-        println(io, "omega:                     $(pulse.omega)  ")
-        println(io, "intensity:                 $(pulse.intensity)  ")
+    """
+    `HighHarmonic.HhgLinearPlaneWaveLaser(omega; intensity::Float64=1.0e14)`  
+        ... constructor for an linearly-polarized plane-wave pulse of given frequency omega and intensity [W/cm^2].
+    """
+    function HhgLinearPlaneWaveLaser(omega; intensity::Float64=1.0e14)
+        omega_au = Defaults.convertUnits("energy: to atomic", omega);   E0_au = intensity / 3.51e16
+        HhgLinearPlaneWaveLaser(omega_au, E0_au)
+    end
+
+
+    # `Base.show(io::IO, pulse::HhgLinearPlaneWaveLaser)`  ... prepares a proper printout of the variable pulse::HhgLinearPlaneWaveLaser.
+    function Base.show(io::IO, pulse::HhgLinearPlaneWaveLaser) 
+        println(io, "omega:              $(pulse.omega)  ")
+        println(io, "E0:                 $(pulse.E0)  ")
     end
     
 
@@ -202,18 +216,20 @@ module HighHarmonic
         ... defines a type for the computation of high-harmonic spectra, atto-second pulses, intensity and phase profiles,
             and several others.
 
-        + observable         ::AbstractHhgObservable          ... Specifies one of the observables to be calculated.
-        + approach           ::AbstractHhgApproach            ... Specifies the approach/frame to be applied in the computations.
-        + pulse              ::AbstractHhgPulse               ... Specifies the incident laser field.   
-        + nuclearModel       ::Nuclear.Model                  ... Model, charge and parameters of the nucleus.
-        + initialOrbital     ::Radial.Orbital                 ... (Single-electron) orbital to specify the initial state of atom.
-        + target             ::TargetCloud                    ... Specifies the target for generating high harmonics.
-        + detector           ::DetectorScreen                 ... Specifies the detector for observing high harmonics.
+        + observable         ::AbstractHhgObservable    ... Specifies one of the observables to be calculated.
+        + approach           ::AbstractHhgApproach      ... Specifies the approach/frame to be applied in the computations.
+        + pulse              ::AbstractHhgPulse         ... Specifies the incident laser field.   
+        + timeMesh           ::Array{Float64,1}         ... time mesh to be used for representing the incident and generated fields.
+        + nuclearModel       ::Nuclear.Model            ... Model, charge and parameters of the nucleus.
+        + initialOrbital     ::Radial.Orbital           ... (Single-electron) orbital to specify the initial state of atom.
+        + target             ::TargetCloud              ... Specifies the target for generating high harmonics.
+        + detector           ::DetectorScreen           ... Specifies the detector for observing high harmonics.
     """
     struct  Computation
         observable           ::AbstractHhgObservable
         approach             ::AbstractHhgApproach
         pulse                ::AbstractHhgPulse
+        timeMesh             ::Array{Float64,1}
         nuclearModel         ::Nuclear.Model
         initialOrbital       ::Radial.Orbital
         target               ::TargetCloud 
@@ -221,17 +237,85 @@ module HighHarmonic
     end 
 
 
+    # `Base.show(io::IO, computation::HighHarmonic.Computation)`  ... prepares a proper printout of the variable computation::HighHarmonic.Computation.
+    function Base.show(io::IO, computation::HighHarmonic.Computation) 
+        println(io, "observable:           $(computation.observable)  ")
+        println(io, "approach:             $(computation.approach)  ")
+        println(io, "pulse:                $(computation.pulse)  ")
+        println(io, "timeMesh:             $(computation.timeMesh)  ")
+        println(io, "nuclearModel:         $(computation.nuclearModel)  ")
+        println(io, "initialOrbital:       $(computation.initialOrbital)  ")
+        println(io, "target:               $(computation.target)  ")
+        println(io, "detector:             $(computation.detector)  ")
+    end
+    
+
     """
-    `HighHarmonic.Computation()`  ... constructor for an 'empty' instance of a HighHarmonic.Computation.
+    `HighHarmonic.computeTimeMesh(NoCycles::Int64, NoPointsPerCycle::Int64)` 
+        ... to compute a time mesh for a photon field with given number of cycles (NoCycles) as well as time 
+            points per cycle; a timeMesh::Array{Float64,1} is returned.
     """
-    function Computation()
-        Computation("",  Nuclear.Model(0.) )
+    function computeTimeMesh(NoCycles::Int64, NoPointsPerCycle::Int64)
+        dt = 2pi / NoPointsPerCycle;    timeMesh = Float64[]
+        for  k = 1:NoCycles*NoPointsPerCycle   push!( timeMesh, k*dt)   end
+        
+        println("Time mesh generated in the (time) interval [0., $(timeMesh[end])] with $(length(timeMesh)) points.")
+        return( timeMesh )
     end
 
 
-    # `Base.show(io::IO, computation::HighHarmonic.Computation)`  ... prepares a proper printout of the variable computation::HighHarmonic.Computation.
-    function Base.show(io::IO, computation::HighHarmonic.Computation) 
-        println(io, "name:                     $(computation.name)  ")
+    """
+    `HighHarmonic.computeTimeDipoleMoment(approach::HhgHydrogenicSaddlePoint, pulse::HhgLinearPlaneWaveLaser, 
+                                          timeMesh::Array{Float64,1}, orbital::Radial.Orbital)` 
+        ... to compute the time-dependent dipole moment D(t) for the given pulse, approximation and the orbital wave function.
+            This dipole moment is calculated for all times as defined by timeMesh. A dipoleMoment::Array{Float64,1} is returned.
+    """
+    function computeTimeDipoleMoment(approach::HhgHydrogenicSaddlePoint, pulse::HhgLinearPlaneWaveLaser, 
+                                     timeMesh::Array{Float64,1}, orbital::Radial.Orbital)
+        dipoleMoment = Float64[]
+        return( dipoleMoment )
+    end
+
+
+    """
+    `HighHarmonic.computeElectricField(pulse::HhgLinearPlaneWaveLaser, time::Float64)` 
+        ... to compute the electric field for the given pulse at time; an eField::Array{Float64,1} is returned.
+    """
+    function computeElectricField(pulse::HhgLinearPlaneWaveLaser, time::Float64)
+        return( [0., 0., pulse.E0 * cos(pulse.omega*time)] )
+    end
+
+
+    """
+    `HighHarmonic.computeVectorPotential(pulse::HhgLinearPlaneWaveLaser, time::Float64)` 
+        ... to compute the electric field for the given pulse at time; a aField::Array{Float64,1} is returned.
+    """
+    function computeVectorPotential(pulse::HhgLinearPlaneWaveLaser, time::Float64)
+        return( [0., 0., 1.0] )
+    end
+
+
+    """
+    `HighHarmonic.computeVolkovPhase(approach::HhgHydrogenicSaddlePoint, time::Float64, ip::Float64, aField::Array{Float64,1})` 
+        ... to compute the Volkov phase at time for the given approximation, ionization potential and vector potential (aField);
+            a Volkov phase::Float64 is returned.
+    """
+    function computeVolkovPhase(approach::HhgHydrogenicSaddlePoint, time::Float64, ip::Float64, aField::Array{Float64,1})
+        phase = 0.
+        return( phase )
+    end
+
+
+    """
+    `HighHarmonic.computeTimeDipoleAmplitude(approach::HhgHydrogenicSaddlePoint, time::Float64, aField::Array{Float64,1},
+                                             orbital::Radial.Orbital)` 
+        ... to compute the dipole amplitude d(t) at time for the given approximation, vector potential (aField) and the 
+            orbital wave function; a dipole amplitude::Float64 is returned.
+    """
+    function computeTimeDipoleAmplitude(approach::HhgHydrogenicSaddlePoint, time::Float64, aField::Array{Float64,1},
+                                        orbital::Radial.Orbital)
+        dipoleAmplitude = Float64[]
+        return( dipoleAmplitude )
     end
 
 
@@ -245,37 +329,16 @@ module HighHarmonic
 
 
     """
-    `HighHarmonic.computeTimeDipoleAmplitude()` 
-        ... to compute the time-dependent dipole amplitude d(t)
+    `HighHarmonic.perform(comp::HighHarmonic.Computation; output::Bool=false)` 
+        ... to perform a computation of (one) selected observable in HHG, such a spectra, attosecond pulses of profiles.
+            Different approaches, pulse structures of the incident light as well as different target clouds and detector
+            screens can also be specified together with all physical parameters: frequency, intensity and polarization of
+            the incident light; size andshape of target clouds; size and shape of detector screens; ....
     """
-    function computeTimeDipoleAmplitude()
-        return( 0. )
-    end
-
-
-    """
-    `HighHarmonic.computeTimeDipoleMoment()` 
-        ... to compute the time-dependent dipole moment D(t)
-    """
-    function computeTimeDipoleMoment()
-        return( 0. )
-    end
-
-
-    """
-    `HighHarmonic.computeFieldAndPotential()` 
-        ... to compute the electric field and the vector potential for the given pulse at time t
-    """
-    function computeFieldAndPotential()
-        return( 0. )
-    end
-
-
-    """
-    `HighHarmonic.perform(comp::HighHarmonic.Computation)` 
-        ... to perform the computation
-    """
-    function perform(comp::HighHarmonic.Computation)
+    function perform(comp::HighHarmonic.Computation; output::Bool=false)
+        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        nModel = comp.nuclearModel
+        
         return( 0. )
     end
 

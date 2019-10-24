@@ -321,9 +321,10 @@ module Radial
     function Orbital(subshell::Subshell, energy::Float64)
         if energy < 0    isBound = true    else    isBound = false    end
         useStandardGrid = true
-        P = Array{Float64,1}[];    Q = Array{Float64,1}[];    grid = RadialGrid()
+        P = Array{Float64,1}[];    Q = Array{Float64,1}[];    grid = Radial.Grid()
+        Pprime = Array{Float64,1}[];    Qprime = Array{Float64,1}[]
 
-        Orbital(subshell, isBound, useStandardGrid, energy, P, Q, grid)
+        Orbital(subshell, isBound, useStandardGrid, energy, P, Q, Pprime, Qprime, grid)
     end
 
 
@@ -336,9 +337,10 @@ module Radial
         if energy < 0    isBound = true    else    isBound = false    end
     
         subshell = Subshell(label);    useStandardGrid = true
-        P = Array{Float64,1}[];        Q = Array{Float64,1}[];    grid = RadialGrid()
+        P = Array{Float64,1}[];        Q = Array{Float64,1}[];    grid = Radial.Grid()
+        Pprime = Array{Float64,1}[];    Qprime = Array{Float64,1}[]
 
-        Orbital(subshell, isBound, useStandardGrid, energy, P, Q, grid)
+        Orbital(subshell, isBound, useStandardGrid, energy, P, Q, Pprime, Qprime, grid)
     end
 
 
