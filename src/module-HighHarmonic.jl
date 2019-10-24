@@ -1,193 +1,282 @@
 
 """
 `module  JAC.HighHarmonic
-    ... a submodel of JAC that contains all methods to set-up and process high-harmonic computations.
+    ... a submodel of JAC that contains all methods to set-up and process high-harmonic computations. 
+        It defines in particular a number of structs to deal with the observables, approaches, laser pulses and
+        time-dependent fields as they frequently occur in the computation of high-harmonic spectra.
 """
 module HighHarmonic
 
     using Printf, ..Basics, ..Defaults, ..Radial, ..ManyElectron, ..Nuclear, ..TableStrings
 
+    
     """
-    `abstract type HighHarmonic.AbstractApproachxx` 
-        ... defines an abstract and a number of singleton types for the computational approach/model/scenario that 
-            is considered for generating spectra of high harmonics.
+    `abstract type HighHarmonic.AbstractTargetModel` 
+        ... defines an abstract and a number of other types to represent an atomic target (cloud) for HHG:
 
-      + struct AverageSCA         
-        ... to evaluate the level structure and transitions of all involved levels in single-configuration approach but 
-            without configuration interaction and from just a single orbital set.
-            
-      + struct SCA                
-        ... to evaluate the level structure and transitions of all involved levels in single-configuration approach but 
-            by calculating all fine-structure resolved transitions.
+      + struct LocalizedTargetModel     ... to represent a point-like localized target       
+      + struct GaussianTargetModel      ... to represent a localized, Gaussian-type target (not yet)      
+      + struct PlanarTargetModel        ... to represent a planar target of finite extent (not yet)      
+      + struct UserTargetModel          ... to represent a user-defined 3-dimensional target (not yet)
     """
-    abstract type  AbstractApproach                   end
-    struct         AverageSCA  <:  AbstractApproach   end
-    struct         SCA         <:  AbstractApproach   end
+    abstract type  AbstractTargetModel  end
+
+    
+    """
+    `struct  HighHarmonic.LocalizedTargetModel  <:  AbstractTargetModel`  
+        ... defines a struct for point-like localized target cloud.
+
+        + center     ::CartesianPoint   ... Center of the (point-like) target.
+    """
+    struct  LocalizedTargetModel  <:  AbstractTargetModel
+        center       ::CartesianPoint
+    end
+
+    
+    """
+    `struct  HighHarmonic.GaussianTargetModel  <:  AbstractTargetModel`  
+        ... defines a struct for localized, Gaussian target cloud.
+
+        + center     ::CartesianPoint   ... Center of the (point-like) target.
+        + NoPoints   ::Int64            ... Number of points to be used for the target.
+        + sigma      ::Float64          ... Gaussian half-widths of the cloud.
+    """
+    struct  GaussianTargetModel  <:  AbstractTargetModel
+        center       ::CartesianPoint
+        NoPoints     ::Int64  
+        sigma        ::Float64 
+    end
+
+    
+    """
+    `struct  HighHarmonic.TargetCloud`  
+        ... defines a struct to represent a -- point-like or extended -- target cloud for the computation of high-harmonic spectra
+
+        + model      ::AbstractTargetModel           ... Model of the target cloud, from which the target is generated.
+        + points     ::Array{WeightedCartesian,1}    ... Cartesian points and weights that define the atomic target cloud.
+    """
+    struct  TargetCloud
+        model        ::AbstractTargetModel
+        points       ::Array{WeightedCartesian,1}
+    end
+
+    
+    
+    """
+    `abstract type HighHarmonic.AbstractDeterctorModel` 
+        ... defines an abstract and a number of other types to represent an dectector screen for high-harmonic spectra:
+
+      + struct LocalizedDetectorModel      ... to represent a point-like localized detector       
+      + struct SphericalDetectorModel      ... to represent a partial-sphere detector screen (not yet)      
+      + struct PlanarDetectorModel         ... to represent a planar detector screen of finite extent (not yet)      
+    """
+    abstract type  AbstractDetectorModel  end
+
+    
+    """
+    `struct  HighHarmonic.LocalizedDetectorModel  <:  AbstractDetectorModel`  
+        ... defines a struct for point-like localized detector.
+
+        + center     ::CartesianPoint   ... Center of the (point-like) detector.
+    """
+    struct  LocalizedDetectorModel  <:  AbstractDetectorModel
+        center       ::CartesianPoint
+    end
+
+    
+    """
+    `struct  HighHarmonic.SphericalDetectorModel  <:  AbstractDetectorModel`  
+        ... defines a struct for a partly-spherical detector screen.
+
+        + center     ::CartesianPoint   ... Center of the detector.
+        + NoPoints   ::Int64            ... Number of points to be used for the detector screen.
+        + theta      ::Float64          ... polar (arc) angle of the screen.
+    """
+    struct  SphericalDetectorModel  <:  AbstractDetectorModel
+        center       ::CartesianPoint
+        NoPoints     ::Int64  
+        theta        ::Float64 
+    end
+
+    
+    """
+    `struct  HighHarmonic.DetectorScreen`  
+        ... defines a struct to represent a -- point-like or extended -- detector screen for the computation of high-harmonic spectra.
+
+        + model      ::AbstractDetectorModel           ... Model of the detector, from which the detection screen is generated.
+        + points     ::Array{WeightedCartesian,1}      ... Cartesian points and weights that define the detection screen.
+    """
+    struct  DetectorScreen
+        model        ::AbstractDetectorModel
+        points       ::Array{WeightedCartesian,1}
+    end
+    
     
 
+    """
+    `abstract type HighHarmonic.AbstractHhgObservable` 
+        ... defines an abstract and a number of singleton types for the observables that can be computed for HHG processes.
+
+      + struct UniColorSpectrum     
+        ... to compute a standard (single-color) high-harmonic spectrum (for a point-like target and point-like detector).       
+            
+      + struct BiColorSpectrum
+        ... to compute a bi-color high-harmonic spectrum (for a point-like target and point-like detector).
+            
+      + struct AttoSecondPulse     (not yet)
+      + struct IntensityProfile    (not yet)
+      + struct PhaseProfile        (not yet)
+            
+      + struct UniColorSpectrum
+    """
+    abstract type  AbstractHhgObservable                         end
+    struct         UniColorSpectrum  <:  AbstractHhgObservable   end
+    struct         BiColorSpectrum   <:  AbstractHhgObservable   end
+    
+    
 
     """
-    `struct  HighHarmonic.Block`  
-        ... defines a type for an individual block of configurations that are treatet together within the cascade. Such an block is given 
-            by a list of configurations that may occur as initial- or final-state configurations in some step of the canscade and that are 
-            treated together in a single multiplet to allow for configuration interaction but to avoid 'double counting' of individual levels.
+    `abstract type HighHarmonic.AbstractHhgApproach` 
+        ... defines an abstract and a number of singleton types for the computational approach/model that is applied in the
+            computation of HHG spectra.
 
-        + NoElectrons     ::Int64                     ... Number of electrons in this block.
-        + confs           ::Array{Configuration,1}    ... List of one or several configurations that define the multiplet.
-        + hasMultiplet    ::Bool                      ... true if the (level representation in the) multiplet has already been computed and
-                                                          false otherwise.
-        + multiplet       ::Multiplet                 ... Multiplet of the this block.
+      + struct HhgHydrogenicSaddlePoint         
+        ... to apply hydrogenic orbitals for the computation of the time-dependent dipole amplitude and the saddle-point
+            approximation for the dipole moments.
+            
+      + struct HhgHydrogenicFullVolkov
+        ... to apply hydrogenic orbitals for the computation of the time-dependent dipole amplitude but the full
+             Volkov phase for the dipole moments.
     """
-    struct  Block
-        NoElectrons       ::Int64
-        confs             ::Array{Configuration,1} 
-        hasMultiplet      ::Bool
-        multiplet         ::Multiplet  
-    end 
+    abstract type  AbstractHhgApproach                                 end
+    struct         HhgHydrogenicSaddlePoint  <:  AbstractHhgApproach   end
+    struct         HhgHydrogenicFullVolkov   <:  AbstractHhgApproach   end
 
+    
+    """
+    `abstract type HighHarmonic.AbstractHhgPulse` 
+        ... defines an abstract and a number of other types to represent an incident laser pulse/field for HHG:
 
+      + struct HhgPlaneWaveLaser        ... to represent a long, plane-wave laser field 
+      + struct HhgSineSquaredPulse      ... to represent a sin^2(...) pulse  (not yet)      
     """
-    `HighHarmonic.Block()`  ... constructor for an 'empty' instance of a HighHarmonic.Block.
+    abstract type  AbstractHhgPulse  end
+
+    
     """
-    function Block()
-        Block( )
+    `struct  HighHarmonic.HhgPlaneWaveLaser  <:  AbstractHhgPulse`  
+        ... defines a struct for a long, plane-wave laser field of given frequency and intensity.
+
+        + omega          ::Float64   ... Frequency of the incident laser field.
+        + intensity      ::Float64   ... Intensity [W/cm^2] of the incident laser field.
+        + polarization   ::...       ... Polarization of the incident laser field.
+        + beamProfile    ::...
+        + envelope       ::...
+        + length         ::...
+        + centralLength  ::...
+    """
+    struct  HhgPlaneWaveLaser  <:  AbstractHhgPulse
+        omega            ::Float64
+        intensity        ::Float64
     end
 
 
-    # `Base.show(io::IO, block::HighHarmonic.Block)`  ... prepares a proper printout of the variable block::HighHarmonic.Block.
-    function Base.show(io::IO, block::HighHarmonic.Block) 
-        println(io, "NoElectrons:        $(block.NoElectrons)  ")
+    """
+    `HighHarmonic.HhgPlaneWaveLaser()`  ... constructor for an (empty instance of .
+    """
+    function HhgPlaneWaveLaser()
+        HhgPlaneWaveLaser(0., 0.)
     end
 
 
-    """
-    `struct  HighHarmonic.Step`  
-        ... defines a type for an individual step of an 
-
-        + process          ::JBasics.AtomicProcess         ... Atomic process that 'acts' in this step of the cascade.
-        + settings         ::Union{PhotoEmission.Settings, AutoIonization.Settings}        
-                                                       ... Settings for this step of the cascade.
-        + initialConfs     ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state multiplet.
-    """
-    struct  Step
-        process            ::Basics.AtomicProcess
-    end 
+    # `Base.show(io::IO, pulse::HhgPlaneWaveLaser)`  ... prepares a proper printout of the variable pulse::HhgPlaneWaveLaser.
+    function Base.show(io::IO, pulse::HhgPlaneWaveLaser) 
+        println(io, "omega:                     $(pulse.omega)  ")
+        println(io, "intensity:                 $(pulse.intensity)  ")
+    end
+    
 
 
     """
     `struct  HighHarmonic.Computation`  
-        ... defines a type for the computation of high-harmonic spectra, ...
+        ... defines a type for the computation of high-harmonic spectra, atto-second pulses, intensity and phase profiles,
+            and several others.
 
-        + name               ::String                         ... A name for the cascade
+        + observable         ::AbstractHhgObservable          ... Specifies one of the observables to be calculated.
+        + approach           ::AbstractHhgApproach            ... Specifies the approach/frame to be applied in the computations.
+        + pulse              ::AbstractHhgPulse               ... Specifies the incident laser field.   
         + nuclearModel       ::Nuclear.Model                  ... Model, charge and parameters of the nucleus.
-        + grid               ::Radial.Grid                    ... The radial grid to be used for the computation.
-        + asfSettings        ::AsfSettings                    ... Provides the settings for the SCF process.
-        + approach           ::Cascade.AbstractApproach       ... Computational approach/model that is applied to generate and evaluate the 
-                                                                  cascade; possible approaches are: {'single-configuration', ...}
-        + processes          ::Array{Basics.AtomicProcess,1}   ... List of the atomic processes that are supported and should be included into the 
-                                                                  cascade.
-        + initialConfs       ::Array{Configuration,1}         ... List of one or several configurations that contain the level(s) from which the 
-                                                                  cascade starts.
-        + initialLevels      ::Array{Tuple{Int64,Float64},1}  ... List of one or several (tupels of) levels together with their relative population 
-                                                                  from which the cascade starts.
-        + maxElectronLoss    ::Int64                          ... (Maximum) Number of electrons in which the initial- and final-state 
-                                                                  configurations can differ from each other; this also determines the maximal steps 
-                                                                  of any particular decay path.
-        + NoShakeDisplacements ::Int64                        ... Maximum number of electron displacements due to shake-up or shake-down processes 
-                                                                  in any individual step of the cascade.
-        + shakeFromShells ::Array{Shell,1}                    ... List of shells from which shake transitions may occur.
-        + shakeToShells   ::Array{Shell,1}                    ... List of shells into which shake transitions may occur.
-        + steps           ::Array{Cascade.Step,1}             ... List of individual steps between well-defined atomic multiplets that are 
-                                                                  included into the cascade.
+        + initialOrbital     ::Radial.Orbital                 ... (Single-electron) orbital to specify the initial state of atom.
+        + target             ::TargetCloud                    ... Specifies the target for generating high harmonics.
+        + detector           ::DetectorScreen                 ... Specifies the detector for observing high harmonics.
     """
     struct  Computation
-        name                 ::String
+        observable           ::AbstractHhgObservable
+        approach             ::AbstractHhgApproach
+        pulse                ::AbstractHhgPulse
         nuclearModel         ::Nuclear.Model
+        initialOrbital       ::Radial.Orbital
+        target               ::TargetCloud 
+        detector             ::DetectorScreen 
     end 
 
 
     """
-    `Cascade.Computation()`  ... constructor for an 'empty' instance of a Cascade.Computation.
+    `HighHarmonic.Computation()`  ... constructor for an 'empty' instance of a HighHarmonic.Computation.
     """
     function Computation()
-        Computation("",  Nuclear.Model(0.), Radial.Grid(), AsfSettings(), averageSCA, [Auger], 
-                    Configuration[], [(0, 0.)], 0, 0, Shell[], Shell[], CascadeComputationStep[] )
+        Computation("",  Nuclear.Model(0.) )
     end
 
 
-    # `Base.show(io::IO, computation::Cascade.Computation)`  ... prepares a proper printout of the variable computation::Cascade.Computation.
-    function Base.show(io::IO, computation::Cascade.Computation) 
+    # `Base.show(io::IO, computation::HighHarmonic.Computation)`  ... prepares a proper printout of the variable computation::HighHarmonic.Computation.
+    function Base.show(io::IO, computation::HighHarmonic.Computation) 
         println(io, "name:                     $(computation.name)  ")
     end
 
-    
-    """
-    `abstract type  HighHarmonic.Property`  
-        ... defines an abstract and various singleton types for the different properties that can be obtained from the simulation of cascade data.
-
-        + struct IonDist               ... simulate the 'ion distribution' as it is found after all cascade processes are completed.
-        + struct FinalDist             ... simulate the 'final-level distribution' as it is found after all cascade processes are completed.
-    """
-    abstract type  Property                      end
-    struct   IonDist              <:  Property   end
-    struct   FinalDist            <:  Property   end
-
 
     """
-    abstract type  HighHarmonic.SimulationMethod`  
-        ... defines a enumeration for the various methods that can be used to run the simulation of cascade data.
-
-        + struct ProbPropagation     ... to propagate the (occupation) probabilites of the levels until no further changes occur.
-        + struct MonteCarlo          ... to simulate the cascade decay by a Monte-Carlo approach of possible pathes (not yet considered).
-        + struct RateEquations       ... to solve the cascade by a set of rate equations (not yet considered).
+    `HighHarmonic.computeFrequencyDipoleMoment()` 
+        ... to compute the frequency-dependent dipole moment D^~ (omega)
     """
-    abstract type  SimulationMethod                  end
-    struct   ProbPropagation  <:  SimulationMethod   end
-    struct   MonteCarlo       <:  SimulationMethod   end
-    struct   RateEquations    <:  SimulationMethod   end
-
-
-    """
-    `struct  HighHarmonic.SimulationSettings`  ... defines settings for performing the simulation of some cascade (data).
-
-        + minElectronEnergy ::Float64     ... Minimum electron energy for the simulation of electron spectra.
-        + maxElectronEnergy ::Float64     ... Maximum electron energy for the simulation of electron spectra.
-        + minPhotonEnergy   ::Float64     ... Minimum photon energy for the simulation of electron spectra.
-        + maxPhotonEnergy   ::Float64     ... Maximum photon energy for the simulation of electron spectra..
-    """
-    struct  SimulationSettings
-        minElectronEnergy   ::Float64
-        maxElectronEnergy   ::Float64
-        minPhotonEnergy     ::Float64
-        maxPhotonEnergy     ::Float64
-    end 
-
-
-    """
-    `HighHarmonic.SimulationSettings()`  ... constructor for an 'empty' instance of ...
-    """
-    function SimulationSettings()
-        SimulationSettings(0., 1.0e6,  0., 1.0e6 )
+    function computeFrequencyDipoleMoment()
+        return( 0. )
     end
 
 
     """
-    `Cascade.computeDecayYieldOutcome(outcome::DecayYield.Outcome, linesR::Array{PhotoEmission.Line,1}, 
-                                      linesA::Array{AutoIonization.Line,1}, settings::DecayYield.Settings)` 
-        ... to compute the flourescence and Auger yields for a single outcome as specified by its level; an 
-            outcome::DecayYield.Outcome is returned in which are physical parameters are now specified.
+    `HighHarmonic.computeTimeDipoleAmplitude()` 
+        ... to compute the time-dependent dipole amplitude d(t)
     """
-    function computeDecayYieldOutcome(outcome::DecayYield.Outcome, linesR::Array{PhotoEmission.Line,1}, 
-                                      linesA::Array{AutoIonization.Line,1}, settings::DecayYield.Settings)
-        # Identify the level key of the given level also in the lists of radiative and Auger lines
-        level = outcome.level;    levelKey = LevelKey( LevelSymmetry(level.J, level.parity), level.index, level.energy, 0.)
-        similarKey = LevelKey();  rateR = 0.;    rateA = 0.;   NoPhotonLines = 0;   NoAugerLines = 0
-        ##x println("** levelKey = $levelKey")
-        for  line in linesR
-            compareKey = LevelKey( LevelSymmetry(line.initialLevel.J, line.initialLevel.parity), line.initialLevel.index, line.initialLevel.energy, 0.)
-            if   Basics.isSimilar(levelKey, compareKey, 1.0e-3)    println("** compareKey = $compareKey");   similarKey = deepcopy(compareKey)    end
-        end
-        return( newOutcome )
+    function computeTimeDipoleAmplitude()
+        return( 0. )
+    end
+
+
+    """
+    `HighHarmonic.computeTimeDipoleMoment()` 
+        ... to compute the time-dependent dipole moment D(t)
+    """
+    function computeTimeDipoleMoment()
+        return( 0. )
+    end
+
+
+    """
+    `HighHarmonic.computeFieldAndPotential()` 
+        ... to compute the electric field and the vector potential for the given pulse at time t
+    """
+    function computeFieldAndPotential()
+        return( 0. )
+    end
+
+
+    """
+    `HighHarmonic.perform(comp::HighHarmonic.Computation)` 
+        ... to perform the computation
+    """
+    function perform(comp::HighHarmonic.Computation)
+        return( 0. )
     end
 
 end # module

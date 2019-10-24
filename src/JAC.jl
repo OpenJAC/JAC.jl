@@ -54,7 +54,7 @@ using  Dates, Printf,  LinearAlgebra, IJulia, Interact, SpecialFunctions, Fortra
 export AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AngularMomentum, 
        AsfSettings, Atomic, AtomicStructure, Auger, AutoIonization, 
        Basics, Basis, 
-       CloseCoupling, compute, convertUnits, Cascade, Configuration, ConfigurationR, Continuum, CsfR, 
+       CartesianPoint, CloseCoupling, compute, convertUnits, Cascade, Configuration, ConfigurationR, Continuum, CsfR, 
        CoulombExcitation, CoulombIonization,  
        diagonalize, Defaults, DecayYield, Details, Dielectronic, DoubleAuger,
        estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate,
@@ -76,6 +76,7 @@ export AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, An
        SchiffMoment, setDefaults, Shell, Spectroscopy, Subshell,
        tabulate, TestFrames, tools, W3j, W6j,
        UseCoulomb, UseBabushkin, UseGauge,
+       WeightedCartesian, 
        Yields, 
        Zeeman
      
@@ -149,6 +150,9 @@ include("module-READI.jl")
 include("module-PairProduction.jl")
 include("module-PairAnnihilation1Photon.jl")
 include("module-PairAnnihilation2Photon.jl")  =#
+
+# Functions/methods for the computation of atomic responses
+include("module-HighHarmonic.jl")
 
 # Functions/methods for semi-empirical estimations
 # include("module-ImpactIonization.jl")

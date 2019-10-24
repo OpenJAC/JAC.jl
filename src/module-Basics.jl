@@ -11,7 +11,7 @@ module Basics
     using Printf
 
     export  add, analyze, AngularJ, AngularJ64, AngularM, AngularM64, Auger,
-            compute, diagonalize,
+            CartesianPoint, compute, diagonalize,
             estimate, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
             generate,
             ##x HalfInt, HalfInteger, 
@@ -23,7 +23,8 @@ module Basics
             RadialMesh, Radiative,
             SolidAngle, Shell, Subshell, subshell_2j,
             tabulate, tools, TensorComp, 
-            UseCoulomb, UseBabushkin
+            UseCoulomb, UseBabushkin,
+            WeightedCartesian
 
 
     ##x include("inc-halfintegers.jl")
@@ -1095,6 +1096,66 @@ module Basics
         end
         
         if   withZeros    return( ComplexF64(0.) )    else    error("Statistical tensor component not found for k = $k and q = $q ")    end
+    end
+
+
+    """
+    `struct  Basics.CartesianPoint`  
+        ... defines a type to represent a point in Cartesian coordinates.
+
+        + x              ::Float64       ... x-coordinate.
+        + y              ::Float64       ... y-coordinate.
+        + z              ::Float64       ... z-coordinate.
+    """
+    struct  CartesianPoint 
+        x                ::Float64
+        y                ::Float64
+        z                ::Float64
+    end 
+
+
+
+    # `Base.show(io::IO, point::CartesianPoint)`  ... prepares a proper printout of the variable point::CartesianPoint.
+    function Base.show(io::IO, point::CartesianPoint) 
+        sa = Base.string(point);                print(io, sa)
+    end
+
+
+    # `Base.string(point::CartesianPoint)`  ... provides a String notation for the variable point::CartesianPoint.
+    function Base.string(point::CartesianPoint)
+        sa = "Cartesian point x = $(point.x),  y = $(point.y),  z = $(point.z)  "
+        return( sa )
+    end
+
+
+    """
+    `struct  Basics.WeightedCartesian`  
+        ... defines a type to represent a point in Cartesian coordinates with weight.
+
+        + x              ::Float64       ... x-coordinate.
+        + y              ::Float64       ... y-coordinate.
+        + z              ::Float64       ... z-coordinate.
+        + w              ::Float64       ... weight.
+    """
+    struct  WeightedCartesian 
+        x                ::Float64
+        y                ::Float64
+        z                ::Float64
+        w                ::Float64
+    end 
+
+
+
+    # `Base.show(io::IO, point::WeightedCartesian)`  ... prepares a proper printout of the variable point::WeightedCartesian.
+    function Base.show(io::IO, point::WeightedCartesian) 
+        sa = Base.string(point);                print(io, sa)
+    end
+
+
+    # `Base.string(point::WeightedCartesian)`  ... provides a String notation for the variable point::WeightedCartesian.
+    function Base.string(point::WeightedCartesian)
+        sa = "Cartesian point x = $(point.x),  y = $(point.y),  z = $(point.z) with weight w = $(point.w) "
+        return( sa )
     end
 
 
