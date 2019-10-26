@@ -26,10 +26,10 @@ module HighHarmonic
     `struct  HighHarmonic.LocalizedTargetModel  <:  AbstractTargetModel`  
         ... defines a struct for point-like localized target cloud.
 
-        + center     ::CartesianPoint   ... Center of the (point-like) target.
+        + center     ::CartesianVector{Float64}   ... Center of the (point-like) target.
     """
     struct  LocalizedTargetModel  <:  AbstractTargetModel
-        center       ::CartesianPoint
+        center       ::CartesianVector{Float64}
     end
 
     
@@ -37,12 +37,12 @@ module HighHarmonic
     `struct  HighHarmonic.GaussianTargetModel  <:  AbstractTargetModel`  
         ... defines a struct for localized, Gaussian target cloud.
 
-        + center     ::CartesianPoint   ... Center of the (point-like) target.
-        + NoPoints   ::Int64            ... Number of points to be used for the target.
-        + sigma      ::Float64          ... Gaussian half-widths of the cloud.
+        + center     ::CartesianVector{Float64}   ... Center of the (point-like) target.
+        + NoPoints   ::Int64                      ... Number of points to be used for the target.
+        + sigma      ::Float64                    ... Gaussian half-widths of the cloud.
     """
     struct  GaussianTargetModel  <:  AbstractTargetModel
-        center       ::CartesianPoint
+        center       ::CartesianVector{Float64}
         NoPoints     ::Int64  
         sigma        ::Float64 
     end
@@ -52,12 +52,12 @@ module HighHarmonic
     `struct  HighHarmonic.TargetCloud`  
         ... defines a struct to represent a -- point-like or extended -- target cloud for the computation of high-harmonic spectra
 
-        + model      ::AbstractTargetModel           ... Model of the target cloud, from which the target is generated.
-        + points     ::Array{WeightedCartesian,1}    ... Cartesian points and weights that define the atomic target cloud.
+        + model      ::AbstractTargetModel                    ... Model of the target cloud, from which the target is generated.
+        + points     ::Array{WeightedCartesian{Float64},1}    ... Cartesian points and weights that define the atomic target cloud.
     """
     struct  TargetCloud
         model        ::AbstractTargetModel
-        points       ::Array{WeightedCartesian,1}
+        points       ::Array{WeightedCartesian{Float64},1}
     end
 
     
@@ -77,10 +77,10 @@ module HighHarmonic
     `struct  HighHarmonic.LocalizedDetectorModel  <:  AbstractDetectorModel`  
         ... defines a struct for point-like localized detector.
 
-        + center     ::CartesianPoint   ... Center of the (point-like) detector.
+        + center     ::CartesianVector{Float64}   ... Center of the (point-like) detector.
     """
     struct  LocalizedDetectorModel  <:  AbstractDetectorModel
-        center       ::CartesianPoint
+        center       ::CartesianVector{Float64}
     end
 
     
@@ -88,12 +88,12 @@ module HighHarmonic
     `struct  HighHarmonic.SphericalDetectorModel  <:  AbstractDetectorModel`  
         ... defines a struct for a partly-spherical detector screen.
 
-        + center     ::CartesianPoint   ... Center of the detector.
-        + NoPoints   ::Int64            ... Number of points to be used for the detector screen.
-        + theta      ::Float64          ... polar (arc) angle of the screen.
+        + center     ::CartesianVector{Float64}   ... Center of the detector.
+        + NoPoints   ::Int64                      ... Number of points to be used for the detector screen.
+        + theta      ::Float64                    ... polar (arc) angle of the screen.
     """
     struct  SphericalDetectorModel  <:  AbstractDetectorModel
-        center       ::CartesianPoint
+        center       ::CartesianVector{Float64}
         NoPoints     ::Int64  
         theta        ::Float64 
     end
@@ -103,12 +103,12 @@ module HighHarmonic
     `struct  HighHarmonic.DetectorScreen`  
         ... defines a struct to represent a -- point-like or extended -- detector screen for the computation of high-harmonic spectra.
 
-        + model      ::AbstractDetectorModel           ... Model of the detector, from which the detection screen is generated.
-        + points     ::Array{WeightedCartesian,1}      ... Cartesian points and weights that define the detection screen.
+        + model      ::AbstractDetectorModel                    ... Model of the detector, from which the detection screen is generated.
+        + points     ::Array{WeightedCartesian{Float64},1}      ... Cartesian points and weights that define the detection screen.
     """
     struct  DetectorScreen
         model        ::AbstractDetectorModel
-        points       ::Array{WeightedCartesian,1}
+        points       ::Array{WeightedCartesian{Float64},1}
     end
     
     
@@ -272,59 +272,68 @@ module HighHarmonic
     """
     function computeTimeDipoleMoment(approach::HhgHydrogenicSaddlePoint, pulse::HhgLinearPlaneWaveLaser, 
                                      timeMesh::Array{Float64,1}, orbital::Radial.Orbital)
-        dipoleMoment = Float64[]
+        dipoleMoment = CartesianVector{ComplexF64}[]
+        for  t in timeMesh    
+            push!( dipoleMoment, CartesianVector{ComplexF64}(0., 0., 0.) )    
+        end
         return( dipoleMoment )
     end
 
 
     """
     `HighHarmonic.computeElectricField(pulse::HhgLinearPlaneWaveLaser, time::Float64)` 
-        ... to compute the electric field for the given pulse at time; an eField::Array{Float64,1} is returned.
+        ... to compute the electric field for the given pulse at time; an eField::CartesianVector{Float64} is returned.
     """
     function computeElectricField(pulse::HhgLinearPlaneWaveLaser, time::Float64)
-        return( [0., 0., pulse.E0 * cos(pulse.omega*time)] )
+        return( CartesianVector{Float64}(0., 0., pulse.E0 * cos(pulse.omega*time) ) )
     end
 
 
     """
     `HighHarmonic.computeVectorPotential(pulse::HhgLinearPlaneWaveLaser, time::Float64)` 
-        ... to compute the electric field for the given pulse at time; a aField::Array{Float64,1} is returned.
+        ... to compute the electric field for the given pulse at time; a aField::CartesianVector{Float64} is returned.
     """
     function computeVectorPotential(pulse::HhgLinearPlaneWaveLaser, time::Float64)
-        return( [0., 0., 1.0] )
+        aField = CartesianVector{Float64}(0., 0., 0.)
+        return( aField )
     end
 
 
     """
-    `HighHarmonic.computeVolkovPhase(approach::HhgHydrogenicSaddlePoint, time::Float64, ip::Float64, aField::Array{Float64,1})` 
+    `HighHarmonic.computeVolkovPhase(approach::HhgHydrogenicSaddlePoint, time::Float64, ip::Float64, aField::CartesianVector{Float64})` 
         ... to compute the Volkov phase at time for the given approximation, ionization potential and vector potential (aField);
             a Volkov phase::Float64 is returned.
     """
-    function computeVolkovPhase(approach::HhgHydrogenicSaddlePoint, time::Float64, ip::Float64, aField::Array{Float64,1})
+    function computeVolkovPhase(approach::HhgHydrogenicSaddlePoint, time::Float64, ip::Float64, aField::CartesianVector{Float64})
         phase = 0.
         return( phase )
     end
 
 
     """
-    `HighHarmonic.computeTimeDipoleAmplitude(approach::HhgHydrogenicSaddlePoint, time::Float64, aField::Array{Float64,1},
+    `HighHarmonic.computeTimeDipoleAmplitude(approach::HhgHydrogenicSaddlePoint, time::Float64, aField::CartesianVector{Float64},
                                              orbital::Radial.Orbital)` 
         ... to compute the dipole amplitude d(t) at time for the given approximation, vector potential (aField) and the 
-            orbital wave function; a dipole amplitude::Float64 is returned.
+            orbital wave function; a dipole amplitude::CartesianVector{ComplexF64} is returned.
     """
     function computeTimeDipoleAmplitude(approach::HhgHydrogenicSaddlePoint, time::Float64, aField::Array{Float64,1},
                                         orbital::Radial.Orbital)
-        dipoleAmplitude = Float64[]
+        dipoleAmplitude = CartesianVector{ComplexF64}(0., 0., 0.)
         return( dipoleAmplitude )
     end
 
 
     """
-    `HighHarmonic.computeFrequencyDipoleMoment()` 
-        ... to compute the frequency-dependent dipole moment D^~ (omega)
+    `HighHarmonic.computeFrequencyDipoleMoment(timeMesh::Array{Float64,1}, timeDipole::Array{CartesianVector{ComplexF64},1})` 
+        ... to compute the frequency-dependent dipole moment D^~ (omega); 
+            an omegaMoment::Array{CartesianVector{ComplexF64},1} is returned.
     """
-    function computeFrequencyDipoleMoment()
-        return( 0. )
+    function computeFrequencyDipoleMoment(timeMesh::Array{Float64,1}, timeDipole::Array{CartesianVector{ComplexF64},1})
+        omegaMoment = CartesianVector{ComplexF64}[]
+        for  t in timeMesh
+           push!( omegaMoment, CartesianVector{ComplexF64}(0., 0., 0.) )
+        end
+        return( omegaMoment )
     end
 
 
@@ -338,6 +347,13 @@ module HighHarmonic
     function perform(comp::HighHarmonic.Computation; output::Bool=false)
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         nModel = comp.nuclearModel
+        
+        if       comp.observable == HighHarmonic.HhgSpectrum()
+            timeDipole  = HighHarmonic.computeTimeDipoleMoment(comp.approach, comp.pulse, comp.timeMesh, comp.initialOrbital)
+            omegaDipole = HighHarmonic.computeFrequencyDipoleMoment(comp.timeMesh, timeDipole)
+        elseif   comp.observable == HighHarmonic.HhgPolarizedSpectrum()
+        else     error("Undefined observable for HHG computations.")
+        end
         
         return( 0. )
     end

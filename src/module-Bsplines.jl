@@ -527,7 +527,7 @@ module Bsplines
         while  isNotSCF
             NoIteration = NoIteration + 1;   go_on = false 
             if  NoIteration >  settings.maxIterationsScf
-                println("*** Maximum No. of iterations exceeded. ***")
+                println("Maximum number of SCF iterations = $(settings.maxIterationsScf) is reached ... computations proceed.")
                 break
             end
             if  printout    println("\nIteration $NoIteration for symmetries ... ")    end

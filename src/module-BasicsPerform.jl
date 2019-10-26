@@ -428,7 +428,7 @@ module BascisPerform
             wa = Basics.generate("configuration list: relativistic", conf)
             append!( relconfList, wa)
         end
-        if  printout    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
+        if  printout    for  i = 1:length(relconfList)    println(">> include ", relconfList[i])    end   end
         subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
         Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
 
@@ -456,15 +456,24 @@ module BascisPerform
 
         # Generate start orbitals
         if  settings.startScf == "hydrogenic"
+            println("Start SCF process with hydrogenic orbitals.")
             # Generate start orbitals for the SCF field by using B-splines
             ##x orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(waL, nsL, waS, nsS, nuclearModel, subshellList)
             orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(wa, nuclearModel, subshellList; printout=printout)
-        elseif  settings.startScf == "fromNRorbitals"
-            # Generate starting orbitals for this csfList by adapting non-relativistic orbitals with a proper nuclear charge
+        elseif  settings.startScf == "fromOrbitals"
+            println("Start SCF process from given list of orbitals.")
+            # Taking starting orbitals for the given dictionary; non-relativistic orbitals with a proper nuclear charge
+            # are adapted if no orbital is found
             orbitals = Dict{Subshell, Orbital}()
             for  subsh in subshellList
-                orb      = JAC.HydrogenicIon.radialOrbital(subsh, nuclearModel.Z, grid)
-                orbitals = Base.merge( orbitals, Dict( subsh => orb) ) 
+                if  haskey(settings.startOrbitals, subsh)  
+                    orb = settings.startOrbitals[subsh]
+                    orbitals = Base.merge( orbitals, Dict( subsh => orb) )
+                else
+                    println("Start orbitals do not contain an Orbital for subshell $subsh ")
+                    orb      = JAC.HydrogenicIon.radialOrbital(subsh, nuclearModel.Z, grid)
+                    orbitals = Base.merge( orbitals, Dict( subsh => orb) ) 
+                end
             end
         else  error("stop a")
         end
@@ -475,14 +484,16 @@ module BascisPerform
         basis    = Basis(true, NoElectrons, subshellList, csfList, coreSubshellList, orbitals)
         if   settings.methodScf in ["meanDFS", "meanHS"]
             ##x newBasis = JAC.Bsplines.solveSelfConsistentFieldMean(waL, nsL, waS, nsS, nuclearModel, basis, settings) 
-            newBasis = JAC.Bsplines.solveSelfConsistentFieldMean(wa, nuclearModel, basis, settings; printout=printout) 
+            ##x newBasis = JAC.Bsplines.solveSelfConsistentFieldMean(wa, nuclearModel, basis, settings; printout=printout) 
+            basis = JAC.Bsplines.solveSelfConsistentFieldMean(wa, nuclearModel, basis, settings; printout=printout) 
         elseif   settings.methodScf in ["AL", "OL"] 
             ##x newBasis = JAC.Bsplines.solveSelfConsistentFieldOptimized(waL, nsL, waS, nsS, nuclearModel, basis, settings)
-            newBasis = JAC.Bsplines.solveSelfConsistentFieldOptimized(wa, nuclearModel, basis, settings; printout=printout)
+            ##x newBasis = JAC.Bsplines.solveSelfConsistentFieldOptimized(wa, nuclearModel, basis, settings; printout=printout)
+            basis = JAC.Bsplines.solveSelfConsistentFieldOptimized(wa, nuclearModel, basis, settings; printout=printout)
         else  error("stop b")
         end
         
-        return( newBasis )  
+        return( basis )  
     end
 
 
@@ -502,7 +513,7 @@ module BascisPerform
             wa = Basics.generate("configuration list: relativistic", conf)
             append!( relconfList, wa)
         end
-        if  printout    for  i = 1:length(relconfList)    println("perform-aa: ", relconfList[i])    end   end
+        if  printout    for  i = 1:length(relconfList)    println(">> include ", relconfList[i])    end   end
         subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
         Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
 

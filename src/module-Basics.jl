@@ -11,7 +11,7 @@ module Basics
     using Printf
 
     export  add, analyze, AngularJ, AngularJ64, AngularM, AngularM64, Auger,
-            CartesianPoint, compute, diagonalize,
+            CartesianVector, compute, diagonalize,
             estimate, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
             generate,
             ##x HalfInt, HalfInteger, 
@@ -1100,61 +1100,61 @@ module Basics
 
 
     """
-    `struct  Basics.CartesianPoint`  
-        ... defines a type to represent a point in Cartesian coordinates.
+    `struct  Basics.CartesianVector`  
+        ... defines a type to represent a point in Cartesian{Type} coordinates.
 
-        + x              ::Float64       ... x-coordinate.
-        + y              ::Float64       ... y-coordinate.
-        + z              ::Float64       ... z-coordinate.
+        + x              ::Type       ... x-coordinate.
+        + y              ::Type       ... y-coordinate.
+        + z              ::Type       ... z-coordinate.
     """
-    struct  CartesianPoint 
-        x                ::Float64
-        y                ::Float64
-        z                ::Float64
+    struct  CartesianVector{Type} 
+        x                ::Type
+        y                ::Type
+        z                ::Type
     end 
 
 
 
-    # `Base.show(io::IO, point::CartesianPoint)`  ... prepares a proper printout of the variable point::CartesianPoint.
-    function Base.show(io::IO, point::CartesianPoint) 
-        sa = Base.string(point);                print(io, sa)
+    # `Base.show(io::IO, vector::CartesianVector)`  ... prepares a proper printout of the variable vector::CartesianVector.
+    function Base.show(io::IO, vector::CartesianVector) 
+        sa = Base.string(vector);                print(io, sa)
     end
 
 
-    # `Base.string(point::CartesianPoint)`  ... provides a String notation for the variable point::CartesianPoint.
-    function Base.string(point::CartesianPoint)
-        sa = "Cartesian point x = $(point.x),  y = $(point.y),  z = $(point.z)  "
+    # `Base.string(vector::CartesianVector)`  ... provides a String notation for the variable vector::CartesianVector.
+    function Base.string(vector::CartesianVector)
+        sa = "Cartesian vector V.x = $(vector.x),  V.y = $(vector.y),  V.z = $(vector.z)  "
         return( sa )
     end
 
 
     """
-    `struct  Basics.WeightedCartesian`  
-        ... defines a type to represent a point in Cartesian coordinates with weight.
+    `struct  Basics.WeightedCartesian{Type}`  
+        ... defines a type to represent a point in Cartesian{Type} coordinates with weight.
 
-        + x              ::Float64       ... x-coordinate.
-        + y              ::Float64       ... y-coordinate.
-        + z              ::Float64       ... z-coordinate.
-        + w              ::Float64       ... weight.
+        + x              ::Type       ... x-coordinate.
+        + y              ::Type       ... y-coordinate.
+        + z              ::Type       ... z-coordinate.
+        + w              ::Float64    ... (real) weight.
     """
-    struct  WeightedCartesian 
-        x                ::Float64
-        y                ::Float64
-        z                ::Float64
+    struct  WeightedCartesian{Type}
+        x                ::Type
+        y                ::Type
+        z                ::Type
         w                ::Float64
     end 
 
 
 
     # `Base.show(io::IO, point::WeightedCartesian)`  ... prepares a proper printout of the variable point::WeightedCartesian.
-    function Base.show(io::IO, point::WeightedCartesian) 
-        sa = Base.string(point);                print(io, sa)
+    function Base.show(io::IO, vector::WeightedCartesian) 
+        sa = Base.string(vector);                print(io, sa)
     end
 
 
     # `Base.string(point::WeightedCartesian)`  ... provides a String notation for the variable point::WeightedCartesian.
-    function Base.string(point::WeightedCartesian)
-        sa = "Cartesian point x = $(point.x),  y = $(point.y),  z = $(point.z) with weight w = $(point.w) "
+    function Base.string(vector::WeightedCartesian)
+        sa = "Cartesian vector V.x = $(vector.x),  V.y = $(vector.y),  V.z = $(vector.z) with weight w = $(vector.w) "
         return( sa )
     end
 

@@ -8,7 +8,7 @@ module  RacahAlgebra
   
     using   SymEngine,  ..AngularMomentum, ..Basics,  ..Defaults
     
-    export  Kronecker, Triangle, W3j, W6j
+    export  Kronecker, Triangle, W3j, W6j, W9j, RacahExpression
 
     
     """
@@ -100,8 +100,7 @@ module  RacahAlgebra
 
 
     """
-    `RacahAlgebra.W3j(ja::AngMomentum, jb::AngMomentum, jc::AngMomentum, 
-                      ma::AngMomentum, mb::AngMomentum, mc::AngMomentum)`  
+    `RacahAlgebra.W3j(ja::AngMomentum, jb::AngMomentum, jc::AngMomentum, ma::AngMomentum, mb::AngMomentum, mc::AngMomentum)`  
         ... constructor for defining the Wigner 3-j symbol either by Julia Symbol's or SymEngine Basic variables.
     """
     function W3j(ja::AngMomentum, jb::AngMomentum, jc::AngMomentum, 

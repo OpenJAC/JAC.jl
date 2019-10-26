@@ -221,8 +221,9 @@ module ManyElectron
         + generateScf          ::Bool               ... True, if a SCF need to be generated, and false otherwise (frozen orbitals).
         + breitScf             ::Bool               ... True, if Breit interaction is to be included into the SCF computations.
         + methodScf            ::String             ... Specify the SCF method: ["AL", "OL", "EOL", "meanDFS", "meanHS"].
-        + startScf             ::String             ... Specify how the start orbitals are obtained ["fromNRorbitals", "fromGrasp", "hydrogenic"].
-        + orbitalFileScf       ::String             ... Filename of orbitals, if taken from Grasp.
+        + startScf             ::String             ... Specify how the start orbitals are obtained ["hydrogenic", "fromOrbitals"].
+        + startOrbitals        ::Dict{Subshell, Orbital}  ... List of start orbitals; hydrogenic orbitals are used 
+                                                              if not found in this list.
         + levelsScf            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
         + maxIterationsScf     ::Int64              ... maximum number of SCF iterations
         + accuracyScf          ::Float64            ... convergence criterion for the SCF field.
@@ -244,7 +245,7 @@ module ManyElectron
         breitScf               ::Bool  
         methodScf              ::String  
         startScf               ::String 
-        orbitalFileScf         ::String  
+        startOrbitals          ::Dict{Subshell, Orbital}
         levelsScf              ::Array{Int64,1}
         maxIterationsScf       ::Int64 
         accuracyScf            ::Float64   
@@ -266,7 +267,7 @@ module ManyElectron
     `ManyElectron.AsfSettings()`  ... constructor for setting the default values.
     """
     function AsfSettings()
-    	AsfSettings(false, false, "meanDFS", "hydrogenic", "", Int64[1], 24, 1.0e-6, Subshell[],   
+    	AsfSettings(false, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[1], 24, 1.0e-6, Subshell[],   
     	            true, false, NoneQed(), "eigen", LSjjSettings(false), false, Int64[], false, LevelSymmetry[] )
     end
     
@@ -277,7 +278,7 @@ module ManyElectron
     	  println(io, "breitScf:             $(settings.breitScf)  ")
     	  println(io, "methodScf:            $(settings.methodScf)  ")
     	  println(io, "startScf:             $(settings.startScf)  ")
-    	  println(io, "orbitalFileScf:       $(settings.orbitalFileScf)  ")
+    	  println(io, "startOrbitals:        $(settings.startOrbitals)  ")
     	  println(io, "levelsScf:            $(settings.levelsScf)  ")
     	  println(io, "maxIterationsScf:     $(settings.maxIterationsScf)  ")
     	  println(io, "accuracyScf:          $(settings.accuracyScf)  ")

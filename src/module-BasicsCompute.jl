@@ -472,6 +472,7 @@ module BascisCompute
         ##x println("coreSubshells = $(basis.coreSubshells);    subshells = $(basis.subshells)")
         rhot = zeros( npoints );    wb = zeros( npoints );    wx = zeros( npoints )
         # Compute the charge density of the core orbitals for the given level
+        ##x println("*** subshells = $(basis.subshells)")
         for  sh in basis.subshells
             orb  = basis.orbitals[sh]
             occ  = Basics.computeMeanSubshellOccupation(sh, [level])
