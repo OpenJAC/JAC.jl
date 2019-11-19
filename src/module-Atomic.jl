@@ -73,7 +73,7 @@ export  RasSettings, RasStep, RasComputation
         + teFrom            ::Array{Shell,1}        ... Triple-excitations from shells   [sh_1, sh_2, ...]
         + teTo              ::Array{Shell,1}        ... Triple-excitations to shells  [sh_1, sh_2, ...]
         + qeFrom            ::Array{Shell,1}        ... Quadrupole-excitations from shells   [sh_1, sh_2, ...]
-        + QeTo              ::Array{Shell,1}        ... Quadrupole-excitations to shells  [sh_1, sh_2, ...]
+        + qeTo              ::Array{Shell,1}        ... Quadrupole-excitations to shells  [sh_1, sh_2, ...]
         + frozenShells      ::Array{Shell,1}        ... List of shells that are kept 'frozen' in this step.
         + constraints       ::Array{String,1}       ... List of Strings to define 'constraints/restrictions' to the generated CSF basis.
     """
@@ -172,7 +172,7 @@ export  RasSettings, RasStep, RasComputation
         + refConfigs       ::Array{Configuration,1}    ... List of references configurations, at least 1.
         + symmetry         ::LevelSymmetry             ... Symmetry of the levels/CSF in the many-electron basis.
         + NoElectrons      ::Int64                     ... Number of electrons.
-        + NoIterations     ::Int64                     ... Number of SCf iterations to be applied in this step of computations.
+        ## + NoIterations     ::Int64                     ... Number of SCf iterations to be applied in this step of computations.
         + steps            ::Array{Atomic.RasStep,1}   ... List of SCF steps that are to be done in this model computation.
         + settings         ::Atomic.RasSettings        ... Settings for the given RAS computation
     """
@@ -183,7 +183,7 @@ export  RasSettings, RasStep, RasComputation
         refConfigs         ::Array{Configuration,1} 
         symmetry           ::LevelSymmetry
         NoElectrons        ::Int64
-        NoIterations       ::Int64 
+        ## NoIterations       ::Int64 
         steps              ::Array{Atomic.RasStep,1}
         settings           ::Atomic.RasSettings 
     end

@@ -403,6 +403,44 @@ module Bsplines
 
 
     """
+    `Bsplines.generateOrbitalsForPotential(primitives::Bsplines.Primitives, kappa::Int64, subshells::Array{Subshell,1}, 
+                                           pot::Radial.Potential; printout::Bool=true)`  
+        ... generates all single-electron orbitals from subhsells, which are of symmetry kappa. 
+            A set of orbitals::Dict{Subshell, Orbital} is returned.
+    """
+    function generateOrbitalsForPotential(primitives::Bsplines.Primitives, kappa::Int64, subshells::Array{Subshell,1}, 
+                                          pot::Radial.Potential; printout::Bool=true)
+        orbitals = Dict{Subshell, Orbital}()
+        if  kappa == 0     return( orbitals )     end       # This should not cause any problem.
+        
+        # Define the storage for the calculations of matrices; this is necessary to use the Bsplines.generateMatrix!() function.
+        if  printout    println("(Re-) Define a storage array for various B-spline matrices:")    end
+        storage  = Dict{Array{Any,1},Array{Float64,2}}()
+        # Set-up the overlap matrix
+        nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
+        wb = zeros( nsL+nsS, nsL+nsS )
+        
+        # Compute or fetch the diagonal 'overlap' blocks
+        wb[1:nsL,1:nsL]                 = generateMatrix!(0, "LL-overlap", primitives, storage)
+        wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = generateMatrix!(0, "SS-overlap", primitives, storage)
+        
+        # Compute the local Hamiltonian matrix and diagonalize it
+        wa = Bsplines.setupLocalMatrix(kappa, primitives, pot, storage)
+        w2 = Basics.diagonalize("generalized eigenvalues: Julia, eigfact", wa, wb)
+        nsi = nsS;    if kappa > 0   nsi = nsi + 1   end
+        if  printout   Basics.tabulateKappaSymmetryEnergiesDirac(kappa, w2.values, nsi, Nuclear.Model(4.))    end
+        
+        # Collect all the computed single-electron orbitals
+        for  sh in subshells
+            orbitals = Base.merge( orbitals, Dict( sh => generateOrbitalFromPrimitives(sh, w2, primitives) ))
+        end
+        
+        return( orbitals )
+    end
+
+
+
+    """
     `Bsplines.generateOrbitalsHydrogenic(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, 
                                              subshells::Array{Subshell,1}; printout::Bool=true)`  
         ... generates the hydrogenic orbitals for the nuclear model and for the given subshells. A set of 
@@ -461,7 +499,7 @@ module Bsplines
                 if  alreadyDone[j]   continue
                 elseif  sh.kappa == subshells[j].kappa   
                     newOrbitals[subshells[j]] = generateOrbitalFromPrimitives(subshells[j], w2, primitives)
-                    if  printout   println("Use hydrogenic orbital from this symmetry block also for $(subshells[j]).")    end
+                    if  printout   println(">> Use hydrogenic orbital from this symmetry block also for $(subshells[j]).")    end
                     alreadyDone[j] = true
                 end
             end
@@ -562,7 +600,8 @@ module Bsplines
                 wcBlock = Basics.analyzeConvergence(bsplineBlock[kappa], wc)
                 if  wcBlock > 1.000 * settings.accuracyScf   go_on = true   end
                 for  sh in basis.subshells
-                    if  sh.kappa == kappa
+                    if      sh in settings.frozenSubshells   ## do nothing
+                    elseif  sh.kappa == kappa
                         newOrbital = generateOrbitalFromPrimitives(sh, wc, primitives)
                         wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
                         if  wcOrbital > settings.accuracyScf   go_on = true   end

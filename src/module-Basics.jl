@@ -1364,14 +1364,17 @@ module Basics
     function extractNonrelativisticConfigurationFromCsfR    end
     function extractOpenShellQNfromCsfNR                    end
     function extractOpenShellQNfromCsfR                     end
+    function extractRelativisticSubshellList                end
     function extractShellOccupationFromCsfR                 end
     function generate()                                     end
     function generateBasis                                  end
+    function generateConfigurations                         end
     function generateConfigurationsForExcitationScheme      end
     function generateLevelWithExtraElectron                 end
     function generateLevelWithExtraSubshell                 end
     function generateLevelWithSymmetryReducedBasis          end
-    function generateOrbitalList                            end
+    function generateOrbitalsForBasis                       end
+    function generateOrbitalsForPotential                   end
     function generateShellList                              end
     function integrate                                      end
     function integrateOnGridNewtonCotes                     end

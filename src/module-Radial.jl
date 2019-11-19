@@ -454,7 +454,7 @@ module Radial
      `Radial.SingleElecSpectrum()`  ... constructor for providing an 'empty' instance of this struct.
     """
     function SingleElecSpectrum()
-        SingleSymOrbitals("", SingleSymOrbitals[])
+        SingleElecSpectrum("", SingleSymOrbitals[])
     end
 
 

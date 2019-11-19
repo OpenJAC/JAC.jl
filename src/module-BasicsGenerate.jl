@@ -5,7 +5,7 @@
 """
 module BascisGenerate
 
-    using Printf, ..AngularMomentum, ..Atomic, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..ManyElectron, 
+    using Printf, ..AngularMomentum, ..Atomic, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..Einstein, ..ManyElectron, 
                   ..PhotoEmission, ..Radial
     
     export generate
@@ -357,43 +357,54 @@ module BascisGenerate
 
 
     """
-    `Basics.generateBasis(step::Atomic.RasStep)`  
+    `Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetry::LevelSymmetry, step::Atomic.RasStep)`  
         ... generates the CSF basis for the given reference configurations and single, double, ... excitations of
             electrons from the corresponding fromShells --> toShells. A basis::Basis is returned but without a valid
             representation of the radial orbitals
     """
-    function generateBasis(step::Atomic.RasStep)
+    function Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetry::LevelSymmetry, step::Atomic.RasStep)
         # Single excitations
         if      step.seFrom == Shell[]  ||  step.seTo == Shell[]    confSingles = Configuration[]
-        else    confSingles = generateConfigurations(step.refConfigs, step.seFrom, step.seTo)
+        else    confSingles = Basics.generateConfigurations(refConfigs, step.seFrom, step.seTo)
         end
         # Double excitations
         if      step.deFrom == Shell[]  ||  step.deTo == Shell[]    confDoubles = Configuration[]
-        else    confDoubles = generateConfigurations(step.refConfigs, step.deFrom, step.deTo)
-                confDoubles = generateConfigurations(ConfDoubles,     step.deFrom, step.deTo)
+        else    confDoubles = Basics.generateConfigurations(refConfigs, step.deFrom, step.deTo)
+                confDoubles = Basics.generateConfigurations(confDoubles,     step.deFrom, step.deTo)
         end
         # Triple excitations
         if      step.teFrom == Shell[]  ||  step.teTo == Shell[]    confTriples = Configuration[]
-        else    confTriples = generateConfigurations(step.refConfigs, step.teFrom, step.teTo)
-                confTriples = generateConfigurations(ConfTriples,     step.teFrom, step.teTo)
-                confTriples = generateConfigurations(ConfTriples,     step.teFrom, step.teTo)
+        else    confTriples = Basics.generateConfigurations(refConfigs, step.teFrom, step.teTo)
+                confTriples = Basics.generateConfigurations(confTriples,     step.teFrom, step.teTo)
+                confTriples = Basics.generateConfigurations(confTriples,     step.teFrom, step.teTo)
         end
         # Quadruple excitations
         if      step.teFrom == Shell[]  ||  step.teTo == Shell[]    confQuadruples = Configuration[]
-        else    confQuadruples = generateConfigurations(step.refConfigs, step.qeFrom, step.qeTo)
-                confQuadruples = generateConfigurations(confQuadruples,  step.qeFrom, step.qeTo)
-                confQuadruples = generateConfigurations(confQuadruples,  step.qeFrom, step.qeTo)
-                confQuadruples = generateConfigurations(confQuadruples,  step.qeFrom, step.qeTo)
+        else    confQuadruples = Basics.generateConfigurations(refConfigs, step.qeFrom, step.qeTo)
+                confQuadruples = Basics.generateConfigurations(confQuadruples,  step.qeFrom, step.qeTo)
+                confQuadruples = Basics.generateConfigurations(confQuadruples,  step.qeFrom, step.qeTo)
+                confQuadruples = Basics.generateConfigurations(confQuadruples,  step.qeFrom, step.qeTo)
         end
         
         # Now get a unique set of configurations and generate the relativistic configurations
-        configurations = Base.unique(step.refConfigs, confSingles, confDoubles, confTriples, confQuadruples)
+        # configurations = Base.unique((==), configurations) does not work here
+        confList       = Configuration[]  
+        configurations = deepcopy(refConfigs);      append!(configurations, confSingles);    append!(configurations, confDoubles)
+                                                    append!(configurations, confTriples);    append!(configurations, confQuadruples)
+        for  confa in configurations
+            addTo = true
+            for confb in confList    if   confa == confb    addTo = false;    break     end     end
+            if  addTo    push!(confList, confa)     end
+        end
+        for  i = 1:length(confList)    println(">> include ", confList[i])    end
+        ##x println("***bb confList = $confList")
+        #
         relconfList = ConfigurationR[]
-        for  conf in configurations
+        for  conf in confList
             wa = Basics.generate("configuration list: relativistic", conf)
             append!( relconfList, wa)
         end
-        ##x for  i = 1:length(relconfList)    println("generateBasis(): ", relconfList[i])    end
+        ##x println("***cc relconfList = $relconfList")
         subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
         Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
 
@@ -401,7 +412,8 @@ module BascisGenerate
         csfList = CsfR[]
         for  relconf in relconfList
             newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
-            append!( csfList, newCsfs)
+            for  csf in newCsfs     if  csf.J == symmetry.J  &&  csf.parity == symmetry.parity   push!(csfList, csf)   end   end
+            ##x append!( csfList, newCsfs)
         end
 
         # Determine the number of electrons and the list of coreSubshells
@@ -416,9 +428,53 @@ module BascisGenerate
         end
         
         basis = Basis(true, NoElectrons, subshellList, csfList, coreSubshellList, Dict{Subshell, Orbital}())
+        
+        println("Construct a basis with $(length(basis.csfs)) CSF for J^P = $symmetry with $(length(basis.subshells)) subshells: " *
+                "$(basis.subshells[1])  $(basis.subshells[2]) ...  $(basis.subshells[end-1])  $(basis.subshells[end])")
         return( basis )
     end
 
+
+
+    """
+    `Basics.generateConfigurations(refConfigs::Array{Configuration,1}, fromShells::Array{Shell,1}, toShells::Array{Shell,1})`  
+        ... generates all nonrelativistic configurations due to the (single) excitation of an electron fromShells --> toShells
+            for all given reference configurations. A confList::Array{Configuration,1} is returned.
+    """
+    function Basics.generateConfigurations(refConfigs::Array{Configuration,1}, fromShells::Array{Shell,1}, toShells::Array{Shell,1})
+        confList = Configuration[]
+        for  config in refConfigs
+            for  fromShell in fromShells
+                for  toShell in toShells
+                    # Cycle through all shells of config to built-up a new configuration with a single excitation if fromShell occurs
+                    if  haskey(config.shells, fromShell )
+                        newShells = Dict{Shell,Int64}();   addShell = true;   addConfiguration = true
+                        for (k,v) in config.shells
+                            if        k == fromShell == toShell       newShells = Base.merge( newShells, Dict( k => v))
+                                      addShell = false   
+                            elseif    k == fromShell    if  v-1 > 0   newShells = Base.merge( newShells, Dict( fromShell => v-1))  end
+                            elseif    k == toShell      
+                                if    v+1 <= 2*(2*toShell.l + 1)      newShells = Base.merge( newShells, Dict( toShell => v+1))
+                                      addShell = false   
+                                else  addConfiguration = false
+                                end
+                            else      newShells = Base.merge( newShells, Dict( k => v))
+                            end
+                            #
+                            if  addShell                              newShells = Base.merge( newShells, Dict( toShell => 1))      end
+                        end
+                        if  addConfiguration   push!(confList, Configuration(newShells, config.NoElectrons ))          end
+                    else    # No configuration to add if fromShell does not occur in the reference configuration
+                    end
+                end
+            end
+        end
+        
+        ##x println("***aa refConfigs = $refConfigs,  fromShells = $fromShells,  toShells = $toShells")
+        ##x println("***aa confList   = $confList")
+        
+        return( confList )
+    end
 
 
     """
@@ -575,19 +631,64 @@ module BascisGenerate
         newLevel = Level(level.J, level.M, level.parity, level.index, level.energy, level.relativeOcc, true, newBasis, newMc)
         return( newLevel )
     end
+    
+
+    """
+    `Basics.generateOrbitalsForPotential(grid::Radial.Grid, meanPot::Radial.Potential, subshellList::Array{Subshell,1})`  
+        ... generates a set of (start) orbitals from the given potential and for all the subshells in subshellList. 
+            A set of orbitals::Dict{Subshell, Orbital} is returned.
+    """
+    function  Basics.generateOrbitalsForPotential(grid::Radial.Grid, meanPot::Radial.Potential, subshellList::Array{Subshell,1})
+        orbitals = Dict{Subshell, Orbital}()
+        
+        # Determine kappaMin and kappaMax
+        kappaMin = 0;   kappaMax = 0
+        for  subsh in subshellList   
+            if       subsh.kappa < kappaMin    kappaMin = subsh.kappa
+            elseif   subsh.kappa > kappaMax    kappaMax = subsh.kappa
+            end
+        end
+        
+        # Generate the primitives for a B-spline basis
+        wa = Bsplines.generatePrimitives(grid)
+        
+        # Now cycle through all kappa symmetries
+        for  kappa = kappaMin:kappaMax
+            # Determine all requested subshells of symmetry kappa ... to compute them together
+            shList     = Subshell[];    for  subsh in subshellList    if kappa == subsh.kappa    push!( shList, subsh)    end    end
+            shOrbitals = Bsplines.generateOrbitalsForPotential(wa, kappa, shList, meanPot; printout=false)
+            for  sh in shList
+                orbitals = Base.merge( orbitals, Dict( sh => shOrbitals[sh]))
+            end
+        end
+
+        return( orbitals )
+    end
 
 
 
     """
-    `Basics.generateOrbitalList(basis::Basis, frozenShells::Array{Shell,1}, priorBasis::Basis, spectrum::Int64)`  
-        ... generates a list of (relativistic) orbitals as specificed for basis. These orbitals are taken from priorBasis
+    `Basics.generateOrbitalsForBasis(basis::Basis, frozenShells::Array{Shell,1}, priorBasis::Basis, startOrbitals::Dict{Subshell, Orbital})`  
+        ... generates a dict of (relativistic) orbitals as specificed by subshells of the basis. These orbitals are taken from priorBasis
             if contained in frozen-shells, and from spectrum (start orbitals) otherwises. An error message is issued if some
-            requested orbital is not found. A orbList::Array{Orbital,1} is returned.
+            requested orbital is not found. A orbList::Dict{Subshell, Orbital} is returned.
     """
-    function generateOrbitalList(basis::Basis, frozenShells::Array{Shell,1}, priorBasis::Basis, spectrum::Int64)
-        orbList = Orbital[]
-        error("Not yet implemented.")
-        return( orbList )
+    function Basics.generateOrbitalsForBasis(basis::Basis, frozenShells::Array{Shell,1}, priorBasis::Basis, 
+                                             startOrbitals::Dict{Subshell, Orbital})
+        orbitals = Dict{Subshell, Orbital}()
+        for  subsh in basis.subshells
+            if  subsh in frozenShells    &&   haskey(priorBasis.orbitals, subsh)
+                orbitals = Base.merge( orbitals, Dict( subsh => priorBasis.orbitals[subsh]) )
+            elseif  subsh in frozenShells     error("Frozen orbital $subsh not found in prior basis.")
+            elseif  haskey(priorBasis.orbitals, subsh)
+                println(">> Start orbital $subsh is taken from prior basis")
+                orbitals = Base.merge( orbitals, Dict( subsh => priorBasis.orbitals[subsh]) )
+            else
+                println(">> Start orbital $subsh is taken from hydrogenic orbitals")
+                orbitals = Base.merge( orbitals, Dict( subsh => startOrbitals[subsh]) )
+            end
+        end
+        return( orbitals )
     end
 
     
@@ -623,5 +724,6 @@ module BascisGenerate
         
         return( newShellList )
     end
+
 
 end # module

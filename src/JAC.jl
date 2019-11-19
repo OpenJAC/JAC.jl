@@ -151,10 +151,10 @@ include("module-REDA.jl")
 include("module-READI.jl")
 include("module-PairProduction.jl")
 include("module-PairAnnihilation1Photon.jl")
-include("module-PairAnnihilation2Photon.jl")  =#
+include("module-PairAnnihilation2Photon.jl")
 
 # Functions/methods for the computation of atomic responses
-include("module-HighHarmonic.jl")
+include("module-HighHarmonic.jl")  =#
 
 # Functions/methods for semi-empirical estimations
 # include("module-ImpactIonization.jl")

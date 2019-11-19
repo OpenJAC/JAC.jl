@@ -38,7 +38,7 @@ module BascisPerform
             LSjj.expandLevelsIntoLS(multiplet, computation.asfSettings.jjLS)
             #
             if output    results = Base.merge( results, Dict("multiplet:" => multiplet) ) 
-                        results = Base.merge( results, Dict("grid:"      => computation.grid) )  end
+                         results = Base.merge( results, Dict("grid:"      => computation.grid) )  end
             
             # Now compute all requested properties
             if  JAC.EinsteinX      in computation.properties   
@@ -328,29 +328,39 @@ module BascisPerform
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         nModel   = comp.nuclearModel
         # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
-        asfSettings    = ManyElectron.AsfSettings()  ## (comp.settings)
-        priorBasis     = performSCF(comp.refConfigs, nModel, comp.grid, asfSettings; printout=printout)
-        priorMultiplet = performCI(priorBasis, nModel, comp.grid, asfSettings; printout=printout)
-        meanPot        = 1 ## generate a mean potential for the levels of priorMultiplet
-        spectrum       = 1 ## generate a spectrum of sufficient size
+        asfSettings    = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
+                                        ## all further details are specified for each step
+        priorBasis     = Basics.performSCF(comp.refConfigs, nModel, comp.grid, asfSettings; printout=true)
+        priorMultiplet = Basics.performCI(priorBasis, nModel, comp.grid, asfSettings; printout=true)
+        nuclearPot     = Nuclear.nuclearPotential(nModel, comp.grid)
+        ## electronicPot  = Basics.compute("radial potential: Dirac-Fock-Slater", comp.grid, priorMultiplet.levels[1].basis)
+        ## meanPot        = Basics.add(nuclearPot, electronicPot)
+        subshellList   = Basics.extractRelativisticSubshellList(comp)             ## extract all subshells that occur in the RAS computation
+        startOrbitals  = Basics.generateOrbitalsForPotential(comp.grid, nuclearPot, subshellList)  ## generate a spectrum of sufficient size
+        if output    results = Base.merge( results, Dict("reference multiplet" => Multiplet("Reference multiplet:", priorMultiplet.levels) ) )  end
+
+        # The asfSettings only define the CI part of the RAS steps and partly derived from the RasSettings
+        asfSettings = AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
+                                  true, comp.settings.breitCI, NoneQed(), "methodCI", LSjjSettings(true), 
+                                  comp.settings.selectLevelsCI, comp.settings.selectedLevelsCI, false, LevelSymmetry[] ) 
         
         # Now, cycle over all steps of the RasComputation
         for (istep, step)  in  enumerate(comp.steps)
             println("")
             printstyled("++ Compute the orbitals, orbitals and multiplet for step $istep ... \n", color=:light_green)
-            printstyled("------------------------------------------------------------------- \n", color=:light_green)
-            basis      = Basics.generateBasis(step)
-            orbList    = Basics.generateOrbitalList(basis, step.frozenShells, priorMultiplet.Level[1].basis, spectrum)
-            basis      = Basis()  ## add orbList to (basis + orbList)
-            basis      = performSCF(basis, nModel, comp.grid, comp.Settings; printout=printout)
-            multiplet  = performCI(basis,  nModel, comp.grid, asfSettings; printout=printout) 
-            # append to results
-            if output    results = Base.merge( results, Dict("step"*string(istep) => multiplet) )           end
+            printstyled("--------------------------------------------------------------      \n", color=:light_green)
+            basis      = Basics.generateBasis(comp.refConfigs, comp.symmetry, step)
+            orbitals   = Basics.generateOrbitalsForBasis(basis, step.frozenShells, priorMultiplet.levels[1].basis, startOrbitals)
+            basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )  
+            basis      = Basics.performSCF(basis, nModel, comp.grid, step.frozenShells, comp.settings; printout=true)
+            multiplet  = Basics.performCI(basis,  nModel, comp.grid, asfSettings; printout=true) 
+            if output    results = Base.merge( results, Dict("step"*string(istep) => Multiplet("Multiplet:", multiplet.levels)) )              end
             priorMultiplet = multiplet
         end
         
         Defaults.warn(PrintWarnings)
         Defaults.warn(ResetWarnings)
+        println(" ")
         return( results )
     end
 
@@ -461,7 +471,7 @@ module BascisPerform
             ##x orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(waL, nsL, waS, nsS, nuclearModel, subshellList)
             orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(wa, nuclearModel, subshellList; printout=printout)
         elseif  settings.startScf == "fromOrbitals"
-            println("Start SCF process from given list of orbitals.")
+            println("Start SCF process from gishellSequenceScfven list of orbitals.")
             # Taking starting orbitals for the given dictionary; non-relativistic orbitals with a proper nuclear charge
             # are adapted if no orbital is found
             orbitals = Dict{Subshell, Orbital}()
@@ -492,6 +502,38 @@ module BascisPerform
             basis = JAC.Bsplines.solveSelfConsistentFieldOptimized(wa, nuclearModel, basis, settings; printout=printout)
         else  error("stop b")
         end
+        
+        return( basis )  
+    end
+                    
+
+
+    """
+    `Basics.performSCF(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, frozenShells::Array{Shell,1}, 
+                       settings::Atomic.RasSettings; printout::Bool=true)`  
+        ... to generate an atomic basis and to compute the self-consistent field (SCF) for this basis due to the given settings;
+            all subshells due to the list of frozenShells are kept fixed. A newBasis::Basis is returned.  
+    """
+    function Basics.performSCF(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, frozenShells::Array{Shell,1}, 
+                               settings::Atomic.RasSettings; printout::Bool=true)
+        if  printout    println("\n... in perform['computation: SCF for RAS step'] ...")    end
+        
+        # Determine the list of frozen subshells
+        frozenSubshells = Subshell[]
+        for  sh in frozenShells
+            if  sh.l == 0    push!( frozenSubshells, Subshell(sh.n, -1))
+            else             push!( frozenSubshells, Subshell(sh.n, sh.l));    push!( frozenSubshells, Subshell(sh.n, -sh.l -1))
+            end
+        end
+        
+        wa = Bsplines.generatePrimitives(grid)
+        # Specify the AsfSettings for the given RAS step
+        asfSettings = AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), settings.levelsScf,    
+                                  settings.maxIterationsScf, settings.accuracyScf, Subshell[], frozenSubshells, 
+                                  false, false, NoneQed(), "methodCI", LSjjSettings(false), 
+                                  settings.selectLevelsCI, settings.selectedLevelsCI, false, LevelSymmetry[] ) 
+
+        basis = JAC.Bsplines.solveSelfConsistentFieldMean(wa, nuclearModel, basis, asfSettings; printout=printout) 
         
         return( basis )  
     end

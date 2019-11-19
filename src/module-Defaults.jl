@@ -384,7 +384,7 @@ module Defaults
         global GBL_STANDARD_GRID
 
         if        sa == "standard grid"
-            if  printout    println("Re-define the standard grid with $(grid.NoPoints) grid points.")    end
+            if  printout    println("(Re-) Define the standard grid with $(grid.NoPoints) grid points.")    end
             GBL_STANDARD_GRID = grid
         else
         error("Unsupported keystring:: $sa")

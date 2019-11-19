@@ -5,7 +5,7 @@
 """
 module BasicsAG
 
-    using Printf,  LinearAlgebra, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..LSjj, ..ManyElectron, 
+    using Printf,  LinearAlgebra, ..AngularMomentum, ..Atomic, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..LSjj, ..ManyElectron, 
                   ..PhotoEmission, ..Radial
     
     export recastAG
@@ -526,6 +526,41 @@ module BasicsAG
         ##x println("Basics.extractOpenShellQNfromCsfR()::  csfR = $csfR  \n  wa = $wa")
         
         return( wa )
+    end
+
+
+    """
+    `Basics.extractRelativisticSubshellList(comp::Atomic.RasComputation)`  
+        ... extract all (relativistic) subshells that (will) contribute to the given RAS computations, and for which (start) 
+            orbitals will be needed in course of the computation. A subshellList::Array{Subshell,1} is returned.
+    """
+    function Basics.extractRelativisticSubshellList(comp::Atomic.RasComputation)
+        # First extract all shells, then unique this list and, finally, convert in corresponding subshells
+        shellList = Shell[]
+        
+        for  conf in comp.refConfigs
+            for  (k,v) in conf.shells   push!( shellList, k)    end
+        end
+        
+        for step in comp.steps
+            append!( shellList, step.seFrom);    append!( shellList, step.seTo)    
+            append!( shellList, step.deFrom);    append!( shellList, step.deTo)   
+            append!( shellList, step.teFrom);    append!( shellList, step.teTo)    
+            append!( shellList, step.qeFrom);    append!( shellList, step.qeTo)   
+        end
+        
+        shellList = unique(shellList)
+        ##x println("ee shellList = $shellList ")
+        subshellList = Subshell[]
+        
+        for  sh in shellList    
+            if  sh.l == 0    push!( subshellList, Subshell(sh.n, -1))
+            else             push!( subshellList, Subshell(sh.n, sh.l));    push!( subshellList, Subshell(sh.n, -sh.l -1))
+            end
+        end
+        
+        ##x println("ee subshellList = $subshellList ")
+        return( subshellList )
     end
 
 

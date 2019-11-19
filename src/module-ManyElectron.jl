@@ -228,6 +228,7 @@ module ManyElectron
         + maxIterationsScf     ::Int64              ... maximum number of SCF iterations
         + accuracyScf          ::Float64            ... convergence criterion for the SCF field.
         + shellSequenceScf     ::Array{Subshell,1}  ... Sequence of subshells to be optimized.
+        + frozenSubshells      ::Array{Subshell,1}  ... Sequence of subshells to be kept frozen.
         
     	+ coulombCI            ::Bool               ... logical flag to include Coulomb interactions.
     	+ breitCI              ::Bool               ... logical flag to include Breit interactions.
@@ -250,6 +251,7 @@ module ManyElectron
         maxIterationsScf       ::Int64 
         accuracyScf            ::Float64   
         shellSequenceScf       ::Array{Subshell,1}
+        frozenSubshells        ::Array{Subshell,1}
         #
     	coulombCI		       ::Bool 
     	breitCI		           ::Bool 
@@ -267,8 +269,56 @@ module ManyElectron
     `ManyElectron.AsfSettings()`  ... constructor for setting the default values.
     """
     function AsfSettings()
-    	AsfSettings(false, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[1], 24, 1.0e-6, Subshell[],   
+    	AsfSettings(false, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[1], 24, 1.0e-6, Subshell[], Subshell[],  
     	            true, false, NoneQed(), "eigen", LSjjSettings(false), false, Int64[], false, LevelSymmetry[] )
+    end
+
+
+    """
+    `ManyElectron.AsfSettings(settings::AsfSettings;`
+        
+                generateScf=..,       breitScf=..,            methodScf=..,          startScf=..,               startOrbitals=..,  
+                levelsScf=..,         maxIterationsScf=..,    accuracyScf=..,        shellSequenceScf=..,       frozenSubshells=..,         
+                coulombCI=..,         breitCI=..,             qedModel=..,           methodCI=..,               jjLS=..,  
+                selectLevelsCI=..,    selectedLevelsCI=..,    selectSymmetriesCI=.., selectedSymmetriesCI=..,   printout::Bool=false)
+        ... constructor for re-defining a settings::AsfSettings.
+    """
+    function AsfSettings(settings::AsfSettings; 
+        generateScf::Union{Nothing,Bool}=nothing,                       breitScf::Union{Nothing,Bool}=nothing,         
+        methodScf::Union{Nothing,String}=nothing,                       startScf::Union{Nothing,String}=nothing,
+        startOrbitals::Union{Nothing,Dict{Subshell, Orbital}}=nothing,  levelsScf::Union{Nothing,Array{Int64,1}}=nothing,   
+        maxIterationsScf::Union{Nothing,Int64}=nothing,                 accuracyScf::Union{Nothing,Float64}=nothing,     
+        shellSequenceScf::Union{Nothing,Array{Subshell,1}}=nothing,     frozenSubshells::Union{Nothing,Array{Subshell,1}}=nothing,         
+        coulombCI::Union{Nothing,Bool}=nothing,                         breitCI::Union{Nothing,Bool}=nothing,         
+        qedModel::Union{Nothing,AbstractQedModel}=nothing,              methodCI::Union{Nothing,String}=nothing,         
+        jjLS::Union{Nothing,LSjjSettings}=nothing,  
+        selectLevelsCI::Union{Nothing,Bool}=nothing,                    selectedLevelsCI::Union{Nothing,Array{Int64,1}}=nothing,         
+        selectSymmetriesCI::Union{Nothing,Bool}=nothing,                selectedSymmetriesCI::Union{Nothing,Array{LevelSymmetry,1}}=nothing,         
+        printout::Bool=false)
+
+        if  generateScf         == nothing   generateScfx          = settings.generateScf           else   generateScfx          = generateScf          end 
+        if  breitScf            == nothing   breitScfx             = settings.breitScf              else   breitScfx             = breitScf             end 
+        if  methodScf           == nothing   methodScfx            = settings.methodScf             else   methodScfx            = methodScf            end 
+        if  startScf            == nothing   startScfx             = settings.startScf              else   startScfx             = startScf             end 
+        if  startOrbitals       == nothing   startOrbitalsx        = settings.startOrbitals         else   startOrbitalsx        = startOrbitals        end 
+        if  levelsScf           == nothing   levelsScfx            = settings.levelsScf             else   levelsScfx            = levelsScf            end 
+        if  maxIterationsScf    == nothing   maxIterationsScfx     = settings.maxIterationsScf      else   maxIterationsScfx     = maxIterationsScf     end 
+        if  accuracyScf         == nothing   accuracyScfx          = settings.accuracyScf           else   accuracyScf           = accuracyScf          end 
+        if  shellSequenceScf    == nothing   shellSequenceScfx     = settings.shellSequenceScf      else   shellSequenceScfx     = shellSequenceScf     end 
+        if  frozenSubshells     == nothing   frozenSubshellsx      = settings.frozenSubshells       else   frozenSubshellsx      = frozenSubshells      end 
+        if  coulombCI           == nothing   coulombCIx            = settings.coulombCI             else   coulombCIx            = coulombCI            end 
+        if  breitCI             == nothing   breitCIx              = settings.breitCI               else   breitCIx              = breitCI              end 
+        if  qedModel            == nothing   qedModelx             = settings.qedModel              else   qedModelx             = qedModel             end 
+        if  methodCI            == nothing   methodCIx             = settings.methodCI              else   methodCI              = methodCI             end 
+        if  jjLS                == nothing   jjLSx                 = settings.jjLS                  else   jjLSx                 = jjLS                 end 
+        if  selectLevelsCI      == nothing   selectLevelsCIx       = settings.selectLevelsCI        else   selectLevelsCIx       = selectLevelsCI       end 
+        if  selectedLevelsCI    == nothing   selectedLevelsCIx     = settings.selectedLevelsCI      else   selectedLevelsCIx     = selectedLevelsCI     end 
+        if  selectSymmetriesCI  == nothing   selectSymmetriesCIx   = settings.selectSymmetriesCI    else   selectSymmetriesCIx   = selectSymmetriesCI   end 
+        if  selectedSymmetriesCI== nothing   selectedSymmetriesCIx = settings.selectedSymmetriesCI  else   selectedSymmetriesCIx = selectedSymmetriesCI end 
+        
+    	AsfSettings(generateScfx, breitScfx, methodScfx, startScfx, startOrbitalsx, levelsScfx, maxIterationsScfx, accuracyScfx, 
+    	            shellSequenceScfx, frozenSubshellsx, coulombCIx, breitCIx, qedModelx, methodCIx, jjLSx, 
+    	            selectLevelsCIx, selectedLevelsCIx, selectSymmetriesCIx, selectedSymmetriesCIx)
     end
     
     
@@ -283,6 +333,7 @@ module ManyElectron
     	  println(io, "maxIterationsScf:     $(settings.maxIterationsScf)  ")
     	  println(io, "accuracyScf:          $(settings.accuracyScf)  ")
     	  println(io, "shellSequenceScf:     $(settings.shellSequenceScf)  ")
+    	  println(io, "frozenSubshells:      $(settings.frozenSubshells)  ")
     	  #
     	  println(io, "coulombCI:            $(settings.coulombCI)  ")
     	  println(io, "breitCI:              $(settings.breitCI)  ")
