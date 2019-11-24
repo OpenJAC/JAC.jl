@@ -1,6 +1,6 @@
 
 #
-println("Cj) Test of the GreenFunction module for a given list of bound-state configurations.")
+println("Al) Test of the GreenFunction module for a given list of bound-state configurations.")
 
 @warn("\n\n !!! This example does not work properly at present !!! \n\n")
 #

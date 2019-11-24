@@ -315,58 +315,6 @@ module BascisPerform
 
 
     """
-    `Basics.perform(computation::Atomic.RasComputation)`  
-        ... to perform a restricted active-space computation for a single level symmetry and based on a set of reference configurations
-            and a number of pre-specified steps. All relevant intermediate and final results are printed to screen (stdout). 
-            Nothing is returned.
-
-    `Basics.perform(computation::Atomic.RasComputation; output=true)`  
-        ... to perform the same but to return the complete output in a dictionary; the particular output depends on the type and 
-            specifications of the computations but can easily accessed by the keys of this dictionary.
-    """
-    function Basics.perform(comp::Atomic.RasComputation; output::Bool=false)
-        if  output    results = Dict{String, Any}()    else    results = nothing    end
-        nModel   = comp.nuclearModel
-        # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
-        asfSettings    = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
-                                        ## all further details are specified for each step
-        priorBasis     = Basics.performSCF(comp.refConfigs, nModel, comp.grid, asfSettings; printout=true)
-        priorMultiplet = Basics.performCI(priorBasis, nModel, comp.grid, asfSettings; printout=true)
-        nuclearPot     = Nuclear.nuclearPotential(nModel, comp.grid)
-        ## electronicPot  = Basics.compute("radial potential: Dirac-Fock-Slater", comp.grid, priorMultiplet.levels[1].basis)
-        ## meanPot        = Basics.add(nuclearPot, electronicPot)
-        subshellList   = Basics.extractRelativisticSubshellList(comp)             ## extract all subshells that occur in the RAS computation
-        startOrbitals  = Basics.generateOrbitalsForPotential(comp.grid, nuclearPot, subshellList)  ## generate a spectrum of sufficient size
-        if output    results = Base.merge( results, Dict("reference multiplet" => Multiplet("Reference multiplet:", priorMultiplet.levels) ) )  end
-
-        # The asfSettings only define the CI part of the RAS steps and partly derived from the RasSettings
-        asfSettings = AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
-                                  true, comp.settings.breitCI, NoneQed(), "methodCI", LSjjSettings(true), 
-                                  comp.settings.selectLevelsCI, comp.settings.selectedLevelsCI, false, LevelSymmetry[] ) 
-        
-        # Now, cycle over all steps of the RasComputation
-        for (istep, step)  in  enumerate(comp.steps)
-            println("")
-            printstyled("++ Compute the orbitals, orbitals and multiplet for step $istep ... \n", color=:light_green)
-            printstyled("--------------------------------------------------------------      \n", color=:light_green)
-            basis      = Basics.generateBasis(comp.refConfigs, comp.symmetry, step)
-            orbitals   = Basics.generateOrbitalsForBasis(basis, step.frozenShells, priorMultiplet.levels[1].basis, startOrbitals)
-            basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )  
-            basis      = Basics.performSCF(basis, nModel, comp.grid, step.frozenShells, comp.settings; printout=true)
-            multiplet  = Basics.performCI(basis,  nModel, comp.grid, asfSettings; printout=true) 
-            if output    results = Base.merge( results, Dict("step"*string(istep) => Multiplet("Multiplet:", multiplet.levels)) )              end
-            priorMultiplet = multiplet
-        end
-        
-        Defaults.warn(PrintWarnings)
-        Defaults.warn(ResetWarnings)
-        println(" ")
-        return( results )
-    end
-
-
-
-    """
     `Basics.perform("computation: SCF", configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
                                         printout::Bool=true)`  
         ... to generate an atomic basis and to compute the self-consistent field (SCF) for this basis due to the given settings; 

@@ -72,6 +72,29 @@ module Nuclear
     end
 
 
+    """
+    `Nuclear.Model(nm::Nuclear.Model;`
+        
+                Z=..,         model=..,         mass=..,        radius=..,     
+                spinI=..,     mu=..,            Q=..)
+        ... constructor for re-defining a nuclear model nm::Nuclear.Model.
+    """
+    function Model(nm::Nuclear.Model;            Z::Union{Nothing,Float64}=nothing,          model::Union{Nothing,String}=nothing,         
+        mass::Union{Nothing,Float64}=nothing,    radius::Union{Nothing,Float64}=nothing,     spinI::Union{Nothing,AngularJ64}=nothing,  
+        mu::Union{Nothing,Float64}=nothing,      Q::Union{Nothing,Float64}=nothing)
+
+        if  Z         == nothing   Zx          = nm.Z           else   Zx          = Z          end 
+        if  model     == nothing   modelx      = nm.model       else   modelx      = model      end 
+        if  mass      == nothing   massx       = nm.mass        else   massx       = mass       end 
+        if  radius    == nothing   radiusx     = nm.radius      else   radiusx     = radius     end 
+        if  spinI     == nothing   spinIx      = nm.spinI       else   spinIx      = spinI      end 
+        if  mu        == nothing   mux         = nm.mu          else   mux         = mu         end 
+        if  Q         == nothing   Qx          = nm.Q           else   Qx          = Q          end 
+    	
+    	Model(Zx, modelx, massx, radiusx, spinIx, mux, Qx)
+    end
+
+
     # `Base.show(io::IO, m::Model)`  ... prepares a proper printout of the variable  m::Model.
     function Base.show(io::IO, m::Model) 
         if      m.model == "Fermi"   

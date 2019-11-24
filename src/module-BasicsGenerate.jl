@@ -6,9 +6,141 @@
 module BascisGenerate
 
     using Printf, ..AngularMomentum, ..Atomic, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..Einstein, ..ManyElectron, 
-                  ..PhotoEmission, ..Radial
+                  ..Nuclear, ..PhotoEmission, ..Radial
     
     export generate
+
+
+
+    """
+    `Basics.generate(representation::Atomic.Representation)`  
+        ... to generate an atomic representation as specified by the representation.repType::AbstractRepresentationType.
+            All relevant intermediate and final results are printed to screen (stdout). Nothing is returned.
+
+    `Basics.perform(representation::Atomic.Representation; output=true)`  
+        ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
+            specifications of the representation but can easily accessed by the keys of this dictionary.
+    """
+    function Basics.generate(representation::Atomic.Representation; output::Bool=false)
+        results = Basics.generate(representation.repType, representation; output=output)
+        
+        Defaults.warn(PrintWarnings)
+        Defaults.warn(ResetWarnings)
+        println(" ")
+        return( results )
+    end
+
+
+
+    """
+    `Basics.generate(repType::Atomic.CiExpansion, representation::Atomic.Representation)`  
+        ... to generate a configuration-interaction expansion for a single level symmetry and based on a set of reference configurations
+            and a number of pre-specified steps. All relevant intermediate and final results are printed to screen (stdout). 
+            Nothing is returned.
+
+    `Basics.generate(repType::Atomic.CiExpansion, representation::Atomic.Representation; output=true)`  
+        ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
+            specifications of the computations but can easily accessed by the keys of this dictionary.
+    """
+    function Basics.generate(repType::Atomic.CiExpansion, rep::Atomic.Representation; output::Bool=false)
+        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        nModel    = rep.nuclearModel
+        orbitals  = repType.applyOrbitals
+        
+        # Generate a list of relativistic configurations and  CSF's for the given subshell list
+        relconfList = ConfigurationR[]
+        for  conf in rep.refConfigs
+            wa = Basics.generate("configuration list: relativistic", conf)
+            append!( relconfList, wa)
+        end
+        ##x if  false    for  i = 1:length(relconfList)    println(">> include ", relconfList[i])    end   end
+        subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+        ##x Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
+        csfList = CsfR[]
+        for  relconf in relconfList
+            newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
+            append!( csfList, newCsfs)
+        end
+        
+        # Generate all level symmetries that need to be taken into account
+        if     repType.settings.selectSymmetriesCI      symmetries = repType.selectedSymmetriesCI
+        else   symmetries = LevelSymmetry[]
+            for csf in csfList
+                if      LevelSymmetry(csf.J, csf.parity)  in  symmetries
+                else    push!( symmetries, LevelSymmetry(csf.J, csf.parity) )
+                end
+            end
+        end
+        println("*** Level symmetries = $symmetries ")
+
+        # The asfSettings only define the CI part and are partly derived from the CiSettings
+        asfSettings = AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
+                                  true, repType.settings.breitCI, NoneQed(), "methodCI", LSjjSettings(false), 
+                                  repType.settings.selectLevelsCI, repType.settings.selectedLevelsCI, 
+                                  repType.settings.selectSymmetriesCI, repType.settings.selectedSymmetriesCI) 
+        
+        basis      = Basics.generateBasis(rep.refConfigs, symmetries, repType.excitations)
+        basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )  
+        # Test that all orbitals are available 
+        for  subshell in  basis.subshells   
+            if   !(haskey(orbitals, subshell))  error("No orbital available for subshell $subshell ")     end
+        end
+        multiplet  = Basics.performCI(basis,  nModel, rep.grid, asfSettings; printout=true) 
+        if output    results = Base.merge( results, Dict("CI multiplet" => Multiplet("CI multiplet:", multiplet.levels)) )              end
+        
+        return( results )
+    end
+
+
+
+    """
+    `Basics.generate(repType::Atomic.RasExpansion, representation::Atomic.Representation)`  
+        ... to generate a restricted active-space expansion for a single level symmetry and based on a set of reference configurations
+            and a number of pre-specified steps. All relevant intermediate and final results are printed to screen (stdout). 
+            Nothing is returned.
+
+    `Basics.generate(repType::Atomic.RasExpansion, representation::Atomic.Representation; output=true)`  
+        ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
+            specifications of the computations but can easily accessed by the keys of this dictionary.
+    """
+    function Basics.generate(repType::Atomic.RasExpansion, rep::Atomic.Representation; output::Bool=false)
+        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        nModel   = rep.nuclearModel
+        # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
+        asfSettings    = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
+                                        ## all further details are specified for each step
+        priorBasis     = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+        priorMultiplet = Basics.performCI(priorBasis, nModel, rep.grid, asfSettings; printout=true)
+        nuclearPot     = Nuclear.nuclearPotential(nModel, rep.grid)
+        ## electronicPot  = Basics.compute("radial potential: Dirac-Fock-Slater", rep.grid, priorMultiplet.levels[1].basis)
+        ## meanPot        = Basics.add(nuclearPot, electronicPot)
+        subshellList   = Basics.extractRelativisticSubshellList(rep)             ## extract all subshells that occur in the RAS computation
+        startOrbitals  = Basics.generateOrbitalsForPotential(rep.grid, nuclearPot, subshellList)  ## generate a spectrum of sufficient size
+        if output    results = Base.merge( results, Dict("reference multiplet" => Multiplet("Reference multiplet:", priorMultiplet.levels) ) )  end
+
+        # The asfSettings only define the CI part of the RAS steps and partly derived from the RasSettings
+        asfSettings = AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
+                                  true, repType.settings.breitCI, NoneQed(), "methodCI", LSjjSettings(true), 
+                                  repType.settings.selectLevelsCI, repType.settings.selectedLevelsCI, false, LevelSymmetry[] ) 
+        
+        # Now, cycle over all steps of the RasExpansion
+        for (istep, step)  in  enumerate(repType.steps)
+            println("")
+            printstyled("++ Compute the orbitals, orbitals and multiplet for step $istep ... \n", color=:light_green)
+            printstyled("--------------------------------------------------------------      \n", color=:light_green)
+            basis      = Basics.generateBasis(rep.refConfigs, [repType.symmetry], step)
+            orbitals   = Basics.generateOrbitalsForBasis(basis, step.frozenShells, priorMultiplet.levels[1].basis, startOrbitals)
+            basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )  
+            basis      = Basics.performSCF(basis, nModel, rep.grid, step.frozenShells, repType.settings; printout=true)
+            multiplet  = Basics.performCI(basis,  nModel, rep.grid, asfSettings; printout=true) 
+            if output    results = Base.merge( results, Dict("step"*string(istep) => Multiplet("Multiplet:", multiplet.levels)) )              end
+            priorMultiplet = multiplet
+        end
+        
+        return( results )
+    end
+    
+    
 
     """
     `Basics.generate("condensed multiplet: by single weight", multiplet::Multiplet)`  
@@ -357,12 +489,12 @@ module BascisGenerate
 
 
     """
-    `Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetry::LevelSymmetry, step::Atomic.RasStep)`  
+    `Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetries::Array{LevelSymmetry,1}, step::Atomic.RasStep)`  
         ... generates the CSF basis for the given reference configurations and single, double, ... excitations of
             electrons from the corresponding fromShells --> toShells. A basis::Basis is returned but without a valid
             representation of the radial orbitals
     """
-    function Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetry::LevelSymmetry, step::Atomic.RasStep)
+    function Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetries::Array{LevelSymmetry,1}, step::Atomic.RasStep)
         # Single excitations
         if      step.seFrom == Shell[]  ||  step.seTo == Shell[]    confSingles = Configuration[]
         else    confSingles = Basics.generateConfigurations(refConfigs, step.seFrom, step.seTo)
@@ -374,7 +506,7 @@ module BascisGenerate
         end
         # Triple excitations
         if      step.teFrom == Shell[]  ||  step.teTo == Shell[]    confTriples = Configuration[]
-        else    confTriples = Basics.generateConfigurations(refConfigs, step.teFrom, step.teTo)
+        else    confTriples = Basics.generateConfigurations(refConfigs,      step.teFrom, step.teTo)
                 confTriples = Basics.generateConfigurations(confTriples,     step.teFrom, step.teTo)
                 confTriples = Basics.generateConfigurations(confTriples,     step.teFrom, step.teTo)
         end
@@ -412,7 +544,7 @@ module BascisGenerate
         csfList = CsfR[]
         for  relconf in relconfList
             newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
-            for  csf in newCsfs     if  csf.J == symmetry.J  &&  csf.parity == symmetry.parity   push!(csfList, csf)   end   end
+            for  csf in newCsfs     if  LevelSymmetry(csf.J, csf.parity) in symmetries   push!(csfList, csf)   end   end
             ##x append!( csfList, newCsfs)
         end
 
@@ -429,7 +561,7 @@ module BascisGenerate
         
         basis = Basis(true, NoElectrons, subshellList, csfList, coreSubshellList, Dict{Subshell, Orbital}())
         
-        println("Construct a basis with $(length(basis.csfs)) CSF for J^P = $symmetry with $(length(basis.subshells)) subshells: " *
+        println("Construct a basis with $(length(basis.csfs)) CSF for J^P = $symmetries with $(length(basis.subshells)) subshells: " *
                 "$(basis.subshells[1])  $(basis.subshells[2]) ...  $(basis.subshells[end-1])  $(basis.subshells[end])")
         return( basis )
     end

@@ -1225,8 +1225,8 @@ module  RacahAlgebra
         return( rexList )
     end
     
-    include("inc-module-RacahAlgebra-special.jl")
-    include("inc-module-RacahAlgebra-sumrules.jl")
+    include("module-RacahAlgebra-inc-special.jl")
+    include("module-RacahAlgebra-inc-sumrules.jl")
 
 end # module
 

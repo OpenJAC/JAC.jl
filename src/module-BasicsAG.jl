@@ -530,19 +530,19 @@ module BasicsAG
 
 
     """
-    `Basics.extractRelativisticSubshellList(comp::Atomic.RasComputation)`  
-        ... extract all (relativistic) subshells that (will) contribute to the given RAS computations, and for which (start) 
+    `Basics.extractRelativisticSubshellList(rep::Atomic.Representation)`  
+        ... extract all (relativistic) subshells that (will) contribute to the given RAS expansion, and for which (start) 
             orbitals will be needed in course of the computation. A subshellList::Array{Subshell,1} is returned.
     """
-    function Basics.extractRelativisticSubshellList(comp::Atomic.RasComputation)
+    function Basics.extractRelativisticSubshellList(rep::Atomic.Representation)
         # First extract all shells, then unique this list and, finally, convert in corresponding subshells
         shellList = Shell[]
         
-        for  conf in comp.refConfigs
+        for  conf in rep.refConfigs
             for  (k,v) in conf.shells   push!( shellList, k)    end
         end
         
-        for step in comp.steps
+        for step in rep.repType.steps
             append!( shellList, step.seFrom);    append!( shellList, step.seTo)    
             append!( shellList, step.deFrom);    append!( shellList, step.deTo)   
             append!( shellList, step.teFrom);    append!( shellList, step.teTo)    
