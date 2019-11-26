@@ -1,17 +1,18 @@
 
 #
-println("Al) Test of the GreenFunction module for a given list of bound-state configurations.")
+println("Aq) Test of the Green(function) expansion.")
 
-@warn("\n\n !!! This example does not work properly at present !!! \n\n")
+name          = "Lithium 1s^2 2s ground configuration"
+refConfigs    = [Configuration("[He] 2s")]
+greenSettings = GreenSettings(5, [0, 1, 2], true, false, Int64[])
 #
-setDefaults("print summary: open", "zzz-GreenFunction.sum")
-wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[Green], 
-                        configs=[Configuration("[Ne] 3s^2 3p^6")],
-                        greenSettings=GreenFunction.Settings(GreenFunction.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(), 
-                                                             5, [0, 1, 2], [LevelSymmetry(1//2,Basics.plus), LevelSymmetry(1//2,Basics.plus)], 
-                                                             true, false, Int64[]) )
+wa          = Representation(name, Nuclear.Model(8.), Radial.Grid("grid: exponential"), refConfigs, 
+                             GreenExpansion( Atomic.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(), 
+                                             [LevelSymmetry(1//2, Basics.plus), LevelSymmetry(3//2, Basics.plus), 
+                                              LevelSymmetry(1//2, Basics.minus), LevelSymmetry(3//2, Basics.minus)], 3, greenSettings) )
+println(wa)
 
-wb = perform(wa)
-setDefaults("print summary: close", "")
+wb = generate(wa, output=true)
+
 
 

@@ -6,7 +6,7 @@
 module BasicsAG
 
     using Printf,  LinearAlgebra, ..AngularMomentum, ..Atomic, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..LSjj, ..ManyElectron, 
-                  ..PhotoEmission, ..Radial
+                  ..PhotoEmission, ..Radial, ..TableStrings
     
     export recastAG
 
@@ -344,6 +344,75 @@ module BasicsAG
         return( nothing )
     end
 
+    
+    
+    """
+    `Basics.display(stream::IO, configs::Array{Configuration,1})`  
+        ... displays the generated list of configurations in a compact form; nothing is returned in this case.
+    """
+    function  Basics.display(stream::IO, configs::Array{Configuration,1})
+        println(" ")
+        println("  Generated list of (non-relativistic) configurations that contribute to the representation:")
+        ## println(" ")
+        println("  ", TableStrings.hLine(85))
+        for  i = 1:length(configs)
+            sa = string("(", i, ")" );    sa = TableStrings.flushright(9, sa, na=3);   sa = sa * string(configs[i])
+            println(sa)
+        end 
+        println("  ", TableStrings.hLine(85))
+        
+        return( nothing )
+    end
+
+    
+    
+    """
+    `Basics.display(stream::IO, orbitals::Dict{Subshell, Orbital})`  
+        ... displays the (generated)  orbitals in a neat and compact form; nothing is returned in this case.
+    """
+    function  Basics.display(stream::IO, orbitals::Dict{Subshell, Orbital})
+        println(stream, " ")
+        println(stream, "  Relativistic orbitals:")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(62))
+        println(stream, "   Subshell   isBound   energy [a.u.]     energy " * TableStrings.inUnits("energy") * "   st-grid ")
+        println(stream, "  ", TableStrings.hLine(62))
+        #
+        for  sh  in Defaults.GBL_STANDARD_SUBSHELL_LIST
+            if haskey(orbitals, sh)
+                v = orbitals[sh]
+                sen_au = @sprintf("%.8e", v.energy)
+                sen    = @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", v.energy))
+                sa     = "     $sh    $(v.isBound)   " * sen_au * "   " * sen * "   $(v.useStandardGrid)"
+                println(sa)
+            end
+        end 
+        println("  ", TableStrings.hLine(62))
+        
+        return( nothing )
+    end
+
+    
+    
+    """
+    `Basics.display(stream::IO, channels::Array{Atomic.GreenChannel,1})`  
+        ... displays the (generated Green function)  channels in a neat and compact form; nothing is returned in this case.
+    """
+    function  Basics.display(stream::IO, channels::Array{Atomic.GreenChannel,1})
+        println(stream, " ")
+        println(stream, "  Green function channels:")
+        println(stream, " ")
+        for  channel in channels
+            energies = Float64[]
+            for  level in channel.gMultiplet.levels   push!(energies, level.energy)  end
+            minenergy = minimum(energies);    maxenergy = maximum(energies)
+            println("  Channel with $(channel.symmetry) symmetry, $(length(channel.gMultiplet.levels)) levels and energies [Hartree]:" *
+                    " $minenergy ... $maxenergy")
+        end
+        
+        return( nothing )
+    end
+
 
     """
     `Basics.excludeDoubles(confList::Array{Configuration,1})`  
@@ -530,11 +599,39 @@ module BasicsAG
 
 
     """
-    `Basics.extractRelativisticSubshellList(rep::Atomic.Representation)`  
-        ... extract all (relativistic) subshells that (will) contribute to the given RAS expansion, and for which (start) 
+    `Basics.extractRelativisticSubshellList(confList::Array{Configuration,1})`  
+        ... extract all (relativistic) subshells that (will) contribute to the given configuration list, and for which (start) 
             orbitals will be needed in course of the computation. A subshellList::Array{Subshell,1} is returned.
     """
-    function Basics.extractRelativisticSubshellList(rep::Atomic.Representation)
+    function Basics.extractRelativisticSubshellList(confList::Array{Configuration,1})
+        # First extract all shells, then unique this list and, finally, convert in corresponding subshells
+        shellList = Shell[]
+        
+        for  conf in confList
+            for  (k,v) in conf.shells   push!( shellList, k)    end
+        end
+        
+        shellList = unique(shellList)
+        ##x println("ee shellList = $shellList ")
+        subshellList = Subshell[]
+        
+        for  sh in shellList    
+            if  sh.l == 0    push!( subshellList, Subshell(sh.n, -1))
+            else             push!( subshellList, Subshell(sh.n, sh.l));    push!( subshellList, Subshell(sh.n, -sh.l -1))
+            end
+        end
+        
+        println(">> Generated subshell list:  $subshellList ")
+        return( subshellList )
+    end
+
+
+    """
+    `Basics.extractRelativisticSubshellList(rep::Representation)`  
+        ... extract all (relativistic) subshells that (will) contribute to the given configuration list, and for which (start) 
+            orbitals will be needed in course of the computation. A subshellList::Array{Subshell,1} is returned.
+    """
+    function Basics.extractRelativisticSubshellList(rep::Representation)
         # First extract all shells, then unique this list and, finally, convert in corresponding subshells
         shellList = Shell[]
         

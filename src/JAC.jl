@@ -60,13 +60,13 @@ export AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, An
        estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate,
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, 
-       generate, Green, GreenFunction, getDefaults, Green, Gui,
+       generate, GreenSettings, GreenChannel, GreenExpansion, getDefaults, Green, Gui,
        Hfs, HighHarmonic, HFS, HydrogenicIon,
        interpolate, integrate, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, InternalConversion, Isotope, IsotopeShift, 
        Kronecker,
        LandeZeeman, LandeJ,  LandeF, Level, LevelSymmetry, LSjj, LSjjSettings,
-       ManyElectron, Model, modify, MultiPhotonDeExcitation, MultiPhotonDoubleIon, MultiPhotonIonization, MultipoleMoment, 
-       MultipolePolarizibility, Multiplet, 
+       ManyElectron, MeanFieldSettings, MeanFieldBasis, Model, modify, MultiPhotonDeExcitation, MultiPhotonDoubleIon, 
+       MultiPhotonIonization, MultipoleMoment, MultipolePolarizibility, Multiplet, 
        NoAmplitude, NoProcess, Nuclear, NoneQed, NoProperty, 
        Orbital, 
        perform, provide, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation, PeriodicTable,
@@ -120,7 +120,7 @@ include("module-LandeZeeman.jl")
 include("module-AlphaVariation.jl")
 include("module-FormFactor.jl")
 include("module-DecayYield.jl")
-include("module-GreenFunction.jl")
+##x include("module-GreenFunction.jl")
 include("module-CloseCoupling.jl")
 include("module-MultipolePolarizibility.jl")
 include("module-PlasmaShift.jl")

@@ -8,15 +8,15 @@ module Atomic
     using Interact
     using ..Basics, ..Radial, ..ManyElectron, ..Nuclear
     using ..Einstein, ..Hfs, ..IsotopeShift, ..PlasmaShift, ..LandeZeeman, ..AlphaVariation, ..FormFactor, ..DecayYield,
-          ..GreenFunction,  ..MultipolePolarizibility,
-          ..PhotoEmission, ..PhotoIonization, ..PhotoExcitation, ..PhotoRecombination, 
+          ..MultipolePolarizibility, ..PhotoEmission, ..PhotoIonization, ..PhotoExcitation, ..PhotoRecombination, 
           ..AutoIonization, ..Dielectronic, ..ImpactExcitation, ..CoulombExcitation, ..CoulombIonization,
           ..PhotoExcitationFluores, ..PhotoExcitationAutoion, ..RayleighCompton, ..MultiPhotonDeExcitation,
           ..PhotoIonizationFluores, ..PhotoIonizationAutoion, ..ImpactExcitationAutoion, ..RadiativeAuger, 
           ..MultiPhotonIonization, ..MultiPhotonDoubleIon, ..InternalConversion
           ##x , ..ElectricDipoleMoment
 
-export  CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, Representation
+export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, 
+        GreenSettings, GreenChannel, GreenExpansion, Representation
 
     include("../src/module-Atomic-inc-Representation.jl")
     
@@ -43,7 +43,7 @@ export  CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, Representat
         + alphaSettings                  ::AlphaVariation.Settings       ... Settings for alpha-variation parameter calculations.
         + einsteinSettings               ::Einstein.Settings             ... Settings for Einstein coefficient calculations.
         + formSettings                   ::FormFactor.Settings           ... Settings for atomic form factor calculations.
-        + greenSettings                  ::GreenFunction.Settings        ... Settings for approximate Green function calculations.
+        ##x + greenSettings                  ::GreenFunction.Settings        ... Settings for approximate Green function calculations.
         + hfsSettings                    ::Hfs.Settings                  ... Settings for hyperfine parameter calculations.
         + isotopeSettings                ::IsotopeShift.Settings         ... Settings for isotope shift parameter calculations.
         + plasmaSettings                 ::PlasmaShift.Settings          ... Settings for plasma-shift calculations.
@@ -77,7 +77,7 @@ export  CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, Representat
         alphaSettings                  ::AlphaVariation.Settings
         einsteinSettings               ::Einstein.Settings
         formSettings                   ::FormFactor.Settings
-        greenSettings                  ::GreenFunction.Settings
+        ##x greenSettings                  ::GreenFunction.Settings
         hfsSettings                    ::Hfs.Settings
         isotopeSettings                ::IsotopeShift.Settings
         plasmaSettings                 ::PlasmaShift.Settings
@@ -109,7 +109,7 @@ export  CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, Representat
                     Configuration[], AsfSettings(),
                     Configuration[], AsfSettings(),
                     Configuration[], AsfSettings(),
-                    AlphaVariation.Settings(), Einstein.Settings(), FormFactor.Settings(), GreenFunction.Settings(), 
+                    AlphaVariation.Settings(), Einstein.Settings(), FormFactor.Settings(), ##x GreenFunction.Settings(), 
                     Hfs.Settings(), 
                     IsotopeShift.Settings(), PlasmaShift.Settings(), MultipolePolarizibility.Settings(), 
                     DecayYield.Settings(),  LandeZeeman.Settings(), 
@@ -126,7 +126,7 @@ export  CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, Representat
          intermediateConfigs::Array{Configuration,1} = Configuration[], intermediateAsfSettings::AsfSettings = AsfSettings(), 
          finalConfigs::Array{Configuration,1} = Configuration[], finalAsfSettings::AsfSettings = AsfSettings(), 
          alphaSettings::AlphaVariation.Settings = AlphaVariation.Settings(), einsteinSettings::Einstein.Settings = Einstein.Settings(), 
-         formSettings::FormFactor.Settings = FormFactor.Settings(), greenSettings::GreenFunction.Settings = GreenFunction.Settings(), 
+         formSettings::FormFactor.Settings = FormFactor.Settings(), ##x greenSettings::GreenFunction.Settings = GreenFunction.Settings(), 
          hfsSettings::Hfs.Settings = Hfs.Settings(),
          isotopeSettings::IsotopeShift.Settings = IsotopeShift.Settings(), plasmaSettings::PlasmaShift.Settings = PlasmaShift.Settings(), 
          polaritySettings::MultipolePolarizibility.Settings = MultipolePolarizibility.Settings(), 
@@ -144,7 +144,7 @@ export  CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, Representat
                          alphaSettings::AlphaVariation.Settings = AlphaVariation.Settings(), 
                          einsteinSettings::Einstein.Settings = Einstein.Settings(), 
                          formSettings::FormFactor.Settings = FormFactor.Settings(), 
-                         greenSettings::GreenFunction.Settings = GreenFunction.Settings(), 
+                         ##x greenSettings::GreenFunction.Settings = GreenFunction.Settings(), 
                          hfsSettings::Hfs.Settings = Hfs.Settings(),
                          isotopeSettings::IsotopeShift.Settings = IsotopeShift.Settings(), 
                          plasmaSettings::PlasmaShift.Settings = PlasmaShift.Settings(), 

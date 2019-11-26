@@ -33,6 +33,30 @@ module BascisGenerate
 
 
     """
+    `Basics.generate(repType::Atomic.MeanFieldBasis, representation::Atomic.Representation)`  
+        ... to generate a mean-field basis (representation) for a set of reference configurations; all relevant intermediate 
+            and final results are printed to screen (stdout). Nothing is returned.
+
+    `Basics.generate(repType::Atomic.MeanFieldBasis, representation::Atomic.Representation; output=true)`  
+        ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
+            specifications of the representation but can easily accessed by the keys of this dictionary.
+    """
+    function Basics.generate(repType::Atomic.MeanFieldBasis, rep::Atomic.Representation; output::Bool=false)
+        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        nModel    = rep.nuclearModel
+
+        # The asfSettings only define the SCF part and are partly derived from the MeanFieldSettings
+        asfSettings = AsfSettings(AsfSettings(); methodScf=repType.settings.methodScf) 
+        
+        basis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+        if output    results = Base.merge( results, Dict("mean-field basis" => basis) )          end
+        
+        return( results )
+    end
+
+
+
+    """
     `Basics.generate(repType::Atomic.CiExpansion, representation::Atomic.Representation)`  
         ... to generate a configuration-interaction expansion for a single level symmetry and based on a set of reference configurations
             and a number of pre-specified steps. All relevant intermediate and final results are printed to screen (stdout). 
@@ -137,6 +161,70 @@ module BascisGenerate
             priorMultiplet = multiplet
         end
         
+        return( results )
+    end
+
+
+
+    """
+    `Basics.generate(repType::Atomic.GreenExpansion, representation::Atomic.Representation)`  
+        ... to generate a Green (function) expansion for a given approach and excitation scheme of the electron,
+            based on a set of reference configurations, a list of level symmetries as well as for given settings.
+            All relevant intermediate and final results are printed to screen (stdout). Nothing is returned.
+
+    `Basics.generate(repType::Atomic.GreenExpansion, representation::Atomic.Representation; output=true)`  
+        ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
+            specifications of the representation but can easily accessed by the keys of this dictionary.
+    """
+    function Basics.generate(repType::Atomic.GreenExpansion, rep::Atomic.Representation; output::Bool=false)
+        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        nModel    = rep.nuclearModel
+        settings  = repType.settings
+        # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
+        asfSettings   = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
+                                       ## all further details are specified for each step
+        refBasis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+        refMultiplet  = Basics.performCI(refBasis, nModel, rep.grid, asfSettings; printout=true)
+        nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
+        electronicPot = Basics.compute("radial potential: Dirac-Fock-Slater", rep.grid, refBasis)
+        meanPot       = Basics.add(nuclearPot, electronicPot)
+        
+        println("")
+        printstyled("Compute an approximate Green function expansion ... \n", color=:light_green)
+        printstyled("--------------------------------------------------- \n", color=:light_green)
+        
+        channels = Atomic.GreenChannel[]
+        
+        # Generate all (non-relativistic) configurations from the bound configurations due to the given excitation scheme 
+        confList = Basics.generateConfigurationsForExcitationScheme(rep.refConfigs, repType.excitationScheme, settings.nMax, settings.lValues)
+        # Print (if required) information about the generated configuration list
+        if  settings.printBeforeComputation    Basics.display(stdout, confList)    end
+        
+        # Generate shell list abd a full single-electron spectrum for this potential
+        subshellList = Basics.extractRelativisticSubshellList(confList)                      ## extract all subshells that occur in confList
+        orbitals     = Basics.generateOrbitalsForPotential(rep.grid, meanPot, subshellList)  ## generate a spectrum of sufficient size
+        Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
+        Basics.display(stdout, orbitals)
+
+        # The asfSettings only define the CI part of the Green channels and are partly derived from the GreenSettings
+        asfSettings = AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
+                                  true, false, NoneQed(), "methodCI", LSjjSettings(false), 
+                                  settings.selectLevels, settings.selectedLevels, false, LevelSymmetry[] ) 
+        
+        # Cycle over all selected level symmetries to generate the requested channels
+        for  levelSymmetry  in  repType.levelSymmetries
+            basis      = Basics.generateBasis(confList, [levelSymmetry])
+            basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )  
+            multiplet  = Basics.computeMultipletForGreenApproach(repType.approach, basis, nModel, rep.grid, asfSettings; printout=true) 
+            push!( channels, GreenChannel( levelSymmetry, multiplet) )
+        end        
+        
+        # Print all results to screen
+        Basics.display(stdout, channels)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        if  printSummary    Basics.display(iostream, channels)         end
+        
+        if output    results = Base.merge( results, Dict("Green channels" => channels) )   end
         return( results )
     end
     
@@ -489,6 +577,49 @@ module BascisGenerate
 
 
     """
+    `Basics.generateBasis(confList::Array{Configuration,1}, symmetries::Array{LevelSymmetry,1})`  
+        ... generates the CSF basis for the given configuration list and level symmetries; a basis::Basis is returned but 
+            without a valid representation of the radial orbitals.
+    """
+    function Basics.generateBasis(confList::Array{Configuration,1}, symmetries::Array{LevelSymmetry,1})
+        #
+        relconfList = ConfigurationR[]
+        for  conf in confList
+            wa = Basics.generate("configuration list: relativistic", conf)
+            append!( relconfList, wa)
+        end
+        subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+        Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
+
+        # Generate the relativistic CSF's for the given subshell list
+        csfList = CsfR[]
+        for  relconf in relconfList
+            newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
+            for  csf in newCsfs     if  LevelSymmetry(csf.J, csf.parity) in symmetries   push!(csfList, csf)   end   end
+        end
+        #
+        if length(csfList) == 0     error("There are no CSF with $symmetries in the given configuration list.")      end
+
+        # Determine the number of electrons and the list of coreSubshells
+        NoElectrons      = sum( csfList[1].occupation )
+        coreSubshellList = Subshell[]
+        for  k in 1:length(subshellList)
+            mocc = Basics.subshell_2j(subshellList[k]) + 1;    is_filled = true
+            for  csf in csfList
+                if  csf.occupation[k] != mocc    is_filled = false;    break   end
+            end
+            if   is_filled    push!( coreSubshellList, subshellList[k])    end
+        end
+        
+        basis = Basis(true, NoElectrons, subshellList, csfList, coreSubshellList, Dict{Subshell, Orbital}())
+        
+        println("Construct a basis with $(length(basis.csfs)) CSF for J^P = $symmetries with $(length(basis.subshells)) subshells: " *
+                "$(basis.subshells[1])  $(basis.subshells[2]) ...  $(basis.subshells[end-1])  $(basis.subshells[end])")
+        return( basis )
+    end
+
+
+    """
     `Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetries::Array{LevelSymmetry,1}, step::Atomic.RasStep)`  
         ... generates the CSF basis for the given reference configurations and single, double, ... excitations of
             electrons from the corresponding fromShells --> toShells. A basis::Basis is returned but without a valid
@@ -628,14 +759,14 @@ module BascisGenerate
 
     """
     `Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.DeExciteSingleElectron, 
-                                                    nMax::Int64, lValues::Array{Int64,1})`  
+                                                      nMax::Int64, lValues::Array{Int64,1})`  
         ... generates a list of non-relativistic configurations for the given (reference) confs and the excitation scheme. 
             All orbitals in standard order are considered up to maxShell = (n_max, l_max).
     """
     function Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.DeExciteSingleElectron, 
-                                                            nMax::Int64, lValues::Array{Int64,1})
-        confList = Configuration[];    NoElectrons = confs[1].NoElectrons
-        shellList   = Basics.generateShellList(confs, nMax, lValues)
+                                                              nMax::Int64, lValues::Array{Int64,1})
+        confList  = Configuration[];    NoElectrons = confs[1].NoElectrons
+        shellList = Basics.generateShellList(confs, nMax, lValues)
         
         # Create all configurations with single excitations from the given list of configurations
         for  conf in confs
@@ -646,18 +777,18 @@ module BascisGenerate
                     ##x print("newShells = $newShells   fromShell = $fromShell    toShell = $toShell")
                     if      fromShell == toShell    
                     elseif  haskey(conf.shells, toShell )   fromOcc = occ;   toOcc = conf.shells[toShell]
-                            if  fromOcc - 1 < 0                        println("");    continue    end
-                            if  toOcc   + 1 > 2*(2*toShell.l + 1)      println("");    continue    end
+                            if  fromOcc - 1 < 0                        println("..");    continue    end
+                            if  toOcc   + 1 > 2*(2*toShell.l + 1)      println("..");    continue    end
                             newShells[fromShell] = newShells[fromShell] - 1
                             newShells[toShell]   = newShells[toShell] + 1
                     else    fromOcc = occ
-                            if  fromOcc - 1 < 0                        println("");    continue    end
+                            if  fromOcc - 1 < 0                        println("..");    continue    end
                             newShells[fromShell] = newShells[fromShell] - 1
                             newShells = Base.merge( newShells, Dict( toShell => 1))
                     end
                     # Add a new configuration
                     push!( confList, Configuration( newShells, NoElectrons))
-                    println("  newconf = $(Configuration( newShells, NoElectrons))")
+                    if  true  println(">> Generate $(Configuration( newShells, NoElectrons))")   end
                 end
             end
         end
@@ -668,7 +799,7 @@ module BascisGenerate
             if  conf in newConfList    continue;    else    push!( newConfList,  conf)    end
         end
         nafter      = length(newConfList)
-        println("Basics.generateConfigurationsForExcitationScheme():: Number of configs is $nbefore (before) and $nafter (after).")
+        println(">> Number of generated configurations for $exScheme is: $nbefore (before) and $nafter (after).")
 
         #
         ##x push!( newConfList, confs[1])
@@ -852,7 +983,7 @@ module BascisGenerate
                 if  n >= l + 1  && Shell(n,l) in shellList    push!( newShellList, Shell(n,l))     end    
             end
         end
-        println("newShellList = $newShellList ")
+        println(">> From configurations generated shell list $newShellList ")
         
         return( newShellList )
     end

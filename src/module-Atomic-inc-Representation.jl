@@ -13,16 +13,55 @@
     abstract type  AbstractRepresentationType                           end
 
     
-    
     """
-    `struct  Atomic.MeanFieldBasis`  
-        ... a struct to represent (and generate) a mean-field basis and, especially, a set of (mean-field) orbitals.
+    `struct  Atomic.MeanFieldSettings`  
+        ... a struct for defining the settings for a mean-field basis (orbital) representation.
 
-        + levelsScf            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
+        + methodScf            ::String             ... Specify the SCF method: ["meanDFS", "meanHS"].
     """
-    struct         MeanFieldBasis  <:  AbstractRepresentationType
-        levelsScf              ::Array{Int64,1}
-     end
+    struct  MeanFieldSettings
+        methodScf              ::String
+    end
+
+    """
+    `Atomic.MeanFieldSettings()`  ... constructor for setting the default values.
+    """
+    function MeanFieldSettings()
+    	MeanFieldSettings("meanDFS")
+    end
+    
+    
+    # `Base.show(io::IO, settings::MeanFieldSettings)`  ... prepares a proper printout of the settings::MeanFieldSettings.
+    function Base.show(io::IO, settings::MeanFieldSettings)
+    	  println(io, "methodScf:                $(settings.methodScf)  ")
+    end
+
+
+    """
+    `struct  Atomic.MeanFieldBasis  <:  AbstractRepresentationType`  
+        ... a struct to represent (and generate) a mean-field orbital basis.
+
+        + settings         ::Atomic.MeanFieldSettings      ... Settings for the given mean-field orbital basis
+    """
+    struct   MeanFieldBasis  <:  AbstractRepresentationType
+        settings           ::Atomic.MeanFieldSettings
+    end
+
+
+    # `Base.string(basis::MeanFieldBasis)`  ... provides a String notation for the variable basis::MeanFieldBasi.
+    function Base.string(basis::MeanFieldBasis)
+        sa = "Mean-field orbital basis for a $(basis.settings.methodScf) SCF field:"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, basis::MeanFieldBasis)`  ... prepares a proper printout of the basis::MeanFieldBasis.
+    function Base.show(io::IO, basis::MeanFieldBasis)
+        sa = Base.string(basis);       print(io, sa, "\n")
+    end
+
+    
+    
     ### RAS: Restricted-Active-Space expansions ##################################################################################
     """
     `struct  Atomic.RasSettings`  
@@ -271,7 +310,7 @@
 
 
     """
-    `struct  Atomic.CiExpansion`  
+    `struct  Atomic.CiExpansion  <:  AbstractRepresentationType`  
         ... a struct to represent (and generate) a configuration-interaction representation.
 
         + applyOrbitals    ::Dict{Subshell, Orbital}
@@ -302,20 +341,141 @@
 
 
      
-
-    #==
     ### Green function representation ##################################################################################
-    """
-    `struct  Atomic.GreenFunction`  
-        ... a struct to represent (and generate) an approximate (many-electron) Green functions; this struct enables one to specify further
-            about the excitation scheme and the particular approximation used.
 
-        + levelsScf            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
     """
-    struct         GreenFunction   <:  AbstractRepresentationType
-        levelsScf              ::Array{Int64,1}
-     end
-    ==#
+    `abstract type Atomic.AbstractGreenApproach` 
+        ... defines an abstract and a number of singleton types for approximating a many-electron Green
+            function expansion for calculating second-order processes.
+
+      + struct SingleCSFwithoutCI        
+        ... to approximate the many-electron multiplets (gMultiplet) for every chosen level symmetry by dealing with each CSF 
+            independently, and without any configuration interaction. This is a fast but also very rough approximation.
+            
+      + struct CoreSpaceCI                
+        ... to approximate the many-electron multiplets (gMultiplet) by taking the electron-electron interaction between the 
+            bound-state orbitals into account.
+            
+      + struct DampedSpaceCI                
+        ... to approximate the many-electron multiplets (gMultiplet) by taking the electron-electron interaction for all, the 
+            bound and free-electron, orbitals into account but by including a damping factor e^{tau*r}, tau > 0 into the 
+            electron densities rho_ab (r) --> rho_ab (r) * e^{tau*r}
+    """
+    abstract type  AbstractGreenApproach                                  end
+    struct         SingleCSFwithoutCI  <:  Atomic.AbstractGreenApproach   end
+    struct         CoreSpaceCI         <:  Atomic.AbstractGreenApproach   end
+    struct         DampedSpaceCI       <:  Atomic.AbstractGreenApproach   end
+
+   
+    """
+    `struct  Atomic.GreenSettings`  
+        ... defines a type for defining the details and parameters of the approximate Green (function) expansion.
+
+        + nMax                     ::Int64            ... maximum principal quantum numbers of (single-electron) 
+                                                          excitations that are to be included into the representation.
+        + lValues                  ::Array{Int64,1}   ... List of (non-relativistic) orbital angular momenta for which
+                                                          (single-electron) excitations are to be included.
+        + printBeforeComputation   ::Bool             ... True if a short overview is to be printed before. 
+        + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
+        + selectedLevels           ::Array{Int64,1}   ... List of selected levels.
+    """
+    struct GreenSettings 
+        nMax                       ::Int64
+        lValues                    ::Array{Int64,1}
+        printBeforeComputation     ::Bool 
+        selectLevels               ::Bool
+        selectedLevels             ::Array{Int64,1}
+    end 
+
+
+    """
+    `Atomic.GreenSettings()`  ... constructor for an `empty` instance of Atomic.GreenSettings.
+    """
+    function GreenSettings()
+        Settings( 0, Int64[], LevelSymmetry[], false, false, Int64[])
+    end
+
+
+    # `Base.show(io::IO, settings::Atomic.GreenSettings)`  ... prepares a proper printout of the variable settings::Atomic.GreenSettings.
+    function Base.show(io::IO, settings::Atomic.GreenSettings) 
+        println(io, "nMax:                     $(settings.nMax)  ")
+        println(io, "lValues:                  $(settings.lValues)  ")
+        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "selectLevels:             $(settings.selectLevels)  ")
+        println(io, "selectedLevels:           $(settings.selectedLevels)  ")
+    end
+
+
+    """
+    `struct  Atomic.GreenChannel`  
+        ... defines a type for a single symmetry channel of an (approximate) Green (function) expansion.
+
+        + symmetry          ::LevelSymmetry    ... Level symmetry of this part of the representation.
+        + gMultiplet        ::Multiplet        ... Multiplet of (scattering) levels of this symmetry.
+    """
+    struct GreenChannel 
+        symmetry            ::LevelSymmetry
+        gMultiplet          ::Multiplet
+    end   
+
+
+    """
+    `Atomic.GreenChannel()`  ... constructor for an `empty` instance of Atomic.GreenChannel.
+    """
+    function GreenChannel()
+        GreenChannel( LevelSymmetry(0, Basics.plus), ManyElectron.Multiplet)
+    end
+
+
+    # `Base.show(io::IO, channel::Atomic.GreenChannel)`  ... prepares a proper printout of the variable channel::Atomic.GreenChannel.
+    function Base.show(io::IO, channel::Atomic.GreenChannel) 
+        println(io, "symmetry:                $(channel.symmetry)  ")
+        println(io, "gMultiplet:              $(channel.gMultiplet)  ")
+    end
+
+
+    """
+    `struct  Atomic.GreenExpansion  <:  AbstractRepresentationType`  
+        ... defines a type to keep an (approximate) Green (function) expansion that is associated with a given set of reference
+            configurations.
+
+        + approach          ::Atomic.AbstractGreenApproach    ... Approach used to approximate the representation.
+        + excitationScheme  ::Basics.AbstractExcitationScheme ... Applied excitation scheme w.r.t. refConfigs. 
+        + levelSymmetries   ::Array{LevelSymmetry,1}          ... Total symmetries J^P to be included into Green expansion.
+        + NoElectrons       ::Int64                           ... Number of electrons.
+        + settings          ::Atomic.GreenSettings            ... settings for the Green (function) expansion.
+    """
+    struct GreenExpansion  <:  AbstractRepresentationType
+        approach            ::Atomic.AbstractGreenApproach
+        excitationScheme    ::Basics.AbstractExcitationScheme 
+        levelSymmetries     ::Array{LevelSymmetry,1}
+        NoElectrons         ::Int64 
+        settings            ::Atomic.GreenSettings
+    end   
+
+
+    """
+    `Atomic.GreenExpansion()`  ... constructor for an `empty` instance of Atomic.GreenExpansion.
+    """
+    function GreenExpansion()
+        GreenExpansion( Atomic.SingleCSFwithoutCI(), Basics.NoExcitationScheme(), LevelSymmetry[], 0, Atomic.GreenSettings())
+    end
+
+
+    # `Base.string(expansion::GreenExpansion)`  ... provides a String notation for the variable expansion::GreenExpansion.
+    function Base.string(expansion::GreenExpansion)
+        sa = "Green (function) expansion in $(expansion.approach) approach and for excitation scheme  $(expansion.excitationScheme)," *
+             "\nincluding (Green function channels with) symmetries $(expansion.levelSymmetries):"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, expansion::GreenExpansion)`  ... prepares a proper printout of the (individual step of computations) expansion::GreenExpansion.
+    function Base.show(io::IO, expansion::GreenExpansion)
+        sa = Base.string(expansion);       print(io, sa, "\n")
+        println(io, "... and the current settings:")
+        println(io, "$(expansion.settings)  ")
+    end
 
 
 

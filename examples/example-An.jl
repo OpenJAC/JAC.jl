@@ -12,7 +12,7 @@ println("wa = $wa")
 
 wb = generate(wa, output=true)
 
-orbitals    = wa.orbitals
+orbitals    = wb["mean-field basis"].orbitals
 ciSettings  = CiSettings(true, false, Int64[], false, LevelSymmetry[] )
 from        = [Shell("2s")]
 #
@@ -21,9 +21,9 @@ to          = [Shell("2s"), Shell("2p")]
 excitations = RasStep()
 #             RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
 #
-wb          = Representation(name, Nuclear.Model(8.), Radial.Grid("grid: exponential"), refConfigs, 
+wc          = Representation(name, Nuclear.Model(8.), Radial.Grid("grid: exponential"), refConfigs, 
                              CiExpansion(orbitals, excitations, ciSettings) )
-println("wb = $wb")
+println("wc = $wc")
 
-wb = generate(wa, output=true)
+wd = generate(wc, output=true)
 

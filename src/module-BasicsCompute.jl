@@ -5,7 +5,8 @@
 """
 module BascisCompute
 
-    using Printf, JAC, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..PlasmaShift, ..Radial
+    using Printf, JAC, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, 
+          ..Nuclear, ..PlasmaShift, ..Radial
     
     export compute
 
@@ -319,6 +320,60 @@ module BascisCompute
             for  i = 1:length(basis.csfs)   q = q + basis.csfs[i].occupation[nsh]    end
         end
         return( q/length(basis.csfs) )
+    end
+
+
+
+    """
+    `Basics.computeMultipletForGreenApproach(approach::Atomic.SingleCSFwithoutCI, basis::Basis, nModel::Nuclear.Model, 
+                                             grid::Radial.Grid, asfSettings::AsfSettings; printout::Bool=false)`  
+        ... computes the (Green channel) multiplet from the given basis with the SingleCSFwithoutCI approach.
+    """
+    function Basics.computeMultipletForGreenApproach(approach::Atomic.SingleCSFwithoutCI, basis::Basis, nModel::Nuclear.Model, 
+                                                     grid::Radial.Grid, asfSettings::AsfSettings; printout::Bool=false)
+        # In the SingleCSFwithoutCI, only the diagonal ME are included into the Hamiltonian matrix
+        # (1) Check that all CSF have same (level) symmetry; issue an error if not
+        sym = LevelSymmetry(0, Basics.plus)
+        for  (r, csf)  in enumerate(basis.csfs)
+            if     r == 1   sym  = LevelSymmetry( csf.J, csf.parity )
+            elseif          sym != LevelSymmetry( csf.J, csf.parity )  error("stop a")
+            end
+        end
+        
+        # (2) Compute Hamiltonian matrix with only diagonal ME with given settings; issue a message which flags are considered.
+        if  asfSettings.qedModel != NoneQed()   println("   ++ No QED terms included for this Green function approach.")               end
+        if  asfSettings.jjLS.makeIt             println("   ++ No jj-LS transformation included for this Green function approach.")    end
+        potential = Nuclear.nuclearPotential(nModel, grid)
+        ncsf      = length(basis.csfs);    matrix = zeros(Float64, ncsf, ncsf)
+        for  (r, csf)  in enumerate(basis.csfs)
+            wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[r])
+            me = 0.
+            for  coeff in wa[1]
+                jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
+                me = me + coeff.T * sqrt( jj + 1) * RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
+            end
+
+            for  coeff in wa[2]
+                if  asfSettings.coulombCI    
+                    me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                 basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   end
+                if  asfSettings.breitCI
+                    me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                               basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)     end
+            end
+            matrix[r,r] = me
+        end
+        
+        # (3) Diagonalize matrix with Julia;   assign a multiplet 
+        eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+        levels = Level[]
+        for  ev = 1:length(eigen.values)
+            level = Level( sym.J, AngularM64(sym.J.num//sym.J.den), sym.parity, 0, eigen.values[ev], 0., true, basis, eigen.vectors[ev] ) 
+            push!( levels, level)
+        end
+        
+        multiplet = Multiplet("SingleCSFwithoutCI multiplet for $sym", levels)
+        return( multiplet )
     end
 
 

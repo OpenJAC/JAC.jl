@@ -1344,6 +1344,7 @@ module Basics
     function compute                                        end
     function computeDiracEnergy                             end
     function computeMeanSubshellOccupation                  end
+    function computeMultipletForGreenApproach               end
     function computePotentialCoreHartree                    end
     function computePotentialHartree                        end
     function computePotentialHartreeSlater                  end
