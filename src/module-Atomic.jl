@@ -204,7 +204,8 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
                     initialConfigs, initialAsfSettings, 
                     intermediateConfigs, intermediateAsfSettings,
                     finalConfigs, finalAsfSettings,
-                    alphaSettings, einsteinSettings, formSettings, greenSettings, hfsSettings, isotopeSettings, plasmaSettings, 
+                    alphaSettings, einsteinSettings, formSettings, ##x greenSettings, 
+                    hfsSettings, isotopeSettings, plasmaSettings, 
                     polaritySettings, yieldSettings, zeemanSettings, 
                     ##x amplitude, ampSettings, 
                     process, procSettings) 
@@ -229,7 +230,7 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
         println(io, "alphaSettings:                    computation.alphaSettings  ")
         println(io, "einsteinSettings:                 computation.einsteinSettings  ")
         println(io, "formSettings:                     computation.formSettings  ")
-        println(io, "greenSettings:                    computation.greenSettings  ")
+        ##x println(io, "greenSettings:                    computation.greenSettings  ")
         println(io, "hfsSettings:                      computation.hfsSettings  ")
         println(io, "isotopeSettings:                  computation.isotopeSettings  ")
         println(io, "plasmaSettings:                   computation.plasmaSettings  ")
@@ -273,7 +274,7 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
         intermediateConfigs = comp.intermediateConfigs;       intermediateAsfSettings = comp.intermediateAsfSettings
         finalConfigs        = comp.finalConfigs;              finalAsfSettings        = comp.finalAsfSettings
         alphaSettings       = comp.alphaSettings;             einsteinSettings        = comp.einsteinSettings
-        formSettings        = comp.formSettings;              greenSettings           = comp.greenSettings
+        formSettings        = comp.formSettings;              ##x greenSettings           = comp.greenSettings
         hfsSettings         = comp.hfsSettings;               isotopeSettings         = comp.isotopeSettings
         plasmaSettings      = comp.plasmaSettings;            polaritySettings        = comp.polaritySettings
         yieldSettings       = comp.yieldSettings;             zeemanSettings          = comp.zeemanSettings 
@@ -306,7 +307,8 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
                     initialConfigs, initialAsfSettings, 
                     intermediateConfigs, intermediateAsfSettings, 
                     finalConfigs, finalAsfSettings, 
-                    alphaSettings, einsteinSettings, formSettings, greenSettings, hfsSettings, isotopeSettings, plasmaSettings, 
+                    alphaSettings, einsteinSettings, formSettings, ##x greenSettings, 
+                    hfsSettings, isotopeSettings, plasmaSettings, 
                     polaritySettings, yieldSettings, zeemanSettings, 
                     process, processSettings) )
         #

@@ -74,10 +74,10 @@ module BascisPerform
                                                         multiplet, nModel, computation.grid, computation.yieldSettings)     
                 if output    results = Base.merge( results, Dict("Fluorescence and AutoIonization yield outcomes:" => outcome) )   end
             end
-            if  JAC.Green          in computation.properties   
-                outcome = JAC.GreenFunction.computeRepresentation(computation.configs, multiplet, nModel, computation.grid, computation.greenSettings)         
-                if output    results = Base.merge( results, Dict("Green function outcomes:" => outcome) )         end
-            end
+            ##x if  JAC.Green          in computation.properties   
+            ##x    outcome = JAC.GreenFunction.computeRepresentation(computation.configs, multiplet, nModel, computation.grid, computation.greenSettings)         
+            ##x    if output    results = Base.merge( results, Dict("Green function outcomes:" => outcome) )         end
+            ##x end
             if  JAC.Polarity       in computation.properties   
                 outcome = JAC.MultipolePolarizibility.computeOutcomes(multiplet, nModel, computation.grid, computation.polaritySettings)         
                 if output    results = Base.merge( results, Dict("Polarizibility outcomes:" => outcome) )         end
