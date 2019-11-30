@@ -163,7 +163,7 @@ radiation field that are to be applied in these calculations:
     perform(comp::Atomic.Computation)
 ```
 
-This example is discussed also in one of the [tutorials](tutorials/06-compute-Fe-X-spectrum.ipynb) below.
+This example is discussed also in one of the [tutorials](tutorials/09-compute-Fe-X-spectrum.ipynb) below.
     
     
 ## Tutorials
@@ -185,7 +185,7 @@ In order to modify the cell-output of the notebooks and to better print *wide ta
 * [Compute the K-LL Auger rates of atomic neon](tutorials/10-compute-Ne-KLL-Auger-spectrum.ipynb)
 * [Compute K-LL Auger rates in a Debye-Hückel plasma](tutorials/11-compute-Auger-rates-in-DH-plasma.ipynb)
 * [Compute the 2s, 2p photoionization of argon](tutorials/12-compute-Ar-2s-2p-photoionization.ipynb)
-* Several other tutorials are available, and this list will be extended with the further development of JAC.
+* Several [other tutorials](tutorials/) are available, and this list will be extended with the further development of JAC.
 
 
 
@@ -229,7 +229,7 @@ A few further suggestions for extending and improving JAC can be found in sectio
 
 ## Developers:
 
-* Stephan Fritzsche,  s.fritzsche@gsi.de
+* Stephan Fritzsche,  s.fritzsche@gsi.de (U Jena, Germany)
 
 
 
