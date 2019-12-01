@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FortranFiles = "c58ffaec-ab22-586d-bfc5-781a99fd0b10"
 GSL = "92c85e6c-cbff-5e0c-80f7-495c94daaecd"
 GaussQuadrature = "d54b0c1a-921d-58e0-8e36-89d8069c0969"
