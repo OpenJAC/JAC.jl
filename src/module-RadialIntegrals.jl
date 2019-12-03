@@ -56,6 +56,38 @@ module  RadialIntegrals
             error("stop a")
         end
     end
+  
+  
+    """
+    `RadialIntegrals.GrantIabDamped(tau::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, potential::Radial.Potential)`  
+        ... computes the (radial) single-electron energy integral:
+
+            `I(ab) = <a | h_D | b> = delta_{kappa_a, kappa_b} int_0^infty dr  [ c Q_a ( d/dr + kappa_a/r ) P_b +  c P_a (-d/dr + kappa_a/r ) Q_b
+                                                                                - 2c^2 Q_a Q_b + V_nuc (r) (P_a P_b + Q_a Q_b) ] * exp(-tau * r)`
+                                  
+            for the orbitals a and b on the grid. potential.Zr must provide the effective nuclear charge Z(r) on this grid.
+    """
+    function GrantIabDamped(tau::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, potential::Radial.Potential)
+        if  a.subshell.kappa != b.subshell.kappa    return( 0 )    end
+        kappa = a.subshell.kappa;                   Zr = potential.Zr
+        mtp   = min(size(a.P, 1), size(b.P, 1));    wc = Defaults.getDefaults("speed of light: c")
+        
+        # Distinguish the radial integration for different grid definitions
+        if  grid.mesh == MeshGrasp
+            error("stop a")
+        elseif  grid.mesh == MeshGL
+            wa = 0.
+            for  i = 2:mtp   
+               wa = wa + grid.wr[i] * (  wc * a.Q[i] * (b.Pprime[i] + kappa/grid.r[i] * b.P[i])  
+                                       - wc * a.P[i] * (b.Qprime[i] - kappa/grid.r[i] * b.Q[i]) 
+                                       - 2wc^2 * a.Q[i] * b.Q[i]
+                                       - Zr[i] * (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) / grid.r[i]  ) * exp(-tau * grid.r[i])
+            end
+            return( wa )
+        else
+            error("stop b")
+        end
+    end
 
 
     """
@@ -557,6 +589,42 @@ module  RadialIntegrals
             return( wa )
         else
             error("stop a")
+        end
+    end
+  
+  
+    """
+    `RadialIntegrals.SlaterRk_2dim_Damped(tau::Float64, k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
+        ... computes the (relativistic) Slater integral
+
+         R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d) * exp(-tau * r - tau*s)
+
+         of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration scheme; a 
+         value::Float64 is returned.
+    """
+    function SlaterRk_2dim_Damped(tau::Float64, k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Radial.Orbital, grid::Radial.Grid)
+        function ul(r :: Float64, s :: Float64) :: Float64
+            if     r <= s    return( r^k/s^(k+1) )
+            elseif r > s     return( s^k/r^(k+1) )
+            end
+        end
+    
+        
+        # Distinguish the radial integration for different grid definitions
+        if  grid.mesh == MeshGrasp
+            error("stop a")
+        elseif  grid.mesh == MeshGL
+            mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
+            wa = 0.
+            for  r = 2:mtp_ac
+                for  s = 2:mtp_bd   wa = wa + (a.P[r] * c.P[r] + a.Q[r] * c.Q[r]) * ul(grid.r[r], grid.r[s]) * 
+                                              (b.P[s] * d.P[s] + b.Q[s] * d.Q[s]) * grid.wr[r] * grid.wr[s]  *
+                                              exp(- tau * grid.r[r] - tau * grid.r[s] )                         end
+            end
+            ## println("Test: SlaterRk_2dim(); wa = $wa")
+            return( wa )
+        else
+            error("stop b")
         end
     end
   

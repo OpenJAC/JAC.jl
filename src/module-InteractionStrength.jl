@@ -276,6 +276,17 @@ module InteractionStrength
 
 
     """
+    `InteractionStrength.XL_BreitDamped(tau::Float64, L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  
+        ... computes the the effective Breit interaction strengths X^L_Breit (abcd) for given rank L and orbital functions 
+            a, b, c and d  at the given grid. A value::Float64 is returned. At present, only the zero-frequency Breit 
+            interaction is taken into account.
+    """
+    function XL_BreitDamped(tau::Float64, L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
+        error("stop a")
+    end
+
+
+    """
     `InteractionStrength.XL_Breit0_coefficients(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital)`  
         ... evaluates the combinations and pre-coefficients for the zero-frequency Breit interaction  
             X^L_Breit (omega=0.; abcd) for given rank L and orbital functions a, b, c and d. A list of coefficients 
@@ -453,6 +464,34 @@ module InteractionStrength
         ##x if abs( (za-zb)/za ) > 1.0e-12    println("XL_Coulomb: Slater  za = $za   zb = $zb  ")   end
 
         XL_Coulomb = xc * RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid)
+        ##x XL_Coulomb = xc * RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
+        return( XL_Coulomb )
+    end
+
+
+    """
+    `InteractionStrength.XL_CoulombDamped(tau::Float64, L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  
+        ... computes the the effective Coulomb interaction strengths X^L_Coulomb (abcd) for given rank L and orbital functions 
+            a, b, c and d at the given grid. A value::Float64 is returned.
+    """
+    function XL_CoulombDamped(tau::Float64, L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
+        # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
+        la = Basics.subshell_l(a.subshell);    ja2 = Basics.subshell_2j(a.subshell)
+        lb = Basics.subshell_l(b.subshell);    jb2 = Basics.subshell_2j(b.subshell)
+        lc = Basics.subshell_l(c.subshell);    jc2 = Basics.subshell_2j(c.subshell)
+        ld = Basics.subshell_l(d.subshell);    jd2 = Basics.subshell_2j(d.subshell)
+
+        if  AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
+            rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
+            return( 0. )
+        end
+        xc = AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
+        if   rem(L,2) == 1    xc = - xc    end 
+        
+        ##x za = RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid);   zb = RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
+        ##x if abs( (za-zb)/za ) > 1.0e-12    println("XL_Coulomb: Slater  za = $za   zb = $zb  ")   end
+
+        XL_Coulomb = xc * RadialIntegrals.SlaterRk_2dim_Damped(tau::Float64, L, a, b, c, d, grid)
         ##x XL_Coulomb = xc * RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
         return( XL_Coulomb )
     end

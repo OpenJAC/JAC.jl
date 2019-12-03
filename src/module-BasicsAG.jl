@@ -6,7 +6,7 @@
 module BasicsAG
 
     using Printf,  LinearAlgebra, ..AngularMomentum, ..Atomic, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..LSjj, ..ManyElectron, 
-                  ..PhotoEmission, ..Radial, ..TableStrings
+                  ..PhotoEmission, ..Radial, ..RadialIntegrals, ..TableStrings
     
     export recastAG
 
@@ -367,27 +367,54 @@ module BasicsAG
     
     
     """
-    `Basics.display(stream::IO, orbitals::Dict{Subshell, Orbital})`  
-        ... displays the (generated)  orbitals in a neat and compact form; nothing is returned in this case.
+    `Basics.display(stream::IO, orbitals::Dict{Subshell, Orbital}, grid::Radial.Grid; longTable::Bool=false)`  
+        ... displays the (generated)  orbitals in a neat and compact form; the default (longTable==false) just prints the subshell,
+            isbound and energies. If longTable==true, it prints in addition the r_max, <r>, ... values.  nothing is returned.
     """
-    function  Basics.display(stream::IO, orbitals::Dict{Subshell, Orbital})
+    function  Basics.display(stream::IO, orbitals::Dict{Subshell, Orbital}, grid::Radial.Grid; longTable::Bool=false)
         println(stream, " ")
         println(stream, "  Relativistic orbitals:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(62))
-        println(stream, "   Subshell   isBound   energy [a.u.]     energy " * TableStrings.inUnits("energy") * "   st-grid ")
-        println(stream, "  ", TableStrings.hLine(62))
-        #
-        for  sh  in Defaults.GBL_STANDARD_SUBSHELL_LIST
-            if haskey(orbitals, sh)
-                v = orbitals[sh]
-                sen_au = @sprintf("%.8e", v.energy)
-                sen    = @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", v.energy))
-                sa     = "     $sh    $(v.isBound)   " * sen_au * "   " * sen * "   $(v.useStandardGrid)"
-                println(sa)
-            end
-        end 
-        println("  ", TableStrings.hLine(62))
+        if  longTable
+            println(stream, "  ", TableStrings.hLine(92))
+            println(stream, "   Subshell   isBound   energy [a.u.]     energy " * TableStrings.inUnits("energy") * 
+                            "   st-grid    r_max [a.u.]   <r> [a.u.]  ")
+            println(stream, "  ", TableStrings.hLine(92))
+            #
+            for  sh  in Defaults.GBL_STANDARD_SUBSHELL_LIST
+                if haskey(orbitals, sh)
+                    v = orbitals[sh]
+                    sen_au = @sprintf("%.8e", v.energy)
+                    sen    = @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", v.energy))
+                    if !v.useStandardGrid   error("Non-standard grids not yet implemented.")    end
+                    p2 = Float64[];    for  p in v.P    push!(p2, p*p)   end
+                    imax   = findmax(p2)
+                    ##x println("length-p2 = $(length(p2)) imax =  $imax ")
+                    rmax   = grid.r[imax[2]]
+                    rmean  = RadialIntegrals.rkDiagonal(1, v, v, grid)
+                    srmax  = @sprintf("%.5e", rmax)
+                    srmean = @sprintf("%.5e", rmean)
+                    sa     = "     $sh    $(v.isBound)   " * sen_au * "   " * sen * "   $(v.useStandardGrid)     " * srmax * "    " * srmean
+                    println(sa)
+                end
+            end 
+            println("  ", TableStrings.hLine(92))
+        else
+            println(stream, "  ", TableStrings.hLine(62))
+            println(stream, "   Subshell   isBound   energy [a.u.]     energy " * TableStrings.inUnits("energy") * "   st-grid ")
+            println(stream, "  ", TableStrings.hLine(62))
+            #
+            for  sh  in Defaults.GBL_STANDARD_SUBSHELL_LIST
+                if haskey(orbitals, sh)
+                    v = orbitals[sh]
+                    sen_au = @sprintf("%.8e", v.energy)
+                    sen    = @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", v.energy))
+                    sa     = "     $sh    $(v.isBound)   " * sen_au * "   " * sen * "   $(v.useStandardGrid)"
+                    println(sa)
+                end
+            end 
+            println("  ", TableStrings.hLine(62))
+        end
         
         return( nothing )
     end

@@ -325,12 +325,13 @@ module BascisCompute
 
 
     """
-    `Basics.computeMultipletForGreenApproach(approach::Atomic.SingleCSFwithoutCI, basis::Basis, nModel::Nuclear.Model, 
-                                             grid::Radial.Grid, asfSettings::AsfSettings; printout::Bool=false)`  
+    `Basics.computeMultipletForGreenApproach(approach::Atomic.SingleCSFwithoutCI, basis::Basis, nModel::Nuclear.Model, grid::Radial.Grid, 
+                                             asfSettings::AsfSettings, greenSettings::GreenSettings; printout::Bool=false)`  
         ... computes the (Green channel) multiplet from the given basis with the SingleCSFwithoutCI approach.
     """
     function Basics.computeMultipletForGreenApproach(approach::Atomic.SingleCSFwithoutCI, basis::Basis, nModel::Nuclear.Model, 
-                                                     grid::Radial.Grid, asfSettings::AsfSettings; printout::Bool=false)
+                                                     grid::Radial.Grid, asfSettings::AsfSettings, greenSettings::GreenSettings; printout::Bool=false)
+        print("Compute a Green function multiplet in $approach approach ... ")
         # In the SingleCSFwithoutCI, only the diagonal ME are included into the Hamiltonian matrix
         # (1) Check that all CSF have same (level) symmetry; issue an error if not
         sym = LevelSymmetry(0, Basics.plus)
@@ -371,8 +372,133 @@ module BascisCompute
             level = Level( sym.J, AngularM64(sym.J.num//sym.J.den), sym.parity, 0, eigen.values[ev], 0., true, basis, eigen.vectors[ev] ) 
             push!( levels, level)
         end
+        println("done with $(length(levels)) levels")
         
         multiplet = Multiplet("SingleCSFwithoutCI multiplet for $sym", levels)
+        return( multiplet )
+    end
+
+
+
+    """
+    `Basics.computeMultipletForGreenApproach(approach::Atomic.CoreSpaceCI, basis::Basis, nModel::Nuclear.Model, grid::Radial.Grid, 
+                                             asfSettings::AsfSettings, greenSettings::GreenSettings; printout::Bool=false)`  
+        ... computes the (Green channel) multiplet from the given basis with the CoreSpaceCI approach in which the electron-electron 
+            interaction is taken into account only between the bound-state orbitals.
+    """
+    function Basics.computeMultipletForGreenApproach(approach::Atomic.CoreSpaceCI, basis::Basis, nModel::Nuclear.Model, 
+                                                     grid::Radial.Grid, asfSettings::AsfSettings, greenSettings::GreenSettings; printout::Bool=false)
+        print("Compute a Green function multiplet in $approach approach ... ")
+        # In the SingleCSFwithoutCI, only the diagonal ME are included into the Hamiltonian matrix
+        # (1) Check that all CSF have same (level) symmetry; issue an error if not
+        sym = LevelSymmetry(0, Basics.plus)
+        for  (r, csf)  in enumerate(basis.csfs)
+            if     r == 1   sym  = LevelSymmetry( csf.J, csf.parity )
+            elseif          sym != LevelSymmetry( csf.J, csf.parity )  error("stop a")
+            end
+        end
+        
+        # (2) Compute Hamiltonian matrix with only diagonal ME with given settings; issue a message which flags are considered.
+        if  asfSettings.qedModel != NoneQed()   println("   ++ No QED terms included for this Green function approach.")               end
+        if  asfSettings.jjLS.makeIt             println("   ++ No jj-LS transformation included for this Green function approach.")    end
+        potential = Nuclear.nuclearPotential(nModel, grid)
+        ncsf      = length(basis.csfs);    matrix = zeros(Float64, ncsf, ncsf)
+        for  (r, rcsf)  in enumerate(basis.csfs)
+            for  (s, scsf)  in enumerate(basis.csfs)
+                wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[s])
+                me = 0.
+                for  coeff in wa[1]
+                    jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
+                    if  basis.orbitals[coeff.a].isBound   &&   basis.orbitals[coeff.b].isBound
+                        me = me + coeff.T * sqrt( jj + 1) * RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
+                    end
+                end
+
+                for  coeff in wa[2]
+                    if  basis.orbitals[coeff.a].isBound   &&   basis.orbitals[coeff.b].isBound   && 
+                        basis.orbitals[coeff.c].isBound   &&   basis.orbitals[coeff.d].isBound
+                        if  asfSettings.coulombCI    
+                            me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                         basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   end
+                        if  asfSettings.breitCI
+                            me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                       basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)     end
+                    end
+                end
+                matrix[r,s] = me
+            end
+        end
+        
+        # (3) Diagonalize matrix with Julia;   assign a multiplet 
+        eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+        levels = Level[]
+        for  ev = 1:length(eigen.values)
+            level = Level( sym.J, AngularM64(sym.J.num//sym.J.den), sym.parity, 0, eigen.values[ev], 0., true, basis, eigen.vectors[ev] ) 
+            push!( levels, level)
+        end
+        println("done with $(length(levels)) levels")
+        
+        multiplet = Multiplet("CoreSpaceCI multiplet for $sym", levels)
+        return( multiplet )
+    end
+
+
+
+    """
+    `Basics.computeMultipletForGreenApproach(approach::Atomic.DampedSpaceCI, basis::Basis, nModel::Nuclear.Model, grid::Radial.Grid,
+                                             asfSettings::AsfSettings, greenSettings::GreenSettings; printout::Bool=false)`  
+        ... computes the (Green channel) multiplet from the given basis with the DampedSpaceCI approach in which the electron-electron 
+            interaction strength are all damped by the factor exp(- dampingTau * r).
+    """
+    function Basics.computeMultipletForGreenApproach(approach::Atomic.DampedSpaceCI, basis::Basis, nModel::Nuclear.Model, 
+                                                     grid::Radial.Grid, asfSettings::AsfSettings, greenSettings::GreenSettings; 
+                                                     printout::Bool=false)
+        print("Compute a Green function multiplet in $approach approach ... ")
+        # In the SingleCSFwithoutCI, only the diagonal ME are included into the Hamiltonian matrix
+        # (1) Check that all CSF have same (level) symmetry; issue an error if not
+        sym = LevelSymmetry(0, Basics.plus)
+        for  (r, csf)  in enumerate(basis.csfs)
+            if     r == 1   sym  = LevelSymmetry( csf.J, csf.parity )
+            elseif          sym != LevelSymmetry( csf.J, csf.parity )  error("stop a")
+            end
+        end
+        
+        # (2) Compute Hamiltonian matrix with only diagonal ME with given settings; issue a message which flags are considered.
+        if  asfSettings.qedModel != NoneQed()   println("   ++ No QED terms included for this Green function approach.")               end
+        if  asfSettings.jjLS.makeIt             println("   ++ No jj-LS transformation included for this Green function approach.")    end
+        potential = Nuclear.nuclearPotential(nModel, grid)
+        ncsf      = length(basis.csfs);    matrix = zeros(Float64, ncsf, ncsf);    tau = greenSettings.dampingTau
+        for  (r, rcsf)  in enumerate(basis.csfs)
+            for  (s, scsf)  in enumerate(basis.csfs)
+                wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[s])
+                me = 0.
+                for  coeff in wa[1]
+                    jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
+                    me = me + coeff.T * sqrt( jj + 1) * RadialIntegrals.GrantIabDamped(tau, basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
+                end
+
+                for  coeff in wa[2]
+                    if  asfSettings.coulombCI    
+                        me = me + coeff.V * InteractionStrength.XL_CoulombDamped(tau, coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                                basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   end
+                    if  asfSettings.breitCI
+                        me = me + coeff.V * InteractionStrength.XL_BreitDamped(tau, coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                              basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)     end
+                end
+                matrix[r,s] = me
+            end
+        end
+        
+        # (3) Diagonalize matrix with Julia;   assign a multiplet 
+        eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+        levels = Level[]
+        for  ev = 1:length(eigen.values)
+            level = Level( sym.J, AngularM64(sym.J.num//sym.J.den), sym.parity, 0, eigen.values[ev], 0., true, basis, eigen.vectors[ev] ) 
+            push!( levels, level)
+        end
+        println("done with $(length(levels)) levels")
+        
+        multiplet = Multiplet("DampedSpaceCI multiplet for $sym", levels)
         return( multiplet )
     end
 

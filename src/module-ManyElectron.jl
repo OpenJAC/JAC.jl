@@ -344,7 +344,6 @@ module ManyElectron
     	  println(io, "selectedLevelsCI:     $(settings.selectedLevelsCI)  ")
     	  println(io, "selectSymmetriesCI:   $(settings.selectSymmetriesCI)  ")
     	  println(io, "selectedSymmetriesCI: $(settings.selectedSymmetriesCI)  ")
-
     end
     
     

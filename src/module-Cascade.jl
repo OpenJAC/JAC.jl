@@ -21,10 +21,10 @@ module Cascade
         ... to evaluate the level structure and transitions of all involved levels in single-configuration approach but 
             by calculating all fine-structure resolved transitions.
     """
-    abstract type  AbstractApproach                   end
-    struct         AverageSCA  <:  AbstractApproach   end
-    struct         SCA         <:  AbstractApproach   end
-    struct         UserMCA     <:  AbstractApproach   end
+    abstract type  AbstractCascadeApproach                   end
+    struct         AverageSCA  <:  AbstractCascadeApproach   end
+    struct         SCA         <:  AbstractCascadeApproach   end
+    struct         UserMCA     <:  AbstractCascadeApproach   end
     
 
 
@@ -74,16 +74,16 @@ module Cascade
         + process          ::JBasics.AtomicProcess         ... Atomic process that 'acts' in this step of the cascade.
         + settings         ::Union{PhotoEmission.Settings, AutoIonization.Settings}        
                                                        ... Settings for this step of the cascade.
-        + initialConfs     ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state multiplet.
-        + finalConfs       ::Array{Configuration,1}    ... List of one or several configurations that define the final-state multiplet.
+        + initialConfigs   ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state multiplet.
+        + finalConfigs     ::Array{Configuration,1}    ... List of one or several configurations that define the final-state multiplet.
         + initialMultiplet ::Multiplet                 ... Multiplet of the initial-state levels of this step of the cascade.
         + finalMultiplet   ::Multiplet                 ... Multiplet of the final-state levels of this step of the cascade.
     """
     struct  Step
         process            ::Basics.AtomicProcess
         settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings}
-        initialConfs       ::Array{Configuration,1}
-        finalConfs         ::Array{Configuration,1}
+        initialConfigs     ::Array{Configuration,1}
+        finalConfigs       ::Array{Configuration,1}
         initialMultiplet   ::Multiplet
         finalMultiplet     ::Multiplet
     end 
@@ -101,8 +101,8 @@ module Cascade
     function Base.show(io::IO, step::Cascade.Step) 
         println(io, "process:                $(step.process)  ")
         println(io, "settings:               $(step.settings)  ")
-        println(io, "initialConfs:           $(step.initialConfs)  ")
-        println(io, "finalConfs:             $(step.finalConfs)  ")
+        println(io, "initialConfigs:         $(step.initialConfigs)  ")
+        println(io, "finalConfigs:           $(step.finalConfigs)  ")
         println(io, "initialMultiplet :      $(step.initialMultiplet )  ")
         println(io, "finalMultiplet:         $(step.finalMultiplet)  ")
     end
@@ -115,69 +115,114 @@ module Cascade
             carried out. Initially, this struct contains the physical metadata about the cascade to be calculated but gets enlarged 
             in course of the computation to keep also wave functions, level multiplets, etc.
 
-        + name               ::String                         ... A name for the cascade
-        + nuclearModel       ::Nuclear.Model                  ... Model, charge and parameters of the nucleus.
-        + grid               ::Radial.Grid                    ... The radial grid to be used for the computation.
-        + asfSettings        ::AsfSettings                    ... Provides the settings for the SCF process.
-        + approach           ::Cascade.AbstractApproach       ... Computational approach/model that is applied to generate and evaluate the 
-                                                                  cascade; possible approaches are: {'single-configuration', ...}
+        + name               ::String                          ... A name for the cascade
+        + nuclearModel       ::Nuclear.Model                   ... Model, charge and parameters of the nucleus.
+        + grid               ::Radial.Grid                     ... The radial grid to be used for the computation.
+        + asfSettings        ::AsfSettings                     ... Provides the settings for the SCF process.
+        + approach           ::Cascade.AbstractCascadeApproach ... Computational approach/model that is applied to generate and evaluate the 
+                                                                   cascade; possible approaches are: {'single-configuration', ...}
         + processes          ::Array{Basics.AtomicProcess,1}   ... List of the atomic processes that are supported and should be included into the 
-                                                                  cascade.
-        + initialConfs       ::Array{Configuration,1}         ... List of one or several configurations that contain the level(s) from which the 
-                                                                  cascade starts.
-        + initialLevels      ::Array{Tuple{Int64,Float64},1}  ... List of one or several (tupels of) levels together with their relative population 
+                                                                   cascade.
+        + initialConfs       ::Array{Configuration,1}          ... List of one or several configurations that contain the level(s) from which the 
+                                                                   cascade starts.
+        + initialLevels      ::Array{Tuple{Int64,Float64},1}   ... List of one or several (tupels of) levels together with their relative population 
                                                                   from which the cascade starts.
-        + maxElectronLoss    ::Int64                          ... (Maximum) Number of electrons in which the initial- and final-state 
-                                                                  configurations can differ from each other; this also determines the maximal steps 
-                                                                  of any particular decay path.
-        + NoShakeDisplacements ::Int64                        ... Maximum number of electron displacements due to shake-up or shake-down processes 
-                                                                  in any individual step of the cascade.
-        + shakeFromShells ::Array{Shell,1}                    ... List of shells from which shake transitions may occur.
-        + shakeToShells   ::Array{Shell,1}                    ... List of shells into which shake transitions may occur.
-        + steps           ::Array{Cascade.Step,1}             ... List of individual steps between well-defined atomic multiplets that are 
-                                                                  included into the cascade.
+        + maxElectronLoss    ::Int64                           ... (Maximum) Number of electrons in which the initial- and final-state 
+                                                                   configurations can differ from each other; this also determines the maximal steps 
+                                                                   of any particular decay path.
+        + NoShakeDisplacements ::Int64                         ... Maximum number of electron displacements due to shake-up or shake-down processes 
+                                                                   in any individual step of the cascade.
+        + shakeFromShells ::Array{Shell,1}                     ... List of shells from which shake transitions may occur.
+        + shakeToShells   ::Array{Shell,1}                     ... List of shells into which shake transitions may occur.
+        ## + steps           ::Array{Cascade.Step,1}              ... List of individual steps between well-defined atomic multiplets that are 
+        ##                                                           included into the cascade.
     """
     struct  Computation
         name                 ::String
         nuclearModel         ::Nuclear.Model
         grid                 ::Radial.Grid
         asfSettings          ::AsfSettings
-        approach             ::Union{Cascade.AbstractApproach}
+        approach             ::Cascade.AbstractCascadeApproach
         processes            ::Array{Basics.AtomicProcess,1}
-        initialConfs         ::Array{Configuration,1}
+        initialConfigs       ::Array{Configuration,1}
         initialLevels        ::Array{Tuple{Int64,Float64},1}
         maxElectronLoss      ::Int64
         NoShakeDisplacements ::Int64
         shakeFromShells      ::Array{Shell,1}
         shakeToShells        ::Array{Shell,1}
-        steps                ::Array{Cascade.Step,1}
+        ## steps                ::Array{Cascade.Step,1}
     end 
 
 
     """
-    `Cascade.Computation()`  ... constructor for an 'empty' instance of a Cascade.Computation.
+    `Cascade.Computation()`  ... constructor for an 'default' instance of a Cascade.Computation.
     """
     function Computation()
-        Computation("",  Nuclear.Model(0.), Radial.Grid(), AsfSettings(), averageSCA, [Auger], 
-                    Configuration[], [(0, 0.)], 0, 0, Shell[], Shell[], CascadeComputationStep[] )
+        Computation("Default cascade computation",  Nuclear.Model(10.), Radial.Grid(), AsfSettings(), AverageSCA(), [Radiative], 
+                    Configuration[], [(0, 0.)], 0, 0, Shell[], Shell[] )
     end
 
 
-    # `Base.show(io::IO, computation::Cascade.Computation)`  ... prepares a proper printout of the variable computation::Cascade.Computation.
-    function Base.show(io::IO, computation::Cascade.Computation) 
-        println(io, "name:                     $(computation.name)  ")
-        println(io, "nuclearModel:             $(computation.nuclearModel)  ")
-        println(io, "grid:                     $(computation.grid)  ")
-        println(io, "asfSettings:                computation.asfSettings  ")
-        println(io, "approach:                 $(computation.approach)  ")
-        println(io, "processes:                $(computation.processes)  ")
-        println(io, "initialConfs:             $(computation.initialConfs)  ")
-        println(io, "initialLevels:            $(computation.initialLevels)  ")
-        println(io, "maxElectronLoss:          $(computation.maxElectronLoss)  ")
-        println(io, "NoShakeDisplacements:     $(computation.NoShakeDisplacements)  ")
-        println(io, "shakeFromShells:          $(computation.shakeFromShells)  ")
-        println(io, "shakeToShells:            $(computation.shakeToShells)  ")
-        println(io, "steps:                    $(computation.steps)  ")
+    """
+    `Cascade.Computation(comp::Cascade.Computation;`
+        
+                name=..,               nuclearModel=..,             grid=..,              asfSettings=..,     
+                approach=..,           processes=..,                initialConfigs=..,    initialLevels=..,
+                maxElectronLoss=..,    NoShakeDisplacements=..,     shakeFromShells=..,   shakeToShells=.. )
+                
+        ... constructor for re-defining the computation::Cascade.Computation.
+    """
+    function Computation(comp::Cascade.Computation;                              
+        name::Union{Nothing,String}=nothing,                                  nuclearModel::Union{Nothing,Nuclear.Model}=nothing,
+        grid::Union{Nothing,Radial.Grid}=nothing,                             asfSettings::Union{Nothing,AsfSettings}=nothing,    
+        approach::Union{Nothing,Cascade.AbstractCascadeApproach}=nothing,     processes::Union{Nothing,Array{Basics.AtomicProcess,1}}=nothing,  
+        initialConfigs::Union{Nothing,Array{Configuration,1}}=nothing,        initialLevels::Union{Nothing,Array{Tuple{Int64,Float64},1}}=nothing,  
+        maxElectronLoss::Union{Nothing,Int64}=nothing,                        NoShakeDisplacements::Union{Nothing,Int64}=nothing,  
+        shakeFromShells::Union{Nothing,Array{Shell,1}}=nothing,               shakeToShells::Union{Nothing,Array{Shell,1}}=nothing ) 
+        ##x steps::Union{Nothing,Array{Cascade.Step,1}}=nothing )
+
+        if  name                 == nothing   namex                 = comp.name                    else  namex = name                                   end 
+        if  nuclearModel         == nothing   nuclearModelx         = comp.nuclearModel            else  nuclearModelx = nuclearModel                   end 
+        if  grid                 == nothing   gridx                 = comp.grid                    else  gridx = grid                                   end 
+        if  asfSettings          == nothing   asfSettingsx          = comp.asfSettings             else  asfSettingsx = asfSettings                     end 
+        if  approach             == nothing   approachx             = comp.approach                else  approachx = approach                           end 
+        if  processes            == nothing   processesx            = comp.processes               else  processesx = processes                         end 
+        if  initialConfigs       == nothing   initialConfigsx       = comp.initialConfigs          else  initialConfigsx = initialConfigs               end 
+        if  initialLevels        == nothing   initialLevelsx        = comp.initialLevels           else  initialLevelsx = initialLevels                 end 
+        if  maxElectronLoss      == nothing   maxElectronLossx      = comp.maxElectronLoss         else  maxElectronLossx = maxElectronLoss             end 
+        if  NoShakeDisplacements == nothing   NoShakeDisplacementsx = comp.NoShakeDisplacements    else  NoShakeDisplacementsx = NoShakeDisplacements   end 
+        if  shakeFromShells      == nothing   shakeFromShellsx      = comp.shakeFromShells         else  shakeFromShellsx = shakeFromShells             end 
+        if  shakeToShells        == nothing   shakeToShellsx        = comp.shakeToShells           else  shakeToShellsx = shakeToShells                 end 
+        ##x if  steps                == nothing   stepsx                = comp.steps                   else  stepsx = steps                                 end 
+    	
+    	Computation(namex, nuclearModelx, gridx, asfSettingsx, approachx, processesx, initialConfigsx, initialLevelsx, 
+    	            maxElectronLossx, NoShakeDisplacementsx, shakeFromShellsx, shakeToShellsx)
+    end
+
+
+    # `Base.string(comp::Cascade.Computation)`  ... provides a String notation for the variable comp::Cascade.Computation.
+    function Base.string(comp::Cascade.Computation)
+        sa = "Cascade computation   $(comp.name)  in $(comp.approach) approach  for Z = $(comp.nuclearModel.Z) and initial configurations: \n "
+        for  config  in  comp.initialConfigs    sa = sa * string(config) * ",  "     end
+        sa = sa * "\n Initial (levels, weights) are: "
+        for  ilevel  in  comp.initialLevels     sa = sa * string(ilevel) * ",  "     end
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, comp::Cascade.Computation)`  ... prepares a proper printout comp::Cascade.Computation.
+    function Base.show(io::IO, comp::Cascade.Computation)
+        sa = Base.string(comp)
+        sa = sa * "\n ... in addition, the following parameters/settings are defined: ";       print(io, sa, "\n")
+        println(io, "processes:                $(comp.processes)  ")
+        println(io, "maxElectronLoss:          $(comp.maxElectronLoss)  ")
+        println(io, "NoShakeDisplacements:     $(comp.NoShakeDisplacements)  ")
+        println(io, "shakeFromShells:          $(comp.shakeFromShells)  ")
+        println(io, "shakeToShells:            $(comp.shakeToShells)  ")
+        ##x println(io, "steps:                    $(comp.steps)  \n")
+        println(io, "nuclearModel:             $(comp.nuclearModel)  ")
+        println(io, "grid:                     $(comp.grid)  ")
+        println(io, "asfSettings:\n------------\n$(comp.asfSettings) ")
     end
 
 
@@ -214,33 +259,8 @@ module Cascade
     end
 
     
-    #==
     """
-    `@enum   Cascade.Property`  ... defines a enumeration for the various properties that can be obtained from the simulation of cascade data.
-
-        + IonDist               ... simulate the 'ion distribution' as it is found after all cascade processes are completed.
-        + FinalDist             ... simulate the 'final-level distribution' as it is found after all cascade processes are completed.
-        + DecayPathes           ... determine the major 'decay pathes' of the cascade.
-        + ElectronIntensity     ... simulate the electron-line intensities as function of electron energy.
-        + PhotonIntensity       ... simulate  the photon-line intensities as function of electron energy. 
-        + ElectronCoincidence   ... simulate electron-coincidence spectra.
-    """
-    @enum   Property    IonDist  FinalDist  DecayPathes  ElectronIntensity  PhotonIntensity  ElectronCoincidence
-
-
-    """
-    `@enum   Cascade.SimulationMethod`  ... defines a enumeration for the various methods that can be used to run the simulation of cascade data.
-
-        + ProbPropagation     ... to propagate the (occupation) probabilites of the levels until no further changes occur.
-        + MonteCarlo          ... to simulate the cascade decay by a Monte-Carlo approach of possible pathes (not yet considered).
-        + RateEquations       ... to solve the cascade by a set of rate equations (not yet considered).
-    """
-    @enum   SimulationMethod    ProbPropagation   MonteCarlo  RateEquations   ==#
-
-    
-    
-    """
-    `abstract type  Cascade.Property`  
+    `abstract type  Cascade.AbstractCascadeProperty`  
         ... defines an abstract and various singleton types for the different properties that can be obtained from the simulation of cascade data.
 
         + struct IonDist               ... simulate the 'ion distribution' as it is found after all cascade processes are completed.
@@ -250,27 +270,27 @@ module Cascade
         + struct PhotonIntensity       ... simulate  the photon-line intensities as function of electron energy. 
         + struct ElectronCoincidence   ... simulate electron-coincidence spectra.
     """
-    abstract type  Property                      end
-    struct   IonDist              <:  Property   end
-    struct   FinalDist            <:  Property   end
-    struct   DecayPathes          <:  Property   end
-    struct   ElectronIntensity    <:  Property   end
-    struct   PhotonIntensity      <:  Property   end
-    struct   ElectronCoincidence  <:  Property   end
+    abstract type  AbstractCascadeProperty                      end
+    struct   IonDist              <:  AbstractCascadeProperty   end
+    struct   FinalDist            <:  AbstractCascadeProperty   end
+    struct   DecayPathes          <:  AbstractCascadeProperty   end
+    struct   ElectronIntensity    <:  AbstractCascadeProperty   end
+    struct   PhotonIntensity      <:  AbstractCascadeProperty   end
+    struct   ElectronCoincidence  <:  AbstractCascadeProperty   end
 
 
     """
-    abstract type  Cascade.SimulationMethod`  
+    abstract type  Cascade.AbstractSimulationMethod`  
         ... defines a enumeration for the various methods that can be used to run the simulation of cascade data.
 
         + struct ProbPropagation     ... to propagate the (occupation) probabilites of the levels until no further changes occur.
         + struct MonteCarlo          ... to simulate the cascade decay by a Monte-Carlo approach of possible pathes (not yet considered).
         + struct RateEquations       ... to solve the cascade by a set of rate equations (not yet considered).
     """
-    abstract type  SimulationMethod                  end
-    struct   ProbPropagation  <:  SimulationMethod   end
-    struct   MonteCarlo       <:  SimulationMethod   end
-    struct   RateEquations    <:  SimulationMethod   end
+    abstract type  AbstractSimulationMethod                  end
+    struct   ProbPropagation  <:  AbstractSimulationMethod   end
+    struct   MonteCarlo       <:  AbstractSimulationMethod   end
+    struct   RateEquations    <:  AbstractSimulationMethod   end
 
 
     """
@@ -309,15 +329,50 @@ module Cascade
     """
     `struct  Cascade.Simulation`  ... defines a simulation on some given cascade (data).
 
-        + properties      ::Array{Cascade.Property,1}   ... Properties that are considered in this simulation of the cascade (data).
-        + method          ::Cascade.SimulationMethod    ... Method that is used in the cascade simulation; cf. Cascade.SimulationMethod.
-        + settings        ::Cascade.SimulationSettings  ... Settings for performing these simulations.
+        + name            ::String                                   ... Name of the simulation
+        + properties      ::Array{Cascade.AbstractCascadeProperty,1} ... Properties that are considered in this simulation of the cascade (data).
+        + method          ::Cascade.AbstractSimulationMethod         ... Method that is used in the cascade simulation; cf. Cascade.SimulationMethod.
+        + settings        ::Cascade.SimulationSettings               ... Settings for performing these simulations.
+        + cascadeData     ::Cascade.Data                             ... Date on which the simulations are performed
     """
     struct  Simulation
-        properties        ::Array{Cascade.Property,1}
-        method            ::Cascade.SimulationMethod
-        settings          ::Cascade.SimulationSettings
+        name              ::String
+        properties        ::Array{Cascade.AbstractCascadeProperty,1}
+        method            ::Cascade.AbstractSimulationMethod
+        settings          ::Cascade.SimulationSettings 
+        cascadeData       ::Cascade.Data 
     end 
+
+
+    """
+    `Cascade.Simulation()`  ... constructor for an 'default' instance of a Cascade.Simulation.
+    """
+    function Simulation()
+        Simulation("Default cascade simulation", Cascade.AbstractCascadeProperty[], Cascade.ProbPropagation(), 
+                   Cascade.SimulationSettings(), Cascade.Data() )
+    end
+
+
+    """
+    `Cascade.Computation(comp::Cascade.Computation;`
+        
+                name=..,               properties=..,             method=..,              settings=..,     cascadeData=.. )
+                
+        ... constructor for re-defining the computation::Cascade.Computation.
+    """
+    function Computation(sim::Cascade.Simulation;                              
+        name::Union{Nothing,String}=nothing,                                  properties::Union{Nothing,Array{Cascade.AbstractCascadeProperty,1}}=nothing,
+        method::Union{Nothing,Cascade.AbstractSimulationMethod}=nothing,      settings::Union{Nothing,Cascade.SimulationSettings}=nothing,    
+        cascadeData::Union{Nothing,Cascade.Data}=nothing )
+ 
+        if  name         == nothing   namex         = sim.name            else  namex = name                  end 
+        if  properties   == nothing   propertiesx   = sim.properties      else  propertiesx = properties      end 
+        if  method       == nothing   methodx       = sim.method          else  methodx = method              end 
+        if  settings     == nothing   settingsx     = sim.settings        else  settingsx = settings          end 
+        if  cascadeData  == nothing   cascadeDatax  = sim.cascadeData     else  cascadeDatax = cascadeData    end 
+    	
+    	Simulation(namex, propertiesx, methodx, settingsx, cascadeDatax)
+    end
 
 
     # `Base.show(io::IO, simulation::Cascade.Simulation)`  ... prepares a proper printout of the variable simulation::Cascade.Simulation.
@@ -538,7 +593,7 @@ module Cascade
     function displayInitialLevels(stream::IO, multiplet::Multiplet, initialLevels::Array{Tuple{Int64,Float64},1})
         println(stream, " ")
         println(stream, "* Initial levels of the given cascade, relative to the lowest, and their given occupation:")
-        println(stream, " ")
+        ##x println(stream, " ")
         println(stream, "  ", TableStrings.hLine(64))
         println(stream, "    Level  J Parity          Energy " * TableStrings.inUnits("energy") * "         rel. occupation ") 
         println(stream, "  ", TableStrings.hLine(64))
@@ -579,10 +634,10 @@ module Cascade
         for  i = 1:length(steps)
             sa = " " * TableStrings.flushright( 7, string(i); na=5)
             sa = sa  * TableStrings.flushleft( 11, string(steps[i].process); na=1)
-            sb = "";   for conf in steps[i].initialConfs   sb = sb * string(conf) * ", "    end
+            sb = "";   for conf in steps[i].initialConfigs   sb = sb * string(conf) * ", "    end
             sa = sa  * TableStrings.flushright( 5, string( length(steps[i].initialMultiplet.levels[1].basis.csfs) )*", "; na=0) 
             sa = sa  * TableStrings.flushleft( 50, sb[1:end-2]; na=4)
-            sb = "";   for conf in steps[i].finalConfs   sb = sb * string(conf) * ", "    end
+            sb = "";   for conf in steps[i].finalConfigs     sb = sb * string(conf) * ", "    end
             sa = sa  * TableStrings.flushright( 5, string( length(steps[i].finalMultiplet.levels[1].basis.csfs) )*", "; na=0) 
             sa = sa  * TableStrings.flushleft( 50, sb[1:end-2]; na=4)
             minEn = 1000.;   maxEn = -1000.;
@@ -610,7 +665,7 @@ module Cascade
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
         if    comp.approach == AverageSCA()
-            println("\n  In the cascade approach $(comp.approach), the following assumptions/simplifications are made: ")
+            println("\n* In the cascade approach $(comp.approach), the following assumptions/simplifications are made: ")
             println("    + orbitals from the initial multiplet are applied throughout; ")
             println("    + all blocks (multiplets) are generated from single-CSF levels and without any configuration mixing even in the SC; ")
             println("    + only E1 dipole transitions are applied in all radiative decay stets; ")
@@ -778,14 +833,17 @@ module Cascade
         #
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
-        println("\n  Electron configuration used in the cascade:")
+        println("\n* Electron configuration used in the cascade:")
+        @warn "*** Limit to just two configurations for each No. of electrons. ***"                        ## delete nxx
         if  printSummary   println(iostream, "\n* Electron configuration used in the cascade:")    end
         confList = Configuration[];   nc = 0
         for  n = maxNoElectrons:-1:minNoElectrons
-            println("\n    Configuration(s) with $n electrons:")
+            nxx = 0                                                                                        ## delete nxx
+            println("\n  Configuration(s) with $n electrons:")
             if  printSummary   println(iostream, "\n    Configuration(s) with $n electrons:")      end
             for  conf in confs
-                if n == conf.NoElectrons   
+                if n == conf.NoElectrons  
+                    nxx = nxx + 1;    if nxx > 2   break    end                                            ## delete nxx
                     nc = nc + 1
                     push!(confList, conf ) 
                     wa = Semiempirical.estimate("binding energy", round(Int64, Z), conf);    wa = Defaults.convertUnits("energy: from atomic", wa)
@@ -797,9 +855,9 @@ module Cascade
         end
         
         println("\n  A total of $nc configuration have been defined for this cascade, and selected configurations could be " *
-                "removed here:  [currently not supported] \n")
+                "removed here:  [currently not supported]")
         if  printSummary   println(iostream, "\n* A total of $nc configuration have been defined for this cascade, and selected " *
-                                             "configurations could be removed here:  [currently not supported] \n")      end
+                                             "configurations could be removed here:  [currently not supported]")      end
         return( confList )
     end
 
@@ -813,7 +871,7 @@ module Cascade
         #
         newStepList = Cascade.Step[]
         #
-        println("\n  Here, modify the individual steps explicitly in the code, if needed, ...... and just do it !!")
+        println("\n* Here, modify the individual steps explicitly in the code, if needed, ...... and just do it !!")
         # 
         #  Delete individual steps from stepList
         #  if  i in [1,2,5, ...] modify the particular settings, etc.

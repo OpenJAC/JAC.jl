@@ -204,7 +204,7 @@ module BascisGenerate
         subshellList = Basics.extractRelativisticSubshellList(confList)                      ## extract all subshells that occur in confList
         orbitals     = Basics.generateOrbitalsForPotential(rep.grid, meanPot, subshellList)  ## generate a spectrum of sufficient size
         Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
-        Basics.display(stdout, orbitals)
+        Basics.display(stdout, orbitals, rep.grid)
 
         # The asfSettings only define the CI part of the Green channels and are partly derived from the GreenSettings
         asfSettings = AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
@@ -215,7 +215,7 @@ module BascisGenerate
         for  levelSymmetry  in  repType.levelSymmetries
             basis      = Basics.generateBasis(confList, [levelSymmetry])
             basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )  
-            multiplet  = Basics.computeMultipletForGreenApproach(repType.approach, basis, nModel, rep.grid, asfSettings; printout=true) 
+            multiplet  = Basics.computeMultipletForGreenApproach(repType.approach, basis, nModel, rep.grid, asfSettings, settings; printout=true) 
             push!( channels, GreenChannel( levelSymmetry, multiplet) )
         end        
         

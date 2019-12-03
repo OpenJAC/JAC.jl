@@ -61,14 +61,15 @@ module Radial
 
 
     """
-    `Radial.Grid()`  ... constructor to define an 'empty' instance of the radial grid.
-
-    `Radial.Grid("grid: exponential")`  ... constructor to define an instance of the (Grasp) standard exponential grid.
+    `Radial.Grid()` ... constructor to define an 'empty' grid.  
+    
+    `Radial.Grid("grid: exponential")` ... constructor to define an instance of the (Grasp) standard exponential grid.
 
     `Radial.Grid("grid: by given parameters"; rnt = rntx, h = hx, hp = hpx, NoPoints = NoPointx)`  
         ... constructor to define an instance of the radial grid with the given parameters.
     """
     function Grid()
+        # Radial.Grid("grid: exponential")
         Grid(0., 0., 0., 0,   Float64[], 0, 0, 0, 0, 0, 0, 0,   MeshGrasp, 0, Float64[], Float64[], Float64[], Float64[] )
     end
 
@@ -609,8 +610,8 @@ module Radial
         end
         mZbar   = sum(meanZbar) / nx;   for  i = 1:nx    devsZbar[i] = (meanZbar[i] - mZbar)^2    end
         stdZbar = sqrt( sum(devsZbar) / nx )
-        if  true  println("Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
-                                     " (Delta-Zbar=" * @sprintf("%.4e",stdZbar) * ")." )    end
+        if  true  println("> Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
+                          " (Delta-Zbar=" * @sprintf("%.4e",stdZbar) * ")." )    end
         
         return( mZbar )
     end

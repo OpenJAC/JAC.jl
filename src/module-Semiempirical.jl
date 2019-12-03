@@ -144,21 +144,25 @@ module Semiempirical
     `Semiempirical.estimate("binding energy", Z::Float64, conf::Configuration)`  
         ... to provide an approximate binding energy of a given electron configuration. This estimate adds the binding 
             energies of all subshell, taken frogm a semi-empirical tabulations by Williams et al., 
-            https://userweb.jlab.org/~gwyn/ebindene.html. No relaxation effects are included if several hole states
+            https://userweb.jlab.org/~gwyn/ebindene.html. If no binding energy is provided by this table, it simply scales the 
+            binding energies (e/ 12.) from the next lower shell of the same symmetry
+            No relaxation effects are included if several hole states
             occur with regard to the neutral atom. An energy::Float64 in  Hartree is returned.
     """
     function estimate(sa::String, Z::Int64, conf::Configuration)
         if     sa == "binding energy"
             wa = PeriodicTable.bindingEnergies_Williams2000(Z);    wb = 0.
             for (sh,v) in  conf.shells
-                if      sh == Shell("1s")    wb = wb + v * wa[1];    if wa[1]  == -1.   error("stop aa")   end
-                elseif  sh == Shell("2s")    wb = wb + v * wa[2];    if wa[2]  == -1.   error("stop ab")   end
-                elseif  sh == Shell("2p")    wb = wb + v * wa[3];    if wa[3]  == -1.   error("stop ac")   end
-                elseif  sh == Shell("3s")    wb = wb + v * wa[5];    if wa[5]  == -1.   error("stop ae")   end
-                elseif  sh == Shell("3p")    wb = wb + v * wa[6];    if wa[6]  == -1.   error("stop af")   end
-                elseif  sh == Shell("3d")    wb = wb + v * wa[8];    if wa[8]  == -1.   error("stop ah")   end
-                elseif  sh == Shell("4s")    wb = wb + v * wa[10];   if wa[10] == -1.   error("stop aj")   end
-                elseif  sh == Shell("4p")    wb = wb + v * wa[11];   if wa[11] == -1.   error("stop ak")   end
+                if      sh == Shell("1s")    if wa[1]  == -1.   error("stop aa")          else    wb = wb + v * wa[1]    end
+                elseif  sh == Shell("2s")    if wa[2]  == -1.   error("stop ab")          else    wb = wb + v * wa[2]    end
+                elseif  sh == Shell("2p")    if wa[3]  == -1.   error("stop ac")          else    wb = wb + v * wa[3]    end
+                elseif  sh == Shell("3s")    if wa[5]  == -1.   wb = wb + v * wa[2]/12.   else    wb = wb + v * wa[5]    end
+                                             if wa[2]  == -1.   error("stop ad")   end
+                elseif  sh == Shell("3p")    if wa[6]  == -1.   wb = wb + v * wa[3]/12.   else    wb = wb + v * wa[6]    end
+                                             if wa[3]  == -1.   error("stop af")   end
+                elseif  sh == Shell("3d")    if wa[8]  == -1.   error("stop ah")          else    wb = wb + v * wa[8]    end
+                elseif  sh == Shell("4s")    if wa[10] == -1.   error("stop aj")          else    wb = wb + v * wa[10]   end
+                elseif  sh == Shell("4p")    if wa[11] == -1.   error("stop ak")          else    wb = wb + v * wa[11]   end
                 else    error("No binding energy available for Z = $Z and subshell $sh ")
                 end
             end
