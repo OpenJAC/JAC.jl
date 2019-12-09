@@ -89,6 +89,8 @@ include("module-Math.jl");          using ..Math
 include("module-Defaults.jl");      using ..Defaults
 include("module-ManyElectron.jl");  using ..ManyElectron
 include("module-Nuclear.jl");       using ..Nuclear
+include("module-SpinAngular.jl");   using ..SpinAngular
+include("module-BiOrthogonal.jl");  using ..BiOrthogonal
 
 # Specialized functions/methods to manipulate these data
 include("module-AngularMomentum.jl")

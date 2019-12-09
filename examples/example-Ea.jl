@@ -19,9 +19,10 @@ else
 setDefaults("print summary: open", "zzz-Cascade-simulatiaon.sum")
 
 using JLD
-data = JLD.load("zzz-Cascade-2019-12-03T20.jld")
+data = JLD.load("zzz-Cascade-2019-12-03T20.jld")["cascade data:"]
 name = "Si- (1s^-1) simulation"
-wc   = Cascade.Simulation(Cascade.Simulation() )
+
+wc   = Cascade.Simulation(Cascade.Simulation(), name=name )
 ## wc   = Cascade.Simulation(Cascade.Simulation(); name=name, cascadeData=data )
 println(wc)
 ## wd = perform(wc; output=true)

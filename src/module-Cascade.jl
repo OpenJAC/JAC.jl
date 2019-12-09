@@ -354,13 +354,13 @@ module Cascade
 
 
     """
-    `Cascade.Computation(comp::Cascade.Computation;`
+    `Cascade.Simulation(sim::Cascade.Simulation;`
         
                 name=..,               properties=..,             method=..,              settings=..,     cascadeData=.. )
                 
         ... constructor for re-defining the computation::Cascade.Computation.
     """
-    function Computation(sim::Cascade.Simulation;                              
+    function Simulation(sim::Cascade.Simulation;                              
         name::Union{Nothing,String}=nothing,                                  properties::Union{Nothing,Array{Cascade.AbstractCascadeProperty,1}}=nothing,
         method::Union{Nothing,Cascade.AbstractSimulationMethod}=nothing,      settings::Union{Nothing,Cascade.SimulationSettings}=nothing,    
         cascadeData::Union{Nothing,Cascade.Data}=nothing )

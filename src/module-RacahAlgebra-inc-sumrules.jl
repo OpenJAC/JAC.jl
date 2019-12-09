@@ -422,6 +422,82 @@
         return( (false, RacahExpression()) )
     end
 
+
+    """
+    `RacahAlgebra.sumRulesForThreeW3j(rex::RacahAlgebra.RacahExpression)`  
+        ... attempts to find a simplification of the given Racah expression by using sum rules for three Wigner 3j symbols. 
+            Once a simplification is found, no attempt is made to find another simplifcation for this set of rules.
+            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
+    """
+    function sumRulesForThreeW3j(rex::RacahAlgebra.RacahExpression)
+        # Make sure that the sum rule could apply at all
+        if  length(rex.summations) < 2  ||  length(rex.w3js) < 2     return( (false, RacahExpression()) )    end
+        
+        # Loop through all Wigner 3j symbols
+        for  (iaW3j, aW3j) in enumerate(rex.w3js)
+            aRexList = RacahAlgebra.symmetricForms(aW3j)
+            for  xaRex in aRexList
+                for  (ibW3j, bW3j) in enumerate(rex.w3js)
+                    if  iaW3j == ibW3j    break    end
+                    bRexList = RacahAlgebra.symmetricForms(bW3j)
+                    for  xbRex in bRexList
+                        for  (icW3j, cW3j) in enumerate(rex.w3js)
+                            if  iaW3j == icW3j    ||   ibW3j == icW3j      break    end
+                            cRexList = RacahAlgebra.symmetricForms(cW3j)
+                            for  xcRex in cRexList
+                                wwa = xaRex.w3js[1];     wwb = xbRex.w3js[1];     wwc = xcRex.w3js[1]
+                                #
+                                #   Rule:                         -m4-m5-m6  ( j5 j1  j6 ) ( j6 j2  j4 ) ( j4 j3  j5 )
+                                #   ----        Sum(m4,m5,m6) (-1)           (           ) (           ) (           )
+                                #                                            ( m5 m1 -m6 ) ( m6 m2 -m4 ) ( m4 m3 -m5 )
+                                #
+                                #                                                             -j4-j5-j6  (  j1  j2  j3 )  ( j1 j2 j3 )
+                                #                                                      =  (-1)           (             ) {(          )}
+                                #                                                                        ( -m1 -m2 -m3 )  ( j4 j5 j6 )
+                                #
+                                specialaW3j = W3j(wwa.ja, wwa.jb, wwa.jc, wwa.ma, wwa.mb, -wwb.ma)
+                                specialbW3j = W3j(wwa.jc, wwb.jb, wwb.jc, wwb.ma, wwb.mb, -wwc.ma)
+                                specialcW3j = W3j(wwb.jc, wwc.jb, wwa.ja, wwc.ma, wwc.mb, -wwa.ma)
+                                if  wwa == specialaW3j  &&  wwb == specialbW3j  &&  wwc == specialcW3j 
+                                    newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase;   
+                                    testPhase  = rewritePhase(newPhase, [wwc.ma + wwa.ma + wwb.ma], [wwc.ma, wwa.ma, wwb.ma] )
+                                println("sumRulesForThreeW3j,  testPhase = $testPhase")
+                                    newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight
+                                    testWeight = newWeight 
+                                    newW3js    = W3j[];       
+                                    for (idW3j, dW3j) in enumerate(rex.w3js)  
+                                        if  idW3j != iaW3j &&  idW3j != ibW3j &&  idW3j != icW3j   push!(newW3js, dW3j)   end   
+                                    end
+                                    #
+                                    if   RacahAlgebra.hasIndex(wwc.ma, rex.summations)    &&   RacahAlgebra.hasIndex(wwa.ma, rex.summations)    &&  
+                                         RacahAlgebra.hasIndex(wwb.ma, rex.summations)    &&   
+                                         RacahAlgebra.hasNoVars([wwc.ma, wwa.ma, wwb.ma], testPhase)                                            &&  
+                                         ##x RacahAlgebra.hasIndex(wwb.mc, newWeight)     ##x &&  !RacahAlgebra.hasIndex(wwa.ma, testWeight)        &&
+                                        !RacahAlgebra.hasIndex(wwc.ma, rex.deltas)        &&  !RacahAlgebra.hasIndex(wwc.ma, rex.triangles)     &&
+                                        !RacahAlgebra.hasIndex(wwa.ma, rex.deltas)        &&  !RacahAlgebra.hasIndex(wwa.ma, rex.triangles)     && 
+                                        !RacahAlgebra.hasIndex(wwb.ma, rex.deltas)        &&  !RacahAlgebra.hasIndex(wwb.ma, rex.triangles)     && 
+                                        !RacahAlgebra.hasIndex(wwc.ma, rex.w6js)          &&  !RacahAlgebra.hasIndex(wwc.ma, rex.w9js)          &&
+                                        !RacahAlgebra.hasIndex(wwa.ma, rex.w6js)          &&  !RacahAlgebra.hasIndex(wwa.ma, rex.w9js)          
+                                        !RacahAlgebra.hasIndex(wwb.ma, rex.w6js)          &&  !RacahAlgebra.hasIndex(wwb.ma, rex.w9js)          
+                                        newSummations = RacahAlgebra.removeIndex([wwc.ma, wwa.ma, wwb.ma], rex.summations)
+                                        newDeltas = rex.deltas;   push!(newW3js,  W3j(wwa.jb, wwb.jb, wwc.jb, -wwa.mb, -wwb.mb, - wwc.mb))
+                                        newW6js   = rex.w6js;     push!(newW6js,  W6j(wwa.jb, wwb.jb, wwc.jb,  wwb.ja, wwa.ja, wwa.jc))
+                                        wa = RacahExpression( newSummations, testPhase, newWeight, 
+                                                              newDeltas, rex.triangles, newW3js, newW6js, rex.w9js )
+                                        println("** Apply sum rule for three W3j -- Sum(m4,m5,m6) ...")
+                                        return( (true, wa) )
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        return( (false, RacahExpression()) )
+    end
+
     
 #===================================================
                         ##x println("specialaW3j = $specialaW3j    wwa = $wwa   $(specialaW3j==wwa)" )
@@ -555,17 +631,8 @@ Racah_usesumrulesfortwoYlm := proc(Rexpr::Racahexpr)
                   #
 
                   
-Racah_usesumrulesforthreew3jloop := proc(Rexpr::Racahexpr,w3jpos::list)
+done Racah_usesumrulesforthreew3jloop := proc(Rexpr::Racahexpr,w3jpos::list)
 
-   #
-   #                     -m4-m5-m6  ( j5 j1  j6 ) ( j6 j2  j4 ) ( j4 j3  j5 )
-   #   Sum(m4,m5,m6) (-1)           (           ) (           ) (           )
-   #                                ( m5 m1 -m6 ) ( m6 m2 -m4 ) ( m4 m3 -m5 )
-   #
-   #                            -j4-j5-j6  (  j1  j2  j3 )  ( j1 j2 j3 )
-   #                     =  (-1)           (             ) {(          )}
-   #                                       ( -m1 -m2 -m3 )  ( j4 j5 j6 )
-   #
 
    
 Racah_usesumrulesfortwow3jonew6j := proc(Rexpr::Racahexpr)

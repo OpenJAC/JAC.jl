@@ -261,6 +261,34 @@ module  RacahAlgebra
     end
 
 
+    """
+    `RacahAlgebra.RacahExpression(rex::RacahAlgebra.RacahExpression;`
+    
+            summations=..,      phase=..,       weight=..,      deltas=..,     
+            triangles=..,       w3js=..,        w6js=..,        w9js=..) 
+                        
+        ... constructor for modifying the given CiSettings by 'overwriting' the explicitly selected parameters.
+    """
+    function RacahExpression(rex::RacahAlgebra.RacahExpression;    
+                             summations::Union{Nothing,Array{Basic,1}}=nothing,        phase::Union{Nothing,Basic}=nothing,            
+                             weight::Union{Nothing,Basic}=nothing,                     deltas::Union{Nothing,Array{Kronecker,1}}=nothing,     
+                             triangles::Union{Nothing,Array{Triangle,1}}=nothing,      w3js::Union{Nothing,Array{W3j,1}}=nothing,             
+                             w6js::Union{Nothing,Array{W6j,1}}=nothing,                w9js::Union{Nothing,Array{W9j,1}}=nothing) 
+        
+        if  summations == nothing   summationsx = rex.summations    else   summationsx = summations     end 
+        if  phase      == nothing   phasex      = rex.phase         else   phasex = phase               end 
+        if  weight     == nothing   weightx     = rex.weight        else   weightx = weight             end 
+        if  deltas     == nothing   deltasx     = rex.deltas        else   deltasx = deltas             end 
+        if  triangles  == nothing   trianglesx  = rex.triangles     else   trianglesx = triangles       end 
+        if  w3js       == nothing   w3jsx       = rex.w3js          else   w3jsx = w3js                 end 
+        if  w6js       == nothing   w6jsx       = rex.w6js          else   w6jsx = w6js                 end 
+        if  w9js       == nothing   w9jsx       = rex.w9js          else   w9jsx = w9js                 end 
+        
+        RacahExpression( summationsx, phasex, weightx, deltasx, trianglesx, w3jsx, w6jsx, w9jsx)
+    end
+
+
+    
     # `Base.show(io::IO, rex::RacahExpression)`  ... prepares a proper printout of the variable  rex::RacahExpression.
     function Base.show(io::IO, rex::RacahExpression)
         sa = ""
@@ -287,6 +315,29 @@ module  RacahAlgebra
         newW9js       = rexa.w9js;          for  w9j in rexb.w9js              push!(newW9js, w9j)              end
         
         return( RacahExpression(newSummations, newPhase, newWeight, newDeltas, newTriangles, newW3js, newW6js, newW9js) )
+    end
+
+
+    """
+    `struct  RacahAlgebra.Csq`  
+        ... defines a type for a coupling sequence of two angular momenta (a,b) c   or  a + b -> c  with symbolic arguments.
+
+        + a    ::Union{Basic,RacahAlgebra.Csq}      ... First angular momentum or coupling sequence.
+        + b    ::Union{Basic,RacahAlgebra.Csq}      ... Second angular momentum or coupling sequence.
+        + c    ::Basic                              ... Angular momentum to which a + b is coupled.
+    """
+    struct  Csq
+        a      ::Union{Basic,RacahAlgebra.Csq} 
+        b      ::Union{Basic,RacahAlgebra.Csq} 
+        c      ::Basic
+    end
+
+
+    
+    # `Base.show(io::IO, csq::RacahAlgebra.Csq)`  ... prepares a proper printout of the variable  csq::RacahAlgebra.Csq.
+    function Base.show(io::IO, csq::RacahAlgebra.Csq)
+        sa = "($(csq.a), $(csq.b)) $(csq.c)"
+        print(io, sa)
     end
     
     
@@ -433,6 +484,40 @@ module  RacahAlgebra
         end
         
         println("\nNo simplification found for:  $rex ");  
+        return( nothing )
+    end
+
+
+    """
+    `RacahAlgebra.evaluate(leftCsq::RacahAlgebra.Csq, rightCsq::RacahAlgebra.Csq)`  
+        ... evaluates a general recoupling coefficient that is defined by two coupling sequences. It first translates the coupling
+            sequences into Racah expressions, i.e. into sums of Wigner 3-j symbols. A non-zero coefficient is obtained only if
+            leftCsq.c == rightCsq.c, since re-coupling coefficients are diagonal in the 'last' angular momentum. 
+            A newrex::RacahExpression is returned once a (single) simplification has been found, and nothing otherwise. 
+            No attempt is presently made to find further simplications, once a rule has been applied.
+    """
+    function  evaluate(leftCsq::RacahAlgebra.Csq, rightCsq::RacahAlgebra.Csq)
+        function prsim(rx::RacahExpression)
+            println("** Simplification found for recoupling coefficient     < $leftCsq | $rightCsq > = $rx ")
+        end
+        #
+        if  leftCsq.c != rightCsq.c     
+            println("Recoupling coefficients vanishs because of different total angular momenta $(leftCsq.c) != $(rightCsq.c)")
+            return( Basic(0) )
+        end
+        #
+        # Rewrite coupling string as Racah expression and combine(multiply) both sides
+        lrex = RacahAlgebra.rewriteCsq(leftCsq, "m")
+        rrex = RacahAlgebra.rewriteCsq(rightCsq, "m")
+        rex  = lrex * rrex
+        summations = unique(rex.summations);    rex = RacahExpression(rex, summations=summations)
+        println("\n*** Total rex = $rex")
+        #
+        wa = sumRulesForOneW3j(rex);         if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
+        wa = sumRulesForTwoW3j(rex);         if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
+        wa = sumRulesForThreeW3j(rex);       if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
+        #
+        println("** No simplification found for recoupling coefficient  < $leftCsq | $rightCsq > = $rex ")
         return( nothing )
     end
 
@@ -806,6 +891,68 @@ module  RacahAlgebra
             end
         end
         return( newList )
+    end
+
+
+    """
+    `RacahAlgebra.rewriteCsq(csq::RacahAlgebra.Csq, ms::String)`  
+        ... attempts to rewrite the coupling sequence csq as Racah expressions, i.e. as (sum of) products of Wigner 3-j symbols. 
+            A rex::RacahExpression is returned.
+    """
+    function rewriteCsq(csq::RacahAlgebra.Csq, ms::String)
+        function  appendSummation(a::RacahAlgebra.Csq, b::RacahAlgebra.Csq)
+            sx = Basic[];   sx = append!( sx, appendSummation(a.a, a.b));   sx = append!( sx, appendSummation(b.a, b.b))
+            sx = push!( sx, Basic(ms * string(a.c)));                       sx = push!( sx, Basic(ms * string(b.c))); 
+            return( sx )
+        end
+        function  appendSummation(a::RacahAlgebra.Csq, b::Basic)
+            sx = Basic[];   sx = append!( sx, appendSummation(a.a, a.b));   sx = push!( sx, Basic(ms * string(b)))
+            sx = push!( sx, Basic(ms * string(a.c)));
+            return( sx )
+        end
+        function  appendSummation(a::Basic, b::RacahAlgebra.Csq)
+            sx = Basic[];   sx = push!( sx, Basic(ms * string(a)));         sx = append!( sx, appendSummation(b.a, b.b))
+            sx = push!( sx, Basic(ms * string(b.c)));
+            return( sx )
+        end
+        function  appendSummation(a::Basic, b::Basic)
+            sx = Basic[];   sx = push!( sx, Basic(ms * string(a)));         sx = push!( sx, Basic(ms * string(b)))
+            return( sx )
+        end
+        #
+        function  appendW3j(a::RacahAlgebra.Csq, b::RacahAlgebra.Csq, c::Basic)
+            wx = W3j[];   wx = append!( wx, appendW3j(a.a, a.b, a.c));   wx = append!( wx, appendW3j(b.a, b.b, b.c))
+            wx = append!( wx, [W3j(a.c,b.c,c, Basic(ms * string(a.c)),  Basic(ms * string(b.c)),  -Basic(ms * string(c))) ] )
+            return( wx )
+        end
+        function  appendW3j(a::RacahAlgebra.Csq, b::Basic, c::Basic)
+            wx = W3j[];   wx = append!( wx, appendW3j(a.a, a.b, a.c))
+            wx = append!( wx, [W3j(a.c,b,c, Basic(ms * string(a.c)),  Basic(ms * string(b)),  -Basic(ms * string(c))) ] )
+            return( wx )
+        end
+        function  appendW3j(a::Basic, b::RacahAlgebra.Csq, c::Basic)
+            wx = W3j[];   wx = append!( wx, appendW3j(b.a, b.b, b.c))
+            wx = append!( wx, [W3j(a,b.c,c, Basic(ms * string(a)),  Basic(ms * string(b.c)),  -Basic(ms * string(c))) ] )
+            return( wx )
+        end
+        function  appendW3j(a::Basic, b::Basic, c::Basic)
+            wx = W3j[];   wx = append!( wx, [W3j(a,b,c, Basic(ms * string(a)),  Basic(ms * string(b)),  -Basic(ms * string(c)) )] )
+            return( wx )
+        end
+        #
+        summations = Basic[];   phase = Basic(0);   weight = Basic(1);   w3js = W3j[]
+        summations = appendSummation( csq.a, csq.b)
+        w3js       = appendW3j( csq.a, csq.b, csq.c)
+        println("\n*** summations = $summations")
+        println("*** w3js       = $w3js")
+        for  w3j in w3js
+            phase  = phase  + w3j.ja - w3j.jb - w3j.mc
+            weight = weight * sqrt(2*w3j.jc+1)
+        end
+        
+        rex = RacahExpression( summations, phase, weight, Kronecker[], Triangle[], w3js, W6j[], W9j[])    
+        println("*** rex = $rex")
+        return( rex )
     end
 
 
