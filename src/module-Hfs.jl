@@ -233,7 +233,7 @@ module Hfs
                                                            printed, and false otherwise.
         + calcIJFexpansion          ::Bool             ... True if the selected atomic levels are to be represented in a IJF-coupled basis,
                                                            and false otherwise.
-        + printBeforeComputation    ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
+        + printBefore    ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
         + printDeltaEF              ::Bool             ... True if the energy shift of E_F (with regard to E_J) is to be printed, and false otherwise.
         + selectLevels              ::Bool             ... True if individual levels are selected for the computation.
         + selectedLevels            ::Array{Int64,1}   ... List of selected levels.
@@ -243,7 +243,7 @@ module Hfs
         calcT2                      ::Bool
         calcNondiagonal             ::Bool 
         calcIJFexpansion            ::Bool 
-        printBeforeComputation      ::Bool 
+        printBefore      ::Bool 
         printDeltaEF                ::Bool
         selectLevels                ::Bool
         selectedLevels              ::Array{Int64,1}
@@ -252,14 +252,14 @@ module Hfs
 
     """
     `Hfs.Settings(; calcT1::Bool=true,` calcT2::Bool=false, calcNondiagonal::Bool=false, calcIJFexpansion::Bool=false, 
-                        printBeforeComputation::Bool=false, printDeltaEF::Bool=false, 
+                        printBefore::Bool=false, printDeltaEF::Bool=false, 
                         selectLevels::Bool=false, selectedLevels::Array{Int64,1}=Int64[]) 
         ... keyword constructor to overwrite selected value of Einstein line computations.
     """
     function Settings(; calcT1::Bool=true, calcT2::Bool=false, calcNondiagonal::Bool=false, calcIJFexpansion::Bool=false, 
-                        printBeforeComputation::Bool=false, printDeltaEF::Bool=false, 
+                        printBefore::Bool=false, printDeltaEF::Bool=false, 
                         selectLevels::Bool=false, selectedLevels::Array{Int64,1}=Int64[])
-        Settings(calcT1, calcT2, calcNondiagonal, calcIJFexpansion, printBeforeComputation, printDeltaEF, selectLevels, selectedLevels)
+        Settings(calcT1, calcT2, calcNondiagonal, calcIJFexpansion, printBefore, printDeltaEF, selectLevels, selectedLevels)
     end
 
 
@@ -269,7 +269,7 @@ module Hfs
         println(io, "calcT2:                   $(settings.calcT2)  ")
         println(io, "calcNondiagonal:          $(settings.calcNondiagonal)  ")
         println(io, "calcIJFexpansion:         $(settings.calcIJFexpansion)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "printDeltaEF:             $(settings.printDeltaEF)  ")
         println(io, "selectLevels:             $(settings.selectLevels)  ")
         println(io, "selectedLevels:           $(settings.selectedLevels)  ")
@@ -512,7 +512,7 @@ module Hfs
         println("")
         outcomes = Hfs.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    Hfs.displayOutcomes(outcomes)    end
+        if  settings.printBefore    Hfs.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         im = computeInteractionMatrix(multiplet.levels[1].basis, grid, settings)
         newOutcomes = Hfs.Outcome[]

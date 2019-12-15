@@ -16,7 +16,7 @@ module PhotoExcitationAutoion
 
         + multipoles              ::Array{Basics.EmMultipole,1}    ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{Basics.UseGauge,1}       ... Specifies the gauges to be included into the computations.
-        + printBeforeComputation  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
         + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
         + maxKappa                ::Int64                              ... Maximum kappa value of partial waves to be included.
@@ -24,7 +24,7 @@ module PhotoExcitationAutoion
     struct Settings
         multipoles                ::Array{Basics.EmMultipole,1}
         gauges                    ::Array{Basics.UseGauge,1} 
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
         selectPathways            ::Bool
         selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
         maxKappa                  ::Int64 
@@ -45,7 +45,7 @@ module PhotoExcitationAutoion
     function Base.show(io::IO, settings::PhotoExcitationAutoion.Settings) 
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
-        println(io, "printBeforeComputation:  $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:  $(settings.printBefore)  ")
         println(io, "selectPathways:          $(settings.selectPathways)  ")
         println(io, "selectedPathways:        $(settings.selectedPathways)  ")
         println(io, "maxKappa:                $(settings.maxKappa)  ")
@@ -161,7 +161,7 @@ module PhotoExcitationAutoion
         #
         pathways = PhotoExcitationAutoion.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    PhotoExcitationAutoion.displayPathways(pathways)    end
+        if  settings.printBefore    PhotoExcitationAutoion.displayPathways(pathways)    end
         # Determine maximum (electron) energy and check for consistency of the grid
         maxEnergy = 0.;   for  pathway in pathways   maxEnergy = max(maxEnergy, pathway.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)

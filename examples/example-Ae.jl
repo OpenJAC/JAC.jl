@@ -1,11 +1,12 @@
 #
 println("Ae) Test of the CI part for an internally generated neon multiplet without Breit interaction.")
 #
+settings = AsfSettings(AsfSettings(),selectLevelsCI = true, selectedLevelsCI = [1,2, 4,5, 7,8], 
+                                     selectSymmetriesCI = true, selectedSymmetriesCI = [ LevelSymmetry(1//2,Basics.plus),  
+                                                          LevelSymmetry(1//2,Basics.minus),  LevelSymmetry(5//2,Basics.plus)], jjLS = LSjjSettings(false))
 wa = Atomic.Computation("xx",  Nuclear.Model(26.); 
                         configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")], 
-                        asfSettings=AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), [1],    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
-                                                true, false, NoneQed(), "yyy", LSjjSettings(true),
-                                                false, [1,2,3,4], false, JAC.LevelSymmetry[] )  )
+                        asfSettings=settings  )
 
 @time wb = perform(wa)
 

@@ -181,7 +181,7 @@ module InteractionStrength
 
         kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
         mtp  = min(size(a.P, 1), size(b.P, 1))
-        !(grid.mesh == MeshGL)  &&  error("Only for MeshGL implemented so far.")
+        !(grid.meshType == Radial.MeshGL())  &&  error("Only for Radial.MeshGL() implemented so far.")
         #
         if       gauge == Basics.Magnetic
             ChengI = AngularMomentum.ChengI(-kapa, kapb, AngularJ64(mp.L));   if  abs(ChengI) < 1.0e-10  return( 0. )   end
@@ -417,7 +417,7 @@ module InteractionStrength
     """
     function XL_Breit0_densities(xcList::Array{XLCoefficient,1}, grid::Radial.Grid)
         
-        if  grid.mesh == MeshGL
+        if  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  xc  in  xcList  ## [end:end]
                 # Use the minimal extent of any involved orbitals; this need to be improved

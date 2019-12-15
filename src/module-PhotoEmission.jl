@@ -17,7 +17,7 @@ module PhotoEmission
         + gauges                  ::Array{UseGauge}         ... Gauges to be included into the computations.
         + calcAnisotropy          ::Bool                    ... True, if the anisotropy (structure) functions are to be 
                                                                 calculated and false otherwise 
-        + printBeforeComputation  ::Bool                    ... True, if all energies and lines are printed before comput.
+        + printBefore             ::Bool                    ... True, if all energies and lines are printed before comput.
         + selectLines             ::Bool                    ... True, if lines are selected individually for the computat.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines as tupels (inital-level, final-level).
         + photonEnergyShift       ::Float64                 ... An overall energy shift for all photon energies.
@@ -30,7 +30,7 @@ module PhotoEmission
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge}
         calcAnisotropy            ::Bool         
-        printBeforeComputation    ::Bool
+        printBefore               ::Bool
         selectLines               ::Bool
         selectedLines             ::Array{Tuple{Int64,Int64},1}
         photonEnergyShift         ::Float64
@@ -47,12 +47,43 @@ module PhotoEmission
     end
 
 
+    """
+    `PhotoEmission.Settings(set::PhotoEmission.Settings;`
+    
+            multipoles::=..,        gauges=..,          calcAnisotropy=..,          printBefore=..,
+            selectLines=..,         selectedLines=..,   photonEnergyShift=..,       mimimumPhotonEnergy=.., 
+            maximumPhotonEnergy=..) 
+                        
+        ... constructor for modifying the given PhotoEmission.Settings by 'overwriting' the previously selected parameters.
+    """
+    function Settings(set::PhotoEmission.Settings;    
+        multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    gauges::Union{Nothing,Array{UseGauge}}=nothing,
+        calcAnisotropy::Union{Nothing,Bool}=nothing,                printBefore::Union{Nothing,Bool}=nothing,
+        selectLines::Union{Nothing,Bool}=nothing,                   selectedLines::Union{Nothing,Array{Tuple{Int64,Int64},1}}=nothing,
+        photonEnergyShift::Union{Nothing,Float64}=nothing,          mimimumPhotonEnergy::Union{Nothing,Float64}=nothing, 
+        maximumPhotonEnergy::Union{Nothing,Float64}=nothing)
+        
+        if  multipoles          == nothing   multipolesx          = set.multipoles              else  multipolesx          = multipoles            end 
+        if  gauges              == nothing   gaugesx              = set.gauges                  else  gaugesx              = gauges                end 
+        if  calcAnisotropy      == nothing   calcAnisotropyx      = set.calcAnisotropy          else  calcAnisotropyx      = calcAnisotropy        end 
+        if  printBefore         == nothing   printBeforex         = set.printBefore             else  printBeforex         = printBefore           end 
+        if  selectLines         == nothing   selectLinesx         = set.selectLines             else  selectLinesx         = selectLines           end 
+        if  selectedLines       == nothing   selectedLinesx       = set.selectedLines           else  selectedLinesx       = selectedLines         end 
+        if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift       else  photonEnergyShiftx   = photonEnergyShift     end 
+        if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy     else  mimimumPhotonEnergyx = mimimumPhotonEnergy   end 
+        if  maximumPhotonEnergy == nothing   maximumPhotonEnergyx = set.maximumPhotonEnergy     else  maximumPhotonEnergyx = maximumPhotonEnergy   end 
+        
+        Settings( multipolesx, gaugesx, calcAnisotropyx, printBeforex, selectLinesx, selectedLinesx, 
+                  photonEnergyShiftx, mimimumPhotonEnergyx, maximumPhotonEnergyx)
+    end
+
+
     # `Base.show(io::IO, settings::PhotoEmission.Settings)`  ... prepares a proper printout of the variable settings::PhotoEmissionSettings.
     function Base.show(io::IO, settings::PhotoEmission.Settings) 
         println(io, "multipoles:             $(settings.multipoles)  ")
         println(io, "gauges:                 $(settings.gauges)  ")
         println(io, "calcAnisotropy:         $(settings.calcAnisotropy)  ")
-        println(io, "printBeforeComputation: $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:            $(settings.printBefore)  ")
         println(io, "selectLines:            $(settings.selectLines)  ")
         println(io, "selectedLines:          $(settings.selectedLines)  ")
         println(io, "photonEnergyShift:      $(settings.photonEnergyShift)  ")
@@ -200,7 +231,7 @@ module PhotoEmission
         ##x println("basis = $(finalMultiplet.levels[1].basis) ")
         lines = PhotoEmission.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    PhotoEmission.displayLines(lines)    end
+        if  settings.printBefore    PhotoEmission.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = PhotoEmission.Line[]
         for  line in lines
@@ -238,7 +269,7 @@ module PhotoEmission
         Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
         lines = PhotoEmission.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        # if  settings.printBeforeComputation    PhotoEmission.displayLines(lines)    end
+        # if  settings.printBefore    PhotoEmission.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = PhotoEmission.Line[]
         for  line in lines

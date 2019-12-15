@@ -11,13 +11,13 @@ module DecayYield
     `struct  DecayYield.Settings`  ... defines a type for the details and parameters of computing fluorescence and Auger yields.
 
         + approach                 ::String         ... Determines the applied cascade approach for the yields: {"AverageSCA", "SCA"}.
-        + printBeforeComputation   ::Bool           ... True if a list of selected levels is to be printed before the actual computations start. 
+        + printBefore   ::Bool           ... True if a list of selected levels is to be printed before the actual computations start. 
         + selectLevels             ::Bool           ... True if individual levels are selected for the computation.
         + selectedLevels           ::Array{Level,1} ... List of selected levels.
     """
     struct Settings 
         approach                   ::String 
-        printBeforeComputation     ::Bool
+        printBefore     ::Bool
         selectLevels               ::Bool
         selectedLevels             ::Array{Level,1}
     end 
@@ -35,7 +35,7 @@ module DecayYield
     # `Base.show(io::IO, settings::DecayYield.Settings)`  ... prepares a proper printout of the variable settings::DecayYield.Settings.
     function Base.show(io::IO, settings::DecayYield.Settings) 
         println(io, "approach:                 $(settings.approach)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectLevels:             $(settings.selectLevels)  ")
         println(io, "selectedLevels:           $(settings.selectedLevels)  ")
     end
@@ -97,7 +97,7 @@ module DecayYield
         #
         outcomes = DecayYield.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    DecayYield.displayOutcomes(outcomes)    end
+        if  settings.printBefore    DecayYield.displayOutcomes(outcomes)    end
         #
         # Overwrite the default settings for the generation of the continuum orbitals, if needed
         ## setDefaults("method: continuum, asymptotic Coulomb")

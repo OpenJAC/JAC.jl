@@ -14,14 +14,14 @@ module ImpactExcitationAutoion
             |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
         + electronEnergies        ::Array{Float64,1}                   ... List of impact-energies of the incoming elecgtrons.
-        + printBeforeComputation  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
         + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
         + maxKappa                ::Int64                              ... Maximum kappa value of partial waves to be included.
     """
     struct Settings
         electronEnergies          ::Array{Float64,1}
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
         selectPathways            ::Bool
         selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
         maxKappa                  ::Int64 
@@ -40,7 +40,7 @@ module ImpactExcitationAutoion
     #   ... prepares a proper printout of the variable settings::ImpactExcitationAutoion.Settings.  
     function Base.show(io::IO, settings::ImpactExcitationAutoion.Settings) 
         println(io, "electronEnergies:         $(settings.electronEnergies)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectPathways:           $(settings.selectPathways)  ")
         println(io, "selectedPathways:         $(settings.selectedPathways)  ")
         println(io, "maxKappa:                 $(settings.maxKappa)  ")
@@ -172,7 +172,7 @@ module ImpactExcitationAutoion
         #
         pathways = ImpactExcitationAutoion.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    ImpactExcitationAutoion.displayPathways(pathways)    end
+        if  settings.printBefore    ImpactExcitationAutoion.displayPathways(pathways)    end
         # Calculate all amplitudes and requested properties
         newPathways = ImpactExcitationAutoion.Pathway[]
         for  pathway in pathways

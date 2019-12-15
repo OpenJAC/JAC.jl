@@ -2,7 +2,7 @@
 println("Ha) Tests of the HighHarmonic module to calculate a high-harmonic spectrum in single-electron approximation.")
 #
 setDefaults("print summary: open", "zzz-HHG.sum")
-grid       = JAC.Radial.Grid("grid: exponential")
+grid       = JAC.Radial.Grid(true)
 setDefaults("standard grid", grid::Radial.Grid; printout=true)
 
 observable = HighHarmonic.HhgSpectrum()

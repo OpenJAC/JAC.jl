@@ -13,13 +13,13 @@ module AlphaVariation
     `struct  AlphaVariation.Settings`  ... defines a type for the details and parameters of computing alpha-variation parameters.
 
         + calcK                    ::Bool             ... True if the enhancement factor need to be calculated, and false otherwise.
-        + printBeforeComputation   ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
+        + printBefore   ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
         + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
         + selectedLevels           ::Array{Level,1}   ... List of selected levels.
     """
     struct Settings 
         calcK                      ::Bool
-        printBeforeComputation     ::Bool
+        printBefore     ::Bool
         selectLevels               ::Bool
         selectedLevels             ::Array{Level,1}
     end 
@@ -35,8 +35,8 @@ module AlphaVariation
 
     # `Base.show(io::IO, settings::AlphaVariation.Settings)`  ... prepares a proper printout of the variable settings::AlphaVariation.Settings.
     function Base.show(io::IO, settings::AlphaVariation.Settings) 
-        println(io, "calcK:                    $(settings.calcM)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "calcK:                    $(settings.calcK)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
         println(io, "selectLevels:             $(settings.selectLevels)  ")
         println(io, "selectedLevels:           $(settings.selectedLevels)  ")
     end
@@ -83,7 +83,7 @@ module AlphaVariation
         #
         outcomes = JAC.AlphaVariation.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    JAC.AlphaVariation.displayOutcomes(outcomes)    end
+        if  settings.printBefore    JAC.AlphaVariation.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         newOutcomes = AlphaVariation.Outcome[]
         for  outcome in outcomes

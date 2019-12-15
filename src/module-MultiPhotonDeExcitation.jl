@@ -13,7 +13,7 @@ module MultiPhotonDeExcitation
         + NoPhotons               ::Int64                        ... Number of photons in the multi-photon ionization
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
 
@@ -22,7 +22,7 @@ module MultiPhotonDeExcitation
         NoPhotons                 ::Int64
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
         selectLines               ::Bool
         selectedLines             ::Array{Tuple{Int64,Int64},1} 
     end 
@@ -42,7 +42,7 @@ module MultiPhotonDeExcitation
         println(io, "NoPhotons:                $(settings.NoPhotons)  ")
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectLines:              $(settings.selectLines)  ")
         println(io, "selectedLines:            $(settings.selectedLines)  ")
     end
@@ -139,7 +139,7 @@ module MultiPhotonDeExcitation
         #
         lines = MultiPhotonDeExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    MultiPhotonDeExcitation.displayLines(lines)    end
+        if  settings.printBefore    MultiPhotonDeExcitation.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = MultiPhotonDeExcitation.Line[]
         for  line in lines

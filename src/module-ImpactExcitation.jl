@@ -12,7 +12,7 @@ module ImpactExcitation
 
         + electronEnergies        ::Array{Float64,1}             ... List of impact-energies of the incoming elecgtrons.
         + includeBreit            ::Bool                         ... True if the Breit interaction is to be included, and false otherwise.
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True if particular lines are selected for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
         + maxKappa                ::Int64                        ... Maximum kappa value of partial waves to be included.
@@ -21,7 +21,7 @@ module ImpactExcitation
     struct Settings
         electronEnergies          ::Array{Float64,1}
         includeBreit              ::Bool
-        printBeforeComputation    ::Bool 
+        printBefore    ::Bool 
         selectLines               ::Bool 
         selectedLines             ::Array{Tuple{Int64,Int64},1}
         maxKappa                  ::Int64
@@ -41,7 +41,7 @@ module ImpactExcitation
     function Base.show(io::IO, settings::ImpactExcitation.Settings) 
         println(io, "electronEnergies:           $(settings.electronEnergies)  ")
         println(io, "includeBreit:               $(settings.includeBreit)  ")
-        println(io, "printBeforeComputation:     $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:     $(settings.printBefore)  ")
         println(io, "selectLines:                $(settings.selectLines)  ")
         println(io, "selectedLines:              $(settings.selectedLines)  ")
         println(io, "maxKappa:                   $(settings.maxKappa)  ")
@@ -186,7 +186,7 @@ module ImpactExcitation
         #
         lines = ImpactExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    ImpactExcitation.displayLines(lines)    end
+        if  settings.printBefore    ImpactExcitation.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = ImpactExcitation.Line[]
         for  line in lines

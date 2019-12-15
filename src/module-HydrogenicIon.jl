@@ -92,13 +92,13 @@ module HydrogenicIon
         P   = HydrogenicIon.radialOrbital( Shell(sh.n, Basics.subshell_l(sh)), Z, grid)
         
         Q   = zeros(size(P, 1));   Pprime   = zeros(size(P, 1));    Qprime   = zeros(size(P, 1))
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             dP(i) = Math.derivative(P, i)
             for i = 2:size(Q, 1)
                 Q[i] = -1/(2 * Defaults.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(i) / grid.h / grid.rp[i] + sh.kappa/grid.r[i]) * P[i]
                 @warn("radialOrbital():: P' and Q' not yet defined.")
             end
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             @warn("radialOrbital():: Q[:] = zero everywhere; kinetic-balance not yet defined for Gauss-Legendre grids.")
         else
             error("stop a")

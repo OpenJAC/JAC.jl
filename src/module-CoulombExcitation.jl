@@ -15,7 +15,7 @@ module CoulombExcitation
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + energies                ::Array{Float64,1}             ... List of ... energies.
         + calcAlignment           ::Bool                         ... True, if alignment parameters to be calculated and false otherwise.
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
     """
@@ -24,7 +24,7 @@ module CoulombExcitation
         gauges                    ::Array{UseGauge}
         photonEnergies            ::Array{Float64,1} 
         calcAlignment             ::Bool 
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
         selectLines               ::Bool
         selectedLines             ::Array{Tuple{Int64,Int64},1} 
     end 
@@ -44,7 +44,7 @@ module CoulombExcitation
         println(io, "gauges:                   $(settings.gauges)  ")
         println(io, "photonEnergies:           $(settings.photonEnergies)  ")
         println(io, "calcAlignment:            $(settings.calcAlignment)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectLines:              $(settings.selectLines)  ")
         println(io, "selectedLines:            $(settings.selectedLines)  ")
     end

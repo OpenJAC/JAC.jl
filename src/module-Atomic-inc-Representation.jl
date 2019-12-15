@@ -377,7 +377,7 @@
                                                           (single-electron) excitations are to be included.
         + dampingTau               ::Float64          ... factor tau (> 0.) that is used to 'damp' the one- and two-electron
                                                           interactions strength: exp( - tau * r)
-        + printBeforeComputation   ::Bool             ... True if a short overview is to be printed before. 
+        + printBefore   ::Bool             ... True if a short overview is to be printed before. 
         + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
         + selectedLevels           ::Array{Int64,1}   ... List of selected levels.
     """
@@ -385,7 +385,7 @@
         nMax                       ::Int64
         lValues                    ::Array{Int64,1}
         dampingTau                 ::Float64
-        printBeforeComputation     ::Bool 
+        printBefore     ::Bool 
         selectLevels               ::Bool
         selectedLevels             ::Array{Int64,1}
     end 
@@ -404,7 +404,7 @@
         println(io, "nMax:                     $(settings.nMax)  ")
         println(io, "lValues:                  $(settings.lValues)  ")
         println(io, "dampingTau:               $(settings.dampingTau)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectLevels:             $(settings.selectLevels)  ")
         println(io, "selectedLevels:           $(settings.selectedLevels)  ")
     end

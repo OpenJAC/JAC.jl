@@ -17,7 +17,7 @@ module PairAnnihilation1Photon
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + positronEnergies        ::Array{Float64,1}             ... List of positron energies.
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
     """
@@ -25,7 +25,7 @@ module PairAnnihilation1Photon
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         positronEnergies          ::Array{Float64,1} 
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
         selectLines               ::Bool
         selectedLines             ::Array{Tuple{Int64,Int64},1} 
     end 
@@ -45,7 +45,7 @@ module PairAnnihilation1Photon
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
         println(io, "positronEnergies:         $(settings.positronEnergies)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectLines:              $(settings.selectLines)  ")
         println(io, "selectedLines:            $(settings.selectedLines)  ")
     end
@@ -163,7 +163,7 @@ module PairAnnihilation1Photon
                            output::Bool=true)
         lines = JAC.PairAnnihilation1Photon.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    JAC.PairAnnihilation1Photon.displayLines(lines)    end
+        if  settings.printBefore    JAC.PairAnnihilation1Photon.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = PairAnnihilation1Photon.Line[]
         for  line in lines

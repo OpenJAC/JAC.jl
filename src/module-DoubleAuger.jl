@@ -11,7 +11,7 @@ module DoubleAuger
     """
     `struct  DoubleAuger.Settings`  ... defines a type for the settings in estimating double-Auger and autoionization rates.
 
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
         + minAugerEnergy          ::Float64                      ... Minimum energy of free (Auger) electrons to be included.
@@ -19,7 +19,7 @@ module DoubleAuger
         + maxKappa                ::Int6464                      ... Maximum kappa value of partial waves to be included.
     """
     struct Settings
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
         selectLines               ::Bool  
         selectedLines             ::Array{Tuple{Int64,Int64},1}
         minAugerEnergy            ::Float64
@@ -38,7 +38,7 @@ module DoubleAuger
 
     # `Base.show(io::IO, settings::DoubleAuger.Settings)`  ... prepares a proper printout of the variable settings::DoubleAuger.Settings.
     function Base.show(io::IO, settings::DoubleAuger.Settings) 
-        println(io, "printBeforeComputation:       $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:       $(settings.printBefore)  ")
         println(io, "selectLines:                  $(settings.selectLines)  ")
         println(io, "selectedLines:                $(settings.selectedLines)  ")
         println(io, "minAugerEnergy:               $(settings.minAugerEnergy)  ")

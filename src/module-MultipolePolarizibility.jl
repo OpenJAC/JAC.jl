@@ -78,7 +78,7 @@ module MultipolePolarizibility
         + nLower                    ::Int64                 ... Lower and upper indices in the configurations for the summation 
         + nUpper                    ::Int64                     over the intermediate levels.
         + omegas                    ::Array{Float64,1}      ... List of omegas (energies) of the dynamic polarizibility.
-        + printBeforeComputation    ::Bool                  ... True if a list of selected levels is printed before the 
+        + printBefore    ::Bool                  ... True if a list of selected levels is printed before the 
                                                                 actual computations start. 
         + selectLevels              ::Bool                  ... True if individual levels are selected for the computation.
         + selectedLevels            ::Array{Int64,1}        ... List of selected levels.
@@ -88,7 +88,7 @@ module MultipolePolarizibility
         nLower                      ::Int64  
         nUpper                      ::Int64
         omegas                      ::Array{Float64,1}
-        printBeforeComputation      ::Bool 
+        printBefore      ::Bool 
         selectLevels                ::Bool
         selectedLevels              ::Array{Int64,1}
     end 
@@ -110,7 +110,7 @@ module MultipolePolarizibility
         println(io, "nLower:                   $(settings.nLower)  ")
         println(io, "nUpper:                   $(settings.nUpper)  ")
         println(io, "omegas:                   $(settings.omegas)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectLevels:             $(settings.selectLevels)  ")
         println(io, "selectedLevels:           $(settings.selectedLevels)  ")
     end
@@ -142,7 +142,7 @@ module MultipolePolarizibility
         #
         outcomes = MultipolePolarizibility.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    MultipolePolarizibility.displayOutcomes(outcomes)    end
+        if  settings.printBefore    MultipolePolarizibility.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         newOutcomes = MultipolePolarizibility.Outcome[]
         for  outcome in outcomes

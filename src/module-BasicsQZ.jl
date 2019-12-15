@@ -302,28 +302,30 @@ module BasicsQZ
 
 
     """
-    `Basics.tabulate(sa::String, multiplet::Multiplet; stream::IO=stdout)`  
-        ... tabulates the energies from the multiplet due to different criteria.
+    `Basics.tabulate(stream::IO, sa::String, multiplet::Multiplet, levelNos::Array{Int64,1})`  
+        ... tabulates the energies from the multiplet with level numbers in levelNos due to different criteria.
 
-    + `("multiplet: energies", multiplet::Multiplet; stream::IO=stdout)`  
+    + `(stream::IO, "multiplet: energies", multiplet::Multiplet)`  
         ... to tabulate the energies of all levels of the given multiplet into a neat format; nothing is returned.
-    + `("multiplet: energy relative to immediately lower level", multiplet::Multiplet; stream::IO=stdout)`  
+    + `(stream::IO, "multiplet: energy relative to immediately lower level", multiplet::Multiplet, levelNos::Array{Int64,1})`  
         ... to tabulate the energy splitting between neighboured levels of all levels of the given multiplet into a neat
             format; nothing is returned.
-    + `("multiplet: energy of each level relative to lowest level", multiplet::Multiplet; stream::IO=stdout)`  
+    + `(stream::IO, "multiplet: energy of each level relative to lowest level", multiplet::Multiplet, levelNos::Array{Int64,1}`  
         ... to tabulate the energy splitting of all levels with regard to the lowest level of the given multiplet into 
             a neat format; nothing is returned.
     """
-    function Basics.tabulate(sa::String, multiplet::Multiplet; stream::IO=stdout)
+    function Basics.tabulate(stream::IO, sa::String, multiplet::Multiplet, levelNos::Array{Int64,1})
         if        sa == "multiplet: energies"
             println(stream, "\n  Eigenenergies:")
             sb = "  Level  J Parity          Hartrees       " * "             eV                   " *  TableStrings.inUnits("energy")     
             println(stream, "\n", sb, "\n")
             for  i = 1:length(multiplet.levels)
-                lev = multiplet.levels[i]
-                en  = lev.energy;    en_eV = Defaults.convertUnits("energy: from atomic to eV", en);    en_requested = Defaults.convertUnits("energy: from atomic", en)
-                sc  = " " * TableStrings.level(i) * "    " * string(LevelSymmetry(lev.J, lev.parity)) * "    "
-                @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
+                if  i in levelNos
+                    lev = multiplet.levels[i]
+                    en  = lev.energy;    en_eV = Defaults.convertUnits("energy: from atomic to eV", en);    en_requested = Defaults.convertUnits("energy: from atomic", en)
+                    sc  = " " * TableStrings.level(i) * "    " * string(LevelSymmetry(lev.J, lev.parity)) * "    "
+                    @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
+                end
             end
 
         elseif    sa == "multiplet: energy relative to immediately lower level"
@@ -331,11 +333,13 @@ module BasicsQZ
             sb = "  Level  J Parity          Hartrees       " * "             eV                   " * TableStrings.inUnits("energy")  
             println(stream, "\n", sb, "\n")
             for  i = 2:length(multiplet.levels)
-                lev = multiplet.levels[i]
-                en    = lev.energy - multiplet.levels[i-1].energy;    
-                en_eV = Defaults.convertUnits("energy: from atomic to eV", en);    en_requested = Defaults.convertUnits("energy: from atomic", en)
-                sc  = " " * TableStrings.level(i) * "    " * string(LevelSymmetry(lev.J, lev.parity)) * "    "
-                @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
+                if  i in levelNos
+                    lev = multiplet.levels[i]
+                    en    = lev.energy - multiplet.levels[i-1].energy;    
+                    en_eV = Defaults.convertUnits("energy: from atomic to eV", en);    en_requested = Defaults.convertUnits("energy: from atomic", en)
+                    sc  = " " * TableStrings.level(i) * "    " * string(LevelSymmetry(lev.J, lev.parity)) * "    "
+                    @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
+                end
             end
 
         elseif    sa == "multiplet: energy of each level relative to lowest level"
@@ -343,11 +347,13 @@ module BasicsQZ
             sb = "  Level  J Parity          Hartrees       " * "             eV                   " * TableStrings.inUnits("energy")      
             println(stream, "\n", sb, "\n")
             for  i = 2:length(multiplet.levels)
-                lev = multiplet.levels[i]
-                en    = lev.energy - multiplet.levels[1].energy;    
-                en_eV = Defaults.convertUnits("energy: from atomic to eV", en);    en_requested = Defaults.convertUnits("energy: from atomic", en)
-                sc  = " " * TableStrings.level(i) * "    " * string(LevelSymmetry(lev.J, lev.parity)) * "    "
-                @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
+                if  i in levelNos
+                    lev = multiplet.levels[i]
+                    en    = lev.energy - multiplet.levels[1].energy;    
+                    en_eV = Defaults.convertUnits("energy: from atomic to eV", en);    en_requested = Defaults.convertUnits("energy: from atomic", en)
+                    sc  = " " * TableStrings.level(i) * "    " * string(LevelSymmetry(lev.J, lev.parity)) * "    "
+                    @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
+                end
             end
         else
             error("Unsupported keystring.")

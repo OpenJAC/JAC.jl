@@ -14,7 +14,7 @@ module PhotoIonizationAutoion
 
         + multipoles              ::Array{EmMultipole,1}               ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge,1}                  ... Specifies the gauges to be included into the computations.
-        + printBeforeComputation  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
         + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
         + maxKappa                ::Int64                              ... Maximum kappa value of partial waves to be included.
@@ -22,7 +22,7 @@ module PhotoIonizationAutoion
     struct Settings
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge,1} 
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
         selectPathways            ::Bool
         selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
         maxKappa                  ::Int64 
@@ -42,7 +42,7 @@ module PhotoIonizationAutoion
     function Base.show(io::IO, settings::PhotoIonizationAutoion.Settings) 
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
-        println(io, "printBeforeComputation:  $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:  $(settings.printBefore)  ")
         println(io, "selectPathways:          $(settings.selectPathways)  ")
         println(io, "selectedPathways:        $(settings.selectedPathways)  ")
         println(io, "maxKappa:                $(settings.maxKappa)  ")

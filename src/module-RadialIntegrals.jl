@@ -26,7 +26,7 @@ module  RadialIntegrals
         mtp   = min(size(a.P, 1), size(b.P, 1));    wc = Defaults.getDefaults("speed of light: c")
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
     
             function f1(i::Int64)   dPb(j) = Math.derivative(b.P, j)
                                     dQb(j) = Math.derivative(b.Q, j)
@@ -43,7 +43,7 @@ module  RadialIntegrals
             return( Defaults.INVERSE_FINE_STRUCTURE_CONSTANT * I1 + Defaults.INVERSE_FINE_STRUCTURE_CONSTANT * kappa * I2 -
                     2 * Defaults.INVERSE_FINE_STRUCTURE_CONSTANT^2 * I3 + I4 )
                     
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   
                wa = wa + grid.wr[i] * (  wc * a.Q[i] * (b.Pprime[i] + kappa/grid.r[i] * b.P[i])  
@@ -73,9 +73,9 @@ module  RadialIntegrals
         mtp   = min(size(a.P, 1), size(b.P, 1));    wc = Defaults.getDefaults("speed of light: c")
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             error("stop a")
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   
                wa = wa + grid.wr[i] * (  wc * a.Q[i] * (b.Pprime[i] + kappa/grid.r[i] * b.P[i])  
@@ -99,10 +99,10 @@ module  RadialIntegrals
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function f(i :: Int64)    return( (a.P[i] * b.Q[i] - a.Q[i] * b.P[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) )       end
             return( Math.integrateFitTransform(f, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   wa = wa + (a.P[i] * b.Q[i] - a.Q[i] * b.P[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) * grid.wr[i]   end
             return( wa )
@@ -121,10 +121,10 @@ module  RadialIntegrals
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function f(i :: Int64)    return( (a.P[i] * b.Q[i] + a.Q[i] * b.P[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) )       end
             return( Math.integrateFitTransform(f, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   wa = wa + (a.P[i] * b.Q[i] + a.Q[i] * b.P[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) * grid.wr[i]   end
             return( wa )
@@ -143,10 +143,10 @@ module  RadialIntegrals
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function f(i :: Int64)    return( (a.P[i] * b.Q[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) )       end
             return( Math.integrateFitTransform(f, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   wa = wa + (a.P[i] * b.Q[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) * grid.wr[i]   end
             return( wa )
@@ -165,10 +165,10 @@ module  RadialIntegrals
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function f(i :: Int64)    return( (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) )       end
             return( Math.integrateFitTransform(f, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   wa = wa + (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * GSL.sf_bessel_jl(L, q * grid.r[i]) * grid.wr[i]   end
             return( wa )
@@ -187,9 +187,9 @@ module  RadialIntegrals
         alphaZ = Defaults.getDefaults("alpha") * Z
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             error("stop a")
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   
                 wb = (a.Pprime[i] * b.Pprime[i]  +  a.Qprime[i] * b.Qprime[i])  + 
@@ -214,9 +214,9 @@ module  RadialIntegrals
         minusa = Subshell(1, -a.subshell.kappa);    minusc = Subshell(1, -c.subshell.kappa)
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             error("stop a")
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   
                 wb = (- a.Q[i] * c.P[i] * AngularMomentum.sigma_reduced_me(minusa, c.subshell)  +
@@ -238,9 +238,9 @@ module  RadialIntegrals
         mtp = min(size(a.P, 1), size(c.P, 1));   alphaZ = Defaults.getDefaults("alpha") * Z
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             error("stop a")
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   
                 wa = wa - alphaZ / grid.r[i] * (a.Q[i] * c.P[i] - c.Q[i] * a.P[i]) * grid.wr[i]   
@@ -263,7 +263,7 @@ module  RadialIntegrals
         n0  = max( bspline1.lower, bspline2.lower)
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
     
             function f1(i::Int64)
                 wa = pm * bspline1.bs[i] * bspline2.bp[i]
@@ -278,7 +278,7 @@ module  RadialIntegrals
             I1 = Math.integrateTransform(f1, n0, mtp, grid)
             I2 = Math.integrateTransform(f2, n0, mtp, grid)
             return( I1+I2 )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = n0:mtp  
                 wa = wa + pm * bspline1.bs[i] * bspline2.bp[i] * grid.wr[i] 
@@ -303,14 +303,14 @@ module  RadialIntegrals
         mtp = min(size(orbital1.P, 1), size(orbital2.P, 1))
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
     
             function f(i :: Int64)
                 return( orbital1.P[i] * orbital2.P[i] + orbital1.Q[i] * orbital2.Q[i] )
             end
     
             return( Math.integrateFitTransform(f, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 1:grid.nr 
                 if i > mtp   break   end
@@ -330,7 +330,7 @@ module  RadialIntegrals
     function overlap(bspline1::Bsplines.Bspline, bspline2::Bsplines.Bspline, grid::Radial.Grid)
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == Basics.MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             if  bspline1.upper <= bspline2.lower  ||  bspline2.upper <= bspline1.lower    return( 0. )   end
             mtp = min( bspline1.upper, bspline2.upper)
             n0  = max( bspline1.lower, bspline2.lower)
@@ -340,7 +340,7 @@ module  RadialIntegrals
             end
     
             return( Math.integrateTransform(f, n0, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 1:grid.nr   wa = wa + bspline1.bs[i] * bspline2.bs[i] * grid.wr[i]   end
             return( wa )
@@ -359,14 +359,14 @@ module  RadialIntegrals
         mtp = min( length(p1List), length(p2List))
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
     
             function f(i :: Int64)
                 return( p1List[i] * p2List[i] )
             end
     
             return( Math.integrateTransform(f, 1, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             error("stop a")
         else
             error("stop b")
@@ -382,7 +382,7 @@ module  RadialIntegrals
     function qedDampedOverlap(lambda::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(b.P, 1))
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGL
+        if  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   wb = Base.MathConstants.e^(- grid.r[i]/lambda);     wa = wa + (a.P[i]*wb*b.P[i] + a.Q[i]*wb*b.Q[i]) * grid.wr[i]   end
             return( wa )
@@ -401,7 +401,7 @@ module  RadialIntegrals
         alpha = Defaults.getDefaults("alpha");    BZ = 0.074 + 0.035 * nm.Z * alpha
         mtp = min(size(a.P, 1), size(b.P, 1))
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGL
+        if  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 1:mtp   wb = Base.MathConstants.e^(-nm.Z * grid.r[i]) ;     wa = wa + (a.P[i]*wb*b.P[i] + a.Q[i]*wb*b.Q[i]) * grid.wr[i]   end
             wa = -BZ * nm.Z^4 * alpha^3 * wa
@@ -430,7 +430,7 @@ module  RadialIntegrals
         
         mtp = min(size(a.P, 1), size(b.P, 1))
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGL
+        if  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 1:mtp   
                 wb = tIntegral(grid.r[i]) * (-pot.Zr[i] * grid.r[i])     
@@ -462,7 +462,7 @@ module  RadialIntegrals
         
         mtp = min(size(a.P, 1), size(b.P, 1))
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGL
+        if  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   
                 wb = tIntegral(grid.r[i]) * (-pot.Zr[i] / grid.r[i])     
@@ -488,10 +488,10 @@ module  RadialIntegrals
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function f(i :: Int64)    return( (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * (grid.r[i]^k) )    end
             return( Math.integrateFitTransform(f, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             if  k > -3   m0 = 2   else   m0 = 6   end    # Don't allow too small r-values
             for  i = m0:mtp   wa = wa + (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * (grid.r[i]^k) * grid.wr[i]   end
@@ -510,14 +510,14 @@ module  RadialIntegrals
         mtp = min( length(p1List), length(p2List))
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
     
             function f(i :: Int64)
                 return( p1List[i] * p2List[i] * (grid.r[i]^k) )
             end
     
             return( Math.integrateTransform(f, 2, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   wa = wa + p1List[i] * p2List[i] * (grid.r[i]^k) * grid.wr[i]   end
             return( wa )
@@ -536,10 +536,10 @@ module  RadialIntegrals
         mtp = min(size(a.P, 1), size(b.P, 1))
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function f(i :: Int64)    return( (a.P[i] * b.Q[i] + a.Q[i] * b.P[i]) * (grid.r[i]^k) )    end
             return( Math.integrateFitTransform(f, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   wa = wa + (a.P[i] * b.Q[i] + a.Q[i] * b.P[i]) * (grid.r[i]^k) * grid.wr[i]   end
             return( wa )
@@ -567,7 +567,7 @@ module  RadialIntegrals
     
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function fs(r :: Int64, s :: Int64) :: Float64
                 return( ul(grid.r[r], grid.r[s]) * ( b.P[s] * d.P[s] + b.Q[s] * d.Q[s] ) )
             end
@@ -578,7 +578,7 @@ module  RadialIntegrals
             end
     
             return Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
             wa = 0.
             for  r = 2:mtp_ac
@@ -611,9 +611,9 @@ module  RadialIntegrals
     
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             error("stop a")
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
             wa = 0.
             for  r = 2:mtp_ac
@@ -655,9 +655,9 @@ module  RadialIntegrals
         end
                
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             error("stop a")
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1));  rtuple = rLowUp()
             wa = 0.
             for  (rlow, rup)  in  rtuple
@@ -727,7 +727,7 @@ module  RadialIntegrals
     
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function fs(r :: Int64, s :: Int64) :: Float64
                 return( ul(grid.r[r], grid.r[s]) * ( b.P[s] * d.P[s] + b.Q[s] * d.Q[s] ) )
             end
@@ -738,7 +738,7 @@ module  RadialIntegrals
             end
     
             return Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
             wa = 0.
             for  r = 2:mtp_ac
@@ -765,9 +765,9 @@ module  RadialIntegrals
     function  Vinti(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             error("stop a")
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             mtp_ab = min(size(a.P, 1), size(b.P, 1));    kapa = a.subshell.kappa;     kapb = b.subshell.kappa
             wa = 0.
             for  r = 2:mtp_ab
@@ -793,7 +793,7 @@ module  RadialIntegrals
         n0  = max( bspline1.lower, bspline2.lower)
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
     
             function f(i :: Int64)
                 if  i == 1  wa = - bspline1.bs[i] * potential.Zr[i] * bspline2.bs[i] / (0.3 * grid.r[2]) 
@@ -802,7 +802,7 @@ module  RadialIntegrals
             end
     
             return( Math.integrateTransform(f, n0, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = n0:mtp  
                 if  i == 1  wa = wa - bspline1.bs[i] * potential.Zr[i] * bspline2.bs[i] / (0.3 * grid.r[2]) * grid.wr[i] 
@@ -822,10 +822,10 @@ module  RadialIntegrals
     function V0(wa::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function f(i :: Int64)    return( wa[i] )     end
             return( Math.integrateFitTransform(f, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wb = 0.
             for  i = 1:mtp   wb = wb + wa[i] * grid.wr[i]   end
             return( wb )
@@ -851,7 +851,7 @@ module  RadialIntegrals
         mtp = min(size(b.P, 1), size(d.P, 1))
         
         # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function fs(s :: Int64) :: Float64
                 return( grid.r[s]^nu * ( b.P[s] * d.Q[s] ) )
             end
@@ -864,7 +864,7 @@ module  RadialIntegrals
             end
     
             return Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
             wa = 0.
             for  r = 2:mtp_ac
@@ -895,10 +895,10 @@ module  RadialIntegrals
     function Yk_ab(k::Int64, r::Float64, rho_ab::Array{Float64,1}, mtp::Int64, grid::Radial.Grid)
         
        # Distinguish the radial integration for different grid definitions
-        if  grid.mesh == MeshGrasp
+        if  grid.meshType == Radial.MeshGrasp()
             function f(i :: Int64)    rl = min(r, grid.r[i]);   rg = max(r, grid.r[i]);   return( rho_ab[i] * rl^k / rg^(k+1) )     end
             return( r * Math.integrateFitTransform(f, mtp, grid) )
-        elseif  grid.mesh == MeshGL
+        elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   
                 rl = min(r, grid.r[i]);   rg = max(r, grid.r[i])

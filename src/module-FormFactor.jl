@@ -11,13 +11,13 @@ module FormFactor
     `struct  FormFactor.Settings`  ... defines a type for the details and parameters of computing alpha-variation parameters.
 
         + qList                    ::Array{Float64,1} ... List of q-values in [a.u.]
-        + printBeforeComputation   ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
+        + printBefore   ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
         + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
         + selectedLevels           ::Array{Level,1}   ... List of selected levels.
     """
     struct Settings 
         qList                      ::Array{Float64,1} 
-        printBeforeComputation     ::Bool
+        printBefore     ::Bool
         selectLevels               ::Bool
         selectedLevels             ::Array{Level,1}
     end 
@@ -34,7 +34,7 @@ module FormFactor
     # `Base.show(io::IO, settings::FormFactor.Settings)`  ... prepares a proper printout of the variable settings::FormFactor.Settings.
     function Base.show(io::IO, settings::FormFactor.Settings) 
         println(io, "qList:                    $(settings.qList)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectLevels:             $(settings.selectLevels)  ")
         println(io, "selectedLevels:           $(settings.selectedLevels)  ")
     end
@@ -182,7 +182,7 @@ module FormFactor
         #
         outcomes = FormFactor.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    FormFactor.displayOutcomes(outcomes)    end
+        if  settings.printBefore    FormFactor.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         newOutcomes = FormFactor.Outcome[]
         for  outcome in outcomes

@@ -95,22 +95,6 @@ module Nuclear
     end
 
 
-    # `Base.show(io::IO, m::Model)`  ... prepares a proper printout of the variable  m::Model.
-    function Base.show(io::IO, m::Model) 
-        if      m.model == "Fermi"   
-            print(io, "Fermi nuclear model for Z = $(m.Z) with mass = $(m.mass), radius R = $(m.radius) fm and ")
-        elseif  m.model == "point"   
-            print(io, "Point nuclear model for Z = $(m.Z) with mass = $(m.mass), radius R = $(m.radius) fm and ")
-        elseif  m.model == "uniform"   
-            print(io, "Uniform nuclear model for Z = $(m.Z) with mass = $(m.mass), radius R = $(m.radius) fm and ")
-        else
-            error("stop a")
-        end
-
-        print(io, "nuclear spin I = $(m.spinI), dipole moment mu = $(m.mu) and quadrupole moment Q = $(m.Q).")
-    end
-
-
     """
     `Nuclear.Model(gui::Guint; model::Nuclear.Model=Model(36.0))`  
         ... constructor to re-fine a nuclear model by a graphical user interface, and which may starts from 
@@ -141,6 +125,22 @@ module Nuclear
 
         else  error("Unsupported Guint = $gui.")
         end
+    end
+
+
+    # `Base.show(io::IO, m::Model)`  ... prepares a proper printout of the variable  m::Model.
+    function Base.show(io::IO, m::Model) 
+        if      m.model == "Fermi"   
+            print(io, "Fermi nuclear model for Z = $(m.Z) with mass = $(m.mass), radius R = $(m.radius) fm and ")
+        elseif  m.model == "point"   
+            print(io, "Point nuclear model for Z = $(m.Z) with mass = $(m.mass), radius R = $(m.radius) fm and ")
+        elseif  m.model == "uniform"   
+            print(io, "Uniform nuclear model for Z = $(m.Z) with mass = $(m.mass), radius R = $(m.radius) fm and ")
+        else
+            error("stop a")
+        end
+
+        print(io, "nuclear spin I = $(m.spinI), dipole moment mu = $(m.mu) and quadrupole moment Q = $(m.Q).")
     end
   
 

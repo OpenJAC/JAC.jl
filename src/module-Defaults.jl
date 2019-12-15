@@ -87,7 +87,8 @@ module Defaults
     
     GBL_SUMMARY_IOSTREAM        = nothing
 
-    GBL_STANDARD_GRID           = Radial.Grid("grid: exponential", printout=false)        
+    GBL_STANDARD_GRID           = Radial.Grid(true, printout=false)        
+    ##x GBL_STANDARD_GRID       = Radial.Grid("grid: exponential", printout=false)        
 
     
     """

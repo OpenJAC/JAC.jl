@@ -33,8 +33,10 @@ module BascisPerform
             ##x     multiplet = perform("computation: CI", basis, nModel, computation.grid, computation.asfSettings)
             ##x     error("stop after Breit test")
             ##x end =#
-            basis     = perform("computation: SCF", computation.configs, nModel, computation.grid, computation.asfSettings)
-            multiplet = perform("computation: CI", basis, nModel, computation.grid, computation.asfSettings)
+            basis     = Basics.performSCF(computation.configs, nModel, computation.grid, computation.asfSettings)
+            ##x basis     = perform("computation: SCF", computation.configs, nModel, computation.grid, computation.asfSettings)
+            ##x multiplet = perform("computation: CI", basis, nModel, computation.grid, computation.asfSettings)
+            multiplet = Basics.performCI( basis, nModel, computation.grid, computation.asfSettings)
             LSjj.expandLevelsIntoLS(multiplet, computation.asfSettings.jjLS)
             #
             if output    results = Base.merge( results, Dict("multiplet:" => multiplet) ) 
@@ -91,11 +93,12 @@ module BascisPerform
         elseif  computation.process in [AugerInPlasma, PhotoInPlasma]
             pSettings        = computation.processSettings
             plasmaSettings   = PlasmaShift.Settings(pSettings.plasmaModel, pSettings.lambdaDebye, pSettings.ionSphereR0, pSettings.NoBoundElectrons)
-            initialBasis     = perform("computation: SCF", computation.initialConfigs, nModel, computation.grid, 
-                                                        computation.initialAsfSettings)
+            ##x initialBasis     = perform("computation: SCF", computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
+            initialBasis     = Basics.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
             initialMultiplet = perform("computation: CI for plasma",  initialBasis, nModel, computation.grid, computation.initialAsfSettings,
                                                                     plasmaSettings)
-            finalBasis       = perform("computation: SCF", computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
+            ##x finalBasis       = perform("computation: SCF", computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
+            finalBasis       = Basics.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
             finalMultiplet   = perform("computation: CI for plasma",  finalBasis, nModel, computation.grid, computation.finalAsfSettings,
                                                                     plasmaSettings)
             #
@@ -110,16 +113,21 @@ module BascisPerform
             end
             
         else
-            initialBasis     = perform("computation: SCF", computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
-            initialMultiplet = perform("computation: CI",  initialBasis, nModel, computation.grid, computation.initialAsfSettings)
-            finalBasis       = perform("computation: SCF", computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
-            finalMultiplet   = perform("computation: CI",  finalBasis, nModel, computation.grid, computation.finalAsfSettings)
+            initialBasis     = Basics.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
+            ##x initialBasis     = perform("computation: SCF", computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
+            ##x initialMultiplet = perform("computation: CI",  initialBasis, nModel, computation.grid, computation.initialAsfSettings)
+            initialMultiplet = Basics.performCI( initialBasis, nModel, computation.grid, computation.initialAsfSettings)
+            finalBasis       = Basics.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
+            ##x finalBasis       = perform("computation: SCF", computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
+            ##x finalMultiplet   = perform("computation: CI",  finalBasis, nModel, computation.grid, computation.finalAsfSettings)
+            finalMultiplet   = Basics.performCI(   finalBasis, nModel, computation.grid, computation.finalAsfSettings)
             #
             if computation.process in [PhotoExcFluor, PhotoExcAuto, PhotoIonFluor, PhotoIonAuto, ImpactExcAuto, Dierec]
-                intermediateBasis     = perform("computation: SCF", computation.intermediateConfigs, nModel, computation.grid, 
-                                                                    computation.intermediateAsfSettings)
-                intermediateMultiplet = perform("computation: CI",  intermediateBasis, nModel, computation.grid, 
-                                                                    computation.intermediateAsfSettings)
+                intermediateBasis     = Basics.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
+                ##x intermediateBasis     = perform("computation: SCF", computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
+                ##x intermediateMultiplet = perform("computation: CI",  intermediateBasis, nModel, computation.grid, 
+                ##x                                                     computation.intermediateAsfSettings)
+                intermediateMultiplet = Basics.performCI( intermediateBasis, nModel, computation.grid, computation.intermediateAsfSettings)
             end
             #
             if      computation.process == JAC.Auger   
@@ -316,6 +324,7 @@ module BascisPerform
 
 
 
+    #============================================================================
     """
     `Basics.perform("computation: SCF", configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
                                         printout::Bool=true)`  
@@ -328,6 +337,7 @@ module BascisPerform
         return( Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
                                   printout=printout) )
     end
+    ============================================================================#
 
 
 
@@ -344,7 +354,7 @@ module BascisPerform
                                  grid::Radial.Grid, settings::AsfSettings; printout=printout) )
     end
 
-
+    #============================================================================
     """
     `Basics.perform("computation: CI", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)`  
         ... to  set-up and diagonalize from the (SCF) basis the configuration-interaction matrix and to derive and display the 
@@ -354,6 +364,7 @@ module BascisPerform
         !(sa == "computation: CI")   &&   error("Unsupported keystring = $sa")
         return( Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout=printout) )
     end
+    ============================================================================#
 
 
     """
@@ -380,7 +391,7 @@ module BascisPerform
     """
     function Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
                                printout::Bool=true)
-        if  printout    println("\n... in perform['computation: SCF'] ...")    end
+        if  printout    println("\n... in performSCF ...")    end
         
         # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
         relconfList = ConfigurationR[]
@@ -468,7 +479,7 @@ module BascisPerform
     """
     function Basics.performSCF(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, frozenShells::Array{Shell,1}, 
                                settings::Atomic.RasSettings; printout::Bool=true)
-        if  printout    println("\n... in perform['computation: SCF for RAS step'] ...")    end
+        if  printout    println("\n... in performSCF['for RAS step'] ...")    end
         
         # Determine the list of frozen subshells
         frozenSubshells = Subshell[]
@@ -574,15 +585,15 @@ module BascisPerform
         
         # Display all level energies and energy splittings
         if  printout
-            Basics.tabulate("multiplet: energies", mp)
-            Basics.tabulate("multiplet: energy relative to immediately lower level",    mp)
-            Basics.tabulate("multiplet: energy of each level relative to lowest level", mp)
+            Basics.tabulate(stdout, "multiplet: energies", mp)
+            Basics.tabulate(stdout, "multiplet: energy relative to immediately lower level",    mp)
+            Basics.tabulate(stdout, "multiplet: energy of each level relative to lowest level", mp)
         end
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary     
-            Basics.tabulate("multiplet: energies", mp, stream=iostream)
-            Basics.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
-            Basics.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
+            Basics.tabulate(iostream, "multiplet: energies", mp)
+            Basics.tabulate(iostream, "multiplet: energy relative to immediately lower level",    mp)
+            Basics.tabulate(iostream, "multiplet: energy of each level relative to lowest level", mp)
         end
     
         return( mp )
@@ -612,6 +623,8 @@ module BascisPerform
         # Calculate for each symmetry block the corresponding CI matrix, diagonalize it and append a Multiplet for this block
         multiplets = Multiplet[]
         for  (sym,v) in  symmetries
+            # Skip the symmetry block if it not selected
+            if  settings.selectSymmetriesCI    &&   !(sym in settings.selectedSymmetriesCI)     continue    end
             matrix = compute("matrix: CI, J^P symmetry", sym, basis, nuclearModel, grid, settings; printout=printout)
             eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
             levels = Level[]
@@ -632,17 +645,35 @@ module BascisPerform
         mp = Basics.merge(multiplets)
         mp = Basics.sortByEnergy(mp)
         
+        # Determine the level list to be printed out
+        levelNos = Int64[]
+        if      settings.selectLevelsCI  &&  settings.selectSymmetriesCI
+            for (ilev, level) in  enumerate(mp.levels)
+                if  LevelSymmetry(level.J, level.parity)  in  settings.selectedSymmetriesCI  &&  ilev in  settings.selectedLevelsCI 
+                    push!(levelNos, ilev)       
+                end
+            end
+        elseif  settings.selectLevelsCI
+            levels = deepcopy(settings.selectedLevelsCI)
+        elseif  settings.selectSymmetriesCI
+            for (ilev, level) in  enumerate(mp.levels)
+                if  LevelSymmetry(level.J, level.parity)  in  settings.selectedSymmetriesCI     push!(levelNos, ilev)   end
+            end
+        else
+            for (ilev, level) in  enumerate(mp.levels)       push!(levelNos, ilev)   end
+        end
+        
         # Display all level energies and energy splittings
         if  printout
-            Basics.tabulate("multiplet: energies", mp)
-            Basics.tabulate("multiplet: energy relative to immediately lower level",    mp)
-            Basics.tabulate("multiplet: energy of each level relative to lowest level", mp)
+            Basics.tabulate(stdout, "multiplet: energies", mp, levelNos)
+            Basics.tabulate(stdout, "multiplet: energy relative to immediately lower level",    mp, levelNos)
+            Basics.tabulate(stdout, "multiplet: energy of each level relative to lowest level", mp, levelNos)
         end
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary     
-            Basics.tabulate("multiplet: energies", mp, stream=iostream)
-            Basics.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
-            Basics.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
+            Basics.tabulate(iostream, "multiplet: energies", mp, levelNos)
+            Basics.tabulate(iostream, "multiplet: energy relative to immediately lower level",    mp, levelNos)
+            Basics.tabulate(iostream, "multiplet: energy of each level relative to lowest level", mp, levelNos)
         end
     
         return( mp )
@@ -696,17 +727,20 @@ module BascisPerform
         mp = Basics.merge(multiplets)
         mp = Basics.sortByEnergy(mp)
         
+        levelNos = Int64[]
+        for (ilev, level) in  enumerate(mp.levels)       push!(levelNos, ilev)   end
+        
         # Display all level energies and energy splittings
         if  printout
-            Basics.tabulate("multiplet: energies", mp)
-            Basics.tabulate("multiplet: energy relative to immediately lower level",    mp)
-            Basics.tabulate("multiplet: energy of each level relative to lowest level", mp)
+            Basics.tabulate(stdout, "multiplet: energies", mp, levelNos)
+            Basics.tabulate(stdout, "multiplet: energy relative to immediately lower level",    mp, levelNos)
+            Basics.tabulate(stdout, "multiplet: energy of each level relative to lowest level", mp, levelNos)
         end
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary     
-            Basics.tabulate("multiplet: energies", mp, stream=iostream)
-            Basics.tabulate("multiplet: energy relative to immediately lower level",    mp, stream=iostream)
-            Basics.tabulate("multiplet: energy of each level relative to lowest level", mp, stream=iostream)
+            Basics.tabulate(iostream, "multiplet: energies", mp, levelNos)
+            Basics.tabulate(iostream, "multiplet: energy relative to immediately lower level",    mp, levelNos)
+            Basics.tabulate(iostream, "multiplet: energy of each level relative to lowest level", mp, levelNos)
         end
     
         return( mp )

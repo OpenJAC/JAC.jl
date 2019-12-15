@@ -16,14 +16,14 @@ module PhotoExcitationFluores
 
         + multipoles              ::Array{EmMultipole,1}   ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge,1}      ... Specifies the gauges to be included into the computations.
-        + printBeforeComputation  ::Bool                   ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                   ... True, if all energies and lines are printed before their evaluation.
         + selectPathways          ::Bool                   ... True if particular pathways are selected for the computations.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
     """
     struct Settings
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge,1} 
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
         selectPathways            ::Bool
         selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
      end 
@@ -43,7 +43,7 @@ module PhotoExcitationFluores
     function Base.show(io::IO, settings::PhotoExcitationFluores.Settings) 
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
-        println(io, "printBeforeComputation:  $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:  $(settings.printBefore)  ")
         println(io, "selectPathways:          $(settings.selectPathways)  ")
         println(io, "selectedPathways:        $(settings.selectedPathways)  ")
     end
@@ -160,7 +160,7 @@ module PhotoExcitationFluores
         println("")
         pathways = PhotoExcitationFluores.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
         # Display all selected pathways before the computations start
-        if  settings.printBeforeComputation    PhotoExcitationFluores.displayPathways(pathways)    end
+        if  settings.printBefore    PhotoExcitationFluores.displayPathways(pathways)    end
         # Calculate all amplitudes and requested properties
         newPathways = PhotoExcitationFluores.Pathway[]
         ##x println("computePathways: NO-pathwayS = $(length(pathways)) ")

@@ -9,7 +9,7 @@ setDefaults("print summary: open", "zzz-Dielectronic.sum")
 setDefaults("method: continuum, asymptotic Coulomb")  ## setDefaults("method: continuum, Galerkin")
 setDefaults("method: normalization, pure sine")   ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
-wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600),
+wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=JAC.Radial.Grid(false),
                         initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                         intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                         finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 

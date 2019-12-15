@@ -15,7 +15,7 @@ module AutoIonization
 
         + calcAnisotropy          ::Bool                         ... True, if the intrinsic alpha_2,4 angular parameters are to be calculated, 
                                                                      and false otherwise.
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
         + minAugerEnergy          ::Float64                      ... Minimum energy of free (Auger) electrons to be included.
@@ -26,7 +26,7 @@ module AutoIonization
     """
     struct Settings
         calcAnisotropy            ::Bool         
-        printBeforeComputation    ::Bool
+        printBefore               ::Bool
         selectLines               ::Bool  
         selectedLines             ::Array{Tuple{Int64,Int64},1}
         minAugerEnergy            ::Float64
@@ -44,10 +44,37 @@ module AutoIonization
     end
 
 
+    """
+    `AutoIonization.Settings(set::AutoIonization.Settings;`
+    
+            calcAnisotropy=..,      printBefore=..,             selectLines=..,         selectedLines=..,       
+            minAugerEnergy=..,      maxAugerEnergy=..,          maxKappa=..,            operator=..)
+                        
+        ... constructor for modifying the given AutoIonization.Settings by 'overwriting' the previously selected parameters.
+    """
+    function Settings(set::AutoIonization.Settings;    
+        calcAnisotropy::Union{Nothing,Bool}=nothing,            printBefore::Union{Nothing,Bool}=nothing, 
+        selectLines::Union{Nothing,Bool}=nothing,               selectedLines::Union{Nothing,Array{Tuple{Int64,Int64},1}}=nothing,  
+        minAugerEnergy::Union{Nothing,Float64}=nothing,         maxAugerEnergy::Union{Nothing,Float64}=nothing,
+        maxKappa::Union{Nothing,Int64}=nothing,                 operator::Union{Nothing,String}=nothing)  
+        
+        if  calcAnisotropy  == nothing   calcAnisotropyx  = set.calcAnisotropy    else  calcAnisotropyx  = calcAnisotropy   end 
+        if  printBefore     == nothing   printBeforex     = set.printBefore       else  printBeforex     = printBefore      end 
+        if  selectLines     == nothing   selectLinesx     = set.selectLines       else  selectLinesx     = selectLines      end 
+        if  selectedLines   == nothing   selectedLinesx   = set.selectedLines     else  selectedLinesx   = selectedLines    end 
+        if  minAugerEnergy  == nothing   minAugerEnergyx  = set.minAugerEnergy    else  minAugerEnergyx  = minAugerEnergy   end 
+        if  maxAugerEnergy  == nothing   maxAugerEnergyx  = set.maxAugerEnergy    else  maxAugerEnergyx  = maxAugerEnergy   end 
+        if  maxKappa        == nothing   maxKappax        = set.maxKappa          else  maxKappax        = maxKappa         end 
+        if  operator        == nothing   operatorx        = set.operator          else  operatorx        = operator         end 
+
+        Settings( calcAnisotropyx, printBeforex, selectLinesx, selectedLinesx, minAugerEnergyx, maxAugerEnergyx, maxKappax, operatorx)
+    end
+
+
     # `Base.show(io::IO, settings::AutoIonization.Settings)`  ... prepares a proper printout of the variable settings::AutoIonization.Settings.
     function Base.show(io::IO, settings::AutoIonization.Settings) 
         println(io, "calcAnisotropy:                $(settings.calcAnisotropy)  ")
-        println(io, "printBeforeComputation:        $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:                   $(settings.printBefore)  ")
         println(io, "selectLines:                   $(settings.selectLines)  ")
         println(io, "selectedLines:                 $(settings.selectedLines)  ")
         println(io, "minAugerEnergy:                $(settings.minAugerEnergy)  ")
@@ -307,7 +334,7 @@ module AutoIonization
         println("")
         lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    AutoIonization.displayLines(lines)    end  
+        if  settings.printBefore    AutoIonization.displayLines(lines)    end  
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -342,7 +369,7 @@ module AutoIonization
         
         lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        # if  settings.printBeforeComputation    AutoIonization.displayLines(lines)    end  
+        # if  settings.printBefore    AutoIonization.displayLines(lines)    end  
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -375,10 +402,10 @@ module AutoIonization
         printstyled("AutoIonization.computeLinesPlasma(): The computation of Auger rates starts now ... \n", color=:light_green)
         printstyled("---------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        augerSettings = AutoIonization.Settings(false, settings.printBeforeComputation, settings.selectLines, settings.selectedLines, 0., 1.0e6, 100, "Coulomb")
+        augerSettings = AutoIonization.Settings(false, settings.printBefore, settings.selectLines, settings.selectedLines, 0., 1.0e6, 100, "Coulomb")
         lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, augerSettings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    AutoIonization.displayLines(lines)    end
+        if  settings.printBefore    AutoIonization.displayLines(lines)    end
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)

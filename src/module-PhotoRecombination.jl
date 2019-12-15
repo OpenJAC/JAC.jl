@@ -19,7 +19,7 @@ module PhotoRecombination
         + useIonEnergies          ::Bool                         ... Make use of ion energies in [MeV/u] to obtain the electron energies.
         + calcAnisotropy          ::Bool                         ... True, if the overall anisotropy is to be calculated.
         + calcTensors             ::Bool                         ... True, if the statistical tensors are to be calculated and false otherwise.
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
     """
@@ -31,7 +31,7 @@ module PhotoRecombination
         useIonEnergies            ::Bool
         calcAnisotropy            ::Bool
         calcTensors               ::Bool 
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
         selectLines               ::Bool
         selectedLines             ::Array{Tuple{Int64,Int64},1} 
     end 
@@ -55,7 +55,7 @@ module PhotoRecombination
         println(io, "useIonEnergies:           $(settings.useIonEnergies)  ")
         println(io, "calcAnisotropy:           $(settings.calcAnisotropy)  ")
         println(io, "calcTensors:              $(settings.calcTensors)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectLines:              $(settings.selectLines)  ")
         println(io, "selectedLines:            $(settings.selectedLines)  ")
     end
@@ -239,7 +239,7 @@ module PhotoRecombination
         println("")
         lines = PhotoRecombination.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    PhotoRecombination.displayLines(lines)    end
+        if  settings.printBefore    PhotoRecombination.displayLines(lines)    end
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)

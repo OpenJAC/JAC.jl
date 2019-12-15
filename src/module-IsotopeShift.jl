@@ -16,7 +16,7 @@ module IsotopeShift
         + calcNMS                  ::Bool             ... True if mass-shift parameters M_nmn need to be calculated, and false otherwise.
         + calcSMS                  ::Bool             ... True if mass-shift parameters M_sms need to be calculated, and false otherwise.
         + calcF                    ::Bool             ... True if the field-shift parameter need to be calculated, and false otherwise.
-        + printBeforeComputation   ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
+        + printBefore   ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
         + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
         + selectedLevels           ::Array{Level,1}   ... List of selected levels.
         + methodF                  ::String           ... Method to calculate the field-shift parameter F.
@@ -25,7 +25,7 @@ module IsotopeShift
         calcNMS                    ::Bool
         calcSMS                    ::Bool
         calcF                      ::Bool
-        printBeforeComputation     ::Bool
+        printBefore     ::Bool
         selectLevels               ::Bool
         selectedLevels             ::Array{Level,1}
         methodF                    ::String
@@ -46,7 +46,7 @@ module IsotopeShift
         println(io, "calcNMS:                  $(settings.calcNMS)  ")
         println(io, "calcSMS:                  $(settings.calcSMS)  ")
         println(io, "calcF:                    $(settings.calcF)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectLevels:             $(settings.selectLevels)  ")
         println(io, "selectedLevels:           $(settings.selectedLevels)  ")
         println(io, "methodF:                  $(settings.methodF)  ")
@@ -289,7 +289,7 @@ module IsotopeShift
         #
         outcomes = IsotopeShift.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    IsotopeShift.displayOutcomes(outcomes)    end
+        if  settings.printBefore    IsotopeShift.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         newOutcomes = IsotopeShift.Outcome[]
         for  outcome in outcomes

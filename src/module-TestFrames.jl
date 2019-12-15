@@ -56,7 +56,7 @@ module TestFrames
         printTest, iostream = Defaults.getDefaults("test flag/stream")
 
         # Test the integration on the grid for an analytical function
-        grid = Radial.Grid("grid: by given parameters", rnt=2.0e-10, h=5.0e-3, NoPoints=9000)
+        grid = Radial.Grid(Radial.Grid(false), rnt=2.0e-10, h=5.0e-3, NoPoints=9000)
         function f1(r)    
             A = 10^5;    gamma = 3;    a = 300
             return( A * r^gamma * exp(-a * r^2) )
@@ -93,7 +93,7 @@ module TestFrames
         println(iostream, "Warning(testMethod_integrate_ongrid): test of integration with Grasp orbitals has been set silent.")
         #=
         # Test the integration with orbital functions from Grasp92
-        grid = Radial.Grid("grid: exponential")
+        grid = Radial.Grid(true)
 
         orbitals1 = Basics.readOrbitalFileGrasp92("../test/approved/Ne-0+-scf.exp.out", grid)
         orbitals2 = Basics.readOrbitalFileGrasp92("../test/approved/Ne-1+-scf.exp.out", grid)
@@ -163,7 +163,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-AlphaVariation-new.sum")
         printstyled("\n\nTest the module  AlphaVariation  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Model(26.); properties=[JAC.AlphaX], 
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
+                                nuclearModel=Nuclear.Model(26.), properties=[JAC.AlphaX], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
                                 alphaSettings=AlphaVariation.Settings(true, true, false, Int64[]) )
         wb = perform(wa)
@@ -185,7 +186,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-AutoIonization-new.sum")
         printstyled("\n\nTest the module  AutoIonization  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Model(36.); grid=Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 600),  
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 600)
+        wa = Atomic.Computation("xx",  Model(36.); grid=grid,  
                                 initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = JAC.Auger,
                                 processSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(3,1), (4,1), (5,1), (6,1)], 0., 1.0e6, 2, "Coulomb") )
@@ -229,8 +231,9 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-DecayYield-new.sum")
         printstyled("\n\nTest the module  DecayYield  ... \n", color=:cyan)
         ### Make the tests
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600)
         wa = Atomic.Computation("xx",  Nuclear.Model(12.); properties=[JAC.Yields],
-                                grid=Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600),
+                                grid=grid,
                                 configs=[Configuration("1s 2s^2 2p^6")],
                                 yieldSettings=DecayYield.Settings("SCA", true, false, Int64[]) )
         wb = perform(wa)
@@ -251,7 +254,9 @@ module TestFrames
     function testModule_Dielectronic(; short::Bool=true)     Defaults.setDefaults("print summary: open", "test-Dielectronic-new.sum")
         printstyled("\n\nTest the module  Dielectronic  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600), 
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600)
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid,
+                                nuclearModel=Nuclear.Model(26.), 
                                 initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                                 intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
@@ -302,7 +307,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-FormFactor-new.sum")
         printstyled("\n\nTest the module  FormFactor  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[JAC.FormF], 
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
+                                nuclearModel=Nuclear.Model(26.); properties=[JAC.FormF], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
                                 formSettings=FormFactor.Settings([0.1], true, false, Int64[]) )
         wb = perform(wa)
@@ -347,16 +353,19 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-Hfs-b-new.sum")
         printstyled("\n\nTest the module  Hfs  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0); properties=[JAC.HFS],
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
+                                nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0); properties=[JAC.HFS],
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
                                 hfsSettings=Hfs.Settings(true, true, true, true, true, true, false, Int64[] ) )
 
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
+        println("aaa  ")
         # Make the comparison with approved data
         success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Hfs-b-approved.sum"), 
                                     joinpath(@__DIR__, "..", "test", "test-Hfs-b-new.sum"), "Level        J^P           Energy", 20) 
+        println("bbb  success = $success")
         testPrint("testModule_Hfs()::", success)
         return(success)  
     end
@@ -370,7 +379,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-IsotopeShift-new.sum")
         printstyled("\n\nTest the module  IsotopeShift  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[JAC.Isotope], 
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
+                                nuclearModel=Nuclear.Model(26.), properties=[JAC.Isotope], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
                                 isotopeSettings=IsotopeShift.Settings(true, false, false, true, false, Int64[], "method-1") )
         wb = perform(wa)
@@ -392,7 +402,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-LandeZeeman-new.sum")
         printstyled("\n\nTest the module  LandeZeeman  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(26., "Fermi", 58., 3.75, AngularJ64(5//2), 1.0, 2.0); 
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
+                                nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.75, AngularJ64(5//2), 1.0, 2.0),
                                 properties=[JAC.LandeJ], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
                                 zeemanSettings=LandeZeeman.Settings(true, true, true, true, 0., true, false, Int64[] ) )
@@ -436,9 +447,10 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-MultipoleMoment-new.sum")
         ### Make the tests
         printstyled("\n\nTest the module  MultipoleMoment  ... \n", color=:cyan)
-        grid = Radial.Grid("grid: exponential")
-        wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=grid, properties=Basics.AtomicLevelProperty[],
-                                configs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")] )
+        grid = Radial.Grid(true)
+        wa = Atomic.Computation(Atomic.Computation(), 
+                                name="xx",  nuclearModel=Nuclear.Model(26.), grid=grid, properties=Basics.AtomicLevelProperty[],
+                                configs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], printout=true )
 
         wxa  = perform(wa; output=true)
         wma  = wxa["multiplet:"]
@@ -470,7 +482,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-MultipolePolarizibility-new.sum")
         printstyled("\n\nTest the module  MultipolePolarizibility  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[JAC.Polarity], 
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
+                                nuclearModel=Nuclear.Model(26.); properties=[JAC.Polarity], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
                                 polaritySettings=MultipolePolarizibility.Settings(EmMultipole[], 0, 0, Float64[], false, false, Int64[]) )
         wb = perform(wa)
@@ -494,7 +507,8 @@ module TestFrames
         printstyled("\n\nTest the module  ParityNonConservation  ... \n", color=:cyan)
         ### Make the tests
         grid = Defaults.getDefaults("standard grid")
-        wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=Basics.AtomicLevelProperty[],
+        wa = Atomic.Computation(Atomic.Computation(), name="xx",  nuclearModel=Nuclear.Model(26.), properties=Basics.AtomicLevelProperty[],
+                                grid=grid,
                                 configs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")] )
 
         wxa  = perform(wa; output=true)
@@ -529,7 +543,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-PlasmaShift-new.sum")
         printstyled("\n\nTest the module  PlasmaShift  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[JAC.Plasma], 
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
+                                nuclearModel=Nuclear.Model(26.); properties=[JAC.Plasma], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
                                 plasmaSettings=PlasmaShift.Settings() )
         wb = perform(wa)
@@ -551,7 +566,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-PhotoExcitation-new.sum")
         printstyled("\n\nTest the module  PhotoExcitation  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(36.);
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
+                                nuclearModel=Nuclear.Model(36.),
                                 initialConfigs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                                 finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
                                 process = JAC.PhotoExc, 
@@ -577,7 +593,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-PhotoExcitationAutoion-new.sum")
         printstyled("\n\nTest the module  PhotoExcitationAutoion  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 600), 
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 600)
+        wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=grid, 
                                 initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                                 intermediateConfigs=[Configuration("1s 2s^2"), Configuration("1s 2p^2")],
                                 finalConfigs=[Configuration("1s^2")], 
@@ -635,7 +652,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-PhotoIonization-new.sum")
         printstyled("\n\nTest the module  PhotoIonization  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800),
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800)
+        wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=grid,
                                 initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                                 finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
                                 process = JAC.Photo, 
@@ -660,7 +678,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-PhotoRecombination-new.sum")
         printstyled("\n\nTest the module  PhotoRecombination  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=Radial.Grid("grid: by given parameters"; rnt = 2.0e-6, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600),
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-6, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600)
+        wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=grid,
                                 initialConfigs=[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ],
                                 finalConfigs  =[Configuration("1s^2 2s^2 2p^6")], 
                                 process = JAC.Rec, 

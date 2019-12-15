@@ -708,7 +708,8 @@ module Cascade
                 print("  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")
                 if  printSummary   print(iostream, "* Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")   end
                 basis     = perform("computation: SCF", [confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
-                multiplet = perform("computation: CI",  basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                ##x multiplet = perform("computation: CI",  basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                multiplet = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
                 println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
                 ##x if  printSummary   println(iostream, "and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")   end

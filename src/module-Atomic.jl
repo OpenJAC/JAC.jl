@@ -13,7 +13,6 @@ module Atomic
           ..PhotoExcitationFluores, ..PhotoExcitationAutoion, ..RayleighCompton, ..MultiPhotonDeExcitation,
           ..PhotoIonizationFluores, ..PhotoIonizationAutoion, ..ImpactExcitationAutoion, ..RadiativeAuger, 
           ..MultiPhotonIonization, ..MultiPhotonDoubleIon, ..InternalConversion
-          ##x , ..ElectricDipoleMoment
 
 export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, 
         GreenSettings, GreenChannel, GreenExpansion, Representation
@@ -29,7 +28,6 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
         + name                           ::String                        ... A name associated to the computation.
         + nuclearModel                   ::Nuclear.Model          ... Model, charge and parameters of the nucleus.
         + grid                           ::Radial.Grid                   ... The radial grid to be used for the computation.
-        ##x + calcLevelProperties            ::Bool                          ... True, if level structures and properties are to be calculated
         + properties                     ::Array{AtomicLevelProperty,1}  ... List of atomic properties to be calculated.
         + configs                        ::Array{Configuration,1}        ... A list of non-relativistic configurations.
         + asfSettings                    ::AsfSettings                   ... Provides the settings for the SCF process and for the CI and QED calculations.
@@ -43,7 +41,6 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
         + alphaSettings                  ::AlphaVariation.Settings       ... Settings for alpha-variation parameter calculations.
         + einsteinSettings               ::Einstein.Settings             ... Settings for Einstein coefficient calculations.
         + formSettings                   ::FormFactor.Settings           ... Settings for atomic form factor calculations.
-        ##x + greenSettings                  ::GreenFunction.Settings        ... Settings for approximate Green function calculations.
         + hfsSettings                    ::Hfs.Settings                  ... Settings for hyperfine parameter calculations.
         + isotopeSettings                ::IsotopeShift.Settings         ... Settings for isotope shift parameter calculations.
         + plasmaSettings                 ::PlasmaShift.Settings          ... Settings for plasma-shift calculations.
@@ -64,7 +61,6 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
         name                           ::String
         nuclearModel                   ::Nuclear.Model
         grid                           ::Radial.Grid
-        ##x calcLevelProperties            ::Bool
         properties                     ::Array{AtomicLevelProperty,1}
         configs                        ::Array{Configuration,1}
         asfSettings                    ::AsfSettings
@@ -109,107 +105,116 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
                     Configuration[], AsfSettings(),
                     Configuration[], AsfSettings(),
                     Configuration[], AsfSettings(),
-                    AlphaVariation.Settings(), Einstein.Settings(), FormFactor.Settings(), ##x GreenFunction.Settings(), 
-                    Hfs.Settings(), 
-                    IsotopeShift.Settings(), PlasmaShift.Settings(), MultipolePolarizibility.Settings(), 
-                    DecayYield.Settings(),  LandeZeeman.Settings(), 
-                    ##x NoAmplitude, ElectricDipoleMoment.Settings(), 
+                    AlphaVariation.Settings(), Einstein.Settings(), FormFactor.Settings(), Hfs.Settings(), IsotopeShift.Settings(), 
+                    PlasmaShift.Settings(), MultipolePolarizibility.Settings(), DecayYield.Settings(),  LandeZeeman.Settings(), 
                     NoProcess, PhotoEmission.Settings() )
     end
 
-
+    
     """
-    `JAC.Atomic.Computation(sa::String, nm::Nuclear.Model; grid::Radial.Grid = JAC.Radial.Grid('grid: exponential'), ##x calc::Bool = false,
-         properties::Array{AtomicLevelProperty,1} = AtomicLevelProperty[], configs::Array{Configuration,1} = Configuration[],
-         asfSettings::AsfSettings = AsfSettings(),  
-         initialConfigs::Array{Configuration,1} = Configuration[], initialAsfSettings::AsfSettings = AsfSettings(), 
-         intermediateConfigs::Array{Configuration,1} = Configuration[], intermediateAsfSettings::AsfSettings = AsfSettings(), 
-         finalConfigs::Array{Configuration,1} = Configuration[], finalAsfSettings::AsfSettings = AsfSettings(), 
-         alphaSettings::AlphaVariation.Settings = AlphaVariation.Settings(), einsteinSettings::Einstein.Settings = Einstein.Settings(), 
-         formSettings::FormFactor.Settings = FormFactor.Settings(), ##x greenSettings::GreenFunction.Settings = GreenFunction.Settings(), 
-         hfsSettings::Hfs.Settings = Hfs.Settings(),
-         isotopeSettings::IsotopeShift.Settings = IsotopeShift.Settings(), plasmaSettings::PlasmaShift.Settings = PlasmaShift.Settings(), 
-         polaritySettings::MultipolePolarizibility.Settings = MultipolePolarizibility.Settings(), 
-         yieldSettings::DecayYield.Settings = DecayYield.Settings(), zeemanSettings::LandeZeeman.Settings = LandeZeeman.Settings(), 
-         ##x amplitude::JAC.AtomicAmplitude = JAC.NoAmplitude, amplitudeSettings::Any = true, 
-         process::JAC.AtomicProcess = JAC.NoProcess, processSettings::Any = true)`   ... constructor for an instance::Atomic.Computation for 
-         which all requested details are given by proper keyword specification. A few internal checks are  made. 
+    `Atomic.Computation(comp::Atomic.Computation;`
+    
+        name=..,                nuclearModel=..,            grid=..,                    configs=..,             asfSettings=..,     
+        initialConfigs=..,      initialAsfSettings=..,      intermediateConfigs=..,     intermediateAsfSettings=.., 
+        finalConfigs=..,        finalAsfSettings=..,        alphaSettings=..,           einsteinSettings=.., 
+        formSettings=..,        hfsSettings=..,             isotopeSettings=..,         plasmaSettings=..,
+        polaritySettings=..,    yieldSettings::=..,         zeemanSettings=..,
+        process=..,             processSettings=..,         printout::Bool=false)
+                        
+        ... constructor for modifying the given Atomic.Computation by 'overwriting' the previously selected parameters.
     """
-    function Computation(sa::String, nm::Nuclear.Model; grid::Radial.Grid = Radial.Grid("grid: exponential"), ##x calc::Bool = false,
-                         properties::Array{AtomicLevelProperty,1} = [Basics.NoProperty], configs::Array{Configuration,1} = Configuration[],
-                         asfSettings::AsfSettings = AsfSettings(),  
-                         initialConfigs::Array{Configuration,1} = Configuration[], initialAsfSettings::AsfSettings = AsfSettings(), 
-                         intermediateConfigs::Array{Configuration,1} = Configuration[], intermediateAsfSettings::AsfSettings = AsfSettings(), 
-                         finalConfigs::Array{Configuration,1} = Configuration[], finalAsfSettings::AsfSettings = AsfSettings(), 
-                         alphaSettings::AlphaVariation.Settings = AlphaVariation.Settings(), 
-                         einsteinSettings::Einstein.Settings = Einstein.Settings(), 
-                         formSettings::FormFactor.Settings = FormFactor.Settings(), 
-                         ##x greenSettings::GreenFunction.Settings = GreenFunction.Settings(), 
-                         hfsSettings::Hfs.Settings = Hfs.Settings(),
-                         isotopeSettings::IsotopeShift.Settings = IsotopeShift.Settings(), 
-                         plasmaSettings::PlasmaShift.Settings = PlasmaShift.Settings(), 
-                         polaritySettings::MultipolePolarizibility.Settings = MultipolePolarizibility.Settings(), 
-                         yieldSettings::DecayYield.Settings = DecayYield.Settings(), 
-                         zeemanSettings::LandeZeeman.Settings = LandeZeeman.Settings(), 
-                         process::Basics.AtomicProcess = Basics.NoProcess, processSettings::Any = true)
-        if      process == Basics.NoProcess         && typeof(processSettings) == Bool && processSettings             procSettings = PhotoEmission.Settings()
-        elseif  process == Basics.Auger             && typeof(processSettings) == Bool && processSettings             procSettings = AutoIonization.Settings()
-        elseif  process == Basics.Auger             && typeof(processSettings) == AutoIonization.Settings             procSettings = processSettings 
-        elseif  process == Basics.AugerInPlasma     && typeof(processSettings) == Bool && processSettings             procSettings = PlasmaShift.AugerSettings()
-        elseif  process == Basics.AugerInPlasma     && typeof(processSettings) == PlasmaShift.AugerSettings           procSettings = processSettings 
-        elseif  process == Basics.Radiative         && typeof(processSettings) == Bool && processSettings             procSettings = PhotoEmission.Settings()
-        elseif  process == Basics.Radiative         && typeof(processSettings) == PhotoEmission.Settings              procSettings = processSettings 
-        elseif  process == Basics.PhotoExc          && typeof(processSettings) == Bool && processSettings             procSettings = PhotoExcitation.Settings()
-        elseif  process == Basics.PhotoExc          && typeof(processSettings) == PhotoExcitation.Settings            procSettings = processSettings 
-        elseif  process == Basics.Photo             && typeof(processSettings) == Bool && processSettings             procSettings = PhotoIonization.Settings()
-        elseif  process == Basics.Photo             && typeof(processSettings) == PhotoIonization.Settings            procSettings = processSettings 
-        elseif  process == Basics.PhotoInPlasma     && typeof(processSettings) == Bool && processSettings             procSettings = PlasmaShift.PhotoSettings()
-        elseif  process == Basics.PhotoInPlasma     && typeof(processSettings) == PlasmaShift.PhotoSettings           procSettings = processSettings 
-        elseif  process == Basics.Rec               && typeof(processSettings) == Bool && processSettings             procSettings = PhotoRecombination.Settings()
-        elseif  process == Basics.Rec               && typeof(processSettings) == PhotoRecombination.Settings         procSettings = processSettings 
-        elseif  process == Basics.Dierec            && typeof(processSettings) == Bool && processSettings             procSettings = Dielectronic.Settings()
-        elseif  process == Basics.Dierec            && typeof(processSettings) == Dielectronic.Settings               procSettings = processSettings 
-        elseif  process == Basics.PhotoExcFluor     && typeof(processSettings) == Bool && processSettings             procSettings = PhotoExcitationFluores.Settings()
-        elseif  process == Basics.PhotoExcFluor     && typeof(processSettings) == PhotoExcitationFluores.Settings     procSettings = processSettings 
-        elseif  process == Basics.PhotoExcAuto      && typeof(processSettings) == Bool && processSettings             procSettings = PhotoExcitationAutoion.Settings()
-        elseif  process == Basics.PhotoExcAuto      && typeof(processSettings) == PhotoExcitationAutoion.Settings     procSettings = processSettings 
-        elseif  process == Basics.PhotoIonFluor     && typeof(processSettings) == Bool && processSettings             procSettings = PhotoIonizationFluores.Settings()
-        elseif  process == Basics.PhotoIonFluor     && typeof(processSettings) == PhotoIonizationFluores.Settings     procSettings = processSettings 
-        elseif  process == Basics.PhotoIonAuto      && typeof(processSettings) == Bool && processSettings             procSettings = PhotoIonizationAutoion.Settings()
-        elseif  process == Basics.PhotoIonAuto      && typeof(processSettings) == PhotoIonizationAutoion.Settings     procSettings = processSettings 
-        elseif  process == Basics.MultiPhotonDE     && typeof(processSettings) == Bool && processSettings             procSettings = MultiPhotonDeExcitation.Settings()
-        elseif  process == Basics.MultiPhotonDE     && typeof(processSettings) == MultiPhotonDeExcitation.Settings    procSettings = processSettings 
-        elseif  process == Basics.Compton           && typeof(processSettings) == Bool && processSettings             procSettings = RayleighCompton.Settings()
-        elseif  process == Basics.Compton           && typeof(processSettings) == RayleighCompton.Settings            procSettings = processSettings 
-        elseif  process == Basics.Eimex             && typeof(processSettings) == Bool && processSettings             procSettings = ImpactExcitation.Settings()
-        elseif  process == Basics.Eimex             && typeof(processSettings) == ImpactExcitation.Settings           procSettings = processSettings 
-        elseif  process == Basics.ImpactExcAuto     && typeof(processSettings) == Bool && processSettings             procSettings = ImpactExcitationAutoion.Settings()
-        elseif  process == Basics.ImpactExcAuto     && typeof(processSettings) == ImpactExcitationAutoion.Settings    procSettings = processSettings 
-        elseif  process == Basics.RAuger            && typeof(processSettings) == Bool && processSettings             procSettings = RadiativeAuger.Settings()
-        elseif  process == Basics.RAuger            && typeof(processSettings) == RadiativeAuger.Settings             procSettings = processSettings 
-        elseif  process == Basics.MultiPI           && typeof(processSettings) == Bool && processSettings             procSettings = MultiPhotonIonization.Settings()
-        elseif  process == Basics.MultiPI           && typeof(processSettings) == MultiPhotonIonization.Settings      procSettings = processSettings 
-        elseif  process == Basics.MultiPDI          && typeof(processSettings) == Bool && processSettings             procSettings = MultiPhotonDoubleIon.Settings()
-        elseif  process == Basics.MultiPDI          && typeof(processSettings) == MultiPhotonDoubleIon.Settings       procSettings = processSettings 
-        elseif  process == Basics.InternalConv      && typeof(processSettings) == Bool && processSettings             procSettings = InternalConversion.Settings()
-        elseif  process == Basics.InternalConv      && typeof(processSettings) == InternalConversion.Settings         procSettings = processSettings 
-        elseif  process == Basics.Coulex            && typeof(processSettings) == Bool && processSettings             procSettings = CoulombExcitation.Settings()
-        elseif  process == Basics.Coulex            && typeof(processSettings) == CoulombExcitation.Settings          procSettings = processSettings 
-        elseif  process == Basics.Coulion           && typeof(processSettings) == Bool && processSettings             procSettings = CoulombIonization.Settings()
-        elseif  process == Basics.Coulion           && typeof(processSettings) == CoulombIonization.Settings          procSettings = processSettings 
-        else    error("The processSettings must fit to the given process or should not occur if NoProcess is to be calculated.")
+    function Computation(comp::Atomic.Computation;
+        name::Union{Nothing,String}=nothing,                                        nuclearModel::Union{Nothing,Nuclear.Model}=nothing,
+        grid::Union{Nothing,Radial.Grid}=nothing,                                   properties::Union{Nothing,Array{AtomicLevelProperty,1}}=nothing,   
+        configs::Union{Nothing,Array{Configuration,1}}=nothing,                     asfSettings::Union{Nothing,AsfSettings}=nothing, 
+        initialConfigs::Union{Nothing,Array{Configuration,1}}=nothing,              initialAsfSettings::Union{Nothing,AsfSettings}=nothing, 
+        intermediateConfigs::Union{Nothing,Array{Configuration,1}}=nothing,         intermediateAsfSettings::Union{Nothing,AsfSettings}=nothing, 
+        finalConfigs::Union{Nothing,Array{Configuration,1}}=nothing,                finalAsfSettings::Union{Nothing,AsfSettings}=nothing, 
+        alphaSettings::Union{Nothing,AlphaVariation.Settings}=nothing,              einsteinSettings::Union{Nothing,Einstein.Settings}=nothing, 
+        formSettings::Union{Nothing,FormFactor.Settings}=nothing,                   hfsSettings::Union{Nothing,Hfs.Settings}=nothing,
+        isotopeSettings::Union{Nothing,IsotopeShift.Settings}=nothing,              plasmaSettings::Union{Nothing,PlasmaShift.Settings}=nothing, 
+        polaritySettings::Union{Nothing,MultipolePolarizibility.Settings}=nothing,  yieldSettings::Union{Nothing,DecayYield.Settings}=nothing, 
+        zeemanSettings::Union{Nothing,LandeZeeman.Settings}=nothing, 
+        process::Union{Nothing,Basics.AtomicProcess}=nothing,                       processSettings::Union{Nothing,Any}=nothing,            
+        printout::Bool=false)
+        
+        if  name                    == nothing  namex                    = comp.name                    else  namex                    = name                     end 
+        if  nuclearModel            == nothing  nuclearModelx            = comp.nuclearModel            else  nuclearModelx            = nuclearModel             end 
+        if  grid                    == nothing  gridx                    = comp.grid                    else  gridx                    = grid                     end 
+        if  properties              == nothing  propertiesx              = comp.properties              else  propertiesx              = properties               end 
+        if  configs                 == nothing  configsx                 = comp.configs                 else  configsx                 = configs                  end 
+        if  asfSettings             == nothing  asfSettingsx             = comp.asfSettings             else  asfSettingsx             = asfSettings              end 
+        if  initialConfigs          == nothing  initialConfigsx          = comp.initialConfigs          else  initialConfigsx          = initialConfigs           end 
+        if  initialAsfSettings      == nothing  initialAsfSettingsx      = comp.initialAsfSettings      else  initialAsfSettingsx      = initialAsfSettings       end 
+        if  intermediateConfigs     == nothing  intermediateConfigsx     = comp.intermediateConfigs     else  intermediateConfigsx     = intermediateConfigs      end 
+        if  intermediateAsfSettings == nothing  intermediateAsfSettingsx = comp.intermediateAsfSettings else  intermediateAsfSettingsx = intermediateAsfSettings  end 
+        if  finalConfigs            == nothing  finalConfigsx            = comp.finalConfigs            else  finalConfigsx            = finalConfigs             end 
+        if  finalAsfSettings        == nothing  finalAsfSettingsx        = comp.finalAsfSettings        else  finalAsfSettingsx        = finalAsfSettings         end 
+        if  alphaSettings           == nothing  alphaSettingsx           = comp.alphaSettings           else  alphaSettingsx           = alphaSettings            end 
+        if  einsteinSettings        == nothing  einsteinSettingsx        = comp.einsteinSettings        else  einsteinSettingsx        = einsteinSettings         end 
+        if  formSettings            == nothing  formSettingsx            = comp.formSettings            else  formSettingsx            = formSettings             end 
+        if  hfsSettings             == nothing  hfsSettingsx             = comp.hfsSettings             else  hfsSettingsx             = hfsSettings              end 
+        if  isotopeSettings         == nothing  isotopeSettingsx         = comp.isotopeSettings         else  isotopeSettingsx         = isotopeSettings          end 
+        if  plasmaSettings          == nothing  plasmaSettingsx          = comp.plasmaSettings          else  plasmaSettingsx          = plasmaSettings           end 
+        if  polaritySettings        == nothing  polaritySettingsx        = comp.polaritySettings        else  polaritySettingsx        = polaritySettings         end 
+        if  yieldSettings           == nothing  yieldSettingsx           = comp.yieldSettings           else  yieldSettingsx           = yieldSettings            end 
+        if  zeemanSettings          == nothing  zeemanSettingsx          = comp.zeemanSettings          else  zeemanSettingsx          = zeemanSettings           end 
+        if  process                 == nothing  processx                 = comp.process                 else  processx                 = process                  end 
+        if  processSettings         == nothing  prsx                     = comp.processSettings         else  prsx                     = processSettings          end 
+        
+        println("aa: $processx   $prsx")
+        
+        if      processx == Basics.NoProcess                                                              prsx = PhotoEmission.Settings()
+        elseif  processx == Basics.Auger            && typeof(prsx) != AutoIonization.Settings            prsx = AutoIonization.Settings()
+        elseif  processx == Basics.AugerInPlasma    && typeof(prsx) != PlasmaShift.AugerSettings          prsx = PlasmaShift.AugerSettings()
+        elseif  processx == Basics.Radiative        && typeof(prsx) != PhotoEmission.Settings             prsx = PhotoEmission.Settings()
+        elseif  processx == Basics.PhotoExc         && typeof(prsx) != PhotoExcitation.Settings           prsx = PhotoExcitation.Settings()
+        elseif  process == Basics.Photo             && typeof(prsx) != PhotoIonization.Settings           prsx = PhotoIonization.Settings()
+        elseif  process == Basics.PhotoInPlasma     && typeof(prsx) != PlasmaShift.PhotoSettings          prsx = PlasmaShift.PhotoSettings()
+        elseif  process == Basics.Rec               && typeof(prsx) != PhotoRecombination.Settings        prsx = PhotoRecombination.Settings()
+        elseif  process == Basics.Dierec            && typeof(prsx) != Dielectronic.Settings              prsx = Dielectronic.Settings()
+        elseif  process == Basics.PhotoExcFluor     && typeof(prsx) != PhotoExcitationFluores.Settings    prsx = PhotoExcitationFluores.Settings()
+        elseif  process == Basics.PhotoExcAuto      && typeof(prsx) != PhotoExcitationAutoion.Settings    prsx = PhotoExcitationAutoion.Settings()
+        elseif  process == Basics.PhotoIonFluor     && typeof(prsx) != PhotoIonizationFluores.Settings    prsx = PhotoIonizationFluores.Settings()
+        elseif  process == Basics.PhotoIonAuto      && typeof(prsx) != PhotoIonizationAutoion.Settings    prsx = PhotoIonizationAutoion.Settings()
+        elseif  process == Basics.MultiPhotonDE     && typeof(prsx) != MultiPhotonDeExcitation.Settings   prsx = MultiPhotonDeExcitation.Settings()
+        elseif  process == Basics.Compton           && typeof(prsx) != RayleighCompton.Settings           prsx = RayleighCompton.Settings()
+        elseif  process == Basics.Eimex             && typeof(prsx) != ImpactExcitation.Settings          prsx = ImpactExcitation.Settings()
+        elseif  process == Basics.ImpactExcAuto     && typeof(prsx) != ImpactExcitationAutoion.Settings   prsx = ImpactExcitationAutoion.Settings()
+        elseif  process == Basics.RAuger            && typeof(prsx) != RadiativeAuger.Settings            prsx = RadiativeAuger.Settings()
+        elseif  process == Basics.MultiPI           && typeof(prsx) != MultiPhotonIonization.Settings     prsx = MultiPhotonIonization.Settings()
+        elseif  process == Basics.MultiPDI          && typeof(prsx) != MultiPhotonDoubleIon.Settings      prsx = MultiPhotonDoubleIon.Settings()
+        elseif  process == Basics.InternalConv      && typeof(prsx) != InternalConversion.Settings        prsx = InternalConversion.Settings()
+        elseif  process == Basics.Coulex            && typeof(prsx) != CoulombExcitation.Settings         prsx = CoulombExcitation.Settings()
+        elseif  process == Basics.Coulion           && typeof(prsx) != CoulombIonization.Settings         prsx = CoulombIonization.Settings()
         end
         
-        Computation(sa, nm, grid, properties, configs, asfSettings, 
-                    initialConfigs, initialAsfSettings, 
-                    intermediateConfigs, intermediateAsfSettings,
-                    finalConfigs, finalAsfSettings,
-                    alphaSettings, einsteinSettings, formSettings, ##x greenSettings, 
-                    hfsSettings, isotopeSettings, plasmaSettings, 
-                    polaritySettings, yieldSettings, zeemanSettings, 
-                    ##x amplitude, ampSettings, 
-                    process, procSettings) 
+        cp = Computation(namex, nuclearModelx, gridx, propertiesx, configsx, asfSettingsx, initialConfigsx, initialAsfSettingsx,     
+                         intermediateConfigsx,  intermediateAsfSettingsx, finalConfigsx, finalAsfSettingsx,        
+                         alphaSettingsx, einsteinSettingsx , formSettingsx, hfsSettingsx, isotopeSettingsx, plasmaSettingsx,
+                         polaritySettingsx, yieldSettingsx, zeemanSettingsx,  processx, prsx) 
+                         
+        if printout  Base.show(cp)      end
+        return( cp )
     end
+
+    #== re-write for Computation 
+    # `Base.string(rep::Representation)`  ... provides a String notation for the variable rep::Representation.
+    function Base.string(rep::Representation)
+        sa = "Atomic representation:   $(rep.name) for Z = $(rep.nuclearModel.Z) and with reference configurations: \n   "
+        for  refConfig  in  rep.refConfigs     sa = sa * string(refConfig) * ",  "     end
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, rep::Representation)`  ... prepares a printout of rep::Representation.
+    function Base.show(io::IO, rep::Representation)
+        sa = Base.string(rep);            print(io, sa, "\n")
+        println(io, "representation type:   $(rep.repType)  ")
+        println(io, "nuclearModel:          $(rep.nuclearModel)  ")
+        println(io, "grid:                  $(rep.grid)  ")
+    end
+    ==#
 
 
     # `Base.show(io::IO, computation::Atomic.Computation)`  ... prepares a proper printout of the variable computation::Atomic.Computation.
@@ -217,7 +222,6 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
         println(io, "name:                           $(computation.name)  ")
         println(io, "nuclearModel:                   $(computation.nuclearModel)  ")
         println(io, "grid:                           $(computation.grid)  ")
-        ##x println(io, "calcLevelProperties:            $(computation.calcLevelProperties)  ")
         println(io, "properties:                     $(computation.properties)  ")
         println(io, "configs:                        $(computation.configs)  ")
         println(io, "asfSettings:                      computation.asfSettings  ")
@@ -230,7 +234,6 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
         println(io, "alphaSettings:                    computation.alphaSettings  ")
         println(io, "einsteinSettings:                 computation.einsteinSettings  ")
         println(io, "formSettings:                     computation.formSettings  ")
-        ##x println(io, "greenSettings:                    computation.greenSettings  ")
         println(io, "hfsSettings:                      computation.hfsSettings  ")
         println(io, "isotopeSettings:                  computation.isotopeSettings  ")
         println(io, "plasmaSettings:                   computation.plasmaSettings  ")
@@ -239,101 +242,6 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
         println(io, "zeemanSettings:                   computation.zeemanSettings  ")
         println(io, "process:                        $(computation.process)  ")
         println(io, "processSettings:                  computation.processSettings  ")
-    end
-
-
-    """
-    `Atomic.Computation(gui::Guint; comp::Atomic.Computation=Atomic.Computation())`  ... constructor that is defined by a graphical user interface.
-    """
-    function Computation(gui::Guint; comp::Atomic.Computation=Atomic.Computation())
-        
-        if      gui == Gui
-            println("aa")
-            output = Atomic.ComputationGui(comp)
-        elseif  gui == GuiSettings
-            println("bb")
-            output = Atomic.ComputationGuiSettings(comp)
-        else  error("Unsupported Guint = $gui.")
-        end
-        
-        return( output )
-    end
-
-
-    """
-    `Atomic.ComputationGui(comp::Atomic.Computation)`  ... constructor that defines the standard part of a computation by a graphical 
-         user interface apart from the setting and the configurations.
-    """
-    function ComputationGui(comp::Atomic.Computation)
-        nmd = comp.nuclearModel
-        
-        title = comp.name;    nmd = comp.nuclearModel;    grid = comp.grid;    calcLevelProperties = comp.calcLevelProperties
-        properties          = comp.properties
-        configs             = comp.configs;                   asfSettings             = comp.asfSettings
-        initialConfigs      = comp.initialConfigs;            initialAsfSettings      = comp.initialAsfSettings
-        intermediateConfigs = comp.intermediateConfigs;       intermediateAsfSettings = comp.intermediateAsfSettings
-        finalConfigs        = comp.finalConfigs;              finalAsfSettings        = comp.finalAsfSettings
-        alphaSettings       = comp.alphaSettings;             einsteinSettings        = comp.einsteinSettings
-        formSettings        = comp.formSettings;              ##x greenSettings           = comp.greenSettings
-        hfsSettings         = comp.hfsSettings;               isotopeSettings         = comp.isotopeSettings
-        plasmaSettings      = comp.plasmaSettings;            polaritySettings        = comp.polaritySettings
-        yieldSettings       = comp.yieldSettings;             zeemanSettings          = comp.zeemanSettings 
-        process             = comp.process;                   processSettings         = comp.processSettings
-        
-        # Update the nuclear model
-        tn1 = "Update nuclear model: "
-        bn1 = slider(1:110, label = "charge", value = nmd.Z)
-        bn2 = dropdown([nmd.model, "Fermi", "point", "uniform"])
-        bn3 = spinbox(label="mass  ";   value=nmd.mass)
-        bn4 = spinbox(label="radius";   value=nmd.radius)
-        bn5 = spinbox(label="2*spin";   value=nmd.spinI.num)
-        bn6 = spinbox(label="mu    ";   value=nmd.mu)
-        bn7 = spinbox(label="Q     ";   value=nmd.Q)
-        #
-        #
-        update = button("Update all")
-        ui = vbox( hbox( pad(0em, tn1) ),
-                   hbox( pad(1em, bn1) ), 
-                   hbox( pad(1em, bn2), pad(1em, bn3), pad(1em, bn4) ), 
-                   hbox( pad(1em, bn5), pad(1em, bn6), pad(1em, bn7) ), 
-                   hbox( pad(2em, update) )
-                  )
-        #
-        Interact.display(ui) 
-        output = Interact.@map  (&update;     Computation(title, 
-                    Nuclear.Model( observe(bn1)[], observe(bn2)[], observe(bn3)[], observe(bn4)[], 
-                                   AngularJ64( Int64(observe(bn5)[])//2 ), observe(bn6)[], observe(bn7)[] ),
-                    grid, calcLevelProperties, properties, configs, asfSettings, 
-                    initialConfigs, initialAsfSettings, 
-                    intermediateConfigs, intermediateAsfSettings, 
-                    finalConfigs, finalAsfSettings, 
-                    alphaSettings, einsteinSettings, formSettings, ##x greenSettings, 
-                    hfsSettings, isotopeSettings, plasmaSettings, 
-                    polaritySettings, yieldSettings, zeemanSettings, 
-                    process, processSettings) )
-        #
-        return( output )
-    end
-
-
-    """
-    `Atomic.ComputationGuiSettings(comp::Atomic.Computation)`  ... constructor that defines the settings and configurations of a computation 
-         by a graphical user interface.
-    """
-    function ComputationGuiSettings(comp::Atomic.Computation)
-        ac = comp;   nmd = ac.nuclearModel
-        
-        t1 = "A slider: "
-        b1 = slider(1:110, label = "charge", value = nmd.Z)
-        update = button("Update")
-        ui = vbox( hbox( pad(0em, t1) ),
-                   hbox( pad(0em, b1) ),
-                   hbox( pad(1em, update) )
-                  )
-        #
-        Interact.display(ui) 
-        output = Interact.@map  (&update; observe(b1)[] )
-        return( output )
     end
 
 end # module

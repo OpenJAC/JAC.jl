@@ -19,7 +19,7 @@ module PhotoExcitation
         + calcPhotonDm            ::Bool                         ... True, if the photon density matrix of a subsequently emitted fluorescence photon is to be
                                                                      calculated and false otherwise. 
         + calcTensors             ::Bool                         ... True, if the statistical tensors of the excited atom are to be calculated and false otherwise. 
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
         + photonEnergyShift       ::Float64                      ... An overall energy shift for all photon energies.
@@ -34,7 +34,7 @@ module PhotoExcitation
         calcForStokes             ::Bool
         calcPhotonDm              ::Bool  
         calcTensors               ::Bool  
-        printBeforeComputation    ::Bool
+        printBefore               ::Bool
         selectLines               ::Bool
         selectedLines             ::Array{Tuple{Int64,Int64},1}
         photonEnergyShift         ::Float64
@@ -52,6 +52,41 @@ module PhotoExcitation
     end
 
 
+    """
+    `PhotoExcitation.Settings(set::PhotoExcitation.Settings;`
+    
+            multipoles=..,          gauges=..,                  calcForStokes=..,           calcPhotonDm=..,    
+            calcTensors=..,         printBefore=..,             selectLines=..,             selectedLines=..,  
+            photonEnergyShift=..,   mimimumPhotonEnergy=..,     maximumPhotonEnergy=..,     stokes=..)
+                        
+        ... constructor for modifying the given PhotoExcitation.Settings by 'overwriting' the previously selected parameters.
+    """
+    function Settings(set::PhotoExcitation.Settings;    
+        multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,        gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
+        calcForStokes::Union{Nothing,Bool}=nothing,                     calcPhotonDm::Union{Nothing,Bool}=nothing,    
+        calcTensors::Union{Nothing,Bool}=nothing,                       printBefore::Union{Nothing,Bool}=nothing,  
+        selectLines::Union{Nothing,Bool}=nothing,                       selectedLines::Union{Nothing,Array{Tuple{Int64,Int64},1}}=nothing,  
+        photonEnergyShift::Union{Nothing,Float64}=nothing,              mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,     
+        maximumPhotonEnergy::Union{Nothing,Float64}=nothing,            stokes::Union{Nothing,ExpStokes}=nothing)  
+        
+        if  multipoles          == nothing   multipolesx          = set.multipoles              else  multipolesx          = multipoles            end 
+        if  gauges              == nothing   gaugesx              = set.gauges                  else  gaugesx              = gauges                end 
+        if  calcForStokes       == nothing   calcForStokesx       = set.calcForStokes           else  calcForStokesx       = calcForStokes         end 
+        if  calcPhotonDm        == nothing   calcPhotonDmx        = set.calcPhotonDm            else  calcPhotonDmx        = calcPhotonDm          end 
+        if  calcTensors         == nothing   calcTensorsx         = set.calcTensors             else  calcTensorsx         = calcTensors           end 
+        if  printBefore         == nothing   printBeforex         = set.printBefore             else  printBeforex         = printBefore           end 
+        if  selectLines         == nothing   selectLinesx         = set.selectLines             else  selectLinesx         = selectLines           end 
+        if  selectedLines       == nothing   selectedLinesx       = set.selectedLines           else  selectedLinesx       = selectedLines         end 
+        if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift       else  photonEnergyShiftx   = photonEnergyShift     end 
+        if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy     else  mimimumPhotonEnergyx = mimimumPhotonEnergy   end 
+        if  maximumPhotonEnergy == nothing   maximumPhotonEnergyx = set.maximumPhotonEnergy     else  maximumPhotonEnergyx = maximumPhotonEnergy   end 
+        if  stokes              == nothing   stokesx              = set.stokes                  else  stokesx              = stokes                end 
+        
+        Settings( multipolesx, gaugesx, calcForStokesx, calcPhotonDmx, calcTensorsx, printBeforex, selectLinesx, selectedLinesx, 
+                         photonEnergyShiftx, mimimumPhotonEnergyx, maximumPhotonEnergyx, stokesx)
+    end
+
+
     # `Base.show(io::IO, settings::PhotoExcitation.Settings)`  ... prepares a proper printout of the variable settings::PhotoExcitation.Settings.
     function Base.show(io::IO, settings::PhotoExcitation.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
@@ -59,7 +94,7 @@ module PhotoExcitation
         println(io, "calcForStokes:            $(settings.calcForStokes)  ")
         println(io, "calcPhotonDm:             $(settings.calcPhotonDm)  ")
         println(io, "calcTensors:              $(settings.calcTensors)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
         println(io, "selectLines:              $(settings.selectLines)  ")
         println(io, "selectedLines:            $(settings.selectedLines)  ")
         println(io, "photonEnergyShift:        $(settings.photonEnergyShift)  ")
@@ -165,7 +200,7 @@ module PhotoExcitation
         ##x Defaults.setDefaults("standard grid", grid)
         lines = PhotoExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    PhotoExcitation.displayLines(lines)    end
+        if  settings.printBefore    PhotoExcitation.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = PhotoExcitation.Line[]
         for  line in lines

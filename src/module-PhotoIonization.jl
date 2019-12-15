@@ -19,7 +19,7 @@ module PhotoIonization
         + calcAnisotropy          ::Bool                         ... True, if the beta anisotropy parameters are to be calculated and false otherwise (o/w). 
         + calcPartialCs           ::Bool                         ... True, if partial cross sections are to be calculated and false otherwise.  
         + calcTensors             ::Bool                         ... True, if statistical tensors of the excited atom are to be calculated and false o/w. 
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
         + stokes                  ::ExpStokes                    ... Stokes parameters of the incident radiation.
@@ -31,7 +31,7 @@ module PhotoIonization
         calcAnisotropy            ::Bool 
         calcPartialCs             ::Bool 
         calcTensors               ::Bool 
-        printBeforeComputation    ::Bool
+        printBefore               ::Bool
         selectLines               ::Bool
         selectedLines             ::Array{Tuple{Int64,Int64},1} 
         stokes                    ::ExpStokes
@@ -47,6 +47,38 @@ module PhotoIonization
     end
 
 
+    """
+    `PhotoIonization.Settings(set::PhotoIonization.Settings;`
+    
+            multipoles=..,          gauges=..,                  photonEnergies=..,          calcAnisotropy=..,    
+            calcPartialCs0..,       calcTensors=..,             printBefore=..,             selectLines=..,             
+            selectedLines=..,       stokes=..)
+                        
+        ... constructor for modifying the given PhotoIonization.Settings by 'overwriting' the previously selected parameters.
+    """
+    function Settings(set::PhotoIonization.Settings;    
+        multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
+        photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,                calcAnisotropy::Union{Nothing,Bool}=nothing,
+        calcPartialCs::Union{Nothing,Bool}=nothing,                             calcTensors::Union{Nothing,Bool}=nothing,                       
+        printBefore::Union{Nothing,Bool}=nothing,                               selectLines::Union{Nothing,Bool}=nothing,           
+        selectedLines::Union{Nothing,Array{Tuple{Int64,Int64},1}}=nothing,      stokes::Union{Nothing,ExpStokes}=nothing)  
+        
+        if  multipoles      == nothing   multipolesx      = set.multipoles        else  multipolesx      = multipoles       end 
+        if  gauges          == nothing   gaugesx          = set.gauges            else  gaugesx          = gauges           end 
+        if  photonEnergies  == nothing   photonEnergiesx  = set.photonEnergies    else  photonEnergiesx  = photonEnergies   end 
+        if  calcAnisotropy  == nothing   calcAnisotropyx  = set.calcAnisotropy    else  calcAnisotropyx  = calcAnisotropy   end 
+        if  calcPartialCs   == nothing   calcPartialCsx   = set.calcPartialCs     else  calcPartialCsx   = calcPartialCs    end 
+        if  calcTensors     == nothing   calcTensorsx     = set.calcTensors       else  calcTensorsx     = calcTensors      end 
+        if  printBefore     == nothing   printBeforex     = set.printBefore       else  printBeforex     = printBefore      end 
+        if  selectLines     == nothing   selectLinesx     = set.selectLines       else  selectLinesx     = selectLines      end 
+        if  selectedLines   == nothing   selectedLinesx   = set.selectedLines     else  selectedLinesx   = selectedLines    end 
+        if  stokes          == nothing   stokesx          = set.stokes            else  stokesx          = stokes           end 
+
+        Settings( multipolesx, gaugesx, photonEnergiesx, calcAnisotropyx, calcPartialCsx, calcTensorsx, printBeforex, 
+                  selectLinesx, selectedLinesx, stokesx)
+    end
+
+
     # `Base.show(io::IO, settings::PhotoIonization.Settings)`  ... prepares a proper printout of the variable settings::PhotoIonization.Settings.
     function Base.show(io::IO, settings::PhotoIonization.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
@@ -55,7 +87,7 @@ module PhotoIonization
         println(io, "calcAnisotropy:           $(settings.calcAnisotropy)  ")
         println(io, "calcPartialCs:            $(settings.calcPartialCs)  ")
         println(io, "calcTensors:              $(settings.calcTensors)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
         println(io, "selectLines:              $(settings.selectLines)  ")
         println(io, "selectedLines:            $(settings.selectedLines)  ")
         println(io, "stokes:                   $(settings.stokes)  ")
@@ -232,7 +264,7 @@ module PhotoIonization
         println("")
         lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    PhotoIonization.displayLines(lines)    end
+        if  settings.printBefore    PhotoIonization.displayLines(lines)    end
         # Determine maximum energy and check for consistency of the grid
         maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -266,11 +298,11 @@ module PhotoIonization
         printstyled("------------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
         photoSettings = PhotoIonization.Settings(settings.multipoles, settings.gauges, settings.photonEnergies, false, false, false,
-                                                 settings.printBeforeComputation, settings.selectLines, settings.selectedLines, Basics.ExpStokes() )
+                                                 settings.printBefore, settings.selectLines, settings.selectedLines, Basics.ExpStokes() )
         
         lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, photoSettings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    PhotoIonization.displayLines(lines)    end
+        if  settings.printBefore    PhotoIonization.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = PhotoIonization.Line[]
         for  line in lines

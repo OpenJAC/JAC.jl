@@ -416,11 +416,17 @@ module Details
     atomic structure and collision theory, we tried to define data types that are flexible enough to further extend these tools in the future.
     Following the Julia's standard conventions, all types (struct) are named in CamelCase notation.
 
+    ### `Abstract data types`
+
+    + AbstractExcitationScheme     ... supports the selection of various (singleton) excitation schemes.
+    + AbstractQedModel             ... supports the selection of various (singleton) QED models.
+
     ### `Basic data types`
 
     + AngularJ64                   ... (positive, half-integer) angular momentum, j = 0, 1/2, 1, 3/2, ... .
     + AngularM64                   ... (half-integer) projection of ang. momentum, m = -1/2, 0, 1/2, ... can be initialized also
                                         w.r.t AngularJ64().
+    + CartesianVector              ... Cartesian vector of given type.
     + ContinuumNormalization       ... method for dealing with the normalization of continuum orbitals.
     + ContinuumPhase               ... method for determining the phase of continuum orbitals.
     + ContinuumSolutions           ... method for solving continuum orbitals.
@@ -431,7 +437,9 @@ module Details
     + EmStokes                     ... (computed) Stokes parameter for the polarization of emitted radiation.
     + ExpStokes                    ... (experimentally) given Stokes parameter for the polarization of incoming radiation.
     + Guint                        ... specifier for dealing with graphical user interfaces (GUI).
+    + LevelKey                     ... data type for identifying a level by its symmetry, energy, etc.
     + LevelSymmetry                ... total level symmetry (J, parity).
+    + LineKey                      ..  data type for identifying a line by the keys of the initial and final level, ...
     + Model                        ... to keep the all nuclear parameters.
     + Parity                       ... standard parity values
     + Shell                        ... a non-relativistic shell.
@@ -441,6 +449,7 @@ module Details
     + TensorComp                   ... component of the statistical tensor as associated with an atomic level. 
     + UseGauge                     ... an allowed gauge form requested for explicit computations: UseCoulomb or UseBabushkin.
     + Warnings                     ... for dealing with warnings that are made during a run or REPL session.
+    + WeightedCartesian            ... Cartesian vector with weight factor of given type.
 
     ### `Data types from many-electron theory`
 
@@ -455,6 +464,9 @@ module Details
     + Orbital                      ... (relativistic) radial orbital function that appears as 'building block' to define many-electron 
                                         states; more often than not, it just occurs as radial orbital on a given (radial) grid while the 
                                         angular dependence is given by the subshell label.
+    + QedPetersburg                ... singleton data type for selecting QED calculations a la St. Petersburg.
+    + QedSydney                    ... singleton data type for selecting QED calculations a la Sydney.
+    + NoneQed                      ... singleton data type if no QED corrections are to be calculated.                 
     + Radial.Grid                  ... radial grid to represent the (radial) orbitals.
     + Radial.Potential             ... radial potential function.
     + Radial.Primitives            ... a list of radial functions, that may serve as a set of primitives in SCF computations, together 

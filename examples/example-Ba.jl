@@ -1,7 +1,7 @@
 #
 println("Ba) Tests of the dipole, em multipole and momentum-transfer amplitudes.")
 #
-grid = Radial.Grid("grid: exponential")
+grid = Radial.Grid(true)
 wa = Atomic.Computation("xx",  Nuclear.Model(26.); grid=grid, properties=JAC.AtomicLevelProperty[],
                         configs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")] )
 

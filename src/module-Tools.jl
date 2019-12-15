@@ -12,10 +12,10 @@ module Tools
     `struct  Tools.Settings`  
         ... defines a type for the settings in estimating double-Auger and autoionization rates.
 
-        + printBeforeComputation  ::Bool   ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool   ... True, if all energies and lines are printed before their evaluation.
     """
     struct Settings
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
     end 
     
 

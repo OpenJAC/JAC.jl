@@ -20,7 +20,7 @@ module Basics
             modify, 
             oplus,
             Parity, perform, provide,
-            RadialMesh, Radiative,
+            Radiative,
             SolidAngle, Shell, Subshell, subshell_2j,
             tabulate, tools, TensorComp, 
             UseCoulomb, UseBabushkin,
@@ -1233,7 +1233,7 @@ module Basics
     end
 
 
-
+    #==
     """
     `@enum   Basics.RadialMesh`  ... defines a enumeration for dealing with the radial mesh points and integration scheme.
 
@@ -1244,7 +1244,6 @@ module Basics
     export  RadialMesh,   MeshGrasp,   MeshGL
 
 
-    #==
     """
     `@enum   Basics.QedModel`  ... defines a enumeration for dealing with the radiative (QED) contribution to the Hamiltonian matrix.
 

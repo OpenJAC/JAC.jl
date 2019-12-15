@@ -111,7 +111,7 @@ module LandeZeeman
         + includeSchwinger       ::Bool              ... True if Schwinger's QED correction ``\\Delta N^(1)`` is to be included, 
                                                          and false otherwise.
         + BField                 ::Float64           ... Strength of the magnetic field in [Tesla]
-        + printBeforeComputation ::Bool              ... True if a list of selected levels is printed before the actual computations start. 
+        + printBefore ::Bool              ... True if a list of selected levels is printed before the actual computations start. 
         + selectLevels           ::Bool              ... true, if specific level (number)s have been selected for computation.
         + selectedLevels         ::Array{Int64,1}    ... Level number that have been selected.
     """
@@ -121,7 +121,7 @@ module LandeZeeman
         calcZeeman               ::Bool
         includeSchwinger         ::Bool
         BField                   ::Float64
-        printBeforeComputation   ::Bool 
+        printBefore   ::Bool 
         selectLevels             ::Bool
         selectedLevels           ::Array{Int64,1}
     end 
@@ -143,7 +143,7 @@ module LandeZeeman
         println(io, "calcZeeman:               $(settings.calcZeeman)  ")
         println(io, "includeSchwinger:         $(settings.includeSchwinger)  ")
         println(io, "BField:                   $(settings.BField)  ")
-        println(io, "printBeforeComputation:   $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:   $(settings.printBefore)  ")
         println(io, "selectLevels:             $(settings.selectLevels)  ")
         println(io, "selectedLevels:           $(settings.selectedLevels)  ")
     end
@@ -235,7 +235,7 @@ module LandeZeeman
         println("")
         outcomes = LandeZeeman.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
-        if  settings.printBeforeComputation    LandeZeeman.displayOutcomes(outcomes)    end
+        if  settings.printBefore    LandeZeeman.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
         newOutcomes = LandeZeeman.Outcome[]
         for  outcome in outcomes

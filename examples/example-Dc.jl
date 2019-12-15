@@ -5,7 +5,7 @@ setDefaults("print summary: open", "zzz-PhotoIonization.sum")
 setDefaults("method: continuum, asymptotic Coulomb")  ## setDefaults("method: continuum, Galerkin")
 setDefaults("method: normalization, pure Coulomb")   ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
-wa = Atomic.Computation("xx",  Nuclear.Model(20.); grid=JAC.Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800),
+wa = Atomic.Computation("xx",  Nuclear.Model(20.); grid=JAC.Radial.Grid(false, "grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800),
                         initialConfigs=[Configuration("[Ne] 3s^2 3p^6")],
                         finalConfigs  =[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6") ], 
                         process = JAC.Photo, 

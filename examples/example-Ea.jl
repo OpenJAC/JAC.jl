@@ -7,7 +7,7 @@ setDefaults("method: continuum, asymptotic Coulomb")    ## setDefaults("method: 
 setDefaults("method: normalization, pure sine")         ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
 name = "Si- (1s^-1) cascade"
-grid = Radial.Grid("grid: by given parameters"; rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600)
+grid = Radial.Grid(false)
 wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(14.), grid=grid, approach=Cascade.AverageSCA(),
                            processes=[Auger, Radiative], initialConfigs=[Configuration("1s^1 2s^2 2p^6 3s^2 3p^4")], initialLevels=[(1, 1.)],
                            maxElectronLoss=2 )

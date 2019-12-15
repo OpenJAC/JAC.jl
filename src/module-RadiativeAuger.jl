@@ -13,7 +13,7 @@ module RadiativeAuger
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + NoEnergySharings        ::Int64                        ... Number of energy sharings that are used in the computations for each line.
-        + printBeforeComputation  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
         + minAugerEnergy          ::Float64                      ... Minimum energy of free (Auger) electrons to be included.
@@ -24,7 +24,7 @@ module RadiativeAuger
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         NoEnergySharings          ::Int64
-        printBeforeComputation    ::Bool
+        printBefore    ::Bool
         selectLines               ::Bool  
         selectedLines             ::Array{Tuple{Int64,Int64},1}
         minAugerEnergy            ::Float64
@@ -46,7 +46,7 @@ module RadiativeAuger
         println(io, "multipoles:                   $(settings.multipoles)  ")
         println(io, "gauges:                       $(settings.gauges)  ")
         println(io, "NoEnergySharings:             $(settings.NoEnergySharings)  ")
-        println(io, "printBeforeComputation:       $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:       $(settings.printBefore)  ")
         println(io, "selectLines:                  $(settings.selectLines)  ")
         println(io, "selectedLines:                $(settings.selectedLines)  ")
         println(io, "minAugerEnergy:               $(settings.minAugerEnergy)  ")
@@ -183,7 +183,7 @@ module RadiativeAuger
         #
         lines = RadiativeAuger.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBeforeComputation    RadiativeAuger.displayLines(lines)    end
+        if  settings.printBefore    RadiativeAuger.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = RadiativeAuger.Line[]
         for  line in lines

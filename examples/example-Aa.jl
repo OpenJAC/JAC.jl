@@ -22,7 +22,7 @@ end
 
 nucleus = Nuclear.Model(10.)
 
-grid = JAC.Radial.Grid("grid: by given parameters", rnt=2.0e-6, h=5.0e-2, NoPoints=390)
+grid = JAC.Radial.Grid(true)
 setDefaults("standard grid", grid)
 
 

@@ -3,7 +3,7 @@ println("Dv) Test of the PairAnnihilation1Photon module with ASF from an interna
 
 @warn("\n\n !!! This example does not work properly at present !!! \n\n")
 #
-wa = Atomic.Computation("xx",  Nuclear.Model(26.), JAC.Radial.Grid("grid: exponential"), false, [JAC.NoProperty],
+wa = Atomic.Computation("xx",  Nuclear.Model(26.), JAC.Radial.Grid(true), false, [JAC.NoProperty],
      Configuration[],
      Configuration[Configuration("1s^2")], 
      Configuration[], 

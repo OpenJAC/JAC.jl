@@ -16,7 +16,7 @@ module Dielectronic
 
         + multipoles              ::Array{EmMultipoles}   ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}       ... Specifies the gauges to be included into the computations.
-        + printBeforeComputation  ::Bool                  ... True, if all energies and pathways are printed before their evaluation.
+        + printBefore             ::Bool                  ... True, if all energies and pathways are printed before their evaluation.
         + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
         + electronEnergyShift     ::Float64               ... An overall energy shift for all electron energies (i.e. from the initial to
@@ -31,14 +31,13 @@ module Dielectronic
     struct Settings 
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge}
-        printBeforeComputation    ::Bool
+        printBefore               ::Bool
         selectPathways            ::Bool
         selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
         electronEnergyShift       ::Float64
         photonEnergyShift         ::Float64
         mimimumPhotonEnergy       ::Float64
         augerOperator             ::String
-        
     end 
 
 
@@ -51,11 +50,42 @@ module Dielectronic
     end
 
 
+    """
+    ` (set::Dielectronic.Settings;`
+    
+            multipoles=..,          gauges=..,                  printBefore=..,             selectPathways=..,             
+            selectedPathways=..,    electronEnergyShift=..,     photonEnergyShift=..,       mimimumPhotonEnergy=..,
+            augerOperator=..)
+                        
+        ... constructor for modifying the given Dielectronic.Settings by 'overwriting' the previously selected parameters.
+    """
+    function Settings(set::Dielectronic.Settings;    
+        multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                        gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
+        printBefore::Union{Nothing,Bool}=nothing,                                       selectPathways::Union{Nothing,Bool}=nothing,
+        selectedPathways::Union{Nothing,Array{Tuple{Int64,Int64,Int64},1}}=nothing,     electronEnergyShift::Union{Nothing,Float64}=nothing,
+        photonEnergyShift::Union{Nothing,Float64}=nothing,                              mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,
+        augerOperator::Union{Nothing,String}=nothing)
+        
+        if  multipoles          == nothing   multipolesx          = set.multipoles            else  multipolesx          = multipoles           end 
+        if  gauges              == nothing   gaugesx              = set.gauges                else  gaugesx              = gauges               end 
+        if  printBefore         == nothing   printBeforex         = set.printBefore           else  printBeforex         = printBefore          end 
+        if  selectPathways      == nothing   selectPathwaysx      = set.selectPathways        else  selectPathwaysx      = selectPathways       end 
+        if  selectedPathways    == nothing   selectedPathwaysx    = set.selectedPathways      else  selectedPathwaysx    = selectedPathways     end 
+        if  electronEnergyShift == nothing   electronEnergyShiftx = set.electronEnergyShift   else  electronEnergyShiftx = electronEnergyShift  end 
+        if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift     else  photonEnergyShiftx   = photonEnergyShift    end 
+        if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy   else  mimimumPhotonEnergyx = mimimumPhotonEnergy  end 
+        if  augerOperator       == nothing   augerOperatorx       = set.augerOperator         else  augerOperatorx       = augerOperator        end 
+
+        Settings( multipolesx, gaugesx, printBeforex, selectPathwaysx, selectedPathwaysx, electronEnergyShiftx, photonEnergyShiftx, 
+                  mimimumPhotonEnergyx, augerOperatorx )
+    end
+
+
     # `Base.show(io::IO, settings::Dielectronic.Settings)`  ... prepares a proper printout of the variable settings::Dielectronic.Settings.
     function Base.show(io::IO, settings::Dielectronic.Settings) 
         println(io, "multipoles:                 $(settings.multipoles)  ")
         println(io, "use-gauges:                 $(settings.gauges)  ")
-        println(io, "printBeforeComputation:     $(settings.printBeforeComputation)  ")
+        println(io, "printBefore:                $(settings.printBefore)  ")
         println(io, "selectPathways:             $(settings.selectPathways)  ")
         println(io, "selectedPathways:           $(settings.selectedPathways)  ")
         println(io, "electronEnergyShift:        $(settings.electronEnergyShift)  ")
@@ -240,7 +270,7 @@ module Dielectronic
         println("")
         pathways = Dielectronic.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
         # Display all selected pathways before the computations start
-        if  settings.printBeforeComputation    Dielectronic.displayPathways(pathways)    end
+        if  settings.printBefore    Dielectronic.displayPathways(pathways)    end
         # Determine maximum (electron) energy and check for consistency of the grid
         maxEnergy = 0.;   for  pathway in pathways   maxEnergy = max(maxEnergy, pathway.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)

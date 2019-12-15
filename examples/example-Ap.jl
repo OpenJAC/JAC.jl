@@ -19,7 +19,7 @@ append!(frozen, [Shell("3s"), Shell("3p"), Shell("3d")])
 append!(to,     [Shell("4s"), Shell("4p"), Shell("4d"), Shell("4f")])
 step3       = RasStep(step2, seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
 #
-wa          = Representation(name, Nuclear.Model(4.), Radial.Grid("grid: exponential"), refConfigs, 
+wa          = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs, 
                              RasExpansion(LevelSymmetry(0, Basics.plus), 4, [step1, step2, step3], rasSettings) )
 println("wa = $wa")
 

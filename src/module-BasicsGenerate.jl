@@ -198,7 +198,7 @@ module BascisGenerate
         # Generate all (non-relativistic) configurations from the bound configurations due to the given excitation scheme 
         confList = Basics.generateConfigurationsForExcitationScheme(rep.refConfigs, repType.excitationScheme, settings.nMax, settings.lValues)
         # Print (if required) information about the generated configuration list
-        if  settings.printBeforeComputation    Basics.display(stdout, confList)    end
+        if  settings.printBefore    Basics.display(stdout, confList)    end
         
         # Generate shell list abd a full single-electron spectrum for this potential
         subshellList = Basics.extractRelativisticSubshellList(confList)                      ## extract all subshells that occur in confList
