@@ -1,7 +1,7 @@
 
 println("Dq) Test of the RadiativeAuger module with ASF from an internally generated initial- and final-state multiplet.")
 #
-wa = Atomic.Computation("xx",  Nuclear.Model(26.), 
+wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
                         initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                         finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
                         process = JAC.RAuger, 

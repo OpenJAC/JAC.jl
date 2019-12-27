@@ -6,7 +6,7 @@
 """
 module Tools
 
-    using Interact
+    ## using Interact
 
     """
     `struct  Tools.Settings`  
@@ -20,6 +20,7 @@ module Tools
     
 
 
+    #==
     """
     `Tools.perform(obs::Observable{Any})`  ... performs different tasks due to the given Observable.
     """
@@ -59,7 +60,7 @@ module Tools
         println("Tools.select(): A menu if a dict comes in; $dict ")
     end
 
-
+    
     """
     `Tools.taskGridCalculator()`  ... grid calculator to determine useful grid parameters
     """
@@ -86,6 +87,7 @@ module Tools
         Interact.@map (&update; taskGridCalculatorResults(observe(b1)[], observe(b2)[], observe(b3)[], observe(b4)[]) ) 
         return( nothing )
     end
+    ==#
 
 
     """

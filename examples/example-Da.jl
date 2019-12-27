@@ -11,7 +11,8 @@ setDefaults("print summary: open", "zzz-radiative.sum")
                         processSettings=PhotoEmission.Settings([E1, M1, E2, M2], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, 
                            true, Tuple{Int64,Int64}[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)], 0., 0., 10000. ) )  ==#
                            
-wa = Atomic.Computation("Energies and Einstein coefficients for the spectrum Fe X",  Nuclear.Model(26.);
+wa = Atomic.Computation(Atomic.Computation(), name="Energies and Einstein coefficients for the spectrum Fe X", 
+                        grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
                         initialConfigs = [Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],
                         finalConfigs   = [Configuration("[Ne] 3s^2 3p^5")], 
                         process = Radiative, 

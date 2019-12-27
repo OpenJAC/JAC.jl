@@ -620,7 +620,7 @@ module ManyElectron
            isDefined = true 
            #
            println("ManyElectron.Basis-aa: warning ... The standard grid is set; make an interactive request if not appropriate.") 
-           grid     = Radial.Grid("grid: exponential")
+           grid     = Radial.Grid(true)
            basis    = Basics.read("CSF list: Grasp92", cslFilename)
            orbitals = Basics.readOrbitalFileGrasp92(rwfFilename, grid)
         else  error("stop a")

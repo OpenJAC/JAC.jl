@@ -5,7 +5,7 @@
 """
 module Atomic
 
-    using Interact
+    ## using Interact
     using ..Basics, ..Radial, ..ManyElectron, ..Nuclear
     using ..Einstein, ..Hfs, ..IsotopeShift, ..PlasmaShift, ..LandeZeeman, ..AlphaVariation, ..FormFactor, ..DecayYield,
           ..MultipolePolarizibility, ..PhotoEmission, ..PhotoIonization, ..PhotoExcitation, ..PhotoRecombination, 

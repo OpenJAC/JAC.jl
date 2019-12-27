@@ -3,7 +3,7 @@ println("Dn) Test of the ImpactExcitation module with ASF from an internally gen
 @warn("\n\n !!! This example does not work properly at present !!! \n\n")
 #
 setDefaults("print summary: open", "zzz-ImpactExcitation.sum")
-wa = Atomic.Computation("xx",  Nuclear.Model(36.);
+wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(36.), 
                         initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                         finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
                         process = JAC.Eimex, 

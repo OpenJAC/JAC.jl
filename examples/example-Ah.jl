@@ -5,7 +5,7 @@ println("Ah) Generate and normalize continuum orbitals in a local potential.")
 
 @warn("\n\n !!! This example does not work properly at present !!! \n\n")
 #
-wa = Atomic.Computation("xx",  Nuclear.Model(3.); grid=JAC.Radial.Grid(false),
+wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(false), nuclearModel=Nuclear.Model(3.), 
                         configs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")], 
                         asfSettings=AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), [1],    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
                                                 true, false, NoneQed(), "yyy", LSjjSettings(true),

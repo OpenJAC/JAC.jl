@@ -6,7 +6,7 @@
 """
 module BasicsQZ
 
-    using Printf, Interact, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..Hfs, 
+    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..Hfs, 
           ..ManyElectron, ..Nuclear, ..PhotoEmission, ..Radial, ..TableStrings
     
     export dummyQZ
@@ -448,6 +448,8 @@ module BasicsQZ
         return( nothing )
     end
 
+    
+    #==
     """
     `Basics.tools()`  ... select different tools from a menu for which no further input is required.
     """
@@ -465,6 +467,7 @@ module BasicsQZ
         output = Interact.@map (&update;  (observe(b1)[], observe(b2)[]) ) 
         return( output )
     end
+    ==#
 
 
     """

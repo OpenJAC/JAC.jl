@@ -1,7 +1,7 @@
 #
 println("Ad) Tests towards a SCF field: B-spline primitives and one-particle spectra in a local potential.")
 #
-wa = Atomic.Computation("xx",  Nuclear.Model(18., "point"); grid=JAC.Radial.Grid(true), 
+wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(18., "point"), 
                         properties=JAC.AtomicLevelProperty[],
                         configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],  ## 
                         asfSettings=AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), [1],    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 

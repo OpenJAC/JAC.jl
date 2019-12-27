@@ -6,7 +6,7 @@
 """
 module Nuclear
   
-    using Interact, QuadGK, ..Basics,  ..Defaults, ..Radial, ..Math
+    using  QuadGK, ..Basics,  ..Defaults, ..Radial, ..Math
     export Model
 
 
@@ -95,6 +95,7 @@ module Nuclear
     end
 
 
+    #==
     """
     `Nuclear.Model(gui::Guint; model::Nuclear.Model=Model(36.0))`  
         ... constructor to re-fine a nuclear model by a graphical user interface, and which may starts from 
@@ -126,6 +127,7 @@ module Nuclear
         else  error("Unsupported Guint = $gui.")
         end
     end
+    ==#
 
 
     # `Base.show(io::IO, m::Model)`  ... prepares a proper printout of the variable  m::Model.
