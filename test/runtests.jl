@@ -22,24 +22,23 @@ using JAC, ..Defaults, ..TestFrames
     ##x close(streamDummy)
 
     @testset "JAC properties" begin
-        ## @test TestFrames.testModule_Einstein()       ## printout too accurate
+        @test TestFrames.testModule_Einstein()         ## printout too accurate ??
         @test TestFrames.testModule_Hfs()   
         @test TestFrames.testModule_LandeZeeman() 
         @test TestFrames.testModule_IsotopeShift()   
         @test TestFrames.testModule_AlphaVariation() 
         @test TestFrames.testModule_FormFactor() 
         # @test TestFrames.testModule_DecayYield()  ... need to be adapted
-        ## @test TestFrames.testModule_GreenFunction()
         @test TestFrames.testModule_MultipolePolarizibility()
         @test TestFrames.testModule_PlasmaShift() 
     end
 
     @testset "JAC processes" begin
-        ##  @test TestFrames.testModule_PhotoEmission()     ## printout too accurate 
+        @test TestFrames.testModule_PhotoEmission()     ## printout too accurate ??
         @test TestFrames.testModule_PhotoExcitation()
-        ## @test TestFrames.testModule_PhotoIonization()
-        ## @test TestFrames.testModule_PhotoRecombination()
-        ## @test TestFrames.testModule_AutoIonization()  
+        @test TestFrames.testModule_PhotoIonization()
+        @test TestFrames.testModule_PhotoRecombination()
+        @test TestFrames.testModule_AutoIonization()  
         @test TestFrames.testModule_Dielectronic()  
         ## @test TestFrames.testModule_PhotoExcitationFluores() 
         ## @test TestFrames.testModule_PhotoExcitationAutoion() 

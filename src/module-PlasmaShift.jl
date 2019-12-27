@@ -123,7 +123,7 @@ module PlasmaShift
         + lambdaDebye            ::Float64                       ... The lambda parameter of different plasma models.
         + ionSphereR0            ::Float64                       ... The effective radius of the ion-sphere model.
         + NoBoundElectrons       ::Int64                         ... Effective number of bound electrons.
-        + printBefore ::Bool                          ... True, if all energies and lines are printed before their evaluation.
+        + printBefore            ::Bool                          ... True, if all energies and lines are printed before their evaluation.
         + selectLines            ::Bool                          ... True, if lines are selected individually for the computations.
         + selectedLines          ::Array{Tuple{Int64,Int64},1}   ... List of lines, given by tupels (inital-level, final-level).
     """
@@ -132,7 +132,7 @@ module PlasmaShift
         lambdaDebye              ::Float64 
         ionSphereR0              ::Float64
         NoBoundElectrons         ::Int64
-        printBefore   ::Bool 
+        printBefore              ::Bool 
         selectLines              ::Bool
         selectedLines            ::Array{Tuple{Int64,Int64},1}
     end 
@@ -152,7 +152,7 @@ module PlasmaShift
         println(io, "lambdaDebye:             $(settings.lambdaDebye)  ")
         println(io, "ionSphereR0:             $(settings.ionSphereR0)  ")
         println(io, "NoBoundElectrons:        $(settings.NoBoundElectrons)  ")
-        println(io, "printBefore:  $(settings.printBefore)  ")
+        println(io, "printBefore:             $(settings.printBefore)  ")
         println(io, "selectLines:             $(settings.selectLines)  ")
         println(io, "selectedLines:           $(settings.selectedLines)  ")
     end
@@ -169,7 +169,7 @@ module PlasmaShift
         + multipoles             ::Array{Basics.EmMultipole}     ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                 ::Array{Basics.UseGauge}        ... Specifies the gauges to be included into the computations.
         + photonEnergies         ::Array{Float64,1}              ... List of photon energies.  
-        + printBefore ::Bool                          ... True, if all energies and lines are printed before their evaluation.
+        + printBefore            ::Bool                          ... True, if all energies and lines are printed before their evaluation.
         + selectLines            ::Bool                          ... True, if lines are selected individually for the computations.
         + selectedLines          ::Array{Tuple{Int64,Int64},1}   ... List of lines, given by tupels (inital-level, final-level).
     """
@@ -181,7 +181,7 @@ module PlasmaShift
         multipoles               ::Array{Basics.EmMultipole}
         gauges                   ::Array{Basics.UseGauge}  
         photonEnergies           ::Array{Float64,1} 
-        printBefore   ::Bool 
+        printBefore              ::Bool 
         selectLines              ::Bool
         selectedLines            ::Array{Tuple{Int64,Int64},1}
     end 
@@ -204,7 +204,7 @@ module PlasmaShift
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
         println(io, "photonEnergies:          $(settings.photonEnergies)  ")
-        println(io, "printBefore:  $(settings.printBefore)  ")
+        println(io, "printBefore:             $(settings.printBefore)  ")
         println(io, "selectLines:             $(settings.selectLines)  ")
         println(io, "selectedLines:           $(settings.selectedLines)  ")
     end

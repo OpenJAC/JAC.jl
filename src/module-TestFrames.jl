@@ -186,8 +186,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-AutoIonization-new.sum")
         printstyled("\n\nTest the module  AutoIonization  ... \n", color=:cyan)
         ### Make the tests
-        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 600)
-        wa = Atomic.Computation("xx",  Model(36.); grid=grid,  
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 900)
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),  
                                 initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = JAC.Auger,
                                 processSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(3,1), (4,1), (5,1), (6,1)], 0., 1.0e6, 2, "Coulomb") )
@@ -196,7 +196,7 @@ module TestFrames
         Defaults.setDefaults("print summary: close", "")
         # Make the comparison with approved data
         success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-AutoIonization-approved.sum"), 
-                                    joinpath(@__DIR__, "..", "test", "test-AutoIonization-new.sum"), "AutoIonization rates and intr", 17) 
+                                    joinpath(@__DIR__, "..", "test", "test-AutoIonization-new.sum"), "Auger rates and intrinsic", 17) 
         testPrint("testModule_AutoIonization()::", success)
         return(success)  
     end
@@ -283,7 +283,8 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-Einstein-new.sum")
         printstyled("\n\nTest the module  Einstein  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(36.); properties=[JAC.EinsteinX], 
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true), nuclearModel=Nuclear.Model(36.), 
+                                properties=[JAC.EinsteinX], 
                                 configs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                                 einsteinSettings=Einstein.Settings([E1, M1, E2, M2], true, 
                                 true, Tuple{Int64,Int64}[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0)], 0., 0., 10000. ) )
@@ -320,29 +321,6 @@ module TestFrames
         testPrint("testModule_FormFactor()::", success)
         return(success)  
     end
-
-
-    #===
-    """
-    `TestFrames.testModule_GreenFunction(; short::Bool=true)`  ... tests on module GreenFunction.
-    """
-    function testModule_GreenFunction(; short::Bool=true) 
-        Defaults.setDefaults("print summary: open", "test-GreenFunction-new.sum")
-        printstyled("\n\nTest the module  GreenFunction  ... \n", color=:cyan)
-        ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(26.); properties=[JAC.Green], 
-                                configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                greenSettings=GreenFunction.Settings(true, true, false, Int64[]) )
-        wb = perform(wa)
-        ###
-        Defaults.setDefaults("print summary: close", "")
-        # Make the comparison with approved data
-        success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-GreenFunction-approved.sum"), 
-                                    joinpath(@__DIR__, "..", "test", "test-GreenFunction-new.sum"), "Green's function summary:", 6) 
-        testPrint("testModule_GreenFunction()::", success)
-        return(success)  
-    end
-    ===#
 
 
 
@@ -653,7 +631,7 @@ module TestFrames
         printstyled("\n\nTest the module  PhotoIonization  ... \n", color=:cyan)
         ### Make the tests
         grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800)
-        wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=grid,
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),
                                 initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                                 finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
                                 process = JAC.Photo, 
@@ -664,7 +642,7 @@ module TestFrames
         Defaults.setDefaults("print summary: close", "")
         # Make the comparison with approved data
         success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoIonization-approved.sum"), 
-                                    joinpath(@__DIR__, "..", "test", "test-PhotoIonization-new.sum"), "Total photoionization c", 8) 
+                                    joinpath(@__DIR__, "..", "test", "test-PhotoIonization-new.sum"), "Total photoionization c", 30) 
         testPrint("testModule_PhotoIonization()::", success)
         return(success)  
     end
@@ -679,7 +657,7 @@ module TestFrames
         printstyled("\n\nTest the module  PhotoRecombination  ... \n", color=:cyan)
         ### Make the tests
         grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-6, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600)
-        wa = Atomic.Computation("xx",  Nuclear.Model(36.); grid=grid,
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),
                                 initialConfigs=[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ],
                                 finalConfigs  =[Configuration("1s^2 2s^2 2p^6")], 
                                 process = JAC.Rec, 
@@ -704,7 +682,7 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-PhotoEmission-new.sum")
         printstyled("\n\nTest the module  PhotoEmission  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation("xx",  Nuclear.Model(36.);
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true), nuclearModel=Nuclear.Model(36.),
                                 initialConfigs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                                 finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
                                 process = JAC.Radiative, 

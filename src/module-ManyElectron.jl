@@ -354,6 +354,34 @@ module ManyElectron
     	  return( sa )
     end
     
+
+    """
+    `Base.:(==)(seta::AsfSettings, setb::AsfSettings)`  
+        ... compares (recursively) two instances of AsfSettings and return true if all subfields are equal, 
+            and false otherwise
+    """
+    function  Base.:(==)(seta::AsfSettings, setb::AsfSettings)
+    
+    	if  seta.generateScf      !=  setb.generateScf                return( false )    end
+    	if  seta.breitScf         !=  setb.breitScf            	      return( false )    end
+    	if  seta.methodScf        !=  setb.methodScf                  return( false )    end
+    	if  seta.startScf         !=  setb.startScf                   return( false )    end
+    	#   startOrbitals
+    	if  seta.levelsScf        !=  setb.levelsScf                  return( false )    end
+    	if  seta.maxIterationsScf !=  setb.maxIterationsScf           return( false )    end
+    	if  seta.accuracyScf      !=  setb.accuracyScf                return( false )    end
+    	if  seta.shellSequenceScf !=  setb.shellSequenceScf           return( false )    end
+    	if  seta.frozenSubshells  !=  setb.frozenSubshells            return( false )    end
+    	if  seta.coulombCI        !=  setb.coulombCI                  return( false )    end
+    	if  seta.breitCI          !=  setb.breitCI                    return( false )    end
+    	#   qedModel
+    	#   methodCI
+    	#   jjLS
+    	
+    	  return( true )
+    end
+
+    
     
     """
     `struct  ManyElectron.CsfR`  

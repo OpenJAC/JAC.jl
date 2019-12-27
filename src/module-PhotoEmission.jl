@@ -533,7 +533,7 @@ module PhotoEmission
                sa  = "  ";    sym = LevelSymmetry( lines[i].initialLevel.J, lines[i].initialLevel.parity )
                sa = sa * TableStrings.center(10, TableStrings.level(lines[i].initialLevel.index); na=2)
                sa = sa * TableStrings.center(10, string(sym); na=4)
-               sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", lines[i].initialLevel.energy)) * "    "
+               sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", lines[i].initialLevel.energy)) * "    "
                push!( ilevels, ii);    push!( istr, sa )   
             end
         end
@@ -553,32 +553,32 @@ module PhotoEmission
         println(stream, " ")
         println(stream, "  PhotoEmission lifetimes (as derived from these computations):")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(111))
+        println(stream, "  ", TableStrings.hLine(105))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                              sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                              sb = sb * TableStrings.hBlank(14)
-        sa = sa * TableStrings.center(14, "Level energy"   ; na=4);               
-        sb = sb * TableStrings.center(14,TableStrings.inUnits("energy"); na=4)
-        sa = sa * TableStrings.center(12, "Used Gauge"    ; na=7);                     sb = sb * TableStrings.hBlank(18)
-        sa = sa * TableStrings.center(28, "Lifetime"; na=5);       
-        sb = sb * TableStrings.center(28, "[a.u.]"*"          "*TableStrings.inUnits("time"); na=5)
-        sa = sa * TableStrings.center(14, "Decay widths"; na=4);       
-        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(111)) 
+        sa = sa * TableStrings.center(12, "Level energy"   ; na=3);               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(12, "Used Gauge"    ; na=6);                     sb = sb * TableStrings.hBlank(18)
+        sa = sa * TableStrings.center(26, "Lifetime"; na=3);       
+        sb = sb * TableStrings.center(26, "[a.u.]"*"          "*TableStrings.inUnits("time"); na=5)
+        sa = sa * TableStrings.center(12, "Decay widths"; na=4);       
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(105)) 
         #    
         for  ii = 1:length(ilevels)
             sa = istr[ii]
-            sa = sa * "Coulomb          " * @sprintf("%.8e",              1.0/irates[ii].Coulomb)     * "  "
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("time: from atomic",   1.0/irates[ii].Coulomb) )   * "    "
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic",     irates[ii].Coulomb) )
+            sa = sa * "Coulomb          " * @sprintf("%.6e",              1.0/irates[ii].Coulomb)     * "  "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("time: from atomic",   1.0/irates[ii].Coulomb) )   * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic",     irates[ii].Coulomb) )
             println(stream, sa)
             sa = repeat(" ", length(istr[ii]) )
-            sa = sa * "Babushkin        " * @sprintf("%.8e",              1.0/irates[ii].Babushkin)   * "  "
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("time: from atomic",   1.0/irates[ii].Babushkin) ) * "    "
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic",     irates[ii].Babushkin) )
+            sa = sa * "Babushkin        " * @sprintf("%.6e",              1.0/irates[ii].Babushkin)   * "  "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("time: from atomic",   1.0/irates[ii].Babushkin) ) * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic",     irates[ii].Babushkin) )
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(111))
+        println(stream, "  ", TableStrings.hLine(105))
         #
         return( nothing )
     end
@@ -631,20 +631,20 @@ module PhotoEmission
         println(stream, " ")
         println(stream, "  Einstein coefficients, transition rates and oscillator strengths:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(155))
+        println(stream, "  ", TableStrings.hLine(145))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
-        sa = sa * TableStrings.center(14, "Energy"   ; na=4);               
-        sb = sb * TableStrings.center(14,TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(12, "Energy"   ; na=4);               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.center( 9, "Multipole"; na=0);                         sb = sb * TableStrings.hBlank(10)
-        sa = sa * TableStrings.center(11, "Gauge"    ; na=5);                         sb = sb * TableStrings.hBlank(16)
-        sa = sa * TableStrings.center(30, "A--Einstein--B"; na=3);       
-        sb = sb * TableStrings.center(30, TableStrings.inUnits("rate")*"          "*TableStrings.inUnits("rate"); na=2)
-        sa = sa * TableStrings.center(13, "Osc. strength"    ; na=4);                 sb = sb * TableStrings.hBlank(19)
-        sa = sa * TableStrings.center(14, "Decay widths"; na=4);       
-        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(155)) 
+        sa = sa * TableStrings.center(11, "Gauge"    ; na=4);                         sb = sb * TableStrings.hBlank(17)
+        sa = sa * TableStrings.center(26, "A--Einstein--B"; na=3);       
+        sb = sb * TableStrings.center(26, TableStrings.inUnits("rate")*"          "*TableStrings.inUnits("rate"); na=2)
+        sa = sa * TableStrings.center(11, "Osc. strength"    ; na=3);                 sb = sb * TableStrings.hBlank(17)
+        sa = sa * TableStrings.center(12, "Decay widths"; na=4);       
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(145)) 
         #   
         for  line in lines
             for  ch in line.channels
@@ -652,20 +652,20 @@ module PhotoEmission
                                fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
                 sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
                 sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
-                sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
                 sa = sa * TableStrings.center(9,  string(ch.multipole); na=4)
                 sa = sa * TableStrings.flushleft(11, string(ch.gauge);  na=2)
                 chRate =  8pi * Defaults.getDefaults("alpha") * line.omega / (AngularMomentum.twoJ(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) * 
                                                                  (AngularMomentum.twoJ(line.finalLevel.J) + 1)
-                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
-                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
-                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to g_f",         line, chRate)) * "    "
-                sa = sa * @sprintf("%.8e", Basics.recast("rate: radiative, to decay width", line, chRate)) * "      "
+                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
+                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
+                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to g_f",         line, chRate)) * "    "
+                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to decay width", line, chRate)) * "      "
                 ##x sa = sa * @sprintf("%.5e  %.5e", ch.amplitude.re, ch.amplitude.im) * "        "
                 println(stream, sa)
             end
         end
-        println(stream, "  ", TableStrings.hLine(155))
+        println(stream, "  ", TableStrings.hLine(145))
         #
         return( nothing )
     end

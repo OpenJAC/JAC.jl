@@ -519,17 +519,17 @@ module AutoIonization
         println(stream, " ")
         println(stream, "  Auger lifetimes, total rates and widths:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(115))
+        println(stream, "  ", TableStrings.hLine(104))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level";    na=2);                           sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center( 8, "J^P";      na=4);                           sb = sb * TableStrings.hBlank(12)
-        sa = sa * TableStrings.center(14, "Lifetime"; na=4);               
-        sb = sb * TableStrings.center(14,TableStrings.inUnits("time"); na=4)
-        sa = sa * TableStrings.center(16, "Total rate"; na=6);               
-        sb = sb * TableStrings.center(16,TableStrings.inUnits("rate"); na=4)
-        sa = sa * TableStrings.center(48, "Widths"; na=2);       
-        sb = sb * TableStrings.center(48, "Hartrees           Kaysers             eV"; na=2)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(115)) 
+        sa = sa * TableStrings.center(12, "Lifetime"; na=4);               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("time"); na=4)
+        sa = sa * TableStrings.center(14, "Total rate"; na=6);               
+        sb = sb * TableStrings.center(14,TableStrings.inUnits("rate"); na=4)
+        sa = sa * TableStrings.center(42, "Widths"; na=2);       
+        sb = sb * TableStrings.center(42, "  Hartrees         Kaysers           eV"; na=2)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(104)) 
         # 
         notYetDone = trues(1000)
         for  line in lines
@@ -542,15 +542,15 @@ module AutoIonization
                 sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                 sa = sa * TableStrings.center(10, TableStrings.level(line.initialLevel.index); na=2)
                 sa = sa * TableStrings.center( 8, string(isym); na=4)
-                sa = sa * @sprintf("%.8e", Defaults.convertUnits("time: from atomic",  1/totalRate))            * "     "
-                sa = sa * @sprintf("%.8e", Defaults.convertUnits("rate: from atomic",    totalRate))            * "      "
-                sa = sa * @sprintf("%.8e", totalRate)                                                           * "    "
-                sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic to Kayser",  totalRate))  * "    "
-                sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic to eV",      totalRate))  * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("time: from atomic",  1/totalRate))            * "     "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("rate: from atomic",    totalRate))            * "      "
+                sa = sa * @sprintf("%.6e", totalRate)                                                           * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic to Kayser",  totalRate))  * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic to eV",      totalRate))  * "    "
                 println(stream, sa)
             end
         end
-        println(stream, "  ", TableStrings.hLine(115))
+        println(stream, "  ", TableStrings.hLine(104))
         #
         return( nothing )
     end
@@ -565,31 +565,31 @@ module AutoIonization
         println(stream, " ")
         if  settings.calcAnisotropy    println(stream, "  Auger rates and intrinsic angular parameters: \n")
         else                           println(stream, "  Auger rates (without angular parameters): \n")        end
-        println(stream, "  ", TableStrings.hLine(115))
+        println(stream, "  ", TableStrings.hLine(106))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
-        sa = sa * TableStrings.center(14, "Energy"   ; na=4);               
-        sb = sb * TableStrings.center(14,TableStrings.inUnits("energy"); na=4)
-        sa = sa * TableStrings.center(16, "Electron energy"   ; na=2);               
-        sb = sb * TableStrings.center(16,TableStrings.inUnits("energy"); na=2)
-        sa = sa * TableStrings.center(16, "Auger rate"; na=2);       
-        sb = sb * TableStrings.center(16, TableStrings.inUnits("rate"); na=2)
-        sa = sa * TableStrings.center(16, "alpha_2"; na=2);                           sb = sb * TableStrings.hBlank(18)     
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(115)) 
+        sa = sa * TableStrings.center(12, "Energy"   ; na=2);               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(14, "Electron energy"   ; na=2);               
+        sb = sb * TableStrings.center(14,TableStrings.inUnits("energy"); na=2)
+        sa = sa * TableStrings.center(14, "Auger rate"; na=2);       
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("rate"); na=2)
+        sa = sa * TableStrings.center(15, "alpha_2"; na=2);                           sb = sb * TableStrings.hBlank(18)     
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(106)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "    "
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.electronEnergy))       * "    "
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("rate: from atomic", line.totalRate))              * "    "
-            sa = sa * TableStrings.flushright(13, @sprintf("%.5e", line.angularAlpha))            * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.electronEnergy))       * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("rate: from atomic", line.totalRate))              * "    "
+            sa = sa * TableStrings.flushright(13, @sprintf("%.4e", line.angularAlpha))            * "    "
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(115))
+        println(stream, "  ", TableStrings.hLine(106))
         #
         return( nothing )
     end

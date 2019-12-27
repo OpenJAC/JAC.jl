@@ -162,8 +162,6 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
         if  process                 == nothing  processx                 = comp.process                 else  processx                 = process                  end 
         if  processSettings         == nothing  prsx                     = comp.processSettings         else  prsx                     = processSettings          end 
         
-        println("aa: $processx   $prsx")
-        
         if      processx == Basics.NoProcess                                                              prsx = PhotoEmission.Settings()
         elseif  processx == Basics.Auger            && typeof(prsx) != AutoIonization.Settings            prsx = AutoIonization.Settings()
         elseif  processx == Basics.AugerInPlasma    && typeof(prsx) != PlasmaShift.AugerSettings          prsx = PlasmaShift.AugerSettings()
@@ -198,50 +196,64 @@ export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings,
         return( cp )
     end
 
-    #== re-write for Computation 
-    # `Base.string(rep::Representation)`  ... provides a String notation for the variable rep::Representation.
-    function Base.string(rep::Representation)
-        sa = "Atomic representation:   $(rep.name) for Z = $(rep.nuclearModel.Z) and with reference configurations: \n   "
-        for  refConfig  in  rep.refConfigs     sa = sa * string(refConfig) * ",  "     end
+
+    # `Base.string(comp::Atomic.Computation)`  ... provides a String notation for the variable comp::Atomic.Computation.
+    function Base.string(comp::Atomic.Computation)
+        sa = "Atomic computation:    $(comp.name) for Z = $(comp.nuclearModel.Z), "
+        if  comp.process != NoProcess   sa = sa * "for the process $(comp.process) and with the \ninitial configurations:    "
+            for  config  in  comp.initialConfigs   sa = sa * string(config) * ",  "         end
+            if  length(comp.intermediateConfigs) > 0
+                sa = sa * "\nintermediate configurations:"
+                for  config  in  comp.finalConfigs     sa = sa * string(config) * ",  "     end
+            end
+            sa = sa * "\nfinal configurations:      "
+            for  config  in  comp.finalConfigs     sa = sa * string(config) * ",  "         end
+        else                                sa = sa * "for the properties $(comp.properties) and with the \nconfigurations:        "
+            for  config  in  comp.configs   sa = sa * string(config) * ",  "                end
+        end
         return( sa )
     end
 
 
-    # `Base.show(io::IO, rep::Representation)`  ... prepares a printout of rep::Representation.
-    function Base.show(io::IO, rep::Representation)
-        sa = Base.string(rep);            print(io, sa, "\n")
-        println(io, "representation type:   $(rep.repType)  ")
-        println(io, "nuclearModel:          $(rep.nuclearModel)  ")
-        println(io, "grid:                  $(rep.grid)  ")
-    end
-    ==#
-
-
-    # `Base.show(io::IO, computation::Atomic.Computation)`  ... prepares a proper printout of the variable computation::Atomic.Computation.
-    function Base.show(io::IO, computation::Atomic.Computation) 
-        println(io, "name:                           $(computation.name)  ")
-        println(io, "nuclearModel:                   $(computation.nuclearModel)  ")
-        println(io, "grid:                           $(computation.grid)  ")
-        println(io, "properties:                     $(computation.properties)  ")
-        println(io, "configs:                        $(computation.configs)  ")
-        println(io, "asfSettings:                      computation.asfSettings  ")
-        println(io, "initialConfigs:                 $(computation.initialConfigs)  ")
-        println(io, "initialAsfSettings:               computation.initialAsfSettings  ")
-        println(io, "intermediateConfigs:            $(computation.intermediateConfigs)  ")
-        println(io, "intermediateAsfSettings:          computation.intermediateAsfSettings  ")
-        println(io, "finalConfigs:                   $(computation.finalConfigs)  ")
-        println(io, "finalAsfSettings:                 computation.finalAsfSettings  ")
-        println(io, "alphaSettings:                    computation.alphaSettings  ")
-        println(io, "einsteinSettings:                 computation.einsteinSettings  ")
-        println(io, "formSettings:                     computation.formSettings  ")
-        println(io, "hfsSettings:                      computation.hfsSettings  ")
-        println(io, "isotopeSettings:                  computation.isotopeSettings  ")
-        println(io, "plasmaSettings:                   computation.plasmaSettings  ")
-        println(io, "polaritySettings:                 computation.polaritySettings  ")
-        println(io, "yieldSettings:                    computation.yieldSettings  ")
-        println(io, "zeemanSettings:                   computation.zeemanSettings  ")
-        println(io, "process:                        $(computation.process)  ")
-        println(io, "processSettings:                  computation.processSettings  ")
+    # `Base.show(io::IO, comp::Atomic.Computation)`  ... prepares a printout of comp::Atomic.Computation.
+    function Base.show(io::IO, comp::Atomic.Computation)
+        sa = Base.string(comp);             print(io, sa, "\n")
+        println(io, "nuclearModel:          $(comp.nuclearModel)  ")
+        println(io, "grid:                  $(comp.grid)  ")
+        #
+        # For the computation of some given atomic process
+        if  comp.process != NoProcess  
+        println(io, "processSettings:              \n$(comp.processSettings)  ")
+        if  comp.initialAsfSettings != AsfSettings()     
+        println(io, "initialAsfSettings:           \n$(comp.initialAsfSettings)  ")         end
+        if  comp.intermediateAsfSettings != AsfSettings()     
+        println(io, "intermediateAsfSettings:      \n$(comp.intermediateAsfSettings)  ")    end
+        if  comp.finalAsfSettings != AsfSettings()     
+        println(io, "finalAsfSettings:             \n$(comp.finalAsfSettings)  ")           end
+        #
+        else
+        # For the computation of no or several atomic properties
+        if  comp.asfSettings != AsfSettings()     
+        println(io, "asfSettings:                  \n$(comp.asfSettings)  ")                end
+        if  AlphaX in comp.properties     &&  comp.alphaSettings    != AlphaVariation.Settings()
+        println(io, "alphaSettings:                \n$(comp.alphaSettings)  ")              end
+        if  EinsteinX in comp.properties  &&  comp.einsteinSettings != Einstein.Settings()
+        println(io, "einsteinSettings:             \n$(comp.einsteinSettings)  ")           end
+        if  FormF in comp.properties      &&  comp.formSettings     != FormFactor.Settings()
+        println(io, "formSettings:                 \n$(comp.formSettings)  ")               end
+        if  HFS in comp.properties        &&  comp.hfsSettings      != Hfs.Settings()
+        println(io, "hfsSettings:                  \n$(comp.hfsSettings)  ")                end
+        if  Isotope in comp.properties    &&  comp.isotopeSettings  != IsotopeShift.Settings()
+        println(io, "isotopeSettings:              \n$(comp.isotopeSettings)  ")            end
+        if  Plasma in comp.properties     &&  comp.plasmaSettings   != PlasmaShift.Settings()
+        println(io, "plasmaSettings:               \n$(comp.plasmaSettings)  ")             end
+        if  Polarity in comp.properties   &&  comp.polaritySettings != MultipolePolarizibility.Settings()
+        println(io, "polaritySettings:             \n$(comp.polaritySettings)  ")           end
+        if  Yields in comp.properties     &&  comp.yieldSettings    != DecayYield.Settings()
+        println(io, "yieldSettings:                \n$(comp.yieldSettings)  ")              end
+        if  Zeeman in comp.properties     &&  comp.zeemanSettings   != LandeZeeman.Settings()
+        println(io, "zeemanSettings:               \n$(comp.zeemanSettings)  ")             end
+        end
     end
 
 end # module
