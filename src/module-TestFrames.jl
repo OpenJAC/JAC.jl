@@ -642,7 +642,7 @@ module TestFrames
         Defaults.setDefaults("print summary: close", "")
         # Make the comparison with approved data
         success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoIonization-approved.sum"), 
-                                    joinpath(@__DIR__, "..", "test", "test-PhotoIonization-new.sum"), "Total photoionization c", 30) 
+                                    joinpath(@__DIR__, "..", "test", "test-PhotoIonization-new.sum"), "Total photoionization c", 3) 
         testPrint("testModule_PhotoIonization()::", success)
         return(success)  
     end
@@ -668,7 +668,7 @@ module TestFrames
         Defaults.setDefaults("print summary: close", "")
         # Make the comparison with approved data
         success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoRecombination-approved.sum"), 
-                                    joinpath(@__DIR__, "..", "test", "test-PhotoRecombination-new.sum"), "Photorecombination cross sections for ", 12) 
+                                    joinpath(@__DIR__, "..", "test", "test-PhotoRecombination-new.sum"), "Photorecombination cross sections for ", 3) 
         testPrint("testModule_PhotoRecombination()::", success)
         return(success)  
     end
