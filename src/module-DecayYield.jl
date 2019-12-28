@@ -104,22 +104,22 @@ module DecayYield
         ## setDefaults("method: normalization, pure sine")
         #
         println("\nPerform a cascade computation for all radiative decay channels of the levels from the initial configurations:")
-        if      settings.approach == "AverageSCA"    cApproach = JAC.Cascade.AverageSCA()
-        elseif  settings.approach == "SCA"           cApproach = JAC.Cascade.SCA()
+        if      settings.approach == "AverageSCA"    cApproach = Cascade.AverageSCA()
+        elseif  settings.approach == "SCA"           cApproach = Cascade.SCA()
         else    error("Improper (cascade) approach for yield computations; approach = $(settings.approach)")    
         end
-        wa = JAC.Cascade.Computation("photon lines", nm, grid, asfSettings, cApproach, [Radiative], 
-                                     initialConfigs, Tuple{Int64,Float64}[],  0, 0, Shell[], Shell[], JAC.Cascade.Step[])
+        wa = Cascade.Computation(Cascade.Computation(), name="photon lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
+                                 approach=cApproach, processes=[Radiative], initialConfigs=initialConfigs)
         wb = perform(wa; output=false);   linesR = wb.linesR
         println("\nPerform a cascade computation for all (single-electron) Auger decay channels of the levels from the initial configurations:")
-        wa = JAC.Cascade.Computation("Auger lines", nm, grid, asfSettings, cApproach, [Auger], 
-                                      initialConfigs, Tuple{Int64,Float64}[],  1, 0, Shell[], Shell[], JAC.Cascade.Step[])
+        wa = Cascade.Computation(Cascade.Computation(), name="Auger lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
+                                 approach=cApproach, processes=[Auger], initialConfigs=initialConfigs)
         wb = perform(wa; output=false);   linesA = wb.linesA
         #
         # Calculate all amplitudes and requested properties
         newOutcomes = DecayYield.Outcome[]
         for  outcome in outcomes
-            newOutcome = JAC.Cascade.computeDecayYieldOutcome(outcome, linesR, linesA, settings)
+            newOutcome = Cascade.computeDecayYieldOutcome(outcome, linesR, linesA, settings)
             push!( newOutcomes, newOutcome)
         end
         # Print all results to screen

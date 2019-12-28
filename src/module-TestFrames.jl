@@ -47,6 +47,85 @@ module TestFrames
     end 
 
 
+    """
+    `TestFrames.testEvaluation_Wigner_3j_specialValues(; short::Bool=true)`  
+        ... tests on special values for the Wigner 3j symbols.
+    """
+    function testEvaluation_Wigner_3j_specialValues(; short::Bool=true)
+        success = true
+        printTest, iostream = Defaults.getDefaults("test flag/stream")
+
+        w3j = RacahAlgebra.selectW3j(2);                    println("w3j-original      = $w3j")
+        wa  = RacahAlgebra.symmetricForms(w3j)
+        wb  = RacahAlgebra.evaluate(wa[1], special=true);   println("\nwb-special value  = $wb")
+        wc  = RacahAlgebra.evaluate(wa[2], special=true);   println("\nwc-special value  = $wc")
+        if  wb != wc
+            success = false
+            if printTest   info(iostream, "$w3j:   $wb != $wc")   end
+        end
+
+        testPrint("testEvaluation_Wigner_3j_specialValues()::", success)
+        return(success)  
+    end
+
+
+    """
+    `TestFrames.testEvaluation_Wigner_6j_specialValues(; short::Bool=true)`  
+        ... tests on special values for the Wigner 6j symbols.
+    """
+    function testEvaluation_Wigner_6j_specialValues(; short::Bool=true)
+        success = true
+        printTest, iostream = Defaults.getDefaults("test flag/stream")
+
+        w6j = RacahAlgebra.selectW6j(2);                    println("w6j-original      = $w6j")
+        wa  = RacahAlgebra.symmetricForms(w6j)
+        wb  = RacahAlgebra.evaluate(wa[1], special=true);   println("\nwb-special value  = $wb")
+        wc  = RacahAlgebra.evaluate(wa[2], special=true);   println("\nwc-special value  = $wc")
+        if  wb != wc
+            success = false
+            if printTest   info(iostream, "$w6j:   $wb != $wc")   end
+        end
+
+        testPrint("testEvaluation_Wigner_6j_specialValues()::", success)
+        return(success)  
+    end
+
+
+    """
+    `TestFrames.testEvaluation_Wigner_9j_specialValues(; short::Bool=true)`  
+        ... tests on special values for the Wigner 9j symbols.
+    """
+    function testEvaluation_Wigner_9j_specialValues(; short::Bool=true)
+        success = true
+        printTest, iostream = Defaults.getDefaults("test flag/stream")
+
+        w9j = RacahAlgebra.selectW9j(2);                    println("w9j-original      = $w9j")
+        wa  = RacahAlgebra.symmetricForms(w9j)
+        wb  = RacahAlgebra.evaluate(wa[1], special=true);   println("\nwb-special value  = $wb")
+        wc  = RacahAlgebra.evaluate(wa[2], special=true);   println("\nwc-special value  = $wc")
+        if  wb != wc
+            success = false
+            if printTest   info(iostream, "$w9j:   $wb != $wc")   end
+        end
+
+        testPrint("testEvaluation_Wigner_9j_specialValues()::", success)
+        return(success)  
+    end
+
+
+    """
+    `TestFrames.testEvaluation_sumrules_one_nj(; short::Bool=true)`  
+        ... tests on special values for the Wigner 3-j symbols.
+    """
+    function testEvaluation_sumrules_one_nj(; short::Bool=true)
+        success = true
+        printTest, iostream = Defaults.getDefaults("test flag/stream")
+
+        testPrint("testEvaluation_sumrules_one_nj()::", success)
+        return(success)  
+    end
+
+
 
     """
     `Basics.testMethod_integrate_ongrid(; short::Bool=true)`  ... tests the integration on grid.
@@ -231,17 +310,16 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-DecayYield-new.sum")
         printstyled("\n\nTest the module  DecayYield  ... \n", color=:cyan)
         ### Make the tests
-        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600)
-        wa = Atomic.Computation("xx",  Nuclear.Model(12.); properties=[JAC.Yields],
-                                grid=grid,
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800)
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.),  
                                 configs=[Configuration("1s 2s^2 2p^6")],
-                                yieldSettings=DecayYield.Settings("SCA", true, false, Int64[]) )
+                                properties=[JAC.Yields], yieldSettings=DecayYield.Settings("SCA", true, false, Int64[]) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
         # Make the comparison with approved data
         success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-DecayYield-approved.sum"), 
-                                    joinpath(@__DIR__, "..", "test", "test-DecayYield-new.sum"), "Auger rates (without", 6) 
+                                    joinpath(@__DIR__, "..", "test", "test-DecayYield-new.sum"), "Fluorescence and Auger", 4) 
         testPrint("testModule_DecayYield()::", success)
         return(success)  
     end

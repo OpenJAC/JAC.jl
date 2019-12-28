@@ -15,6 +15,18 @@ using JAC, ..Defaults, ..TestFrames
         @test TestFrames.testMethod_Wigner_3j() 
     end
 
+    @testset "JAC evaluations" begin
+        @test TestFrames.testEvaluation_Wigner_3j_specialValues() 
+        @test TestFrames.testEvaluation_Wigner_6j_specialValues() 
+        ## @test TestFrames.testEvaluation_Wigner_9j_specialValues() 
+        ## @test TestFrames.testEvaluation_sumrules_one_nj() 
+    end
+
+    @testset "JAC representations" begin
+        ## @test TestFrames.testRepresentation_meanfield() 
+        ## @test TestFrames.testRepresentation_meanfield() 
+    end
+
     @testset "JAC amplitudes" begin
         @test TestFrames.testModule_MultipoleMoment() 
         @test TestFrames.testModule_ParityNonConservation() 
@@ -22,23 +34,23 @@ using JAC, ..Defaults, ..TestFrames
     ##x close(streamDummy)
 
     @testset "JAC properties" begin
-        @test TestFrames.testModule_Einstein()         ## printout too accurate ??
+        @test TestFrames.testModule_Einstein()
         @test TestFrames.testModule_Hfs()   
         @test TestFrames.testModule_LandeZeeman() 
         @test TestFrames.testModule_IsotopeShift()   
         @test TestFrames.testModule_AlphaVariation() 
         @test TestFrames.testModule_FormFactor() 
-        # @test TestFrames.testModule_DecayYield()  ... need to be adapted
+        @test TestFrames.testModule_DecayYield()
         @test TestFrames.testModule_MultipolePolarizibility()
         @test TestFrames.testModule_PlasmaShift() 
     end
 
     @testset "JAC processes" begin
-        @test TestFrames.testModule_PhotoEmission()     ## printout too accurate ??
+        @test TestFrames.testModule_PhotoEmission()
         @test TestFrames.testModule_PhotoExcitation()
         @test TestFrames.testModule_PhotoIonization()
         @test TestFrames.testModule_PhotoRecombination()
-        @test TestFrames.testModule_AutoIonization()  
+        ## @test TestFrames.testModule_AutoIonization()  
         @test TestFrames.testModule_Dielectronic()  
         ## @test TestFrames.testModule_PhotoExcitationFluores() 
         ## @test TestFrames.testModule_PhotoExcitationAutoion() 

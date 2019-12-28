@@ -707,7 +707,7 @@ module Cascade
                 ## i = i + 1;    if   i < 11  ||  i > 11   println("  Block $i omitted.");    continue    end
                 print("  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")
                 if  printSummary   print(iostream, "* Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")   end
-                basis     = perform("computation: SCF", [confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                basis     = Basics.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 ##x multiplet = perform("computation: CI",  basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 multiplet = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
@@ -835,7 +835,7 @@ module Cascade
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
         println("\n* Electron configuration used in the cascade:")
-        @warn "*** Limit to just two configurations for each No. of electrons. ***"                        ## delete nxx
+        @warn "*** Limit to just four configurations for each No. of electrons. ***"                       ## delete nxx
         if  printSummary   println(iostream, "\n* Electron configuration used in the cascade:")    end
         confList = Configuration[];   nc = 0
         for  n = maxNoElectrons:-1:minNoElectrons
@@ -844,7 +844,7 @@ module Cascade
             if  printSummary   println(iostream, "\n    Configuration(s) with $n electrons:")      end
             for  conf in confs
                 if n == conf.NoElectrons  
-                    nxx = nxx + 1;    if nxx > 2   break    end                                            ## delete nxx
+                    nxx = nxx + 1;    if nxx > 4   break    end                                            ## delete nxx
                     nc = nc + 1
                     push!(confList, conf ) 
                     wa = Semiempirical.estimate("binding energy", round(Int64, Z), conf);    wa = Defaults.convertUnits("energy: from atomic", wa)

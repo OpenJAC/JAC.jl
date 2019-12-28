@@ -602,35 +602,34 @@
         for  rex in rexList
             ww = rex.w9js[1]
             #
-            #  Rule:         ( ja   ja   0 )
-            #  -----         (             )         D(ja,jc,jf)
-            #               {( jc   jc   0 )}   =  -------------- 1/2
-            #                (             )       [ ja, jc, jf ]
-            #                ( jf   jf   0 )
+            #  Rule:         ( ja   jb   0 )
+            #  -----         (             )         D(ja,jc,je)
+            #               {( jc   jd   0 )}   =  -------------- 1/2  delta(a,b)  delta(c,d)  delta(e,f)
+            #                (             )       [ ja, jc, je ]
+            #                ( je   jf   0 )
             #
-            specialW9j = xxxW9j( ww.a, ww.b, ww.c, ww.e, ww.f, 0)
-            if  ww == specialW6j
-                push!( deltas, Kronecker(ww.a, ww.e) )
-                push!( deltas, Kronecker(ww.b, ww.d) )
-                push!( triangles, Kronecker(ww.a, ww.b, ww.c) )
-                wa = RacahExpression( rex.summations, rex.phase + ww.a + ww.b + ww.c, 
-                                      rex.weight / sqrt( (2*ww.a+1)*(2*ww.b+1)), deltas, triangles, w3js, w6js, w9js )
+            specialW9j = W9j( ww.a, ww.b, 0, ww.c, ww.d, 0, ww.e, ww.f, 0)
+            if  ww == specialW9j
+                push!( deltas, Kronecker(ww.a, ww.b) )
+                push!( deltas, Kronecker(ww.c, ww.d) )
+                push!( deltas, Kronecker(ww.e, ww.f) )
+                push!( triangles, Kronecker(ww.a, ww.c, ww.e) )
+                wa = RacahExpression( rex.summations, rex.phase, rex.weight / sqrt( (2*ww.a+1)*(2*ww.c+1)*(2*ww.c+1)), 
+                                      deltas, triangles, w3js, w6js, w9js )
                 return( (true, wa) )
             end
             #
-            #  Rule:         ( ja   jb   je )           jb+jc+je+jf      
-            #  -----         (              )       (-1)                   ( ja   jb   je )
-            #               {( jc   jd   je )}   =  --------------- 1/2   {(              )}
-            #                (              )          [ je, jf ]          ( jd   jc   jf )
-            #                ( jf   jf   0  )
+            #  Rule:         ( ja   jb   jc )           jb+jc+je+jf      
+            #  -----         (              )       (-1)                   ( ja   jb   jc )
+            #               {( jd   je   jf )}   =  --------------- 1/2   {(              )}
+            #                (              )          [ jc, jg ]          ( je   jd   jg )
+            #                ( jg   jh   0  )
             #
-            specialW9j = xxxW9j( ww.a, ww.b, ww.c, ww.e, ww.f, 0)
-            if  ww == specialW6j
-                push!( deltas, Kronecker(ww.a, ww.e) )
-                push!( deltas, Kronecker(ww.b, ww.d) )
-                push!( triangles, Kronecker(ww.a, ww.b, ww.c) )
-                wa = RacahExpression( rex.summations, rex.phase + ww.a + ww.b + ww.c, 
-                                      rex.weight / sqrt( (2*ww.a+1)*(2*ww.b+1)), deltas, triangles, w3js, w6js, w9js )
+            specialW9j = W9j( ww.a, ww.b, ww.c, ww.d, ww.e, ww.f, ww.g, ww.h, 0)
+            if  ww == specialW9j
+                push!( w6js, W6j(ww.a, ww.b, ww.c, ww.e, ww.d, ww.g) )
+                wa = RacahExpression( rex.summations, rex.phase + ww.b + ww.c + ww.e + ww.f, 
+                                      rex.weight / sqrt( (2*ww.c+1)*(2*ww.g+1)), deltas, triangles, w3js, w6js, w9js )
                 return( (true, wa) )
             end
         end

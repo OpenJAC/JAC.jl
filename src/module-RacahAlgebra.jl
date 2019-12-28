@@ -319,6 +319,44 @@ module  RacahAlgebra
 
 
     """
+    `Base.:(==)(rexa::RacahExpression, rexb::RacahExpression)`  
+        ... compares two (symbolic) Racah expressions and return true if all subfields are equal, and false otherwise.
+    """
+    function  Base.:(==)(rexa::RacahExpression, rexb::RacahExpression)
+        if   rexa.phase  != rexb.phase   ||   rexa.weight  != rexb.weight       return( false )     end
+
+        if   length(rexa.summations)     !=   length(rexb.summations)    ||
+             length(rexa.deltas)         !=   length(rexb.deltas)        ||
+             length(rexa.triangles)      !=   length(rexb.triangles)     ||
+             length(rexa.w3js)           !=   length(rexb.w3js)          ||
+             length(rexa.w6js)           !=   length(rexb.w6js)          ||
+             length(rexa.w9js)           !=   length(rexb.w9js)                 return( false )     end
+        
+        for  i = 1:length(rexa.summations)
+            if  rexa.summations[i] != rexb.summations[i]                        return( false )     end     
+        end
+        for  i = 1:length(rexa.deltas)
+            if  rexa.deltas[i] != rexb.deltas[i]                                return( false )     end     
+        end
+        for  i = 1:length(rexa.triangles)
+            if  rexa.triangles[i] != rexb.triangles[i]                          return( false )     end     
+        end
+        
+        for  i = 1:length(rexa.w3js)
+            if  rexa.w3js[i] != rexb.w3js[i]                                    return( false )     end     
+        end
+        for  i = 1:length(rexa.w6js)
+            if  rexa.w6js[i] != rexb.w6js[i]                                    return( false )     end     
+        end
+        for  i = 1:length(rexa.w9js)
+            if  rexa.w9js[i] != rexb.w9js[i]                                    return( false )     end     
+        end
+        
+        return( true )    
+    end
+
+
+    """
     `struct  RacahAlgebra.Csq`  
         ... defines a type for a coupling sequence of two angular momenta (a,b) c   or  a + b -> c  with symbolic arguments.
 
@@ -440,10 +478,10 @@ module  RacahAlgebra
 
 
     """
-    `RacahAlgebra.evaluate(wj::Union{W3j,W6j})`  
-        ... attempts to evaluate a symbolic Wigner 3j symbol by means of special values.
+    `RacahAlgebra.evaluate(wj::Union{W3j,W6j,W9j})`  
+        ... attempts to evaluate a symbolic Wigner 3j, 6j or 9j symbols by means of special values.
     """
-    function  evaluate(wj::Union{W3j,W6j})
+    function  evaluate(wj::Union{W3j,W6j,W9j})
         wa = RacahAlgebra.specialValue(wj)
         if    wa[1]   println("** Special value found for  $wj = $(wa[2]) ")
         else          println("** No special value found for  $wj ")
@@ -472,6 +510,12 @@ module  RacahAlgebra
                 if wa[1]    newW6js = W6j[]     
                     for  (ibW6j, bW6j) in enumerate(rex.w6js)   if  iaW6j == ibW6j  else  push!(newW6js, ibW6j)   end    end
                     return( RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, rex.w3js, newW6js, rex.w9js) * wa[2] )
+                end
+            end
+            for  (iaW9j, aW9j) in enumerate(rex.w9js)    wa = evaluate(aW9j)
+                if wa[1]    newW9js = W9j[]     
+                    for  (ibW9j, bW9j) in enumerate(rex.w9js)   if  iaW9j == ibW9j  else  push!(newW9js, ibW9j)   end    end
+                    return( RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, rex.w3js, rex.w6js, newW9js) * wa[2] )
                 end
             end
         else
@@ -1060,6 +1104,30 @@ module  RacahAlgebra
         end
         
         return( w6j )
+    end
+
+
+    """
+    `RacahAlgebra.selectW9j(n::Int64)`  
+        ... selects one of various pre-defined Wigner 9j symbols for which usually special values are known;
+            this function has been implemented mainly for test purposes. A w9j::W9j is returned. 
+            If n = 99, all pre-defined Wigner 9j symbols are printed to screen and nothing is returned in this
+            case.
+    """
+    function selectW9j(n::Int64)
+        if  n == 99     for  i = 1:1   println("  $i    $(selectW9j(i))")      end
+            return(nothing)
+        end
+        
+        a = Basic(:a);    b = Basic(:b);    c = Basic(:c);    d = Basic(:d);    ee = Basic(:ee)
+        f = Basic(:f);    g = Basic(:g);    h = Basic(:h)
+        
+        if      n ==  1     w9j = W9j(a, b, 0, c, d, 0, ee, f, 0)
+        elseif  n ==  2     w9j = W9j(a, b, c, d, ee, f, g, h, 0)
+        else    error("stop a")
+        end
+        
+        return( w9j )
     end
 
 
