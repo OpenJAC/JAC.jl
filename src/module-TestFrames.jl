@@ -114,14 +114,85 @@ module TestFrames
 
 
     """
-    `TestFrames.testEvaluation_sumrules_one_nj(; short::Bool=true)`  
+    `TestFrames.testEvaluation_sumRulesForOneWnj(; short::Bool=true)`  
         ... tests on special values for the Wigner 3-j symbols.
     """
-    function testEvaluation_sumrules_one_nj(; short::Bool=true)
+    function testEvaluation_sumRulesForOneWnj(; short::Bool=true)
         success = true
         printTest, iostream = Defaults.getDefaults("test flag/stream")
+    
+        rex = RacahAlgebra.selectRacahExpression(1);         println(">> rex-original  = $rex")
+        wa  = RacahAlgebra.evaluate(rex);                    println(">> rex-evaluated = $wa")
+        if  wa == nothing
+            success = false
+            if printTest   info(iostream, "No simplification found for $rex")   end
+        end
+    
+        rex = RacahAlgebra.selectRacahExpression(2);         println(">> rex-original  = $rex")
+        wa  = RacahAlgebra.evaluate(rex);                    println(">> rex-evaluated = $wa")
+        if  wa == nothing
+            success = false
+            if printTest   info(iostream, "No simplification found for $rex")   end
+        end
+    
+        rex = RacahAlgebra.selectRacahExpression(3);         println(">> rex-original  = $rex")
+        wa  = RacahAlgebra.evaluate(rex);                    println(">> rex-evaluated = $wa")
+        if  wa == nothing
+            success = false
+            if printTest   info(iostream, "No simplification found for $rex")   end
+        end
+    
+        rex = RacahAlgebra.selectRacahExpression(4);         println(">> rex-original  = $rex")
+        wa  = RacahAlgebra.evaluate(rex);                    println(">> rex-evaluated = $wa")
+        if  wa == nothing
+            success = false
+            if printTest   info(iostream, "No simplification found for $rex")   end
+        end
+    
+        rex = RacahAlgebra.selectRacahExpression(5);         println(">> rex-original  = $rex")
+        wa  = RacahAlgebra.evaluate(rex);                    println(">> rex-evaluated = $wa")
+        if  wa == nothing
+            success = false
+            if printTest   info(iostream, "No simplification found for $rex")   end
+        end
+        
 
-        testPrint("testEvaluation_sumrules_one_nj()::", success)
+        testPrint("testEvaluation_sumRulesForOneWnj()::", success)
+        return(success)  
+    end
+
+
+    """
+    `TestFrames.testEvaluation_sumRulesForTwoWnj(; short::Bool=true)`  
+        ... tests on special values for the Wigner 3-j symbols.
+    """
+    function testEvaluation_sumRulesForTwoWnj(; short::Bool=true)
+        success = true
+        printTest, iostream = Defaults.getDefaults("test flag/stream")
+    
+        rex = RacahAlgebra.selectRacahExpression(6);         println(">> rex-original  = $rex")
+        wa  = RacahAlgebra.evaluate(rex);                    println(">> rex-evaluated = $wa")
+        if  wa == nothing
+            success = false
+            if printTest   info(iostream, "No simplification found for $rex")   end
+        end
+    
+        rex = RacahAlgebra.selectRacahExpression(7);         println(">> rex-original  = $rex")
+        wa  = RacahAlgebra.evaluate(rex);                    println(">> rex-evaluated = $wa")
+        if  wa == nothing
+            success = false
+            if printTest   info(iostream, "No simplification found for $rex")   end
+        end
+    
+        rex = RacahAlgebra.selectRacahExpression(8);         println(">> rex-original  = $rex")
+        wa  = RacahAlgebra.evaluate(rex);                    println(">> rex-evaluated = $wa")
+        if  wa == nothing
+            success = false
+            if printTest   info(iostream, "No simplification found for $rex")   end
+        end
+        
+
+        testPrint("testEvaluation_sumRulesForTwoWnj()::", success)
         return(success)  
     end
 
@@ -798,6 +869,116 @@ module TestFrames
         ## success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-RayleighCompton-approved.sum"), 
         ##                             joinpath(@__DIR__, "..", "test", "test-RayleighCompton-new.sum"), "xxx", 100) 
         testPrint("testModule_RayleighCompton()::", success)
+        return(success)  
+    end
+
+
+
+    """
+    `TestFrames.testRepresentation_MeanFieldBasis_CiExpansion(; short::Bool=true)`  ... tests on the representation .
+    """
+    function testRepresentation_MeanFieldBasis_CiExpansion(; short::Bool=true) 
+        success = true
+        printTest, iostream = Defaults.getDefaults("test flag/stream")
+
+        name        = "Oxygen 1s^2 2s^2 2p^4 ground configuration"
+        refConfigs  = [Configuration("[He] 2s^2 2p^4")]
+        mfSettings  = MeanFieldSettings()
+        #
+        wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, MeanFieldBasis(mfSettings) )
+        wb = generate(wa, output=true)
+        #
+        orbitals    = wb["mean-field basis"].orbitals
+        ciSettings  = CiSettings(true, false, Int64[], false, LevelSymmetry[] )
+        from        = [Shell("2s")]
+        #
+        frozen      = [Shell("1s")]
+        to          = [Shell("2s"), Shell("2p")]
+        excitations = RasStep()
+        #             RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
+        #
+        wc          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
+                                     CiExpansion(orbitals, excitations, ciSettings) )
+        println("wc = $wc")
+        wd = generate(wc, output=true)
+        
+        if  abs(orbitals[Subshell("1s_1/2")].energy + 18.705283) > 1.0e-3
+            success = false
+            if printTest   info(iostream, "orbital energy $(orbitals[Subshell("1s_1/2")].energy) != -18.705283")     end
+        end
+        if  abs(wd["CI multiplet"].levels[1].energy + 74.840309)  > 1.0e-3
+            success = false
+            if printTest   info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -74.840309")   end
+        end
+
+        testPrint("testRepresentation_MeanFieldBasis_CiExpansion()::", success)
+        return(success)  
+    end
+
+
+
+    """
+    `TestFrames.testRepresentation_RasExpansion(; short::Bool=true)`  ... tests on the representation .
+    """
+    function testRepresentation_RasExpansion(; short::Bool=true) 
+        success = true
+        printTest, iostream = Defaults.getDefaults("test flag/stream")
+        
+        name        = "Beryllium 1s^2 2s^2 ^1S_0 ground state"
+        refConfigs  = [Configuration("[He] 2s^2")]
+        rasSettings = RasSettings([1], 24, 1.0e-6, false, true, [1,2,3] )
+        from        = [Shell("2s")]
+        #
+        frozen      = [Shell("1s")]
+        to          = [Shell("2s"), Shell("2p")]
+        step1       = RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
+        #
+        append!(frozen, [Shell("2s"), Shell("2p")])
+        append!(to,     [Shell("3s"), Shell("3p"), Shell("3d")])
+        step2       = RasStep(step1; seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
+        #
+        append!(frozen, [Shell("3s"), Shell("3p"), Shell("3d")])
+        append!(to,     [Shell("4s"), Shell("4p"), Shell("4d"), Shell("4f")])
+        step3       = RasStep(step2, seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
+        #
+        wa          = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs, 
+                                     RasExpansion(LevelSymmetry(0, Basics.plus), 4, [step1, step2, step3], rasSettings) )
+        wb = generate(wa, output=true)
+        if  abs(wb["step3"].levels[1].energy + 14.61679117)  > 1.0e-3
+            success = false
+            if printTest   info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -14.61679117")   end
+        end
+
+        testPrint("testRepresentation_RasExpansion()::", success)
+        return(success)  
+    end
+
+
+
+    """
+    `TestFrames.testRepresentation_GreenExpansion(; short::Bool=true)`  ... tests on the representation .
+    """
+    function testRepresentation_GreenExpansion(; short::Bool=true) 
+        success = true
+        printTest, iostream = Defaults.getDefaults("test flag/stream")
+        
+        name          = "Lithium 1s^2 2s ground configuration"
+        refConfigs    = [Configuration("[He] 2s")]
+        greenSettings = GreenSettings(5, [0, 1, 2], 0.01, true, false, Int64[])
+        #
+        wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
+                                     ## GreenExpansion( Atomic.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(), 
+                                     ## GreenExpansion( Atomic.CoreSpaceCI(), Basics.DeExciteSingleElectron(), 
+                                        GreenExpansion( Atomic.DampedSpaceCI(), Basics.DeExciteSingleElectron(), 
+                                                        [LevelSymmetry(1//2, Basics.plus), LevelSymmetry(3//2, Basics.plus)], 3, greenSettings) )
+        wb = generate(wa, output=true)
+
+        if  abs(wb["Green channels"][1].gMultiplet.levels[1].energy + 64.080705)  > 1.0e-3
+            success = false
+            if printTest   info(iostream, "gMultiplet.levels[1].energy $(wb["Green channels"][1].gMultiplet.levels[1].energy) != -64.080705")   end
+        end
+
+        testPrint("testRepresentation_GreenExpansion()::", success)
         return(success)  
     end
 

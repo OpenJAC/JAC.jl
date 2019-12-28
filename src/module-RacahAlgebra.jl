@@ -403,7 +403,7 @@ module  RacahAlgebra
     function equivalentForm(w3j::RacahAlgebra.W3j; regge::Bool=false)
         wa  = RacahAlgebra.symmetricForms(w3j, regge=regge)
         if  regge   n = rand(1:72)    else     n = rand(1:12)   end
-        println("** Select $(n)th equivalent form for $w3j    ==>   $( wa[n])")
+        println(">> Select $(n)th equivalent form for $w3j    ==>   $( wa[n])")
         return( wa[n] )
     end
 
@@ -416,7 +416,7 @@ module  RacahAlgebra
     function equivalentForm(w6j::RacahAlgebra.W6j; regge::Bool=false)
         wa  = RacahAlgebra.symmetricForms(w6j, regge=regge)
         if  regge   n = rand(1:144)    else     n = rand(1:24)   end
-        println("** Select $(n)th equivalent form for $w6j    ==>   $( wa[n])")
+        println(">> Select $(n)th equivalent form for $w6j    ==>   $( wa[n])")
         return( wa[n] )
     end
 
@@ -429,7 +429,7 @@ module  RacahAlgebra
     function equivalentForm(w9j::RacahAlgebra.W9j; regge::Bool=false)
         wa  = RacahAlgebra.symmetricForms(w9j, regge=regge)
         if  regge   n = rand(1:72)    else     n = rand(1:72)   end
-        println("** Select $(n)th equivalent form for $w9j    ==>   $( wa[n])")
+        println(">> Select $(n)th equivalent form for $w9j    ==>   $( wa[n])")
         return( wa[n] )
     end
 
@@ -483,8 +483,8 @@ module  RacahAlgebra
     """
     function  evaluate(wj::Union{W3j,W6j,W9j})
         wa = RacahAlgebra.specialValue(wj)
-        if    wa[1]   println("** Special value found for  $wj = $(wa[2]) ")
-        else          println("** No special value found for  $wj ")
+        if    wa[1]   println(">> Special value found for  $wj = $(wa[2]) ")
+        else          println(">> No special value found for  $wj ")
         end
         return( wa )
     end
@@ -500,22 +500,29 @@ module  RacahAlgebra
     function  evaluate(rex::RacahExpression; special::Bool=false)
         if  special
             # Simplify by means of special values if this is requested
+            println("*** a1   rex = $rex ")
             for  (iaW3j, aW3j) in enumerate(rex.w3js)    wa = evaluate(aW3j)
                 if wa[1]    newW3js = W3j[]     
                     for  (ibW3j, bW3j) in enumerate(rex.w3js)   if  iaW3j == ibW3j  else  push!(newW3js, ibW3j)   end    end
-                    return( RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, newW3js, rex.w6js, rex.w9js) * wa[2] )
+                    rrex = RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, newW3js, rex.w6js, rex.w9js)
+                    println("*** aa  rrex = $rrex    wa[2] = $(wa[2]) ")
+                    return( rrex * wa[2] )
                 end
             end
             for  (iaW6j, aW6j) in enumerate(rex.w6js)    wa = evaluate(aW6j)
                 if wa[1]    newW6js = W6j[]     
                     for  (ibW6j, bW6j) in enumerate(rex.w6js)   if  iaW6j == ibW6j  else  push!(newW6js, ibW6j)   end    end
-                    return( RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, rex.w3js, newW6js, rex.w9js) * wa[2] )
+                    rrex = RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, rex.w3js, newW6js, rex.w9js)
+                    println("*** bb  rrex = $rrex    wa[2] = $(wa[2]) ")
+                    return( rrex * wa[2] )
                 end
             end
             for  (iaW9j, aW9j) in enumerate(rex.w9js)    wa = evaluate(aW9j)
                 if wa[1]    newW9js = W9j[]     
                     for  (ibW9j, bW9j) in enumerate(rex.w9js)   if  iaW9j == ibW9j  else  push!(newW9js, ibW9j)   end    end
-                    return( RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, rex.w3js, rex.w6js, newW9js) * wa[2] )
+                    rrex = RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, rex.w3js, rex.w6js, newW9js)
+                    println("*** cc  rrex = $rrex    wa[2] = $(wa[2]) ")
+                    return( rrex * wa[2] )
                 end
             end
         else
@@ -542,7 +549,7 @@ module  RacahAlgebra
     """
     function  evaluate(leftCsq::RacahAlgebra.Csq, rightCsq::RacahAlgebra.Csq)
         function prsim(rx::RacahExpression)
-            println("** Simplification found for recoupling coefficient     < $leftCsq | $rightCsq > = $rx ")
+            println(">> Simplification found for recoupling coefficient     < $leftCsq | $rightCsq > = $rx ")
         end
         #
         if  leftCsq.c != rightCsq.c     
@@ -561,7 +568,7 @@ module  RacahAlgebra
         wa = sumRulesForTwoW3j(rex);         if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
         wa = sumRulesForThreeW3j(rex);       if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
         #
-        println("** No simplification found for recoupling coefficient  < $leftCsq | $rightCsq > = $rex ")
+        println(">> No simplification found for recoupling coefficient  < $leftCsq | $rightCsq > = $rex ")
         return( nothing )
     end
 

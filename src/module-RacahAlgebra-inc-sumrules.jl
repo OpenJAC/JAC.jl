@@ -33,7 +33,7 @@
                         newDeltas = rex.deltas;      push!( newDeltas, Kronecker(ww.jc, 0));     push!( newDeltas, Kronecker(ww.mc, 0))
                         wa = RacahExpression( newSummations, newPhase + ww.ma - ww.ja, newWeight * (2*ww.ja+1), 
                                               newDeltas, rex.triangles, newW3js, rex.w6js, rex.w9js )
-                        println("** Apply sum rule for one W3j -- Sum(m) (-1)^m ...")
+                        println(">> Apply sum rule for one W3j -- Sum(m) (-1)^m ...")
                         return( (true, wa) )
                     end
                 end
@@ -76,7 +76,7 @@
                         newTriangles  = rex.triangles;      push!( newTriangles, Triangle(ww.a, ww.b, ww.f) )
                         wa = RacahExpression( newSummations, newPhase + 2*ww.f, newWeight / (2*ww.c+1), 
                                               rex.deltas, newTriangles, rex.w3js, newW6js, rex.w9js )
-                        println("** Apply sum rule for one W6j -- Sum(X) ...")
+                        println(">> Apply sum rule for one W6j -- Sum(X) ...")
                         return( (true, wa) )
                     end
                 end
@@ -99,7 +99,7 @@
                         newDeltas     = rex.deltas;      push!( newDeltas, Kronecker(ww.f, 0) )
                         wa = RacahExpression( newSummations, newPhase - ww.c - ww.a - ww.b, newWeight / (2*ww.c+1) * sqrt((2*ww.a+1)*(2*ww.b+1)), 
                                               newDeltas, rex.triangles, rex.w3js, newW6js, rex.w9js )
-                        println("** Apply sum rule for one W6j -- Sum(X) (-1)^X ...")
+                        println(">> Apply sum rule for one W6j -- Sum(X) (-1)^X ...")
                         return( (true, wa) )
                     end
                 end
@@ -149,7 +149,7 @@
                                                            push!( newTriangles, Triangle(ww.b, ww.e, ww.f))
                         wa = RacahExpression( newSummations, testPhase, testWeight / (2*ww.b+1), 
                                               newDeltas, newTriangles, rex.w3js, rex.w6js, newW9js )
-                        println("** Apply sum rule for one W9j -- Sum(X) ....")
+                        println(">> Apply sum rule for one W9j -- Sum(X) ....")
                         return( (true, wa) )
                     end
                 end
@@ -175,7 +175,7 @@
                                                            push!( newTriangles, Triangle(ww.a, ww.d, ww.f))
                         wa = RacahExpression( newSummations, newPhase + ww.i - ww.a - ww.b - ww.d - ww.e, newWeight / (2*ww.i+1) / (2*ww.a+1), 
                                               newDeltas, newTriangles, rex.w3js, rex.w6js, newW9js )
-                        println("** Apply sum rule for one W9j -- Sum(-X) (-1)^-X ....")
+                        println(">> Apply sum rule for one W9j -- Sum(-X) (-1)^-X ....")
                         return( (true, wa) )
                     end
                 end
@@ -232,7 +232,7 @@
                                 newDeltas = rex.deltas;      push!( newDeltas, Kronecker(wwa.ma, wwb.ma));     push!( newDeltas, Kronecker(wwa.mb, wwb.mb))
                                 wa = RacahExpression( newSummations, testPhase, newWeight / (2*wwa.jc+1), 
                                                       newDeltas, rex.triangles, newW3js, rex.w6js, rex.w9js )
-                                println("** Apply sum rule for two W3j -- Sum(j3,m3) ...")
+                                println(">> Apply sum rule for two W3j -- Sum(j3,m3) ...")
                                 return( (true, wa) )
                             end
                         end
@@ -263,7 +263,7 @@
                                 newDeltas = rex.deltas;      push!( newDeltas, Kronecker(wwa.jc, wwb.jc));     push!( newDeltas, Kronecker(wwa.mc, wwb.mc))
                                 wa = RacahExpression( newSummations, testPhase, newWeight / (2*wwa.jc+1), 
                                                       newDeltas, rex.triangles, newW3js, rex.w6js, rex.w9js )
-                                println("** Apply sum rule for two W3j -- Sum(m1,m2) ...")
+                                println(">> Apply sum rule for two W3j -- Sum(m1,m2) ...")
                                 return( (true, wa) )
                             end
                         end
@@ -295,7 +295,7 @@
                                 newTriangles = rex.triangles;   push!( newTriangles, Triangle(wwa.ja, wwa.jb, wwa.jc));
                                 wa = RacahExpression( newSummations, testPhase + wwa.ja - wwa.ma - wwa.jb - wwa.jc, newWeight / (2*wwa.ja+1), 
                                                       newDeltas, newTriangles, newW3js, rex.w6js, rex.w9js )
-                                println("** Apply sum rule for two W3j -- Sum(np,nq) (-1)^(-np-nq) ...")
+                                println(">> Apply sum rule for two W3j -- Sum(np,nq) (-1)^(-np-nq) ...")
                                 return( (true, wa) )
                             end
                         end
@@ -352,7 +352,7 @@
                                 newSummations = RacahAlgebra.removeIndex([wwa.a, wwa.b, wwa.c], rex.summations)
                                 newTriangles = rex.triangles;   push!( newTriangles, Triangle(wwa.a, wwa.b, wwa.c));
                                 wa = RacahExpression( newSummations, testPhase, testWeight, rex.deltas, newTriangles, rex.w3js, newW6js, rex.w9js )
-                                println("** Apply sum rule for two W6j -- Sum(X,Y,Z) [X,Y,Z] ...")
+                                println(">> Apply sum rule for two W6j -- Sum(X,Y,Z) [X,Y,Z] ...")
                                 return( (true, wa) )
                             end
                         end
@@ -380,7 +380,7 @@
                                 push!( newW6js, W6j(wwa.d, wwa.a, wwb.f, wwa.e, wwa.b, wwa.f));
                                 wa = RacahExpression( newSummations, testPhase - wwa.f - wwb.f, testWeight, 
                                                       rex.deltas, rex.triangles, rex.w3js, newW6js, rex.w9js )
-                                println("** Apply sum rule for two W6j -- Sum(X) (-1)^X [X] ...")
+                                println(">> Apply sum rule for two W6j -- Sum(X) (-1)^X [X] ...")
                                 return( (true, wa) )
                             end
                         end
@@ -410,7 +410,7 @@
                                                                 push!( newTriangles, Triangle(wwa.b, wwa.d, wwa.f));
                                 wa = RacahExpression( newSummations, testPhase, testWeight / (2*wwa.f+1), 
                                                                newDeltas, newTriangles, rex.w3js, newW6js, rex.w9js )
-                                println("** Apply sum rule for two W6j -- Sum(X) [X] ...")
+                                println(">> Apply sum rule for two W6j -- Sum(X) [X] ...")
                                 return( (true, wa) )
                             end
                         end
@@ -484,7 +484,7 @@
                                         newW6js   = rex.w6js;     push!(newW6js,  W6j(wwa.jb, wwb.jb, wwc.jb,  wwb.ja, wwa.ja, wwa.jc))
                                         wa = RacahExpression( newSummations, testPhase, newWeight, 
                                                               newDeltas, rex.triangles, newW3js, newW6js, rex.w9js )
-                                        println("** Apply sum rule for three W3j -- Sum(m4,m5,m6) ...")
+                                        println(">> Apply sum rule for three W3j -- Sum(m4,m5,m6) ...")
                                         return( (true, wa) )
                                     end
                                 end

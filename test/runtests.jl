@@ -19,12 +19,14 @@ using JAC, ..Defaults, ..TestFrames
         @test TestFrames.testEvaluation_Wigner_3j_specialValues() 
         @test TestFrames.testEvaluation_Wigner_6j_specialValues() 
         ## @test TestFrames.testEvaluation_Wigner_9j_specialValues() 
-        ## @test TestFrames.testEvaluation_sumrules_one_nj() 
+        @test TestFrames.testEvaluation_sumRulesForOneWnj() 
+        @test TestFrames.testEvaluation_sumRulesForTwoWnj() 
     end
 
     @testset "JAC representations" begin
-        ## @test TestFrames.testRepresentation_meanfield() 
-        ## @test TestFrames.testRepresentation_meanfield() 
+        @test TestFrames.testRepresentation_MeanFieldBasis_CiExpansion() 
+        @test TestFrames.testRepresentation_RasExpansion() 
+        @test TestFrames.testRepresentation_GreenExpansion() 
     end
 
     @testset "JAC amplitudes" begin
