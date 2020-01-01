@@ -55,10 +55,10 @@ module TestFrames
         success = true
         printTest, iostream = Defaults.getDefaults("test flag/stream")
 
-        w3j = RacahAlgebra.selectW3j(2);                    println("w3j-original      = $w3j")
+        w3j = RacahAlgebra.selectW3j(2);                    println(">> w3j-original     = $w3j")
         wa  = RacahAlgebra.symmetricForms(w3j)
-        wb  = RacahAlgebra.evaluate(wa[1], special=true);   println("\nwb-special value  = $wb")
-        wc  = RacahAlgebra.evaluate(wa[2], special=true);   println("\nwc-special value  = $wc")
+        wb  = RacahAlgebra.evaluate(wa[1], special=true);   println(">> wb-special value  = $wb")
+        wc  = RacahAlgebra.evaluate(wa[2], special=true);   println(">> wc-special value  = $wc")
         if  wb != wc
             success = false
             if printTest   info(iostream, "$w3j:   $wb != $wc")   end
@@ -77,10 +77,10 @@ module TestFrames
         success = true
         printTest, iostream = Defaults.getDefaults("test flag/stream")
 
-        w6j = RacahAlgebra.selectW6j(2);                    println("w6j-original      = $w6j")
+        w6j = RacahAlgebra.selectW6j(2);                    println(">> w6j-original      = $w6j")
         wa  = RacahAlgebra.symmetricForms(w6j)
-        wb  = RacahAlgebra.evaluate(wa[1], special=true);   println("\nwb-special value  = $wb")
-        wc  = RacahAlgebra.evaluate(wa[2], special=true);   println("\nwc-special value  = $wc")
+        wb  = RacahAlgebra.evaluate(wa[1], special=true);   println(">> wb-special value  = $wb")
+        wc  = RacahAlgebra.evaluate(wa[2], special=true);   println(">> wc-special value  = $wc")
         if  wb != wc
             success = false
             if printTest   info(iostream, "$w6j:   $wb != $wc")   end
@@ -99,10 +99,10 @@ module TestFrames
         success = true
         printTest, iostream = Defaults.getDefaults("test flag/stream")
 
-        w9j = RacahAlgebra.selectW9j(2);                    println("w9j-original      = $w9j")
+        w9j = RacahAlgebra.selectW9j(2);                     println(">> w9j-original     = $w9j")
         wa  = RacahAlgebra.symmetricForms(w9j)
-        wb  = RacahAlgebra.evaluate(wa[1], special=true);   println("\nwb-special value  = $wb")
-        wc  = RacahAlgebra.evaluate(wa[2], special=true);   println("\nwc-special value  = $wc")
+        wb  = RacahAlgebra.evaluate(wa[5],  special=true);   println(">> wb-special value = $wb")
+        wc  = RacahAlgebra.evaluate(wa[11], special=true);   println(">> wc-special value = $wc")
         if  wb != wc
             success = false
             if printTest   info(iostream, "$w9j:   $wb != $wc")   end

@@ -18,7 +18,7 @@ using JAC, ..Defaults, ..TestFrames
     @testset "JAC evaluations" begin
         @test TestFrames.testEvaluation_Wigner_3j_specialValues() 
         @test TestFrames.testEvaluation_Wigner_6j_specialValues() 
-        ## @test TestFrames.testEvaluation_Wigner_9j_specialValues() 
+        @test TestFrames.testEvaluation_Wigner_9j_specialValues() 
         @test TestFrames.testEvaluation_sumRulesForOneWnj() 
         @test TestFrames.testEvaluation_sumRulesForTwoWnj() 
     end
