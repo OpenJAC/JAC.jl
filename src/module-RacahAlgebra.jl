@@ -534,8 +534,8 @@ module  RacahAlgebra
             wa = RacahAlgebra.sumRulesForOneW6j(rex);                if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForOneW9j(rex);                if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForTwoW3j(rex);                if    wa[1]  return( wa[2] )  end
-            wa = RacahAlgebra.sumRulesForTwoW6j(rex);                if    wa[1]  return( wa[2] )  end
-            wa = RacahAlgebra.sumRulesForOneW6jOneW9j(rex);          if    wa[1]  return( wa[2] )  end
+            ## wa = RacahAlgebra.sumRulesForTwoW6j(rex);                if    wa[1]  return( wa[2] )  end
+            ## wa = RacahAlgebra.sumRulesForOneW6jOneW9j(rex);          if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForTwoW9j(rex);                if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForThreeW3j(rex);              if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForTwoW3jOneW6j(rex);          if    wa[1]  return( wa[2] )  end
