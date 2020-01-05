@@ -534,8 +534,8 @@ module  RacahAlgebra
             wa = RacahAlgebra.sumRulesForOneW6j(rex);                if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForOneW9j(rex);                if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForTwoW3j(rex);                if    wa[1]  return( wa[2] )  end
-            ## wa = RacahAlgebra.sumRulesForTwoW6j(rex);                if    wa[1]  return( wa[2] )  end
-            ## wa = RacahAlgebra.sumRulesForOneW6jOneW9j(rex);          if    wa[1]  return( wa[2] )  end
+            wa = RacahAlgebra.sumRulesForTwoW6j(rex);                if    wa[1]  return( wa[2] )  end
+            wa = RacahAlgebra.sumRulesForOneW6jOneW9j(rex);          if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForTwoW9j(rex);                if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForThreeW3j(rex);              if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForTwoW3jOneW6j(rex);          if    wa[1]  return( wa[2] )  end
@@ -543,6 +543,9 @@ module  RacahAlgebra
             wa = RacahAlgebra.sumRulesForTwoW6jOneW9j(rex);          if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForOneW6jTwoW9j(rex);          if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForThreeW9j(rex);              if    wa[1]  return( wa[2] )  end
+            wa = RacahAlgebra.sumRulesForFourW3j(rex);               if    wa[1]  return( wa[2] )  end
+            wa = RacahAlgebra.sumRulesForFiveW3j(rex);               if    wa[1]  return( wa[2] )  end
+            wa = RacahAlgebra.sumRulesForSixW3j(rex);                if    wa[1]  return( wa[2] )  end
         end
         
         println("\nNo simplification found for:  $rex ");  
@@ -1167,13 +1170,15 @@ module  RacahAlgebra
         
         j = Basic(:j);    J = Basic(:J);    m = Basic(:m);    M = Basic(:M)
         a = Basic(:a);    b = Basic(:b);    c = Basic(:c);    d = Basic(:d);    ee = Basic(:ee);    f = Basic(:f) 
-        g = Basic(:g);    h = Basic(:h);    k = Basic(:k);    p = Basic(:p);    q  = Basic(:q);     r = Basic(:r);     
-        s = Basic(:s);    t = Basic(:t);  
+        g = Basic(:g);    h = Basic(:h);    k = Basic(:k);    l = Basic(:l);    p  = Basic(:p);     q = Basic(:q);     
+        r = Basic(:r);    s = Basic(:s);    t = Basic(:t);  
         X = Basic(:X);    Y = Basic(:Y);    Z = Basic(:Z);    
         na  = Basic(:na);    np  = Basic(:np);     nq  = Basic(:nq);     ee  = Basic(:ee);    ap  = Basic(:ap) 
-        j1  = Basic(:j1);    j2  = Basic(:j2);     j3  = Basic(:j3);     m1  = Basic(:m1);    m2  = Basic(:m2);    m3 = Basic(:m3)
-        j4  = Basic(:j4);    j5  = Basic(:j5);     j6  = Basic(:j6);     m4  = Basic(:m4);    m5  = Basic(:m5);    m6 = Basic(:m6)
-        l1  = Basic(:l1);    l2  = Basic(:l2);     l3  = Basic(:l3);     n1  = Basic(:n1);    n2  = Basic(:n2);    n3 = Basic(:n3)
+        j1  = Basic(:j1);    j2  = Basic(:j2);     j3  = Basic(:j3);     m1  = Basic(:m1);    m2  = Basic(:m2);    m3  = Basic(:m3)
+        j4  = Basic(:j4);    j5  = Basic(:j5);     j6  = Basic(:j6);     m4  = Basic(:m4);    m5  = Basic(:m5);    m6  = Basic(:m6)
+        j7  = Basic(:j7);    j8  = Basic(:j8);     j9  = Basic(:j9);     m7  = Basic(:m7);    m8  = Basic(:m8);    m9  = Basic(:m9)
+        j10 = Basic(:j10);   j11 = Basic(:j11);    j12 = Basic(:j12);    m10 = Basic(:m10);   m11 = Basic(:m11);   m12 = Basic(:m12)
+        l1  = Basic(:l1);    l2  = Basic(:l2);     l3  = Basic(:l3);     n1  = Basic(:n1);    n2  = Basic(:n2);    n3  = Basic(:n3)
         m1p = Basic(:m1p);   m2p = Basic(:m2p);    j3p = Basic(:j3p);    m3p = Basic(:m3p);   nap = Basic(:nap)
         
         # Sum rules for one Wnj symbol
@@ -1234,14 +1239,25 @@ module  RacahAlgebra
                             rex = RacahExpression( [X, Y], Basic(0), (2*X+1)*(2*Y+1), Kronecker[], Triangle[], W3j[], W6j[aw6j, bw6j], W9j[cw9j] )
         elseif  n ==  27    aw6j = W6j(a, b, X, Y, g, h);   bw6j = W6j(c, d, Y, b, h, j);   cw9j = W9j(a, b, X, c, d, Y, ee, f, g);   
                             rex = RacahExpression( [X, Y], Basic(0), (2*X+1)*(2*Y+1), Kronecker[], Triangle[], W3j[], W6j[aw6j, bw6j], W9j[cw9j] )
-        elseif  n ==  28    aw6j = W6j(a, h, Y, g, b, s);   bw9j = W9j(a, f, X, d, q, ee, p, c, b);   cw9j = W9j(a, f, X, h, r, e, Y, g, b);   
+        elseif  n ==  28    aw6j = W6j(a, h, Y, g, b, s);   bw9j = W9j(a, f, X, d, q, ee, p, c, b);   cw9j = W9j(a, f, X, h, r, ee, Y, g, b);   
                             rex = RacahExpression( [X, Y], Basic(0), (2*X+1)*(2*Y+1), Kronecker[], Triangle[], W3j[], W6j[aw6j], W9j[bw9j, cw9j] )
         elseif  n ==  29    aw6j = W6j(a, b, X, g, Z, Y);   bw9j = W9j(a, b, X, c, d, Z, ee, f, g);   cw9j = W9j(g, b, Y, c, d, Z, h, j, a);   
                             rex = RacahExpression( [X, Y, Z], X + Y, (2*X+1)*(2*Y+1)*(2*Z+1), Kronecker[], Triangle[], W3j[], W6j[aw6j], W9j[bw9j, cw9j] )
-        elseif  n ==  30    aw6j = W6j(p, X, Z, c, f, d);   bw9j = W9j(a, b, p, c, d, X, q, Y, Z);   cw9j = W9j(b, d, Y, e, f, Z, j, k, q);   
+        elseif  n ==  30    aw6j = W6j(p, X, Z, c, f, d);   bw9j = W9j(a, b, p, c, d, X, q, Y, Z);   cw9j = W9j(b, d, Y, c, f, Z, l, k, q);   
                             rex = RacahExpression( [X, Y, Z], X, (2*X+1)*(2*Y+1)*(2*Z+1), Kronecker[], Triangle[], W3j[], W6j[aw6j], W9j[bw9j, cw9j] )
-        elseif  n ==  31    aw9j = W9j(a, b, p, c, d, X, q, Y, Z);   bw9j = W9j(c, d, X, e, f, Z, g, h, p);   cw9j = W9j(b, d, Y, e, f, Z, j, k, q);   
+        elseif  n ==  31    aw9j = W9j(a, b, p, c, d, X, q, Y, Z);   bw9j = W9j(c, d, X, ee, f, Z, g, h, p);   cw9j = W9j(b, d, Y, ee, f, Z, j, k, q);   
                             rex = RacahExpression( [X, Y, Z], Basic(0), (2*X+1)*(2*Y+1)*(2*Z+1), Kronecker[], Triangle[], W3j[], W6j[], W9j[aw9j, bw9j, cw9j] )
+        elseif  n ==  32    aw3j = W3j(j1, j5, j2, m1, m5, -m2);    bw3j = W3j(j2, j6, j3, m2, m6, -m3)
+                            cw3j = W3j(j3, j7, j4, m3, m7, -m4);    dw3j = W3j(j4, j8, j1, m4, m8, -m1)
+                            rex = RacahExpression( [m1, m2, m3, m4], -m1-m2-m3-m4, Basic(1), Kronecker[], Triangle[], W3j[aw3j, bw3j, cw3j, dw3j], W6j[], W9j[] )
+        elseif  n ==  40    aw3j = W3j(j1, j6, j2, m1, m6, -m2);    bw3j = W3j(j2, j7, j3, m2, m7, -m3);    cw3j = W3j(j3, j8, j4, m3, m8, -m4)
+                            dw3j = W3j(j4, j9, j5, m4, m9, -m5);    ew3j = W3j(j5, j10, j1, m5, m10, -m1)
+                            rex = RacahExpression( [m1, m2, m3, m4, m5], -m1-m2-m3-m4-m5, Basic(1), Kronecker[], Triangle[], 
+                                                   W3j[aw3j, bw3j, cw3j, dw3j, ew3j], W6j[], W9j[] )
+        elseif  n ==  41    aw3j = W3j(j1, j7, j2, m1, m7, -m2);    bw3j = W3j(j2, j8, j3, m2, m8, -m3);      cw3j = W3j(j3, j9, j4, m3, m9, -m4)
+                            dw3j = W3j(j4, j10, j5, m4, m10, -m5);  ew3j = W3j(j5, j11, j6, m5, m11, -m6);    fw3j = W3j(j6, j12, j1, m6, m12, -m1)
+                            rex = RacahExpression( [m1, m2, m3, m4, m5, m6], -m1-m2-m3-m4-m5-m6, Basic(1), Kronecker[], Triangle[], 
+                                                   W3j[aw3j, bw3j, cw3j, dw3j, ew3j, fw3j], W6j[], W9j[] )
         else    error("stop a")
         end
         

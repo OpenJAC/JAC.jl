@@ -1030,74 +1030,109 @@
             A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
     """
     function sumRulesForOneW6jTwoW9j(rex::RacahAlgebra.RacahExpression)
-        @warn "Not yet adapted to the rule(s) shown below.";         return( (false, RacahExpression()) ) 
         # Make sure that the sum rule could apply at all
-        if  length(rex.summations) < 2  ||  length(rex.w3js) < 2     return( (false, RacahExpression()) )    end
+        if  length(rex.summations) < 2  ||  length(rex.w6js) < 1  ||  length(rex.w9js) < 2     return( (false, RacahExpression()) )    end
         
         # Loop through all Wigner 3j symbols
-        for  (iaW3j, aW3j) in enumerate(rex.w3js)
-            aRexList = RacahAlgebra.symmetricForms(aW3j)
-            for  xaRex in aRexList
-                for  (ibW3j, bW3j) in enumerate(rex.w3js)
-                    if  iaW3j == ibW3j    break    end
-                    bRexList = RacahAlgebra.symmetricForms(bW3j)
+        for  (icW9j, cW9j) in enumerate(rex.w9js)
+            cRexList = RacahAlgebra.symmetricForms(cW9j)
+            for  xcRex in cRexList
+                for  (ibW9j, bW9j) in enumerate(rex.w9js)
+                    if  icW9j == ibW9j      break    end
+                    bRexList = RacahAlgebra.symmetricForms(bW9j)
                     for  xbRex in bRexList
-                        for  (icW3j, cW3j) in enumerate(rex.w3js)
-                            if  iaW3j == icW3j    ||   ibW3j == icW3j      break    end
-                            cRexList = RacahAlgebra.symmetricForms(cW3j)
-                            for  xcRex in cRexList
-                                wwa = xaRex.w3js[1];     wwb = xbRex.w3js[1];     wwc = xcRex.w3js[1]
+                        for  (iaW6j, aW6j) in enumerate(rex.w6js)
+                            aRexList = RacahAlgebra.symmetricForms(aW6j)
+                            for  xaRex in aRexList
+                                wwa = xaRex.w6js[1];     wwb = xbRex.w9js[1];     wwc = xcRex.w9js[1]
                                 #
                                 #   Rule:                     ( a  h  Y )    ( a  f  X )   ( a  f  X )       ( a  b  s )   ( c  d  s )   ( e  f  s )
                                 #   ----    Sum(X,Y)  [X,Y]  {(         )}  {( d  q  e )} {( h  r  e )}  =  {(         )} {(         )} {(         )}
                                 #                             ( g  b  s )    ( p  c  b )   ( Y  g  b )       ( c  d  p )   ( e  f  q )   ( g  h  r )
                                 #
-                                specialaW3j = W3j(wwa.ja, wwa.jb, wwa.jc, wwa.ma, wwa.mb, -wwb.ma)
-                                specialbW3j = W3j(wwa.jc, wwb.jb, wwb.jc, wwb.ma, wwb.mb, -wwc.ma)
-                                specialcW3j = W3j(wwb.jc, wwc.jb, wwa.ja, wwc.ma, wwc.mb, -wwa.ma)
-                                if  wwa == specialaW3j  &&  wwb == specialbW3j  &&  wwc == specialcW3j 
-                                    newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase
-                                    testPhase  = newPhase + wwc.ma + wwa.ma + wwb.ma - wwb.jc - wwc.jc - wwa.jc   
-                                    testPhase  = rewritePhase(testPhase, [wwc.ma + wwc.mb + wwc.mc], [wwc.ma, wwa.ma, wwb.ma], printout=true, from="sumRulesForThreeW3j" )
-                                    newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight
-                                    testWeight = newWeight 
-                                    newW3js    = W3j[];       
-                                    for (idW3j, dW3j) in enumerate(rex.w3js)  
-                                        if  idW3j != iaW3j &&  idW3j != ibW3j &&  idW3j != icW3j   push!(newW3js, dW3j)   end   
-                                    end
+                                specialaW6j = W6j(wwa.a, wwa.b, wwa.c, wwa.d, wwa.e, wwa.f)
+                                specialbW9j = W9j(wwb.a, wwb.b, wwb.c, wwb.d, wwb.e, wwb.f, wwb.g, wwb.h, wwa.e)
+                                specialcW9j = W9j(wwa.a, wwb.b, wwb.c, wwa.b, wwc.e, wwb.f, wwa.c, wwa.d, wwa.e)
+                                if  wwa == specialaW6j  &&  wwb == specialbW9j  &&  wwc == specialcW9j 
+                                    newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase;    testPhase  = newPhase
+                                    newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight;
+                                    testWeight = newWeight / ((2*wwb.c + 1)*(2*wwa.c + 1))
+                                    newW6js    = W6j[];     newW9js    = W9j[];     
+                                    for (idW6j, dW6j) in enumerate(rex.w6js)   if  idW6j != iaW6j                      push!(newW6js, dW6j)   end   end
+                                    for (idW9j, dW9j) in enumerate(rex.w9js)   if  idW9j != ibW9j &&  idW9j != icW9j   push!(newW9js, dW9j)   end   end
                                     #
-                                    if   RacahAlgebra.hasIndex(wwc.ma, rex.summations)    &&   RacahAlgebra.hasIndex(wwa.ma, rex.summations)    &&  
-                                         RacahAlgebra.hasIndex(wwb.ma, rex.summations)    &&   
-                                         RacahAlgebra.hasNoVars([wwc.ma, wwa.ma, wwb.ma], testPhase)                                            &&  
-                                         ##x RacahAlgebra.hasIndex(wwb.mc, newWeight)     ##x &&  !RacahAlgebra.hasIndex(wwa.ma, testWeight)        &&
-                                        !RacahAlgebra.hasIndex(wwc.ma, rex.deltas)        &&  !RacahAlgebra.hasIndex(wwc.ma, rex.triangles)     &&
-                                        !RacahAlgebra.hasIndex(wwa.ma, rex.deltas)        &&  !RacahAlgebra.hasIndex(wwa.ma, rex.triangles)     && 
-                                        !RacahAlgebra.hasIndex(wwb.ma, rex.deltas)        &&  !RacahAlgebra.hasIndex(wwb.ma, rex.triangles)     && 
-                                        !RacahAlgebra.hasIndex(wwc.ma, rex.w6js)          &&  !RacahAlgebra.hasIndex(wwc.ma, rex.w9js)          &&
-                                        !RacahAlgebra.hasIndex(wwa.ma, rex.w6js)          &&  !RacahAlgebra.hasIndex(wwa.ma, rex.w9js)          
-                                        !RacahAlgebra.hasIndex(wwb.ma, rex.w6js)          &&  !RacahAlgebra.hasIndex(wwb.ma, rex.w9js)          
-                                        newSummations = RacahAlgebra.removeIndex([wwc.ma, wwa.ma, wwb.ma], rex.summations)
-                                        newDeltas = rex.deltas;   push!(newW3js,  W3j(wwa.jb, wwb.jb, wwc.jb, -wwa.mb, -wwb.mb, - wwc.mb))
-                                        newW6js   = rex.w6js;     push!(newW6js,  W6j(wwa.jb, wwb.jb, wwc.jb,  wwc.ja, wwa.ja, wwb.ja))
-                                        wa = RacahExpression( newSummations, testPhase, testWeight, 
-                                                              newDeltas, rex.triangles, newW3js, newW6js, rex.w9js )
-                                        println(">> Apply sum rule for three W3j -- Sum(m4,m5,m6) ...")
+                                    if  RacahAlgebra.hasAllVars([wwa.c, wwb.c], rex.summations) &&  RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase)   &&  
+                                        RacahAlgebra.hasNoVars([wwa.c, wwb.c], testWeight)      &&  RacahAlgebra.hasNoVars([wwa.c, wwb.c], rex.deltas)  &&  
+                                        RacahAlgebra.hasNoVars([wwa.c, wwb.c], rex.triangles)   &&  RacahAlgebra.hasNoVars([wwa.c, wwb.c], rex.w3js)    &&  
+                                        RacahAlgebra.hasNoVars([wwa.c, wwb.c], newW6js)         &&  RacahAlgebra.hasNoVars([wwa.c, wwb.c], newW9js)
+                                        newSummations = RacahAlgebra.removeIndex([wwa.c, wwb.c], rex.summations)
+                                        push!(newW6js,  W6j(wwa.a, wwa.e, wwa.f, wwb.h, wwb.d, wwb.g))
+                                        push!(newW6js,  W6j(wwb.h, wwb.d, wwa.f, wwb.f, wwb.b, wwb.e))
+                                        push!(newW6js,  W6j(wwb.f, wwb.b, wwa.f, wwc.h, wwa.b, wwc.e))
+                                        wa = RacahExpression( newSummations, testPhase, testWeight, rex.deltas, rex.triangles, rex.w3js, newW6js, newW9js )
+                                        println(">> Apply sum rule for one W6j & two W9j -- Sum(X,Y)  [X,Y] ...")
                                         return( (true, wa) )
                                     end
                                 end
-                                                
                                 #
                                 #   Rule:                            X+Y   ( a  b  X )    ( a  b  X )   ( g  b  Y )         e+h  d(f,j)             ( e  f  g )
                                 #   ----    Sum(X,Y,Z)  [X,Y,Z]  (-1)     {(         )}  {( c  d  Z )} {( c  d  Z )}  = (-1)     ------  d(b,d,f)  {(         )}
                                 #                                          ( g  Z  Y )    ( e  f  g )   ( h  j  a )              2f + 1             ( h  c  a )
                                 #
-
-                                                         
+                                specialaW6j = W6j(wwa.a, wwa.b, wwa.c, wwa.d, wwa.e, wwa.f)
+                                specialbW9j = W9j(wwa.a, wwa.b, wwa.c, wwb.d, wwb.e, wwa.e, wwb.g, wwb.h, wwa.d)
+                                specialcW9j = W9j(wwa.d, wwa.b, wwa.f, wwb.d, wwb.e, wwa.e, wwc.g, wwc.h, wwa.a)
+                                if  wwa == specialaW6j  &&  wwb == specialbW9j  &&  wwc == specialcW9j 
+                                    newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase;    
+                                    testPhase  = newPhase - wwa.c - wwa.f + wwb.g + wwc.g
+                                    newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight;
+                                    testWeight = newWeight / ((2*wwa.c + 1)*(2*wwa.f + 1)*(2*wwa.e + 1)) / (2*wwb.h + 1)
+                                    newW6js    = W6j[];     newW9js    = W9j[];     
+                                    for (idW6j, dW6j) in enumerate(rex.w6js)   if  idW6j != iaW6j                      push!(newW6js, dW6j)   end   end
+                                    for (idW9j, dW9j) in enumerate(rex.w9js)   if  idW9j != ibW9j &&  idW9j != icW9j   push!(newW9js, dW9j)   end   end
+                                    #
+                                    if  RacahAlgebra.hasAllVars([wwa.c, wwa.f, wwa.e], rex.summations) &&  RacahAlgebra.hasNoVars([wwa.c, wwa.f, wwa.e], testPhase)   &&  
+                                        RacahAlgebra.hasNoVars([wwa.c, wwa.f, wwa.e], testWeight)      &&  RacahAlgebra.hasNoVars([wwa.c, wwa.f, wwa.e], rex.deltas)  &&  
+                                        RacahAlgebra.hasNoVars([wwa.c, wwa.f, wwa.e], rex.triangles)   &&  RacahAlgebra.hasNoVars([wwa.c, wwa.f, wwa.e], rex.w3js)    &&  
+                                        RacahAlgebra.hasNoVars([wwa.c, wwa.f, wwa.e], newW6js)         &&  RacahAlgebra.hasNoVars([wwa.c, wwa.f, wwa.e], newW9js)
+                                        newSummations = RacahAlgebra.removeIndex([wwa.c, wwa.f, wwa.e], rex.summations)
+                                        newDeltas     = rex.deltas;         push!(newDeltas, Kronecker(wwb.h, wwc.h))
+                                        newTriangles  = rex.triangles;      push!(newTriangles, Triangle(wwa.b, wwb.e, wwb.h))
+                                        push!(newW6js,  W6j(wwb.g, wwb.h, wwa.d, wwc.g, wwb.d, wwa.a))
+                                        wa = RacahExpression( newSummations, testPhase, testWeight, newDeltas, newTriangles, rex.w3js, newW6js, newW9js )
+                                        println(">> Apply sum rule for one W6j & two W9j -- Sum(X,Y,Z) (-1)^X+Y  [X,Y,Z] ...")
+                                        return( (true, wa) )
+                                    end
+                                end
                                 #
                                 #   Rule:                            X  ( p  X  Z )    ( a  b  p )   ( b  d  Y )          a+l-f  d(p,k)             ( a  b  p )
                                 #   ----    Sum(X,Y,Z)  [X,Y,Z]  (-1)  {(         )}  {( c  d  X )} {( c  f  Z )}  = (-1)        ------  d(d,f p)  {(         )}
                                 #                                       ( c  f  d )    ( q  Y  Z )   ( l  k  q )                 2k + 1             ( l  q  c )
                                 #
+                                specialaW6j = W6j(wwa.a, wwa.b, wwa.c, wwa.d, wwa.e, wwa.f)
+                                specialbW9j = W9j(wwb.a, wwb.b, wwb.c, wwa.d, wwb.e, wwa.b, wwb.g, wwb.h, wwa.c)
+                                specialcW9j = W9j(wwb.b, wwb.e, wwb.h, wwa.d, wwa.e, wwa.c, wwc.g, wwc.h, wwb.g)
+                                if  wwa == specialaW6j  &&  wwb == specialbW9j  &&  wwc == specialcW9j 
+                                    newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase;    testPhase  = newPhase - wwa.b + wwb.a + wwc.g - wwa.e
+                                    newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight;
+                                    testWeight = newWeight / ((2*wwa.b + 1)*(2*wwb.h + 1)*(2*wwa.c + 1)) / (2*wwc.h + 1)
+                                    newW6js    = W6j[];     newW9js    = W9j[];     
+                                    for (idW6j, dW6j) in enumerate(rex.w6js)   if  idW6j != iaW6j                      push!(newW6js, dW6j)   end   end
+                                    for (idW9j, dW9j) in enumerate(rex.w9js)   if  idW9j != ibW9j &&  idW9j != icW9j   push!(newW9js, dW9j)   end   end
+                                    #
+                                    if  RacahAlgebra.hasAllVars([wwa.b, wwb.h, wwa.c], rex.summations) &&  RacahAlgebra.hasNoVars([wwa.b, wwb.h, wwa.c], testPhase)   &&  
+                                        RacahAlgebra.hasNoVars([wwa.b, wwb.h, wwa.c], testWeight)      &&  RacahAlgebra.hasNoVars([wwa.b, wwb.h, wwa.c], rex.deltas)  &&  
+                                        RacahAlgebra.hasNoVars([wwa.b, wwb.h, wwa.c], rex.triangles)   &&  RacahAlgebra.hasNoVars([wwa.b, wwb.h, wwa.c], rex.w3js)    &&  
+                                        RacahAlgebra.hasNoVars([wwa.b, wwb.h, wwa.c], newW6js)         &&  RacahAlgebra.hasNoVars([wwa.b, wwb.h, wwa.c], newW9js)
+                                        newSummations = RacahAlgebra.removeIndex([wwa.b, wwb.h, wwa.c], rex.summations)
+                                        newDeltas     = rex.deltas;         push!(newDeltas, Kronecker(wwa.a, wwc.h))
+                                        newTriangles  = rex.triangles;      push!(newTriangles, Triangle(wwb.e, wwa.e, wwb.c))
+                                        push!(newW6js,  W6j(wwb.a, wwb.b, wwb.c, wwc.g, wwb.g, wwa.d))
+                                        wa = RacahExpression( newSummations, testPhase, testWeight, newDeltas, newTriangles, rex.w3js, newW6js, newW9js )
+                                        println(">> Apply sum rule for one W6j & two W9j -- Sum(X,Y,Z) (-1)^X [X,Y,Z] ...")
+                                        return( (true, wa) )
+                                    end
+                                end
                             end
                         end
                     end
@@ -1116,59 +1151,345 @@
             A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
     """
     function sumRulesForThreeW9j(rex::RacahAlgebra.RacahExpression)
-        @warn "Not yet adapted to the rule(s) shown below.";         return( (false, RacahExpression()) ) 
         # Make sure that the sum rule could apply at all
-        if  length(rex.summations) < 2  ||  length(rex.w3js) < 2     return( (false, RacahExpression()) )    end
+        if  length(rex.summations) < 3  ||  length(rex.w9js) < 3     return( (false, RacahExpression()) )    end
         
-        # Loop through all Wigner 3j symbols
-        for  (iaW3j, aW3j) in enumerate(rex.w3js)
-            aRexList = RacahAlgebra.symmetricForms(aW3j)
-            for  xaRex in aRexList
-                for  (ibW3j, bW3j) in enumerate(rex.w3js)
-                    if  iaW3j == ibW3j    break    end
-                    bRexList = RacahAlgebra.symmetricForms(bW3j)
+        # Loop through all Wigner nj symbols
+        for  (icW9j, cW9j) in enumerate(rex.w9js)
+            cRexList = RacahAlgebra.symmetricForms(cW9j)
+            for  xcRex in cRexList
+                for  (ibW9j, bW9j) in enumerate(rex.w9js)
+                    if  icW9j == ibW9j    break    end
+                    bRexList = RacahAlgebra.symmetricForms(bW9j)
                     for  xbRex in bRexList
-                        for  (icW3j, cW3j) in enumerate(rex.w3js)
-                            if  iaW3j == icW3j    ||   ibW3j == icW3j      break    end
-                            cRexList = RacahAlgebra.symmetricForms(cW3j)
-                            for  xcRex in cRexList
-                                wwa = xaRex.w3js[1];     wwb = xbRex.w3js[1];     wwc = xcRex.w3js[1]
+                        for  (iaW9j, aW9j) in enumerate(rex.w9js)
+                            if  iaW9j == ibW9j    ||   iaW9j == icW9j      break    end
+                            aRexList = RacahAlgebra.symmetricForms(aW9j)
+                            for  xaRex in aRexList
+                                wwa = xaRex.w9js[1];     wwb = xbRex.w9js[1];     wwc = xcRex.w9js[1]
                                 #
                                 #   Rule:                        ( a  b  p )   ( c  d  X )   ( b  d  Y )       d(h,k)             ( a  b  p )
                                 #   ----     Sum(X,Y,Z) [X,Y,Z] {( c  d  X )} {( e  f  Z )} {( e  f  Z )}   =  ------  d(d,f,h)  {( c  e  g )}
                                 #                                ( q  Y  Z )   ( g  h  p )   ( j  k  q )        [h]               ( q  j  h )
                                 #
-                                specialaW3j = W3j(wwa.ja, wwa.jb, wwa.jc, wwa.ma, wwa.mb, -wwb.ma)
-                                specialbW3j = W3j(wwa.jc, wwb.jb, wwb.jc, wwb.ma, wwb.mb, -wwc.ma)
-                                specialcW3j = W3j(wwb.jc, wwc.jb, wwa.ja, wwc.ma, wwc.mb, -wwa.ma)
-                                if  wwa == specialaW3j  &&  wwb == specialbW3j  &&  wwc == specialcW3j 
-                                    newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase
-                                    testPhase  = newPhase + wwc.ma + wwa.ma + wwb.ma - wwb.jc - wwc.jc - wwa.jc   
-                                    testPhase  = rewritePhase(testPhase, [wwc.ma + wwc.mb + wwc.mc], [wwc.ma, wwa.ma, wwb.ma], printout=true, from="sumRulesForThreeW3j" )
-                                    newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight
-                                    testWeight = newWeight 
-                                    newW3js    = W3j[];       
-                                    for (idW3j, dW3j) in enumerate(rex.w3js)  
-                                        if  idW3j != iaW3j &&  idW3j != ibW3j &&  idW3j != icW3j   push!(newW3js, dW3j)   end   
+                                specialaW9j = W9j(wwa.a, wwa.b, wwa.c, wwa.d, wwa.e, wwa.f, wwa.g, wwa.h, wwa.i) 
+                                specialbW9j = W9j(wwa.d, wwa.e, wwa.f, wwb.d, wwb.e, wwa.i, wwb.g, wwb.h, wwa.c)
+                                specialcW9j = W9j(wwa.b, wwb.b, wwa.h, wwb.d, wwb.e, wwa.i, wwc.g, wwc.h, wwa.g)
+                                if  wwa == specialaW9j  &&  wwb == specialbW9j  &&  wwc == specialcW9j
+                                    newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase;    testPhase  = newPhase
+                                    newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight;
+                                    testWeight = newWeight / ((2*wwa.f + 1)*(2*wwa.h + 1)*(2*wwa.i + 1)) / (2*wwb.h + 1)
+                                    newW9js    = W9j[];     
+                                    for (idW9j, dW9j) in enumerate(rex.w9js)   if  idW9j != iaW9j &&  idW9j != ibW9j &&  idW9j != icW9j   push!(newW9js, dW9j)   end   
                                     end
                                     #
-                                    if   RacahAlgebra.hasIndex(wwc.ma, rex.summations)    &&   RacahAlgebra.hasIndex(wwa.ma, rex.summations)    &&  
-                                         RacahAlgebra.hasIndex(wwb.ma, rex.summations)    &&   
-                                         RacahAlgebra.hasNoVars([wwc.ma, wwa.ma, wwb.ma], testPhase)                                            &&  
-                                         ##x RacahAlgebra.hasIndex(wwb.mc, newWeight)     ##x &&  !RacahAlgebra.hasIndex(wwa.ma, testWeight)        &&
-                                        !RacahAlgebra.hasIndex(wwc.ma, rex.deltas)        &&  !RacahAlgebra.hasIndex(wwc.ma, rex.triangles)     &&
-                                        !RacahAlgebra.hasIndex(wwa.ma, rex.deltas)        &&  !RacahAlgebra.hasIndex(wwa.ma, rex.triangles)     && 
-                                        !RacahAlgebra.hasIndex(wwb.ma, rex.deltas)        &&  !RacahAlgebra.hasIndex(wwb.ma, rex.triangles)     && 
-                                        !RacahAlgebra.hasIndex(wwc.ma, rex.w6js)          &&  !RacahAlgebra.hasIndex(wwc.ma, rex.w9js)          &&
-                                        !RacahAlgebra.hasIndex(wwa.ma, rex.w6js)          &&  !RacahAlgebra.hasIndex(wwa.ma, rex.w9js)          
-                                        !RacahAlgebra.hasIndex(wwb.ma, rex.w6js)          &&  !RacahAlgebra.hasIndex(wwb.ma, rex.w9js)          
-                                        newSummations = RacahAlgebra.removeIndex([wwc.ma, wwa.ma, wwb.ma], rex.summations)
-                                        newDeltas = rex.deltas;   push!(newW3js,  W3j(wwa.jb, wwb.jb, wwc.jb, -wwa.mb, -wwb.mb, - wwc.mb))
-                                        newW6js   = rex.w6js;     push!(newW6js,  W6j(wwa.jb, wwb.jb, wwc.jb,  wwc.ja, wwa.ja, wwb.ja))
-                                        wa = RacahExpression( newSummations, testPhase, testWeight, 
-                                                              newDeltas, rex.triangles, newW3js, newW6js, rex.w9js )
-                                        println(">> Apply sum rule for three W3j -- Sum(m4,m5,m6) ...")
+                                    if  RacahAlgebra.hasAllVars([wwa.f, wwa.h, wwa.i], rex.summations) &&  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase)   &&  
+                                        RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testWeight)      &&  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.deltas)  &&  
+                                        RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.triangles)   &&  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.w3js)    &&  
+                                        RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.w6js)        &&  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], newW9js)
+                                        newSummations = RacahAlgebra.removeIndex([wwa.b, wwb.h, wwa.c], rex.summations)
+                                        newDeltas     = rex.deltas;         push!(newDeltas, Kronecker(wwb.h, wwc.h))
+                                        newTriangles  = rex.triangles;      push!(newTriangles, Triangle(wwa.e, wwb.e, wwb.h))
+                                        push!(newW9js,  W9j(wwa.a, wwa.b, wwa.c, wwa.d, wwb.d, wwb.g, wwa.g, wwc.g, wwb.h))
+                                        wa = RacahExpression( newSummations, testPhase, testWeight, newDeltas, newTriangles, rex.w3js, rex.w6js, newW9js )
+                                        println(">> Apply sum rule for three W9j -- Sum(X,Y,Z) [X,Y,Z] ...")
                                         return( (true, wa) )
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        return( (false, RacahExpression()) )
+    end
+
+
+    """
+    `RacahAlgebra.sumRulesForFourW3j(rex::RacahAlgebra.RacahExpression)`  
+        ... attempts to find a simplification of the given Racah expression by using sum rules for four Wigner 3j symbols. 
+            Once a simplification is found, no attempt is made to find another simplifcation for this set of rules.
+            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
+    """
+    function sumRulesForFourW3j(rex::RacahAlgebra.RacahExpression)
+        # Make sure that the sum rule could apply at all
+        if  length(rex.summations) < 4  ||  length(rex.w3js) < 4     return( (false, RacahExpression()) )    end
+        
+        # Loop through all Wigner 3j symbols
+        for  (idW3j, dW3j) in enumerate(rex.w3js)
+            dRexList = RacahAlgebra.symmetricForms(dW3j)
+            for  xdRex in dRexList
+                for  (icW3j, cW3j) in enumerate(rex.w3js)
+                    if  icW3j == idW3j    break    end
+                    cRexList = RacahAlgebra.symmetricForms(cW3j)
+                    for  xcRex in cRexList
+                        for  (ibW3j, bW3j) in enumerate(rex.w3js)
+                            if  ibW3j == icW3j   ||   ibW3j == idW3j    break    end
+                            bRexList = RacahAlgebra.symmetricForms(bW3j)
+                            for  xbRex in bRexList
+                                for  (iaW3j, aW3j) in enumerate(rex.w3js)
+                                    if  iaW3j == ibW3j    ||   iaW3j == icW3j    ||   iaW3j == idW3j      break    end
+                                    aRexList = RacahAlgebra.symmetricForms(aW3j)
+                                    for  xaRex in aRexList
+                                        wwa = xaRex.w3js[1];     wwb = xbRex.w3js[1];     wwc = xcRex.w3js[1];     wwd = xdRex.w3js[1]
+                                        #
+                                        #   Rule:                        -m1-m2-m3-m4  ( j1 j5  j2 ) ( j2 j6  j3 ) ( j3 j7  j4 ) ( j4 j8  j1 )
+                                        #   ----    Sum(m1,m2,m3,m4) (-1)              (           ) (           ) (           ) (           )
+                                        #                                              ( m1 m5 -m2 ) ( m2 m6 -m3 ) ( m3 m7 -m4 ) ( m4 m8 -m1 )
+                                        #
+                                        #
+                                        #                -j1-2j2-j3-j5-j8                  j9-m9            ( j5  j9 j8 ) ( j6 j9 j7 )  ( j5 j9 j8 )   ( j6 j9 j7 )
+                                        #         =  (-1)                   Sum(j9,m9) (-1)      (2j9 + 1)  (           ) (          ) {(          )} {(          )}
+                                        #                                                                   ( m5 -m9 m8 ) ( m6 m9 m7 )  ( j4 j1 j2 )   ( j4 j3 j2 )
+                                        #
+                                        specialaW3j = W3j(wwa.ja, wwa.jb, wwa.jc, wwa.ma, wwa.mb, -wwb.ma)
+                                        specialbW3j = W3j(wwa.jc, wwb.jb, wwb.jc, wwb.ma, wwb.mb, -wwc.ma)
+                                        specialcW3j = W3j(wwb.jc, wwc.jb, wwc.jc, wwc.ma, wwc.mb, -wwd.ma)
+                                        specialdW3j = W3j(wwc.jc, wwd.jb, wwa.ja, wwd.ma, wwd.mb, -wwa.ma)
+                                        if  wwa == specialaW3j  &&  wwb == specialbW3j  &&  wwc == specialcW3j  &&  wwd == specialdW3j 
+                                            j9 = Basic(:j9);   m9 = Basic(:m9)
+                                            newPhase  = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase
+                                            testPhase = newPhase + wwa.ma + wwb.ma + wwc.ma + wwd.ma - wwa.ja - 2*wwa.jc - wwb.jc - wwa.jb - wwd.jb + j9 - m9   
+                                            newWeight = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    testWeight = newWeight * (2*j9 + 1)
+                                            newW3js    = W3j[];      newW6js    = W6j[];    
+                                            for (ieW3j, eW3j) in enumerate(rex.w3js)  
+                                                if  ieW3j != iaW3j &&  ieW3j != ibW3j &&  ieW3j != icW3j &&  ieW3j != idW3j   push!(newW3js, eW3j)   end   
+                                            end
+                                            #
+                                            if  RacahAlgebra.hasAllVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], rex.summations)   &&  
+                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], testPhase)         &&  
+                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], testWeight)        &&  
+                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], rex.deltas)        &&  
+                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], rex.triangles)     && 
+                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], newW3js)           &&  
+                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], rex.w6js)          &&  
+                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], rex.w9js)
+                                                newSummations = RacahAlgebra.removeIndex([wwa.ma, wwb.ma, wwc.ma, wwd.ma], rex.summations)
+                                                push!(newSummations, j9)
+                                                push!(newW3js,  W3j(wwa.jb, j9, wwd.jb, wwa.mb, -m9, wwd.mb))
+                                                push!(newW3js,  W3j(wwb.jb, j9, wwc.jb, wwb.mb,  m9, wwc.mb))
+                                                push!(newW6js,  W6j(wwa.jb, j9, wwd.jb, wwd.ja,  wwa.ja, wwa.jc))
+                                                push!(newW6js,  W6j(wwb.jb, j9, wwc.jb, wwc.jc,  wwb.jc, wwa.jc))
+                                                wa = RacahExpression( newSummations, testPhase, testWeight, rex.deltas, rex.triangles, newW3js, newW6js, rex.w9js )
+                                                println(">> Apply sum rule for four W3j -- Sum(m1,m2,m3,m4) (-1)^-m1-m2-m3-m4  ...")
+                                                return( (true, wa) )
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        return( (false, RacahExpression()) )
+    end
+
+
+    """
+    `RacahAlgebra.sumRulesForFiveW3j(rex::RacahAlgebra.RacahExpression)`  
+        ... attempts to find a simplification of the given Racah expression by using sum rules for five Wigner 3j symbols. 
+            Once a simplification is found, no attempt is made to find another simplifcation for this set of rules.
+            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
+    """
+    function sumRulesForFiveW3j(rex::RacahAlgebra.RacahExpression)
+        # Make sure that the sum rule could apply at all
+        if  length(rex.summations) < 5  ||  length(rex.w3js) < 5     return( (false, RacahExpression()) )    end
+        
+        # Loop through all Wigner 3j symbols
+        for  (ieW3j, eW3j) in enumerate(rex.w3js)
+            eRexList = RacahAlgebra.symmetricForms(eW3j)
+            for  xeRex in eRexList
+                for  (idW3j, dW3j) in enumerate(rex.w3js)
+                    if  idW3j == ieW3j    break    end
+                    dRexList = RacahAlgebra.symmetricForms(dW3j)
+                    for  xdRex in dRexList
+                        for  (icW3j, cW3j) in enumerate(rex.w3js)
+                            if  icW3j == idW3j   ||   icW3j == ieW3j    break    end
+                            cRexList = RacahAlgebra.symmetricForms(cW3j)
+                            for  xcRex in cRexList
+                                for  (ibW3j, bW3j) in enumerate(rex.w3js)
+                                    if  ibW3j == icW3j   ||   ibW3j == idW3j   ||   ibW3j == ieW3j    break    end
+                                    bRexList = RacahAlgebra.symmetricForms(bW3j)
+                                    for  xbRex in bRexList
+                                        for  (iaW3j, aW3j) in enumerate(rex.w3js)
+                                            if  iaW3j == ibW3j    ||   iaW3j == icW3j    ||   iaW3j == idW3j    ||   iaW3j == ieW3j      break    end
+                                            aRexList = RacahAlgebra.symmetricForms(aW3j)
+                                            for  xaRex in aRexList
+                                                wwa = xaRex.w3js[1];   wwb = xbRex.w3js[1];   wwc = xcRex.w3js[1];   wwd = xdRex.w3js[1];   wwe = xeRex.w3js[1]
+                                                #
+                                                #   Rule:                           -m1-m2-m3-m4-m5  ( j1 j6  j2 ) ( j2 j7  j3 ) ( j3 j8  j4 ) ( j4 j9  j5 ) ( j5 j10  j1 )
+                                                #   ----    Sum(m1,m2,m3,m4,m5) (-1)                 (           ) (           ) (           ) (           ) (            )
+                                                #                                                    ( m1 m6 -m2 ) ( m2 m7 -m3 ) ( m3 m8 -m4 ) ( m4 m9 -m5 ) ( m5 m10 -m1 )
+                                                #
+                                                #
+                                                #                  -2j1-j7-j6-j9-j8-j2-j3-j4                      x-xi+y-eta                     
+                                                #           =  (-1)                           Sum(x,xi,y,eta) (-1)            (2x + 1) (2y + 1)  *
+                                                #
+                                                #
+                                                #                  ( j6 j7  x ) (  x  j10   y  ) (  y  j8 j9 )  ( j6 j7  x )   (  x j10 y )   (  y j8 j9 )
+                                                #                  (          ) (              ) (           ) {(          )} {(          )} {(          )}
+                                                #                  ( m6 m7 xi ) ( -xi m10 -eta ) ( eta m8 m9 )  ( j3 j1 j2 )   ( j5 j3 j1 )   ( j4 j5 j3 )
+                                                #
+                                                specialaW3j = W3j(wwa.ja, wwa.jb, wwa.jc, wwa.ma, wwa.mb, -wwb.ma)
+                                                specialbW3j = W3j(wwa.jc, wwb.jb, wwb.jc, wwb.ma, wwb.mb, -wwc.ma)
+                                                specialcW3j = W3j(wwb.jc, wwc.jb, wwc.jc, wwc.ma, wwc.mb, -wwd.ma)
+                                                specialdW3j = W3j(wwc.jc, wwd.jb, wwd.jc, wwd.ma, wwd.mb, -wwe.ma)
+                                                specialeW3j = W3j(wwd.jc, wwe.jb, wwa.ja, wwe.ma, wwe.mb, -wwa.ma)
+                                                if  wwa == specialaW3j  &&  wwb == specialbW3j  &&  wwc == specialcW3j  &&  wwd == specialdW3j  &&  wwe == specialeW3j  
+                                                    x = Basic(:x);   xi = Basic(:xi);   y = Basic(:y);   eta = Basic(:eta)
+                                                    newPhase  = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase  + xeRex.phase
+                                                    testPhase = newPhase + wwa.ma + wwb.ma + wwc.ma + wwd.ma + wwe.ma - 2*wwa.ja - wwb.jb - wwa.jb - wwd.jb 
+                                                    testPhase = testPhase - wwc.jb - wwb.ja - wwc.ja - wwd.ja + x - xi + y - eta
+                                                    newWeight = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight * xeRex.weight;    
+                                                    testWeight = newWeight * (2*x + 1) * (2*y + 1)
+                                                    newW3js    = W3j[];      newW6js    = W6j[];    
+                                                    for (ifW3j, fW3j) in enumerate(rex.w3js)  
+                                                        if  ifW3j != iaW3j &&  ifW3j != ibW3j &&  ifW3j != icW3j &&  ifW3j != idW3j &&  ifW3j != ieW3j   
+                                                            push!(newW3js, eW3j)   end   
+                                                    end
+                                                    #
+                                                    if  RacahAlgebra.hasAllVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.summations)   &&  
+                                                        RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], testPhase)         &&  
+                                                        RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], testWeight)        &&  
+                                                        RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.deltas)        &&  
+                                                        RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.triangles)     && 
+                                                        RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], newW3js)           &&  
+                                                        RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.w6js)          &&  
+                                                        RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.w9js)
+                                                        newSummations = RacahAlgebra.removeIndex([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.summations)
+                                                        push!(newSummations, x);    push!(newSummations, xi);    push!(newSummations, y);    push!(newSummations, eta)
+                                                        push!(newW3js,  W3j(wwa.jb, wwb.jb,      x, wwa.mb, wwb.mb, xi))
+                                                        push!(newW3js,  W3j(     x, wwe.jb,      y,    -xi, wwe.mb, -eta))
+                                                        push!(newW3js,  W3j(     y, wwc.jb, wwd.jb,    eta, wwc.mb, wwd.mb))
+                                                        push!(newW6js,  W6j(wwa.jb, wwb.jb,      x, wwb.jc, wwa.ja, wwa.jc))
+                                                        push!(newW6js,  W6j(     x, wwe.jb,      y, wwe.ja, wwb.jc, wwa.ja))
+                                                        push!(newW6js,  W6j(     y, wwc.jb, wwd.jb, wwc.jc, wwd.jc, wwc.ja))
+                                                        wa = RacahExpression( newSummations, testPhase, testWeight, rex.deltas, rex.triangles, newW3js, newW6js, rex.w9js )
+                                                        println(">> Apply sum rule for five W3j -- Sum(m1,m2,m3,m4,m5) (-1)^-m1-m2-m3-m4-m5  ...")
+                                                        return( (true, wa) )
+                                                    end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        return( (false, RacahExpression()) )
+    end
+
+
+    """
+    `RacahAlgebra.sumRulesForSixW3j(rex::RacahAlgebra.RacahExpression)`  
+        ... attempts to find a simplification of the given Racah expression by using sum rules for six Wigner 3j symbols. 
+            Once a simplification is found, no attempt is made to find another simplifcation for this set of rules.
+            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
+    """
+    function sumRulesForSixW3j(rex::RacahAlgebra.RacahExpression)
+        # Make sure that the sum rule could apply at all
+        if  length(rex.summations) < 6  ||  length(rex.w3js) < 6     return( (false, RacahExpression()) )    end
+        
+        # Loop through all Wigner 3j symbols
+        for  (ifW3j, fW3j) in enumerate(rex.w3js)
+            fRexList = RacahAlgebra.symmetricForms(fW3j)
+            for  xfRex in fRexList
+                for  (ieW3j, eW3j) in enumerate(rex.w3js)
+                    if  ieW3j == ifW3j    break    end
+                    eRexList = RacahAlgebra.symmetricForms(eW3j)
+                    for  xeRex in eRexList
+                        for  (idW3j, dW3j) in enumerate(rex.w3js)
+                            if  idW3j == ieW3j   ||   idW3j == ifW3j    break    end
+                            dRexList = RacahAlgebra.symmetricForms(dW3j)
+                            for  xdRex in dRexList
+                                for  (icW3j, cW3j) in enumerate(rex.w3js)
+                                    if  icW3j == idW3j   ||   icW3j == ieW3j   ||   icW3j == ifW3j    break    end
+                                    cRexList = RacahAlgebra.symmetricForms(cW3j)
+                                    for  xcRex in cRexList
+                                        for  (ibW3j, bW3j) in enumerate(rex.w3js)
+                                            if  ibW3j == icW3j   ||   ibW3j == idW3j   ||   ibW3j == ieW3j   ||   ibW3j == ifW3j    break    end
+                                            bRexList = RacahAlgebra.symmetricForms(bW3j)
+                                            for  xbRex in bRexList
+                                                for  (iaW3j, aW3j) in enumerate(rex.w3js)
+                                                    if  iaW3j == ibW3j  ||  iaW3j == icW3j  ||  iaW3j == idW3j  ||  iaW3j == ieW3j  ||  iaW3j == ifW3j   break    end
+                                                    aRexList = RacahAlgebra.symmetricForms(aW3j)
+                                                    for  xaRex in aRexList
+                                                        wwa = xaRex.w3js[1];   wwb = xbRex.w3js[1];   wwc = xcRex.w3js[1];   
+                                                        wwd = xdRex.w3js[1];   wwe = xeRex.w3js[1];   wwf = xfRex.w3js[1];
+                #
+                #   Rule: 
+                #   ----                              -m1-m2-m3-m4-m5-m6  ( j1 j7  j2 ) ( j2 j8  j3 ) ( j3 j9  j4 ) ( j4 j10  j5 ) ( j5 j11  j6 ) ( j6 j12  j1 )
+                #          Sum(m1,m2,m3,m4,m5,m6) (-1)                    (           ) (           ) (           ) (            ) (            ) (            )
+                #                                                         ( m1 m7 -m2 ) ( m2 m8 -m3 ) ( m3 m9 -m4 ) ( m4 m10 -m5 ) ( m5 j11 -m6 ) ( m6 m12 -m1 )
+                #
+                #
+                #                            -j1-j2-j3-j4-j5-j6                                x-xi+y-eta+z-zeta
+                #                     =  (-1)                     * Sum(x,xi,y,eta,z,zeta) (-1)                    (2x + 1) (2y + 1) (2z + 1) 
+                #
+                #
+                #              ( j7  x j8 ) ( j9  y  j10 ) ( j11   z  j12 ) (  x    y    z   )  ( j7  x j8 )   ( j9  y j10 )   ( j11  z j12 )   (  x  y  z )
+                #            * (          ) (            ) (              ) (                ) {(          )} {(           )} {(            )} {(          )}
+                #              ( m7 xi m8 ) ( m9 eta m10 ) ( m11 zeta m12 ) ( -xi -eta -zeta )  ( j3 j2 j1 )   ( j5 j4 j3  )   (  j1 j6  j5 )   ( j5 j1 j3 )
+                #
+                                                        specialaW3j = W3j(wwa.ja, wwa.jb, wwa.jc, wwa.ma, wwa.mb, -wwb.ma)
+                                                        specialbW3j = W3j(wwa.jc, wwb.jb, wwb.jc, wwb.ma, wwb.mb, -wwc.ma)
+                                                        specialcW3j = W3j(wwb.jc, wwc.jb, wwc.jc, wwc.ma, wwc.mb, -wwd.ma)
+                                                        specialdW3j = W3j(wwc.jc, wwd.jb, wwd.jc, wwd.ma, wwd.mb, -wwe.ma)
+                                                        specialeW3j = W3j(wwd.jc, wwe.jb, wwe.jc, wwe.ma, wwe.mb, -wwf.ma)
+                                                        specialfW3j = W3j(wwe.jc, wwf.jb, wwa.ja, wwf.ma, wwf.mb, -wwa.ma)
+                                                        if  wwa == specialaW3j   &&   wwb == specialbW3j   &&   wwc == specialcW3j   &&  
+                                                            wwd == specialdW3j   &&   wwe == specialeW3j   &&   wwf == specialfW3j  
+                                                            x = Basic(:x);  xi = Basic(:xi);  y = Basic(:y);  eta = Basic(:eta);  z = Basic(:z);  zeta = Basic(:zeta)
+                                                            newPhase  = rex.phase + xaRex.phase + xbRex.phase + xcRex.phase + xdRex.phase + xeRex.phase + xfRex.phase
+                                                            testPhase = newPhase + wwa.ma + wwb.ma + wwc.ma + wwd.ma + wwe.ma + wwf.ma - wwa.ja - wwb.ja - wwb.jc - wwd.ja 
+                                                            testPhase = testPhase - wwd.jc - wwe.jc + x - xi + y - eta + z - zeta
+                                                            newWeight = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight * xeRex.weight * xfRex.weight  
+                                                            testWeight = newWeight * (2*x + 1) * (2*y + 1) * (2*z + 1)
+                                                            newW3js    = W3j[];      newW6js    = W6j[];    
+                                                            for (igW3j, gW3j) in enumerate(rex.w3js)  
+                                                                if  igW3j != iaW3j &&  igW3j != ibW3j &&  igW3j != icW3j &&  igW3j != idW3j &&  
+                                                                    igW3j != ieW3j &&  igW3j != ifW3j    
+                                                                    push!(newW3js, gW3j)   end   
+                                                            end
+                                                            #
+                                                            if  RacahAlgebra.hasAllVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.summations)   &&  
+                                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], testPhase)         &&  
+                                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], testWeight)        &&  
+                                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.deltas)        &&  
+                                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.triangles)     && 
+                                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], newW3js)           &&  
+                                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.w6js)          &&  
+                                                                RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.w9js)
+                                                                newSummations = RacahAlgebra.removeIndex([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.summations)
+                                                                push!(newSummations, x);    push!(newSummations, xi);    push!(newSummations, y);    
+                                                                push!(newSummations, eta);  push!(newSummations, z);     push!(newSummations, zeta)
+                                                                push!(newW3js,  W3j(wwa.jb,      x, wwb.jb, wwa.mb,     xi, wwb.mb))
+                                                                push!(newW3js,  W3j(wwc.jb,      y, wwd.jb, wwc.mb,    eta, wwd.mb))
+                                                                push!(newW3js,  W3j(wwe.jb,      z, wwf.jb, wwe.mb,   zeta, wwf.mb))
+                                                                push!(newW3js,  W3j(     x,      y,      z,    -xi,   -eta,  -zeta))
+                                                                push!(newW6js,  W6j(wwa.jb,      x, wwb.jb, wwb.jc, wwa.jc, wwa.ja))
+                                                                push!(newW6js,  W6j(wwc.jb,      y, wwd.jb, wwd.jc, wwd.ja, wwc.ja))
+                                                                push!(newW6js,  W6j(wwe.jb,      z, wwf.jb, wwa.ja, wwe.jc, wwe.ja))
+                                                                push!(newW6js,  W6j(      x,     y,      z, wwd.jc, wwa.ja, wwb.jc))
+                                                                wa = RacahExpression( newSummations, testPhase, testWeight, 
+                                                                                      rex.deltas, rex.triangles, newW3js, newW6js, rex.w9js )
+                                                                println(">> Apply sum rule for six W3j -- Sum(m1,m2,m3,m4,m5,m6) (-1)^-m1-m2-m3-m4-m5-m6  ...")
+                                                                return( (true, wa) )
+                                                            end
+                                                        end
+                                                    end
+                                                end
+                                            end
+                                        end
                                     end
                                 end
                             end
@@ -1228,22 +1549,6 @@ Racah_usesumrulesfortwoYlm := proc(Rexpr::Racahexpr)
 
 
                                              
-Racah_usesumrulesforfourw3jloop := proc(Rexpr::Racahexpr,w3jpos::list)
-
-   #
-   #                        -m1-m2-m3-m4  ( j1 j5  j2 ) ( j2 j6  j3 ) ( j3 j7  j4 ) ( j4 j8  j1 )
-   #   Sum(m1,m2,m3,m4) (-1)              (           ) (           ) (           ) (           )
-   #                                      ( m1 m5 -m2 ) ( m2 m6 -m3 ) ( m3 m7 -m4 ) ( m4 m8 -m1 )
-   #
-   #
-   #                            -j1-2j2-j3-j5-j8
-   #                     =  (-1)                  *
-   #
-   #                     j9-m9            ( j5  j9 j8 ) ( j6 j9 j7 )  ( j5 j9 j8 )   ( j6 j9 j7 )
-   #    * Sum(j9,m9) (-1)      (2j9 + 1)  (           ) (          ) {(          )} {(          )}
-   #                                      ( m5 -m9 m8 ) ( m6 m9 m7 )  ( j4 j1 j2 )   ( j4 j3 j2 )
-   #
-
    
 Racah_usesumrulesforfourw6j := proc(Rexpr::Racahexpr)
    
@@ -1494,38 +1799,8 @@ Racah_usesumrulesforonew6jthreew9j := proc(Rexpr::Racahexpr)
                                                             
 Racah_usesumrulesforfivew3jloop := proc(Rexpr::Racahexpr,w3jpos::list)
 
-   #
-   #                           -m1-m2-m3-m4-m5  ( j1 j6  j2 ) ( j2 j7  j3 ) ( j3 j8  j4 ) ( j4 j9  j5 ) ( j5 j10  j1 )
-   #   Sum(m1,m2,m3,m4,m5) (-1)                 (           ) (           ) (           ) (           ) (            )
-   #                                            ( m1 m6 -m2 ) ( m2 m7 -m3 ) ( m3 m8 -m4 ) ( m4 m9 -m5 ) ( m5 j10 -m1 )
-   #
-   #
-   #                            -2j1-j7-j6-j9-j8-j2-j3-j4
-   #                     =  (-1)                          *
-   #
-   #                          x-xi+y-eta                     ( j6 j7  x ) (  x  j10   y  ) (  y  j8 j9 )  ( j6 j7  x )   (  x j10 y )   (  y j8 j9 )
-   #    * Sum(x,xi,y,eta) (-1)            (2x + 1) (2y + 1)  (          ) (              ) (           ) {(          )} {(          )} {(          )}
-   #                                                         ( m6 m7 xi ) ( -xi m10 -eta ) ( eta m8 m9 )  ( j3 j1 j2 )   ( j5 j3 j1 )   ( j4 j5 j3 )
-   #
                                                             
 Racah_usesumrulesforsixw3jloop := proc(Rexpr::Racahexpr,w3jpos::list)
-
-   #
-   #                              -m1-m2-m3-m4-m5-m6  ( j1 j7  j2 ) ( j2 j8  j3 ) ( j3 j9  j4 ) ( j4 j10  j5 ) ( j5 j11  j6 ) ( j6 j12  j1 )
-   #   Sum(m1,m2,m3,m4,m5,m6) (-1)                    (           ) (           ) (           ) (            ) (            ) (            )
-   #                                                  ( m1 m7 -m2 ) ( m2 m8 -m3 ) ( m3 m9 -m4 ) ( m4 m10 -m5 ) ( m5 j11 -m6 ) ( m6 m12 -m1 )
-   #
-   #
-   #                            -j1-j2-j3-j4-j5-j6
-   #                     =  (-1)                     *
-   #
-   #                                 x-xi+y-eta+z-zeta
-   #    * Sum(x,xi,y,eta,z,zeta) (-1)                    (2x + 1) (2y + 1) (2z + 1) *
-   #
-   #      ( j7  x j8 ) ( j9  y  j10 ) ( j11   z  j12 ) (  x    y    z   )  ( j7  x j8 )   ( j9  y j10 )   ( j11  z j12 )   (  x  y  z )
-   #    * (          ) (            ) (              ) (                ) {(          )} {(           )} {(            )} {(          )}
-   #      ( m7 xi m8 ) ( m9 eta m10 ) ( m11 zeta m12 ) ( -xi -eta -zeta )  ( j3 j2 j1 )   ( j5 j4 j3  )   (  j1 j6  j5 )   ( j5 j1 j3 )
-   #
 
 
 ====================================================#
