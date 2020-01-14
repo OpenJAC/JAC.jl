@@ -1187,7 +1187,7 @@
                                         RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testWeight)      &&  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.deltas)  &&  
                                         RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.triangles)   &&  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.w3js)    &&  
                                         RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.w6js)        &&  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], newW9js)
-                                        newSummations = RacahAlgebra.removeIndex([wwa.b, wwb.h, wwa.c], rex.summations)
+                                        newSummations = RacahAlgebra.removeIndex([wwa.f, wwa.h, wwa.i], rex.summations)
                                         newDeltas     = rex.deltas;         push!(newDeltas, Kronecker(wwb.h, wwc.h))
                                         newTriangles  = rex.triangles;      push!(newTriangles, Triangle(wwa.e, wwb.e, wwb.h))
                                         push!(newW9js,  W9j(wwa.a, wwa.b, wwa.c, wwa.d, wwb.d, wwb.g, wwa.g, wwc.g, wwb.h))
@@ -1277,6 +1277,415 @@
                                                 return( (true, wa) )
                                             end
                                         end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        return( (false, RacahExpression()) )
+    end
+
+
+    """
+    `RacahAlgebra.sumRulesForFourW6j(rex::RacahAlgebra.RacahExpression)`  
+        ... attempts to find a simplification of the given Racah expression by using sum rules for four Wigner 6j symbols. 
+            Once a simplification is found, no attempt is made to find another simplifcation for this set of rules.
+            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
+    """
+    function sumRulesForFourW6j(rex::RacahAlgebra.RacahExpression)
+        # Make sure that the sum rule could apply at all
+        if  length(rex.w6js) < 4     return( (false, RacahExpression()) )    end
+        
+        # Loop through all Wigner nj symbols
+        for  (idW6j, dW6j) in enumerate(rex.w6js)
+            dRexList = RacahAlgebra.symmetricForms(dW6j)
+            for  xdRex in dRexList
+                for  (icW6j, cW6j) in enumerate(rex.w6js)
+                    if  icW6j == idW6j    break    end
+                    cRexList = RacahAlgebra.symmetricForms(cW6j)
+                    for  xcRex in cRexList
+                        for  (ibW6j, bW6j) in enumerate(rex.w6js)
+                            if  ibW6j == icW6j   ||   ibW6j == idW6j    break    end
+                            bRexList = RacahAlgebra.symmetricForms(bW6j)
+                            for  xbRex in bRexList
+                                for  (iaW6j, aW6j) in enumerate(rex.w6js)
+                                    if  iaW6j == ibW6j    ||   iaW6j == icW6j    ||   iaW6j == idW6j      break    end
+                                    aRexList = RacahAlgebra.symmetricForms(aW6j)
+                                    for  xaRex in aRexList
+                                        wwa = xaRex.w6js[1];     wwb = xbRex.w6js[1];     wwc = xcRex.w6js[1];     wwd = xdRex.w6js[1]
+                                        #
+                                        #   Rule:                  R-X  ( a  b  X )   ( c  d  X )   ( e  f  X )   ( g  h  X )
+                                        #   ----    Sum(X) [X] (-1)    {(         )} {(         )} {(         )} {(         )}
+                                        #                               ( c  d  p )   ( e  f  q )   ( g  h  r )   ( b  a  s )
+                                        #
+                                        #
+                                        #                                                       2Y+a+b+e+f      ( s  h  b )   ( b  f  Y )   ( a  e  Y )
+                                        #                                         =  Sum(Y) (-1)           [Y] {( g  r  f )} {(         )} {(         )}
+                                        #                                                                       ( a  e  Y )   ( q  p  c )   ( q  p  d )
+                                        #
+                                        #           with  R = a+b+c+d+e+f+g+h+p+q+r+s
+                                        #
+                                        specialaW6j = W6j(wwa.a, wwa.b, wwa.c, wwa.d, wwa.e, wwa.f)
+                                        specialbW6j = W6j(wwa.d, wwa.e, wwa.c, wwb.d, wwb.e, wwb.f)
+                                        specialcW6j = W6j(wwb.d, wwb.e, wwa.c, wwc.d, wwc.e, wwc.f)
+                                        specialdW6j = W6j(wwc.d, wwc.e, wwa.c, wwa.b, wwa.a, wwd.f)
+                                        if  wwa == specialaW6j  &&  wwb == specialbW6j  &&  wwc == specialcW6j  &&  wwd == specialdW6j 
+                                            Y = Basic(:Y)
+                                            newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase
+                                            testPhase  = newPhase + wwa.c - wwa.d - wwa.e - wwc.d - wwc.e - wwa.f - wwb.f - wwc.f - wwd.f + 2*Y
+                                            newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
+                                            testWeight = newWeight / (2*wwa.c + 1) * (2*Y + 1)
+                                            newW6js    = W6j[];    newW9js    = W9j[];    
+                                            for (ieW6j, eW6j) in enumerate(rex.w6js)  
+                                                if  ieW6j != iaW6j &&  ieW6j != ibW6j &&  ieW6j != icW6j &&  ieW6j != idW6j   push!(newW6js, eW6j)   end   
+                                            end
+                                            #
+                                            if  RacahAlgebra.hasAllVars([wwa.c], rex.summations)   &&    RacahAlgebra.hasNoVars([wwa.c], testPhase)     &&  
+                                                RacahAlgebra.hasNoVars([wwa.c], testWeight)        &&    RacahAlgebra.hasNoVars([wwa.c], rex.deltas)    &&  
+                                                RacahAlgebra.hasNoVars([wwa.c], rex.triangles)     &&    RacahAlgebra.hasNoVars([wwa.c], rex.w3js)      &&  
+                                                RacahAlgebra.hasNoVars([wwa.c], newW6js)           &&    RacahAlgebra.hasNoVars([wwa.c], rex.w9js)
+                                                newSummations = RacahAlgebra.removeIndex([wwa.c], rex.summations)
+                                                push!(newSummations, Y)
+                                                push!(newW9js,  W9j(wwd.f, wwd.b, wwa.b, wwc.d, wwc.f, wwb.e, wwa.a, wwb.d, Y))
+                                                push!(newW6js,  W6j(wwa.b, wwb.e,     Y, wwb.f, wwa.f, wwa.d))
+                                                push!(newW6js,  W6j(wwa.a, wwb.d,     Y, wwb.f, wwa.f, wwb.b))
+                                                wa = RacahExpression( newSummations, testPhase, testWeight, rex.deltas, rex.triangles, rex.w3js, newW6js, newW9js )
+                                                println(">> Apply sum rule for four W6j -- Sum(X) [X]  (-1)^R-X ...")
+                                                return( (true, wa) )
+                                            end
+                                        end
+                                        #
+                                        #   Rule:                ( a  b  X )   ( c  d  X )   ( e  f  X )   ( g  h  X )                ( a  f  X )   ( a  f  X )
+                                        #   ----    Sum(X) [X]  {(         )} {(         )} {(         )} {(         )}   =  Sum(X)  {( d  q  e )} {( h  r  e )}
+                                        #                        ( c  d  p )   ( e  f  q )   ( g  h  r )   ( a  b  s )                ( p  c  b )   ( s  g  b )
+                                        #
+                                        specialaW6j = W6j(wwa.a, wwa.b, wwa.c, wwa.d, wwa.e, wwa.f)
+                                        specialbW6j = W6j(wwa.d, wwa.e, wwa.c, wwb.d, wwb.e, wwb.f)
+                                        specialcW6j = W6j(wwb.d, wwb.e, wwa.c, wwc.d, wwc.e, wwc.f)
+                                        specialdW6j = W6j(wwc.d, wwc.e, wwa.c, wwa.a, wwa.b, wwd.f)
+                                        if  wwa == specialaW6j  &&  wwb == specialbW6j  &&  wwc == specialcW6j  &&  wwd == specialdW6j 
+                                            X = Basic(:X)
+                                            newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase;     testPhase  = newPhase
+                                            newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    testWeight = newWeight / (2*wwa.c + 1)
+                                            newW6js    = W6j[];    newW9js    = W9j[];    
+                                            for (ieW6j, eW6j) in enumerate(rex.w6js)  
+                                                if  ieW6j != iaW6j &&  ieW6j != ibW6j &&  ieW6j != icW6j &&  ieW6j != idW6j   push!(newW6js, eW6j)   end   
+                                            end
+                                            #
+                                            if  RacahAlgebra.hasAllVars([wwa.c], rex.summations)   &&    RacahAlgebra.hasNoVars([wwa.c], testPhase)     &&  
+                                                RacahAlgebra.hasNoVars([wwa.c], testWeight)        &&    RacahAlgebra.hasNoVars([wwa.c], rex.deltas)    &&  
+                                                RacahAlgebra.hasNoVars([wwa.c], rex.triangles)     &&    RacahAlgebra.hasNoVars([wwa.c], rex.w3js)      &&  
+                                                RacahAlgebra.hasNoVars([wwa.c], newW6js)           &&    RacahAlgebra.hasNoVars([wwa.c], rex.w9js)
+                                                newSummations = RacahAlgebra.removeIndex([wwa.c], rex.summations)
+                                                push!(newSummations, X)
+                                                push!(newW9js,  W9j(wwa.a, wwb.e,     X, wwa.e, wwb.f, wwb.d, wwa.f, wwa.d, wwa.b))
+                                                push!(newW9js,  W9j(wwa.a, wwb.e,     X, wwc.e, wwc.f, wwb.d, wwd.f, wwc.d, wwa.b))
+                                                wa = RacahExpression( newSummations, testPhase, testWeight, rex.deltas, rex.triangles, rex.w3js, newW6js, newW9js )
+                                                println(">> Apply sum rule for four W6j -- Sum(X) [X]  (-1)^R-X ...")
+                                                return( (true, wa) )
+                                            end
+                                        end
+                                        #
+                                        #   Rule:                   X+Y+Z           ( a  b  c )   ( a  e  f )   ( c  f  d )   ( b  e  d )         R       ( a  b  c )
+                                        #   ----    Sum(X,Y,Z)  (-1)      [X,Y,Z]  {(         )} {(         )} {(         )} {(         )} =  (-1)  [p]  {(         )}
+                                        #                                           ( Z  X  Y )   ( p  X  Y )   ( p  Z  X )   ( p  Z  Y )                 ( d  f  e )
+                                        #
+                                        #           with  R = -a-b-c-d-e-f-p
+                                        #
+                                        specialaW6j = W6j(wwa.a, wwa.b, wwa.c, wwa.d, wwa.e, wwa.f)
+                                        specialbW6j = W6j(wwa.a, wwb.b, wwb.c, wwb.d, wwa.e, wwa.f)
+                                        specialcW6j = W6j(wwa.c, wwb.c, wwc.c, wwb.d, wwa.d, wwa.e)
+                                        specialdW6j = W6j(wwa.b, wwb.b, wwc.c, wwb.d, wwa.d, wwa.f)
+                                        if  wwa == specialaW6j  &&  wwb == specialbW6j  &&  wwc == specialcW6j  &&  wwd == specialdW6j 
+                                            newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase;     
+                                            testPhase  = newPhase - wwa.e - wwa.f - wwa.d - wwa.a - wwa.b - wwa.c - wwc.c - wwb.b - wwb.c - wwb.d
+                                            newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
+                                            testWeight = newWeight / ((2*wwa.e + 1)*(2*wwa.f + 1)*(2*wwa.d + 1)) * (2*wwb.d + 1)
+                                            newW6js    = W6j[]  
+                                            for (ieW6j, eW6j) in enumerate(rex.w6js)  
+                                                if  ieW6j != iaW6j &&  ieW6j != ibW6j &&  ieW6j != icW6j &&  ieW6j != idW6j   push!(newW6js, eW6j)   end   
+                                            end
+                                            #
+                                            if  RacahAlgebra.hasAllVars([wwa.e, wwa.f, wwa.d], rex.summations)   &&    
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f, wwa.d], testPhase)         &&  
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f, wwa.d], testWeight)        &&    
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f, wwa.d], rex.deltas)        &&  
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f, wwa.d], rex.triangles)     &&    
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f, wwa.d], rex.w3js)          &&  
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f, wwa.d], newW6js)           &&    
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f, wwa.d], rex.w9js)
+                                                newSummations = RacahAlgebra.removeIndex([wwa.e, wwa.f, wwa.d], rex.summations)
+                                                push!(newW6js,  W6j(wwa.a, wwa.b, wwa.c, wwc.c, wwc.b, wwb.b))
+                                                wa = RacahExpression( newSummations, testPhase, testWeight, rex.deltas, rex.triangles, rex.w3js, newW6js, rex.w9js )
+                                                println(">> Apply sum rule for four W6j -- Sum(X,Y,Z) [X,Y,Z]  (-1)^X+Y+Z ...")
+                                                return( (true, wa) )
+                                            end
+                                        end
+                                        #
+                                        #   Rule:                    ( a  b  c )   ( a  e  f )   ( c  g  p )   ( b  g  q )        2(c+e)  ( a  b  c )   ( a  e  f )
+                                        #   ----    Sum(X,Y) [X,Y]  {(         )} {(         )} {(         )} {(         )} = (-1)       {(         )} {(         )}
+                                        #                            ( d  X  Y )   ( g  X  Y )   ( f  d  X )   ( e  d  Y )                ( g  p  q )   ( d  p  q )
+                                        #
+                                        specialaW6j = W6j(wwa.a, wwa.b, wwa.c, wwa.d, wwa.e, wwa.f)
+                                        specialbW6j = W6j(wwa.a, wwb.b, wwb.c, wwb.d, wwa.e, wwa.f)
+                                        specialcW6j = W6j(wwa.c, wwb.d, wwc.c, wwb.c, wwa.d, wwa.e)
+                                        specialdW6j = W6j(wwa.b, wwb.d, wwd.c, wwb.b, wwa.d, wwa.f)
+                                        if  wwa == specialaW6j  &&  wwb == specialbW6j  &&  wwc == specialcW6j  &&  wwd == specialdW6j 
+                                            newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase;     
+                                            testPhase  = newPhase + 2*wwa.c + 2*wwb.b
+                                            newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
+                                            testWeight = newWeight / ((2*wwa.e + 1)*(2*wwa.f + 1))
+                                            newW6js    = W6j[];    
+                                            for (ieW6j, eW6j) in enumerate(rex.w6js)  
+                                                if  ieW6j != iaW6j &&  ieW6j != ibW6j &&  ieW6j != icW6j &&  ieW6j != idW6j   push!(newW6js, eW6j)   end   
+                                            end
+                                            #
+                                            if  RacahAlgebra.hasAllVars([wwa.e, wwa.f], rex.summations)   &&    RacahAlgebra.hasNoVars([wwa.e, wwa.f], testPhase)     &&  
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f], testWeight)        &&    RacahAlgebra.hasNoVars([wwa.e, wwa.f], rex.deltas)    &&  
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f], rex.triangles)     &&    RacahAlgebra.hasNoVars([wwa.e, wwa.f], rex.w3js)      &&  
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f], newW6js)           &&    RacahAlgebra.hasNoVars([wwa.e, wwa.f], rex.w9js)
+                                                newSummations = RacahAlgebra.removeIndex([wwa.e, wwa.f], rex.summations)
+                                                push!(newW6js,  W6j(wwa.a, wwa.b, wwa.c, wwb.d, wwc.c, wwd.c))
+                                                push!(newW6js,  W6j(wwa.a, wwb.b, wwb.c, wwa.d, wwc.c, wwd.c))
+                                                wa = RacahExpression( newSummations, testPhase, testWeight, rex.deltas, rex.triangles, rex.w3js, newW6js, rex.w9js )
+                                                println(">> Apply sum rule for four W6j -- Sum(X,Y) [X,Y] ...")
+                                                return( (true, wa) )
+                                            end
+                                        end
+                                        #   Rule:                 X+Y         ( a  b  c )   ( a  e  f )   ( c  f  p )   ( b  e  q )
+                                        #   ----    Sum(X,Y)  (-1)    [X,Y]  {(         )} {(         )} {(         )} {(         )}
+                                        #                                     ( d  X  Y )   ( g  X  Y )   ( g  d  X )   ( g  d  Y )
+                                        #
+                                        #                                                                     -a+b+c-d+e+f-g-p  d(p,q)             ( a  b  c )
+                                        #                                                              =  (-1)                  ------  d(d,g,p)  {(         )}
+                                        #                                                                                       2p + 1             ( p  f  e )
+                                        #
+                                        specialaW6j = W6j(wwa.a, wwa.b, wwa.c, wwa.d, wwa.e, wwa.f)
+                                        specialbW6j = W6j(wwa.a, wwb.b, wwb.c, wwb.d, wwa.e, wwa.f)
+                                        specialcW6j = W6j(wwa.c, wwb.c, wwc.c, wwb.d, wwa.d, wwa.e)
+                                        specialdW6j = W6j(wwa.b, wwb.b, wwd.c, wwc.d, wwa.d, wwa.f)
+                                        if  wwa == specialaW6j  &&  wwb == specialbW6j  &&  wwc == specialcW6j  &&  wwd == specialdW6j 
+                                            newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase;     
+                                            testPhase  = newPhase - wwa.e - wwa.f  - wwa.a + wwa.b + wwa.c - wwa.d + wwb.b + wwb.c - wwb.d - wwc.c
+                                            newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
+                                            testWeight = newWeight / ((2*wwa.e + 1)*(2*wwa.f + 1)) / (2*wwc.c + 1)
+                                            newW6js    = W6j[];    
+                                            for (ieW6j, eW6j) in enumerate(rex.w6js)  
+                                                if  ieW6j != iaW6j &&  ieW6j != ibW6j &&  ieW6j != icW6j &&  ieW6j != idW6j   push!(newW6js, eW6j)   end   
+                                            end
+                                            #
+                                            if  RacahAlgebra.hasAllVars([wwa.e, wwa.f], rex.summations)   &&    RacahAlgebra.hasNoVars([wwa.e, wwa.f], testPhase)     &&  
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f], testWeight)        &&    RacahAlgebra.hasNoVars([wwa.e, wwa.f], rex.deltas)    &&  
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f], rex.triangles)     &&    RacahAlgebra.hasNoVars([wwa.e, wwa.f], rex.w3js)      &&  
+                                                RacahAlgebra.hasNoVars([wwa.e, wwa.f], newW6js)           &&    RacahAlgebra.hasNoVars([wwa.e, wwa.f], rex.w9js)
+                                                newSummations = RacahAlgebra.removeIndex([wwa.e, wwa.f], rex.summations)
+                                                newDeltas    = rex.deltas;       push!(newDeltas, Kronecker(wwc.c, wwd.c))
+                                                newTriangles = rex.triangles;    push!(newTriangles, Triangle(wwa.d, wwb.d, wwc.c))
+                                                push!(newW6js,  W6j(wwa.a, wwa.b, wwa.c, wwc.c, wwb.c, wwb.b))
+                                                wa = RacahExpression( newSummations, testPhase, testWeight, rex.deltas, rex.triangles, rex.w3js, newW6js, rex.w9js )
+                                                println(">> Apply sum rule for four W6j -- Sum(X,Y) [X,Y]  (-1)^X+Y ...")
+                                                return( (true, wa) )
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        return( (false, RacahExpression()) )
+    end
+
+
+    """
+    `RacahAlgebra.sumRulesForThreeW6jOneW9j(rex::RacahAlgebra.RacahExpression)`  
+        ... attempts to find a simplification of the given Racah expression by using sum rules for four Wigner 3j symbols. 
+            Once a simplification is found, no attempt is made to find another simplifcation for this set of rules.
+            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
+    """
+    function sumRulesForThreeW6jOneW9j(rex::RacahAlgebra.RacahExpression)
+        @info "sumRulesForThreeW6jOneW9j: Not yet implemented."
+        # Make sure that the sum rule could apply at all
+        if  length(rex.summations) < 4  ||  length(rex.w6js) < 3     return( (false, RacahExpression()) )    end
+        
+        # Loop through all Wigner nj symbols
+        for  (idW3j, dW3j) in enumerate(rex.w3js)
+            dRexList = RacahAlgebra.symmetricForms(dW3j)
+            for  xdRex in dRexList
+                for  (icW3j, cW3j) in enumerate(rex.w3js)
+                    if  icW3j == idW3j    break    end
+                    cRexList = RacahAlgebra.symmetricForms(cW3j)
+                    for  xcRex in cRexList
+                        for  (ibW3j, bW3j) in enumerate(rex.w3js)
+                            if  ibW3j == icW3j   ||   ibW3j == idW3j    break    end
+                            bRexList = RacahAlgebra.symmetricForms(bW3j)
+                            for  xbRex in bRexList
+                                for  (iaW3j, aW3j) in enumerate(rex.w3js)
+                                    if  iaW3j == ibW3j    ||   iaW3j == icW3j    ||   iaW3j == idW3j      break    end
+                                    aRexList = RacahAlgebra.symmetricForms(aW3j)
+                                    for  xaRex in aRexList
+                                        wwa = xaRex.w3js[1];     wwb = xbRex.w3js[1];     wwc = xcRex.w3js[1];     wwd = xdRex.w3js[1]
+        
+                                        #
+                                        #   Rule:                         ( X  Y  Z )   ( X  Y  Z )   ( X  a  d )   ( Y  b  e )
+                                        #   ----    Sum(X,Y,Z)  [X,Y,Z]  {( d  e  f )} {(         )} {(         )} {(         )}
+                                        #                                 ( a  b  c )   ( f  c  g )   ( b' g  c )   ( d' f  g )
+                                        #
+                                        #                                                         2b+2d    d(b,b') d(d,d')
+                                        #                                                  =  (-1)        -----------------   d(a,b,c) d(d,e,f) d(b,d,g)
+                                        #                                                                 (2b + 1) (2d + 1)
+                                        #
+
+                                        #
+                                        #   Rule:                   2Z            ( a  b  X )   ( e  f  g )   ( a  b  X )   ( c  d  Y )
+                                        #   ----    Sum(X,Y,Z)  (-1)    [X,Y,Z]  {( c  d  Y )} {(         )} {(         )} {(         )}
+                                        #                                         ( e' f' g )   ( X  Y  Z )   ( f  Z  d )   ( Z  e  a )
+                                        #
+                                        #                                                        d(e,e') d(f,f')
+                                        #                                                  =    -----------------   d(a,c,e) d(b,d,f) d(e,g,f)
+                                        #                                                       (2e + 1) (2f + 1)
+                                        #
+                                                         
+                                        #
+                                        #   Rule:                Y        ( a  b  X )   ( X  Y  r )   ( a  b  X )   ( c  d  Y )
+                                        #   ----    Sum(X,Y) (-1)  [X,Y] {( c  d  Y )} {(         )} {(         )} {(         )}
+                                        #                                 ( p  q  r )   ( j  h  g )   ( h  g  e )   ( j  g  f )
+                                        #
+                                        #                                                         a-b+d+e-j-p+r  ( e  b  h )   ( a  c  p )
+                                        #                                                  =  (-1)              {( f  d  j )} {(         )}
+                                        #                                                                        ( p  q  r )   ( f  e  g )
+                                        #
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        return( (false, RacahExpression()) )
+    end
+
+
+    """
+    `RacahAlgebra.sumRulesForTwoW6jTwoW9j(rex::RacahAlgebra.RacahExpression)`  
+        ... attempts to find a simplification of the given Racah expression by using sum rules for four Wigner 3j symbols. 
+            Once a simplification is found, no attempt is made to find another simplifcation for this set of rules.
+            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
+    """
+    function sumRulesForTwoW6jTwoW9j(rex::RacahAlgebra.RacahExpression)
+        @info "sumRulesForTwoW6jTwoW9j: Not yet implemented."
+        # Make sure that the sum rule could apply at all
+        if  length(rex.summations) < 4  ||  length(rex.w6js) < 3     return( (false, RacahExpression()) )    end
+        
+        # Loop through all Wigner nj symbols
+        for  (idW3j, dW3j) in enumerate(rex.w3js)
+            dRexList = RacahAlgebra.symmetricForms(dW3j)
+            for  xdRex in dRexList
+                for  (icW3j, cW3j) in enumerate(rex.w3js)
+                    if  icW3j == idW3j    break    end
+                    cRexList = RacahAlgebra.symmetricForms(cW3j)
+                    for  xcRex in cRexList
+                        for  (ibW3j, bW3j) in enumerate(rex.w3js)
+                            if  ibW3j == icW3j   ||   ibW3j == idW3j    break    end
+                            bRexList = RacahAlgebra.symmetricForms(bW3j)
+                            for  xbRex in bRexList
+                                for  (iaW3j, aW3j) in enumerate(rex.w3js)
+                                    if  iaW3j == ibW3j    ||   iaW3j == icW3j    ||   iaW3j == idW3j      break    end
+                                    aRexList = RacahAlgebra.symmetricForms(aW3j)
+                                    for  xaRex in aRexList
+                                        wwa = xaRex.w3js[1];     wwb = xbRex.w3js[1];     wwc = xcRex.w3js[1];     wwd = xdRex.w3js[1]
+                                        #
+                                        #   Rule:                  Z          ( a  d  X )   ( l  a  Z )   ( a  d  X )   ( X  Y  g )
+                                        #   ----    Sum(X,Y,Z) (-1)  [X,Y,Z] {( b  e  Y )} {( e  b  Y )} {(         )} {(         )}
+                                        #                                     ( c' f  g )   ( j  c  h )   ( k  Z  l )   ( h  k  Z )
+                                        #
+                                        #                                                       2c+b-d+g+j  d(c,c')              ( k  j  f )   ( k  j  f )
+                                        #                                                 = (-1)            -------  d(a,b,c)   {(         )} {(         )}
+                                        #                                                                     [c]                ( c  g  h )   ( e  d  l )
+                                        #
+
+                                        #
+                                        #   Rule:                  2Y-Z          ( a  b  X )   ( g  h  X )   ( a  b  X )   ( c  d  Y )
+                                        #   ----    Sum(X,Y,Z) (-1)     [X,Y,Z] {( c  d  Y )} {( k  l  Y )} {(         )} {(         )}
+                                        #                                        ( e  f  Z )   ( f  e  Z )   ( g  h  j )   ( k  l  j')
+                                        #
+                                        #                                                            -b+c-h+k  d(j,j')   ( a  c  e )   ( b  d  f )
+                                        #                                                      = (-1)          -------  {(         )} {(         )}
+                                        #                                                                        [j]     ( l  h  j )   ( k  g  j )
+                                        #
+
+                                        #
+                                        #   Rule:                  Y          ( a  b  X )   ( b  d  f')   ( a  b  X )   ( d  h  Y )
+                                        #   ----    Sum(X,Y,Z) (-1)  [X,Y,Z] {( g  c  q )} {( c  h  j )} {(         )} {(         )}
+                                        #                                     ( p  Z  Y )   ( Z  Y  p )   ( d  e  f )   ( q  X  e )
+                                        #
+                                        #                                                  2j+a+b+c+f+h+p-q  d(f,f')            ( e  g  j )   ( e  g  j )
+                                        #                                            = (-1)                 -------  d(b,d,f)  {(         )} {(         )}
+                                        #                                                                      [f]              ( p  f  a )   ( c  h  q )
+
+                                        #
+                                        #   Rule:                X+Y        ( a  b  X )   ( e  f  X )   ( a  b  X )   ( c  d  Y )
+                                        #   ----    Sum(X,Y) (-1)    [X,Y] {( c  d  Y )} {( g  h  Y )} {(         )} {(         )}
+                                        #                                   ( p  q  s )   ( r  t  s )   ( f  e  k )   ( h  g  l )
+                                        #
+                                        #                                               k+l+a+c+p-s-h-t+Z       ( c  g  l )   ( f  b  k )   ( p  r  Z )
+                                        #                                 =  Sum(Z) (-1)                   [Z] {( a  e  k )} {( h  d  l )} {(         )}
+                                        #                                                                       ( p  r  Z )   ( t  q  Z )   ( t  q  s )
+                                        #
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        return( (false, RacahExpression()) )
+    end
+
+
+    """
+    `RacahAlgebra.sumRulesForOneW6jThreeW9j(rex::RacahAlgebra.RacahExpression)`  
+        ... attempts to find a simplification of the given Racah expression by using sum rules for four Wigner 3j symbols. 
+            Once a simplification is found, no attempt is made to find another simplifcation for this set of rules.
+            A (istrue, rex)::Tuple{Bool, RacahExpression} is returned but where rex has no meaning for !istrue.
+    """
+    function sumRulesForOneW6jThreeW9j(rex::RacahAlgebra.RacahExpression)
+        # Make sure that the sum rule could apply at all
+        @info "sumRulesForOneW6jThreeW9j: Not yet implemented."
+        if  length(rex.summations) < 4  ||  length(rex.w6js) < 3     return( (false, RacahExpression()) )    end
+        
+        # Loop through all Wigner nj symbols
+        for  (idW3j, dW3j) in enumerate(rex.w3js)
+            dRexList = RacahAlgebra.symmetricForms(dW3j)
+            for  xdRex in dRexList
+                for  (icW3j, cW3j) in enumerate(rex.w3js)
+                    if  icW3j == idW3j    break    end
+                    cRexList = RacahAlgebra.symmetricForms(cW3j)
+                    for  xcRex in cRexList
+                        for  (ibW3j, bW3j) in enumerate(rex.w3js)
+                            if  ibW3j == icW3j   ||   ibW3j == idW3j    break    end
+                            bRexList = RacahAlgebra.symmetricForms(bW3j)
+                            for  xbRex in bRexList
+                                for  (iaW3j, aW3j) in enumerate(rex.w3js)
+                                    if  iaW3j == ibW3j    ||   iaW3j == icW3j    ||   iaW3j == idW3j      break    end
+                                    aRexList = RacahAlgebra.symmetricForms(aW3j)
+                                    for  xaRex in aRexList
+                                        wwa = xaRex.w3js[1];     wwb = xbRex.w3js[1];     wwc = xcRex.w3js[1];     wwd = xdRex.w3js[1]
+                        #
+                        #   Rule:                         ( a  b  X )   ( a  b  X )   ( k  l  p )   ( p  q  r )        ( k  l  p )   ( k  h  t )   ( l  j  s )
+                        #   ----    Sum(X,Y,Z)  [X,Y,Z]  {( c  d  Y )} {( h  j  q )} {( c  d  Y )} {(         )}  =   {( h  j  q )} {(         )} {(         )}
+                        #                                 ( t  s  r )   ( e  f  Z )   ( e  f  Z )   ( X  Y  Z )        ( t  s  r )   ( a  c  e )   ( b  d  f )
                                     end
                                 end
                             end
@@ -1546,261 +1955,5 @@ Racah_usesumrulesfortwoYlm := proc(Rexpr::Racahexpr)
                   #            =     --------------------  sin(theta)^2
                   #                          8 Pi
                   #
-
-
-                                             
-   
-Racah_usesumrulesforfourw6j := proc(Rexpr::Racahexpr)
-   
-                                                         #
-                                                         # Rule :
-                                                         #
-                                                         #                 R-X  ( a  b  X )   ( c  d  X )
-                                                         #  Sum(X) [X] (-1)    {(         )} {(         )}
-                                                         #                      ( c  d  p )   ( e  f  q )
-                                                         #
-                                                         #                      ( e  f  X )   ( g  h  X )
-                                                         #                   x {(         )} {(         )}
-                                                         #                      ( g  h  r )   ( b  a  s )
-                                                         #
-                                                         #                    2Y+a+b+e+f      ( s  h  b )
-                                                         #      =  Sum(Y) (-1)           [Y] {( g  r  f )}
-                                                         #                                    ( a  e  Y )
-                                                         #
-                                                         #                      ( b  f  Y )   ( a  e  Y )
-                                                         #                   x {(         )} {(         )}
-                                                         #                      ( q  p  c )   ( q  p  d )
-                                                         #
-                                                         #   where  R = a+b+c+d+e+f+g+h+p+q+r+s
-                                                         #
-
-                                                         
-                                                         #
-                                                         # Rule :
-                                                         #
-                                                         #               ( a  b  X )   ( c  d  X )
-                                                         #  Sum(X) [X]  {(         )} {(         )}
-                                                         #               ( c  d  p )   ( e  f  q )
-                                                         #
-                                                         #               ( e  f  X )   ( g  h  X )
-                                                         #            x {(         )} {(         )}
-                                                         #               ( g  h  r )   ( a  b  s )
-                                                         #
-                                                         #                        ( a  f  X )   ( a  f  X )
-                                                         #            =  Sum(X)  {( d  q  e )} {( h  r  e )}
-                                                         #                        ( p  c  b )   ( s  g  b )
-                                                         #
-
-                                                         
-                                                                              #
-                                                                              # Rule :
-                                                                              #
-                                                                              #                  X+Y+Z             ( a  b  c )   ( a  e  f )
-                                                                              #  Sum(X,Y,Z)  (-1)        [X,Y,Z]  {(         )} {(         )}
-                                                                              #                                    ( Z  X  Y )   ( p  X  Y )
-                                                                              #
-                                                                              #                                    ( c  f  d )   ( b  e  d )
-                                                                              #                                 x {(         )} {(         )}
-                                                                              #                                    ( p  Z  X )   ( p  Z  Y )
-                                                                              #
-                                                                              #
-                                                                              #               -a-b-c-d-e-f-p       ( a  b  c )
-                                                                              #        =  (-1)               [p]  {(         )}
-                                                                              #                                    ( d  f  e )
-                                                                              #
-
-                                                                              
-                                                                  #
-                                                                  # Rule :
-                                                                  #
-                                                                  #                   ( a  b  c )   ( a  e  f )
-                                                                  #  Sum(X,Y) [X,Y]  {(         )} {(         )}
-                                                                  #                   ( d  X  Y )   ( g  X  Y )
-                                                                  #
-                                                                  #                   ( c  g  p )   ( b  g  q )
-                                                                  #                x {(         )} {(         )}
-                                                                  #                   ( f  d  X )   ( e  d  Y )
-                                                                  #
-                                                                  #           2(c+e)  ( a  b  c )   ( a  e  f )
-                                                                  #     = (-1)       {(         )} {(         )}
-                                                                  #                   ( g  p  q )   ( d  p  q )
-                                                                  #
-
-                                                                  
-                                                                  #
-                                                                  # Rule :
-                                                                  #
-                                                                  #                X+Y         ( a  b  c )   ( a  e  f )
-                                                                  #  Sum(X,Y)  (-1)    [X,Y]  {(         )} {(         )}
-                                                                  #                            ( d  X  Y )   ( g  X  Y )
-                                                                  #
-                                                                  #                            ( c  f  p )   ( b  e  q )
-                                                                  #                         x {(         )} {(         )}
-                                                                  #                            ( g  d  X )   ( g  d  Y )
-                                                                  #
-                                                                  #                   -a+b+c-d+e+f-g-p  d(p,q)             ( a  b  c )
-                                                                  #            =  (-1)                  ------  d(d,g,p)  {(         )}
-                                                                  #                                     2p + 1             ( p  f  e )
-                                                                  #
-
-                                                                  
-Racah_usesumrulesforthreew6jonew9j := proc(Rexpr::Racahexpr)
-        
-                                                         #
-                                                         # Rule :
-                                                         #
-                                                         #                        ( X  Y  Z )   ( X  Y  Z )
-                                                         #  Sum(X,Y,Z)  [X,Y,Z]  {( d  e  f )} {(         )}
-                                                         #                        ( a  b  c )   ( f  c  g )
-                                                         #
-                                                         #                        ( X  a  d )   ( Y  b  e )
-                                                         #                     x {(         )} {(         )}
-                                                         #                        ( b' g  c )   ( d' f  g )
-                                                         #
-                                                         #         2b+2d    d(b,b') d(d,d')
-                                                         #  =  (-1)        -----------------   d(a,b,c) d(d,e,f) d(b,d,g)
-                                                         #                 (2b + 1) (2d + 1)
-                                                         #
-
-                                                         
-                                                         #
-                                                         # Rule :
-                                                         #
-                                                         #                  2Z            ( a  b  X )   ( e  f  g )
-                                                         #  Sum(X,Y,Z)  (-1)    [X,Y,Z]  {( c  d  Y )} {(         )}
-                                                         #                                ( e' f' g )   ( X  Y  Z )
-                                                         #
-                                                         #                        ( a  b  X )   ( c  d  Y )
-                                                         #                     x {(         )} {(         )}
-                                                         #                        ( f  Z  d )   ( Z  e  a )
-                                                         #
-                                                         #        d(e,e') d(f,f')
-                                                         #  =    -----------------   d(a,c,e) d(b,d,f) d(e,g,f)
-                                                         #       (2e + 1) (2f + 1)
-                                                         #
-                                                         
-        
-                                                         #
-                                                         # Rule :
-                                                         #
-                                                         #               Y        ( a  b  X )   ( X  Y  r )
-                                                         #  Sum(X,Y) (-1)  [X,Y] {( c  d  Y )} {(         )}
-                                                         #                        ( p  q  r )   ( j  h  g )
-                                                         #
-                                                         #                        ( a  b  X )   ( c  d  Y )
-                                                         #                     x {(         )} {(         )}
-                                                         #                        ( h  g  e )   ( j  g  f )
-                                                         #
-                                                         #         a-b+d+e-j-p+r  ( e  b  h )   ( a  c  p )
-                                                         #  =  (-1)              {( f  d  j )} {(         )}
-                                                         #                        ( p  q  r )   ( f  e  g )
-                                                         #
-
-                                                         
-Racah_usesumrulesfortwow6jtwow9j := proc(Rexpr::Racahexpr)
-
-                                                      #
-                                                      # Rule :
-                                                      #
-                                                      #                 Z          ( a  d  X )   ( l  a  Z )
-                                                      #  Sum(X,Y,Z) (-1)  [X,Y,Z] {( b  e  Y )} {( e  b  Y )}
-                                                      #                            ( c' f  g )   ( j  c  h )
-                                                      #
-                                                      #                            ( a  d  X )   ( X  Y  g )
-                                                      #                         x {(         )} {(         )}
-                                                      #                            ( k  Z  l )   ( h  k  Z )
-                                                      #
-                                                      #                        2c+b-d+g+j  d(c,c')
-                                                      #                  = (-1)            -------  d(a,b,c)
-                                                      #                                      [c]
-                                                      #
-                                                      #                            ( k  j  f )   ( k  j  f )
-                                                      #                         x {(         )} {(         )}
-                                                      #                            ( c  g  h )   ( e  d  l )
-                                                      #
-
-                                                      
-                                                      #
-                                                      # Rule :
-                                                      #
-                                                      #                 2Y-Z          ( a  b  X )   ( g  h  X )
-                                                      #  Sum(X,Y,Z) (-1)     [X,Y,Z] {( c  d  Y )} {( k  l  Y )}
-                                                      #                               ( e  f  Z )   ( f  e  Z )
-                                                      #
-                                                      #                               ( a  b  X )   ( c  d  Y )
-                                                      #                            x {(         )} {(         )}
-                                                      #                               ( g  h  j )   ( k  l  j')
-                                                      #
-                                                      #           -b+c-h+k  d(j,j')   ( a  c  e )   ( b  d  f )
-                                                      #     = (-1)          -------  {(         )} {(         )}
-                                                      #                       [j]     ( l  h  j )   ( k  g  j )
-                                                      #
-                                                      
-
-                                                      #
-                                                      # Rule :
-                                                      #
-                                                      #                 Y          ( a  b  X )   ( b  d  f')
-                                                      #  Sum(X,Y,Z) (-1)  [X,Y,Z] {( g  c  q )} {( c  h  j )}
-                                                      #                            ( p  Z  Y )   ( Z  Y  p )
-                                                      #
-                                                      #                            ( a  b  X )   ( d  h  Y )
-                                                      #                         x {(         )} {(         )}
-                                                      #                            ( d  e  f )   ( q  X  e )
-                                                      #
-                                                      #                   2j+a+b+c+f+h+p-q  d(f,f')
-                                                      #             = (-1)                 -------  d(b,d,f)
-                                                      #                                       [f]
-                                                      #
-                                                      #                            ( e  g  j )   ( e  g  j )
-                                                      #                         x {(         )} {(         )}
-                                                      #                            ( p  f  a )   ( c  h  q )
-                                                      #
-                                                      
-                                                         #
-                                                         # Rule :
-                                                         #
-                                                         #               X+Y        ( a  b  X )   ( e  f  X )
-                                                         #  Sum(X,Y) (-1)    [X,Y] {( c  d  Y )} {( g  h  Y )}
-                                                         #                          ( p  q  s )   ( r  t  s )
-                                                         #
-                                                         #                          ( a  b  X )   ( c  d  Y )
-                                                         #                       x {(         )} {(         )}
-                                                         #                          ( f  e  k )   ( h  g  l )
-                                                         #
-                                                         #                k+l+a+c+p-s-h-t+Z       ( c  g  l )
-                                                         #  =  Sum(Z) (-1)                   [Z] {( a  e  k )}
-                                                         #                                        ( p  r  Z )
-                                                         #
-                                                         #                          ( f  b  k )   ( p  r  Z )
-                                                         #                       x {( h  d  l )} {(         )}
-                                                         #                          ( t  q  Z )   ( t  q  s )
-                                                         #
-
-                                                         
-Racah_usesumrulesforonew6jthreew9j := proc(Rexpr::Racahexpr)
-
-                                                            #
-                                                            # Rule :
-                                                            #
-                                                            #                        ( a  b  X )   ( a  b  X )
-                                                            #  Sum(X,Y,Z)  [X,Y,Z]  {( c  d  Y )} {( h  j  q )}
-                                                            #                        ( t  s  r )   ( e  f  Z )
-                                                            #
-                                                            #                        ( k  l  p )   ( p  q  r )
-                                                            #                     x {( c  d  Y )} {(         )}
-                                                            #                        ( e  f  Z )   ( X  Y  Z )
-                                                            #
-                                                            #          ( k  l  p )   ( k  h  t )   ( l  j  s )
-                                                            #     =   {( h  j  q )} {(         )} {(         )}
-                                                            #          ( t  s  r )   ( a  c  e )   ( b  d  f )
-                                                            #
-
-                                                            
-Racah_usesumrulesforfivew3jloop := proc(Rexpr::Racahexpr,w3jpos::list)
-
-                                                            
-Racah_usesumrulesforsixw3jloop := proc(Rexpr::Racahexpr,w3jpos::list)
-
 
 ====================================================#

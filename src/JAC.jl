@@ -194,7 +194,8 @@ function __init__()
     global JAC_TEST_IOSTREAM    = stdout
 end
 
-println("\nWelcome to JAC:  A community approach to the computation of atomic structures, cascades and time evolutions [(C) Copyright by Stephan Fritzsche, Jena (2019)].")
+println("\nWelcome to JAC:  A community approach to the computation of atomic structures, cascades and time evolutions " * 
+        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2020)].")
 
 end
 

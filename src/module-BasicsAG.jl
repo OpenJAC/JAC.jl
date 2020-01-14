@@ -376,10 +376,10 @@ module BasicsAG
         println(stream, "  Relativistic orbitals:")
         println(stream, " ")
         if  longTable
-            println(stream, "  ", TableStrings.hLine(92))
+            println(stream, "  ", TableStrings.hLine(108))
             println(stream, "   Subshell   isBound   energy [a.u.]     energy " * TableStrings.inUnits("energy") * 
-                            "   st-grid    r_max [a.u.]   <r> [a.u.]  ")
-            println(stream, "  ", TableStrings.hLine(92))
+                            "   st-grid   r_max [a.u.]    <r> [a.u.]    <r^2> [a.u.]  ")
+            println(stream, "  ", TableStrings.hLine(108))
             #
             for  sh  in Defaults.GBL_STANDARD_SUBSHELL_LIST
                 if haskey(orbitals, sh)
@@ -388,17 +388,20 @@ module BasicsAG
                     sen    = @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", v.energy))
                     if !v.useStandardGrid   error("Non-standard grids not yet implemented.")    end
                     p2 = Float64[];    for  p in v.P    push!(p2, p*p)   end
-                    imax   = findmax(p2)
+                    imax    = findmax(p2)
                     ##x println("length-p2 = $(length(p2)) imax =  $imax ")
-                    rmax   = grid.r[imax[2]]
-                    rmean  = RadialIntegrals.rkDiagonal(1, v, v, grid)
-                    srmax  = @sprintf("%.5e", rmax)
-                    srmean = @sprintf("%.5e", rmean)
-                    sa     = "     $sh    $(v.isBound)   " * sen_au * "   " * sen * "   $(v.useStandardGrid)     " * srmax * "    " * srmean
+                    rmax    = grid.r[imax[2]]
+                    rmean   = RadialIntegrals.rkDiagonal(1, v, v, grid)
+                    r2mean  = RadialIntegrals.rkDiagonal(2, v, v, grid)
+                    srmax   = @sprintf("%.5e", rmax)
+                    srmean  = @sprintf("%.5e", rmean)
+                    sr2mean = @sprintf("%.5e", r2mean)
+                    sa      = "     $sh    $(v.isBound)   " * sen_au * "   " * sen * "   $(v.useStandardGrid)     " 
+                    sa      = sa * srmax * "    " * srmean * "    " * sr2mean
                     println(sa)
                 end
             end 
-            println("  ", TableStrings.hLine(92))
+            println("  ", TableStrings.hLine(108))
         else
             println(stream, "  ", TableStrings.hLine(62))
             println(stream, "   Subshell   isBound   energy [a.u.]     energy " * TableStrings.inUnits("energy") * "   st-grid ")
