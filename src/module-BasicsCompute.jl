@@ -119,7 +119,7 @@ module BascisCompute
                     me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
                     if  settings.qedModel != NoneQed()  
                         me = me + JAC.InteractionStrengthQED.qedLocal(basis.orbitals[coeff.a], basis.orbitals[coeff.b], nuclearModel, settings.qedModel, 
-                                                                    meanPot, grid)  
+                                                                      meanPot, grid)  
                     end
                 end
 

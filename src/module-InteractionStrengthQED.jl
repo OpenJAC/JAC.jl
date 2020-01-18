@@ -5,7 +5,7 @@
 """
 module InteractionStrengthQED
 
-    using Printf, ..Basics, ..Defaults, ..HydrogenicIon, ..ManyElectron, ..Radial, ..RadialIntegrals, ..Nuclear
+    using Printf, ..Basics, ..Bsplines, ..Defaults, ..HydrogenicIon, ..ManyElectron, ..Radial, ..RadialIntegrals, ..Nuclear
     
     #                   Z/10       1s_1/2      2p_1/2      2p_3/2      3d_3/2      3d_5/2        Zi
     const   fez_qed =         [    4.6542     -0.1148      0.1304     -0.0427      0.0408   ;   #  10
@@ -30,24 +30,43 @@ module InteractionStrengthQED
             these overlap integrals whenever necessary.  A single-electron amplitud wa::Float64 is returned.
     """
     function qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, qed::ManyElectron.AbstractQedModel, pot::Radial.Potential, grid::Radial.Grid)
-        ##x global  JAC_QED_MODEL,  JAC_QED_NUCLEAR_CHARGE,  JAC_QED_HYDROGENIC_LAMBDAC
         # Define a grid for the t-integration
-        qgrid = Radial.GridGL("QED",  7)
+        qgrid = Radial.GridGL("QED",  5)
+        if  a.subshell == b.subshell == Subshell("1s_1/2")    println("qgrid =  $qgrid")    end
         # Re-define the hydrogenic values of the 
-        if  false  ##  nm.Z != Defaults.GBL_QED_NUCLEAR_CHARGE
-            @warn("Calculate hydrogenic values only if necessary.")
+        ##x println("\n>> Defaults.GBL_QED_NUCLEAR_CHARGE = $(Defaults.GBL_QED_NUCLEAR_CHARGE) ")
+        if  nm.Z != Defaults.GBL_QED_NUCLEAR_CHARGE
+            println(">> Calculate hydrogenic values only if necessary.")
             alpha = Defaults.getDefaults("alpha")
-            ax  = HydrogenicIon.radialOrbital(Subshell("1s_1/2"), nm, grid);    wc1 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = HydrogenicIon.radialOrbital(Subshell("2p_1/2"), nm, grid);    wc2 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = HydrogenicIon.radialOrbital(Subshell("2p_3/2"), nm, grid);    wc3 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = HydrogenicIon.radialOrbital(Subshell("3d_3/2"), nm, grid);    wc4 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ax  = HydrogenicIon.radialOrbital(Subshell("3d_5/2"), nm, grid);    wc5 = RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ##x # Make a first approximation
+            ##x ax  = HydrogenicIon.radialOrbital(Subshell("1s_1/2"), nm.Z, grid);    wc1 = 1.12* RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ##x ax  = HydrogenicIon.radialOrbital(Subshell("2p_1/2"), nm.Z, grid);    wc2 = 1.8 * RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ##x ax  = HydrogenicIon.radialOrbital(Subshell("2p_3/2"), nm.Z, grid);    wc3 = 1.09* RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ##x ax  = HydrogenicIon.radialOrbital(Subshell("3d_3/2"), nm.Z, grid);    wc4 = 1.8 * RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ##x ax  = HydrogenicIon.radialOrbital(Subshell("3d_5/2"), nm.Z, grid);    wc5 = 1.05* RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
+            ##x Defaults.setDefaults("QED: damped-hydrogenic", nm.Z, [wc1, wc2, wc3, wc4, wc5] )
+            ##x println("Redefined damped radial integrals GBL_QED_HYDROGENIC_LAMBDAC = $(Defaults.GBL_QED_HYDROGENIC_LAMBDAC)")
+            ##x # Make these values more accurate
+            wp           = Bsplines.generatePrimitives(grid)
+            subshellList = [Subshell("1s_1/2"), Subshell("2p_1/2"), Subshell("2p_3/2"), Subshell("3d_3/2"), Subshell("3d_5/2")]
+            orbitals     = Bsplines.generateOrbitalsHydrogenic(wp, nm, subshellList; printout=true)
+            wc1          = wc2 = wc3 = wc4 = wc5 = 1.0
+            for  subsh in subshellList
+                orb = orbitals[subsh]
+                if      orb.subshell == Subshell("1s_1/2")      wc1 = RadialIntegrals.qedDampedOverlap(alpha, orb, orb, grid)
+                elseif  orb.subshell == Subshell("2p_1/2")      wc2 = RadialIntegrals.qedDampedOverlap(alpha, orb, orb, grid)
+                elseif  orb.subshell == Subshell("2p_3/2")      wc3 = RadialIntegrals.qedDampedOverlap(alpha, orb, orb, grid)
+                elseif  orb.subshell == Subshell("3d_3/2")      wc4 = RadialIntegrals.qedDampedOverlap(alpha, orb, orb, grid)
+                elseif  orb.subshell == Subshell("3d_5/2")      wc5 = RadialIntegrals.qedDampedOverlap(alpha, orb, orb, grid)
+                end
+            end
             Defaults.setDefaults("QED: damped-hydrogenic", nm.Z, [wc1, wc2, wc3, wc4, wc5] )
             println("Redefined damped radial integrals GBL_QED_HYDROGENIC_LAMBDAC = $(Defaults.GBL_QED_HYDROGENIC_LAMBDAC)")
         end
         
         if      qed == QedSydney()
-            wa = RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
+            nucpot = Nuclear.nuclearPotential(nm, grid)
+            wa = RadialIntegrals.qedUehlingSimple(a, b, nucpot, grid, qgrid) + 
                  ## RadialIntegrals.qedWichmannKrollSimple(a, b, pot, grid, qgrid) + 
                  ## RadialIntegrals.qedElectricFormFactor(a, b, pot, grid, qgrid) + 
                  ## RadialIntegrals.qedMagneticFormFactor(a, b, pot, grid, qgrid) + 
@@ -83,12 +102,16 @@ module InteractionStrengthQED
         wb          = RadialIntegrals.qedDampedOverlap(alpha, a, a, grid)
         wa          = whydrogenic * wb
         
+        println("local SE, Coulomb = $(whydrogenic)  [a.u.]")
+        ## println("<e^-r>, Coulomb   = $(wb)")
+        println("<e^-r>, DH        = $(wb)")
+        
         # Printout the corresponding  F(alpha Z) value for the given orbital if a == b
         ## FalphaZ = alpha/pi * (alpha*nm.Z)^4 / a.subshell.n^3 / alpha^2
         ## FalphaZ = wa / FalphaZ
         ## println("Self-energy function for $(a.subshell) and $(a.subshell) is F(alpha Z) = $FalphaZ,  wdamped = $wb,  wa = $wa ")
         
-        println("QED single-electron strength <$(a.subshell)| h^(SE, Volotka) | $(b.subshell)> = $wa  e^-alpha r = $wb")
+        ## println("QED single-electron strength <$(a.subshell)| h^(SE, Volotka) | $(b.subshell)> = $wa  e^-alpha r = $wb")
         
         return( wa )
     end
@@ -127,7 +150,9 @@ module InteractionStrengthQED
         end
         
         wb = Defaults.GBL_QED_HYDROGENIC_LAMBDAC[k]
-        println("QED  <$(sh)| h^(SE, hydrogenic) | $(sh)> = $wa  e^-alpha r, hydrogenic = $wb")
+        ## println("QED  <$(sh)| h^(SE, hydrogenic) | $(sh)> = $wa      e^-alpha r, hydrogenic = $wb")
+        println("local SE, Coulomb = $(wa)    [F]")
+        println("<e^-r>, Coulomb   = $(wb)    from storage")
        
         return( wa / Defaults.GBL_QED_HYDROGENIC_LAMBDAC[k] )
     end

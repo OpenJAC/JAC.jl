@@ -380,7 +380,7 @@ module Radial
         txlow = 1.;    t = Float64[];    wt = Float64[];    nt = 0
         for i = 1:100000
             # Define the exponential increase (1.5) and the maximum size (infinity=150.)
-            txup = txlow * 1.5;    if  txup > 150.   break   end
+            txup = txlow * 1.1;    if  txup > 10.   break   end
             #
             wax = QuadGK.gauss(orderGL);   tx = wax[1];   wtx = wax[2] 
             bma  = txup - txlow;   bpa = txup + txlow

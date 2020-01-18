@@ -424,9 +424,23 @@ module  RadialIntegrals
         # Define the internal t-integration that is specific to the (simplified) Uehling potential; cf. PRA 72, 052115 (2005); eq. (9)
         function tIntegral(r::Float64)
             wx = 0.;
-            for  i = 1:qgrid.nt   t = qgrid.t[i];    wx = wx + sqrt(t^2 - 1) / t^2 * (1 + 1 / (2*t^2)) * Base.MathConstants.e^(-2t*r) * qgrid.wt[i]   end
+            alpha = Defaults.getDefaults("alpha")
+            for  i = 1:qgrid.nt   t = qgrid.t[i];   
+                wx = wx + sqrt(t^2 - 1) / t^2 * (1. + 1. / (2.0*t^2)) * Base.MathConstants.e^(-2t*r) * qgrid.wt[i]   
+            end
             return( wx )
         end
+
+        println("\n\n a = $(a.subshell)  b = $(b.subshell)    \n ======================\n")
+        if  a.subshell == b.subshell == Subshell("1s_1/2")    
+           r = 0.9973e-3;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+           r = 0.1038e-2;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+           r = 0.9975e-2;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+           r = 0.1004e-1;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+           r = 0.9992e-1;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+           r = 0.1012e-0;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+        end
+        println("\n")
         
         mtp = min(size(a.P, 1), size(b.P, 1))
         # Distinguish the radial integration for different grid definitions
@@ -456,24 +470,39 @@ module  RadialIntegrals
         # Define the internal t-integration that is specific to the (simplified) Uehling potential; cf. PRA 72, 052115 (2005); eq. (9)
         function tIntegral(r::Float64)
             wx = 0.;
-            for  i = 1:qgrid.nt   t = qgrid.t[i];    wx = wx + sqrt(t^2 - 1) / t^2 * (1 + 1 / (2*t^2)) * Base.MathConstants.e^(-2t*r) * qgrid.wt[i]   end
+            alpha = Defaults.getDefaults("alpha")
+            for  i = 1:qgrid.nt   t = qgrid.t[i];    
+                wx = wx + sqrt(t^2 - 1.) / t^2 * (1. + 1. / (2.0*t^2)) * Base.MathConstants.e^(-2.0*t*r/alpha) * qgrid.wt[i] 
+            end
             return( wx )
         end
         
+        ## println("\n\n qgrid = $qgrid")
+        println("\n\n a = $(a.subshell)  b = $(b.subshell)    \n ======================\n")
+        if  a.subshell == b.subshell == Subshell("1s_1/2")    
+           r = 0.9973e-3;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+           r = 0.1038e-2;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+           r = 0.9975e-2;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+           r = 0.1004e-1;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+           r = 0.9992e-1;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+           r = 0.1012e-0;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
+        end
+        println("\n")
         mtp = min(size(a.P, 1), size(b.P, 1))
         # Distinguish the radial integration for different grid definitions
         if  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   
-                wb = tIntegral(grid.r[i]) * (-pot.Zr[i] / grid.r[i])     
-                wa = wa + (a.P[i]*wb*b.P[i] + a.Q[i]*wb*b.Q[i]) * grid.wr[i]   
+                wb = tIntegral(grid.r[i]) 
+                wc = (-pot.Zr[i] / grid.r[i])
+                wa = wa + (a.P[i]*wb*wc*b.P[i] + a.Q[i]*wb*wc*b.Q[i]) * grid.wr[i]   
             end
             wa = 2. * Defaults.getDefaults("alpha") / (3pi) * wa
         else
             error("stop a")
         end
         
-        println("QED single-electron strength <$(a.subshell)| h^(simplified Uehling) | $(b.subshell)> = $wa ")
+        println("\n\nQED single-electron strength <$(a.subshell)| h^(simplified Uehling) | $(b.subshell)> = $wa ")
         return( wa )
     end
 

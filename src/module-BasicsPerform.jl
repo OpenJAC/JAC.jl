@@ -139,7 +139,7 @@ module BascisPerform
                 ##x                                               "TestAuger/belike-resonance-a-scf.out","TestAuger/belike-resonance-a-relci.mix")  
                 ##x finalMultiplet   = JAC.ManyElectron.Multiplet("from Grasp2013", "TestAuger/belike-ground-a-csl.inp",
                 ##x                                               "TestAuger/belike-ground-a-scf.out","TestAuger/belike-ground-a-relci.mix") 
-                outcome = JAC.AutoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+                outcome = AutoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("AutoIonization lines:" => outcome) )                  end
             elseif  computation.process == JAC.Radiative  
                 ##x println(" ")
@@ -150,16 +150,16 @@ module BascisPerform
                 ##x                                               "TestRaditive/helike-resonance-a-scf.out","TestRaditive/helike-resonance-a-relci.mix")  
                 ##x initialMultiplet = JAC.ManyElectron.Multiplet("from Grasp2013", "TestRaditive/helike-resonance-a-csl.inp",
                 ##x                                               "TestRaditive/helike-resonance-a-scf.out","TestRaditive/helike-resonance-a-relci.mix") 
-                outcome = JAC.PhotoEmission.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = PhotoEmission.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("radiative lines:" => outcome) )              end
             elseif  computation.process == JAC.Photo   
-                outcome = JAC.PhotoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+                outcome = PhotoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photoionization lines:" => outcome) )        end
             elseif  computation.process == JAC.Rec   
-                outcome = JAC.PhotoRecombination.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+                outcome = PhotoRecombination.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo recombination lines:" => outcome) )    end
             elseif  computation.process == JAC.Eimex   
-                outcome = JAC.ImpactExcitation.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+                outcome = ImpactExcitation.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("impact-excitation lines:" => outcome) )      end
             elseif  computation.process == JAC.PhotoExc  
                 outcome = JAC.PhotoExcitation.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
@@ -248,9 +248,9 @@ module BascisPerform
         multiplet = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
         ##x println("bb")
         multiplet = Multiplet("initial states", multiplet.levels)
-        Cascade.displayInitialLevels(stdout, multiplet, comp.initialLevels)
-        if  printSummary   JAC.Cascade.displayInitialLevels(iostream, multiplet, comp.initialLevels)    end      
-        if output    results = Base.merge( results, Dict("initial multiplet:" => multiplet) )           end
+        Cascade.displayInitialLevels(stdout, multiplet)
+        if  printSummary   JAC.Cascade.displayInitialLevels(iostream, multiplet)                 end      
+        if output    results = Base.merge( results, Dict("initial multiplet:" => multiplet) )    end
         #
         # Generate subsequent cascade configurations as well as display and group them together
         wa = Cascade.generateConfigurationList(comp.initialConfigs, comp.maxElectronLoss, comp.NoShakeDisplacements)
@@ -270,7 +270,7 @@ module BascisPerform
             results = Base.merge( results, Dict("cascade data:" => data) )
             #
             #  Write out the result to file to later continue with simulations on the cascade data
-            filename = "zzz-Cascade-" * string(Dates.now())[1:13] * ".jld"
+            filename = "zzz-Cascade-computation-" * string(Dates.now())[1:13] * ".jld"
             println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
                     "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
             if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
@@ -284,27 +284,27 @@ module BascisPerform
 
 
     """
-    `Basics.perform(simulation::Cascade.Simulation, data::Cascade.Data)`  
-        ... to simulate a cascade decay (and excitation) by using the given data::Cascade.Data. Different computational methods and 
-            different properties of the ionic system, such as the ion distribution or final-level distribution can be derived and 
-            displayed from these simulations. Of course, the details of these simulations strongly depend on the atomic processes 
-            and data that have been generated before by performing a computation::Cascade.Computation. The results of all individual 
-            steps are printed to screen but nothing is returned otherwise.
+    `Basics.perform(simulation::Cascade.Simulation`  
+        ... to simulate a cascade decay (and excitation) from the given data. Different computational methods and different properties of 
+            the ionic system, such as the ion distribution or final-level distribution can be derived and displayed from these simulations. 
+            Of course, the details of these simulations strongly depend on the atomic processes and data that have been generated before by 
+            performing a computation::Cascade.Computation. The results of all individual steps are printed to screen but nothing is 
+            returned otherwise.
 
-    `Basics.perform(simulation::Cascade.Simulation, data::Cascade.Data; output=true)`   
+    `Basics.perform(simulation::Cascade.Simulation; output=true)`   
         ... to perform the same but to return the complete output in a dictionary; the particular output depends on the method and 
             specifications of the cascade but can easily accessed by the keys of this dictionary.
     """
-    function Basics.perform(simulation::Cascade.Simulation, data::Cascade.Data; output::Bool=false)
+    function Basics.perform(simulation::Cascade.Simulation; output::Bool=false)
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         #
         # Distinguish between the different computational methods for running the simulations
         if  simulation.method == Cascade.ProbPropagation()
-            if   JAC.Cascade.FinalDist()  in  simulation.properties   ||   JAC.Cascade.IonDist()  in  simulation.properties
-                wa = Cascade.simulateLevelDistribution(simulation, data) 
+            if   Cascade.FinalLevelDistribution()  in  simulation.properties   ||   Cascade.IonDistribution()  in  simulation.properties
+                wa = Cascade.simulateLevelDistribution(simulation) 
             end
-            if   JAC.Cascade.ElectronIntensity()    in simulation.properties    ||   JAC.Cascade.PhotonIntensity()  in simulation.properties   ||
-                JAC.Cascade.ElectronCoincidence()  in simulation.properties 
+            if   Cascade.ElectronIntensities()  in simulation.properties    ||   Cascade.PhotonIntensities()  in simulation.properties   ||
+                 Cascade.ElectronCoincidence()  in simulation.properties 
                 error("stop a: Not yet implemented")    
             end
         else  error("stop b")
@@ -314,10 +314,10 @@ module BascisPerform
             wx = 0.   
             results = Base.merge( results, Dict("ion distribution:" => wx) )
             #  Write out the result to file to later continue with simulations on the cascade data
-            filename = "xxx-simulation-" * string(now())[1:13] * ".jld"
+            filename = "zzz-Cascade-simulation-" * string(now())[1:13] * ".jld"
             println("\nWrite all results to disk; use:\n   save($filename, results) \n   using JLD " *
-                    "\n   results = load($filename)    ... to load the results back from file.")
-            save(filename, results)
+                    "\n   results = load($filename)    ... to load the results back from file ... CURRENTLY NOT.")
+            ## save(filename, results)
         end
         return( results )
     end
@@ -583,17 +583,20 @@ module BascisPerform
         mp = Multiplet("noName", levels)
         mp = Basics.sortByEnergy(mp)
         
+        levelNos = Int64[]
+        for (ilev, level) in  enumerate(mp.levels)       push!(levelNos, ilev)   end
+        
         # Display all level energies and energy splittings
         if  printout
-            Basics.tabulate(stdout, "multiplet: energies", mp)
-            Basics.tabulate(stdout, "multiplet: energy relative to immediately lower level",    mp)
-            Basics.tabulate(stdout, "multiplet: energy of each level relative to lowest level", mp)
+            Basics.tabulate(stdout, "multiplet: energies", mp, levelNos)
+            Basics.tabulate(stdout, "multiplet: energy relative to immediately lower level",    mp, levelNos)
+            Basics.tabulate(stdout, "multiplet: energy of each level relative to lowest level", mp, levelNos)
         end
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary     
-            Basics.tabulate(iostream, "multiplet: energies", mp)
-            Basics.tabulate(iostream, "multiplet: energy relative to immediately lower level",    mp)
-            Basics.tabulate(iostream, "multiplet: energy of each level relative to lowest level", mp)
+            Basics.tabulate(iostream, "multiplet: energies", mp, levelNos)
+            Basics.tabulate(iostream, "multiplet: energy relative to immediately lower level",    mp, levelNos)
+            Basics.tabulate(iostream, "multiplet: energy of each level relative to lowest level", mp, levelNos)
         end
     
         return( mp )

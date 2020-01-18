@@ -375,8 +375,10 @@ module AutoIonization
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = AutoIonization.Line[]
-        for  line in lines
-            newLine = AutoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
+        for  (i,line)  in  enumerate(lines)
+            println("> Auger line $i:  ... not calculated ")
+            ## newLine = AutoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
+            newLine = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, 1.0, 0.0, false, AutoIonization.Channel[] )
             push!( newLines, newLine)
         end
         # Print all results to a summary file, if requested
