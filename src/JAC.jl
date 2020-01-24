@@ -70,7 +70,7 @@ export AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, An
        NoAmplitude, NoProcess, Nuclear, NoneQed, NoProperty, 
        Orbital, 
        perform, provide, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation, PeriodicTable,
-       PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
+       Photo, PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, Plasma, Polarity, 
        QedPetersburg, QedSydney,
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RasSettings, RasStep, 

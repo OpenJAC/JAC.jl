@@ -239,46 +239,7 @@ module BascisPerform
             and specifications of the cascade but can easily accessed by the keys of this dictionary.
     """
     function Basics.perform(comp::Cascade.Computation; output::Bool=false)
-        ##x println("aa")
-        if  output    results = Dict{String, Any}()    else    results = nothing    end
-        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        #
-        # Perform the SCF and CI computation for the intial-state multiplet and print them out with their relative occupation
-        basis     = Basics.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
-        multiplet = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
-        ##x println("bb")
-        multiplet = Multiplet("initial states", multiplet.levels)
-        Cascade.displayInitialLevels(stdout, multiplet)
-        if  printSummary   JAC.Cascade.displayInitialLevels(iostream, multiplet)                 end      
-        if output    results = Base.merge( results, Dict("initial multiplet:" => multiplet) )    end
-        #
-        # Generate subsequent cascade configurations as well as display and group them together
-        wa = Cascade.generateConfigurationList(comp.initialConfigs, comp.maxElectronLoss, comp.NoShakeDisplacements)
-        wb = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa)
-        #
-        # Determine first all configuration 'blocks' and from them the individual steps of the cascade
-        wc = Cascade.generateBlocks(comp, wb, basis.orbitals)
-        Cascade.displayBlocks(stdout, wc)
-        if  printSummary   JAC.Cascade.displayBlocks(iostream, wc)    end      
-        # Determine, modify and compute the transition data for all steps, ie. the PhotoEmission.Line's, the AutoIonization.Line's, etc.
-        wd = JAC.Cascade.determineSteps(comp, wc)
-        JAC.Cascade.displaySteps(stdout, wd)
-        if  printSummary   JAC.Cascade.displaySteps(iostream, wd)    end      
-        we   = JAC.Cascade.modifySteps(wd)
-        data = JAC.Cascade.computeSteps(comp, we)
-        if output    
-            results = Base.merge( results, Dict("cascade data:" => data) )
-            #
-            #  Write out the result to file to later continue with simulations on the cascade data
-            filename = "zzz-Cascade-computation-" * string(Dates.now())[1:13] * ".jld"
-            println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
-                    "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
-            if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
-                                                 "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
-            JLD.save(filename, results)
-        end
-        ## return( results )
-        return( data )
+        Cascade.perform(comp.scheme, comp::Cascade.Computation, output=output)
     end
 
 

@@ -118,8 +118,8 @@ module BascisCompute
                     jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                     me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
                     if  settings.qedModel != NoneQed()  
-                        me = me + JAC.InteractionStrengthQED.qedLocal(basis.orbitals[coeff.a], basis.orbitals[coeff.b], nuclearModel, settings.qedModel, 
-                                                                      meanPot, grid)  
+                        me = me + JAC.InteractionStrengthQED.qedLocal(basis.orbitals[coeff.a], basis.orbitals[coeff.b], nuclearModel, 
+                                                                      settings.qedModel, meanPot, grid)  
                     end
                 end
 
@@ -604,9 +604,9 @@ module BascisCompute
         ... to compute a (radial) Kohn-Sham potential for the given level; a potential::RadialPotential is returned. 
             The Kohn-Sham potential is defined by
 
-                                                                2    [   81                   ]^(1/3)
+                                                                2     [   81                   ]^(1/3)
                 V_KS(r) =  int_0^infty dr'  rho_t(r') / r_>  --  ---  [--------   r * rho_t(r) ]
-                                                                3 r  [ 32 pi^2                ]
+                                                                3 r   [ 32 pi^2                ]
 
             with r_> = max(r,r')  and  rho_t(r) = sum_a (Pa^2(r) + Qa^2(r))   ... charge density of all electrons.  
             An Radial.Potential with -r * V_KS(r)  is returned to be consistent with an effective charge Z(r).

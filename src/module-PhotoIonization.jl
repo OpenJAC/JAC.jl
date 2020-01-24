@@ -285,6 +285,42 @@ module PhotoIonization
     end
 
 
+
+    """
+    `PhotoIonization.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+                                         settings::PhotoIonization.Settings; output=true, printout::Bool=true)`  
+        ... to compute the photoionization transition amplitudes and all properties as requested by the given settings. The computations
+            and printout is adapted for large cascade computations by including only lines with at least one channel and by sending
+            all printout to a summary file only. A list of lines::Array{PhotoIonization.Lines} is returned.
+    """
+    function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+                                  settings::PhotoIonization.Settings; output=true, printout::Bool=true)
+        
+        lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
+        # Display all selected lines before the computations start
+        # if  settings.printBefore    PhotoIonization.displayLines(lines)    end  
+        # Determine maximum energy and check for consistency of the grid
+        maxEnergy = 0.;   for  en in settings.photonEnergies   maxEnergy = max(maxEnergy, Defaults.convertUnits("energy: to atomic", en))   end
+        nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
+        # Calculate all amplitudes and requested properties
+        newLines = PhotoIonization.Line[]
+        for  (i,line)  in  enumerate(lines)
+            println("> Photo line $i:  ... not calculated ")
+            ## newLine = PhotoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
+            newLine = PhotoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, Basics.EmProperty(1.0, 0.), 
+                                           false, PhotoIonization.Channel[] )
+            push!( newLines, newLine)
+        end
+        # Print all results to a summary file, if requested
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        if  printSummary   PhotoIonization.displayResults(iostream, newLines, settings)   end
+        #
+        if    output    return( newLines )
+        else            return( nothing )
+        end
+    end
+
+
     """
     `PhotoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                             settings::PlasmaShift.PhotoSettings; output::Bool=true)`  

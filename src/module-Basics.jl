@@ -19,7 +19,7 @@ module Basics
             LevelSymmetry, LevelKey,
             modify, 
             oplus,
-            Parity, perform, provide,
+            Photo, Parity, perform, provide,
             Radiative,
             SolidAngle, Shell, Subshell, subshell_2j,
             tabulate, tools, TensorComp, 

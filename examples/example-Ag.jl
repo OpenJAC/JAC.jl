@@ -21,5 +21,5 @@ end
 wb = perform(wa)
 
 
-# NoneQed()
+# NoneQed() QedPetersburg()
 #  

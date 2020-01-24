@@ -43,7 +43,7 @@
     `Cascade.computeSteps(comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
         ... computes in turn all the requested transition amplitudes and PhotoEmission.Line's, AutoIonization.Line's, 
             etc. for all pre-specified decay steps of the cascade. When compared with the standard atomic process computations, 
-            however, the amount of output is largely reduced. A set of  data::Cascade.Data  is returned.
+            however, the amount of output is largely reduced. A set of  data::Cascade.DecayData  is returned.
     """
     function computeSteps(comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
         linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    linesP = PhotoIonization.Line[]    
@@ -51,10 +51,12 @@
         nt = 0;   st = 0
         for  step  in  stepList
             st = st + 1
-            nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels) 
+            nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels)
+            if  step.process == Basics.Photo    nc = nc * length(step.settings.photonEnergies)    end
             println("\n  $st) Perform $(string(step.process)) amplitude computations for up to $nc lines (without selection rules): ")
             if  printSummary   println(iostream, "\n* $st) Perform $(string(step.process)) amplitude computations for " *
-                                                 "up to $nc lines (without selection rules): ")   end      
+                                                 "up to $nc lines (without selection rules): ")   end 
+          
             if      step.process == Basics.Auger 
                 newLines = AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
                                                               step.settings, output=true, printout=false) 
@@ -63,6 +65,10 @@
                 newLines = PhotoEmission.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
                                                              step.settings, output=true, printout=false) 
                 append!(linesR, newLines);    nt = length(linesR)
+            elseif  step.process == Basics.Photo
+                newLines = PhotoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
+                                                               step.settings, output=true, printout=true) 
+                append!(linesP, newLines);    nt = length(linesP)
             else   error("Unsupported atomic process for cascade computations.")
             end
             println("     Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, giving now rise " *
@@ -71,17 +77,17 @@
                                                  "giving now rise to a total of $nt $(string(step.process)) lines." )   end      
         end
         #
-        data = Cascade.Data(comp.name, linesR, linesA, linesP)
+        data = Cascade.DecayData(comp.name, linesR, linesA)
     end
 
 
     """
-    `Cascade.determineSteps(comp::Cascade.Computation, blockList::Array{Cascade.Block,1})`  
+    `Cascade.determineSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, blockList::Array{Cascade.Block,1})`  
         ... determines all steps::Cascade.Step that need to be computed for this cascade. It cycles through the given processes and 
             distinguished between the different cascade approaches. It also checks that the averaged energies of the configuration 
             allows such a step energetically. A stepList::Array{Cascade.Step,1} is returned
     """
-    function determineSteps(comp::Cascade.Computation, blockList::Array{Cascade.Block,1})
+    function determineSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, blockList::Array{Cascade.Block,1})
         stepList = Cascade.Step[]
         ##x println("comp.approach = $(comp.approach)")
         if  comp.approach  in  [Cascade.AverageSCA(), Cascade.SCA()]
@@ -92,7 +98,7 @@
                         minEn = min(minEn, blockList[a].multiplet.levels[p].energy - blockList[b].multiplet.levels[q].energy)
                         maxEn = max(maxEn, blockList[a].multiplet.levels[p].energy - blockList[b].multiplet.levels[q].energy)
                     end
-                    for  process  in  comp.processes
+                    for  process  in  comp.scheme.processes
                         if      process == Basics.Radiative   
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons
@@ -106,6 +112,40 @@
                                 settings = AutoIonization.Settings(false, false, false, Tuple{Int64,Int64}[], 0., 1.0e6, 2, "Coulomb")
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
+                            end
+                        else    error("stop a")
+                        end
+                    end
+                end
+            end
+            #
+        else  error("Unsupported cascade approach.")
+        end
+        return( stepList )
+    end
+
+
+    """
+    `Cascade.determineSteps(scheme::Cascade.PhotonIonizationScheme, comp::Cascade.Computation, 
+                            initialList::Array{Cascade.Block,1}, ionizedList::Array{Cascade.Block,1})`  
+        ... determines all steps::Cascade.Step that need to be computed for this cascade. It cycles through the given processes and 
+            distinguished between the different cascade approaches. It also checks that the averaged energies of the configuration 
+            allows such a step energetically. A stepList::Array{Cascade.Step,1} is returned
+    """
+    function determineSteps(scheme::Cascade.PhotonIonizationScheme, comp::Cascade.Computation, 
+                            initialList::Array{Cascade.Block,1}, ionizedList::Array{Cascade.Block,1})
+        stepList = Cascade.Step[]
+        if  comp.approach  in  [Cascade.AverageSCA(), Cascade.SCA()]
+            for  initialBlock in initialList
+                for  ionizedBlock in ionizedList
+                    for  process  in  comp.scheme.processes
+                        if      process == Basics.Photo   
+                            if  initialBlock.NoElectrons == ionizedBlock.NoElectrons + 1
+                                settings = PhotoIonization.Settings();  phEnergies = Float64[]
+                                for  en  in scheme.photonEnergies   push!(phEnergies, Defaults.convertUnits("energy: from atomic", en))   end
+                                settings = PhotoIonization.Settings(settings, photonEnergies=phEnergies, printBefore=true)
+                                push!( stepList, Cascade.Step(process, settings, initialBlock.confs, ionizedBlock.confs, 
+                                                                                 initialBlock.multiplet, ionizedBlock.multiplet) )
                             end
                         else    error("stop a")
                         end
@@ -151,28 +191,34 @@
    
 
     """
-    `Cascade.displayInitialLevels(stream::IO, multiplet::Multiplet)`  
-        ... display the calculated initial levels to screen together with their given relative occupation.
+    `Cascade.displayInitialLevels(stream::IO, multiplets::Array{Multiplet,1})`  
+        ... display on stream the initial configurations as well as the calculated levels for all initial multiplets.
     """
-    function displayInitialLevels(stream::IO, multiplet::Multiplet)
+    function displayInitialLevels(stream::IO, multiplets::Array{Multiplet,1})
         println(stream, " ")
-        println(stream, "* Initial levels of the given cascade, relative to the lowest:")
-        ##x println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(44))
-        println(stream, "    Level  J Parity          Energy " * TableStrings.inUnits("energy") ) 
-        println(stream, "  ", TableStrings.hLine(44))
-        for  i = 1:length(multiplet.levels)
-            lev = multiplet.levels[i]
-            en  = lev.energy - multiplet.levels[1].energy;    en_requested = Defaults.convertUnits("energy: from atomic", en)
-            ##x wx = 0.
-            ##x for  ilevel in initialLevels
-            ##x if  i in ilevel   wx = ilevel[2];    break    end
-            ##x end
-            ##x sb  = "          "   * string(wx)
-            sc  = "   "  * TableStrings.level(i) * "     " * string(LevelSymmetry(lev.J, lev.parity)) * "     "
-            @printf(stream, "%s %.15e %s", sc, en_requested, "\n")
+        println(stream, "* Configurations and levels for all initial multiplets of the given cascade, relative to the lowest:")
+        for  multiplet  in multiplets
+            confList = Basics.extractNonrelativisticConfigurations(multiplet.levels[1].basis)
+            for  conf in confList
+                println(stream, "  $conf")
+            end
+            println(stream, "  ")
+            println(stream, "  ", TableStrings.hLine(44))
+            println(stream, "    Level  J Parity          Energy " * TableStrings.inUnits("energy") ) 
+            println(stream, "  ", TableStrings.hLine(44))
+            for  i = 1:length(multiplet.levels)
+                lev = multiplet.levels[i]
+                en  = lev.energy - multiplet.levels[1].energy;    en_requested = Defaults.convertUnits("energy: from atomic", en)
+                ##x wx = 0.
+                ##x for  ilevel in initialLevels
+                ##x if  i in ilevel   wx = ilevel[2];    break    end
+                ##x end
+                ##x sb  = "          "   * string(wx)
+                sc  = "   "  * TableStrings.level(i) * "     " * string(LevelSymmetry(lev.J, lev.parity)) * "     "
+                @printf(stream, "%s %.15e %s", sc, en_requested, "\n")
+            end
+            println(stream, "  ", TableStrings.hLine(44))
         end
-        println(stream, "  ", TableStrings.hLine(44))
         return( nothing )
     end
    
@@ -247,8 +293,8 @@
             for  confa  in confs
                 print("  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")
                 if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")   end
-                multiplet = perform("computation: mutiplet from orbitals, no CI, CSF diagonal", [confa],  initalOrbitals, 
-                                    comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                multiplet = Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", [confa],  initalOrbitals, 
+                                           comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
                 println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
                 ##x if  printSummary   println(iostream, "* ... and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")   end
@@ -272,7 +318,6 @@
                 print("  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")
                 if  printSummary   print(iostream, "* Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")   end
                 basis     = Basics.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
-                ##x multiplet = perform("computation: CI",  basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 multiplet = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
                 println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
@@ -284,17 +329,24 @@
         return( blockList )
     end
     
-    
 
     """
-    `Cascade.generateConfigurationList(initialConfs::Array{Configuration,1}, further::Int64, NoShake::Int64)`  
+    `Cascade.generateConfigurationList(multiplets::Array{Multiplet,1}, further::Int64, NoShake::Int64)`  
         ... generates all possible (decay) configurations with up to further holes and with NoShake displacements. First, all 
             configuratons are generated for which the hole is either moved 'outwards' or is moved and a second 'outer' hole is 
             created; this step is repated further + 2 times. From the generated list, only those configurations are kept with 
-            up to further holes, when compared with the initial configuration. A confList::Array{Configuration,1} is returned.
+            up to further holes, when compared with the configurations from the given multiplets. A confList::Array{Configuration,1} 
+            is returned.
     """
-    function generateConfigurationList(initialConfs::Array{Configuration,1}, further::Int64, NoShake::Int64)
-        confList = copy(initialConfs);    cList = copy(initialConfs);   initialNoElectrons = initialConfs[1].NoElectrons
+    function generateConfigurationList(multiplets::Array{Multiplet,1}, further::Int64, NoShake::Int64)
+        # Determine all (different) configurations from multiplets
+        confList = Configuration[]
+        for mp  in  multiplets   
+            cfList = Basics.extractNonrelativisticConfigurations(mp.levels[1].basis)
+            for  cf in cfList   if  cf in confList   nothing   else   push!(confList, cf)      end      end
+        end
+        ##x confList = copy(initialConfs);    cList = copy(initialConfs);   initialNoElectrons = initialConfs[1].NoElectrons
+        cList = copy(confList);   initialNoElectrons = multiplets[1].levels[1].basis.NoElectrons
         # First, move and generate new 'outer' hole without displacements
         for  fur = 1:further+1
             newConfList = Configuration[]
@@ -317,6 +369,56 @@
         # Add further shake-displacements if appropriate
         newConfList = Basics.excludeDoubles(newConfList)
         return( newConfList )
+    end
+
+
+    """
+    `Cascade.generateConfigurationsForPhotoionization(multiplets::Array{Multiplet,1},  maxPhotoElectrons::Int64, 
+                                                      maxPhotonEnergy::Float64, nm::Nuclear.Model)`  
+        ... generates all possible (photoionized) configurations with upto maxPhotoElectrons less electrons and whose averaged energy
+            is NOT higher than maxPhotoEnergy above of the given configuration. 
+            A Tuple(initialConfList::Array{Configuration,1}, confList::Array{Configuration,1}) is returned.
+    """
+    function generateConfigurationsForPhotoionization(multiplets::Array{Multiplet,1}, maxPhotoElectrons::Int64, maxPhotonEnergy::Float64, nm::Nuclear.Model)
+        # Determine all (different) configurations from multiplets
+        newconfList = Configuration[]
+        for mp  in  multiplets   
+            confList = Basics.extractNonrelativisticConfigurations(mp.levels[1].basis)
+            for  conf in confList   if  conf in newconfList   nothing   else   push!(newconfList, conf)      end      end
+        end
+        en     = Float64[];   for conf in confList    push!(en, -Semiempirical.estimate("binding energy", round(Int64, nm.Z), conf))   end
+        maxen  = maximum(en)
+        shList = Basics.generate("shells: ordered list for NR configurations", newconfList)
+        ##x println("xx  $(multiplets)   $(maxen)  $(shList)    $(newconfList)")
+        
+        # Collect all configuration with up to maxPhotoElectrons less electrons
+        initialConfList = deepcopy(newconfList);      
+        allnewconfList  = Configuration[];    confList = deepcopy(newconfList);    newconfList = Configuration[]
+        println("aa  $(length(confList))")
+        for ne = 1:maxPhotoElectrons
+            for  sh in shList
+                for conf in confList
+                    shells = deepcopy(conf.shells);     
+                    if shells[sh] > 0   shells[sh] = shells[sh] - 1;     push!(newconfList, Configuration(shells, conf.NoElectrons - 1))  end
+                end
+            end
+            append!(allnewconfList, newconfList)
+            confList = deepcopy(newconfList);    newconfList = Configuration[]
+            println("bb  $(length(confList))")
+        end
+        
+        # Exclude double configurations as well as those with too high average energy
+        confList = Basics.excludeDoubles(allnewconfList)
+        newconfList = Configuration[]
+        for  conf in confList  
+            enconf = -Semiempirical.estimate("binding energy", round(Int64, nm.Z), conf)
+            @show enconf, maxen, maxPhotonEnergy
+            if enconf - maxen < maxPhotonEnergy   push!(newconfList, conf)    end
+        end
+        println("cc  $(length(newconfList))")
+
+        @show length(initialConfList), length(newconfList)
+        return( (initialConfList, newconfList)  )
     end
 
 
@@ -399,7 +501,7 @@
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
         println("\n* Electron configuration used in the cascade:")
-        @warn "*** Limit to just two configurations for each No. of electrons. ***"                       ## delete nxx
+        @warn "*** Limit to just four configurations for each No. of electrons. ***"                       ## delete nxx
         if  printSummary   println(iostream, "\n* Electron configuration used in the cascade:")    end
         confList = Configuration[];   nc = 0
         for  n = maxNoElectrons:-1:minNoElectrons
@@ -408,7 +510,7 @@
             if  printSummary   println(iostream, "\n    Configuration(s) with $n electrons:")      end
             for  conf in confs
                 if n == conf.NoElectrons  
-                    nxx = nxx + 1;    if nxx > 2   break    end                                            ## delete nxx
+                    nxx = nxx + 1;    if nxx > 4   break    end                                            ## delete nxx
                     nc = nc + 1
                     push!(confList, conf ) 
                     wa = Semiempirical.estimate("binding energy", round(Int64, Z), conf);    wa = Defaults.convertUnits("energy: from atomic", wa)
@@ -460,4 +562,124 @@
         if  printSummary   println(iostream, "\n* A total of $(length(newStepList)) steps are still defined in the cascade.")    end      
         
         return( newStepList )
+    end
+
+
+    """
+    `Cascade.perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation)`  
+        ... to set-up and perform a cascade computation that starts from a given set of initial configurations and proceeds via 
+            various steps until a given number of electrons has been removed or the decay stops at some stable levels with regard 
+            to the given atomic processes. The results of all individual steps are printed to screen but nothing is returned 
+            otherwise.
+
+    `Cascade.perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output=true)`   
+        ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
+            and specifications of the cascade but can easily accessed by the keys of this dictionary.
+    """
+    function perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output::Bool=false)
+        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        #
+        # Perform the SCF and CI computation for the intial-state multiplets if initial configurations are given
+        if  comp.initialConfigs != Configuration[]
+            basis      = Basics.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            multiplet  = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            multiplets = [Multiplet("initial states", multiplet.levels)]
+        else
+            multiplets = comp.initialMultiplets
+        end
+        # Print out initial configurations and levels 
+        Cascade.displayInitialLevels(stdout, multiplets)
+        if  printSummary   Cascade.displayInitialLevels(iostream, multiplets)                            end
+        if  output         results = Base.merge( results, Dict("initial multiplets:" => multiplets) )    end
+        #
+        # Generate subsequent cascade configurations as well as display and group them together
+        wa = Cascade.generateConfigurationList(multiplets, comp.scheme.maxElectronLoss, comp.scheme.NoShakeDisplacements)
+        wb = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa)
+        #
+        # Determine first all configuration 'blocks' and from them the individual steps of the cascade
+        wc = Cascade.generateBlocks(comp, wb, basis.orbitals)
+        Cascade.displayBlocks(stdout, wc)
+        if  printSummary   Cascade.displayBlocks(iostream, wc)    end      
+        # Determine, modify and compute the transition data for all steps, ie. the PhotoEmission.Line's, the AutoIonization.Line's, etc.
+        wd = Cascade.determineSteps(scheme, comp, wc)
+        Cascade.displaySteps(stdout, wd)
+        if  printSummary   Cascade.displaySteps(iostream, wd)    end      
+        we   = Cascade.modifySteps(wd)
+        data = Cascade.computeSteps(comp, we)
+        if output    
+            results = Base.merge( results, Dict("cascade decay data:" => data) )
+            #
+            #  Write out the result to file to later continue with simulations on the cascade data
+            filename = "zzz-Cascade-computation-" * string(Dates.now())[1:13] * ".jld"
+            println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
+                    "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
+            if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
+                                                 "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
+            JLD.save(filename, results)
+        end
+        ## return( results )
+        return( data )
+    end
+
+
+    """
+    `Cascade.perform(scheme::PhotonIonizationScheme, comp::Cascade.Computation)`  
+        ... to set-up and perform a cascade computation that starts from a given set of initial configurations xor initial multiplets
+            and proceeds via photoionizing processes to configurations with a given No of photoelectrons. The results of all individual 
+            photoionization steps are comprised into (output) data::PhotoIonData, although all data are only printed and nothing 
+            is returned.
+
+    `Cascade.perform(scheme::PhotonIonizationScheme, comp::Cascade.Computation; output=true)`   
+        ... to perform the same but to return the complete output in a dictionary that is written to disk and can be used in subsequent
+            cascade simulation. The particular output also depends on the specifications of the cascade.
+    """
+    function perform(scheme::PhotonIonizationScheme, comp::Cascade.Computation; output::Bool=false)
+        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        #
+        # Perform the SCF and CI computation for the intial-state multiplets if initial configurations are given
+        if  comp.initialConfigs != Configuration[]
+            basis      = Basics.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            multiplet  = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            multiplets = [Multiplet("initial states", multiplet.levels)]
+        else
+            multiplets = comp.initialMultiplets
+        end
+        # Print out initial configurations and levels 
+        Cascade.displayInitialLevels(stdout, multiplets)
+        if  printSummary   Cascade.displayInitialLevels(iostream, multiplets)                            end
+        if  output         results = Base.merge( results, Dict("initial multiplets:" => multiplets) )    end
+        #
+        # Generate subsequent cascade configurations as well as display and group them together
+        maxen = maximum(comp.scheme.photonEnergies) + 20
+        wa  = Cascade.generateConfigurationsForPhotoionization(multiplets, comp.scheme.maxPhotoElectrons, maxen, comp.nuclearModel)
+        wb1 = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa[1])
+        wb2 = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa[2])
+        #
+        # Determine first all configuration 'blocks' and from them the individual steps of the cascade
+        ##x @show length(wa[1]), length(wa[2])
+        wc1 = Cascade.generateBlocks(comp, wb1, basis.orbitals)
+        wc2 = Cascade.generateBlocks(comp, wb2, basis.orbitals)
+        Cascade.displayBlocks(stdout, wc1);      Cascade.displayBlocks(stdout, wc2)
+        # if  printSummary   Cascade.displayBlocks(stdout, wc1);      Cascade.displayBlocks(stdout, wc2)    end      
+        # Determine, modify and compute the transition data for all steps, ie. the PhotoIonization.Line's, etc.
+        we = Cascade.determineSteps(scheme, comp, wc1, wc2)
+        Cascade.displaySteps(stdout, we)
+        if  printSummary   Cascade.displaySteps(iostream, we)    end      
+        wf   = Cascade.modifySteps(we)
+        data = Cascade.computeSteps(comp, wf)
+        if output    
+            results = Base.merge( results, Dict("cascade decay data:" => data) )
+            #
+            #  Write out the result to file to later continue with simulations on the cascade data
+            filename = "zzz-Cascade-computation-" * string(Dates.now())[1:13] * ".jld"
+            println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
+                    "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
+            if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
+                                                 "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
+            JLD.save(filename, results)
+        end
+        ## return( results )
+        return( data )
     end

@@ -25,14 +25,17 @@ module InteractionStrengthQED
     """
     `InteractionStrengthQED.qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, qed::ManyElectron.AbstractQedModel, 
                                      pot::Radial.Potential, grid::Radial.Grid)`  
-        ... to calculate the local, single-electron QED correction due to a chosen QedModel.  The function also determines whether 
+        ... to calculate the local, single-electron QED correction due to a chosen QedModel.  The basis::Basis is needed to
+            compute the electron density for the Uehling potential. The function also determines whether 
             the 'stored' hydrogenic values for the lambda_C-dampled overlap integrals belong the given Z-value, and re-calculates 
             these overlap integrals whenever necessary.  A single-electron amplitud wa::Float64 is returned.
     """
-    function qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, qed::ManyElectron.AbstractQedModel, pot::Radial.Potential, grid::Radial.Grid)
+    function qedLocal(a::Orbital, b::Orbital, nm::Nuclear.Model, qed::ManyElectron.AbstractQedModel, 
+                      pot::Radial.Potential, grid::Radial.Grid)
         # Define a grid for the t-integration
-        qgrid = Radial.GridGL("QED",  5)
-        if  a.subshell == b.subshell == Subshell("1s_1/2")    println("qgrid =  $qgrid")    end
+        qgrid = Radial.GridGL("QED",  7)
+        if  a.subshell == b.subshell == Subshell("1s_1/2")    println(" ")    end
+        ##x if  a.subshell == b.subshell == Subshell("1s_1/2")    println("qgrid =  $qgrid")    end
         # Re-define the hydrogenic values of the 
         ##x println("\n>> Defaults.GBL_QED_NUCLEAR_CHARGE = $(Defaults.GBL_QED_NUCLEAR_CHARGE) ")
         if  nm.Z != Defaults.GBL_QED_NUCLEAR_CHARGE
@@ -65,13 +68,14 @@ module InteractionStrengthQED
         end
         
         if      qed == QedSydney()
-            nucpot = Nuclear.nuclearPotential(nm, grid)
-            wa = RadialIntegrals.qedUehlingSimple(a, b, nucpot, grid, qgrid) + 
+            ##x nucpot = Nuclear.nuclearPotential(nm, grid)
+            wa = RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
                  ## RadialIntegrals.qedWichmannKrollSimple(a, b, pot, grid, qgrid) + 
                  ## RadialIntegrals.qedElectricFormFactor(a, b, pot, grid, qgrid) + 
                  ## RadialIntegrals.qedMagneticFormFactor(a, b, pot, grid, qgrid) + 
                  RadialIntegrals.qedLowFrequency(a, b, nm, grid, qgrid) 
         elseif   qed == QedPetersburg()
+            ## RadialIntegrals.qedUehling(a, b, nm, grid, qgrid)
             wa = RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
                  InteractionStrengthQED.selfEnergyVolotka(a, b, nm, grid, qgrid)
         else    error("stop a")
@@ -102,16 +106,16 @@ module InteractionStrengthQED
         wb          = RadialIntegrals.qedDampedOverlap(alpha, a, a, grid)
         wa          = whydrogenic * wb
         
-        println("local SE, Coulomb = $(whydrogenic)  [a.u.]")
         ## println("<e^-r>, Coulomb   = $(wb)")
-        println("<e^-r>, DH        = $(wb)")
+        ## println("<e^-r>, DH        = $(wb)")
+        ## println("local SE, DHF     = $(wa)  [a.u.]")
         
         # Printout the corresponding  F(alpha Z) value for the given orbital if a == b
         ## FalphaZ = alpha/pi * (alpha*nm.Z)^4 / a.subshell.n^3 / alpha^2
         ## FalphaZ = wa / FalphaZ
         ## println("Self-energy function for $(a.subshell) and $(a.subshell) is F(alpha Z) = $FalphaZ,  wdamped = $wb,  wa = $wa ")
         
-        ## println("QED single-electron strength <$(a.subshell)| h^(SE, Volotka) | $(b.subshell)> = $wa  e^-alpha r = $wb")
+        println("QED single-electron strength <$(a.subshell)| h^(SE, Volotka) | $(b.subshell)> = $wa    with <$(a.subshell)| e^-alpha r | $(b.subshell)> = $wb")
         
         return( wa )
     end
@@ -151,8 +155,8 @@ module InteractionStrengthQED
         
         wb = Defaults.GBL_QED_HYDROGENIC_LAMBDAC[k]
         ## println("QED  <$(sh)| h^(SE, hydrogenic) | $(sh)> = $wa      e^-alpha r, hydrogenic = $wb")
-        println("local SE, Coulomb = $(wa)    [F]")
-        println("<e^-r>, Coulomb   = $(wb)    from storage")
+        ## println("local SE, Coulomb = $(wa)    [F]")
+        ## println("<e^-r>, Coulomb   = $(wb)    from storage")
        
         return( wa / Defaults.GBL_QED_HYDROGENIC_LAMBDAC[k] )
     end

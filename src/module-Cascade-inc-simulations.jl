@@ -75,12 +75,12 @@
 
 
     """
-    `Cascade.displayLevelTree(stream::IO, levels::Array{Cascade.Level,1}, data::Cascade.Data; extended::Bool=false)` 
+    `Cascade.displayLevelTree(stream::IO, levels::Array{Cascade.Level,1}, data::Cascade.DecayData; extended::Bool=false)` 
         ... displays all defined levels  in a neat table, together with their No. of electrons, symmetry, level energy, 
             current (relative) population as well as analogue information about their parents and daugther levels. This 
             enables one to recognize (and perhaps later add) missing parent and daughter levels. Nothing is returned.
     """
-    function displayLevelTree(stream::IO, levels::Array{Cascade.Level,1}, data::Cascade.Data; extended::Bool=false)
+    function displayLevelTree(stream::IO, levels::Array{Cascade.Level,1}, data::Cascade.DecayData; extended::Bool=false)
         minElectrons = 1000;   maxElectrons = 0;   energies = zeros(length(levels))
         for  i = 1:length(levels)
             minElectrons = min(minElectrons, levels[i].NoElectrons);   maxElectrons = max(maxElectrons, levels[i].NoElectrons)
@@ -155,13 +155,13 @@
 
 
     """
-    `Cascade.extractLevels(data::Cascade.Data, settings::Cascade.SimulationSettings)` 
+    `Cascade.extractLevels(data::Cascade.DecayData, settings::Cascade.SimulationSettings)` 
         ... extracts and sorts all levels from the given cascade data into a new levelList::Array{Cascade.Level,1} to simplify the 
             propagation of the probabilities. In this list, every level of the overall cascade just occurs just once, together 
             with its parent lines (which may populate the level) and the daugther lines (to which the pobability may decay). 
             A levelList::Array{Cascade.Level,1} is returned.
     """
-    function extractLevels(data::Cascade.Data, settings::Cascade.SimulationSettings)
+    function extractLevels(data::Cascade.DecayData, settings::Cascade.SimulationSettings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         levels = Cascade.Level[]
         print("\n  Extract, sort and unify the list of levels of the cascade ... ")
@@ -184,16 +184,6 @@
             Cascade.pushLevels!(levels, iLevel)  
             fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
                                     line.finalLevel.relativeOcc, [ Cascade.LineIndex(Basics.Auger, i)], Cascade.LineIndex[] ) 
-            Cascade.pushLevels!(levels, fLevel)  
-        end
-
-        for  i = 1:length(data.linesP)
-            line = data.linesP[i]
-            iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(Basics.Photo, i)] ) 
-            Cascade.pushLevels!(levels, iLevel)  
-            fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(Basics.Photo, i)], Cascade.LineIndex[] ) 
             Cascade.pushLevels!(levels, fLevel)  
         end
         
@@ -236,11 +226,11 @@
 
 
     """
-    `Cascade.propagateProbability!(levels::Array{Cascade.Level,1}, data::Cascade.Data)` 
+    `Cascade.propagateProbability!(levels::Array{Cascade.Level,1}, data::Cascade.DecayData)` 
         ... propagates the relative level occupation through the levels of the cascade until no further change occur in the 
             relative level occupation. The argument levels is modified during the propagation, but nothing is returned otherwise.
     """
-    function propagateProbability!(levels::Array{Cascade.Level,1}, data::Cascade.Data)
+    function propagateProbability!(levels::Array{Cascade.Level,1}, data::Cascade.DecayData)
         n = 0
         println("\n  Probability propagation through $(length(levels)) levels of the cascade:")
         while true
