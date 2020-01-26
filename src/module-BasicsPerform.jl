@@ -245,42 +245,18 @@ module BascisPerform
 
 
     """
-    `Basics.perform(simulation::Cascade.Simulation`  
-        ... to simulate a cascade decay (and excitation) from the given data. Different computational methods and different properties of 
-            the ionic system, such as the ion distribution or final-level distribution can be derived and displayed from these simulations. 
-            Of course, the details of these simulations strongly depend on the atomic processes and data that have been generated before by 
-            performing a computation::Cascade.Computation. The results of all individual steps are printed to screen but nothing is 
-            returned otherwise.
+    `Basics.perform(comp::Cascade.Simulation)`  
+        ... to set-up and perform a cascade computation that starts from a given set of initial configurations and proceeds via 
+            various steps until a given number of electrons has been removed or the decay stops at some stable levels with regard 
+            to the given atomic processes. The results of all individual steps are printed to screen but nothing is returned 
+            otherwise.
 
-    `Basics.perform(simulation::Cascade.Simulation; output=true)`   
-        ... to perform the same but to return the complete output in a dictionary; the particular output depends on the method and 
-            specifications of the cascade but can easily accessed by the keys of this dictionary.
+    `Basics.perform(comp::Cascade.Simulation; output=true)`   
+        ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
+            and specifications of the cascade but can easily accessed by the keys of this dictionary.
     """
-    function Basics.perform(simulation::Cascade.Simulation; output::Bool=false)
-        if  output    results = Dict{String, Any}()    else    results = nothing    end
-        #
-        # Distinguish between the different computational methods for running the simulations
-        if  simulation.method == Cascade.ProbPropagation()
-            if   Cascade.FinalLevelDistribution()  in  simulation.properties   ||   Cascade.IonDistribution()  in  simulation.properties
-                wa = Cascade.simulateLevelDistribution(simulation) 
-            end
-            if   Cascade.ElectronIntensities()  in simulation.properties    ||   Cascade.PhotonIntensities()  in simulation.properties   ||
-                 Cascade.ElectronCoincidence()  in simulation.properties 
-                error("stop a: Not yet implemented")    
-            end
-        else  error("stop b")
-        end
-
-        if output 
-            wx = 0.   
-            results = Base.merge( results, Dict("ion distribution:" => wx) )
-            #  Write out the result to file to later continue with simulations on the cascade data
-            filename = "zzz-Cascade-simulation-" * string(now())[1:13] * ".jld"
-            println("\nWrite all results to disk; use:\n   save($filename, results) \n   using JLD " *
-                    "\n   results = load($filename)    ... to load the results back from file ... CURRENTLY NOT.")
-            ## save(filename, results)
-        end
-        return( results )
+    function Basics.perform(comp::Cascade.Simulation; output::Bool=false)
+        Cascade.perform(comp::Cascade.Simulation, output=output)
     end
 
 

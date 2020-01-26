@@ -305,7 +305,7 @@ module PhotoIonization
         # Calculate all amplitudes and requested properties
         newLines = PhotoIonization.Line[]
         for  (i,line)  in  enumerate(lines)
-            println("> Photo line $i:  ... not calculated ")
+            if  rem(i,10) == 0    println("> Photo line $i:  ... not calculated ")    end
             ## newLine = PhotoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
             newLine = PhotoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, Basics.EmProperty(1.0, 0.), 
                                            false, PhotoIonization.Channel[] )

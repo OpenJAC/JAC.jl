@@ -370,7 +370,6 @@ module Cascade
         + linesA         ::Array{AutoIonization.Line,1}         ... List of Auger lines.
     """  
     struct  DecayData  <:  Cascade.AbstractData
-        name             ::String
         linesR           ::Array{PhotoEmission.Line,1}
         linesA           ::Array{AutoIonization.Line,1}
     end 
@@ -380,13 +379,12 @@ module Cascade
     `Cascade.DecayData()`  ... (simple) constructor for cascade  decay data.
     """
     function DecayData()
-        DecayData("", Array{PhotoEmission.Line,1}[], Array{AutoIonization.Line,1}[] )
+        DecayData(Array{PhotoEmission.Line,1}[], Array{AutoIonization.Line,1}[] )
     end
 
 
     # `Base.show(io::IO, data::Cascade.DecayData)`  ... prepares a proper printout of the variable data::Cascade.DecayData.
     function Base.show(io::IO, data::Cascade.DecayData) 
-        println(io, "name:                    $(data.name)  ")
         println(io, "linesR:                  $(data.linesR)  ")
         println(io, "linesA:                  $(data.linesA)  ")
     end
@@ -395,12 +393,10 @@ module Cascade
     """
     `struct  Cascade.PhotoIonData  <:  Cascade.AbstractData`  ... defines a type for an atomic cascade, i.e. lists of photoionization lines.
 
-        + name           ::String                               ... A name for the (part of the) cascade.
         + photonEnergy   ::Float64                              ... Photon energy for this (part of the) cascade.
         + linesP         ::Array{PhotoIonization.Line,1}        ... List of photoionization lines.
     """  
     struct  PhotoIonData  <:  Cascade.AbstractData
-        name             ::String
         photonEnergy     ::Float64
         linesP           ::Array{PhotoIonization.Line,1}
     end 
@@ -410,13 +406,12 @@ module Cascade
     `Cascade.PhotoIonData()`  ... (simple) constructor for cascade photo-ionization data.
     """
     function PhotoIonData()
-        PhotoIonData("", 0., Array{PhotoIonization.Line,1}[] )
+        PhotoIonData(0., Array{PhotoIonization.Line,1}[] )
     end
 
 
-    # `Base.show(io::IO, data::Cascade.DecayData)`  ... prepares a proper printout of the variable data::Cascade.DecayData.
+    # `Base.show(io::IO, data::Cascade.PhotoIonData)`  ... prepares a proper printout of the variable data::Cascade.PhotoIonData.
     function Base.show(io::IO, data::Cascade.PhotoIonData) 
-        println(io, "name:                    $(data.name)  ")
         println(io, "photonEnergy:            $(data.photonEnergy)  ")
         println(io, "linesP:                  $(data.linesP)  ")
     end
@@ -505,14 +500,14 @@ module Cascade
         + properties      ::Array{Cascade.AbstractSimulationProperty,1} ... Properties that are considered in this simulation of the cascade (data).
         + method          ::Cascade.AbstractSimulationMethod            ... Method that is used in the cascade simulation; cf. Cascade.SimulationMethod.
         + settings        ::Cascade.SimulationSettings                  ... Settings for performing these simulations.
-        + cascadeData     ::Cascade.AbstractData                        ... Date on which the simulations are performed
+        + computationData ::Array{Dict{String,Any},1}                   ... Date on which the simulations are performed
     """
     struct  Simulation
         name              ::String
         properties        ::Array{Cascade.AbstractSimulationProperty,1}
         method            ::Cascade.AbstractSimulationMethod
         settings          ::Cascade.SimulationSettings 
-        cascadeData       ::Cascade.AbstractData 
+        computationData   ::Array{Dict{String,Any},1}
     end 
 
 
@@ -521,30 +516,29 @@ module Cascade
     """
     function Simulation()
         Simulation("Default cascade simulation", Cascade.AbstractSimulationProperty[], Cascade.ProbPropagation(), 
-                   Cascade.SimulationSettings(), Cascade.DecayData() )
+                   Cascade.SimulationSettings(), Array{Dict{String,Any},1}[] )
     end
 
 
     """
     `Cascade.Simulation(sim::Cascade.Simulation;`
         
-                name=..,               properties=..,             method=..,              settings=..,     cascadeData=.. )
+                name=..,               properties=..,             method=..,              settings=..,     computationData=.. )
                 
-        ... constructor for re-defining the computation::Cascade.Computation.
+        ... constructor for re-defining the computation::Cascade.Simulation.
     """
     function Simulation(sim::Cascade.Simulation;                              
         name::Union{Nothing,String}=nothing,                                  properties::Union{Nothing,Array{Cascade.AbstractSimulationProperty,1}}=nothing,
         method::Union{Nothing,Cascade.AbstractSimulationMethod}=nothing,      settings::Union{Nothing,Cascade.SimulationSettings}=nothing,    
-        cascadeData::Union{Nothing,Cascade.AbstractData}=nothing )
+        computationData::Union{Nothing,Array{Dict{String,Any},1}}=nothing )
  
-        if  name         == nothing   namex         = sim.name            else  namex = name                  end 
-        if  properties   == nothing   propertiesx   = sim.properties      else  propertiesx = properties      end 
-        if  method       == nothing   methodx       = sim.method          else  methodx = method              end 
-        if  settings     == nothing   settingsx     = sim.settings        else  settingsx = settings          end 
-        if  cascadeData  == nothing   cascadeDatax  = sim.cascadeData     else  cascadeDatax = cascadeData    end 
-        println("aa = $(cascadeDatax.name)" )
+        if  name            == nothing   namex            = sim.name              else  namex = name                          end 
+        if  properties      == nothing   propertiesx      = sim.properties        else  propertiesx = properties              end 
+        if  method          == nothing   methodx          = sim.method            else  methodx = method                      end 
+        if  settings        == nothing   settingsx        = sim.settings          else  settingsx = settings                  end 
+        if  computationData == nothing   computationDatax = sim.computationData   else  computationDatax = computationData    end 
     	
-    	Simulation(namex, propertiesx, methodx, settingsx, cascadeDatax)
+    	Simulation(namex, propertiesx, methodx, settingsx, computationDatax)
     end
 
 
@@ -553,8 +547,7 @@ module Cascade
         println(io, "name:              $(simulation.name)  ")
         println(io, "properties:        $(simulation.properties)  ")
         println(io, "method:            $(simulation.method)  ")
-        println(io, "cascadeData:       $(simulation.cascadeData.name)   " *
-                                "with:  $(length(simulation.cascadeData.linesR)) radiative and  $(length(simulation.cascadeData.linesA)) Auger lines.")
+        println(io, "computationData:   ... based on $(length(simulation.computationData)) cascade data sets ")
         println(io, "> settings:      \n$(simulation.settings)  ")
     end
 
@@ -562,10 +555,12 @@ module Cascade
     """
     `struct  Cascade.LineIndex`  ... defines a line index with regard to the various lineLists of data::Cascade.LineIndex.
 
+        + lineSet      ::Cascade.AbstractData    ... refers to the data set for which this index is defined.
         + process      ::Basics.AtomicProcess    ... refers to the particular lineList of cascade (data).
-        + index        ::Int64                       ... index of the corresponding line.
+        + index        ::Int64                   ... index of the corresponding line.
     """
     struct  LineIndex
+        lineSet        ::Cascade.AbstractData 
         process        ::Basics.AtomicProcess
         index          ::Int64 
     end 
@@ -573,8 +568,9 @@ module Cascade
 
     # `Base.show(io::IO, index::Cascade.LineIndex)`  ... prepares a proper printout of the variable index::Cascade.LineIndex.
     function Base.show(io::IO, index::Cascade.LineIndex) 
-        println(io, "process:        $(index.process)  ")
-        println(io, "index:          $(index.index)  ")
+        println(io, "lineSet (typeof):      $(typeof(index.lineSet))  ")
+        println(io, "process:               $(index.process)  ")
+        println(io, "index:                 $(index.index)  ")
     end
 
 
@@ -600,7 +596,6 @@ module Cascade
     end 
 
 
-
     # `Base.show(io::IO, level::Cascade.Level)`  ... prepares a proper printout of the variable level::Cascade.Level.
     function Base.show(io::IO, level::Cascade.Level) 
         println(io, "energy:        $(level.energy)  ")
@@ -611,6 +606,18 @@ module Cascade
         println(io, "parents:       $(level.parents)  ")
         println(io, "daugthers:     $(level.daugthers)  ")
     end
+    
+    
+    """
+    `Base.:(==)(leva::Cascade.Level, levb::Cascade.Level)`  ... returns true if both levels are equal and false otherwise.
+    """
+    function  Base.:(==)(leva::Cascade.Level, levb::Cascade.Level)
+        if  leva.energy == levb.energy   &&   leva.J == levb.J  && leva.parity == levb.parity  && leva.NoElectrons == levb.NoElectrons 
+                return( true )
+        else    return( false )
+        end
+    end
+    
     
     include("module-Cascade-inc-computations.jl")
     include("module-Cascade-inc-simulations.jl")

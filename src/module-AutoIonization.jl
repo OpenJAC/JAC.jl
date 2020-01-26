@@ -376,7 +376,7 @@ module AutoIonization
         # Calculate all amplitudes and requested properties
         newLines = AutoIonization.Line[]
         for  (i,line)  in  enumerate(lines)
-            println("> Auger line $i:  ... not calculated ")
+            if  rem(i,10) == 0    println("> Auger line $i:  ... not calculated ")  end
             ## newLine = AutoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
             newLine = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, 1.0, 0.0, false, AutoIonization.Channel[] )
             push!( newLines, newLine)
