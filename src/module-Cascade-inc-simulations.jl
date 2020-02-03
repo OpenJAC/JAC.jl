@@ -1,7 +1,6 @@
 
     # Functions and methods for cascade simulations
 
-    ### use addLevels instead of appendLevels!
     """
     `Cascade.addLevels(levelsA::Array{Cascade.Level,1}, levelsB::Array{Cascade.Level,1})` 
         ... adds two sets of levels so that each levels occurs only 'once' in the list; however, this addition requires also that the
@@ -12,31 +11,35 @@
             Note that all relative occucations are set to zero in this addition; a newlevels::Array{Cascade.Level,1} is returned.
     """
     function  addLevels(levelsA::Array{Cascade.Level,1}, levelsB::Array{Cascade.Level,1})
-        nA = length(levelsA);   nB = length(levelsB);    nmod = 0;    newlevels = Cascade.Level[];  appendedB = falses(nb)
+        nA = length(levelsA);   nB = length(levelsB);    nmod = 0;    nnew = 0;    newlevels = Cascade.Level[];  appendedB = falses(nB)
+        
         # First all levels from levels A but taking additional parents and daugthers into accout
         for  levA in levelsA
+            parents   = deepcopy(levA.parents);     daugthers = deepcopy(levA.daugthers);   
             for  (i,levB) in enumerate(levelsB)
                 if levA == levB     appendedB[i] = true
-                    parents   = deepcopy(levA.parents);     for p in levB.parents     push!(parents,   d)   end
-                    daugthers = deepcopy(levA.daugthers);   for d in levB.daugthers   push!(daugthers, d)   end
-                    push!(newlevels, Cascade.Level(levA.energy, levA.J, levA.parity, levA.NoElectrons, 0., parents, daugthers) )
+                    for p in levB.parents     push!(parents,   p)   end
+                    for d in levB.daugthers   push!(daugthers, d)   end
+                    if  length(parents) > length(levA.parents)  ||  length(daugthers) > length(levA.daugthers)  nmod = nmod + 1   end
                     break
                 end
             end
+            push!(newlevels, Cascade.Level(levA.energy, levA.J, levA.parity, levA.NoElectrons, 0., parents, daugthers) )
         end
         
         # Append those levels from levelsB that are not yet appended
         for  (i,levB) in enumerate(levelsB)
             if appendedB[i]
-            else    push!(newlevels, levB)
+            else    push!(newlevels, levB);     nnew = nnew + 1
             end 
         end
         nN = length(newlevels)
-        println("> Append $nlev (new) levels to $naBefore levels results in a total of $naAfter levels in the list.")
+        println("> Append $nnew (new) levels to $nA levels results in a total of $nN levels (with $nmod modified levels) in the list.")
         return( newlevels )
     end
 
 
+    #===
     """
     `Cascade.appendLevels!(allLevels::Array{Cascade.Level,1}, levels::Array{Cascade.Level,1})` 
         ... appends the (cascade) levels to allLevels if they do not yet occur in the list; a message is issued about the number
@@ -53,6 +56,7 @@
         println("> Append $nlev (new) levels to $naBefore levels results in a total of $naAfter levels in the list.")
         return( nothing )
     end
+    ==#
     
     
     """
@@ -473,7 +477,8 @@
             else    error("stop a")
             end
             levels = Cascade.extractLevels(lineData, settings)
-            Cascade.appendLevels!(allLevels, levels)
+            ##x Cascade.appendLevels!(allLevels, levels)
+            allLevels = Cascade.addLevels(allLevels, levels)
         end
         
         allLevels = Cascade.sortByEnergy(allLevels, simulation.settings)

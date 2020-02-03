@@ -234,12 +234,12 @@ module BascisPerform
             to the given atomic processes. The results of all individual steps are printed to screen but nothing is returned 
             otherwise.
 
-    `Basics.perform(comp::Cascade.Computation; output=true)`   
+    `Basics.perform(comp::Cascade.Computation; output::Bool=true, outputToFile::Bool=true)`   
         ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
             and specifications of the cascade but can easily accessed by the keys of this dictionary.
     """
-    function Basics.perform(comp::Cascade.Computation; output::Bool=false)
-        Cascade.perform(comp.scheme, comp::Cascade.Computation, output=output)
+    function Basics.perform(comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true)
+        Cascade.perform(comp.scheme, comp::Cascade.Computation, output=output, outputToFile=outputToFile)
     end
 
 

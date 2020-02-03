@@ -4,7 +4,7 @@ println("Ea) Two-step cascade computations and simulations following the 1s-3p p
 setDefaults("method: continuum, asymptotic Coulomb")    ## setDefaults("method: continuum, Galerkin")
 setDefaults("method: normalization, pure sine")         ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 #
-if  false    ## Stepwise decay cascade
+if  true    ## Stepwise decay cascade
 setDefaults("print summary: open", "zzz-Cascade-computation.sum")
 
 name = "Cascade after Si- 1s-3p excitation"

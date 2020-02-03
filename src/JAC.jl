@@ -48,7 +48,7 @@
 """
 module JAC
 
-using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD, SymEngine  ## , Interact
+using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD2, SymEngine  ## , Interact
 
 ##x export @racahsum, 
 export AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AngularMomentum, 

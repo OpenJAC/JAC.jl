@@ -618,11 +618,11 @@
             to the given atomic processes. The results of all individual steps are printed to screen but nothing is returned 
             otherwise.
 
-    `Cascade.perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output=true)`   
+    `Cascade.perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true)`   
         ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
             and specifications of the cascade but can easily accessed by the keys of this dictionary.
     """
-    function perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output::Bool=false)
+    function perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true)
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
@@ -662,12 +662,15 @@
             results = Base.merge( results, Dict("decay line data:"      => data) )
             #
             #  Write out the result to file to later continue with simulations on the cascade data
-            filename = "zzz-cascade-decay-computations-" * string(Dates.now())[1:13] * ".jld"
-            println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
-                    "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
-            if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
-                                                 "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
-            JLD.save(filename, results)
+            if outputToFile
+                filename = "zzz-cascade-decay-computations-" * string(Dates.now())[1:13] * ".jld"
+                println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
+                        "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
+                if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
+                                                     "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
+                ## JLD.save(filename, results)
+                JLD2.@save filename results
+            end
         else    results = nothing
         end
         
@@ -682,11 +685,11 @@
             photoionization steps are comprised into (output) data::PhotoIonData, although all data are only printed and nothing 
             is returned.
 
-    `Cascade.perform(scheme::PhotonIonizationScheme, comp::Cascade.Computation; output=true)`   
+    `Cascade.perform(scheme::PhotonIonizationScheme, comp::Cascade.Computation; output=true, outputToFile::Bool=true)`   
         ... to perform the same but to return the complete output in a dictionary that is written to disk and can be used in subsequent
             cascade simulation. The particular output also depends on the specifications of the cascade.
     """
-    function perform(scheme::PhotonIonizationScheme, comp::Cascade.Computation; output::Bool=false)
+    function perform(scheme::PhotonIonizationScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true)
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
@@ -736,8 +739,9 @@
                     "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
             if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
                                                  "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
-            JLD.save(filename, results)
+            ##x JLD.save(filename, results)
+            JLD2.@save filename results
         end
         ## return( results )
-        return( data )
+        return( results )
     end
