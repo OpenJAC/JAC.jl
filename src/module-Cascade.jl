@@ -13,10 +13,12 @@ module Cascade
     `abstract type Cascade.AbstractCascadeScheme` 
         ... defines an abstract type to distinguish different excitation, ionization and decay schemes of an atomic cascade; see also:
         
-        + struct StepwiseDecayScheme       ... to represent a standard decay scheme, starting from one or several initial multiplets.
-        + struct PhotonIonizationScheme    ... to represent a (prior) photoionization part of a cascade for given photon energies.
-        + struct ElectronExcitationScheme  ... to represent a (prior) electron-impact excitation part of a cascade for given electron
-                                               energies.
+        + struct StepwiseDecayScheme       ... to represent a standard decay scheme, starting from one or several 
+                                               initial multiplets.
+        + struct PhotonIonizationScheme    ... to represent a (prior) photoionization part of a cascade for given 
+                                               photon energies.
+        + struct ElectronExcitationScheme  ... to represent a (prior) electron-impact excitation part of a cascade 
+                                               for given electron energies (not yet).
     """
     abstract type  AbstractCascadeScheme       end
 
@@ -25,15 +27,16 @@ module Cascade
     `struct  Cascade.StepwiseDecayScheme  <:  Cascade.AbstractCascadeScheme`  
         ... a struct to represent (and generate) a mean-field orbital basis.
 
-        + processes             ::Array{Basics.AtomicProcess,1} ... List of the atomic processes that are supported and should be included into the 
-                                                                   cascade.
-        + maxElectronLoss       ::Int64                         ... (Maximum) Number of electrons in which the initial- and final-state 
-                                                                    configurations can differ from each other; this also determines the maximal steps 
-                                                                    of any particular decay path.
-        + NoShakeDisplacements  ::Int64                         ... Maximum number of electron displacements due to shake-up or shake-down processes 
-                                                                    in any individual step of the cascade.
-        + shakeFromShells       ::Array{Shell,1}                ... List of shells from which shake transitions may occur.
-        + shakeToShells         ::Array{Shell,1}                ... List of shells into which shake transitions may occur.
+        + processes             ::Array{Basics.AtomicProcess,1} ... List of the atomic processes that are supported 
+                                                                    and should be included into the cascade.
+        + maxElectronLoss       ::Int64             ... (Maximum) Number of electrons in which the initial- and 
+                                                        final-state configurations can differ from each other; 
+                                                        this also determines the maximal steps of any particular 
+                                                        decay path.
+        + NoShakeDisplacements  ::Int64             ... Maximum number of electron displacements due to shake-up 
+                                                        or shake-down processes in any individual step of cascade.
+        + shakeFromShells       ::Array{Shell,1}    ... List of shells from which shake transitions may occur.
+        + shakeToShells         ::Array{Shell,1}    ... List of shells into which shake transitions may occur.
     """
     struct   StepwiseDecayScheme  <:  Cascade.AbstractCascadeScheme
         processes               ::Array{Basics.AtomicProcess,1}
@@ -74,12 +77,14 @@ module Cascade
     `struct  Cascade.PhotonIonizationScheme  <:  Cascade.AbstractCascadeScheme`  
         ... a struct to represent (and generate) a mean-field orbital basis.
 
-        + processes             ::Array{Basics.AtomicProcess,1} ... List of the atomic processes that are supported and should be included into the 
-                                                                    cascade.
-        + maxPhotoElectrons     ::Int64                         ... (Maximum) Number of photo-electrons in which the initial- and (photo-ionized) 
-                                                                    final-state configurations can differ from each other; this affects the number of
-                                                                    ionized multiplets in the cascade.
-        + photonEnergies        ::Array{Float64,1}              ... List of photon energies for which this photo-ionization scheme is to be calculated.
+        + processes             ::Array{Basics.AtomicProcess,1} ... List of the atomic processes that are supported 
+                                                                    and should be included into the cascade.
+        + maxPhotoElectrons     ::Int64                 ... (Maximum) Number of photo-electrons in which the initial- 
+                                                            and (photo-ionized) final-state configurations can differ
+                                                            from each other; this affects the number of ionized 
+                                                            multiplets in the cascade.
+        + photonEnergies        ::Array{Float64,1}      ... List of photon energies for which this photo-ionization 
+                                                            scheme is to be calculated.
     """
     struct   PhotonIonizationScheme  <:  Cascade.AbstractCascadeScheme
         processes               ::Array{Basics.AtomicProcess,1}
@@ -261,13 +266,16 @@ module Cascade
         + nuclearModel       ::Nuclear.Model                   ... Model, charge and parameters of the nucleus.
         + grid               ::Radial.Grid                     ... The radial grid to be used for the computation.
         + asfSettings        ::AsfSettings                     ... Provides the settings for the SCF process.
-        + scheme             ::Cascade.AbstractCascadeScheme   ... Scheme of the atomic cascade (photoionization, decay, ...)
-        + approach           ::Cascade.AbstractCascadeApproach ... Computational approach/model that is applied to generate and evaluate the 
-                                                                   cascade; possible approaches are: {'single-configuration', ...}
-        + initialConfs       ::Array{Configuration,1}          ... List of one or several configurations that contain the level(s) from which the 
-                                                                   cascade starts.
-        + initialMultiplets  ::Array{Multiplet,1}              ... List of one or several (initial) multiplets; either initialConfs 'xor'
-                                                                   initialMultiplets can be specified for a cascade computation.
+        + scheme             ::Cascade.AbstractCascadeScheme   ... Scheme of the atomic cascade (photoionization, 
+                                                                   decay, ...)
+        + approach           ::Cascade.AbstractCascadeApproach ... Computational approach/model that is applied 
+                                                                   to generate and evaluate the cascade; possible 
+                                                                   approaches are: {'single-configuration', ...}
+        + initialConfs       ::Array{Configuration,1}          ... List of one or several configurations that 
+                                                                   contain the level(s) from which the cascade starts.
+        + initialMultiplets  ::Array{Multiplet,1}              ... List of one or several (initial) multiplets; 
+                                                                   either initialConfs 'xor' initialMultiplets can
+                                                                   be specified for a cascade computation.
     """
     struct  Computation
         name                 ::String
@@ -426,8 +434,10 @@ module Cascade
     `abstract type  Cascade.AbstractSimulationProperty`  
         ... defines an abstract and various singleton types for the different properties that can be obtained from the simulation of cascade data.
 
-        + struct IonDistribution         ... simulate the 'ion distribution' as it is found after all cascade processes are completed.
-        + struct FinalLevelDistribution  ... simulate the 'final-level distribution' as it is found after all cascade processes are completed.
+        + struct IonDistribution         ... simulate the 'ion distribution' as it is found after all cascade 
+                                             processes are completed.
+        + struct FinalLevelDistribution  ... simulate the 'final-level distribution' as it is found after all cascade 
+                                             processes are completed.
         + struct DecayPathes             ... determine the major 'decay pathes' of the cascade.
         + struct ElectronIntensities     ... simulate the electron-line intensities as function of electron energy.
         + struct PhotonIntensities       ... simulate  the photon-line intensities as function of electron energy. 
@@ -446,8 +456,10 @@ module Cascade
     abstract type  Cascade.AbstractSimulationMethod`  
         ... defines a enumeration for the various methods that can be used to run the simulation of cascade data.
 
-        + struct ProbPropagation     ... to propagate the (occupation) probabilites of the levels until no further changes occur.
-        + struct MonteCarlo          ... to simulate the cascade decay by a Monte-Carlo approach of possible pathes (not yet considered).
+        + struct ProbPropagation     ... to propagate the (occupation) probabilites of the levels until no further 
+                                         changes occur.
+        + struct MonteCarlo          ... to simulate the cascade decay by a Monte-Carlo approach of possible 
+                                         pathes (not yet considered).
         + struct RateEquations       ... to solve the cascade by a set of rate equations (not yet considered).
     """
     abstract type  AbstractSimulationMethod                  end
@@ -462,15 +474,17 @@ module Cascade
         + minElectronEnergy   ::Float64     ... Minimum electron energy for the simulation of electron spectra.
         + maxElectronEnergy   ::Float64     ... Maximum electron energy for the simulation of electron spectra.
         + minPhotonEnergy     ::Float64     ... Minimum photon energy for the simulation of electron spectra.
-        + maxPhotonEnergy     ::Float64     ... Maximum photon energy for the simulation of electron spectra..
-        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   ... List of one or several (tupels of) levels in the overall 
-                                                cascade tree together with their relative population.
+        + maxPhotonEnergy     ::Float64     ... Maximum photon energy for the simulation of electron spectra.
+        + initialPhotonEnergy ::Float64     ... Photon energy for which photoionization data are considered. 
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   ... List of one or several (tupels of) levels 
+                                            in the overall cascade tree together with their relative population.
     """
     struct  SimulationSettings
         minElectronEnergy     ::Float64
         maxElectronEnergy     ::Float64
         minPhotonEnergy       ::Float64
         maxPhotonEnergy       ::Float64
+        initialPhotonEnergy   ::Float64
         initialOccupations    ::Array{Tuple{Int64,Float64},1} 
     end 
 
@@ -479,7 +493,7 @@ module Cascade
     `Cascade.SimulationSettings()`  ... constructor for an 'empty' instance of a Cascade.Block.
     """
     function SimulationSettings()
-        SimulationSettings(0., 1.0e6,  0., 1.0e6, [(1, 1.0)] )
+        SimulationSettings(0., 1.0e6,  0., 1.0e6, 0., [(1, 1.0)] )
     end
 
 
@@ -489,6 +503,7 @@ module Cascade
         println(io, "maxElectronEnergy:        $(settings.maxElectronEnergy)  ")
         println(io, "minPhotonEnergy:          $(settings.minPhotonEnergy)  ")
         println(io, "maxPhotonEnergy:          $(settings.maxPhotonEnergy)  ")
+        println(io, "initialPhotonEnergy:      $(settings.initialPhotonEnergy)  ")
         println(io, "initialOccupations:       $(settings.initialOccupations)  ")
     end
 
@@ -497,10 +512,12 @@ module Cascade
     `struct  Cascade.Simulation`  ... defines a simulation on some given cascade (data).
 
         + name            ::String                                      ... Name of the simulation
-        + properties      ::Array{Cascade.AbstractSimulationProperty,1} ... Properties that are considered in this simulation of the cascade (data).
-        + method          ::Cascade.AbstractSimulationMethod            ... Method that is used in the cascade simulation; cf. Cascade.SimulationMethod.
-        + settings        ::Cascade.SimulationSettings                  ... Settings for performing these simulations.
-        + computationData ::Array{Dict{String,Any},1}                   ... Date on which the simulations are performed
+        + properties      ::Array{Cascade.AbstractSimulationProperty,1} ... Properties that are considered in this 
+                                                                            simulation of the cascade (data).
+        + method          ::Cascade.AbstractSimulationMethod    ... Method that is used in the cascade simulation; 
+                                                                    cf. Cascade.SimulationMethod.
+        + settings        ::Cascade.SimulationSettings          ... Settings for performing these simulations.
+        + computationData ::Array{Dict{String,Any},1}           ... Date on which the simulations are performed
     """
     struct  Simulation
         name              ::String

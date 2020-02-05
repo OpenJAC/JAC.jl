@@ -1,6 +1,7 @@
 
 #
 println("Eb) Three-step cascade computation and simulation for the photo-ionization of Si^- and its subsequent decay: AverageSCA model.")
+using JLD2
 #
 println("aa")
 setDefaults("method: continuum, asymptotic Coulomb")    ## setDefaults("method: continuum, Galerkin")
@@ -40,7 +41,6 @@ setDefaults("print summary: close", "")
 else
 setDefaults("print summary: open", "zzz-Cascade-simulation.sum")
 
-using JLD2
 JLD2.@load "zzz-cascade-ionizing-computations-2020-02-02T20.jld"
 resIon  = results
 JLD2.@load "zzz-cascade-decay-computations-2020-02-02T20.jld"
@@ -50,7 +50,7 @@ data = [resIon, resDecay]
 name = "Simulation after Si- 1s and 2s ionization and subsequent decay"
 
 wc   = Cascade.Simulation(Cascade.Simulation(), name=name, properties=Cascade.AbstractSimulationProperty[Cascade.IonDistribution()], ## , Cascade.FinalLevelDistribution()], 
-                          settings=Cascade.SimulationSettings(0., 0., 0., 0., [(78, 2.0), (79, 1.0), (80, 0.5)]), computationData=data )
+                          settings=Cascade.SimulationSettings(0., 0., 0., 0., 30., [(78, 2.0), (79, 1.0), (80, 0.5)]), computationData=data )
 println(wc)
 wd = perform(wc; output=true)
 setDefaults("print summary: close", "")

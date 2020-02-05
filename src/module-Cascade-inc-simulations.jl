@@ -267,7 +267,7 @@
     """
     function extractLevels(data::Array{Cascade.PhotoIonData,1}, settings::Cascade.SimulationSettings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream");   found = false
-        photonEnergy = 80.0;   newlevels = Cascade.Level[]
+        photonEnergy = settings.initialPhotonEnergy;   newlevels = Cascade.Level[]
         for dataset in data
             @show dataset.photonEnergy
             if  dataset.photonEnergy == photonEnergy       found     = true
@@ -354,11 +354,11 @@
         
         # Distinguish between the different computational methods for running the simulations
         if  simulation.method == Cascade.ProbPropagation()
-            if   Cascade.FinalLevelDistribution()  in  simulation.properties   ||   Cascade.IonDistribution()  in  simulation.properties
+            if  Cascade.FinalLevelDistribution()  in  simulation.properties   ||   Cascade.IonDistribution()  in  simulation.properties
                 wa = Cascade.simulateLevelDistribution(levels, simulation) 
             end
-            if   Cascade.ElectronIntensities()  in simulation.properties    ||   Cascade.PhotonIntensities()  in simulation.properties   ||
-                 Cascade.ElectronCoincidence()  in simulation.properties 
+            if  Cascade.ElectronIntensities()  in simulation.properties    ||   Cascade.PhotonIntensities()  in simulation.properties   ||
+                Cascade.ElectronCoincidence()  in simulation.properties 
                 error("stop a: Not yet implemented")    
             end
         else  error("stop b")
@@ -390,22 +390,28 @@
             print("    $n-th round ... ")
             for  level in levels
                 if   level.relativeOcc > 0.   && length(level.daugthers) > 0
-                    # A level with relative occupation > 0 has still 'daugther' levels; collect all decay rates for this level
+                    # A level with relative occupation > 0 has still 'daugther' levels; collect all excitation/decay rates for this level
+                    # Here, an excitation cross section is formally treated as a rate as it is assumed that the initial levels of
+                    # the photoionization process cannot decay by photon emission or autoionization processes.
                     prob  = level.relativeOcc;   totalProbability = totalProbability + prob;   rates = zeros(length(level.daugthers))
                     level.relativeOcc = 0.
                     for  (i,daugther) in  enumerate(level.daugthers)
                         idx = daugther.index
                         if      daugther.process == Basics.Radiative     rates[i] = daugther.lineSet.linesR[idx].photonRate.Babushkin
                         elseif  daugther.process == Basics.Auger         rates[i] = daugther.lineSet.linesA[idx].totalRate
+                        elseif  daugther.process == Basics.Photo         rates[i] = daugther.lineSet.linesP[idx].crossSection.Coulomb
+                                ##x println("Cou = $(daugther.lineSet.linesP[idx].crossSection.Coulomb),  Bab = $(daugther.lineSet.linesP[idx].crossSection.Babushkin)" )
+                                ##x println("photon energy = $(daugther.lineSet.linesP[idx].photonEnergy)")
                         else    error("stop a; process = $(daugther.process) ")
                         end
                     end
                     totalRate = sum(rates)
-                    # Shift the relative occupation to the 'daugther' levels due to the different decay pathes
+                    # Shift the relative occupation to the 'daugther' levels due to the different ionization and decay pathes
                     for  (i,daugther) in  enumerate(level.daugthers)
                         idx = daugther.index
                         if      daugther.process == Basics.Radiative     line = daugther.lineSet.linesR[idx]
                         elseif  daugther.process == Basics.Auger         line = daugther.lineSet.linesA[idx]
+                        elseif  daugther.process == Basics.Photo         line = daugther.lineSet.linesP[idx]
                         else    error("stop b; process = $(daugther.process) ")
                         end
                         newLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, 

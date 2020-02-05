@@ -1,5 +1,6 @@
 #
 println("Ea) Two-step cascade computations and simulations following the 1s-3p photo-excitation of Si^-: AverageSCA model.")
+using JLD
 #
 setDefaults("method: continuum, asymptotic Coulomb")    ## setDefaults("method: continuum, Galerkin")
 setDefaults("method: normalization, pure sine")         ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
@@ -19,7 +20,6 @@ setDefaults("print summary: close", "")
 else
 setDefaults("print summary: open", "zzz-Cascade-simulation.sum")
 
-using JLD
 ## data = [JLD.load("zzz-cascade-decay-computations-2020-01-25T11.jld"), JLD.load("zzz-cascade-decay-computations-2020-01-25T11.jld")]
 data = [JLD.load("zzz-cascade-decay-computations-2020-01-25T21.jld")]
 name = "Simulation after Si- 1s-3p excitation"
