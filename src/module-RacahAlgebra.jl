@@ -153,6 +153,7 @@ module  RacahAlgebra
                   d::AngMomentum, e::AngMomentum, f::AngMomentum)
         wa = AngMomentum(a);    wb = AngMomentum(b);    wc = AngMomentum(c)    
         wd = AngMomentum(d);    we = AngMomentum(e);    wf = AngMomentum(f)    
+        println("aaa")
         W6j(wa, wb, wc, wd, we, wf)
     end
 
@@ -267,7 +268,8 @@ module  RacahAlgebra
             summations=..,      phase=..,       weight=..,      deltas=..,     
             triangles=..,       w3js=..,        w6js=..,        w9js=..) 
                         
-        ... constructor for modifying the given CiSettings by 'overwriting' the explicitly selected parameters.
+        ... constructor for modifying a given rex::RacahExpression by 'overwriting' the explicitly selected parts of the 
+            expression.
     """
     function RacahExpression(rex::RacahAlgebra.RacahExpression;    
                              summations::Union{Nothing,Array{Basic,1}}=nothing,        phase::Union{Nothing,Basic}=nothing,            
@@ -300,6 +302,7 @@ module  RacahAlgebra
         for  w3j      in rex.w3js        sa = sa * "$w3j  "                         end
         for  w6j      in rex.w6js        sa = sa * "$w6j  "                         end
         for  w9j      in rex.w9js        sa = sa * "$w9j  "                         end
+        if sa == ""                      sa = "1"                                   end
         print(io, sa)
     end
 
@@ -394,6 +397,25 @@ module  RacahAlgebra
     struct         RecursionW3jHalfStep  <:  AbstractRecursionW3j   end
     struct         RecursionW3jLouck     <:  AbstractRecursionW3j   end
 
+    
+    #############################################################################################################################
+    #############################################################################################################################
+    #############################################################################################################################
+
+    
+    """
+    `RacahAlgebra.ClebschGordan(ja::Basic, ma::Basic, jb::Basic, mb::Basic, jc::Basic, mc::Basic)`  
+        ... returns the cg::RacahExpression for a standard Clebsch-Gordan coefficient either by Julia Symbol's or SymEngine 
+            Basic variables.
+    """
+    function ClebschGordan(ja::Basic, ma::Basic, jb::Basic, mb::Basic, jc::Basic, mc::Basic)
+        wja = AngMomentum(ja);    wjb = AngMomentum(jb);    wjc = AngMomentum(jc)    
+        wma = AngMomentum(ma);    wmb = AngMomentum(mb);    wmc = AngMomentum(mc)    
+        w3j = W3j(wja, wjb, wjc, wma, wmb, -wmc)
+        rex = RacahExpression( Basic[], wja - wjb - wmc, 1/sqrt(2*wjc+1), Kronecker[], Triangle[], [w3j], W6j[], W9j[] )
+        return( rex )
+    end
+
 
     """
     `RacahAlgebra.equivalentForm(w3j::RacahAlgebra.W3j; regge::Bool=false)`  
@@ -483,10 +505,10 @@ module  RacahAlgebra
     """
     function  evaluate(wj::Union{W3j,W6j,W9j})
         wa = RacahAlgebra.specialValue(wj)
-        if    wa[1]   println(">> Special value found for  $wj = $(wa[2]) ")
-        else          println(">> No special value found for  $wj ")
+        if    wa[1]   println(">> Special value found for  $wj = $(wa[2]).");     return( wa[2] )
+        else          println(">> No special value found for  $(wj).");           return( nothing )
         end
-        return( wa )
+        
     end
 
 
@@ -503,32 +525,55 @@ module  RacahAlgebra
                                copy(rx.deltas), copy(rx.triangles), copy(rx.w3js), copy(rx.w6js), copy(rx.w9js) )
         if  special
             # Simplify by means of special values if this is requested
-            println("*** a1   rex = $rex ")
             for  (iaW3j, aW3j) in enumerate(rex.w3js)    wa = evaluate(aW3j)
-                if wa[1]    newW3js = W3j[]     
+                if wa != nothing    newW3js = W3j[]     
                     for  (ibW3j, bW3j) in enumerate(rex.w3js)   if  iaW3j == ibW3j  else  push!(newW3js, ibW3j)   end    end
                     rrex = RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, newW3js, rex.w6js, rex.w9js)
-                    println("*** aa  rrex = $rrex           wa[2] = $(wa[2]) ")
-                    return( rrex * wa[2] )
+                    return( rrex * wa )
                 end
             end
             for  (iaW6j, aW6j) in enumerate(rex.w6js)    wa = evaluate(aW6j)
-                if wa[1]    newW6js = W6j[]     
+                if wa != nothing    newW6js = W6j[]     
                     for  (ibW6j, bW6j) in enumerate(rex.w6js)   if  iaW6j == ibW6j  else  push!(newW6js, ibW6j)   end    end
                     rrex = RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, rex.w3js, newW6js, rex.w9js)
-                    println("*** bb  rrex = $rrex           wa[2] = $(wa[2]) ")
-                    return( rrex * wa[2] )
+                    return( rrex * wa )
                 end
             end
             for  (iaW9j, aW9j) in enumerate(rex.w9js)    wa = evaluate(aW9j)
-                if wa[1]    newW9js = W9j[]     
+                if wa != nothing    newW9js = W9j[]     
                     for  (ibW9j, bW9j) in enumerate(rex.w9js)   if  iaW9j == ibW9j  else  push!(newW9js, ibW9j)   end    end
                     rrex = RacahExpression( rex.summations, rex.phase, rex.weight, rex.deltas, rex.triangles, rex.w3js, rex.w6js, newW9js)
-                    println("*** cc  rrex = $rrex           wa[2] = $(wa[2]) ")
-                    return( rrex * wa[2] )
+                    return( rrex * wa )
                 end
             end
         else
+            newrex = rex
+            while true
+                cont = false
+                wa = RacahAlgebra.sumRulesForTwoW6jOneW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForOneW6jTwoW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForFourW6j(newrex);            if    wa[1]  newrex = wa[2];   cont = true  end
+                #
+                wa = RacahAlgebra.sumRulesForOneW3j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForOneW6j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForOneW9j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForTwoW3j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForTwoW6j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForOneW6jOneW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForTwoW9j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForThreeW3j(newrex);           if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForTwoW3jOneW6j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForThreeW6j(newrex);           if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForThreeW9j(newrex);           if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForFourW3j(newrex);            if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForThreeW6jOneW9j(newrex);     if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForTwoW6jTwoW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForOneW6jThreeW9j(newrex);     if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForFiveW3j(newrex);            if    wa[1]  newrex = wa[2];   cont = true  end
+                wa = RacahAlgebra.sumRulesForSixW3j(newrex);             if    wa[1]  newrex = wa[2];   cont = true  end
+                if  cont    else     return(newrex)    end
+            end
+            #==
             # Try to find sum rules
             wa = RacahAlgebra.sumRulesForOneW3j(rex);                if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForOneW6j(rex);                if    wa[1]  return( wa[2] )  end
@@ -539,7 +584,7 @@ module  RacahAlgebra
             wa = RacahAlgebra.sumRulesForTwoW9j(rex);                if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForThreeW3j(rex);              if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForTwoW3jOneW6j(rex);          if    wa[1]  return( wa[2] )  end
-            # wa = RacahAlgebra.sumRulesForThreeW6j(rex);              if    wa[1]  return( wa[2] )  end
+            wa = RacahAlgebra.sumRulesForThreeW6j(rex);              if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForTwoW6jOneW9j(rex);          if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForOneW6jTwoW9j(rex);          if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForThreeW9j(rex);              if    wa[1]  return( wa[2] )  end
@@ -550,10 +595,11 @@ module  RacahAlgebra
             wa = RacahAlgebra.sumRulesForOneW6jThreeW9j(rex);        if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForFiveW3j(rex);               if    wa[1]  return( wa[2] )  end
             wa = RacahAlgebra.sumRulesForSixW3j(rex);                if    wa[1]  return( wa[2] )  end
+            ==#
         end
         
-        println("\nNo simplification found for:  $rex ");  
-        return( nothing )
+        ##x println("\nNo simplification found for:  $rex ");  
+        ##x return( nothing )
     end
 
 
@@ -643,7 +689,7 @@ module  RacahAlgebra
     """
     function  hasAllVars(indexList::Array{SymEngine.Basic,1}, varList::Array{SymEngine.Basic,1})
         for  index  in  indexList
-            if  index in varList    else    return( false )   end
+            if  index in varList   ||  -index in varList    else    return( false )   end
         end
         return( true )
     end
@@ -771,7 +817,7 @@ module  RacahAlgebra
     """
     function hasNoVars(indexList::Array{SymEngine.Basic,1}, triangles::Array{RacahAlgebra.Triangle,1})
         sList = Basic[]
-        for  triangle in triangles    push!(sList, triangle.i);    push!(sList, triangle.j);    push!(sList, triangle.k)     end
+        for  triangle in triangles    push!(sList, triangle.ja);    push!(sList, triangle.jb);    push!(sList, triangle.jc)     end
         for  index in indexList
             if  index in sList   return( false )   end
         end
@@ -832,6 +878,18 @@ module  RacahAlgebra
         end
         
         return( true )    
+    end
+
+
+    """
+    `RacahAlgebra.purifyPhase(phase::SymEngine.Basic)`  
+        ... purifies the phase so that all contributions of 'a' are in the range -a, a, 2a ,3a
+            An equivalent newphase::SymEngine.Basic is returned.
+    """
+    function purifyPhase(phase::SymEngine.Basic)
+        newphase = Basic(0)
+        
+        return( newphase )    
     end
 
 
@@ -922,10 +980,10 @@ module  RacahAlgebra
             #
             J = w3j.ja + w3j.jb + w3j.jc;    wa = - sqrt( (w3j.jc+w3j.ma+w3j.mb+1) * (w3j.jc-w3j.ma-w3j.mb) )
             rex = RacahExpression( Basic[], 0, sqrt( (w3j.ja+w3j.ma+1) * (w3j.ja-w3j.ma) )/wa, Kronecker[], Triangle[], 
-                                   [W3j(w3j.ja, w3j.jb, w3j.jc, w3j.ma, w3j.mb+1, -m3)], W6j[], W9j[])
+                                   [W3j(w3j.ja, w3j.jb, w3j.jc, w3j.ma, w3j.mb+1, w3j.mc-1)], W6j[], W9j[])
             push!( rexList, rex)
             rex = RacahExpression( Basic[], 0, sqrt( (w3j.jb+w3j.mb+1) * (w3j.jb-w3j.mb) )/wa, Kronecker[], Triangle[], 
-                                   [W3j(w3j.ja, w3j.jb, w3j.jc, w3j.ma+1, w3j.mb, -m3)], W6j[], W9j[])
+                                   [W3j(w3j.ja, w3j.jb, w3j.jc, w3j.ma+1, w3j.mb, w3j.mc-1)], W6j[], W9j[])
             push!( rexList, rex)
             return( rexList )
             #
@@ -940,7 +998,7 @@ module  RacahAlgebra
     function  removeIndex(index::SymEngine.Basic, indexList::Array{SymEngine.Basic,1})
         newList = Basic[]
         for  idx in indexList
-            if  idx == index
+            if  idx == index  ||  -idx in indices
             else    push!( newList, idx)
             end
         end
@@ -955,7 +1013,7 @@ module  RacahAlgebra
     function  removeIndex(indices::Array{SymEngine.Basic,1}, indexList::Array{SymEngine.Basic,1})
         newList = Basic[]
         for  idx in indexList
-            if  idx in indices
+            if  idx in indices  ||  -idx in indices
             else    push!( newList, idx)
             end
         end
@@ -1126,9 +1184,7 @@ module  RacahAlgebra
         elseif  n == 19     w6j = W6j( a, b, c, 2, c-1, b-1)
         elseif  n == 20     w6j = W6j( a, b, c, 2, c-1, b)
         elseif  n == 21     w6j = W6j( a, b, c, 2, c-1, b+1)
-        elseif  n == 22     w6j = W6j( a, b, c, 2, c-1, b)
-
-        elseif  n == 30     w6j = FAIL
+        elseif  n == 22     w6j = W6j( a, b, c, 2, c  , b)
         else    error("stop a")
         end
         
@@ -1278,7 +1334,7 @@ module  RacahAlgebra
         elseif  n ==  41    aw9j = W9j(a, d, X, b, ee, Y, cp, f, g);    bw9j = W9j(l, a, Z, ee, b, Y, j, c, h);    cw6j = W6j(a, d, X, k, Z, l);    
                             dw6j = W6j(X, Y, g, h, k, Z); 
                             rex  = RacahExpression( [X,Y,Z], Z, (2*X+1)*(2*Y+1)*(2*Z+1), Kronecker[], Triangle[], W3j[], W6j[cw6j, dw6j], W9j[aw9j, bw9j] )
-        elseif  n ==  42    aw9j = W9j(a, d, X, c, d, Y, ee, f, Z);    bw9j = W9j(g, h, X, k, l, Y, f, ee, Z);    cw6j = W6j(a, b, X, g, h, j);    
+        elseif  n ==  42    aw9j = W9j(a, b, X, c, d, Y, ee, f, Z);    bw9j = W9j(g, h, X, k, l, Y, f, ee, Z);    cw6j = W6j(a, b, X, g, h, j);    
                             dw6j = W6j(c, d, Y, k, l, jp); 
                             rex  = RacahExpression( [X,Y,Z], 2*Y - Z, (2*X+1)*(2*Y+1)*(2*Z+1), Kronecker[], Triangle[], W3j[], W6j[cw6j, dw6j], W9j[aw9j, bw9j] )
         elseif  n ==  43    aw9j = W9j(a, b, X, g, c, q, p, Z, Y);    bw9j = W9j(b, d, fp, c, h, j, Z, Y, p);    cw6j = W6j(a, b, X, d, ee, f);    
@@ -1287,7 +1343,7 @@ module  RacahAlgebra
         elseif  n ==  44    aw9j = W9j(a, b, X, c, d, Y, p, q, s);    bw9j = W9j(ee, f, X, g, h, Y, r, t, s);    cw6j = W6j(a, b, X, f, ee, k);    
                             dw6j = W6j(c, d, Y, h, g, l); 
                             rex  = RacahExpression( [X,Y], X + Y, (2*X+1)*(2*Y+1), Kronecker[], Triangle[], W3j[], W6j[cw6j, dw6j], W9j[aw9j, bw9j] )
-        elseif  n ==  45    aw9j = W9j(a, b, X, c, d, Y, t, s, r);    bw9j = W9j(a, b, X, h, j, q, ee, f, Z);    cw9j = W9j(k, l, p, h, j, q, ee, f, Z);    
+        elseif  n ==  45    aw9j = W9j(a, b, X, c, d, Y, t, s, r);    bw9j = W9j(a, b, X, h, j, q, ee, f, Z);    cw9j = W9j(k, l, p, c, d, Y, ee, f, Z);    
                             dw6j = W6j(p, q, r, X, Y, Z); 
                             rex  = RacahExpression( [X,Y,Z], Basic(0), (2*X+1)*(2*Y+1)*(2*Z+1), Kronecker[], Triangle[], W3j[], W6j[dw6j], W9j[aw9j, bw9j, cw9j] )
         # Sum rules for five Wnj symbol

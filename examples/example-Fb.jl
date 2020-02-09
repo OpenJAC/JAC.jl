@@ -4,15 +4,10 @@ println("Fb) Symbolic simplification of Racah expressions by means of sum rules.
 using SymEngine
 
 if  true
-    # Test for sum rules
-    rex = RacahAlgebra.selectRacahExpression(43);          println("rex-original        = $rex")  ## bis 37 getested
-    # rex = RacahAlgebra.equivalentForm(rex);              println("rex-equivalent      = $rex")
-    rex = RacahAlgebra.evaluate(rex)
-    ## @profile rex = RacahAlgebra.evaluate(rex);                    println("wa-sum rule eval    = $rex")
-    ## rex = RacahAlgebra.evaluate(rex);                    println("wb-sum rule eval    = $rex")
-    ## ws  = [:j => 2//1, :m => 1, :jb => 2, :jc => 1]
-    ## wb  = RacahAlgebra.subs(rex, ws);                   println("\nrex-substitution  = $wb")
-    ## wc  = RacahAlgebra.subs(wa, ws);                    println("\nrhs-substitution  = $wc")
-    ## wd  = RacahAlgebra.evaluateNumerical(wb);           println("lhs-numerical       = $wd")
-    ## we  = RacahAlgebra.evaluateNumerical(wc);           println("rhs-numerical       = $we")
+    # Test for sum rules; the 'simple form' (without additional phases) has now been tested for all (1..47) 
+    # selectRacahExpression(1..45); with additional phases for selectRacahExpression(1..30, 32..47)
+    # test simplification of deltas with 31, 38, 39
+    rex = RacahAlgebra.selectRacahExpression(48);           println("rex-original        = $rex")
+    rex = RacahAlgebra.equivalentForm(rex);                println("rex-equivalent      = $rex")
+    rex = RacahAlgebra.evaluate(rex);                      
 end
