@@ -13,12 +13,12 @@ if  false
     #
     leftCsq  = RacahAlgebra.Csq( j1, j2, j3)
     wa       = RacahAlgebra.evaluate(leftCsq, leftCsq)    
-elseif true
+elseif false
     #
     leftCsq  = RacahAlgebra.Csq( RacahAlgebra.Csq( j1, j2, j12), j3, J)
     rightCsq = RacahAlgebra.Csq( j1, RacahAlgebra.Csq( j2, j3, j23), J)
     wa       = RacahAlgebra.evaluate(leftCsq, rightCsq)    
-elseif false
+elseif true
     #
     leftCsq  = RacahAlgebra.Csq( RacahAlgebra.Csq(j1,j2,j5), RacahAlgebra.Csq(j3,j4,j6), j7 )
     rightCsq = RacahAlgebra.Csq( j1, RacahAlgebra.Csq( RacahAlgebra.Csq(j2,j3,j8), j4, j9), j7 )
