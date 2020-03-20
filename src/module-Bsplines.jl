@@ -359,7 +359,7 @@ module Bsplines
     function generateGalerkinMatrix(primitives::Bsplines.Primitives, energy::Float64, sh::Subshell, pot::Radial.Potential)
 
         # Define the storage for the calculations of matrices; this is necessary to use the Bsplines.generateMatrix!() function
-        println("(Re-) Define a storage array for various B-spline matrices:")
+        println(">> (Re-) Define a storage array for various B-spline matrices:")
         storage  = Dict{Array{Any,1},Array{Float64,2}}()
         # Set-up the overlap matrix
         nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS;    wb  = zeros( nsL+nsS, nsL+nsS )
@@ -414,7 +414,7 @@ module Bsplines
         if  kappa == 0     return( orbitals )     end       # This should not cause any problem.
         
         # Define the storage for the calculations of matrices; this is necessary to use the Bsplines.generateMatrix!() function.
-        if  printout    println("(Re-) Define a storage array for various B-spline matrices:")    end
+        if  printout    println(">> (Re-) Define a storage array for various B-spline matrices:")    end
         storage  = Dict{Array{Any,1},Array{Float64,2}}()
         # Set-up the overlap matrix
         nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
@@ -451,7 +451,7 @@ module Bsplines
 
         newOrbitals = Dict{Subshell, Orbital}()
         # Define the storage for the calculations of matrices; this is necessary to use the Bsplines.generateMatrix!() function
-        if  printout    println("(Re-) Define a storage array for various B-spline matrices:")    end
+        if  printout    println(">> (Re-) Define a storage array for various B-spline matrices:")    end
         storage  = Dict{Array{Any,1},Array{Float64,2}}()
         # Set-up the overlap matrix
         nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
@@ -538,7 +538,7 @@ module Bsplines
                                           settings::AsfSettings; printout::Bool=true) 
         Defaults.setDefaults("standard grid", primitives.grid; printout=printout)
         # Define the storage for the calculations of matrices
-        if  printout    println("(Re-) Define a storage array for various B-spline matrices:")    end
+        if  printout    println(">>  for various B-spline matrices:")    end
         storage  = Dict{Array{Any,1},Array{Float64,2}}()
         
         # Set-up the overlap matrix; compute or fetch the diagonal 'overlap' blocks

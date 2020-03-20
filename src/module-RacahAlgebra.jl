@@ -622,18 +622,19 @@ module  RacahAlgebra
         end
         #
         # Rewrite coupling string as Racah expression and combine(multiply) both sides
-        lrex = RacahAlgebra.rewriteCsq(leftCsq, "m")
-        rrex = RacahAlgebra.rewriteCsq(rightCsq, "m")
+        lrex = RacahAlgebra.rewriteCsq(leftCsq, "m");       println(">> Lhs-sequence     = $lrex ")
+        rrex = RacahAlgebra.rewriteCsq(rightCsq, "m");      println(">> Rhs-sequence     = $rrex ")
         rex  = lrex * rrex
         summations = unique(rex.summations);    rex = RacahExpression(rex, summations=summations)
-        println("\n*** Total rex = $rex")
+        println(">> Total recoupling = $rex")
         #
-        wa = sumRulesForOneW3j(rex);         if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
-        wa = sumRulesForTwoW3j(rex);         if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
-        wa = sumRulesForThreeW3j(rex);       if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
-        #
-        println(">> No simplification found for recoupling coefficient  < $leftCsq | $rightCsq > = $rex ")
-        return( nothing )
+        wa = RacahAlgebra.evaluate(rex)
+        ##x wa = sumRulesForOneW3j(rex);         if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
+        ##x wa = sumRulesForTwoW3j(rex);         if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
+        ##x wa = sumRulesForThreeW3j(rex);       if    wa[1]  prsim(wa[2]);   return( wa[2] )  end
+        ##x #
+        ##x println(">> No simplification found for recoupling coefficient  < $leftCsq | $rightCsq > = $rex ")
+        return( wa )
     end
 
 
@@ -789,7 +790,7 @@ module  RacahAlgebra
     function hasNoVars(indexList::Array{SymEngine.Basic,1}, expr::SymEngine.Basic)
         sList = SymEngine.free_symbols(expr)
         for  index in indexList
-            if  index in sList   return( false )   end
+            if  index in sList  || -index in sList   return( false )   end
         end
         
         return( true )    
@@ -1070,15 +1071,15 @@ module  RacahAlgebra
         summations = Basic[];   phase = Basic(0);   weight = Basic(1);   w3js = W3j[]
         summations = appendSummation( csq.a, csq.b)
         w3js       = appendW3j( csq.a, csq.b, csq.c)
-        println("\n*** summations = $summations")
-        println("*** w3js       = $w3js")
+        ##x println("***** summations = $summations")
+        ##x println("***** w3js       = $w3js")
         for  w3j in w3js
             phase  = phase  + w3j.ja - w3j.jb - w3j.mc
             weight = weight * sqrt(2*w3j.jc+1)
         end
         
         rex = RacahExpression( summations, phase, weight, Kronecker[], Triangle[], w3js, W6j[], W9j[])    
-        println("*** rex = $rex")
+        ## println("***** rex = $rex")
         return( rex )
     end
 

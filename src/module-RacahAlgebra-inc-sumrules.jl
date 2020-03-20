@@ -259,10 +259,30 @@
                         specialbW3j = W3j(wwa.jb, wwa.jc, wwb.jc, -wwa.mb, -wwa.mc, wwb.mc)
                         if  wwa == specialaW3j  &&  wwb == specialbW3j 
                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase;     testPhase  = newPhase + wwa.mb + wwa.mc + wwa.ja - wwa.ma - wwa.jb - wwa.jc
+                            testPhase  = testPhase + 2wwb.jb + 2wwb.mb
+                            @info "1)$(2*wwa.ma + 2*wwa.mb + 2*wwa.mc)        2)$(wwb.ma + wwb.mb + wwb.mc)         testPhase  = $testPhase."
+                            if      RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], testPhase)
+                            elseif  RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], testPhase + 2*wwa.ma + 2*wwa.mb + 2*wwa.mc )
+                                    testPhase = testPhase + 2*wwa.ma + 2*wwa.mb + 2*wwa.mc
+                            elseif  RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], testPhase - 2*wwa.ma - 2*wwa.mb - 2*wwa.mc )
+                                    testPhase = testPhase - 2*wwa.ma - 2*wwa.mb - 2*wwa.mc
+                            elseif  RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], testPhase + wwa.ma + wwa.mb + wwa.mc )
+                                    testPhase = testPhase + wwa.ma + wwa.mb + wwa.mc
+                            elseif  RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], testPhase - wwa.ma - wwa.mb - wwa.mc )
+                                    testPhase = testPhase - wwa.ma - wwa.mb - wwa.mc
+                            elseif  RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], testPhase + wwb.ma + wwb.mb + wwb.mc )
+                                    testPhase = testPhase + wwb.ma + wwb.mb + wwb.mc
+                            elseif  RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], testPhase - wwb.ma - wwb.mb - wwb.mc )
+                                    testPhase = testPhase - wwb.ma - wwb.mb - wwb.mc
+                            else    # use testPhase as before
+                            end   
                             newWeight  = rex.weight * xaRex.weight * xbRex.weight;    testWeight = newWeight / (2*wwa.ja+1)
                             newW3js    = W3j[];       
                             for (icW3j, cW3j) in enumerate(rex.w3js)  if  icW3j != iaW3j &&  icW3j != ibW3j   push!(newW3js, cW3j)   end   end
                             #
+                            @info "$rex "
+                            @info "sumRulesForThreeW3j: Proper set of three W3js found; NOT ($(wwa.mb), $(wwa.mc))  testPhase  = $testPhase."
+                            @info "                                                     HAS ($(wwa.mb), $(wwa.mc))  summations = $(rex.summations)."
                             if  RacahAlgebra.hasAllVars([wwa.mb, wwa.mc], rex.summations) &&  RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], testPhase)     &&  
                                 RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], testWeight)      &&  RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], rex.deltas)    &&  
                                 RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], rex.triangles)   &&  RacahAlgebra.hasNoVars([wwa.mb, wwa.mc], newW3js)       &&  
@@ -683,8 +703,9 @@
                                         if  idW3j != iaW3j &&  idW3j != ibW3j &&  idW3j != icW3j   push!(newW3js, dW3j)   end   
                                     end
                                     #
-                                    ## @info "sumRulesForThreeW3j: Proper set of three W3js found; NOT ($(wwc.ma), $(wwa.ma), $(wwb.ma))  testPhase  = $testPhase."
-                                    ## @info "                                                     HAS ($(wwc.ma), $(wwa.ma), $(wwb.ma))  summations = $(rex.summations)."
+                                    @info "$rex "
+                                    @info "sumRulesForThreeW3j: Proper set of three W3js found; NOT ($(wwc.ma), $(wwa.ma), $(wwb.ma))  testPhase  = $testPhase."
+                                    @info "                                                     HAS ($(wwc.ma), $(wwa.ma), $(wwb.ma))  summations = $(rex.summations)."
                                     if  RacahAlgebra.hasAllVars([wwc.ma, wwa.ma, wwb.ma], rex.summations) &&  RacahAlgebra.hasNoVars([wwc.ma, wwa.ma, wwb.ma], testPhase)  &&  
                                         RacahAlgebra.hasNoVars([wwc.ma, wwa.ma, wwb.ma], testWeight)      &&  RacahAlgebra.hasNoVars([wwc.ma, wwa.ma, wwb.ma], rex.deltas) &&  
                                         RacahAlgebra.hasNoVars([wwc.ma, wwa.ma, wwb.ma], rex.triangles)   &&  RacahAlgebra.hasNoVars([wwc.ma, wwa.ma, wwb.ma], newW3js)    &&  

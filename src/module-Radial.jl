@@ -240,7 +240,7 @@ module Radial
     
         sa = Base.string(grid::Radial.Grid);    print(io, sa * "\n")
     
-        nr = grid.nr;    nt = grid.nt;    if  nr < 6   return( nothing )    end
+        nr = grid.nr;    nt = length(grid.t);    if  nr < 6   return( nothing )    end
         print(io, "r:    ", grid.r[1:3],    "  ...  ", grid.r[nr-2:nr],     "\n") 
         if  grid.meshType == Radial.MeshGrasp()
             print(io, "rp:   ", grid.rp[1:3],   "  ...  ", grid.rp[nr-2:nr],    "\n") 
@@ -325,8 +325,11 @@ module Radial
         for  i = 1:nth:nr
             nrmax = i;    nt = nt + 1;    push!( t, r[i])
         end
-        nsL = nt + orderL - 1 - 8;    nsS = nt + orderS - 1 - 8;    nr = nrmax - 10
-        for   ip = nt+1:nt+max(orderL, orderS)-1    push!( t, r[nt])   end
+        ## nsL = nt + orderL - 1 - 8;    nsS = nt + orderS - 1 - 8;    nr = nrmax - 10
+        nsL = nt + orderL - 3;    nsS = nt + orderS - 3;    nr = nrmax - 2
+        for   ip = nt+1:nt+max(orderL, orderS)-1    push!( t, t[nt+orderL] )   end
+        @show nsL, nsS, nt+orderL, t[nt+orderL]
+        @show t
         
         # Define the radial grid due to the definition
         wr = zeros(nr)
@@ -773,8 +776,8 @@ module Radial
         end
         mZbar   = sum(meanZbar) / nx;   for  i = 1:nx    devsZbar[i] = (meanZbar[i] - mZbar)^2    end
         stdZbar = sqrt( sum(devsZbar) / nx )
-        if  true  println("> Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
-                          " (Delta-Zbar=" * @sprintf("%.4e",stdZbar) * ")." )    end
+        if  true  println(">> Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
+                          " (Delta-Zbar=" * @sprintf("%.4e",stdZbar) * ") at r=" * @sprintf("%.4e",pot.grid.r[mtp]) * " a.u." )    end
         
         return( mZbar )
     end
