@@ -7,6 +7,11 @@ j6  = Basic(:j6);    j7  = Basic(:j7);    j8  = Basic(:j8);    j9  = Basic(:j9);
 j11 = Basic(:j11);   j12 = Basic(:j12);   j13 = Basic(:j13);   j14 = Basic(:j14);   j15 = Basic(:j15)
 j16 = Basic(:j16);   j17 = Basic(:j17);   j18 = Basic(:j18);   j19 = Basic(:j19);   j20 = Basic(:j20)
 j21 = Basic(:j21);   j22 = Basic(:j22);   j23 = Basic(:j23);   j24 = Basic(:j24);   j25 = Basic(:j25)
+
+L1  = Basic(:L1);    L2  = Basic(:L2);    L12 = Basic(:L12);   S1  = Basic(:S1);    S2  = Basic(:S2);    S12 = Basic(:S12)
+T1  = Basic(:T1);    T2  = Basic(:T2)
+Jm1 = Basic(:Jm1);   Jp1 = Basic(:Jp1);   J1  = Basic(:J1);    Jm2 = Basic(:Jm2);   Jp2 = Basic(:Jp2);   J2  = Basic(:J2)
+Xp1 = Basic(:Xp1);   Xm2 = Basic(:Xm2)
 J   = Basic(:J)
 
 if  false
@@ -19,11 +24,21 @@ elseif false
     rightCsq = RacahAlgebra.Csq( j1, RacahAlgebra.Csq( j2, j3, j23), J)
     wa       = RacahAlgebra.evaluate(leftCsq, rightCsq)    
 elseif true
+    # LSJ-recoupling, two open shells
+    leftCsq  = RacahAlgebra.Csq( RacahAlgebra.Csq( L1, L2, L12), RacahAlgebra.Csq( S1, S2, S12), J)
+    rightCsq = RacahAlgebra.Csq( RacahAlgebra.Csq( L1, S1, T1),  RacahAlgebra.Csq( L2, S2, T2),  J)
+    wa       = RacahAlgebra.evaluate(leftCsq, rightCsq)    
+elseif false
+    # jjJ-recoupling, two open shells
+    leftCsq  = RacahAlgebra.Csq( RacahAlgebra.Csq( Jm1, Jp1, J1),   RacahAlgebra.Csq( Jm2, Jp2, J2), J)
+    rightCsq = RacahAlgebra.Csq( RacahAlgebra.Csq( RacahAlgebra.Csq( Jm1, Jp1, Xp1), Jm2, Xm2), Jp2, J)
+    wa       = RacahAlgebra.evaluate(leftCsq, rightCsq)    
+elseif true
     #
     leftCsq  = RacahAlgebra.Csq( RacahAlgebra.Csq(j1,j2,j5), RacahAlgebra.Csq(j3,j4,j6), j7 )
     rightCsq = RacahAlgebra.Csq( j1, RacahAlgebra.Csq( RacahAlgebra.Csq(j2,j3,j8), j4, j9), j7 )
     wa       = RacahAlgebra.evaluate(leftCsq, rightCsq)
-elseif false
+elseif true
     #
     leftCsq  = RacahAlgebra.Csq( RacahAlgebra.Csq( RacahAlgebra.Csq(j1,j2,j9),j3,j10), 
                                  RacahAlgebra.Csq( RacahAlgebra.Csq( RacahAlgebra.Csq(j4,j5,j11),j6,j12), RacahAlgebra.Csq(j7,j8,j13),j14), j15)

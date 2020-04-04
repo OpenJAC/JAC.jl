@@ -547,8 +547,13 @@ module  RacahAlgebra
                 end
             end
         else
-            newrex = rex
+            ##x newrex = rex
+            ##x @show "evaluate:", rex
+            newrex = RacahExpression( rex.summations, RacahAlgebra.purifyPhase(rex.phase), rex.weight, 
+                                      rex.deltas, rex.triangles, rex.w3js, rex.w6js, rex.w9js )
+            ##x @show "evaluate:", newrex
             while true
+                @show "evaluate:", newrex
                 cont = false
                 wa = RacahAlgebra.sumRulesForTwoW6jOneW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
                 wa = RacahAlgebra.sumRulesForOneW6jTwoW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
@@ -623,7 +628,7 @@ module  RacahAlgebra
         #
         # Rewrite coupling string as Racah expression and combine(multiply) both sides
         lrex = RacahAlgebra.rewriteCsq(leftCsq, "m");       println(">> Lhs-sequence     = $lrex ")
-        rrex = RacahAlgebra.rewriteCsq(rightCsq, "m");      println(">> Rhs-sequence     = $rrex ")
+        rrex = RacahAlgebra.rewriteCsq(rightCsq, "m");     println(">> Rhs-sequence     = $rrex ")
         rex  = lrex * rrex
         summations = unique(rex.summations);    rex = RacahExpression(rex, summations=summations)
         println(">> Total recoupling = $rex")
@@ -889,6 +894,16 @@ module  RacahAlgebra
     """
     function purifyPhase(phase::SymEngine.Basic)
         newphase = Basic(0)
+        waList   = SymEngine.get_args(phase + 4*Basic(:Xdummy) + 4*Basic(:Ydummy))  # Add Xdummy, Ydummy to have always more than 1 argument
+        for  wa in waList   
+            if       length(SymEngine.get_args(wa)) == 0    newphase = newphase + wa
+            elseif   length(SymEngine.get_args(wa)) == 2
+                ##x @show wa
+                wb = SymEngine.get_args(wa);   wc = convert(Int64,wb[1]);   wc = rem(wc+100,4);    if  wc == 3   wc = -1   end                                    
+                                                            newphase = newphase + wc * wb[2]
+            else     error("stop a")
+            end
+        end
         
         return( newphase )    
     end
