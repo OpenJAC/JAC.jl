@@ -95,7 +95,7 @@ module Defaults
     `Defaults.convertUnits()`  
         ... converts some data from one format/unit into another one; cf. the supported keystrings and return values.
 
-    + `("cross section: from atomic to predefined unit", value::Float64)`  or  `("energy: from atomic", value::Float64)`  
+    + `("cross section: from atomic to predefined unit", value::Float64)`  or  `("cross section: from atomic", value::Float64)`  
         ... to convert an energy value from atomic to the predefined cross section unit; a Float64 is returned.
 
     + `("cross section: from atomic to barn", value::Float64)`  or  `("cross section: from atomic to Mbarn", value::Float64)`  or

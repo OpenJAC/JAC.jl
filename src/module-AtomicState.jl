@@ -1,8 +1,18 @@
-    # This file is 'included' into the module Atomic
+
+"""
+`module  JAC.AtomicState`  ... a submodel of JAC that contains all methods to set-up and process atomic representations.
+"""
+module AtomicState
+
+    ## using Interact
+    using ..Basics, ..Radial, ..ManyElectron, ..Nuclear
+
+    export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, 
+            GreenSettings, GreenChannel, GreenExpansion, Representation
 
     
     """
-    `abstract type Atomic.AbstractRepresentationType` 
+    `abstract type AtomicState.AbstractRepresentationType` 
         ... defines an abstract type and a number of data types to work with and distinguish different atomic representations; see also:
         
         + struct MeanFieldBasis       ... to represent (and generate) a mean-field basis and, especially, a set of (mean-field) orbitals.
@@ -14,7 +24,7 @@
 
     
     """
-    `struct  Atomic.MeanFieldSettings`  
+    `struct  AtomicState.MeanFieldSettings`  
         ... a struct for defining the settings for a mean-field basis (orbital) representation.
 
         + methodScf            ::String             ... Specify the SCF method: ["meanDFS", "meanHS"].
@@ -24,7 +34,7 @@
     end
 
     """
-    `Atomic.MeanFieldSettings()`  ... constructor for setting the default values.
+    `AtomicState.MeanFieldSettings()`  ... constructor for setting the default values.
     """
     function MeanFieldSettings()
     	MeanFieldSettings("meanDFS")
@@ -38,13 +48,13 @@
 
 
     """
-    `struct  Atomic.MeanFieldBasis  <:  AbstractRepresentationType`  
+    `struct  AtomicState.MeanFieldBasis  <:  AbstractRepresentationType`  
         ... a struct to represent (and generate) a mean-field orbital basis.
 
-        + settings         ::Atomic.MeanFieldSettings      ... Settings for the given mean-field orbital basis
+        + settings         ::AtomicState.MeanFieldSettings      ... Settings for the given mean-field orbital basis
     """
     struct   MeanFieldBasis  <:  AbstractRepresentationType
-        settings           ::Atomic.MeanFieldSettings
+        settings           ::AtomicState.MeanFieldSettings
     end
 
 
@@ -64,7 +74,7 @@
     
     ### RAS: Restricted-Active-Space expansions ##################################################################################
     """
-    `struct  Atomic.RasSettings`  
+    `struct  AtomicState.RasSettings`  
         ... a struct for defining the settings for a restricted active-space computations.
 
         + levelsScf            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
@@ -85,7 +95,7 @@
     end
 
     """
-    `Atomic.RasSettings()`  ... constructor for setting the default values.
+    `AtomicState.RasSettings()`  ... constructor for setting the default values.
     """
     function RasSettings()
     	RasSettings(Int64[1], 24, 1.0e-6, false, false, Int64[])
@@ -104,7 +114,7 @@
 
 
     """
-    `struct  Atomic.RasStep`  
+    `struct  AtomicState.RasStep`  
         ... specifies an individual step of a (relativistic) restricted active space computation for a set of levels. This struct 
             comprises all information to generate the orbital basis and to perform the associated SCF and multiplet computations for a 
             selected number of levels.
@@ -134,7 +144,7 @@
     end
 
     """
-    `Atomic.RasStep()`  ... constructor for an 'empty' instance of a variable::Atomic.RasStep
+    `AtomicState.RasStep()`  ... constructor for an 'empty' instance of a variable::AtomicState.RasStep
     """
     function RasStep()
         RasStep(Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[],    Shell[], String[])
@@ -142,7 +152,7 @@
 
 
     """
-    `Atomic.RasStep(rasStep::Atomic.RasStep;`
+    `AtomicState.RasStep(rasStep::AtomicState.RasStep;`
     
                         seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[], 
                         deFrom::Array{Shell,1}=Shell[], deTo::Array{Shell,1}=Shell[], 
@@ -152,7 +162,7 @@
                         
         ... constructor for modifying the given rasStep by specifying all excitations, frozen shells and constraints optionally.
     """
-    function RasStep(rasStep::Atomic.RasStep;
+    function RasStep(rasStep::AtomicState.RasStep;
                      seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[], 
                      deFrom::Array{Shell,1}=Shell[], deTo::Array{Shell,1}=Shell[], 
                      teFrom::Array{Shell,1}=Shell[], teTo::Array{Shell,1}=Shell[], 
@@ -173,15 +183,15 @@
     end
 
 
-    # `Base.string(step::Atomic.RasStep)`  ... provides a String notation for the variable step::Atomic.RasStep.
-    function Base.string(step::Atomic.RasStep)
+    # `Base.string(step::AtomicState.RasStep)`  ... provides a String notation for the variable step::AtomicState.RasStep.
+    function Base.string(step::AtomicState.RasStep)
         sa = "\nCI or RAS step with $(length(step.frozenShells)) (explicitly) frozen shell(s): $(step.frozenShells)  ... and virtual excitations"
         return( sa )
     end
 
 
-    # `Base.show(io::IO, step::Atomic.RasStep)`  ... prepares a proper printout of the (individual step of computations) step::Atomic.RasStep.
-    function Base.show(io::IO, step::Atomic.RasStep)
+    # `Base.show(io::IO, step::AtomicState.RasStep)`  ... prepares a proper printout of the (individual step of computations) step::AtomicState.RasStep.
+    function Base.show(io::IO, step::AtomicState.RasStep)
         sa = Base.string(step);                 print(io, sa, "\n")
         if  length(step.seFrom) > 0
            sa = "   Singles from:          { ";      for  sh in step.seFrom   sa = sa * string(sh) * ", "  end
@@ -207,27 +217,27 @@
     
     
     """
-    `struct  Atomic.RasExpansion    <:  AbstractRepresentationType`  
+    `struct  AtomicState.RasExpansion    <:  AbstractRepresentationType`  
         ... a struct to represent (and generate) a restricted active-space representation.
 
-        + symmetry         ::LevelSymmetry             ... Symmetry of the levels/CSF in the many-electron basis.
-        + NoElectrons      ::Int64                     ... Number of electrons.
-        + steps            ::Array{Atomic.RasStep,1}   ... List of SCF steps that are to be done in this model computation.
-        + settings         ::Atomic.RasSettings        ... Settings for the given RAS computation
+        + symmetry         ::LevelSymmetry                  ... Symmetry of the levels/CSF in the many-electron basis.
+        + NoElectrons      ::Int64                          ... Number of electrons.
+        + steps            ::Array{AtomicState.RasStep,1}   ... List of SCF steps that are to be done in this model computation.
+        + settings         ::AtomicState.RasSettings        ... Settings for the given RAS computation
     """
     struct         RasExpansion    <:  AbstractRepresentationType
         symmetry           ::LevelSymmetry
         NoElectrons        ::Int64
-        steps              ::Array{Atomic.RasStep,1}
-        settings           ::Atomic.RasSettings 
+        steps              ::Array{AtomicState.RasStep,1}
+        settings           ::AtomicState.RasSettings 
      end
 
 
     """
-    `Atomic.RasExpansion()`  ... constructor for an 'empty' instance of the a variable::Atomic.RasExpansion
+    `AtomicState.RasExpansion()`  ... constructor for an 'empty' instance of the a variable::AtomicState.RasExpansion
     """
     function RasExpansion()
-        RasExpansion(Basics.LevelSymmetry(0, Basics.plus), 0, 0, Atomic.RasStep[], Atomic.RasSettings())
+        RasExpansion(Basics.LevelSymmetry(0, Basics.plus), 0, 0, AtomicState.RasStep[], AtomicState.RasSettings())
     end
 
 
@@ -250,14 +260,14 @@
     
     ### CI: Configuration Interaction expansions ##################################################################################
     """
-    `struct  Atomic.CiSettings`  
+    `struct  AtomicState.CiSettings`  
         ... a struct for defining the settings for a configuration-interaction (CI) expansion.
 
     	+ breitCI              ::Bool               ... logical flag to include Breit interactions.
     	+ selectLevelsCI       ::Bool               ... true, if specific level (number)s have been selected.
     	+ selectedLevelsCI     ::Array{Int64,1}     ... Level number that have been selected.
-    	+ selectSymmetriesCI   ::Bool                          ... true, if specific level symmetries have been selected.
-    	+ selectedSymmetriesCI ::Array{LevelSymmetry,1}        ... Level symmetries that have been selected.
+    	+ selectSymmetriesCI   ::Bool                    ... true, if specific level symmetries have been selected.
+    	+ selectedSymmetriesCI ::Array{LevelSymmetry,1}  ... Level symmetries that have been selected.
     """
     struct  CiSettings
     	breitCI                ::Bool 
@@ -268,7 +278,7 @@
     end
 
     """
-    `Atomic.CiSettings()`  ... constructor for setting the default values.
+    `AtomicState.CiSettings()`  ... constructor for setting the default values.
     """
     function CiSettings()
     	CiSettings(false, false, Int64[], false, LevelSymmetry[])
@@ -276,7 +286,7 @@
 
 
     """
-    `Atomic.CiSettings(settings::Atomic.CiSettings;`
+    `AtomicState.CiSettings(settings::AtomicState.CiSettings;`
     
             breitCI::Union{Nothing,Bool}=nothing, 
             selectLevelsCI::Union{Nothing,Bool}=nothing,                    selectedLevelsCI::Union{Nothing,Array{Int64,1}}=nothing, 
@@ -284,7 +294,7 @@
                         
         ... constructor for modifying the given CiSettings by 'overwriting' the explicitly selected parameters.
     """
-    function CiSettings(settings::Atomic.CiSettings;
+    function CiSettings(settings::AtomicState.CiSettings;
         breitCI::Union{Nothing,Bool}=nothing, 
         selectLevelsCI::Union{Nothing,Bool}=nothing,                        selectedLevelsCI::Union{Nothing,Array{Int64,1}}=nothing, 
         selectSymmetriesCI::Union{Nothing,Bool}=nothing,                    selectedSymmetriesCI::Union{Nothing,Array{LevelSymmetry,1}}=nothing)
@@ -310,17 +320,17 @@
 
 
     """
-    `struct  Atomic.CiExpansion  <:  AbstractRepresentationType`  
+    `struct  AtomicState.CiExpansion  <:  AbstractRepresentationType`  
         ... a struct to represent (and generate) a configuration-interaction representation.
 
         + applyOrbitals    ::Dict{Subshell, Orbital}
-        + excitations      ::Atomic.RasStep            ... Excitations beyond refConfigs.
-        + settings         ::Atomic.CiSettings         ... Settings for the given CI expansion
+        + excitations      ::AtomicState.RasStep            ... Excitations beyond refConfigs.
+        + settings         ::AtomicState.CiSettings         ... Settings for the given CI expansion
     """
     struct         CiExpansion     <:  AbstractRepresentationType
         applyOrbitals      ::Dict{Subshell, Orbital}
-        excitations        ::Atomic.RasStep
-        settings           ::Atomic.CiSettings
+        excitations        ::AtomicState.RasStep
+        settings           ::AtomicState.CiSettings
     end
 
 
@@ -344,7 +354,7 @@
     ### Green function representation ##################################################################################
 
     """
-    `abstract type Atomic.AbstractGreenApproach` 
+    `abstract type AtomicState.AbstractGreenApproach` 
         ... defines an abstract and a number of singleton types for approximating a many-electron Green
             function expansion for calculating second-order processes.
 
@@ -362,13 +372,13 @@
             electron densities rho_ab (r) --> rho_ab (r) * e^{tau*r}
     """
     abstract type  AbstractGreenApproach                                  end
-    struct         SingleCSFwithoutCI  <:  Atomic.AbstractGreenApproach   end
-    struct         CoreSpaceCI         <:  Atomic.AbstractGreenApproach   end
-    struct         DampedSpaceCI       <:  Atomic.AbstractGreenApproach   end
+    struct         SingleCSFwithoutCI  <:  AtomicState.AbstractGreenApproach   end
+    struct         CoreSpaceCI         <:  AtomicState.AbstractGreenApproach   end
+    struct         DampedSpaceCI       <:  AtomicState.AbstractGreenApproach   end
 
    
     """
-    `struct  Atomic.GreenSettings`  
+    `struct  AtomicState.GreenSettings`  
         ... defines a type for defining the details and parameters of the approximate Green (function) expansion.
 
         + nMax                     ::Int64            ... maximum principal quantum numbers of (single-electron) 
@@ -377,7 +387,7 @@
                                                           (single-electron) excitations are to be included.
         + dampingTau               ::Float64          ... factor tau (> 0.) that is used to 'damp' the one- and two-electron
                                                           interactions strength: exp( - tau * r)
-        + printBefore   ::Bool             ... True if a short overview is to be printed before. 
+        + printBefore              ::Bool             ... True if a short overview is to be printed before. 
         + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
         + selectedLevels           ::Array{Int64,1}   ... List of selected levels.
     """
@@ -385,33 +395,33 @@
         nMax                       ::Int64
         lValues                    ::Array{Int64,1}
         dampingTau                 ::Float64
-        printBefore     ::Bool 
+        printBefore                ::Bool 
         selectLevels               ::Bool
         selectedLevels             ::Array{Int64,1}
     end 
 
 
     """
-    `Atomic.GreenSettings()`  ... constructor for an `empty` instance of Atomic.GreenSettings.
+    `AtomicState.GreenSettings()`  ... constructor for an `empty` instance of AtomicState.GreenSettings.
     """
     function GreenSettings()
         Settings( 0, Int64[], 0., false, false, Int64[])
     end
 
 
-    # `Base.show(io::IO, settings::Atomic.GreenSettings)`  ... prepares a proper printout of the variable settings::Atomic.GreenSettings.
-    function Base.show(io::IO, settings::Atomic.GreenSettings) 
+    # `Base.show(io::IO, settings::AtomicState.GreenSettings)`  ... prepares a proper printout of the variable settings::AtomicState.GreenSettings.
+    function Base.show(io::IO, settings::AtomicState.GreenSettings) 
         println(io, "nMax:                     $(settings.nMax)  ")
         println(io, "lValues:                  $(settings.lValues)  ")
         println(io, "dampingTau:               $(settings.dampingTau)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
         println(io, "selectLevels:             $(settings.selectLevels)  ")
         println(io, "selectedLevels:           $(settings.selectedLevels)  ")
     end
 
 
     """
-    `struct  Atomic.GreenChannel`  
+    `struct  AtomicState.GreenChannel`  
         ... defines a type for a single symmetry channel of an (approximate) Green (function) expansion.
 
         + symmetry          ::LevelSymmetry    ... Level symmetry of this part of the representation.
@@ -424,45 +434,45 @@
 
 
     """
-    `Atomic.GreenChannel()`  ... constructor for an `empty` instance of Atomic.GreenChannel.
+    `AtomicState.GreenChannel()`  ... constructor for an `empty` instance of AtomicState.GreenChannel.
     """
     function GreenChannel()
         GreenChannel( LevelSymmetry(0, Basics.plus), ManyElectron.Multiplet)
     end
 
 
-    # `Base.show(io::IO, channel::Atomic.GreenChannel)`  ... prepares a proper printout of the variable channel::Atomic.GreenChannel.
-    function Base.show(io::IO, channel::Atomic.GreenChannel) 
+    # `Base.show(io::IO, channel::AtomicState.GreenChannel)`  ... prepares a proper printout of the variable channel::AtomicState.GreenChannel.
+    function Base.show(io::IO, channel::AtomicState.GreenChannel) 
         println(io, "symmetry:                $(channel.symmetry)  ")
         println(io, "gMultiplet:              $(channel.gMultiplet)  ")
     end
 
 
     """
-    `struct  Atomic.GreenExpansion  <:  AbstractRepresentationType`  
+    `struct  AtomicState.GreenExpansion  <:  AbstractRepresentationType`  
         ... defines a type to keep an (approximate) Green (function) expansion that is associated with a given set of reference
             configurations.
 
-        + approach          ::Atomic.AbstractGreenApproach    ... Approach used to approximate the representation.
-        + excitationScheme  ::Basics.AbstractExcitationScheme ... Applied excitation scheme w.r.t. refConfigs. 
-        + levelSymmetries   ::Array{LevelSymmetry,1}          ... Total symmetries J^P to be included into Green expansion.
-        + NoElectrons       ::Int64                           ... Number of electrons.
-        + settings          ::Atomic.GreenSettings            ... settings for the Green (function) expansion.
+        + approach          ::AtomicState.AbstractGreenApproach  ... Approach used to approximate the representation.
+        + excitationScheme  ::Basics.AbstractExcitationScheme    ... Applied excitation scheme w.r.t. refConfigs. 
+        + levelSymmetries   ::Array{LevelSymmetry,1}             ... Total symmetries J^P to be included into Green expansion.
+        + NoElectrons       ::Int64                              ... Number of electrons.
+        + settings          ::AtomicState.GreenSettings          ... settings for the Green (function) expansion.
     """
     struct GreenExpansion  <:  AbstractRepresentationType
-        approach            ::Atomic.AbstractGreenApproach
+        approach            ::AtomicState.AbstractGreenApproach
         excitationScheme    ::Basics.AbstractExcitationScheme 
         levelSymmetries     ::Array{LevelSymmetry,1}
         NoElectrons         ::Int64 
-        settings            ::Atomic.GreenSettings
+        settings            ::AtomicState.GreenSettings
     end   
 
 
     """
-    `Atomic.GreenExpansion()`  ... constructor for an `empty` instance of Atomic.GreenExpansion.
+    `AtomicState.GreenExpansion()`  ... constructor for an `empty` instance of AtomicState.GreenExpansion.
     """
     function GreenExpansion()
-        GreenExpansion( Atomic.SingleCSFwithoutCI(), Basics.NoExcitationScheme(), LevelSymmetry[], 0, Atomic.GreenSettings())
+        GreenExpansion( AtomicState.SingleCSFwithoutCI(), Basics.NoExcitationScheme(), LevelSymmetry[], 0, AtomicState.GreenSettings())
     end
 
 
@@ -485,8 +495,8 @@
 
     ### Representation ##################################################################################
     """
-    `struct  Atomic.Representation`  
-        ... a struct for defining an atomic representation. Such representations often refer to approximate wave function approximations of
+    `struct  AtomicState.Representation`  
+        ... a struct for defining an atomic state representation. Such representations often refer to approximate wave function approximations of
             one or several levels but may concern also a mean-field basis (for some multiplet of some given configurations) or Green functions,
             etc.
 
@@ -506,14 +516,14 @@
 
 
     """
-    `Atomic.Representation()`  ... constructor for an 'empty' instance of the a variable::Atomic.Representation
+    `AtomicState.Representation()`  ... constructor for an 'empty' instance of the a variable::AtomicState.Representation
     """
     function Representation()
         Representation("", Nuclear.Model(1.0), Radial.Grid(), ManyElectron.Configuration[], CiExpansion())
     end
 
 
-    # `Base.string(rep::Representation)`  ... provides a String notation for the variable rep::Representation.
+    # `Base.string(rep::Representation)`  ... provides a String notation for the variable rep::AtomicState.Representation
     function Base.string(rep::Representation)
         sa = "Atomic representation:   $(rep.name) for Z = $(rep.nuclearModel.Z) and with reference configurations: \n   "
         for  refConfig  in  rep.refConfigs     sa = sa * string(refConfig) * ",  "     end
@@ -528,4 +538,6 @@
         println(io, "nuclearModel:          $(rep.nuclearModel)  ")
         println(io, "grid:                  $(rep.grid)  ")
     end
+
+end # module
     

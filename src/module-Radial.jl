@@ -328,8 +328,8 @@ module Radial
         ## nsL = nt + orderL - 1 - 8;    nsS = nt + orderS - 1 - 8;    nr = nrmax - 10
         nsL = nt + orderL - 3;    nsS = nt + orderS - 3;    nr = nrmax - 2
         for   ip = nt+1:nt+max(orderL, orderS)-1    push!( t, t[nt+orderL] )   end
-        @show nsL, nsS, nt+orderL, t[nt+orderL]
-        @show t
+        ##x @show nsL, nsS, nt+orderL, t[nt+orderL]
+        ##x @show t
         
         # Define the radial grid due to the definition
         wr = zeros(nr)

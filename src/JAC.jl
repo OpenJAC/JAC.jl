@@ -52,7 +52,7 @@ using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, Ga
 
 ##x export @racahsum, 
 export AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AngularMomentum, 
-       AsfSettings, Atomic, AtomicStructure, Auger, AutoIonization, 
+       AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AutoIonization, 
        Basics, Basis, 
        CartesianVector, CiSettings, CiExpansion, CloseCoupling, compute, convertUnits, Cascade, Configuration, ConfigurationR, 
        Continuum, CsfR, CoulombExcitation, CoulombIonization,  
@@ -106,6 +106,7 @@ include("module-InteractionStrengthQED.jl")
 include("module-PeriodicTable.jl")
 include("module-TableStrings.jl")
 include("module-Tools.jl")
+include("module-AtomicState.jl");   using ..AtomicState
 include("module-LSjj.jl")
 
 # Functions/methods for atomic amplitudes
@@ -122,7 +123,6 @@ include("module-LandeZeeman.jl")
 include("module-AlphaVariation.jl")
 include("module-FormFactor.jl")
 include("module-DecayYield.jl")
-##x include("module-GreenFunction.jl")
 include("module-CloseCoupling.jl")
 include("module-MultipolePolarizibility.jl")
 include("module-PlasmaShift.jl")

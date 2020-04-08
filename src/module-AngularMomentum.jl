@@ -68,6 +68,29 @@ module AngularMomentum
 
 
     """
+    `AngularMomentum.allowedTotalSymmetries(symf::LevelSymmetry, mp2::EmMultipole, mp1::EmMultipole, symi::LevelSymmetry)`  
+        ... to determine all allowed total symmetries J^P that can be constructed by coupling a multipole wave mp1 to the 
+            initial symmetry symi, and which can be further coupled with mp2 to the final symmetry symf. 
+            A list::Array{LevelSymmetry,1} of total symmetries is returned.
+    """
+    function allowedTotalSymmetries(symf::LevelSymmetry, mp2::EmMultipole, mp1::EmMultipole, symi::LevelSymmetry) 
+        symtList = LevelSymmetry[]
+        waList   = oplus(symi.J, mp1.L);    wbList   = oplus(symf.J, mp2.L)
+        for  wa in waList
+            if  wa in wbList
+                if      AngularMomentum.parityEmMultipolePi(symi.parity, mp1, Basics.plus)    &&
+                        AngularMomentum.parityEmMultipolePi(symf.parity, mp2, Basics.plus)    push!( symtList, LevelSymmetry(wa, Basics.plus) )
+                elseif  AngularMomentum.parityEmMultipolePi(symi.parity, mp1, Basics.minus)   &&
+                        AngularMomentum.parityEmMultipolePi(symf.parity, mp2, Basics.minus)   push!( symtList, LevelSymmetry(wa, Basics.minus) )
+                end
+            end
+        end
+
+        return( symtList )         
+    end
+
+
+    """
     `AngularMomentum.bracket(jList::Array{AngularJ64,1})`  
         ... to compute the bracket [a, b, c, ... ] = (2a+1) * (2b+1) * (2b+1) * ... of the given angular momenta. 
             A value::Int64 is returned.
@@ -228,7 +251,20 @@ module AngularMomentum
         if  kappa < 0    l  = abs(kappa) -1   else   l  = kappa   end
         return( AngularJ64(l) )
     end
+    
 
+    """
+    `AngularMomentum.m_values(j::AngularJ64)`  ... returns a list of m-values for given j::AngularJ64.
+    """
+    function  m_values(j::AngularJ64) 
+        mList = AngularM64[]
+        if       j.den == 1   for  jx = -j.num:j.num      push!( mList, AngularM64(jx))       end
+        elseif   j.den == 2   for  jx = -j.num:2:j.num    push!( mList, AngularM64(jx//2))    end
+        else     error("stop a")
+        end
+
+        return( mList )
+    end
     
 
     """

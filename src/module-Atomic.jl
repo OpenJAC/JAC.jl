@@ -14,10 +14,10 @@ module Atomic
           ..PhotoIonizationFluores, ..PhotoIonizationAutoion, ..ImpactExcitationAutoion, ..RadiativeAuger, 
           ..MultiPhotonIonization, ..MultiPhotonDoubleIon, ..InternalConversion
 
-export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, 
-        GreenSettings, GreenChannel, GreenExpansion, Representation
+    ##x export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, 
+    ##x         GreenSettings, GreenChannel, GreenExpansion, Representation
 
-    include("../src/module-Atomic-inc-Representation.jl")
+    ##x include("../src/module-Atomic-inc-AtomicState.jl")
     
 
     

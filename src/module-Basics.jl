@@ -85,6 +85,10 @@ module Basics
         return( jList )
     end
     
+    oplus(ja::AngularJ64, jb::Int64) = oplus(ja, AngularJ64(jb))
+    oplus(ja::Int64, jb::AngularJ64) = oplus(AngularJ64(ja), jb)
+    oplus(ja::Int64, jb::Int64)      = oplus(AngularJ64(ja), AngularJ64(jb))
+    
     
     ##x oplus(ja, jb) = oplus(HalfInt(ja), HalfInt(jb))
     ##x oplus(ja::Union{HalfInt,Integer}, jb::Union{HalfInt,Integer}) = abs(ja-jb):ja+jb

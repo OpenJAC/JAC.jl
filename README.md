@@ -125,7 +125,8 @@ pkg> add https://github.com/OpenJAC/JAC.jl
 ```
 Moreover, to run the tutorials, yo need to have Jupyter notebooks running.
 
-If problems occur with the installation, please, see the [Installation Guide](InstallationGuide.md).
+If problems occur with the installation, please, see the Installation Guides for [Linux](InstallationGuideLinux.md),
+[Mac](InstallationGuideMac.md) or ... 
 
 
 
@@ -234,4 +235,8 @@ A few further suggestions for extending and improving JAC can be found in sectio
 
 
 ## Supporters:
+
+* Jiri Hofbrucker (U Jena, Germany)
+* Stefan Schippers (U Giessen, Germany)
+* Martino Trasinelli (U Sorbonne Paris, France)
 

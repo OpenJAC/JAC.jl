@@ -5,8 +5,8 @@
 """
 module BasicsAG
 
-    using Printf,  LinearAlgebra, ..AngularMomentum, ..Atomic, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..LSjj, ..ManyElectron, 
-                  ..PhotoEmission, ..Radial, ..RadialIntegrals, ..TableStrings
+    using Printf,  LinearAlgebra, ..AngularMomentum, ..Atomic, ..AtomicState, ..Basics, ..Continuum, ..Defaults, ..Einstein, 
+                   ..LSjj, ..ManyElectron, ..PhotoEmission, ..Radial, ..RadialIntegrals, ..TableStrings
     
     export recastAG
 
@@ -425,10 +425,10 @@ module BasicsAG
     
     
     """
-    `Basics.display(stream::IO, channels::Array{Atomic.GreenChannel,1})`  
+    `Basics.display(stream::IO, channels::Array{AtomicState.GreenChannel,1})`  
         ... displays the (generated Green function)  channels in a neat and compact form; nothing is returned in this case.
     """
-    function  Basics.display(stream::IO, channels::Array{Atomic.GreenChannel,1})
+    function  Basics.display(stream::IO, channels::Array{AtomicState.GreenChannel,1})
         println(stream, " ")
         println(stream, "  Green function channels:")
         println(stream, " ")
@@ -436,8 +436,8 @@ module BasicsAG
             energies = Float64[]
             for  level in channel.gMultiplet.levels   push!(energies, level.energy)  end
             minenergy = minimum(energies);    maxenergy = maximum(energies)
-            println("  Channel with $(channel.symmetry) symmetry, $(length(channel.gMultiplet.levels)) levels and energies [Hartree]:" *
-                    " $minenergy ... $maxenergy")
+            println(stream, "  Channel with $(channel.symmetry) symmetry, $(length(channel.gMultiplet.levels)) levels and energies [Hartree]:" *
+                            " $minenergy ... $maxenergy")
         end
         
         return( nothing )

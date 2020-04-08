@@ -5,23 +5,23 @@
 """
 module BascisGenerate
 
-    using Printf, ..AngularMomentum, ..Atomic, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..Einstein, ..ManyElectron, 
-                  ..Nuclear, ..PhotoEmission, ..Radial
+    using Printf, ..AngularMomentum, ..Atomic, ..AtomicState, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
+                  ..Einstein, ..ManyElectron, ..Nuclear, ..PhotoEmission, ..Radial
     
     export generate
 
 
 
     """
-    `Basics.generate(representation::Atomic.Representation)`  
+    `Basics.generate(representation::AtomicState.Representation)`  
         ... to generate an atomic representation as specified by the representation.repType::AbstractRepresentationType.
             All relevant intermediate and final results are printed to screen (stdout). Nothing is returned.
 
-    `Basics.perform(representation::Atomic.Representation; output=true)`  
+    `Basics.perform(representation::AtomicState.Representation; output=true)`  
         ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
             specifications of the representation but can easily accessed by the keys of this dictionary.
     """
-    function Basics.generate(representation::Atomic.Representation; output::Bool=false)
+    function Basics.generate(representation::AtomicState.Representation; output::Bool=false)
         results = Basics.generate(representation.repType, representation; output=output)
         
         Defaults.warn(PrintWarnings)
@@ -33,15 +33,15 @@ module BascisGenerate
 
 
     """
-    `Basics.generate(repType::Atomic.MeanFieldBasis, representation::Atomic.Representation)`  
+    `Basics.generate(repType::AtomicState.MeanFieldBasis, representation::AtomicState.Representation)`  
         ... to generate a mean-field basis (representation) for a set of reference configurations; all relevant intermediate 
             and final results are printed to screen (stdout). Nothing is returned.
 
-    `Basics.generate(repType::Atomic.MeanFieldBasis, representation::Atomic.Representation; output=true)`  
+    `Basics.generate(repType::AtomicState.MeanFieldBasis, representation::AtomicState.Representation; output=true)`  
         ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
             specifications of the representation but can easily accessed by the keys of this dictionary.
     """
-    function Basics.generate(repType::Atomic.MeanFieldBasis, rep::Atomic.Representation; output::Bool=false)
+    function Basics.generate(repType::AtomicState.MeanFieldBasis, rep::AtomicState.Representation; output::Bool=false)
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         nModel    = rep.nuclearModel
 
@@ -57,16 +57,16 @@ module BascisGenerate
 
 
     """
-    `Basics.generate(repType::Atomic.CiExpansion, representation::Atomic.Representation)`  
+    `Basics.generate(repType::AtomicState.CiExpansion, representation::AtomicState.Representation)`  
         ... to generate a configuration-interaction expansion for a single level symmetry and based on a set of reference configurations
             and a number of pre-specified steps. All relevant intermediate and final results are printed to screen (stdout). 
             Nothing is returned.
 
-    `Basics.generate(repType::Atomic.CiExpansion, representation::Atomic.Representation; output=true)`  
+    `Basics.generate(repType::AtomicState.CiExpansion, representation::AtomicState.Representation; output=true)`  
         ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
             specifications of the computations but can easily accessed by the keys of this dictionary.
     """
-    function Basics.generate(repType::Atomic.CiExpansion, rep::Atomic.Representation; output::Bool=false)
+    function Basics.generate(repType::AtomicState.CiExpansion, rep::AtomicState.Representation; output::Bool=false)
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         nModel    = rep.nuclearModel
         orbitals  = repType.applyOrbitals
@@ -118,16 +118,16 @@ module BascisGenerate
 
 
     """
-    `Basics.generate(repType::Atomic.RasExpansion, representation::Atomic.Representation)`  
+    `Basics.generate(repType::AtomicState.RasExpansion, representation::AtomicState.Representation)`  
         ... to generate a restricted active-space expansion for a single level symmetry and based on a set of reference configurations
             and a number of pre-specified steps. All relevant intermediate and final results are printed to screen (stdout). 
             Nothing is returned.
 
-    `Basics.generate(repType::Atomic.RasExpansion, representation::Atomic.Representation; output=true)`  
+    `Basics.generate(repType::AtomicState.RasExpansion, representation::AtomicState.Representation; output=true)`  
         ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
             specifications of the computations but can easily accessed by the keys of this dictionary.
     """
-    function Basics.generate(repType::Atomic.RasExpansion, rep::Atomic.Representation; output::Bool=false)
+    function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Representation; output::Bool=false)
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         nModel   = rep.nuclearModel
         # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
@@ -167,16 +167,16 @@ module BascisGenerate
 
 
     """
-    `Basics.generate(repType::Atomic.GreenExpansion, representation::Atomic.Representation)`  
+    `Basics.generate(repType::AtomicState.GreenExpansion, representation::AtomicState.Representation)`  
         ... to generate a Green (function) expansion for a given approach and excitation scheme of the electron,
             based on a set of reference configurations, a list of level symmetries as well as for given settings.
             All relevant intermediate and final results are printed to screen (stdout). Nothing is returned.
 
-    `Basics.generate(repType::Atomic.GreenExpansion, representation::Atomic.Representation; output=true)`  
+    `Basics.generate(repType::AtomicState.GreenExpansion, representation::AtomicState.Representation; output=true)`  
         ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
             specifications of the representation but can easily accessed by the keys of this dictionary.
     """
-    function Basics.generate(repType::Atomic.GreenExpansion, rep::Atomic.Representation; output::Bool=false)
+    function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.Representation; output::Bool=false)
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         nModel    = rep.nuclearModel
         settings  = repType.settings
@@ -193,7 +193,7 @@ module BascisGenerate
         printstyled("Compute an approximate Green function expansion ... \n", color=:light_green)
         printstyled("--------------------------------------------------- \n", color=:light_green)
         
-        channels = Atomic.GreenChannel[]
+        channels = AtomicState.GreenChannel[]
         
         # Generate all (non-relativistic) configurations from the bound configurations due to the given excitation scheme 
         confList = Basics.generateConfigurationsForExcitationScheme(rep.refConfigs, repType.excitationScheme, settings.nMax, settings.lValues)
@@ -222,6 +222,7 @@ module BascisGenerate
         # Print all results to screen
         Basics.display(stdout, channels)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        ##x println("iostream = $iostream")
         if  printSummary    Basics.display(iostream, channels)         end
         
         if output    results = Base.merge( results, Dict("Green channels" => channels) )   end
@@ -620,12 +621,12 @@ module BascisGenerate
 
 
     """
-    `Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetries::Array{LevelSymmetry,1}, step::Atomic.RasStep)`  
+    `Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetries::Array{LevelSymmetry,1}, step::AtomicState.RasStep)`  
         ... generates the CSF basis for the given reference configurations and single, double, ... excitations of
             electrons from the corresponding fromShells --> toShells. A basis::Basis is returned but without a valid
             representation of the radial orbitals
     """
-    function Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetries::Array{LevelSymmetry,1}, step::Atomic.RasStep)
+    function Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetries::Array{LevelSymmetry,1}, step::AtomicState.RasStep)
         # Single excitations
         if      step.seFrom == Shell[]  ||  step.seTo == Shell[]    confSingles = Configuration[]
         else    confSingles = Basics.generateConfigurations(refConfigs, step.seFrom, step.seTo)

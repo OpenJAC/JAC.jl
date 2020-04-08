@@ -5,8 +5,8 @@
 """
 module BascisPerform
 
-    using Dates, JLD, Printf, JAC, ..AngularMomentum, ..Atomic, ..Basics, ..Bsplines, ..Cascade, ..Continuum, ..Defaults, 
-                 ..Einstein, ..ManyElectron, ..Nuclear, ..PlasmaShift, ..Radial
+    using Dates, JLD, Printf, JAC, ..AngularMomentum, ..Atomic, ..AtomicState, ..Basics, ..Bsplines, ..Cascade, 
+                 ..Continuum, ..Defaults, ..Einstein, ..ManyElectron, ..Nuclear, ..PlasmaShift, ..Radial
     
     export perform
 
@@ -168,7 +168,8 @@ module BascisPerform
                 outcome = JAC.PairAnnihilation1Photon.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("pair-annihilation-1-photon lines:" => outcome) )       end
             elseif  computation.process == JAC.MultiPhotonDE
-                outcome = JAC.MultiPhotonDeExcitation.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = JAC.MultiPhotonDeExcitation.computeLines(computation.processSettings.process,
+                                                                   finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("multi-photon-de-excitation lines:" => outcome) )       end
             elseif  computation.process == JAC.RAuger
                 outcome = JAC.RadiativeAuger.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
@@ -410,12 +411,12 @@ module BascisPerform
 
     """
     `Basics.performSCF(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, frozenShells::Array{Shell,1}, 
-                       settings::Atomic.RasSettings; printout::Bool=true)`  
+                       settings::AtomicState.RasSettings; printout::Bool=true)`  
         ... to generate an atomic basis and to compute the self-consistent field (SCF) for this basis due to the given settings;
             all subshells due to the list of frozenShells are kept fixed. A newBasis::Basis is returned.  
     """
     function Basics.performSCF(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, frozenShells::Array{Shell,1}, 
-                               settings::Atomic.RasSettings; printout::Bool=true)
+                               settings::AtomicState.RasSettings; printout::Bool=true)
         if  printout    println("\n... in performSCF['for RAS step'] ...")    end
         
         # Determine the list of frozen subshells

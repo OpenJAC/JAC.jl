@@ -5,8 +5,8 @@
 """
 module BascisCompute
 
-    using Printf, JAC, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, 
-          ..Nuclear, ..PlasmaShift, ..Radial
+    using Printf, JAC, ..AngularMomentum, ..AtomicState, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, 
+                       ..Nuclear, ..PlasmaShift, ..Radial
     
     export compute
 
@@ -325,11 +325,11 @@ module BascisCompute
 
 
     """
-    `Basics.computeMultipletForGreenApproach(approach::Atomic.SingleCSFwithoutCI, basis::Basis, nModel::Nuclear.Model, grid::Radial.Grid, 
+    `Basics.computeMultipletForGreenApproach(approach::AtomicState.SingleCSFwithoutCI, basis::Basis, nModel::Nuclear.Model, grid::Radial.Grid, 
                                              asfSettings::AsfSettings, greenSettings::GreenSettings; printout::Bool=false)`  
         ... computes the (Green channel) multiplet from the given basis with the SingleCSFwithoutCI approach.
     """
-    function Basics.computeMultipletForGreenApproach(approach::Atomic.SingleCSFwithoutCI, basis::Basis, nModel::Nuclear.Model, 
+    function Basics.computeMultipletForGreenApproach(approach::AtomicState.SingleCSFwithoutCI, basis::Basis, nModel::Nuclear.Model, 
                                                      grid::Radial.Grid, asfSettings::AsfSettings, greenSettings::GreenSettings; printout::Bool=false)
         print("Compute a Green function multiplet in $approach approach ... ")
         # In the SingleCSFwithoutCI, only the diagonal ME are included into the Hamiltonian matrix
@@ -381,12 +381,12 @@ module BascisCompute
 
 
     """
-    `Basics.computeMultipletForGreenApproach(approach::Atomic.CoreSpaceCI, basis::Basis, nModel::Nuclear.Model, grid::Radial.Grid, 
+    `Basics.computeMultipletForGreenApproach(approach::AtomicState.CoreSpaceCI, basis::Basis, nModel::Nuclear.Model, grid::Radial.Grid, 
                                              asfSettings::AsfSettings, greenSettings::GreenSettings; printout::Bool=false)`  
         ... computes the (Green channel) multiplet from the given basis with the CoreSpaceCI approach in which the electron-electron 
             interaction is taken into account only between the bound-state orbitals.
     """
-    function Basics.computeMultipletForGreenApproach(approach::Atomic.CoreSpaceCI, basis::Basis, nModel::Nuclear.Model, 
+    function Basics.computeMultipletForGreenApproach(approach::AtomicState.CoreSpaceCI, basis::Basis, nModel::Nuclear.Model, 
                                                      grid::Radial.Grid, asfSettings::AsfSettings, greenSettings::GreenSettings; printout::Bool=false)
         print("Compute a Green function multiplet in $approach approach ... ")
         # In the SingleCSFwithoutCI, only the diagonal ME are included into the Hamiltonian matrix
@@ -445,12 +445,12 @@ module BascisCompute
 
 
     """
-    `Basics.computeMultipletForGreenApproach(approach::Atomic.DampedSpaceCI, basis::Basis, nModel::Nuclear.Model, grid::Radial.Grid,
+    `Basics.computeMultipletForGreenApproach(approach::AtomicState.DampedSpaceCI, basis::Basis, nModel::Nuclear.Model, grid::Radial.Grid,
                                              asfSettings::AsfSettings, greenSettings::GreenSettings; printout::Bool=false)`  
         ... computes the (Green channel) multiplet from the given basis with the DampedSpaceCI approach in which the electron-electron 
             interaction strength are all damped by the factor exp(- dampingTau * r).
     """
-    function Basics.computeMultipletForGreenApproach(approach::Atomic.DampedSpaceCI, basis::Basis, nModel::Nuclear.Model, 
+    function Basics.computeMultipletForGreenApproach(approach::AtomicState.DampedSpaceCI, basis::Basis, nModel::Nuclear.Model, 
                                                      grid::Radial.Grid, asfSettings::AsfSettings, greenSettings::GreenSettings; 
                                                      printout::Bool=false)
         print("Compute a Green function multiplet in $approach approach ... ")
