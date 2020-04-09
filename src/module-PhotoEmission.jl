@@ -43,7 +43,7 @@ module PhotoEmission
     `PhotoEmission.Settings()`  ... constructor for the default values of radiative line computations
     """
     function Settings()
-        Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0.)
+        Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 10000.)
     end
 
 
@@ -159,13 +159,13 @@ module PhotoEmission
 
     """
     `PhotoEmission.amplitude(kind::String, Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
-                             grid::Radial.Grid; display::Bool=false)`  
+                             grid::Radial.Grid; display::Bool=false, printout::Bool=false)`  
         ... to compute the kind = (absorption or emission) amplitude  <alpha_f J_f || O^(Mp, kind) || alpha_i J_i> for the 
             interaction with  photon of multipolarity Mp and for the given transition energy and gauge. A value::ComplexF64 is 
             returned. The amplitude value is printed to screen if display=true.
     """
     function amplitude(kind::String, Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
-                       grid::Radial.Grid; display::Bool=false, printout::Bool=true)
+                       grid::Radial.Grid; display::Bool=false, printout::Bool=false)
         
         if      kind == "emission"
         #-------------------------
@@ -199,7 +199,7 @@ module PhotoEmission
         #---------------------------
             iLevel = finalLevel;   fLevel = initialLevel
             amplitude = PhotoEmission.amplitude("emission", Mp, gauge, omega, fLevel, iLevel, grid) 
-            amplitude = (amplitude)
+            amplitude = conj(amplitude)
         else    error("stop a")
         end
         
@@ -381,7 +381,7 @@ module PhotoEmission
                     # Include further restrictions if appropriate
                     if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      push!(channels, PhotoEmission.Channel(mp, Basics.Coulomb,   0.) )
                     elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    push!(channels, PhotoEmission.Channel(mp, Basics.Babushkin, 0.) )  
-                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)                      push!(channels, PhotoEmission.Channel(mp, Basics.Magnetic,  0.) );
+                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)                  push!(channels, PhotoEmission.Channel(mp, Basics.Magnetic,  0.) );
                                                         hasMagnetic = true; 
                     end 
                 end

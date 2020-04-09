@@ -14,12 +14,14 @@ if  false
                                  GreenExpansion( AtomicState.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(), 
                                  ## GreenExpansion( AtomicState.CoreSpaceCI(), Basics.DeExciteSingleElectron(), 
                                  ## GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), 
-                                                 [LevelSymmetry(1//2, Basics.minus), LevelSymmetry(3//2, Basics.minus)], 3, greenSettings) )
+                                                 [LevelSymmetry(1//2, Basics.minus), LevelSymmetry(3//2, Basics.minus),
+                                                  LevelSymmetry(1//2, Basics.plus),  LevelSymmetry(3//2, Basics.plus)], 
+3, greenSettings) )
     println(wa)
     wb            = generate(wa, output=true)
     greenChannels = wb["Green channels"]
     
-elseif  false
+elseif  true
     #
     println("Calculate two-photon absorption cross sections by monochromatic and equally-polarized photons from the same beam ... continue")
     

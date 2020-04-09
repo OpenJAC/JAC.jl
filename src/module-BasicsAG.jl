@@ -37,7 +37,7 @@ module BasicsAG
     function  Basics.addZerosToCsfR(nz::Int64, csf::CsfR)
         !csf.useStandardSubshells   &&   error("Zeros can only be added to CSF with standard subshell order.")
         
-        println("nz = $nz")
+        ##x println("nz = $nz")
         occupation = csf.occupation;   seniority = csf.seniority;    subshellJ = csf.subshellJ;    subshellX = csf.subshellX 
         
         for  i = 1:nz

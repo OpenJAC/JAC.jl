@@ -82,7 +82,7 @@
         newChannels = MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic[]
         for channel in line.channels
             amplitude = MultiPhotonDeExcitation.computeReducedAmplitudeAbsorption(channel.K, line.finalLevel, channel.multipole2, 
-                                         channel.Jsym, channel.omega, channel.multipole1, line.initialLevel, channel.gauge, grid, settings.greenChannels)
+                                            channel.Jsym, channel.omega, channel.multipole1, line.initialLevel, channel.gauge, grid, settings.greenChannels)
             push!( newChannels, MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic(channel.K, channel.omega, channel.multipole1, channel.multipole2, 
                                                                                           channel.gauge, channel.Jsym, amplitude) )
         end
@@ -147,6 +147,38 @@
 
 
     """
+    `MultiPhotonDeExcitation.computeReducedAmplitudeAbsorption(K::AngularJ64, finalLevel::Level, multipole2::EmMultipole, Jsym::LevelSymmetry, 
+                                                                                 omega::Float64, multipole1::EmMultipole, initialLevel::Level,
+                                                                 gauge::EmGauge, grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})`  
+        ... to compute the reduced amplitude U^{K, 2gamma emission} (K, Jf, multipole2, Jsym, omega, multipole1, Ji) by means of the
+            given Green function channels. An amplitude::Complex{Float64} is returned.
+    """
+    function computeReducedAmplitudeAbsorption(K::AngularJ64, finalLevel::Level, multipole2::EmMultipole, Jsym::LevelSymmetry, 
+                                                                omega::Float64, multipole1::EmMultipole, initialLevel::Level,
+                                                                gauge::EmGauge, grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})
+        U = Complex(0.);    found = false
+        for channel in greenChannels
+            if  Jsym == channel.symmetry
+                found = true
+                for (i, nuLevel) in enumerate(channel.gMultiplet.levels)
+                    U = U + PhotoEmission.amplitude("absorption", multipole2, gauge, omega, finalLevel, nuLevel, grid, display=true) *
+                            PhotoEmission.amplitude("absorption", multipole1, gauge, omega, nuLevel, initialLevel, grid, display=true) / 
+                            (initialLevel.energy + omega - nuLevel.energy)
+                end
+            end
+        end 
+        
+        if    found                                
+              U = U * AngularMomentum.Wigner_6j(initialLevel.J, finalLevel.J, K, AngularJ64(multipole2.L), AngularJ64(multipole1.L), Jsym.J)
+              ##x println(" ")
+        else  println("No Green function cannel found for amplitude U^{K, 2gamma absorption} (K, Jf, multipole2, Jsym = $Jsym, omega, multipole1, Ji) ")
+        end 
+        
+        return( U )
+    end
+
+
+    """
     `MultiPhotonDeExcitation.computeTotalCsLinear(omega::Float64, line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic, 
                                                   gauge::EmGauge, settings::MultiPhotonDeExcitation.Settings)`  
         ... to compute the total cross sections for linearly-polarized incident light. A tcs::Float64 is returned.
@@ -173,8 +205,8 @@
                                     wc = AngularMomentum.Wigner_3j(mp1.L, mp2.L, K, lambda1, lambda2, q)
                                     wd = MultiPhotonDeExcitation.getReducedAmplitudeAbsorption(K, line.finalLevel, mp2, Jsym, omega, mp1, 
                                                                                                line.initialLevel, gauge, line.channels) 
-                                    println("computeTotalCsLinear: L1, L2, K, lambda1, lambda2, q = $(mp1.L), $(mp2.L), $K, $lambda1, $lambda2, $q")
-                                    println("computeTotalCsLinear: wa, wb, wc, wd = $wa  $wb  $wc  $wd")
+                                    ##x println("computeTotalCsLinear: L1, L2, K, lambda1, lambda2, q = $(mp1.L), $(mp2.L), $K, $lambda1, $lambda2, $q")
+                                    ##x println("computeTotalCsLinear: wa, wb, wc, wd = $wa  $wb  $wc  $wd")
                                                                                                          
                                     amp = amp + (1.0im)^(mp1.L - p1 + mp2.L - p2) * (-lambda1)^p1 * (-lambda2)^p2           *
                                                 sqrt( (2*mp1.L + 1)*(2*mp2.L + 1) ) * (2*AngularMomentum.twoJ(K) + 1)       *
@@ -258,38 +290,6 @@
 
 
     """
-    `MultiPhotonDeExcitation.computeReducedAmplitudeAbsorption(K::AngularJ64, finalLevel::Level, multipole2::EmMultipole, Jsym::LevelSymmetry, 
-                                                                                 omega::Float64, multipole1::EmMultipole, initialLevel::Level,
-                                                                 gauge::EmGauge, grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})`  
-        ... to compute the reduced amplitude U^{K, 2gamma emission} (K, Jf, multipole2, Jsym, omega, multipole1, Ji) by means of the
-            given Green function channels. An amplitude::Complex{Float64} is returned.
-    """
-    function computeReducedAmplitudeAbsorption(K::AngularJ64, finalLevel::Level, multipole2::EmMultipole, Jsym::LevelSymmetry, 
-                                                                omega::Float64, multipole1::EmMultipole, initialLevel::Level,
-                                                                gauge::EmGauge, grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})
-        U = Complex(0.);    found = false
-        for channel in greenChannels
-            if  Jsym == channel.symmetry
-                found = true
-                for (i, nuLevel) in enumerate(channel.gMultiplet.levels)
-                    U = U + PhotoEmission.amplitude("absorption", multipole2, gauge, omega, finalLevel, nuLevel, grid) *
-                            PhotoEmission.amplitude("absorption", multipole1, gauge, omega, nuLevel, initialLevel, grid) / 
-                            (initialLevel.energy + omega - nuLevel.energy)
-                end
-            end
-        end 
-        
-        if    found                                
-              U = U * AngularMomentum.Wigner_6j(initialLevel.J, finalLevel.J, K, AngularJ64(multipole2.L), AngularJ64(multipole1.L), Jsym.J)
-              ##x println(" ")
-        else  println("No Green function cannel found for amplitude U^{K, 2gamma absorption} (K, Jf, multipole2, Jsym = $Jsym, omega, multipole1, Ji) ")
-        end 
-        
-        return( U )
-    end
-
-
-    """
     `MultiPhotonDeExcitation.getReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, multipole2::EmMultipole, Jsym::LevelSymmetry, omega::Float64, 
                                                                                            multipole1::EmMultipole, initialLevel::Level, 
                                                          gauge::EmGauge, channels::Array{MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic,1})`  
@@ -301,16 +301,15 @@
                                            gauge::EmGauge, channels::Array{MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic,1})
         U = Complex(0.);    found = false
         for channel in channels
-            if  K == channel.K  &&  omega == channel.omega  &&  Jsym == channel.Jsym       &&  
-                multipole1 == channel.multipole1  &&  multipole2 == channel.multipole2     &&  
-                (gauge == channel.gauge  ||  EmGauge("Magnetic")  == channel.gauge)
+            if  K == channel.K  &&  omega == channel.omega  &&   Jsym == channel.Jsym       &&  multipole1 == channel.multipole1  &&  
+                multipole2 == channel.multipole2            &&   (gauge == channel.gauge  ||  EmGauge("Magnetic")  == channel.gauge)
                 U = channel.amplitude;    found = true
             end
         end 
         
         if    found                                
-              println("U^{K, 2gamma absorption} (..) found. ")
-        else  println("No U^{K, 2gamma absorption} (K, Jf, multipole2, Jsym = $Jsym, omega, multipole1, Ji) amplitude found.")
+              println("U^{K, 2gamma absorption} (..) = $U found. ")
+        else  println("No U^{$K, 2gamma absorption} (Jf, mp2=$multipole2, Jsym=$Jsym, omega=$omega, mp1=$multipole1, Ji) amplitude found.")
         end 
         
         return( U )
@@ -332,7 +331,6 @@
                 symmetries  = AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
                 Klist       = oplus(symf.J, symi.J)
                 for  symn in symmetries
-                    hasMagnetic = false
                     for  gauge in settings.gauges
                         # Include further restrictions if appropriate
                         if     string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseCoulomb

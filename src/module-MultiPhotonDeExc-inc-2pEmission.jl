@@ -229,7 +229,7 @@
         end 
         
         if    found                                
-              println("U^{K, 2gamma emission} (..) found. ")
+              println("U^{K, 2gamma emission} (..) = $U found. ")
         else  println("No U^{K, 2gamma emission} (K, Jf, omega2, multipole2, Jsym = $Jsym, omega1, multipole1, Ji) amplitude found.")
         end 
         
@@ -290,11 +290,6 @@
         # The number of energy sharings are provided by the settings
         noSharings = settings.process.noSharings
         sharings   = QuadGK.gauss(noSharings)
-        ##x    wax = QuadGK.gauss(orderGL);   tx = wax[1];   wtx = wax[2] 
-        ##x    bma  = txup - txlow;   bpa = txup + txlow
-        ##x    for  j = 1:orderGL
-        ##x        nt = nt + 1;    push!(t, tx[j] * bma/2. + bpa/2. );    push!(wt, wtx[j] * bma/2. )
-        ##x    end
     
         lines = MultiPhotonDeExcitation.Line_2pEmission[]
         for  i = 1:length(initialMultiplet.levels)
