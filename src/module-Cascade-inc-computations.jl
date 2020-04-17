@@ -547,7 +547,7 @@
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
         println("\n* Electron configuration used in the " * sa * "cascade:")
-        @warn "*** Limit to just xxxx configurations for each No. of electrons. ***"                       ## delete nxx
+        @warn "*** Limit to just 2 configurations for each No. of electrons. ***"                       ## delete nxx
         if  printSummary   println(iostream, "\n* Electron configuration used in the cascade:")    end
         confList = Configuration[];   nc = 0
         for  n = maxNoElectrons:-1:minNoElectrons
@@ -556,7 +556,7 @@
             if  printSummary   println(iostream, "\n    Configuration(s) with $n electrons:")      end
             for  conf in confs
                 if n == conf.NoElectrons  
-                    nxx = nxx + 1;    if nxx > 1000   break    end                                            ## delete nxx
+                    nxx = nxx + 1;    if nxx > 2   break    end                                            ## delete nxx
                     nc = nc + 1
                     push!(confList, conf ) 
                     wa = Semiempirical.estimate("binding energy", round(Int64, Z), conf);    wa = Defaults.convertUnits("energy: from atomic", wa)

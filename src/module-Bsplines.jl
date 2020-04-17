@@ -134,7 +134,7 @@ module Bsplines
         end 
         
         # Determine the maximum number of grid points for this orbital and normalized it propery
-        mtp = 0;   for j = primitives.grid.nr:-1:1    if  abs(P[j]) + abs(Q[j]) > 2.0e-10   mtp = j;   break   end     end
+        mtp = 0;   for j = primitives.grid.nr:-1:1    if  abs(P[j])^2 + abs(Q[j])^2 > 1.0e-13   mtp = j;   break   end     end
         Px = zeros(mtp);    Qx = zeros(mtp);    Px[1:mtp] = P[1:mtp];    Qx[1:mtp] = Q[1:mtp]    
         Pprimex = zeros(mtp);    Qprimex = zeros(mtp);    Pprimex[1:mtp] = Pprime[1:mtp];    Qprimex[1:mtp] = Qprime[1:mtp]    
         for  j = 1:mtp   if  abs(Px[j]) < 1.0e-10    Px[j] = 0.   end

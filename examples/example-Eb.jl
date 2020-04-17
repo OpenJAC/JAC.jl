@@ -7,7 +7,7 @@ println("aa")
 setDefaults("method: continuum, asymptotic Coulomb")    ## setDefaults("method: continuum, Galerkin")
 setDefaults("method: normalization, pure sine")         ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 #
-if false 
+if true
 setDefaults("print summary: open", "zzz-Cascade-computation-photoionization.sum")
 
 name = "Photoionization of Si- "

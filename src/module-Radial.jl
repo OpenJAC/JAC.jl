@@ -519,7 +519,7 @@ module Radial
             stdgrid = Defaults.getDefaults("standard grid")
             stdgrid.NoPoints == 0     &&   return( print("Standard grid has not yet been defined.") )
 
-            n > stdgrid.NoPoints      &&   error("length of P does not match to standard grid")    
+            n > stdgrid.NoPoints      &&   error("length of P does not match to standard grid; n=$n  NoPoints=$(stdgrid.NoPoints) ")    
             n != length(orbital.Q)    &&   error("P and Q have different length")  
         else  
             !(n == length(orbital.Q) == length(orbital.Q))   &&    error("P, Q, grid have different length")
