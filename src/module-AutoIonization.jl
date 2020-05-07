@@ -233,9 +233,9 @@ module AutoIonization
                                          settings::AutoIonization.Settings; printout::Bool=true) 
         newChannels = AutoIonization.Channel[];   contSettings = Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
-            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
+            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
+            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
-            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
             cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
@@ -247,7 +247,7 @@ module AutoIonization
         newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, true, newChannels)
         #
         if  settings.calcAnisotropy    angularAlpha = AutoIonization.computeIntrinsicAlpha(2, newLine)
-            newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, true, newChannels)
+            newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, real(angularAlpha), true, newChannels)
         end
         
         return( newLine )
@@ -290,20 +290,14 @@ module AutoIonization
         ... to compute the intrinsic alpha_k anisotropy parameter for the given line. A value::Float64 is returned.
     """
     function  computeIntrinsicAlpha(k::Int64, line::AutoIonization.Line)
-        ##x println("line = $line")
         if  !line.hasChannels   error("No channels are defined for the given AutoIonization.line.")                   end
         wn = 0.;    for  channel in line.channels    wn = wn + conj(channel.amplitude) * channel.amplitude   end
         wa = 0.;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J;
         for  cha  in line.channels  
             j = AngularMomentum.kappa_j(cha.kappa);    l = AngularMomentum.kappa_l(cha.kappa)
-            ##x println("wn = $wn   j = $j   l =$l")
             for  chp  in line.channels  
                 jp = AngularMomentum.kappa_j(chp.kappa);    lp = AngularMomentum.kappa_l(chp.kappa)
-                ##x println("bracket = $(AngularMomentum.bracket([l, lp, j, jp])) ")
-                ##x println("CG      = $(AngularMomentum.ClebschGordan(l, AngularM64(0), lp, AngularM64(0), AngularJ64(k), AngularM64(0))) ")
-                ##x println("w-6     = $(AngularMomentum.Wigner_6j(Ji, j, Jf, jp, Ji, AngularJ64(k))) ")
-                ##x println("w-6     = $(AngularMomentum.Wigner_6j(l,  j, AngularJ64(1//2), jp, lp, AngularJ64(k))) ")
-                wa = wa + AngularMomentum.bracket([l, lp, j, jp]) *  
+                wa = wa + sqrt( AngularMomentum.bracket([l, lp, j, jp]) ) *  
                           AngularMomentum.ClebschGordan(l, AngularM64(0), lp, AngularM64(0), AngularJ64(k), AngularM64(0)) *
                           AngularMomentum.Wigner_6j(Ji, j, Jf, jp, Ji, AngularJ64(k)) * 
                           AngularMomentum.Wigner_6j(l,  j, AngularJ64(1//2), jp, lp, AngularJ64(k)) * 
@@ -313,7 +307,24 @@ module AutoIonization
         end
         value = AngularMomentum.phaseFactor([Ji, +1, Jf, +1, AngularJ64(k), -1, AngularJ64(1//2)]) * 
                 sqrt(AngularMomentum.twoJ(Ji) + 1) * wa / wn
-        ##x println("value = $value")
+
+        if  false
+            # Calculate the value given by M.H. Chen, PRA 47 (1993) 3733; this does not agree exactly so far.
+            wa = 0.
+            for  cha  in line.channels  
+                j = AngularMomentum.kappa_j(cha.kappa);    l = AngularMomentum.kappa_l(cha.kappa);    phase = cha.phase
+                for  chp  in line.channels  
+                    jp = AngularMomentum.kappa_j(chp.kappa);    lp = AngularMomentum.kappa_l(chp.kappa);    phasep = chp.phase
+                    wa = wa + AngularMomentum.phaseFactor([Ji, +1, Jf, -1, AngularJ64(1//2)]) * im^(Float64(l) - Float64(lp)) * cos(phase - phasep) *
+                              sqrt( AngularMomentum.bracket([l, lp, j, jp, AngularJ64(k), Ji]) ) *  
+                              AngularMomentum.Wigner_3j(lp, l, AngularJ64(k), AngularJ64(0), AngularJ64(0), AngularJ64(0)) * 
+                              AngularMomentum.Wigner_6j(j, jp, AngularJ64(k), lp, l, AngularJ64(1//2)) * 
+                              AngularMomentum.Wigner_6j(Ji, Ji, AngularJ64(k), jp, j, Jf) * 
+                              cha.amplitude * conj(chp.amplitude)
+                end
+            end
+            println("*** Comparison value = $value    Chen-value = $(wa/wn)")
+        end
 
         return( value )
     end
@@ -439,6 +450,7 @@ module AutoIonization
         symi      = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
         kappaList = AngularMomentum.allowedKappaSymmetries(symi, symf)
         for  kappa in kappaList
+            if  abs(kappa) > settings.maxKappa      continue    end
             push!(channels, AutoIonization.Channel(kappa, symi, 0., Complex(0.)) )
         end
         return( channels )  

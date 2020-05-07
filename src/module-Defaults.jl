@@ -155,17 +155,17 @@ module Defaults
         if       sa in ["cross section: from atomic to predefined unit", "cross section: from atomic"]
             if      Defaults.getDefaults("unit: cross section") == "a.u."   return( wa )
             elseif  Defaults.getDefaults("unit: cross section") == "barn"   return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN )
-            elseif  Defaults.getDefaults("unit: cross section") == "Mbarn"  return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 10.0e-6 )
+            elseif  Defaults.getDefaults("unit: cross section") == "Mbarn"  return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 1.0e-6 )
             else    error("stop a")
             end
         
         elseif   sa in ["cross section: from atomic to barn"]               return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN )
-        elseif   sa in ["cross section: from atomic to Mbarn"]              return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 10.0e-6 )
+        elseif   sa in ["cross section: from atomic to Mbarn"]              return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 1.0e-6 )
 
         elseif   sa in ["cross section: from predefined to atomic unit", "cross section: to atomic"]
             if      Defaults.getDefaults("unit: cross section") == "a.u."   return( wa )
             elseif  Defaults.getDefaults("unit: cross section") == "barn"   return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN )
-            elseif  Defaults.getDefaults("unit: cross section") == "Mbarn"  return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN * 10.0e6 )
+            elseif  Defaults.getDefaults("unit: cross section") == "Mbarn"  return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN * 1.0e6 )
             else    error("stop b")
             end
 
@@ -273,9 +273,9 @@ module Defaults
         ... to define a a method for the generation of the continuum orbitals as (pure) spherical Bessel, pure sine,
             asymptotic Coulomb, nonrelativistic Coulomb orbital or by means of the B-spline-Galerkin method.
 
-    + `("method: normalization, pure sine")`  or  `("method: normalization, pure Coulomb")`   
+    + `("method: normalization, pure sine")`  or  `("method: normalization, pure Coulomb")`  or  `("method: normalization, Ong-Russek")`   
         ... to define a method for the normalization of the continuum orbitals as asymptotically (pure) sine or Coulomb 
-            functions.
+            functions, or following the procedure by Ong & Russek (1978).
 
     + `("QED model: Petersburg")`  or  `("QED model: Sydney")`   
         ... to define a model for the computation of the QED corrections following the work by Shabaev et al. (2011; Petersburg) 
@@ -305,6 +305,7 @@ module Defaults
         elseif    sa == "method: continuum, Galerkin"                        GBL_CONT_SOLUTION       = BsplineGalerkin   
         elseif    sa == "method: normalization, pure sine"                   GBL_CONT_NORMALIZATION  = PureSine   
         elseif    sa == "method: normalization, pure Coulomb"                GBL_CONT_NORMALIZATION  = CoulombSine  
+        elseif    sa == "method: normalization, Ong-Russek"                  GBL_CONT_NORMALIZATION  = OngRussek
         ##x elseif    sa == "QED model: Petersburg"                              GBL_QED_MODEL           = QedPetersburg
         ##x elseif    sa == "QED model: Sydney"                                  GBL_QED_MODEL           = QedSydney
         else      error("Unsupported keystring:: $sa")
@@ -320,39 +321,39 @@ module Defaults
         if        sa == "unit: energy"
             units = ["eV", "Kayser", "Hartree", "Hz", "A"]
             !(sb in units)    &&    error("Currently supported energy units: $(units)")
-            GBL_ENERGY_UNIT = sb
+            global GBL_ENERGY_UNIT = sb
         elseif    sa == "unit: cross section"
             units = ["a.u.", "barn", "Mbarn"]
             !(sb in units)    &&    error("Currently supported cross section units: $(units)")
-            GBL_CROSS_SECTION_UNIT = sb
+            global GBL_CROSS_SECTION_UNIT = sb
         elseif    sa == "unit: rate"
             units = ["a.u.", "1/s"]
             !(sb in units)    &&    error("Currently supported rate units: $(units)")
-            GBL_RATE_UNIT = sb
+            global GBL_RATE_UNIT = sb
         elseif    sa == "unit: time"
             units = ["a.u.", "sec", "fs", "as"]
             !(sb in units)    &&    error("Currently supported time units: $(units)")
-            GBL_TIME_UNIT = sb
+            global GBL_TIME_UNIT = sb
         elseif    sa == "print summary: open"
             global GBL_PRINT_SUMMARY    = true
             global GBL_SUMMARY_IOSTREAM = open(sb, "w") 
             println(GBL_SUMMARY_IOSTREAM, "Summary file opened at $( string(now())[1:16] ): \n" *
                                         "========================================   \n")
         elseif    sa == "print summary: append"
-            GBL_PRINT_SUMMARY    = true
-            GBL_SUMMARY_IOSTREAM = open(sb, "a") 
+            global GBL_PRINT_SUMMARY    = true
+            global GBL_SUMMARY_IOSTREAM = open(sb, "a") 
             println(GBL_SUMMARY_IOSTREAM, "Summary file re-opened (to append) at $( string(now())[1:16]): \n" *
                                         "======================================================= \n")
         elseif    sa == "print summary: close"
-            GBL_PRINT_SUMMARY    = false
+            global GBL_PRINT_SUMMARY    = false
             close(GBL_SUMMARY_IOSTREAM)
         elseif    sa == "print test: open"
-            GBL_PRINT_TEST    = true
+            global GBL_PRINT_TEST    = true
             JAC.JAC_TEST_IOSTREAM = open(sb, "w") 
             println(JAC.JAC_TEST_IOSTREAM, "Test report file opened at $( string(now())[1:16] ): \n" *
                                     "============================================  \n")
         elseif    sa == "print test: close"
-            GBL_PRINT_TEST    = false
+            global GBL_PRINT_TEST    = false
             close(GBL_TEST_IOSTREAM)
         else      error("Unsupported keystring:: $sa")
         end

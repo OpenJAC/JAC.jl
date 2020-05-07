@@ -168,12 +168,12 @@ module PhotoIonization
     function amplitude(kind::String, channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, initialLevel::Level, grid::Radial.Grid)
         if      kind in [ "photoionization"]
         #-----------------------------------
-            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, energy, continuumLevel, initialLevel, grid)
+            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, energy, continuumLevel, initialLevel, grid, 
+                                                display=false, printout=false)
             amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
         else    error("stop b")
         end
         
-        ##x println("photo amplitude = $amplitude")
         return( amplitude )
     end
 
@@ -189,13 +189,14 @@ module PhotoIonization
                                           settings::PhotoIonization.Settings)
         newChannels = PhotoIonization.Channel[];;   contSettings = Continuum.Settings(false, nrContinuum);    csC = 0.;    csB = 0.
         for channel in line.channels
-            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
+            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
+            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
-            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
             cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
-            amplitude  = PhotoIonization.amplitude("photoionization", channel, line.photonEnergy, newcLevel, newiLevel, grid)
+            amplitude  = PhotoIonization.amplitude("photoionization", newChannel, line.photonEnergy, newcLevel, newiLevel, grid)
+            ##x println("***AmplitudesProperties:  amplitude = $amplitude ")
             push!( newChannels, PhotoIonization.Channel(newChannel.multipole, newChannel.gauge, newChannel.kappa, newChannel.symmetry, 
                                                         newChannel.phase, amplitude) )
             if       channel.gauge == Basics.Coulomb     csC = csC + abs(amplitude)^2
@@ -205,6 +206,8 @@ module PhotoIonization
         end
         Ji2 = AngularMomentum.twoJ(line.initialLevel.J)
         csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.photonEnergy / (2*(Ji2 + 1))
+        csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
+        csFactor     = 4 * pi^2 / Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         ##x println("photo cs = $crossSection")
         newLine = PhotoIonization.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, 

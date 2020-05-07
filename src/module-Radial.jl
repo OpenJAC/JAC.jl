@@ -513,16 +513,18 @@ module Radial
 
     # `Base.show(io::IO, orbital::Orbital)`  ... prepares a proper printout of the variable orbital::Orbital.
     function Base.show(io::IO, orbital::Orbital) 
+        return()
         n = length(orbital.P)
 
         if   orbital.useStandardGrid
             stdgrid = Defaults.getDefaults("standard grid")
-            stdgrid.NoPoints == 0     &&   return( print("Standard grid has not yet been defined.") )
+            stdgrid.NoPoints == 0                     &&   return( print("Standard grid has not yet been defined.") )
 
-            n > stdgrid.NoPoints      &&   error("length of P does not match to standard grid; n=$n  NoPoints=$(stdgrid.NoPoints) ")    
-            n != length(orbital.Q)    &&   error("P and Q have different length")  
+            n = min(length(orbital.P), stdgrid.NoPoints)
+            n > stdgrid.NoPoints                      &&   error("length of P does not match to standard grid; n=$n  NoPoints=$(stdgrid.NoPoints) ")    
+            length(orbital.P) != length(orbital.Q)    &&   error("P and Q have different length")  
         else  
-            !(n == length(orbital.Q) == length(orbital.Q))   &&    error("P, Q, grid have different length")
+            !(n == length(orbital.P) == length(orbital.Q))   &&    error("P, Q, grid have different length")
         end
     
         sa = Base.string(orbital::Orbital);    print(io, sa * "\n")
@@ -776,7 +778,7 @@ module Radial
         end
         mZbar   = sum(meanZbar) / nx;   for  i = 1:nx    devsZbar[i] = (meanZbar[i] - mZbar)^2    end
         stdZbar = sqrt( sum(devsZbar) / nx )
-        if  true  println(">> Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
+        if  false  println(">> Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
                           " (Delta-Zbar=" * @sprintf("%.4e",stdZbar) * ") at r=" * @sprintf("%.4e",pot.grid.r[mtp]) * " a.u." )    end
         
         return( mZbar )

@@ -238,5 +238,5 @@ A few further suggestions for extending and improving JAC can be found in sectio
 
 * Jiri Hofbrucker (U Jena, Germany)
 * Stefan Schippers (U Giessen, Germany)
-* Martino Trasinelli (U Sorbonne Paris, France)
+* Martino Trassinelli (U Sorbonne Paris, France)
 

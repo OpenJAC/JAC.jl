@@ -89,6 +89,8 @@ module Basics
     oplus(ja::Int64, jb::AngularJ64) = oplus(AngularJ64(ja), jb)
     oplus(ja::Int64, jb::Int64)      = oplus(AngularJ64(ja), AngularJ64(jb))
     
+    Base.Float64(ja::AngularJ64) = ja.num / ja.den
+    
     
     ##x oplus(ja, jb) = oplus(HalfInt(ja), HalfInt(jb))
     ##x oplus(ja::Union{HalfInt,Integer}, jb::Union{HalfInt,Integer}) = abs(ja-jb):ja+jb
@@ -139,7 +141,7 @@ module Basics
     """
     function AngularM64(m::Integer, j::AngularJ64)
         !(j.den == 1)      &&  error("m must be integer for j = $(j).")
-        j.num < abs(m)   &&  error("abs(m) must be <= j = $(j).")
+        j.num < abs(m)     &&  error("abs(m) must be <= j = $(j).")
         AngularM64(m, 1)
     end
 
@@ -160,7 +162,7 @@ module Basics
     function AngularM64(rational::Rational{Int64}, j::AngularJ64)
         !(rational.den in [1,2])      &&   error("Denominator must be 1 or 2.")
         !(j.den == rational.den)      &&   error("j,m must be both integer or half-integer.")
-        j.num < abs(rational.num)   &&   error("abs(m) must be <= j = $(j).")
+        j.num < abs(rational.num)     &&   error("abs(m) must be <= j = $(j).")
         AngularM64(rational.num, rational.den)
     end
 
@@ -232,7 +234,7 @@ module Basics
             for  j = 1:length(a.vectors[i])   if  abs(a.vectors[i][j] - b.vectors[i][j]) > accuracy   return( false )  end    end     
         end
         return( true )
-    end
+    end 
 
 
 

@@ -859,6 +859,7 @@ module BascisGenerate
         newOrbitals = copy(basis.orbitals)
 
         push!(newSubshells, sh)
+        newOrbitals = Base.merge( newOrbitals, Dict( sh => Orbital(sh, -10000.) ))
         Defaults.setDefaults("relativistic subshell list", newSubshells; printout=false)
     
         for  i = 1:length(basis.csfs)
@@ -879,20 +880,42 @@ module BascisGenerate
 
 
     """
-    `Basics.generateLevelWithSymmetryReducedBasis(level::Level)`  
+    `Basics.generateLevelWithSymmetryReducedBasis(level::Level, subshells::Array{Subshell,1})`  
         ... generates a level with a new basis and representation that only includes the CSF with the same symmetry as the level 
-            itself. Both, the underlying CSF basis and the eigenvectors are adopted accordingly. A (new) level::levelR is returned.
+            itself. It also ensures that the new basis is based on the given subshells so that it can be later used with levels
+            which have one or several subshells more (at it often appears in ionization processes). Both, the underlying CSF basis 
+            and the eigenvectors are adopted accordingly. The procedures only supports the 'addition' of subshells but it stops 
+            if (1) the individual sequence differs or if the basis of level contains more subshells than the given subshell-list.
+            A (new) level::levelR is returned.
     """
-    function Basics.generateLevelWithSymmetryReducedBasis(level::Level)
-        basis = level.basis;    newCsfs = CsfR[];    newMc = Float64[]
+    function Basics.generateLevelWithSymmetryReducedBasis(level::Level, subshells::Array{Subshell,1})
+        testBasis = level.basis;    newCsfs = CsfR[];    newMc = Float64[]
+        
+        ##x println("aa:  subshells = $subshells   testsubshells = $(testBasis.subshells)")
+        # Decide of whether the basis need to be extended by some subshells
+        nt = length(testBasis.subshells)
+        if      testBasis.subshells == subshells      basis = testBasis;    nLevel = level
+        elseif  nt >= length(subshells)               error("stop a")
+        elseif  nt + 1 == length(subshells)  &&  testBasis.subshells == subshells[1:nt]
+                nLevel = Basics.generateLevelWithExtraSubshell(subshells[end], level)
+                basis  = nLevel.basis
+        else
+            nLevel  = level
+            for  ns = nt+1:length(subshells)
+                nLevel = Basics.generateLevelWithExtraSubshell(subshells[ns], nLevel)
+            end
+            basis  = nLevel.basis
+            ##x println("bb:  subshells = $subshells   testsubshells = $(basis.subshells)")
+        end
+            
         
         for  i = 1:length(basis.csfs)
-            if  basis.csfs[i].J == level.J  &&   basis.csfs[i].parity == level.parity 
-                push!(newCsfs, basis.csfs[i]);    push!(newMc, level.mc[i])
+            if  basis.csfs[i].J == nLevel.J  &&   basis.csfs[i].parity == nLevel.parity 
+                push!(newCsfs, basis.csfs[i]);    push!(newMc, nLevel.mc[i])
             end
         end
         newBasis = Basis(true, basis.NoElectrons, basis.subshells, newCsfs, basis.coreSubshells, basis.orbitals)
-        newLevel = Level(level.J, level.M, level.parity, level.index, level.energy, level.relativeOcc, true, newBasis, newMc)
+        newLevel = Level(nLevel.J, nLevel.M, nLevel.parity, nLevel.index, nLevel.energy, nLevel.relativeOcc, true, newBasis, newMc)
         return( newLevel )
     end
     

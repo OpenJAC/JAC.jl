@@ -175,11 +175,13 @@ module PhotoEmission
             matrix = zeros(ComplexF64, nf, ni)
             #
             for  r = 1:nf
+                ##x @show r, finalLevel.basis.csfs[r].J, finalLevel.J, finalLevel.basis.csfs[r].parity, finalLevel.parity
                 if  finalLevel.basis.csfs[r].J != finalLevel.J          ||  finalLevel.basis.csfs[r].parity   != finalLevel.parity    continue    end 
                 for  s = 1:ni
                     if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity  continue    end 
                     wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                     me = 0.
+                    ##x println("Enter loop ... r=$r   s=$s  length(wa) = $(length(wa))")
                     for  coeff in wa
                         ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
@@ -198,7 +200,7 @@ module PhotoEmission
         elseif  kind == "absorption"
         #---------------------------
             iLevel = finalLevel;   fLevel = initialLevel
-            amplitude = PhotoEmission.amplitude("emission", Mp, gauge, omega, fLevel, iLevel, grid) 
+            amplitude = PhotoEmission.amplitude("emission", Mp, gauge, omega, fLevel, iLevel, grid, printout=printout) 
             amplitude = conj(amplitude)
         else    error("stop a")
         end

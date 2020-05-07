@@ -74,7 +74,7 @@ module Continuum
         ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
         ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
         ## wp4 = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
-        wp = compute("radial potential: Dirac-Fock-Slater", grid, level)   
+        wp = compute("radial potential: Kohn-Sham", grid, level)   
         pot = Basics.add(nuclearPotential, wp)
         Defaults.warn(AddWarning, "All continuum orbitals are generated in a local (DFS) potential.")  
         
@@ -98,7 +98,7 @@ module Continuum
         elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSine
             cOrbital, phase = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
         elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussek
-            cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot.grid, settings)
+            cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
         else    error("stop b")
         end
         
@@ -111,7 +111,7 @@ module Continuum
         ... to generate a continuum orbital for the (continuum) subshell sh, the energy and the given potential. The effective 
             charge for the normalization of the continuum orbital is derived from the potential. All further specifications about 
             this generations are made by proper settings; however, the function termintates if the settings.includeExchange = true. 
-            A tupel of a (continuum) (orbital::Orbital, phase::Float64) is returned.
+            A tupel of a (continuum) (orbital::Orbital, phase::Float64, normFactor::Float64) is returned.
     """
     function generateOrbitalLocalPotential(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)
         settings.includeExchange   &&   error("Continuum orbital for local potential does not allow 'exchange'.")
@@ -130,20 +130,20 @@ module Continuum
         else    error("stop a")
         end
         #
-        ##x return( cOrbital, 0. )
+        ## return( cOrbital, 0., 0. )
         #
         # Normalize the continuum orbital and determine its phase
         if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSine
-            cOrbital, phase = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
+            cOrbital, phase, normFactor = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
         elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSine
-            cOrbital, phase = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
+            cOrbital, phase, normFactor = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
         elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussek
-            cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot.grid, settings)
+            cOrbital, phase, normFactor = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
         else    error("stop b")
         end
         #
-        
-        return( cOrbital, phase )
+        ##x println("*** phase = $phase   normFactor = $normFactor")
+        return( cOrbital, phase, normFactor )
     end
 
 
@@ -301,36 +301,47 @@ module Continuum
             An (on-energy-scale-normalized) orbital::Orbital and its relative phase phi w.r.t.  sin(kr + phi) is returned.
     """
     function normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings::Continuum.Settings) 
-        
-        nx = 21   # Number of grid points for determining the phase and normalization constants
-        mtp = size( cOrbital.P, 1);    q = sqrt( 2*cOrbital.energy );        l = Basics.subshell_l(cOrbital.subshell)
-        meanPhi = zeros(nx);    devsPhi = zeros(nx);   meanN = zeros(nx);    devsN = zeros(nx);   ny = 0
-        for i = mtp-nx+1:mtp
-            PPprime = cOrbital.P[i] / cOrbital.Pprime[i];    kr  = q * grid.r[i];   at = atan( PPprime * q )
-            phi = atan( PPprime * q ) - kr + l*pi/2;         phi = rem(phi, pi) + pi   # to bring phi in the intervaö 0 <= phi < pi
+        mtp = size( cOrbital.P, 1) - 20;    q = sqrt( 2*cOrbital.energy );        l = Basics.subshell_l(cOrbital.subshell)
+
+        if  true
+            i = mtp;    PPprime = cOrbital.P[i] / cOrbital.Pprime[i];    kr  = q * grid.r[i];   at = atan( PPprime * q )
+            phi = atan( PPprime * q ) - kr + l*pi/2;         phi = rem(phi, 2*pi) + pi   ##x to bring phi in the intervaö 0 <= phi < pi
             A   = cOrbital.P[i] / sin(kr - l*pi/2 + phi);    N   = sqrt(2/(pi*q)) / A
-            if  abs(N) > 1.0e1
-                println("** Skip normalization at i = $i, r[i] = $(grid.r[i])  A = $A   phi = $phi  corbital = $(cOrbital.P[i])");   continue   end
-            ## println("kr=" * @sprintf("%.4e",kr) * ",  PPprime=" * @sprintf("%.4e",PPprime) * ",  at=" * @sprintf("%.4e",at) * 
-            ##         ",  phi=" * @sprintf("%.4e",phi) * ",  A=" * @sprintf("%.4e",A) * ",  N=" * @sprintf("%.4e",N) )
+            mPhi = phi;                                      mN  = N
+            println(">> Pure-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",mN) *
+                    " and phase phi=" * @sprintf("%.4e",mPhi) *
+                    " at r=" * @sprintf("%.4e",grid.r[mtp])   * " a.u." )
+        else
+            # Compute a mean phase, normalization factor and their mean deviations
+            nx = 1   # Number of grid points for determining the phase and normalization constants
+            meanPhi = zeros(nx);    devsPhi = zeros(nx);   meanN = zeros(nx);    devsN = zeros(nx);   ny = 0
+            for i = mtp-nx+1:mtp
+                PPprime = cOrbital.P[i] / cOrbital.Pprime[i];    kr  = q * grid.r[i];   at = atan( PPprime * q )
+                phi = atan( PPprime * q ) - kr + l*pi/2;         phi = rem(phi, 2*pi) + pi   ##x to bring phi in the intervaö 0 <= phi < pi
+                A   = cOrbital.P[i] / sin(kr - l*pi/2 + phi);    N   = sqrt(2/(pi*q)) / A
+                if  abs(N) > 1.0e1
+                    println("** Skip normalization at i = $i, r[i] = $(grid.r[i])  A = $A   phi = $phi  corbital = $(cOrbital.P[i])");   continue   end
+                # Collect data to form the mean and standard deviations
+                ny  = ny + 1;    meanPhi[ny] = phi;     meanN[ny] = N
+            end
             #
-            # Collect data to form the mean and standard deviations
-            ny  = ny + 1;    meanPhi[ny] = phi;     meanN[ny] = N
+            # Determine the mean and standard deviations
+            mPhi = sum(meanPhi) / nx;    mN = sum(meanN) / nx
+            for  i = 1:nx    devsPhi[i] = (meanPhi[i] - mPhi)^2;    devsN[i] = (meanN[i] - mN)^2    end
+            stdPhi = sqrt( sum(devsPhi) / nx );   stdN = sqrt( sum(devsN) / nx );
+            println(">> Pure-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",mN) *
+                    " (Delta-N=" * @sprintf("%.4e",stdN) *
+                    ") and phase phi=" * @sprintf("%.4e",mPhi) *
+                    " (Delta-phi=" * @sprintf("%.4e",stdPhi) * 
+                    ") at r=" * @sprintf("%.4e",grid.r[mtp]) * " a.u." )
         end
-        #
-        # Determine the mean and standard deviations
-        mPhi = sum(meanPhi) / nx;    mN = sum(meanN) / nx
-        for  i = 1:nx    devsPhi[i] = (meanPhi[i] - mPhi)^2;    devsN[i] = (meanN[i] - mN)^2    end
-        stdPhi = sqrt( sum(devsPhi) / nx );   stdN = sqrt( sum(devsN) / nx );
-         if  Defaults.GBL_PRINT_DEBUG  println("Pure-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",mN) *
-                                      " (Delta-N=" * @sprintf("%.4e",stdN) *
-                                      ") and phase phi=" * @sprintf("%.4e",mPhi) *
-                                      " (Delta-N=" * @sprintf("%.4e",stdPhi) * ")." )    end
         
         P = mN .* cOrbital.P;   Q = mN .* cOrbital.Q;   Pprime = mN .* cOrbital.Pprime;   Qprime = mN .* cOrbital.Qprime;   
         newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
-                            P, Q, Pprime, Qprime, cOrbital.grid)
-        return( newOrbital, mPhi )
+                              P, Q, Pprime, Qprime, cOrbital.grid)
+        mN   = maximum( P[end-300:end] )   ## determine the maximum value of the P component as asymptotic measure for the amplitude
+                              
+        return( newOrbital, mPhi, mN )
     end
 
 
@@ -340,50 +351,106 @@ module Continuum
             An (on-energy-scale-normalized) orbital::Orbital is returned.
     """
     function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings) 
-        
-        nx = 21   # Number of grid points for determining the phase and normalization constants
-        mtp = size( cOrbital.P, 1) - 20;   energy = cOrbital.energy    
+        mtp = size( cOrbital.P, 1) - 2;   energy = cOrbital.energy    
         wc   = Defaults.getDefaults("speed of light: c");    q = sqrt( 2*energy + energy/(wc*wc));      kappa = cOrbital.subshell.kappa
         Zbar = Radial.determineZbar(pot);    y = Zbar * (energy + wc^2) / (wc^2 * q);   gammaBar = sqrt(kappa^2 - Zbar^2 / wc^2)
         eta  = - (kappa - im*y) / (energy + wc^2) / (gammaBar + im*y) / (2im)
         NP   = sqrt( (energy + 2*wc^2)/(pi*wc^2*q) );   NQ = -sqrt( energy / (pi*wc^2*q) )
-
-        meanPhi = zeros(nx);    devsPhi = zeros(nx);   meanN = zeros(nx);    devsN = zeros(nx);   ny = 0;   son = "xxx";   at = 0.
-        #
-        for i = mtp-nx+1:mtp
-            thetaprime = q + y/pot.grid.r[i] 
-            #
-            # Select the 'ratio' on which the phase is determined
-            if  true   PprimeP = cOrbital.Pprime[i] / cOrbital.P[i];   at = atan( - PprimeP / thetaprime );   son = "P'/P"    
-            else       PprimeP = cOrbital.Q[i] / cOrbital.P[i];        at = atan( - PprimeP / NQ * NP );      son = "Q/P"     end
+        
+        if  true
+            i = mtp;     thetaprime = q + y/pot.grid.r[i]        
+            # Select the 'ratio' on which the thetaprimephase is determined
+            if  false   PprimeP = cOrbital.Pprime[i] / cOrbital.P[i];   at = atan( - PprimeP / thetaprime );   son = "P'/P"    
+            else        PprimeP = cOrbital.Q[i] / cOrbital.P[i];        at = atan( - PprimeP / NQ * NP );      son = "Q/P"     end
             #
             theta = q * pot.grid.r[i]  +  y * log(2q * pot.grid.r[i])  - angle( SpecialFunctions.gamma(gammaBar + im*y) )  -  pi*gammaBar/2  +  eta.re
-            phi = at - theta;       phi = rem(phi, pi) + pi   # to bring phi in the interval 0 <= phi < pi
+            phi = at - theta;       phi = rem(phi, 2*pi) + pi
             A   = cOrbital.P[i] / cos(theta + phi);             N   = NP / A
-            if  abs(N) > 1.0e1   
-                println("**Skip normalization at i = $i, r[i] = $(pot.grid.r[i])  A = $A   phi = $phi  corbital $(cOrbital.P[i])");   continue   end
-            ## println("theta=" * @sprintf("%.4e",theta) * ",  PprimeP=" * @sprintf("%.4e",PprimeP) * ",  at=" * @sprintf("%.4e",at) * 
-            ##         ",  phi=" * @sprintf("%.4e",phi) * ",  A=" * @sprintf("%.4e",A) * ",  N=" * @sprintf("%.4e",N) ) 
+            mPhi = phi;                                         mN  = N
+            println(">> Coulomb-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",mN) *
+                    " and phase phi=" * @sprintf("%.4e",mPhi) *
+                    " at r=" * @sprintf("%.4e",pot.grid.r[mtp])   * " a.u." )
+        else
+            # Compute a mean phase, normalization factor and their mean deviations
+            nx = 1   # Number of grid points for determining the phase and normalization constants
+            meanPhi = zeros(nx);    devsPhi = zeros(nx);   meanN = zeros(nx);    devsN = zeros(nx);   ny = 0;   son = "xxx";   at = 0.
             #
-            # Collect data to form the mean and standard deviations
-            ny  = ny + 1;    meanPhi[ny] = phi;     meanN[ny] = N
+            for i = mtp-nx+1:mtp
+                thetaprime = q + y/pot.grid.r[i] 
+                # Select the 'ratio' on which the thetaprimephase is determined
+                if  false   PprimeP = cOrbital.Pprime[i] / cOrbital.P[i];   at = atan( - PprimeP / thetaprime );   son = "P'/P"    
+                else        PprimeP = cOrbital.Q[i] / cOrbital.P[i];        at = atan( - PprimeP / NQ * NP );      son = "Q/P"     end
+                #
+                theta = q * pot.grid.r[i]  +  y * log(2q * pot.grid.r[i])  - angle( SpecialFunctions.gamma(gammaBar + im*y) )  -  pi*gammaBar/2  +  eta.re
+                phi = at - theta;       phi = rem(phi, 2*pi) + pi
+                A   = cOrbital.P[i] / cos(theta + phi);             N   = NP / A
+                ##x println("***** thetaprime = $thetaprime    theta = $theta    phi = $phi    A = $A")
+                if  abs(N) > 1.0e1   
+                    println("**Skip normalization at i = $i, r[i] = $(pot.grid.r[i])  A = $A   phi = $phi  corbital $(cOrbital.P[i])");   continue   end
+                # Collect data to form the mean and standard deviations
+                ny  = ny + 1;    meanPhi[ny] = phi;     meanN[ny] = N
+            end
+            #
+            # Determine the mean and standard deviations
+            mPhi = sum(meanPhi) / nx;    mN = sum(meanN) / nx
+            for  i = 1:nx    devsPhi[i] = (meanPhi[i] - mPhi)^2;    devsN[i] = (meanN[i] - mN)^2    end
+            stdPhi = sqrt( sum(devsPhi) / nx );   stdN = sqrt( sum(devsN) / nx );
+            println(">> Coulomb-sine normalized continuum orbital (on " *son* ") with normalization N=" * @sprintf("%.4e",mN) *
+                    " (Delta-N=" * @sprintf("%.4e",stdN) *
+                    ") and phase phi=" * @sprintf("%.4e",mPhi) *
+                    " (Delta-phi=" * @sprintf("%.4e",stdPhi) * 
+                    ") at r=" * @sprintf("%.4e",pot.grid.r[mtp]) * " a.u." )
         end
-        #
-        # Determine the mean and standard deviations
-        mPhi = sum(meanPhi) / nx;    mN = sum(meanN) / nx
-        for  i = 1:nx    devsPhi[i] = (meanPhi[i] - mPhi)^2;    devsN[i] = (meanN[i] - mN)^2    end
-        stdPhi = sqrt( sum(devsPhi) / nx );   stdN = sqrt( sum(devsN) / nx );
-        println(">> Coulomb-sine normalized continuum orbital (on " *son* ") with normalization N=" * @sprintf("%.4e",mN) *
-                " (Delta-N=" * @sprintf("%.4e",stdN) *
-                ") and phase phi=" * @sprintf("%.4e",mPhi) *
-                " (Delta-phi=" * @sprintf("%.4e",stdPhi) * 
-                ") at r=" * @sprintf("%.4e",pot.grid.r[mtp]) * " a.u." )
         
         P = mN .* cOrbital.P;   Q = mN .* cOrbital.Q;   Pprime = mN .* cOrbital.Pprime;   Qprime = mN .* cOrbital.Qprime;   
         newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
-                            P, Q, Pprime, Qprime, cOrbital.grid)
+                              P, Q, Pprime, Qprime, cOrbital.grid)
+        mN = maximum( P[end-300:end] )   ## determine the maximum value of the P component as asymptotic measure for the amplitude
         
-        return( newOrbital, mPhi )
+        return( newOrbital, mPhi, mN )
+    end
+
+
+    """
+    `Continuum.normalizeOrbitalOngRussek(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)`   
+        ... to normalize the given continuum orbital with regard to a (asymptotic) pure sine-function. 
+            An (on-energy-scale-normalized) orbital::Orbital is returned.
+    """
+    function normalizeOrbitalOngRussek(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings) 
+        mtp = size( cOrbital.P, 1) - 30;                    energy = cOrbital.energy;      kappa = cOrbital.subshell.kappa
+        wc   = Defaults.getDefaults("speed of light: c");   E = wc^2 + cOrbital.energy;    q = sqrt( 2*energy + energy/(wc*wc))     
+        qq = sqrt(E^2/wc^2 - wc^2)
+        @show q, qq
+        
+        if  true
+            i = mtp;     dVdr = pot.Zr[i] / (pot.grid.r[i]^2);    V  = - pot.Zr[i] / pot.grid.r[i]
+            Pe = cOrbital.P[i];   Pep = cOrbital.Pprime[i];       r0 = pot.grid.r[i]
+            # Compute U-function
+            ##x @show wc /2.
+            ##x @show ((E-V)*dVdr - wc^2 *kappa*(kappa+1) /r0^3)
+            ##x @show (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1) / r0^2))
+            @show Pe, Pep
+            U = wc /2. * ((E-V)*dVdr - wc^2 *kappa*(kappa+1) /r0^3) / (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1) / r0^2)^(3/2)) * Pe
+            ## U = U - wc * (Pep + dVdr * Pe / (2*(E-V+ 2* wc^2)) ) / (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1)/r0^2)^(1/2))
+            U = U - wc * (Pep + dVdr * Pe / (2*(E-V+ 2* wc^2)) ) / (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1)/r0^2)^(1/2))
+            # Compute A-function
+            A = (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1)/r0^2)^(1/2)) / (E-V+wc^2) * (Pe^2 + U^2)
+            A = sqrt(A);              phir0 = atan(U, Pe)
+            phi = phir0 - q*r0;       phi = rem(phi, 2*pi) + pi
+            mPhi = phi;               mN  = 1 / (A * sqrt(pi*wc))
+            println(">> WKB normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",mN) *
+                    " and phase phi=" * @sprintf("%.4e",mPhi) *
+                    " at r=" * @sprintf("%.4e",pot.grid.r[mtp])   * " a.u.  U/Pe = $(U/Pe)" )
+
+        else  error("stop a")
+        end
+        
+        P = mN .* cOrbital.P;   Q = mN .* cOrbital.Q;   Pprime = mN .* cOrbital.Pprime;   Qprime = mN .* cOrbital.Qprime;   
+        newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
+                              P, Q, Pprime, Qprime, cOrbital.grid)
+        mN = maximum( P[end-300:end] )   ## determine the maximum value of the P component as asymptotic measure for the amplitude
+
+        return( newOrbital, mPhi, mN )
     end
 
 end # module
