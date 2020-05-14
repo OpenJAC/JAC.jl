@@ -160,6 +160,47 @@ module BasicsHP
 
         
     """
+    `Basics.isViolated()`  ... returns true if some rule/limitation is violated, and false otherwise.
+
+    + `(conf::Configuration, restriction::AbstractConfigurationRestriction)`  
+        ... returns true if restriction is violated by the given conf, and false otherwise.
+    """
+    function Basics.isViolated(conf::Configuration, restriction::AbstractConfigurationRestriction)
+        wa = false;  ne = 0
+        if      typeof(restriction) == RestrictNoElectronsTo
+            for (sh,v) in  conf.shells
+                if  sh.n >= restriction.nmin    ||    sh.l >= restriction.lmin    ne = ne + v   end
+            end
+            if  ne > restriction.ne                                   wa = true   end
+        elseif  typeof(restriction) == RestrictParity
+            if  Basics.determineParity(conf) != restriction.parity    wa = true   end
+        elseif  typeof(restriction) == RestrictToShellDoubles
+            for (sh,v) in  conf.shells
+                if  sh.n >= restriction.nmin    
+                    if  sh.l >= restriction.lmin 
+                        println("restrictions:  $sh  $(sh.n)  $v  $(restriction.nmin)")
+                        if !(v in [0,2])                              wa = true   end
+                    end
+                end 
+            end
+        elseif  typeof(restriction) == RequestMinimumOccupation
+            for (sh,v) in  conf.shells
+                if  sh in restriction.shells   ne = ne + v     end
+            end
+            if  ne < restriction.ne                                   wa = true   end
+        elseif  typeof(restriction) == RequestMaximumOccupation
+            for (sh,v) in  conf.shells
+                if  sh in restriction.shells   ne = ne + v     end
+            end
+            if  ne > restriction.ne                                   wa = true   end
+        else    error("stop a")
+        end
+        
+        return( wa )
+    end
+
+        
+    """
     `Basics.isStandardSubshellList(basis::Basis)`  
         ... returns true if the subshell list basis.subshells is in standard order, and false otherwise.
             It requests especially that both subshells of the same shell (n,l) occur in the sequence j = l-1/2, j = l+1/2

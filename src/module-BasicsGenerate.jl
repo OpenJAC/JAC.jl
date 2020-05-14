@@ -734,8 +734,44 @@ module BascisGenerate
             end
         end
         
+        confList = Base.unique(confList)
         ##x println("***aa refConfigs = $refConfigs,  fromShells = $fromShells,  toShells = $toShells")
         ##x println("***aa confList   = $confList")
+        
+        return( confList )
+    end
+
+
+
+    """
+    `Basics.generateConfigurations(refConfigs::Array{Configuration,1}, fromShells::Array{Shell,1}, toShells::Array{Shell,1}, 
+                                   noex::Int64; restrictions::Array{AbstractConfigurationRestriction,1}=AbstractConfigurationRestriction[])`  
+        ... generates all nonrelativistic configurations with excitation of up to noex electrons fromShells --> toShells
+            for all given reference configurations. Moreover, the list of restrictions (if any is given) is finally applied 
+            to restrict the configurations to a given set of limitations. It remains the reponsibility of the user to make sure that
+            the given restrictions do not contradict each other and are consistent with what is to be achieved. The given set of 
+            restrictions can be easily extended if this need arises by the users. A confList::Array{Configuration,1} is returned.
+    """
+    function Basics.generateConfigurations(refConfigs::Array{Configuration,1}, fromShells::Array{Shell,1}, toShells::Array{Shell,1}, 
+                                           noex::Int64; restrictions::Array{AbstractConfigurationRestriction,1}=AbstractConfigurationRestriction[])
+        if  noex > 0
+            newConfigs = Basics.generateConfigurations(refConfigs, fromShells, toShells)
+            newConfigs = Base.unique(newConfigs)
+            for ne = 2:noex    
+                newConfigs = Basics.generateConfigurations(newConfigs, fromShells, toShells)    
+                newConfigs = Base.unique(newConfigs)
+            end
+        end
+        
+        # Now apply in turn all given restrictions, if any, and append if no restriction is violated
+        confList = Configuration[]
+        for  conf  in  newConfigs
+            addConf = true
+            for res in restrictions
+                if  Basics.isViolated(conf,res)     addConf = false;    break   end
+            end
+            if  addConf     push!(confList, conf)   end
+        end
         
         return( confList )
     end
@@ -890,15 +926,19 @@ module BascisGenerate
     """
     function Basics.generateLevelWithSymmetryReducedBasis(level::Level, subshells::Array{Subshell,1})
         testBasis = level.basis;    newCsfs = CsfR[];    newMc = Float64[]
+        ##x @show testBasis.subshells
+        ##x @show           subshells
         
         ##x println("aa:  subshells = $subshells   testsubshells = $(testBasis.subshells)")
         # Decide of whether the basis need to be extended by some subshells
         nt = length(testBasis.subshells)
         if      testBasis.subshells == subshells      basis = testBasis;    nLevel = level
+            ##x println("*** aa")
         elseif  nt >= length(subshells)               error("stop a")
         elseif  nt + 1 == length(subshells)  &&  testBasis.subshells == subshells[1:nt]
                 nLevel = Basics.generateLevelWithExtraSubshell(subshells[end], level)
                 basis  = nLevel.basis
+            ##x println("*** bb")
         else
             nLevel  = level
             for  ns = nt+1:length(subshells)
@@ -906,15 +946,17 @@ module BascisGenerate
             end
             basis  = nLevel.basis
             ##x println("bb:  subshells = $subshells   testsubshells = $(basis.subshells)")
+            ##x println("*** cc")
         end
             
         
         for  i = 1:length(basis.csfs)
+            ##x println("*** dd $(basis.csfs[i].occupation)")
             if  basis.csfs[i].J == nLevel.J  &&   basis.csfs[i].parity == nLevel.parity 
-                push!(newCsfs, basis.csfs[i]);    push!(newMc, nLevel.mc[i])
+                push!(newCsfs, deepcopy(basis.csfs[i]));    push!(newMc, deepcopy(nLevel.mc[i]))
             end
         end
-        newBasis = Basis(true, basis.NoElectrons, basis.subshells, newCsfs, basis.coreSubshells, basis.orbitals)
+        newBasis = Basis(true, basis.NoElectrons, deepcopy(basis.subshells), newCsfs, deepcopy(basis.coreSubshells), deepcopy(basis.orbitals))
         newLevel = Level(nLevel.J, nLevel.M, nLevel.parity, nLevel.index, nLevel.energy, nLevel.relativeOcc, true, newBasis, newMc)
         return( newLevel )
     end

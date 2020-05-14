@@ -51,7 +51,8 @@ module JAC
 using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD2, SymEngine  ## , Interact
 
 ##x export @racahsum, 
-export AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, AngularJ64, AngularM64, AngularJ, AngularMomentum, 
+export AbstractConfigurationRestriction, AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, 
+       AngularJ64, AngularM64, AngularJ, AngularMomentum, 
        AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AutoIonization, 
        Basics, Basis, 
        CartesianVector, CiSettings, CiExpansion, CloseCoupling, compute, convertUnits, Cascade, Configuration, ConfigurationR, 
@@ -75,7 +76,8 @@ export AbstractQedModel, add, analyze, AlphaX, AlphaVariation, AnapoleMoment, An
        QedPetersburg, QedSydney,
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RasSettings, RasStep, 
        RasExpansion, RayleighCompton, recast, REDA, READI, Representation,
-       SchiffMoment, setDefaults, Shell, Spectroscopy, Subshell,
+       RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
+       SchiffMoment, setDefaults, Shell, Spectroscopy, SphericalTensor, Subshell,
        tabulate, TestFrames, Triangle, tools,
        UseCoulomb, UseBabushkin, UseGauge,
        WeightedCartesian, W3j, W6j, W9j,
@@ -171,7 +173,8 @@ include("module-Cascade.jl");       using ..Cascade
 # include("module-Statistical.jl")
 
 # Functions/methods for symbolic computations
-include("module-RacahAlgebra.jl");  using ..RacahAlgebra
+include("module-RacahAlgebra.jl");      using ..RacahAlgebra
+include("module-SphericalTensor.jl");   using ..SphericalTensor
 
 # Basic functions/methods to manipulate these data
 include("module-BasicsAG.jl")

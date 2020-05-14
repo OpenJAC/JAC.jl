@@ -61,10 +61,12 @@ module TableStrings
     `TableStrings.inUnits(sa::String)`  ... a string is returned that displays the requested unit in the form: '[unit]'
     """
     function  inUnits(sa::String) 
-        if       sa == "energy"             return( "[" * Defaults.GBL_ENERGY_UNIT * "]" )
-        elseif   sa == "rate"               return( "[" * Defaults.GBL_RATE_UNIT   * "]" )
-        elseif   sa == "time"               return( "[" * Defaults.GBL_TIME_UNIT   * "]" )
-        elseif   sa == "cross section"      return( "[" * Defaults.GBL_CROSS_SECTION_UNIT * "]" )
+        if       sa == "energy"               return( "[" * Defaults.GBL_ENERGY_UNIT * "]" )
+        elseif   sa == "rate"                 return( "[" * Defaults.GBL_RATE_UNIT   * "]" )
+        elseif   sa == "time"                 return( "[" * Defaults.GBL_TIME_UNIT   * "]" )
+        elseif   sa == "cross section"        return( "[" * Defaults.GBL_CROSS_SECTION_UNIT * "]" )
+        elseif   sa == "resonance strength"   return( "[" * Defaults.GBL_CROSS_SECTION_UNIT * " " * Defaults.GBL_ENERGY_UNIT * "]" )
+        elseif   sa == "reduced strength"     return( "[" * Defaults.GBL_CROSS_SECTION_UNIT * " " * Defaults.GBL_ENERGY_UNIT * "^2" * "]" )
         else     error("stop a")
         end
     end

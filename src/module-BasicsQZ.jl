@@ -424,7 +424,7 @@ module BasicsQZ
         sa = sa * TableStrings.center(17, "Delta-E / |E|";    na=2)
         println(sa)
         println("  ", TableStrings.hLine(77))
-        for  i = ns+1:ns+8
+        for  i = ns+1:ns+38
             sa = " " * TableStrings.center( 6, TableStrings.level(i-ns); na=2)
             sa = sa *  TableStrings.flushright(10, string(Subshell(i-ns+l, kappa)); na=6)
             en = Basics.computeDiracEnergy(Subshell(i-ns+l, kappa), Z)

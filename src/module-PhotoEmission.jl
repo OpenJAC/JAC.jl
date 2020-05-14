@@ -180,6 +180,8 @@ module PhotoEmission
                 for  s = 1:ni
                     if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity  continue    end 
                     wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    ##x @show finalLevel.basis  ## .csfs[r]
+                    ##x @show initialLevel.basis  ## .csfs[s]
                     me = 0.
                     ##x println("Enter loop ... r=$r   s=$s  length(wa) = $(length(wa))")
                     for  coeff in wa

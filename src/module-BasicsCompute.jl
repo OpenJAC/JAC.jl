@@ -24,6 +24,8 @@ module BascisCompute
                 JAC.AngularCoefficientsRatip2013.load_csl(csfa)
                 t_coeffs, v_coeffs = JAC.AngularCoefficientsRatip2013.angular_coefficients_pair(1,1)
             else
+                ##x @show csfa.subshells, csfa
+                ##x @show csfb.subshells, csfb
                 JAC.AngularCoefficientsRatip2013.load_csl(csfa, csfb)
                 t_coeffs, v_coeffs = JAC.AngularCoefficientsRatip2013.angular_coefficients_pair(1,2)
             end
@@ -67,12 +69,13 @@ module BascisCompute
                 subshells  = JAC.AngularCoefficientsRatip2013.load_csl(csfa)
                 mct_coeffs = JAC.AngularCoefficientsRatip2013.mct_generate_coefficients(1, 1, 1, 1, Int32(parity), rank)
             else
+                ##x @show length(csfa.occupation), length(csfb.occupation)
                 # Add 'zeros' to the fields if the length of occupation does not agree
                 if       ( nz = length(csfa.occupation) - length(csfb.occupation) ) <  0   csfa = Basics.addZerosToCsfR( -nz, csfa)
                 elseif   ( nz = length(csfa.occupation) - length(csfb.occupation) ) >  0   csfb = Basics.addZerosToCsfR(  nz, csfb)    end
                 subshells  = JAC.AngularCoefficientsRatip2013.load_csl(csfa, csfb)
                 mct_coeffs = JAC.AngularCoefficientsRatip2013.mct_generate_coefficients(1, 1, 2, 2, Int32(parity), rank)
-                ##x println("csfa.subshells = $(csfa.subshells)")
+                ##x @show mct_coeffs, subshells
             end
         else    error("Unsupported keystring = ", sa)
         end

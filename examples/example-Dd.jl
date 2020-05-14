@@ -3,8 +3,8 @@
 println("Dd) Test of the PhotoRecombination module with ASF from an internally generated initial- and final-state multiplet.")
 #
 setDefaults("print summary: open", "zzz-PhotoRecombination.sum")
-setDefaults("method: continuum, asymptotic Coulomb")  ## setDefaults("method: continuum, Galerkin")
-setDefaults("method: normalization, pure Coulomb")   ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
+setDefaults("method: continuum, Galerkin")            ## setDefaults("method: continuum, Galerkin") setDefaults("method: continuum, asymptotic Coulomb") 
+setDefaults("method: normalization, pure Coulomb")    ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
 wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(false), nuclearModel=Nuclear.Model(12.), 
                         initialConfigs=[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ],

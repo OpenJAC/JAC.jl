@@ -68,12 +68,10 @@ module Defaults
     #
     # Global settings that can be (re-) defined by the user.
     GBL_FRAMEWORK               = "relativistic"
-    GBL_CONT_SOLUTION           = AsymptoticCoulomb         ###  ContBessel    ContSine     AsymptoticCoulomb    NonrelativisticCoulomb    BsplineGalerkin
+    GBL_CONT_SOLUTION           = BsplineGalerkin           ###  ContBessel    ContSine     AsymptoticCoulomb    NonrelativisticCoulomb    BsplineGalerkin
     GBL_CONT_NORMALIZATION      = PureSine                  ###  PureSine    CoulombSine    OngRussek
     GBL_QED_HYDROGENIC_LAMBDAC  = [1.0,  1.0,  1.0,  1.0,  1.0]
     GBL_QED_NUCLEAR_CHARGE      = 0.1
-    ##x GBL_QED_MODEL               = QedPetersburg             ###  QedPetersburg  QedSydney    
-    ##x GBL_CONT_PHASE              = WrtSin                ###  WrtSin
     GBL_WARNINGS                = String[]
 
     GBL_ENERGY_UNIT             = "eV"
@@ -88,7 +86,6 @@ module Defaults
     GBL_SUMMARY_IOSTREAM        = nothing
 
     GBL_STANDARD_GRID           = Radial.Grid(true, printout=false)        
-    ##x GBL_STANDARD_GRID       = Radial.Grid("grid: exponential", printout=false)        
 
     
     """

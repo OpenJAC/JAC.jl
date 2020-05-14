@@ -160,9 +160,9 @@ module PhotoRecombination
                                           settings::PhotoRecombination.Settings)
         newChannels = PhotoRecombination.Channel[];;   contSettings = Continuum.Settings(false, nrContinuum);    csC = 0.;    csB = 0.
         for channel in line.channels
-            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
+            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, line.finalLevel.basis.subshells)
+            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, newfLevel.basis.subshells)
             newfLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newfLevel)
-            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
             cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newiLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newiLevel)
             newChannel = PhotoRecombination.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)

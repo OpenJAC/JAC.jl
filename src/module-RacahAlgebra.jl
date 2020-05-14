@@ -416,6 +416,21 @@ module  RacahAlgebra
         return( rex )
     end
 
+    
+    """
+    `RacahAlgebra.ClebschGordanExpansion(ja::Basic, ma::Basic, jb::Basic, mb::Basic, jc::Basic, mc::Basic)`  
+        ... returns the expansion rex::RacahExpression for a standard Clebsch-Gordan expansion  
+            |jc, mc > = Sum(ma, mb) |ja, ma > |jb, mb >  <ja ma, jb mb| jc mc>  either by Julia Symbol's or SymEngine 
+            Basic variables.
+    """
+    function ClebschGordanExpansion(ja::Basic, ma::Basic, jb::Basic, mb::Basic, jc::Basic, mc::Basic)
+        wja = AngMomentum(ja);    wjb = AngMomentum(jb);    wjc = AngMomentum(jc)    
+        wma = AngMomentum(ma);    wmb = AngMomentum(mb);    wmc = AngMomentum(mc)    
+        w3j = W3j(wja, wjb, wjc, wma, wmb, -wmc)
+        rex = RacahExpression( [wma, wmb], wja - wjb - wmc, 1/sqrt(2*wjc+1), Kronecker[], Triangle[], [w3j], W6j[], W9j[] )
+        return( rex )
+    end
+
 
     """
     `RacahAlgebra.equivalentForm(w3j::RacahAlgebra.W3j; regge::Bool=false)`  
