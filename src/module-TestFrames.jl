@@ -346,7 +346,7 @@ module TestFrames
         Defaults.setDefaults("print summary: close", "")
         # Make the comparison with approved data
         success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-AutoIonization-approved.sum"), 
-                                    joinpath(@__DIR__, "..", "test", "test-AutoIonization-new.sum"), "Auger rates and intrinsic", 17) 
+                                    joinpath(@__DIR__, "..", "test", "test-AutoIonization-new.sum"), "Auger rates and intrinsic", 5) 
         testPrint("testModule_AutoIonization()::", success)
         return(success)  
     end

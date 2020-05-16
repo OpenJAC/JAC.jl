@@ -7,6 +7,12 @@ The following features have been recently implemented and up-loaded into JAC's m
 
 ## 2020
 
+* **New and extended tutorials:** A good number of new tutorials have been implemented and extended,
+    inluding the symbolic evaluation of expressions from Racah's algebra. *(12.05.20)*
+* **Improved continuum orbitals:** Use of Galerkin method for generating continuum orbitals with 
+    well-defined energy. *(23.04.20)*
+* **Extended and improved User Guide & Compendium:**  *(23.04.20)*
+
 
 
 ## 2019

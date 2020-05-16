@@ -174,18 +174,18 @@ They can be explored statically at GitHub or can be run locally after the softwa
 In order to modify the cell-output of the notebooks and to better print *wide tables*, you can create or modify the file
 ~/.jupyter/custom/custom.css in your home directory and add the line:  div.output_area pre { font-size: 7pt;} .
 
-* [Getting started](tutorials/01-getting-started.ipynb)
-* [Simple estimates for hydrogenic atoms and ions](tutorials/02-obtain-hydrogenic-orbitals.ipynb)
-* [Specifying nuclear models and potentials](tutorials/03-define-nuclear-model-parameters.ipynb)
-* [Selection and use of atomic potentials](tutorials/04-compare-radial-potentials.ipynb)
-* [Self-Consistent-Field (and CI) computations for carbon](tutorials/05-compute-SCF+CI-carbon-III.ipynb)
-* [Determine LS notation for atomic levels](tutorials/06-expand-levels-into-LS-basis.ipynb)
-* [Estimate QED corrections for beryllium-like ions](tutorials/07-estimate-QED-for-beryllium-like.ipynb)
-* [Compute the atomic level structure in a Debye-Hückel plasma](tutorials/08-compute-atoms-in-DH-plasma.ipynb)
-* [Compute transition probabilities for Fe X](tutorials/09-compute-Fe-X-spectrum.ipynb)
-* [Compute the K-LL Auger rates of atomic neon](tutorials/10-compute-Ne-KLL-Auger-spectrum.ipynb)
-* [Compute K-LL Auger rates in a Debye-Hückel plasma](tutorials/11-compute-Auger-rates-in-DH-plasma.ipynb)
-* [Compute the 2s, 2p photoionization of argon](tutorials/12-compute-Ar-2s-2p-photoionization.ipynb)
+* [Getting started](tutorials/11-getting-started-with-JAC.ipynb)
+* [Simple estimates for hydrogenic atoms and ions](tutorials/13-compute-hydrogenic-orbitals.ipynb)
+* [Specifying nuclear models and potentials](tutorials/16-define-nuclear-model-parameters.ipynb)
+* [Selection and use of atomic potentials](tutorials/21-compare-radial-atomic-potentials.ipynb)
+* [Self-Consistent-Field (and CI) computations for carbon](tutorials/22-compute-SCF+CI-carbon-III.ipynb)
+* [Determine LS notation for atomic levels](tutorials/25-expand-levels-into-LS-basis.ipynb)
+* [Estimate QED corrections for beryllium-like ions](tutorials/26-estimate-QED-for-beryllium-like.ipynb)
+* [Compute the atomic level structure in a Debye-Hückel plasma](tutorials/28-compute-atoms-in-plasma.ipynb)
+* [Compute transition probabilities for Fe X](tutorials/51-compute-Fe-X-spectrum.ipynb)
+* [Compute the 2s, 2p photoionization of argon](tutorials/53-compute-Ar-2s-2p-photoionization.ipynb)
+* [Compute the K-LL Auger rates of atomic neon](tutorials/54-compute-Ne-KLL-Auger-spectrum.ipynb)
+* [Compute K-LL Auger rates in a Debye-Hückel plasma](tutorials/55-compute-Auger-rates-in-DH-plasma.ipynb)
 * Several [other tutorials](tutorials/) are available, and this list will be extended with the further development of JAC.
 
 
