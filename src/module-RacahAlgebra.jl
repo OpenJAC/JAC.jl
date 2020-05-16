@@ -433,6 +433,16 @@ module  RacahAlgebra
 
 
     """
+    `RacahAlgebra.countWignerSymbols(rex::RacahExpression)`  
+        ... counts the (total) number of Wigner nj symbols in rex. A nwnjs::Int64 is returned.
+    """
+    function countWignerSymbols(rex::RacahExpression)
+        nwnjs = length(rex.w3js) + length(rex.w6js) + length(rex.w9js)
+        return( nwnjs )
+    end
+
+
+    """
     `RacahAlgebra.equivalentForm(w3j::RacahAlgebra.W3j; regge::Bool=false)`  
         ... generates an (random) equivalent form for the Wigner 3j symbol w3j by using either the classical
             (regge = false) or Regge symmetries (regge = true). A rex:RacahExpression is returned.
@@ -1651,6 +1661,108 @@ module  RacahAlgebra
         end
         
         return( rexList )
+    end
+
+
+    """
+    `RacahAlgebra.testRecursions(; short::Bool=true)`  
+        ... tests the implemented recursion by just comparing comparing the number of Wigner symbols; this does not include tests on 
+            the proper phase nor the algebraic factors of the Racah expression(s). The success::Bool of these tests is returned.
+    """
+    function testRecursions(; short::Bool=true)
+        success  = true;   error("nothing tested yet")
+        # For each rule in nnList, nwnjList gives to correct number of Wigner symbols after the evaluation
+        nnList   =        [  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+        nwnjList =        [  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  2,  2,  0,  0,  1,  2,  2,  2,  1,  1,  0,  1,  1,  1,  1,  3,  1,  1]
+        append!(nnList,   [ 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47])
+        append!(nwnjList, [  1,  4,  3,  2,  1,  2,  1,  2,  0,  2,  2,  2,  2,  3,  3,  6,  8])
+        #
+        for (n, nn) in enumerate(nnList)
+            rex = RacahAlgebra.selectRacahExpression(nn);    nrex = RacahAlgebra.evaluate(rex);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
+            if  nwnjs != nwnjList[n]   println(">> Test fails for rule  $nn :");    @show rex;    @show nrex;    @show nwnjs     end
+            success = success && (nwnjs == nwnjList[n])
+            ##x println("\n**** Test for rule $n  with nwnjs = $(nwnjs)  !=== $(nwnjList[n])")
+        end
+        
+        return( success )
+    end
+
+
+    """
+    `RacahAlgebra.testSpecialValuesW3j(; short::Bool=true)`  
+        ... tests the implemented special values of the Wigner 3j symbols by just comparing comparing the number of Wigner symbols,
+            which must be 0 in all cases. The success::Bool of these tests is returned.
+    """
+    function testSpecialValuesW3j(; short::Bool=true)
+        success  = true;   
+        #
+        for n = 1:16
+            w3j = RacahAlgebra.selectW3j(n);;    nrex = RacahAlgebra.evaluate(w3j);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
+            if  nwnjs != 0   println(">> Test fails for special value rule  $n :");      @show w3j;    @show nrex;    @show nwnjs     end
+            success = success && (nwnjs == 0)
+        end
+        
+        return( success )
+    end
+
+
+    """
+    `RacahAlgebra.testSpecialValuesW6j(; short::Bool=true)`  
+        ... tests the implemented special values of the Wigner 6j symbols by just comparing comparing the number of Wigner symbols,
+            which must be 0 in all cases. The success::Bool of these tests is returned.
+    """
+    function testSpecialValuesW6j(; short::Bool=true)
+        success  = true;   
+        #
+        for n = 1:22
+            w6j = RacahAlgebra.selectW6j(n);;    nrex = RacahAlgebra.evaluate(w6j);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
+            if  nwnjs != 0   println(">> Test fails for special value rule  $n :");      @show w6j;    @show nrex;    @show nwnjs     end
+            success = success && (nwnjs == 0)
+        end
+        
+        return( success )
+    end
+
+
+    """
+    `RacahAlgebra.testSpecialValuesW9j(; short::Bool=true)`  
+        ... tests the implemented special values of the Wigner 9j symbols by just comparing comparing the number of Wigner symbols,
+            which must be 0 in all cases. The success::Bool of these tests is returned.
+    """
+    function testSpecialValuesW9j(; short::Bool=true)
+        success  = true;   
+        #
+        for n = 1:2
+            w9j = RacahAlgebra.selectW6j(n);;    nrex = RacahAlgebra.evaluate(w9j);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
+            if  nwnjs != 0   println(">> Test fails for special value rule  $n :");      @show w6j;    @show nrex;    @show nwnjs     end
+            success = success && (nwnjs == 0)
+        end
+        
+        return( success )
+    end
+
+
+    """
+    `RacahAlgebra.testSumRules(; short::Bool=true)`  
+        ... tests the implemented sum rules by just comparing comparing the number of Wigner symbols; this does not include tests on 
+            the proper phase nor the algebraic factors of the Racah expression. The success::Bool of these tests is returned.
+    """
+    function testSumRules(; short::Bool=true)
+        success  = true
+        # For each rule in nnList, nwnjList gives to correct number of Wigner symbols after the evaluation
+        nnList   =        [  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+        nwnjList =        [  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  2,  2,  0,  0,  1,  2,  2,  2,  1,  1,  0,  1,  1,  1,  1,  3,  1,  1]
+        append!(nnList,   [ 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47])
+        append!(nwnjList, [  1,  4,  3,  2,  1,  2,  1,  2,  0,  2,  2,  2,  2,  3,  3,  6,  8])
+        #
+        for (n, nn) in enumerate(nnList)
+            rex = RacahAlgebra.selectRacahExpression(nn);    nrex = RacahAlgebra.evaluate(rex);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
+            if  nwnjs != nwnjList[n]   println(">> Test fails for rule  $nn :");    @show rex;    @show nrex;    @show nwnjs     end
+            success = success && (nwnjs == nwnjList[n])
+            ##x println("\n**** Test for rule $n  with nwnjs = $(nwnjs)  !=== $(nwnjList[n])")
+        end
+        
+        return( success )
     end
     
     include("module-RacahAlgebra-inc-special.jl")

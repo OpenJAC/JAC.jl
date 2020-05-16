@@ -805,19 +805,19 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-PhotoRecombination-new.sum")
         printstyled("\n\nTest the module  PhotoRecombination  ... \n", color=:cyan)
         ### Make the tests
-        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-6, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600)
-        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),
-                                initialConfigs=[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ],
-                                finalConfigs  =[Configuration("1s^2 2s^2 2p^6")], 
+        grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 1.0e-2, NoPoints = 900)
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.), 
+                                initialConfigs=[Configuration("1s^2")],
+                                finalConfigs  =[Configuration("1s^2 2s"), Configuration("1s^2 3s"), Configuration("1s^2 3p"), Configuration("1s^2 3d")], 
                                 process = JAC.Rec, 
-                                processSettings=PhotoRecombination.Settings([E1, M1], [UseCoulomb, UseBabushkin], [10., 20.], [0.], 
-                                                false, true, true, true, true, Tuple{Int64,Int64}[(1,1)]) )
+                                processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10.], 
+                                                     [2.18, 21.8, 218.0], false, false, false, true, false, Tuple{Int64,Int64}[(1,1)]) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
         # Make the comparison with approved data
         success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-PhotoRecombination-approved.sum"), 
-                                    joinpath(@__DIR__, "..", "test", "test-PhotoRecombination-new.sum"), "Photorecombination cross sections for ", 3) 
+                                    joinpath(@__DIR__, "..", "test", "test-PhotoRecombination-new.sum"), "Photorecombination cross sections", 10) 
         testPrint("testModule_PhotoRecombination()::", success)
         return(success)  
     end
@@ -850,6 +850,24 @@ module TestFrames
         testPrint("testModule_PhotoEmission()::", success)
         return(success)  
     end
+
+
+
+    #== """
+    `TestFrames.testModule_RacahAlgebra(; short::Bool=true)`  ... tests on module RacahAlgebra.
+    """
+    function testModule_RacahAlgebra(; short::Bool=true)
+        success = true
+        printstyled("\n\nTest the module  RacahAlgebra  ... \n", color=:cyan)
+        ### Make the tests
+        # Test the implemented recursion relations
+        success = success  &&  RacahAlgebra.testRecursions(; short=short)
+        # Test the implemented sum rule evaluation
+        success = success  &&  RacahAlgebra.testSumRules(; short=short)
+        ###
+        testPrint("testModule_RacahAlgebra()::", success)
+        return(success)  
+    end  ==#
 
 
 

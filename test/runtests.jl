@@ -21,6 +21,10 @@ using JAC, ..Defaults, ..TestFrames
         @test TestFrames.testEvaluation_Wigner_9j_specialValues() 
         @test TestFrames.testEvaluation_sumRulesForOneWnj() 
         @test TestFrames.testEvaluation_sumRulesForTwoWnj() 
+        @test RacahAlgebra.testSpecialValuesW3j()
+        @test RacahAlgebra.testSpecialValuesW6j()
+        @test RacahAlgebra.testSpecialValuesW9j()
+        @test RacahAlgebra.testSumRules()
     end
 
     @testset "JAC representations" begin
@@ -51,8 +55,8 @@ using JAC, ..Defaults, ..TestFrames
         @test TestFrames.testModule_PhotoEmission()
         @test TestFrames.testModule_PhotoExcitation()
         @test TestFrames.testModule_PhotoIonization()
-        ## @test TestFrames.testModule_PhotoRecombination()
-        ## @test TestFrames.testModule_AutoIonization()  
+        @test TestFrames.testModule_PhotoRecombination()
+        @test TestFrames.testModule_AutoIonization()  
         ## @test TestFrames.testModule_Dielectronic()  
         ## @test TestFrames.testModule_PhotoExcitationFluores() 
         ## @test TestFrames.testModule_PhotoExcitationAutoion() 
