@@ -7,7 +7,8 @@
             special value is returned in rex. For istrue = false, rex has no meaning.
     """
     function specialValue(w3j::RacahAlgebra.W3j)
-        deltas = Kronecker[];    triangles = Triangle[];   w3js = W3j[];   w6js = W6j[];   w9js = W9j[]
+        deltas = Kronecker[];    triangles = Triangle[];   integrals = Integral[]
+        w3js = W3j[];   w6js = W6j[];   w9js = W9j[];   ylms = Ylm[];    djpqs = Djpq[]
 
         rexList = RacahAlgebra.symmetricForms(w3j)
         for  rex in rexList
@@ -22,10 +23,10 @@
             specialW3j = W3j(ww.ja, ww.jb, ww.jc, 0, 0, 0);     J = ww.ja + ww.jb + ww.jc
             if  ww == specialW3j
                 push!( deltas, Kronecker(J, Basic(:even)) )
-                wa = RacahExpression( rex.summations, rex.phase + J/2, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + J/2, 
                         rex.weight * sqrt( factorial(J - 2*ww.ja) * factorial(J - 2*ww.jb) * factorial(J - 2*ww.jb) / factorial(J+1) ) * 
                                       factorial(J/2) / ( factorial(J/2-ww.ja) * factorial(J/2-ww.jb) * factorial(J/2-ww.jc) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -35,8 +36,8 @@
             #
             specialW3j = W3j(ww.ja, ww.ja, 0, ww.ma, -ww.ma, 0)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.ja - ww.ma, rex.weight / sqrt(2*ww.ja+1), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.ja - ww.ma, rex.weight / sqrt(2*ww.ja+1), 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -46,9 +47,9 @@
             #
             specialW3j = W3j(ww.ja, ww.ja-1//2, 1//2, ww.ma, -ww.ma-1//2, 1//2)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.ja - ww.ma - 1, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.ja - ww.ma - 1, 
                                       rex.weight * sqrt( (ww.ja - ww.ma)/(2*ww.ja * (2*ww.ja+1)) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -58,9 +59,9 @@
             #
             specialW3j = W3j(ww.jb+1, ww.jb, 1, ww.ma, -ww.ma-1, 1)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma - 1, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma - 1, 
                                       rex.weight * sqrt( (ww.jb - ww.ma)*(ww.jb - ww.ma + 1)/(2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -70,9 +71,9 @@
             #
             specialW3j = W3j(ww.jb+1, ww.jb, 1, ww.ma, -ww.ma, 0)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma - 1, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma - 1, 
                         rex.weight * sqrt( 2*(ww.jb + ww.ma + 1)*(ww.jb - ww.ma + 1)/(2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -82,9 +83,9 @@
             #
             specialW3j = W3j(ww.ja, ww.ja, 1, ww.ma, -ww.ma-1, 1)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.ja - ww.ma, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.ja - ww.ma, 
                         rex.weight * sqrt( 2*(ww.ja - ww.ma)*(ww.ja + ww.ma + 1)/(2*ww.ja+2) * (2*ww.ja+1) * (2*ww.ja) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -94,9 +95,9 @@
             #
             specialW3j = W3j(ww.ja, ww.ja, 1, ww.ma, -ww.ma, 0)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.ja - ww.ma, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.ja - ww.ma, 
                                       rex.weight * 2*ww.ma / sqrt( (2*ww.ja+2) * (2*ww.ja+1) * (2*ww.ja) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -106,10 +107,10 @@
             #
             specialW3j = W3j(ww.jb+3//2, ww.jb, 3//2, ww.ma, -ww.ma-3//2, 3//2)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma + 1//2, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma + 1//2, 
                                       rex.weight * sqrt( ( (ww.jb-ww.ma-1//2) * (ww.jb-ww.ma+1//2) * (ww.jb-ww.ma-3//2) )/
                                                          ( (2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1) ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -119,10 +120,10 @@
             #
             specialW3j = W3j(ww.jb+3//2, ww.jb, 3//2, ww.ma, -ww.ma-1//2, 1//2)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma + 1//2, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma + 1//2, 
                                       rex.weight * sqrt( ( 3*(ww.jb-ww.ma+1//2) * (ww.jb-ww.ma+3//2) * (ww.jb+ww.ma+3//2) )/
                                                          ( (2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1) ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -133,10 +134,10 @@
             #
             specialW3j = W3j(ww.jb+1//2, ww.jb, 3//2, ww.ma, -ww.ma-1//2, 1//2)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma - 1//2, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma - 1//2, 
                                       rex.weight * (ww.jb + 3*ww.ma + 3//2) *
                                       sqrt( (ww.jb-ww.ma+1//2) / ((2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1) * 2*ww.jb) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -146,10 +147,10 @@
             #
             specialW3j = W3j(ww.jb+2, ww.jb, 2, ww.ma, -ww.ma-2, 2)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma, 
                                       rex.weight * sqrt( (ww.jb-ww.ma-1) * (ww.jb-ww.ma) * (ww.jb-ww.ma+1) *(ww.jb-ww.ma-2) / 
                                                          ((2*ww.jb+5) * (2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2)  * (2*ww.jb+1) ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -159,10 +160,10 @@
             #
             specialW3j = W3j(ww.jb+2, ww.jb, 2, ww.ma, -ww.ma, 0)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma, 
                                       rex.weight * sqrt( 6* (ww.jb+ww.ma+2) * (ww.jb+ww.ma+1) * (ww.jb-ww.ma+2) * (ww.jb-ww.ma+1) / 
                                                          ((2*ww.jb+5) * (2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2)  * (2*ww.jb+1) ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -172,10 +173,10 @@
             #
             specialW3j = W3j(ww.jb+1, ww.jb, 2, ww.ma, -ww.ma-2, 2)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma + 1, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma + 1, 
                                       rex.weight * 2* sqrt( (ww.jb-ww.ma-1) * (ww.jb-ww.ma) * (ww.jb-ww.ma+1) * (ww.jb-ww.ma+2) / 
                                                             ((2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1)  * 2*ww.jb ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -185,10 +186,10 @@
             #
             specialW3j = W3j(ww.jb+1, ww.jb, 2, ww.ma, -ww.ma-1, 1)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma + 1, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma + 1, 
                                       rex.weight * 2* (ww.jb+2*ww.ma+2) * sqrt( (ww.jb-ww.ma-1) * (ww.jb-ww.ma) / 
                                                            ((2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1)  * 2*ww.jb ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -198,10 +199,10 @@
             #
             specialW3j = W3j(ww.jb+1, ww.jb, 2, ww.ma, -ww.ma, 0)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma + 1, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma + 1, 
                                       rex.weight * 2*ww.ma * sqrt( 6* (ww.jb-ww.ma+1) * (ww.jb-ww.ma+1) / 
                                                            ((2*ww.jb+4) * (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1)  * 2*ww.jb ) ), 
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
             #
@@ -211,10 +212,10 @@
             #
             specialW3j = W3j(ww.jb, ww.jb, 2, ww.ma, -ww.ma, 0)
             if  ww == specialW3j
-                wa = RacahExpression( rex.summations, rex.phase + ww.jb - ww.ma, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.jb - ww.ma, 
                                       rex.weight * 2* (3*ww.ma*ww.ma - ww.jb*(ww.jb+1)) / 
                                                    sqrt( (2*ww.jb+3) * (2*ww.jb+2) * (2*ww.jb+1)  * 2*ww.jb * (2*ww.jb-1) ),
-                                      deltas, triangles, w3js, w6js, w9js ) 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs ) 
                 return( (true, wa) )
             end
         end
@@ -230,7 +231,8 @@
             special value is returned in rex. For istrue = false, rex has no meaning.
     """
     function specialValue(w6j::RacahAlgebra.W6j)
-        deltas = Kronecker[];    triangles = Triangle[];   w3js = W3j[];   w6js = W6j[];   w9js = W9j[]
+        deltas = Kronecker[];    triangles = Triangle[];   integrals = Integral[]
+        w3js = W3j[];   w6js = W6j[];   w9js = W9j[];   ylms = Ylm[];    djpqs = Djpq[]
 
         rexList = RacahAlgebra.symmetricForms(w6j)
         for  rex in rexList
@@ -247,8 +249,8 @@
                 push!( deltas, Kronecker(ww.a, ww.e) )
                 push!( deltas, Kronecker(ww.b, ww.d) )
                 push!( triangles, Triangle(ww.a, ww.b, ww.c) )
-                wa = RacahExpression( rex.summations, rex.phase + ww.a + ww.b + ww.c, 
-                                      rex.weight / sqrt( (2*ww.a+1)*(2*ww.b+1)), deltas, triangles, w3js, w6js, w9js )
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.a + ww.b + ww.c, 
+                                      rex.weight / sqrt( (2*ww.a+1)*(2*ww.b+1)), deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -258,10 +260,10 @@
             #
             specialW6j = W6j( ww.a, ww.b, ww.c, 1//2, ww.c -1//2,  ww.b +1//2)
             if  ww == specialW6j
-                wa = RacahExpression( rex.summations, rex.phase + ww.a + ww.b + ww.c, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.a + ww.b + ww.c, 
                                       rex.weight * sqrt( (ww.a+ww.c-ww.b)*(ww.a+ww.b-ww.c+1) /
                                                          (2*ww.b+1)*(2*ww.b+2)*2*ww.c*(2*ww.c+1) ), 
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -271,10 +273,10 @@
             #
             specialW6j = W6j( ww.a, ww.b, ww.c, 1//2, ww.c +1//2,  ww.b +1//2)
             if  ww == specialW6j
-                wa = RacahExpression( rex.summations, rex.phase + ww.a + ww.b + ww.c + 1, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.a + ww.b + ww.c + 1, 
                                       rex.weight * sqrt( (ww.a+ww.b+ww.c+2)*(ww.b+ww.c-ww.a+1) /
                                                          (2*ww.b+1)*(2*ww.b+2)*(2*ww.c+1)*(2*ww.c+2) ), 
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -287,10 +289,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 1, ww.c -1,  ww.b -1)
             if  ww == specialW6j
                 S = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + S, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + S, 
                                       rex.weight * sqrt( S*(S+1)*(S-2*ww.a)*(S-2*ww.a -1) /
                                                          (2*ww.b-1)* 2*ww.b * (2*ww.b+1)* (2*ww.c-1)* 2*ww.c * (2*ww.c+1) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -303,10 +305,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 1, ww.c -1,  ww.b)
             if  ww == specialW6j
                 S = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + S, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + S, 
                                       rex.weight * sqrt( 2*(S+1)*(S-2*ww.a)*(S-2*ww.b)*(S-2*ww.c +1) /
                                                          2*ww.b * (2*ww.b+1) * (2*ww.b+2) * (2*ww.c-1) * 2*ww.c * (2*ww.c+1) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -319,10 +321,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 1, ww.c -1,  ww.b +1)
             if  ww == specialW6j
                 S = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + S, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + S, 
                                       rex.weight * sqrt( (S-2*ww.b-1)*(S-2*ww.b)*(S-2*ww.c +1)*(S-2*ww.c +2) /
                                                          (2*ww.b+1) * (2*ww.b+2) * (2*ww.b+3) * (2*ww.c-1) * 2*ww.c * (2*ww.c+1) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -335,10 +337,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 1, ww.c,  ww.b)
             if  ww == specialW6j
                 S = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + S + 1, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + S + 1, 
                                       rex.weight * 2 * ( ww.b*(ww.b+1) + ww.c*(ww.c+1) - ww.a*(ww.a+1) ) /
                                                        sqrt( 2*ww.b * (2*ww.b+1) * (2*ww.b+2) * 2*ww.c * (2*ww.c+1) * (2*ww.c+2) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -351,10 +353,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-3//2)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * sqrt( (s-1)* s * (s+1) * (s-2*ww.a-2) * (s-2*ww.a-1) * (s-2*ww.a)/
                                                          (2*ww.b-2)*(2*ww.b-1)*2*ww.b*(2*ww.b+1) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -367,10 +369,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b-1//2)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * sqrt( 3*s * (s+1) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
                                                          ((2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1)) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -383,10 +385,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b+1//2)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * sqrt( 3* (s+1) * (s-2*ww.a) * (s-2*ww.b-1) * (s-2*ww.b) * (s-2*ww.c+1) * (s-2*ww.c+2)/
                                                          (2*ww.b *(2*ww.b+1)*(2*ww.b+2)*(2*ww.b+3) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1)) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -399,10 +401,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 3//2, ww.c-3//2,  ww.b+3//2)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * sqrt( (s-2*ww.b-2) * (s-2*ww.b-1) * (s-2*ww.b) * (s-2*ww.c+1) * (s-2*ww.c+2) * (s-2*ww.c+3)/
                                                          ((2*ww.b+1)*(2*ww.b+2)*(2*ww.b+3)*(2*ww.b+4) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1)) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -415,10 +417,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 3//2, ww.c-1//2,  ww.b-1//2)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * (2*(s-2*ww.b)*(s-2*ww.c) - (s+2)*(s-2*ww.a-1)) *   sqrt( (s+1)*(s-2*ww.a) /
                                                          ((2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-1)*2*ww.c*(2*ww.c+1)*(2*ww.c+1)) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -431,10 +433,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 3//2, ww.c-1//2,  ww.b+1//2)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * ((s-2*ww.b-1)*(s-2*ww.c) - 2*(s+2)*(s-2*ww.a)) *   sqrt( (s-2*ww.b) * (s-2*ww.c + 1) /
                                                     (2*ww.b * (2*ww.b+1)*(2*ww.b+2)*(2*ww.b+3) * (2*ww.c-1)*2*ww.c*(2*ww.c+1)*(2*ww.c+2)) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -447,10 +449,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 2, ww.c-2,  ww.b-2)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * sqrt( (s-2) * (s-1) *s* (s-2*ww.a-3)* (s-2*ww.a-2)* (s-2*ww.a-1)* (s-2*ww.a) /
                             ((2*ww.b-3)*(2*ww.b-2)*(2*ww.b-1)*2*ww.b*(2*ww.b+1) * (2*ww.c-3)*(2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1)) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -463,10 +465,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 2, ww.c-2,  ww.b-1)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * 2 + sqrt( (s-1)*s*(s+1) * (s-2*ww.a-2) * (s-2*ww.a-1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1)/
                             ((2*ww.b-2)*(2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-3)*(2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1)) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -479,10 +481,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 2, ww.c-2,  ww.b)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * sqrt( 6*s * (s+1)*(s-2*ww.a-1)*(s-2*ww.b-1)*(s-2*ww.a)*(s-2*ww.b)*(s-2*ww.c+1)*(s-2*ww.c+2)/
                             ((2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2)*(2*ww.b+3) * (2*ww.c-3)*(2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1)) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -495,10 +497,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 2, ww.c-2,  ww.b+1)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * 2 * sqrt( (s+1)*(s-2*ww.a)*(s-2*ww.b-2)*(s-2*ww.b-1)*(s-2*ww.b)*(s-2*ww.c+1)*(s-2*ww.c+2)*(s-2*ww.c+3) /
                                       ( 2*ww.b*(2*ww.b+1)*(2*ww.b+2)*(2*ww.b+3)*(2*ww.b+4) * (2*ww.c-3)*(2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -511,10 +513,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 2, ww.c-2,  ww.b+2)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * sqrt( (s-2*ww.b-3)*(s-2*ww.b-2)*(s-2*ww.b-1)*(s-2*ww.b) * (s-2*ww.c+1)*(s-2*ww.c+2)*(s-2*ww.c+3)*(s-2*ww.c+4) /
                                       ( (2*ww.b+1)*(2*ww.b+2)*(2*ww.b+3)*(2*ww.b+4)*(2*ww.b+5) * (2*ww.c-3)*(2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -527,11 +529,11 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 2, ww.c-1,  ww.b-1)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * 4 * ( (ww.a+ww.b)*(ww.a-ww.b+1) - (ww.c-1)*(ww.c-ww.b+1) ) *
                                       sqrt( s*(s+1) * (s-2*ww.a-1)*(s-2*ww.a) /
                                           ( (2*ww.b-2)*(2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1)*(2*ww.c+2) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -544,11 +546,11 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 2, ww.c-1, ww.b)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * 2 * ( (ww.a+ww.b+1)*(ww.a-ww.b) - ww.c*ww.c + 1 ) *
                                       sqrt(  6*(s+1) * (s-2*ww.a) * (s-2*ww.b) * (s-2*ww.c+1) /
                                            ( (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2)*(2*ww.b+3) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1)*(2*ww.c+2) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -561,11 +563,11 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 2, ww.c-1,  ww.b+1)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * 4 * ( (ww.a+ww.b+2)*(ww.a-ww.b-1) - (ww.c-1)*(ww.b+ww.c+2) ) *
                                       sqrt( (s-2*ww.b-1)*(s-2*ww.b) * (s-2*ww.c+1)*(s-2*ww.c+2) /
                                           ( 2*ww.b*(2*ww.b+1)*(2*ww.b+2)*(2*ww.b+3)*(2*ww.b+4) * (2*ww.c-2)*(2*ww.c-1)*2*ww.c*(2*ww.c+1)*(2*ww.c+2) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -578,10 +580,10 @@
             specialW6j = W6j( ww.a, ww.b, ww.c, 2, ww.c,  ww.b)
             if  ww == specialW6j
                 s = ww.a + ww.b + ww.c;     X = ww.b*(ww.b+1) + ww.c*(ww.c+1) - ww.a*(ww.a+1)
-                wa = RacahExpression( rex.summations, rex.phase + s, 
+                wa = RacahExpression( rex.summations, integrals, rex.phase + s, 
                                       rex.weight * 2 * ( 3*X*(X-1) - 4*ww.b*(ww.b+1)*ww.c*(ww.c+1) ) *
                                       sqrt( 1 / ( (2*ww.b-1)*2*ww.b*(2*ww.b+1)*(2*ww.b+2)*(2*ww.b+3) * (2*ww.c-1)*2*ww.c*(2*ww.c+1)*(2*ww.c+2)*(2*ww.c+3) ) ),
-                                      deltas, triangles, w3js, w6js, w9js )
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
         end
@@ -597,7 +599,8 @@
             special value is returned in rex. For istrue = false, rex has no meaning.
     """
     function specialValue(w9j::RacahAlgebra.W9j)
-        deltas = Kronecker[];    triangles = Triangle[];   w3js = W3j[];   w6js = W6j[];   w9js = W9j[]
+        deltas = Kronecker[];    triangles = Triangle[];   integrals = Integral[]
+        w3js= W3j[];   w6js = W6j[];   w9js = W9j[];   ylms = Ylm[];    djpqs = Djpq[]
 
         rexList = RacahAlgebra.symmetricForms(w9j)
         for  rex in rexList
@@ -615,8 +618,8 @@
                 push!( deltas, Kronecker(ww.c, ww.d) )
                 push!( deltas, Kronecker(ww.e, ww.f) )
                 push!( triangles, Kronecker(ww.a, ww.c, ww.e) )
-                wa = RacahExpression( rex.summations, rex.phase, rex.weight / sqrt( (2*ww.a+1)*(2*ww.c+1)*(2*ww.c+1)), 
-                                      deltas, triangles, w3js, w6js, w9js )
+                wa = RacahExpression( rex.summations, integrals, rex.phase, rex.weight / sqrt( (2*ww.a+1)*(2*ww.c+1)*(2*ww.c+1)), 
+                                      deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
             #
@@ -629,8 +632,8 @@
             specialW9j = W9j( ww.a, ww.b, ww.c, ww.d, ww.e, ww.f, ww.g, ww.h, 0)
             if  ww == specialW9j
                 push!( w6js, W6j(ww.a, ww.b, ww.c, ww.e, ww.d, ww.g) )
-                wa = RacahExpression( rex.summations, rex.phase + ww.b + ww.c + ww.e + ww.f, 
-                                      rex.weight / sqrt( (2*ww.c+1)*(2*ww.g+1)), deltas, triangles, w3js, w6js, w9js )
+                wa = RacahExpression( rex.summations, integrals, rex.phase + ww.b + ww.c + ww.e + ww.f, 
+                                      rex.weight / sqrt( (2*ww.c+1)*(2*ww.g+1)), deltas, triangles, w3js, w6js, w9js, ylms, djpqs )
                 return( (true, wa) )
             end
         end

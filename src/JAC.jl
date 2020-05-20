@@ -57,7 +57,7 @@ export AbstractConfigurationRestriction, AbstractQedModel, add, analyze, AlphaX,
        Basics, Basis, 
        CartesianVector, CiSettings, CiExpansion, CloseCoupling, compute, convertUnits, Cascade, Configuration, ConfigurationR, 
        Continuum, CsfR, CoulombExcitation, CoulombIonization,  
-       diagonalize, Defaults, DecayYield, Details, Dielectronic, DoubleAuger,
+       diagonalize, Defaults, DecayYield, Details, Dielectronic, Djpq, DoubleAuger,
        estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate,
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, 
@@ -81,7 +81,7 @@ export AbstractConfigurationRestriction, AbstractQedModel, add, analyze, AlphaX,
        tabulate, TestFrames, Triangle, tools,
        UseCoulomb, UseBabushkin, UseGauge,
        WeightedCartesian, W3j, W6j, W9j,
-       Yields, 
+       Yields, Ylm, 
        Zeeman
      
 # Basic data and data structures
