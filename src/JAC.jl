@@ -72,12 +72,12 @@ export AbstractConfigurationRestriction, AbstractQedModel, add, analyze, AlphaX,
        Orbital, 
        perform, provide, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation, PeriodicTable,
        Photo, PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
-       PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, Plasma, Polarity, 
+       PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, Plasma, Polarity, Pulse,
        QedPetersburg, QedSydney,
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RasSettings, RasStep, 
        RasExpansion, RayleighCompton, recast, REDA, READI, Representation,
        RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
-       SchiffMoment, setDefaults, Shell, Spectroscopy, SphericalTensor, Subshell,
+       SchiffMoment, setDefaults, Shell, Spectroscopy, SphericalTensor, StrongField, Subshell,
        tabulate, TestFrames, Triangle, tools,
        UseCoulomb, UseBabushkin, UseGauge,
        WeightedCartesian, W3j, W6j, W9j,
@@ -155,10 +155,15 @@ include("module-REDA.jl")
 include("module-READI.jl")
 include("module-PairProduction.jl")
 include("module-PairAnnihilation1Photon.jl")
-include("module-PairAnnihilation2Photon.jl")
+include("module-PairAnnihilation2Photon.jl")  =#
+
+# Functions/methods for atomic responses and time evolutions
+include("module-Pulse.jl")
+# include("module-Statistical.jl")
 
 # Functions/methods for the computation of atomic responses
-include("module-HighHarmonic.jl")  =#
+## include("module-HighHarmonic.jl")
+include("module-StrongField.jl") 
 
 # Functions/methods for semi-empirical estimations
 # include("module-ImpactIonization.jl")
@@ -167,10 +172,6 @@ include("module-Semiempirical.jl")
 # Functions/methods for atomic and cascade computations
 include("module-Atomic.jl");        using ..Atomic
 include("module-Cascade.jl");       using ..Cascade
-
-# Functions/methods for atomic time evolutions
-# include("module-Pulse.jl")
-# include("module-Statistical.jl")
 
 # Functions/methods for symbolic computations
 include("module-RacahAlgebra.jl");      using ..RacahAlgebra

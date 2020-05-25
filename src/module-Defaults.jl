@@ -87,6 +87,11 @@ module Defaults
 
     GBL_STANDARD_GRID           = Radial.Grid(true, printout=false)        
 
+    #
+    # Global variables that are used for internal storage
+    GBL_Storage_XL_Coulomb      = Dict{String, Float64}()
+    GBL_Storage_XL_Breit        = Dict{String, Float64}()
+
     
     """
     `Defaults.convertUnits()`  

@@ -14,10 +14,10 @@ module HighHarmonic
     `abstract type HighHarmonic.AbstractTargetModel` 
         ... defines an abstract and a number of other types to represent an atomic target (cloud) for HHG:
 
-      + struct LocalizedTargetModel     ... to represent a point-like localized target       
-      + struct GaussianTargetModel      ... to represent a localized, Gaussian-type target (not yet)      
-      + struct PlanarTargetModel        ... to represent a planar target of finite extent (not yet)      
-      + struct UserTargetModel          ... to represent a user-defined 3-dimensional target (not yet)
+        + struct LocalizedTargetModel     ... to represent a point-like localized target       
+        + struct GaussianTargetModel      ... to represent a localized, Gaussian-type target (not yet)      
+        + struct PlanarTargetModel        ... to represent a planar target of finite extent (not yet)      
+        + struct UserTargetModel          ... to represent a user-defined 3-dimensional target (not yet)
     """
     abstract type  AbstractTargetModel  end
 

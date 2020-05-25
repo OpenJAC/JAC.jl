@@ -245,12 +245,12 @@ module InteractionStrength
 
 
     """
-    `InteractionStrength.XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  
+    `InteractionStrength.XL_Breit_WO(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  
         ... computes the the effective Breit interaction strengths X^L_Breit (abcd) for given rank L and orbital functions 
-            a, b, c and d  at the given grid. A value::Float64 is returned. At present, only the zero-frequency Breit 
-            interaction is taken into account.
+            a, b, c and d  at the given grid but without optimization. A value::Float64 is returned. At present, only the zero-frequency 
+            Breit interaction is taken into account.
     """
-    function XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
+    function XL_Breit_WO(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
         ja2 = Basics.subshell_2j(a.subshell)
         jb2 = Basics.subshell_2j(b.subshell)
         jc2 = Basics.subshell_2j(c.subshell)
@@ -271,6 +271,59 @@ module InteractionStrength
         ##x     XL_Breit = XL_Breit + xc.coeff * wb
         ##x end
         ##x #
+        return( XL_Breit )
+    end
+    
+    
+    """
+    `InteractionStrength.XL_Breit_reset_storage(keep::Bool)`  
+        ... resets the global storage of XL_Breit interaction strength; nothing is returned.
+    """
+    function XL_Breit_reset_storage(keep::Bool)
+        if  keep
+            println("  reset GBL_Storage_XL_Breit storage ...")
+            global GBL_Storage_XL_Breit = Dict{String, Float64}()
+        else
+        end
+        return( nothing )      
+    end
+
+
+    """
+    `InteractionStrength.XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid; keep::Bool=false)`  
+        ... computes the the effective Breit interaction strengths X^L_Breit (abcd) for given rank L and orbital functions 
+            a, b, c and d  at the given grid. For keep=true, the procedure looks up the (global) directory GBL_Storage_XL_Coulomb
+            and returns the corresponding value without re-calculation of the interaction strength; it also 'stores' the calculated
+            value if not yet included. For keep=false, the interaction strength is always computed on-fly. A value::Float64 is returned. 
+            At present, only the zero-frequency Breit interaction is taken into account.
+    """
+    function XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid; keep::Bool=false)
+        global GBL_Storage_XL_Breit
+        ja2 = Basics.subshell_2j(a.subshell)
+        jb2 = Basics.subshell_2j(b.subshell)
+        jc2 = Basics.subshell_2j(c.subshell)
+        jd2 = Basics.subshell_2j(d.subshell)
+        if  AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||  L == 0  
+            return( 0. )
+        end
+        
+        # Now distiguish due to the optional argument keep
+        if  keep
+            sa = "XL" * string(L) * " " * string(a.subshell) * string(b.subshell) * string(c.subshell) * string(d.subshell)
+            if haskey(GBL_Storage_XL_Breit, sa )
+                XL_Breit = GBL_Storage_XL_Breit[sa]
+                ##x println(">> get value $XL_Breit  for $sa ")
+            else
+                xcList   = XL_Breit0_coefficients(L,a,b,c,d)
+                XL_Breit = XL_Breit0_densities(xcList, grid)
+                global GBL_Storage_XL_Breit = Base.merge(GBL_Storage_XL_Breit, Dict( sa => XL_Breit))
+            end
+        else
+            xcList   = XL_Breit0_coefficients(L,a,b,c,d)
+            XL_Breit = XL_Breit0_densities(xcList, grid)
+        end
+        #
+
         return( XL_Breit )
     end
 
@@ -442,11 +495,11 @@ module InteractionStrength
 
 
     """
-    `InteractionStrength.XL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  
+    `InteractionStrength.XL_Coulomb_WO(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  
         ... computes the the effective Coulomb interaction strengths X^L_Coulomb (abcd) for given rank L and orbital functions 
-            a, b, c and d at the given grid. A value::Float64 is returned.
+            a, b, c and d at the given grid but without optimization. A value::Float64 is returned.
     """
-    function XL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
+    function XL_Coulomb_WO(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)
         # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
         la = Basics.subshell_l(a.subshell);    ja2 = Basics.subshell_2j(a.subshell)
         lb = Basics.subshell_l(b.subshell);    jb2 = Basics.subshell_2j(b.subshell)
@@ -463,8 +516,63 @@ module InteractionStrength
         ##x za = RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid);   zb = RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
         ##x if abs( (za-zb)/za ) > 1.0e-12    println("XL_Coulomb: Slater  za = $za   zb = $zb  ")   end
 
-        XL_Coulomb = xc * RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid)
+        XL_Coulomb = xc * RadialIntegrals.SlaterRk_2dim_WO(L, a, b, c, d, grid)
         ##x XL_Coulomb = xc * RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
+        return( XL_Coulomb )
+    end
+    
+    
+    """
+    `InteractionStrength.XL_Coulomb_reset_storage(keep::Bool)`  
+        ... resets the global storage of XL_Coulomb interaction strength; nothing is returned.
+    """
+    function XL_Coulomb_reset_storage(keep::Bool)
+        if  keep
+            ##x println(">> Reset GBL_Storage_XL_Coulomb storage.")
+            global GBL_Storage_XL_Coulomb = Dict{String, Float64}()
+        else
+        end
+        return( nothing )      
+    end
+
+
+    """
+    `InteractionStrength.XL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid; keep::Bool=false)`  
+        ... computes the the effective Coulomb interaction strengths X^L_Coulomb (abcd) for given rank L and orbital functions 
+            a, b, c and d at the given grid. For keep=true, the procedure looks up the (global) directory GBL_Storage_XL_Coulomb
+            and returns the corresponding value without re-calculation of the interaction strength; it also 'stores' the calculated
+            value if not yet included. For keep=false, the interaction strength is always computed on-fly. A value::Float64 is 
+            returned.
+    """
+    function XL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid; keep::Bool=false)
+        global GBL_Storage_XL_Coulomb
+        # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
+        la = Basics.subshell_l(a.subshell);    ja2 = Basics.subshell_2j(a.subshell)
+        lb = Basics.subshell_l(b.subshell);    jb2 = Basics.subshell_2j(b.subshell)
+        lc = Basics.subshell_l(c.subshell);    jc2 = Basics.subshell_2j(c.subshell)
+        ld = Basics.subshell_l(d.subshell);    jd2 = Basics.subshell_2j(d.subshell)
+
+        if  AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
+            rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
+            return( 0. )
+        end
+        
+        # Now distiguish due to the optional argument keep
+        if  keep
+            sa = "XL" * string(L) * " " * string(a.subshell) * string(b.subshell) * string(c.subshell) * string(d.subshell)
+            if haskey(GBL_Storage_XL_Coulomb, sa )
+                XL_Coulomb = GBL_Storage_XL_Coulomb[sa]
+                ##x println(">> get value $XL_Coulomb  for $sa ")
+            else
+                XL_Coulomb = InteractionStrength.XL_Coulomb(L::Int64, a, b, c, d, grid)
+                global GBL_Storage_XL_Coulomb = Base.merge(GBL_Storage_XL_Coulomb, Dict( sa => XL_Coulomb))
+            end
+        else
+            xc = AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
+            if   rem(L,2) == 1    xc = - xc    end 
+            XL_Coulomb = xc * RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid)
+        end
+        
         return( XL_Coulomb )
     end
 

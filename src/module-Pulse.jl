@@ -5,9 +5,137 @@
 """
 module Pulse
 
-    using JAC
+    using   ..Basics
+    
+    export  AbstractEnvelope, AbstractBeam
+    
+    
+    """
+    `abstract type Pulse.AbstractEnvelope` 
+        ... defines an abstract type to comprise various envelopes of (possible) laser pulses in terms of their shape,  
+            pulse duration or number of cycles, etc.
+
+        + InfiniteEnvelope         ... to represent an infinte (plane-wave) pulse.
+        + RectangularEnvelope      ... to represent a finite rectangular pulse.
+        + SinSquaredEnvelope       ... to represent a finite sin^2 pulse.
+        + GaussianEnvelope         ... to represent a Gaussian light pulse.
+    """
+    abstract type  AbstractEnvelope  end
 
 
+    """
+    `struct  Pulse.InfiniteEnvelope  <: Pulse.AbstractEnvelope`   ... to represent an infinte (plane-wave) pulse.
+    """
+    struct   InfiniteEnvelope        <: Pulse.AbstractEnvelope    end
+
+    function Base.string(env::InfiniteEnvelope)
+        sa = "Infinite pulse."
+        return( sa )
+    end
+
+    function Base.show(io::IO, env::InfiniteEnvelope)
+        sa = string(env);       print(io, sa, "\n")
+    end
+
+
+    """
+    `struct  Pulse.RectangularEnvelope  <: Pulse.AbstractEnvelope`   ... to represent a finte rectangular pulse.
+    
+        + cycles      ::Int64     ... Number of cycles of the pulse.
+    """
+    struct   RectangularEnvelope       <: Pulse.AbstractEnvelope
+        cycles        ::Int64
+    end
+
+    function Base.string(env::RectangularEnvelope)
+        sa = "Rectangular pulse of $(env.cycles) cycles."
+        return( sa )
+    end
+
+    function Base.show(io::IO, env::RectangularEnvelope)
+        sa = string(env);       print(io, sa, "\n")
+    end
+
+
+    """
+    `struct  Pulse.SinSquaredEnvelope  <: Pulse.AbstractEnvelope`   ... to represent a finite sin^2 pulse.
+    
+        + cycles      ::Int64     ... Number of cycles of the pulse.
+    """
+    struct   SinSquaredEnvelope        <: Pulse.AbstractEnvelope
+        duration      ::Int64
+    end
+
+
+    function Base.string(env::SinSquaredEnvelope)
+        sa = "sin^2 pulse of $(env.cycles) cycles."
+        return( sa )
+    end
+
+    function Base.show(io::IO, env::SinSquaredEnvelope)
+        sa = string(env);       print(io, sa, "\n")
+    end
+
+
+    """
+    `struct  Pulse.GaussianEnvelope  <: Pulse.AbstractEnvelope`   ... to represent a (infinite) Gaussian pulse.
+    
+        + fwhm        ::Float64     ... FWHM which is often taken as pulse duration
+    """
+    struct   GaussianEnvelope        <: Pulse.AbstractEnvelope
+        fwhm          ::Float64
+    end
+
+
+    function Base.string(env::GaussianEnvelope)
+        sa = "Gaussian pulse with pulse duration or FWHM = $(env.cycles) a.u."
+        return( sa )
+    end
+
+    function Base.show(io::IO, env::GaussianEnvelope)
+        sa = string(env);       print(io, sa, "\n")
+    end
+    
+    
+    """
+    `abstract type Pulse.AbstractBeam` 
+        ... defines an abstract type to comprise various basic laser pulses that are characterized in terms of their amplitude, 
+            frequency, carrier-envelope phase, etc. In general, the basic beam properties are independent of the (pulse) envelope 
+            and the polarization properties which are handled and communicated separately (to and within the program).
+
+        + PlaneWaveBeam            ... to represent a plane-wave beam.
+        + BesselBeam               ... to represent a Bessel beam (not yet).
+    """
+    abstract type  AbstractBeam  end
+
+
+    """
+    `struct  Pulse.PlaneWaveBeam  <: AbstractBeam`   
+        ... to represent a plane-wave beam with given (real) amplitude, frequency and carrier-envelope phase.
+
+        + A0            ::Float64            ... (Constant) Amplitude of the light pulse. 
+        + omega         ::Float64            ... Central frequency. 
+        + cep           ::Float64            ... Carrier-envelope phase. 
+    """
+    struct   PlaneWaveBeam  <: AbstractBeam
+        A0              ::Float64
+        omega           ::Float64
+        cep             ::Float64
+    end
+
+
+    function Base.string(beam::PlaneWaveBeam)
+        sa = "Plane-wave beam/pulse with amplitude A0=$(beam.A0), frequency omega=$(beam.omega) a.u. and carrier-envelope phase cep=$(beam.cep)"
+        return( sa )
+    end
+
+    function Base.show(io::IO, beam::PlaneWaveBeam)
+        sa = string(beam);       print(io, sa, "\n")
+    end
+
+
+    #====================================================================================== 
+    #  These data types need to be worked through
     """
     `struct  Pulse.Envelope`  ... defines a type for the envelope (function) of an em pulse.
 
@@ -77,47 +205,6 @@ module Pulse
         elseif  ptyp == RightCircular       return( "right-circular polarization" )
         elseif  ptyp == Elliptical          return( "elliptical polarization" )
         elseif  ptyp == Linear              return( "linear polarization" )
-        else    error("stop a")
-        end
-    end
-
-
-    """
-    `@enum   Shape`  ... defines a shape of a general em pulse
-
-    + Gaussian               ... with obvious meaning
-    """
-    @enum   Shape    NoShape    GaussianX   SinSquared    SinSquaredCycles
-
-
-    """
-    `JAC.Pulse.Shape(sa::String)`  ... constructor for a given String.
-    """
-    function Shape(sa::String)
-        if       sa == "Gaussian"                wa = GaussianX
-        elseif   sa in ["sin^2 (fwhm)"]          wa = SinSquared
-        elseif   sa in ["sin^2 (No. cycles)"]    wa = SinSquaredCycles
-        else
-            error("stop a")
-        end
-        Shape(wa)
-    end
-
-
-    # `Base.show(io::IO, shape:Pulse.Shape)`  ... prepares a proper printout of the variable shape::Pulse.Shape.
-    function Base.show(io::IO, shape::Pulse.Shape) 
-        print(io, string(shape) )
-    end
-
-
-    """
-    `Base.string(shape:Pulse.Shape)`  ... provides a proper printout of the variable shape::Pulse.Shape.
-    """
-    function Base.string(shape::Pulse.Shape) 
-        if      shape == Shape              return( "undefined pulse" )
-        elseif  shape == GaussianX          return( "Gaussian pulse" )
-        elseif  shape == SinSquared         return( "sin^2 (fwhm) pulse" )
-        elseif  shape == SinSquaredCycles   return( "sin^2 (No. cycles) pulse" )
         else    error("stop a")
         end
     end
@@ -251,5 +338,11 @@ module Pulse
         println(io, "envelope:           $(gaussian.envelope)  ")
         println(io, "polarization:       $(gaussian.polarization)  ")
     end
-
+    ============================================================================================#
+    
+    ###################################################################################################################
+    ###################################################################################################################
+    ###################################################################################################################
+    
+    
 end # module

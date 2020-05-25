@@ -113,7 +113,11 @@ module BascisCompute
 
         
         matrix = zeros(Float64, n, n)
-        for  r = 1:n
+        keep = true
+        JAC.InteractionStrength.XL_Coulomb_reset_storage(keep)
+        JAC.InteractionStrength.XL_Breit_reset_storage(keep)
+        print(">> performCI() ... ")
+        @time   for  r = 1:n
             for  s = 1:n
                 wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[idx_csf[r]], basis.csfs[idx_csf[s]])
                 me = 0.
@@ -127,12 +131,33 @@ module BascisCompute
                 end
 
                 for  coeff in wa[2]
-                    if  settings.coulombCI    
-                        me = me + coeff.V * JAC.InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
-                                                                                        basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   end
+                    if  settings.coulombCI
+                        me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                     basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)
+                    elseif  false
+                        xl1 = InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                                basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=false)
+                        xl2 = InteractionStrength.XL_Coulomb_WO(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                                   basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)
+                        if abs(xl1 - xl2) > 1.0e-12  println("XL_Coulomb differ: $xl1   $xl2")      end
+                    elseif  false 
+                        me = me + coeff.V * InteractionStrength.XL_Coulomb_WO(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                        basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   
+                    end
+                                                                                            
                     if  settings.breitCI
                         me = me + coeff.V * JAC.InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
-                                                                            basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)               end
+                                                                                       basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)     
+                    elseif  false
+                        xl1 = InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                              basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=false)
+                        xl2 = InteractionStrength.XL_Breit_WO(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                                 basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)
+                        if abs(xl1 - xl2) > 1.0e-12  println("XL_Breit differ: $xl1   $xl2")      end
+                    elseif  false 
+                        me = me + coeff.V * InteractionStrength.XL_Breit_WO(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                      basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)
+                    end
                 end
                 matrix[r,s] = me
             end

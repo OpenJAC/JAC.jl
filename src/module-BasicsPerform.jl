@@ -497,10 +497,10 @@ module BascisPerform
             for  coeff in wa[2]
                 if  settings.coulombCI    
                     me = me + coeff.V * JAC.InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
-                                                                                    basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   end
+                                                                                     basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   end
                 if  settings.breitCI
                     me = me + coeff.V * JAC.InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
-                                                                                basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)     end
+                                                                                   basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)     end
             end
             matrix[r,r] = me
         end 

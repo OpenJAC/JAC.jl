@@ -625,6 +625,52 @@ module  RadialIntegrals
             return Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
         elseif  grid.meshType == Radial.MeshGL()
             mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
+            wac = zeros(mtp_ac);   wbd = zeros(mtp_bd)
+            for  r = 2:mtp_ac   wac[r] = (a.P[r] * c.P[r] + a.Q[r] * c.Q[r]) * grid.wr[r]  end
+            for  s = 2:mtp_bd   wbd[s] = (b.P[s] * d.P[s] + b.Q[s] * d.Q[s]) * grid.wr[s]  end
+            wa = 0.
+            for  r = 2:mtp_ac
+                for  s = 2:mtp_bd   wa = wa + wac[r] * ul(grid.r[r], grid.r[s]) * wbd[s]   end
+            end
+            ## println("Test: SlaterRk_2dim(); wa = $wa")
+            return( wa )
+        else
+            error("stop a")
+        end
+    end
+  
+  
+    """
+    `RadialIntegrals.SlaterRk_2dim_WO(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
+        ... computes the (relativistic) Slater integral
+
+         R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d)
+
+         of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration scheme
+         but without optimization (WO); a value::Float64 is returned.
+    """
+    function SlaterRk_2dim_WO(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Radial.Orbital, grid::Radial.Grid)
+        function ul(r :: Float64, s :: Float64) :: Float64
+            if     r <= s    return( r^k/s^(k+1) )
+            elseif r > s     return( s^k/r^(k+1) )
+            end
+        end
+    
+        
+        # Distinguish the radial integration for different grid definitions
+        if  grid.meshType == Radial.MeshGrasp()
+            function fs(r :: Int64, s :: Int64) :: Float64
+                return( ul(grid.r[r], grid.r[s]) * ( b.P[s] * d.P[s] + b.Q[s] * d.Q[s] ) )
+            end
+    
+            function f(r :: Int64) :: Float64
+            function ff(i :: Int64) :: Float64    return( fs(r, i) )    end
+            return( (a.P[r] * c.P[r] + a.Q[r] * c.Q[r] ) * Math.integrateFitTransform(ff, min(size(b.P, 1), size(d.P, 1)), grid) )
+            end
+    
+            return Math.integrateFitTransform(f, min(size(a.P, 1), size(c.P, 1)), grid)
+        elseif  grid.meshType == Radial.MeshGL()
+            mtp_ac = min(size(a.P, 1), size(c.P, 1));    mtp_bd = min(size(b.P, 1), size(d.P, 1))
             wa = 0.
             for  r = 2:mtp_ac
                 for  s = 2:mtp_bd   wa = wa + (a.P[r] * c.P[r] + a.Q[r] * c.Q[r]) * ul(grid.r[r], grid.r[s]) * 
