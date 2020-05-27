@@ -24,8 +24,8 @@ module BascisGenerate
     function Basics.generate(representation::AtomicState.Representation; output::Bool=false)
         results = Basics.generate(representation.repType, representation; output=output)
         
-        Defaults.warn(PrintWarnings)
-        Defaults.warn(ResetWarnings)
+        Defaults.warn(PrintWarnings())
+        Defaults.warn(ResetWarnings())
         println(" ")
         return( results )
     end
@@ -98,7 +98,7 @@ module BascisGenerate
         println("*** Level symmetries = $symmetries ")
 
         # The asfSettings only define the CI part and are partly derived from the CiSettings
-        asfSettings = AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
+        asfSettings = AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
                                   true, repType.settings.breitCI, NoneQed(), "methodCI", LSjjSettings(false), 
                                   repType.settings.selectLevelsCI, repType.settings.selectedLevelsCI, 
                                   repType.settings.selectSymmetriesCI, repType.settings.selectedSymmetriesCI) 
@@ -143,7 +143,7 @@ module BascisGenerate
         if output    results = Base.merge( results, Dict("reference multiplet" => Multiplet("Reference multiplet:", priorMultiplet.levels) ) )  end
 
         # The asfSettings only define the CI part of the RAS steps and partly derived from the RasSettings
-        asfSettings = AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
+        asfSettings = AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
                                   true, repType.settings.breitCI, NoneQed(), "methodCI", LSjjSettings(true), 
                                   repType.settings.selectLevelsCI, repType.settings.selectedLevelsCI, false, LevelSymmetry[] ) 
         
@@ -207,7 +207,7 @@ module BascisGenerate
         Basics.display(stdout, orbitals, rep.grid)
 
         # The asfSettings only define the CI part of the Green channels and are partly derived from the GreenSettings
-        asfSettings = AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
+        asfSettings = AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
                                   true, false, NoneQed(), "methodCI", LSjjSettings(false), 
                                   settings.selectLevels, settings.selectedLevels, false, LevelSymmetry[] ) 
         

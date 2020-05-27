@@ -177,17 +177,17 @@
                     dProcessSymmetryEnergyList = Tuple{Basics.AtomicProcess,Int64,LevelSymmetry,Float64}[]
                     for  p in levels[en].parents
                         idx = p.index
-                        if      p.process == Basics.Auger         lev = p.lineSet.linesA[idx].initialLevel
-                        elseif  p.process == Basics.Radiative     lev = p.lineSet.linesR[idx].initialLevel
-                        elseif  p.process == Basics.Photo         lev = p.lineSet.linesP[idx].initialLevel
+                        if      p.process == Basics.Auger()         lev = p.lineSet.linesA[idx].initialLevel
+                        elseif  p.process == Basics.Radiative()     lev = p.lineSet.linesR[idx].initialLevel
+                        elseif  p.process == Basics.Photo()         lev = p.lineSet.linesP[idx].initialLevel
                         else    error("stop a")    end
                         push!( pProcessSymmetryEnergyList, (p.process, lev.basis.NoElectrons, LevelSymmetry(lev.J, lev.parity), lev.energy) )
                     end
                     for  d in levels[en].daugthers
                         idx = d.index
-                        if      d.process == Basics.Auger         lev = d.lineSet.linesA[idx].finalLevel
-                        elseif  d.process == Basics.Radiative     lev = d.lineSet.linesR[idx].finalLevel
-                        elseif  d.process == Basics.Photo         lev = d.lineSet.linesP[idx].finalLevel
+                        if      d.process == Basics.Auger()         lev = d.lineSet.linesA[idx].finalLevel
+                        elseif  d.process == Basics.Radiative()     lev = d.lineSet.linesR[idx].finalLevel
+                        elseif  d.process == Basics.Photo()         lev = d.lineSet.linesP[idx].finalLevel
                         else    error("stop b")    end
                         push!( dProcessSymmetryEnergyList, (d.process, lev.basis.NoElectrons, LevelSymmetry(lev.J, lev.parity), lev.energy) )
                     end
@@ -228,20 +228,20 @@
         for  i = 1:length(data.linesR)
             line = data.linesR[i]
             iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Radiative, i)] ) 
+                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Radiative(), i)] ) 
             Cascade.pushLevels!(levels, iLevel)  
             fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Radiative, i)], Cascade.LineIndex[] ) 
+                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
             Cascade.pushLevels!(levels, fLevel)  
         end
 
         for  i = 1:length(data.linesA)
             line = data.linesA[i]
             iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Auger, i)] ) 
+                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Auger(), i)] ) 
             Cascade.pushLevels!(levels, iLevel)  
             fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Auger, i)], Cascade.LineIndex[] ) 
+                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Auger(), i)], Cascade.LineIndex[] ) 
             Cascade.pushLevels!(levels, fLevel)  
         end
         
@@ -296,10 +296,10 @@
         for  i = 1:length(data.linesP)
             line = data.linesP[i]
             iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Photo, i)] ) 
+                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Photo(), i)] ) 
             Cascade.pushLevels!(levels, iLevel)  
             fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Photo, i)], Cascade.LineIndex[] ) 
+                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Photo(), i)], Cascade.LineIndex[] ) 
             Cascade.pushLevels!(levels, fLevel)  
         end
         
@@ -397,9 +397,9 @@
                     level.relativeOcc = 0.
                     for  (i,daugther) in  enumerate(level.daugthers)
                         idx = daugther.index
-                        if      daugther.process == Basics.Radiative     rates[i] = daugther.lineSet.linesR[idx].photonRate.Babushkin
-                        elseif  daugther.process == Basics.Auger         rates[i] = daugther.lineSet.linesA[idx].totalRate
-                        elseif  daugther.process == Basics.Photo         rates[i] = daugther.lineSet.linesP[idx].crossSection.Coulomb
+                        if      daugther.process == Basics.Radiative()     rates[i] = daugther.lineSet.linesR[idx].photonRate.Babushkin
+                        elseif  daugther.process == Basics.Auger()         rates[i] = daugther.lineSet.linesA[idx].totalRate
+                        elseif  daugther.process == Basics.Photo()         rates[i] = daugther.lineSet.linesP[idx].crossSection.Coulomb
                                 ##x println("Cou = $(daugther.lineSet.linesP[idx].crossSection.Coulomb),  Bab = $(daugther.lineSet.linesP[idx].crossSection.Babushkin)" )
                                 ##x println("photon energy = $(daugther.lineSet.linesP[idx].photonEnergy)")
                         else    error("stop a; process = $(daugther.process) ")
@@ -409,9 +409,9 @@
                     # Shift the relative occupation to the 'daugther' levels due to the different ionization and decay pathes
                     for  (i,daugther) in  enumerate(level.daugthers)
                         idx = daugther.index
-                        if      daugther.process == Basics.Radiative     line = daugther.lineSet.linesR[idx]
-                        elseif  daugther.process == Basics.Auger         line = daugther.lineSet.linesA[idx]
-                        elseif  daugther.process == Basics.Photo         line = daugther.lineSet.linesP[idx]
+                        if      daugther.process == Basics.Radiative()     line = daugther.lineSet.linesR[idx]
+                        elseif  daugther.process == Basics.Auger()         line = daugther.lineSet.linesA[idx]
+                        elseif  daugther.process == Basics.Photo()         line = daugther.lineSet.linesP[idx]
                         else    error("stop b; process = $(daugther.process) ")
                         end
                         newLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, 

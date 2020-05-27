@@ -16,7 +16,7 @@ if  false
               grid=grid, nuclearModel=Nuclear.Model(26.);
               initialConfigs = [Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],
               finalConfigs   = [Configuration("[Ne] 3s^2 3p^5")], 
-              process = Radiative, processSettings = photoSettings ); 
+              process = Radiative(), processSettings = photoSettings ); 
     @show comp
     perform(comp)          
               
@@ -24,7 +24,7 @@ elseif false
     #== wa = Atomic.Computation("xx",  Nuclear.Model(36.);
                             initialConfigs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                             finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
-                            process = JAC.Radiative, 
+                            process = Radiative(), 
                             processSettings=PhotoEmission.Settings([E1, M1, E2, M2], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, 
                                 true, Tuple{Int64,Int64}[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)], 0., 0., 10000. ) )  ==#
 elseif false                           
@@ -32,7 +32,7 @@ elseif false
                             grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
                             initialConfigs = [Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],
                             finalConfigs   = [Configuration("[Ne] 3s^2 3p^5")], 
-                            process = Radiative, 
+                            process = Radiative(), 
                             processSettings = PhotoEmission.Settings([E1, M1, E2, M2], [JAC.UseCoulomb, JAC.UseBabushkin], 
                                               false, true, false, Tuple{Int64,Int64}[], 0., 0., 10000. ) );
     wb = @time( perform(wa) )
@@ -42,7 +42,7 @@ elseif true
                             grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
                             initialConfigs = [Configuration("1s 2s^2 2p")],
                             finalConfigs   = [Configuration("1s^2 2s^2")], 
-                            process = Radiative, 
+                            process = Radiative(), 
                             processSettings = PhotoEmission.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], 
                                               false, true, true, Tuple{Int64,Int64}[(2,0)], 0., 0., 10000. ) );
     wb = @time( perform(wa) )

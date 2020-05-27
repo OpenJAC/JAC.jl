@@ -10,7 +10,7 @@ if  false
     # Define a full nuclear + Dirac-Fock-Slater potential
     wa   = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(nuclearZ), 
                               configs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")], 
-                              asfSettings=AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), [1],    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
+                              asfSettings=AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), [1],    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
                                                       true, false, NoneQed(), "yyy", LSjjSettings(false), false, [1,2,3,4], false, JAC.LevelSymmetry[] )  )
 
     wb = perform(wa, output=true)

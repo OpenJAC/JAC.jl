@@ -171,11 +171,11 @@ module TableStrings
 
 
     """
-    `TableStrings.processSymmetryEnergyTupels(n::Int64, pList::Array{Tuple{Basics.AtomicProcess, Int64, LevelSymmetry, Float64},1}, sc::String)`  
+    `TableStrings.processSymmetryEnergyTupels(n::Int64, pList::Array{Tuple{Basics.AbstractProcess, Int64, LevelSymmetry, Float64},1}, sc::String)`  
          ... a list of Strings with maximal length n is returned; each string in this list comprises a number of 
             'sc(process: NoElectrons, symmetry, energy),  ' descriptors.
     """
-    function  processSymmetryEnergyTupels(n::Int64, pList::Array{Tuple{Basics.AtomicProcess, Int64, LevelSymmetry, Float64},1}, sc::String)
+    function  processSymmetryEnergyTupels(n::Int64, pList::Array{Tuple{Basics.AbstractProcess, Int64, LevelSymmetry, Float64},1}, sc::String)
         sa = "";   wa = String[]
         for p in pList
            sa = sa * sc * "[" * string(p[1])[1:1] * ": " * string(p[2]) * ", " * string(p[3]) * ", " 

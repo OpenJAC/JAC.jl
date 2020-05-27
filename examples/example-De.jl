@@ -12,7 +12,7 @@ if  false
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.), 
                             initialConfigs  =[Configuration("1s 2s^2 2p^6")],
                             finalConfigs    =[Configuration("1s^2 2s^2 2p^4"), Configuration("1s^2 2s 2p^5"), Configuration("1s^2 2p^6")], 
-                            process = JAC.Auger,  processSettings = augerSettings )
+                            process = Auger(),  processSettings = augerSettings )
 
     wb = perform(wa)
     
@@ -23,7 +23,7 @@ else
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(18.), 
                             initialConfigs  =[Configuration("1s^2 2s^2 2p^5 3s^2 3p^6 4s")],
                             finalConfigs    =[Configuration("1s^2 2s^2 2p^6 3s^2 3p^4 4s")], 
-                            process = JAC.Auger,  processSettings = augerSettings )
+                            process = Auger(),  processSettings = augerSettings )
 
     wb = perform(wa)
     

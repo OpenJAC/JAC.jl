@@ -76,28 +76,28 @@ module Continuum
         ## wp4 = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
         wp = compute("radial potential: Kohn-Sham", grid, level)   
         pot = Basics.add(nuclearPotential, wp)
-        Defaults.warn(AddWarning, "All continuum orbitals are generated in a local (DFS) potential.")  
+        Defaults.warn(AddWarning(), "All continuum orbitals are generated in a local (DFS) potential.")  
         
         # Generate a continuum orbital due to the given solution method
         ##x println("Defaults.GBL_CONT_SOLUTION = $(Defaults.GBL_CONT_SOLUTION)")
-        if      Defaults.GBL_CONT_SOLUTION  ==  ContBessel 
+        if      Defaults.GBL_CONT_SOLUTION  ==  ContBessel() 
             cOrbital = Continuum.generateOrbitalBessel(energy, sh, grid::Radial.Grid, settings)
-        elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb 
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb() 
             cOrbital = Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
-        elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb 
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb()
             cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
-        elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin()
             cOrbital = Continuum.generateOrbitalGalerkin(energy, sh, pot, settings)
         else    error("stop a")
         end
         #
         #
         # Normalize the continuum orbital and determine its phase
-        if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSine
+        if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSineNorm()
             cOrbital, phase = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
-        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSine
+        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSineNorm()
             cOrbital, phase = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
-        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussek
+        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussekNorm()
             cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
         else    error("stop b")
         end
@@ -254,7 +254,7 @@ module Continuum
             'phase behaviour' at large r-values.
     """
     function gridConsistency(maxEnergy::Float64, grid::Radial.Grid)
-        Defaults.warn(AddWarning, "Continuum.gridConsistency(): Improve the grid point for normalization; currently 600.")
+        Defaults.warn(AddWarning(), "Continuum.gridConsistency(): Improve the grid point for normalization; currently 600.")
         
         wavenb      = sqrt( 2maxEnergy + maxEnergy * Defaults.getDefaults("alpha")^2 )
         wavelgth    = 2pi / wavenb

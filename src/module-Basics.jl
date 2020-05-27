@@ -10,7 +10,8 @@ module Basics
 
     using Printf
 
-    export  add, analyze, AngularJ, AngularJ64, AngularM, AngularM64, Auger,
+    export  AbstractScField, AbstractPotential, AbstractLevelProperty, AbstractProcess, add, analyze, AngularJ, AngularJ64, AngularM, 
+            AngularM64, Auger,
             CartesianVector, compute, diagonalize,
             estimate, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
             generate,
@@ -26,8 +27,6 @@ module Basics
             UseCoulomb, UseBabushkin,
             WeightedCartesian
 
-
-    ##x include("inc-halfintegers.jl")
 
     abstract type  AngularJ  end
 
@@ -90,12 +89,6 @@ module Basics
     oplus(ja::Int64, jb::Int64)      = oplus(AngularJ64(ja), AngularJ64(jb))
     
     Base.Float64(ja::AngularJ64) = ja.num / ja.den
-    
-    
-    ##x oplus(ja, jb) = oplus(HalfInt(ja), HalfInt(jb))
-    ##x oplus(ja::Union{HalfInt,Integer}, jb::Union{HalfInt,Integer}) = abs(ja-jb):ja+jb
-    
-    ##x const ⊕ = oplus
 
 
     """
@@ -108,9 +101,6 @@ module Basics
         for  m = -ja2:2:ja2    push!(mList, AngularM64(m//2) )    end
         return( mList )
     end
-
-    ##x projections(j) = projections(HalfInt(j))
-    ##x projections(j::Union{HalfInt,Integer}) = j≥0 ? (-j:j) : throw(DomainError(j, "angular momentum j must be non-negative."))
 
 
     abstract type  AngularM  end
@@ -201,9 +191,6 @@ module Basics
     twice(x::Union{AngularJ64,AngularM64}) = ifelse(isone(x.den), twice(x.num), x.num)
     twice(x) = x + x
 
-    ##x AngularJ64(x::HalfInt) = isinteger(x) ? AngularJ64(Integer(x)) : AngularJ64(twice(x), 2)
-    ##x AngularM64(x::HalfInt) = isinteger(x) ? AngularM64(Integer(x)) : AngularM64(twice(x), 2)
-
 
 
     """
@@ -287,13 +274,6 @@ module Basics
         else     error("stop a")
         end
     end
-
-
-    #============================================
-    # `Base.show(io::IO, p::Parity)`  ... prepares a proper printout of the variable p::Parity.
-    function Base.show(io::IO, p::Parity) 
-        print(io, string(p) )
-    end  ==================================#
 
 
     # `Base.string(p::Parity)`  ... provides a proper printout of the variable p::Parity.
@@ -710,107 +690,6 @@ module Basics
     end
 
 
-    """
-    `@enum   Basics.AtomicProcess`  
-        ... defines a enumeration for the atomic processes that are supported in the JAC program in the computation of transition 
-            arrays or whole excitation/decay cascades.
-
-        + Auger         ... Auger transitions, i.e. single autoionization or the emission of a single free electron into the continuum.
-        + AugerInPlasma ... Auger transitions but calculated for a specified plasma model.
-        + Compton       ... Rayleigh-Compton scattering cross sections.
-        + Coulex        ... Coulomb-excitation of target or projeticle electrons by fast, heavy ions.
-        + Coulion       ... Coulomb-ionization of target or projeticle electrons by fast, heavy ions.
-        + Dierec        ... di-electronic recombination, i.e. the dielectronic capture of a free electron and the subsequent emission of a photon.
-        + MultiPhotonDE ... multi-photon excitation and decay rates, including 2-photon, etc. processes.
-        + MultiPI       ... multi-photon (single-electron) ionization.
-        + MultiPDI      ... multi-photon (single-electron) double ionization.
-        + Photo         ... Photoionization processes, i.e. the emission of a single free electron into the continuum due to an external light field.
-        + PhotoExc      ... Photoexcitation rates.
-        + PhotoExcFluor ... photoexcitation fluorescence rates and cross sections.
-        + PhotoExcAuto  ... photoexcitation autoionization cross sections and collision strengths.
-        + PhotoInPlasma ... Photoionization processes but calculated for a specified plasma model.
-        + PhotoIonFluor ... photoionization fluorescence rates and cross sections.
-        + PhotoIonAuto  ... photoionization autoionization cross sections and collision strengths.
-        + Radiative    ... Radiative (multipole) transitions between bound-state levels of the same charge state.
-        + Rec           ... radiative electron capture, i.e. the capture of a free electron with the simultaneous emission of a photon.
-        + Eimex         ... electron-impact excitation cross sections and collision strengths.
-        + RAuger        ... Radiative Auger rates.
-    """
-    @enum   AtomicProcess  NoProcess  Auger  AugerInPlasma  Compton  Coulex  Dierec  Eimex  ImpactExcAuto  InternalConv  MultiPhotonDE  MultiPI  MultiPDI=
-                    20  Photo  PhotoExc  PhotoExcAuto  PhotoExcFluor  PhotoInPlasma  PhotoIonAuto  PhotoIonFluor   Radiative  RAuger=
-                    40  Rec  PairA1P  Coulion
-    export  AtomicProcess, NoProcess, Auger, AugerInPlasma, Compton, Coulex, Dierec, Eimex, ImpactExcAuto, InternalConv, MultiPhotonDE, MultiPI, MultiPDI,
-                        Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoInPlasma, PhotoIonAuto, PhotoIonFluor,  Radiative, RAuger, 
-                        Rec, PairA1P, Coulion
-
-
-    """
-    `Basics.AtomicProcess(sa::String)`  ... constructor for a given String.
-    """
-    function AtomicProcess(sa::String)
-        if       sa in [ "none", "NoProcess"]                       wa = NoProcess
-        elseif   sa in [ "Auger"]                                   wa = Auger
-        elseif   sa in [ "Auger in plasma"]                         wa = AugerInPlasma
-        elseif   sa in [ "Compton", "Rayleigh"]                     wa = Compton
-        elseif   sa in [ "Coulex", "Coulomb excitation"]            wa = Coulex
-        elseif   sa in [ "Coulion", "Coulomb ionization"]           wa = Coulion
-        elseif   sa in [ "dierec", "Dierec"]                        wa = Dierec
-        elseif   sa in [ "eimex", "Eimex"]                          wa = Eimex
-        elseif   sa in [ "internal conversion"]                     wa = InternalConv
-        elseif   sa in [ "multi-DE"]                                wa = MultiPhotonDE
-        elseif   sa in [ "multi-PI"]                                wa = MultiPI
-        elseif   sa in [ "multi-PDI"]                               wa = MultiPDI
-        elseif   sa in [ "photo", "Photo"]                          wa = Photo
-        elseif   sa in [ "photo in plasma"]                         wa = PhotoInPlasma
-        elseif   sa in [ "PhotoExc", "photoexcitation"]             wa = PhotoExc
-        elseif   sa in [ "photo-EA"]                                wa = PhotoExcAuto
-        elseif   sa in [ "photo-IA"]                                wa = PhotoIonAuto
-        elseif   sa in [ "photo-IF"]                                wa = PhotoIonFluor
-        elseif   sa in [ "photo-EF"]                                wa = PhotoExcFluor
-        elseif   sa in [ "radiative", "Radiative"]                  wa = Radiative
-        elseif   sa in [ "radiativeAuger", "RAuger"]                wa = RAuger
-        elseif   sa in [ "rec", "Rec"]                              wa = Rec
-        elseif   sa in [ "pair-annihilation-1-photon", "PA1P"]      wa = PairA1P
-        elseif   sa in [ "impact-EA"]                               wa = ImpactExcAuto
-        elseif   sa in [ "rec", "Rec"]                              wa = Rec
-        else     error("stop a")
-        end
-
-        AtomicProcess(wa)
-    end
-
-
-    #===========================
-    # `Base.show(io::IO, process::AtomicProcess)`  ... prepares a proper printout of the variable process::AtomicProcess.
-    function Base.show(io::IO, process::AtomicProcess) 
-        print(io, string(process) )
-    end   =======================#
-
-
-    # `Base.string(process::AtomicProcess)`  ... provides a proper printout of the variable process::AtomicProcess.
-    function Base.string(process::AtomicProcess) 
-        if      process == NoProcess       return( "no process" )
-        elseif  process == Auger           return( "Auger" )  
-        elseif  process == AugerInPlasma   return( "Auger in plasma" )  
-        elseif  process == Compton         return( "Rayleigh-Compton" )  
-        elseif  process == Dierec          return( "Dielectronic recombination" )  
-        elseif  process == Eimex           return( "Eimex" )  
-        elseif  process == MultiPhotonDE   return( "multi-photon excitation & decay" )  
-        elseif  process == Photo           return( "Photo" )  
-        elseif  process == PhotoExcFluor   return( "Photo-Excitation-Fluoresence" )  
-        elseif  process == PhotoExcAuto    return( "Photo-Excitation-Autoionization" )  
-        elseif  process == PhotoInPlasma   return( "Photo in plasma" )  
-        elseif  process == PhotoIonFluor   return( "Photo-Ionization-Fluoresence" )  
-        elseif  process == PhotoIonAuto    return( "Photo-Ionization-Autoionization" )  
-        elseif  process == PhotoExc        return( "Photo-Excitation" )  
-        elseif  process == Radiative       return( "Radiative" )  
-        elseif  process == RAuger          return( "Radiative Auger" )  
-        elseif  process == Rec             return( "Rec" )  
-        else    error("stop a")
-        end
-    end
-
-
 
     """
     `struct  Basics.EmMultipole`  ... defines a struct for the em multipoles, E1, M1, E2, ...
@@ -903,13 +782,6 @@ module Basics
     end
 
 
-    #===========================
-    # `Base.show(io::IO, gauge::EmGauge)`  ... prepares a proper printout of the variable gauge::EmGauge.
-    function Base.show(io::IO, gauge::EmGauge) 
-        print(io, string(gauge) )
-    end  ====================#
-
-
     # `Base.string(gauge::EmGauge)`  ... provides a proper printout of the variable gauge::EmGauge.
     function Base.string(gauge::EmGauge) 
         if      gauge == NoGauge     return( "no gauge" )
@@ -939,13 +811,6 @@ module Basics
 
         UseGauge(wa)
     end
-
-
-    #===========================
-    # `Base.show(io::IO, gauge::UseGauge)`  ... prepares a proper printout of the variable gauge::UseGauge.
-    function Base.show(io::IO, gauge::UseGauge) 
-        print(io, string(gauge) )
-    end    ==========================#
 
 
     # `Base.string(gauge::UseGauge)`  ... provides a proper printout of the variable gauge::EmGauge.
@@ -1193,151 +1058,58 @@ module Basics
         return( sa )
     end
 
-
+    
     """
-    `@enum   Basics.AtomicLevelProperty`  ... defines a enumeration for the atomic level properties that are supported in the JAC program.
+    `abstract type Basics.AbstractContinuumNormalization` 
+        ... defines an abstract and a number of singleton types for dealing with the normalization of continuum orbitals.
 
-        + NoProperty      ... No level property defined.
-        + Einstein        ... Einstein A, B coefficients and oscillator strength; although not a 'level property', in the Einstein module
-                              these computations are treated within a single basis and without all relaxation effects, etc. The `Einstein'
-                              property therefore helps to obtain a quick overview about transition probabilities of a transition arry
-                              or if many of these Einstein coefficients need to be calculated for a cascade.
-        + HFS             ... Hyperfine A and B parameters.
-        + Isotope         ... Isotope shift M and F parameters.
-        + LandeJ          ... Lande g_J factors.
-        + LandeF          ... Lande g_F factors.
-        + Polarizibility  ... static and dynamic polarizibilities.
-        + Plasma          ... CI computations including interactions from various plasma models.
-        + Zeeman          ... Zeeman splitting of fine-structure levels.
+        + PureSineNorm       ... normalize with regard to an (asymtotic) pure sine funtion, sin(kr).
+        + CoulombSineNorm    ... normalize with regard to an (asymtotic) Coulombic-sine funtion, sin(kr + ...).
+        + OngRussekNorm      ... normalize by following Ong & Russek (1973).
     """
-    @enum   AtomicLevelProperty   NoProperty   AlphaX   EinsteinX   FormF   Green  HFS   Isotope   LandeJ   LandeF  Plasma=
-                            20   Polarity   Yields  Zeeman
-    export  AtomicLevelProperty,  NoProperty,  AlphaX,  EinsteinX,  FormF,  Green, HFS,  Isotope,  LandeJ,  LandeF, Plasma,  
-                                Polarity,  Yields,  Zeeman
+    abstract type  ContinuumNormalization                          end
+    struct     PureSineNorm         <:  ContinuumNormalization     end
+    struct     CoulombSineNorm      <:  ContinuumNormalization     end
+    struct     OngRussekNorm        <:  ContinuumNormalization     end
 
+    export  AbstractContinuumNormalization,   PureSineNorm,   CoulombSineNorm,   OngRussekNorm
 
+    
     """
-    `Basics.AtomicLevelProperty(sa::Union{String,SubString{String}})`  ... constructor for a given String.
-    """
-    function AtomicLevelProperty(sa::Union{String,SubString{String}})
-        sa = strip( Base.convert(String, sa) )
-        if       sa in ["none", "NoProperty"]                wa = NoProperty
-        elseif   sa in ["alpha"]                             wa = AlphaX
-        elseif   sa in ["Einstein"]                          wa = EinsteinX
-        elseif   sa in ["form factor"]                       wa = FormF
-        elseif   sa in ["Einstein"]                          wa = EinsteinX
-        elseif   sa in ["Green", "Greens function"]          wa = Green
-        ##x elseif   sa in ["IJF_expansion", "IJF"]              wa = IJF_expansion
-        elseif   sa == ["isotope shift", "IS"]               wa = Isotope
-        elseif   sa == ["LandeJ", "g_J"]                     wa = LandeJ
-        elseif   sa == ["LandeF", "g_F"]                     wa = LandeF
-        elseif   sa == ["Plasma", "plasma"]                  wa = Plasma
-        elseif   sa == ["polarity", "polarizibility"]        wa = Polarity
-        elseif   sa == ["yields", "fluorescence yield"]      wa = Yields
-        elseif   sa == ["Zeeman"]                            wa = Zeeman
-        else     error("stop a")
-        end
-
-        AtomicLevelProperty(wa)
-    end
-
-    #===========================
-    # `Base.show(io::IO, property::AtomicLevelProperty)`  ... prepares a proper printout of the variable property::AtomicLevelProperty.
-    function Base.show(io::IO, property::AtomicLevelProperty) 
-        print(io, string(property) )
-    end   ======================#
-
-
-    # `Base.string(property::AtomicLevelProperty)`  ... provides a proper printout of the variable property::AtomicLevelProperty.
-    function Base.string(property::AtomicLevelProperty) 
-        if      property == NoProperty    return( "no property" )
-        elseif  property == AlphaX        return( "alpha variation" )  
-        elseif  property == EinsteinX     return( "Einstein A, B coefficients" )  
-        elseif  property == FormF         return( "form & scattering factors" )  
-        elseif  property == Green         return( "approximate Greens function" )  
-        elseif  property == HFS           return( "HFS A, B parameters" )  
-        elseif  property == Isotope       return( "isotope shift M and F parameters" )  
-        elseif  property == LandeJ        return( "Lande g_J factors" )  
-        elseif  property == LandeF        return( "Lande g_F factors" )  
-        elseif  property == Plasma        return( "CI computations with plasma-type interactions" )  
-        elseif  property == Polarity      return( "multipole polarizibility" )  
-        elseif  property == Yields        return( "fluorescence & Auger yields" )  
-        elseif  property == Zeeman        return( "Zeeman splitting in an external magnetic field" )  
-        else    error("stop a")
-        end
-    end
-
-
-    #==
-    """
-    `@enum   Basics.RadialMesh`  ... defines a enumeration for dealing with the radial mesh points and integration scheme.
-
-        + MeshGrasp       ... use the exponential or exponential-linearized grid from Grasp92.
-        + MeshGL          ... use a Gauss-Legendre grid with grid points due to the orderGL.
-    """
-    @enum   RadialMesh    MeshGrasp    MeshGL
-    export  RadialMesh,   MeshGrasp,   MeshGL
-
-
-    """
-    `@enum   Basics.QedModel`  ... defines a enumeration for dealing with the radiative (QED) contribution to the Hamiltonian matrix.
-
-        + QedSydney       ... to use the local QED potentials by Flambaum & Ginges PRA 72, 052115 (2005).
-        + QedPetersburg   ... to use the local QED potential similar as suggested by Shabaev et al., PRA 88, 012513 (2013). 
-    """
-    @enum   QedModel    QedSydney    QedPetersburg
-    export  QedModel,   QedSydney,   QedPetersburg   ==#
-
-
-
-    """
-    `@enum   Basics.ContinuumNormalization`  ... defines a enumeration for dealing with the normalization of continuum orbitals.
-
-        + PureSine       ... normalize with regard to an (asymtotic) pure sine funtion, sin(kr).
-        + CoulombSine    ... normalize with regard to an (asymtotic) Coulombic-sine funtion, sin(kr + ...).
-        + OngRussek      ... normalize by following Ong & Russek (1973).
-    """
-    @enum   ContinuumNormalization    PureSine    CoulombSine    OngRussek
-    export  ContinuumNormalization,   PureSine,   CoulombSine,   OngRussek
-
-
-
-    """
-    `@enum   Basics.ContinuumSolutions`  ... defines a enumeration for solving the continuum orbitals in a given potential.
+    `abstract type Basics.AbstractContinuumSolutions` 
+        ... defines an abstract and a number of singleton types for solving the continuum orbitals in a given potential.
 
         + ContBessel              ... generate a pure Bessel function for the large component together with kinetic balance.
         + ContSine                ... generate a pure Sine function for the large component together with kinetic balance.
         + NonrelativisticCoulomb  ... generate a non-relativistic Coulomb function for the large component together with kinetic balance.
         + AsymptoticCoulomb       ... generate a pure (asymptotic) Coulombic function for both components.
-        + BsplineGalerkin         ... generate a continuum orbital with the Galerkin method.
+        + BsplineGalerkin         ... generate a continuum orbital with the Galerkin method.dealing with warnings that are made during a run or REPL session.
     """
-    @enum   ContinuumSolutions    ContBessel    ContSine     AsymptoticCoulomb    NonrelativisticCoulomb    BsplineGalerkin
-    export  ContinuumSolutions,   ContBessel,   ContSine,    AsymptoticCoulomb,   NonrelativisticCoulomb,   BsplineGalerkin
+    abstract type  AbstractContinuumSolutions                            end
+    struct     ContBessel             <:  AbstractContinuumSolutions     end
+    struct     ContSine               <:  AbstractContinuumSolutions     end
+    struct     NonrelativisticCoulomb <:  AbstractContinuumSolutions     end
+    struct     AsymptoticCoulomb      <:  AbstractContinuumSolutions     end
+    struct     BsplineGalerkin        <:  AbstractContinuumSolutions     end
 
+    export  AbstractContinuumSolutions, ContBessel, ContSine, NonrelativisticCoulomb, AsymptoticCoulomb, BsplineGalerkin 
 
-
+    
     """
-    `@enum   Basics.Warnings`      ... defines a enumeration for dealing with warnings that are made during a run or REPL session.
-                                Cf. Defaults.warn().
+    `abstract type Basics.AbstractWarning` 
+        ... defines an abstract and a number of singleton types for dealing with warnings that are made during a run or REPL session.
+            Cf. Defaults.warn().
 
         + AddWarning        ... add a Warning to a warningList.
         + PrintWarnings     ... print all warnings into a jac-warn.report file.
-        + ResetWarnings     ... reset (empty) the warningList, usually at the beginning of a new run.
+        + ResetWarnings     ... reset (empty) the warningList, usually at the beginning of a new run.to distinguish between different warnings
     """
-    @enum   Warnings    AddWarning    PrintWarnings    ResetWarnings 
-    export  Warnings,   AddWarning,   PrintWarnings,   ResetWarnings 
+    abstract type  AbstractWarning                          end
+    struct     AddWarning           <:  AbstractWarning     end
+    struct     PrintWarnings        <:  AbstractWarning     end
+    struct     ResetWarnings        <:  AbstractWarning     end
 
-
-    """
-    `@enum   Basics.Guint`      ... defines a enumeration for dealing with graphical user interfaces (GUI).
-
-        + Gui            ... use a graphical (interactive) user interface.
-        + GuiSettings    ... use a graphical (interactive) user interface to define some settings.
-        + Cascade        ... use a graphical (interactive) user interface to define some settings.
-    """
-    @enum   Guint    Gui    GuiSettings   GuiCascade
-    export  Guint,   Gui,   GuiSettings,  GuiCascade
-
+    export  AbstractWarning, AddWarning, PrintWarnings, ResetWarnings 
     
     
     """
@@ -1368,8 +1140,172 @@ module Basics
     struct         DeExciteTwoElectrons    <:  AbstractExcitationScheme   end
     struct         AddSingleElectron       <:  AbstractExcitationScheme   end
 
+    
+    """
+    `abstract type Basics.AbstractScField` 
+        ... defines an abstract and a number of singleton types to distinguish between different self-consistent fields
+
+      + struct ALField          ... to represent an average-level field.        
+      + struct OLField          ... to represent an optimized-level field.        
+      + struct EOLField         ... to represent an extended optimized-level field.        
+      + struct DFSField         ... to represent an mean Dirac-Fock-Slater field.        
+      + struct HSField          ... to represent an mean Hartree-Slater field.        
+      + struct NuclearField     ... to represent a pure nuclear (potential) field.        
+    """
+    abstract type  AbstractScField                          end
+    struct     ALField              <:  AbstractScField     end
+    struct     OLField              <:  AbstractScField     end
+    struct     EOLField             <:  AbstractScField     end
+    struct     DFSField             <:  AbstractScField     end
+    struct     HSField              <:  AbstractScField     end
+    struct     NuclearField         <:  AbstractScField     end
+    
+    export  AbstractScField, ALField, OLField, EOLField, DFSField, HSField, NuclearField
 
     
+    """
+    `abstract type Basics.AbstractPotential` 
+        ... defines an abstract and a number of singleton types to distinguish between different (electronic) atomic potentials.
+
+      + struct DFSpotential     ... to represent a Dirac-Fock-Slater potential.        
+      + struct CoreHartree      ... to represent a core-Hartree potential.        
+      + struct KohnSham         ... to represent a Kohn-Sham potential.        
+      + struct HartreeSlater    ... to represent a Hartree-Slater potential.        
+    """
+    abstract type  AbstractPotential                        end
+    struct    DFSpotential          <:  AbstractPotential   end
+    struct    CoreHartree           <:  AbstractPotential   end
+    struct    KohnSham              <:  AbstractPotential   end
+    struct    HartreeSlater         <:  AbstractPotential   end
+    
+    export  AbstractPotential, DFSpotential, CoreHartree, KohnSham, HartreeSlater
+
+    
+    """
+    `abstract type Basics.AbstractLevelProperty` 
+        ... defines an abstract and a number of singleton types to distinguish between different (electronic) atomic potentials.
+
+      + struct NoProperty       ... No level property defined.        
+      + struct Einstein         ... Einstein A, B coefficients and oscillator strength; although not a 'level property', in the Einstein module
+                                    these computations are treated within a single basis and without all relaxation effects, etc. The `Einstein'
+                                    property therefore helps to obtain a quick overview about transition probabilities of a transition arry
+                                    or if many of these Einstein coefficients need to be calculated for a cascade.   
+      + struct HFS              ... Hyperfine A and B parameters.     
+      + struct Isotope          ... Isotope shift M and F parameters.      
+      + struct LandeJ           ... Lande g_J factors.
+      + struct LandeF           ... Lande g_F factors.   
+      + struct Polarizibility   ... static and dynamic polarizibilities. 
+      + struct Plasma           ... CI computations including interactions from various plasma models. 
+      + struct Zeeman           ... Zeeman splitting of fine-structure levels.
+    """
+    abstract type  AbstractLevelProperty                         end
+    struct    NoProperty            <:  AbstractLevelProperty    end
+    struct    AlphaX                <:  AbstractLevelProperty    end
+    struct    EinsteinX             <:  AbstractLevelProperty    end
+    struct    FormF                 <:  AbstractLevelProperty    end
+    struct    HFS                   <:  AbstractLevelProperty    end
+    struct    Isotope               <:  AbstractLevelProperty    end
+    struct    LandeJ                <:  AbstractLevelProperty    end
+    struct    LandeF                <:  AbstractLevelProperty    end
+    struct    Plasma                <:  AbstractLevelProperty    end
+    struct    Polarizibility        <:  AbstractLevelProperty    end
+    struct    Yields                <:  AbstractLevelProperty    end
+    struct    Zeeman                <:  AbstractLevelProperty    end
+
+    
+    export  AbstractProperty,  NoProperty,  AlphaX,  EinsteinX,  FormF,  HFS,  Isotope,  LandeJ,  LandeF, Plasma,  
+            Polarizibility,  Yields,  Zeeman
+
+    function Base.string(prop::NoProperty)      return( "no property" )                                     end
+    function Base.string(prop::AlphaX)          return( "alpha variation" )                                 end
+    function Base.string(prop::EinsteinX)       return( "Einstein A, B coefficients" )                      end  
+    function Base.string(prop::FormF)           return( "form & scattering factors" )                       end
+    function Base.string(prop::HFS)             return( "HFS A, B parameters" )                             end
+    function Base.string(prop::Isotope)         return( "isotope shift M and F parameters" )                end
+    function Base.string(prop::LandeJ)          return( "Lande g_J factors" )                               end
+    function Base.string(prop::LandeF)          return( "Lande g_F factors" )                               end
+    function Base.string(prop::Plasma)          return( "CI computations with plasma-type interactions" )   end
+    function Base.string(prop::Polarizibility)  return( "multipole polarizibility" )                        end
+    function Base.string(prop::Yields)          return( "fluorescence & Auger yields" )                     end
+    function Base.string(prop::Zeeman)          return( "Zeeman splitting in an external magnetic field" )  end 
+
+    
+    """
+    `abstract type Basics.AbstractProcess` 
+        ... defines an abstract and a number of singleton types to distinguish different atomic processes.
+
+      + struct Auger            ... Auger transitions, i.e. single autoionization or the emission of a single free electron into the continuum.
+      + struct AugerInPlasma    ... Auger transitions but calculated for a specified plasma model.
+      + struct Compton          ... Rayleigh-Compton scattering cross sections.
+      + struct Coulex           ... Coulomb-excitation of target or projeticle electrons by fast, heavy ions.
+      + struct Coulion          ... Coulomb-ionization of target or projeticle electrons by fast, heavy ions.
+      + struct Dierec           ... di-electronic recombination, i.e. the dielectronic capture of a free electron and the subsequent emission of a photon.
+      + struct ImpactExcAuto    ... di-electronic recombination, i.e. the dielectronic capture of a free electron and the subsequent emission of a photon.
+      + struct MultiPhotonDE    ... multi-photon excitation and decay rates, including 2-photon, etc. processes.
+      + struct MultiPI          ... multi-photon (single-electron) ionization.
+      + struct MultiPDI         ... multi-photon (single-electron) double ionization.
+      + struct Photo            ... Photoionization processes, i.e. the emission of a single free electron into the continuum due to an external light field.
+      + struct PhotoExc         ... Photoexcitation rates.
+      + struct PhotoExcFluor    ... photoexcitation fluorescence rates and cross sections.
+      + struct PhotoExcAuto     ... photoexcitation autoionization cross sections and collision strengths.
+      + struct PhotoInPlasma    ... Photoionization processes but calculated for a specified plasma model.
+      + struct PhotoIonFluor    ... photoionization fluorescence rates and cross sections.
+      + struct PhotoIonAuto     ... photoionization autoionization cross sections and collision strengths.
+      + struct Radiative        ... Radiative (multipole) transitions between bound-state levels of the same charge state.
+      + struct Rec              ... radiative electron capture, i.e. the capture of a free electron with the simultaneous emission of a photon.
+      + struct Eimex            ... electron-impact excitation cross sections and collision strengths.
+      + struct RAuger           ... Radiative Auger rates.
+    """
+    abstract type  AbstractProcess                          end
+    struct    NoProcess             <:  AbstractProcess     end
+    struct    Auger                 <:  AbstractProcess     end
+    struct    AugerInPlasma         <:  AbstractProcess     end
+    struct    Compton               <:  AbstractProcess     end
+    struct    Coulex                <:  AbstractProcess     end
+    struct    Coulion               <:  AbstractProcess     end
+    struct    Dierec                <:  AbstractProcess     end
+    struct    ImpactExcAuto         <:  AbstractProcess     end
+    struct    InternalConv          <:  AbstractProcess     end
+    struct    MultiPhotonDE         <:  AbstractProcess     end
+    struct    MultiPI               <:  AbstractProcess     end
+    struct    MultiPDI              <:  AbstractProcess     end
+    struct    Photo                 <:  AbstractProcess     end
+    struct    PhotoExc              <:  AbstractProcess     end
+    struct    PhotoExcFluor         <:  AbstractProcess     end
+    struct    PhotoExcAuto          <:  AbstractProcess     end
+    struct    PhotoInPlasma         <:  AbstractProcess     end
+    struct    PhotoIonFluor         <:  AbstractProcess     end
+    struct    PhotoIonAuto          <:  AbstractProcess     end
+    struct    Radiative             <:  AbstractProcess     end
+    struct    Rec                   <:  AbstractProcess     end
+    struct    Eimex                 <:  AbstractProcess     end
+    struct    RAuger                <:  AbstractProcess     end
+    struct    PairA1P               <:  AbstractProcess     end
+
+    export  NoProcess, Auger, AugerInPlasma, Compton, Coulex, Coulion, Dierec, Eimex, ImpactExcAuto, InternalConv, MultiPhotonDE, MultiPI, MultiPDI,
+            Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoInPlasma, PhotoIonAuto, PhotoIonFluor, Radiative, RAuger, 
+            Rec, PairA1P, Coulion
+
+    function Base.string(propc::NoProcess)          return( "no process" )                         end
+    function Base.string(propc::Auger)              return( "Auger" )                              end
+    function Base.string(propc::AugerInPlasma)      return( "Auger in plasma" )                    end
+    function Base.string(propc::Compton)            return( "Rayleigh-Compton" )                   end
+    function Base.string(propc::Dierec)             return( "Dielectronic recombination" )         end
+    function Base.string(propc::ImpactExcAuto)      return( "ImpactExcAuto" )                      end
+    function Base.string(propc::InternalConv)       return( "InternalConv" )                       end
+    function Base.string(propc::MultiPhotonDE)      return( "multi-photon excitation & decay" )    end
+    function Base.string(propc::Photo)              return( "Photo" )                              end
+    function Base.string(propc::PhotoExcFluor)      return( "Photo-Excitation-Fluoresence" )       end
+    function Base.string(propc::PhotoExcAuto)       return( "Photo-Excitation-Autoionization" )    end
+    function Base.string(propc::PhotoInPlasma)      return( "Photo in plasma" )                    end
+    function Base.string(propc::PhotoIonFluor)      return( "Photo-Ionization-Fluoresence" )       end
+    function Base.string(propc::PhotoIonAuto)       return( "Photo-Ionization-Autoionization" )    end
+    function Base.string(propc::Radiative)          return( "Radiative" )                          end
+    function Base.string(propc::RAuger)             return( "Radiative Auger" )                    end
+    function Base.string(propc::Rec)                return( "Rec" )                                end
+
+            
+            
     # Functions/methods that are later added to the module Basics
     function add                                            end
     function addZerosToCsfR                                 end
@@ -1385,6 +1321,7 @@ module Basics
     function computePotentialKohnSham                       end
     function computePotentialDFS                            end
     function computePotentialExtendedHartree                end
+    function computeScfCoefficients                         end
     function determineEnergySharings                        end
     function determineHoleShells                            end
     function determineParity                                end

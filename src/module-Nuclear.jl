@@ -95,41 +95,6 @@ module Nuclear
     end
 
 
-    #==
-    """
-    `Nuclear.Model(gui::Guint; model::Nuclear.Model=Model(36.0))`  
-        ... constructor to re-fine a nuclear model by a graphical user interface, and which may starts from 
-            the parameters of a given model.
-    """
-    function Model(gui::Guint; model::Nuclear.Model=Model(36.0))
-        nmd = model
-        
-        if      gui == Gui
-            t1 = "Nuclear model with: "
-            b1 = slider(1:110, label = "charge", value = nmd.Z)
-            b2 = dropdown([nmd.model, "Fermi", "point", "uniform"])
-            b3 = spinbox(label="mass  ";   value=nmd.mass)
-            b4 = spinbox(label="radius";   value=nmd.radius)
-            b5 = spinbox(label="2*spin";   value=nmd.spinI.num)
-            b6 = spinbox(label="mu    ";   value=nmd.mu)
-            b7 = spinbox(label="Q     ";   value=nmd.Q)
-            update = button("Update")
-            ui = vbox( hbox( pad(0em, t1) ),
-                       hbox( pad(1em, b1) ), 
-                       hbox( pad(1em, b2), pad(1em, b3), pad(1em, b4) ), 
-                       hbox( pad(1em, b5), pad(1em, b6), pad(1em, b7), pad(1em, update) )
-                      )
-            Interact.display(ui) 
-            output = Interact.@map  (&update; Nuclear.Model( observe(b1)[], observe(b2)[], observe(b3)[], observe(b4)[], 
-                                                             AngularJ64( Int64(observe(b5)[])//2 ), observe(b6)[], observe(b7)[] )  )
-            return( output )
-
-        else  error("Unsupported Guint = $gui.")
-        end
-    end
-    ==#
-
-
     # `Base.show(io::IO, m::Model)`  ... prepares a proper printout of the variable  m::Model.
     function Base.show(io::IO, m::Model) 
         if      m.model == "Fermi"   

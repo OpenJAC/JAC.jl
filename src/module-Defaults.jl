@@ -68,8 +68,8 @@ module Defaults
     #
     # Global settings that can be (re-) defined by the user.
     GBL_FRAMEWORK               = "relativistic"
-    GBL_CONT_SOLUTION           = BsplineGalerkin           ###  ContBessel    ContSine     AsymptoticCoulomb    NonrelativisticCoulomb    BsplineGalerkin
-    GBL_CONT_NORMALIZATION      = PureSine                  ###  PureSine    CoulombSine    OngRussek
+    GBL_CONT_SOLUTION           = BsplineGalerkin()         ###  ContBessel(), ContSine(), AsymptoticCoulomb(), NonrelativisticCoulomb(), BsplineGalerkin()
+    GBL_CONT_NORMALIZATION      = PureSineNorm()            ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm()
     GBL_QED_HYDROGENIC_LAMBDAC  = [1.0,  1.0,  1.0,  1.0,  1.0]
     GBL_QED_NUCLEAR_CHARGE      = 0.1
     GBL_WARNINGS                = String[]
@@ -300,16 +300,14 @@ module Defaults
 
         if        sa == "framework: relativistic"                            GBL_FRAMEWORK           = "relativistic"    
         elseif    sa == "framework: non-relativistic"                        GBL_FRAMEWORK           = "non-relativistic"  
-        elseif    sa == "method: continuum, spherical Bessel"                GBL_CONT_SOLUTION       = ContBessel  
-        elseif    sa == "method: continuum, pure sine"                       GBL_CONT_SOLUTION       = ContSine  
-        elseif    sa == "method: continuum, asymptotic Coulomb"              GBL_CONT_SOLUTION       = AsymptoticCoulomb  
-        elseif    sa == "method: continuum, nonrelativistic Coulomb"         GBL_CONT_SOLUTION       = NonrelativisticCoulomb  
-        elseif    sa == "method: continuum, Galerkin"                        GBL_CONT_SOLUTION       = BsplineGalerkin   
-        elseif    sa == "method: normalization, pure sine"                   GBL_CONT_NORMALIZATION  = PureSine   
-        elseif    sa == "method: normalization, pure Coulomb"                GBL_CONT_NORMALIZATION  = CoulombSine  
-        elseif    sa == "method: normalization, Ong-Russek"                  GBL_CONT_NORMALIZATION  = OngRussek
-        ##x elseif    sa == "QED model: Petersburg"                              GBL_QED_MODEL           = QedPetersburg
-        ##x elseif    sa == "QED model: Sydney"                                  GBL_QED_MODEL           = QedSydney
+        elseif    sa == "method: continuum, spherical Bessel"                GBL_CONT_SOLUTION       = ContBessel()  
+        elseif    sa == "method: continuum, pure sine"                       GBL_CONT_SOLUTION       = ContSine()  
+        elseif    sa == "method: continuum, asymptotic Coulomb"              GBL_CONT_SOLUTION       = AsymptoticCoulomb()  
+        elseif    sa == "method: continuum, nonrelativistic Coulomb"         GBL_CONT_SOLUTION       = NonrelativisticCoulomb()  
+        elseif    sa == "method: continuum, Galerkin"                        GBL_CONT_SOLUTION       = BsplineGalerkin()   
+        elseif    sa == "method: normalization, pure sine"                   GBL_CONT_NORMALIZATION  = PureSineNorm()   
+        elseif    sa == "method: normalization, pure Coulomb"                GBL_CONT_NORMALIZATION  = CoulombSineNorm()  
+        elseif    sa == "method: normalization, Ong-Russek"                  GBL_CONT_NORMALIZATION  = OngRussekNorm()
         else      error("Unsupported keystring:: $sa")
         end
         nothing
@@ -519,10 +517,10 @@ module Defaults
 
     + `(ResetWarnings)`  ... to reset the global array GBL_WARNINGS.
     """
-    function warn(wa::Warnings)
+    function warn(wa::AbstractWarning)
         global GBL_WARNINGS
 
-        if        wa == PrintWarnings
+        if        wa == PrintWarnings()
             iostream = open("jac-warn.report", "w") 
             println(iostream, " ")
             println(iostream, "\n\n",
@@ -533,7 +531,7 @@ module Defaults
             end
             close(iostream)
             #
-        elseif    wa == ResetWarnings
+        elseif    wa == ResetWarnings()
             ## @warn("Reset global array GBL_WARNINGS.")
             printstyled("Constants.warn():  Reset global array GBL_WARNINGS.", color=:light_magenta)
             GBL_WARNINGS = String[]
@@ -544,10 +542,10 @@ module Defaults
     end
 
 
-    function warn(wa::Warnings, sa::String)
+    function warn(wa::AbstractWarning, sa::String)
         global GBL_WARNINGS
 
-        if        wa == AddWarning
+        if        wa == AddWarning()
             push!(GBL_WARNINGS, sa)
         else      error("Unsupported Warnings:: $wa")
         end

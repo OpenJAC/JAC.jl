@@ -799,4 +799,81 @@ module BascisCompute
         return( wx )
     end
 
+
+
+    """
+    `Basics.computeScfCoefficients(field::Basics.ALField, basis::Basis, subsh::Subshell)`  
+        ... to compute and sort out all angular coefficients that contribute to the self-consistent field of the subshell sh.
+            For an average-level field, the energy functional is given by the sum of all diagonal matrix elements of the given
+            basis; the function also adds all coefficients that give rise to the same XL_Coulomb interaction strengths.
+            A tuple of two lists Tuple{Array{AngularTcoeff,1},Array{AngularVcoeff,1}} is returned.
+    """
+    function Basics.computeScfCoefficients(field::Basics.ALField, basis::Basis, subsh::Subshell)
+        #  Select only angular coefficients for the Coulomb interaction
+        function isCoulomb(L::Int64, sha::Subshell, shb::Subshell, shc::Subshell, shd::Subshell)
+            la = Basics.subshell_l(sha);    ja2 = Basics.subshell_2j(sha)
+            lb = Basics.subshell_l(shb);    jb2 = Basics.subshell_2j(shb)
+            lc = Basics.subshell_l(shc);    jc2 = Basics.subshell_2j(shc)
+            ld = Basics.subshell_l(shd);    jd2 = Basics.subshell_2j(shd)
+
+            if  AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
+                rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
+                return( false )
+            end
+            return( true )
+        end
+        #
+        Tcoeffs = JAC.AngularCoefficientsRatip2013.AngularTcoeff[];   allTcoeffs = JAC.AngularCoefficientsRatip2013.AngularTcoeff[]
+        Vcoeffs = JAC.AngularCoefficientsRatip2013.AngularVcoeff[];   allVcoeffs = JAC.AngularCoefficientsRatip2013.AngularVcoeff[]
+        # Compute all angular coefficients for the diagonal matrix elements
+        for  csf in basis.csfs
+            wa = Basics.compute("angular coefficients: e-e, Ratip2013", csf, csf)
+            append!(allTcoeffs, wa[1])
+            append!(allVcoeffs, wa[2])
+        end
+        ##x @show allTcoeffs
+        ##x @show allVcoeffs
+        # Determine a list reduced angular that just depend on subshell subsh
+        tcoeffs = Tuple{Int64,Subshell,Subshell}[]
+        vcoeffs = Tuple{Int64,Subshell,Subshell,Subshell,Subshell}[]
+        for  coeff in allTcoeffs
+            if   subsh == coeff.a
+                wa = (coeff.nu, coeff.a, coeff.b)
+                if      wa in tcoeffs
+                else    push!(tcoeffs, wa)
+                end
+            end
+        end
+        for  coeff in allVcoeffs
+            if   subsh == coeff.a   &&   isCoulomb(coeff.nu, coeff.a, coeff.b, coeff.c, coeff.d)
+                wa = (coeff.nu, coeff.a, coeff.b, coeff.c, coeff.d)
+                if      wa in vcoeffs
+                else    push!(vcoeffs, wa)
+                end
+            end
+        end
+        # Now collect all contributions that belong to the selected reduced coefficients
+        for  redCoeff in tcoeffs
+            redT = 0.
+            for  coeff  in  allTcoeffs
+                wa = (coeff.nu, coeff.a, coeff.b)
+                if  wa == redCoeff      redT = redT + coeff.T   end
+            end
+            push!( Tcoeffs, JAC.AngularCoefficientsRatip2013.AngularTcoeff( redCoeff[1], redCoeff[2], redCoeff[3], redT) )
+        end
+        for  redCoeff in vcoeffs
+            redV = 0.
+            for coeff  in  allVcoeffs
+                wa = (coeff.nu, coeff.a, coeff.b, coeff.c, coeff.d)
+                if  wa == redCoeff      redV = redV + coeff.V   end
+            end
+            push!( Vcoeffs, JAC.AngularCoefficientsRatip2013.AngularVcoeff( redCoeff[1], redCoeff[2], redCoeff[3], redCoeff[4], redCoeff[5],  redV) )
+        end
+        ##x @show " "
+        ##x @show Tcoeffs
+        ##x @show Vcoeffs
+        
+        return( Tcoeffs, Vcoeffs )
+    end
+
 end # module

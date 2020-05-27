@@ -8,7 +8,7 @@ module  RacahAlgebra
   
     using   SymEngine,  ..AngularMomentum, ..Basics,  ..Defaults
     
-    export  Kronecker, Triangle, W3j, W6j, W9j, Ylm, Djpq, RacahExpression
+    export  Integral, Kronecker, Triangle, W3j, W6j, W9j, Ylm, Djpq, RacahExpression
 
     
     """
@@ -1253,7 +1253,7 @@ module  RacahAlgebra
                                    Kronecker[], Triangle[], [W3j(w3j.ja, w3j.jb, w3j.jc-1, w3j.ma, w3j.mb+1, w3j.mc-1)], W6j[], W9j[], Ylm[], Djpq[])
             push!( rexList, rex)
             rex = RacahExpression( Basic[], Integral[], 0, 2*w3j.jb * sqrt( (w3j.jc+w3j.mc) * (w3j.jc-w3j.mc))/wa, Kronecker[], Triangle[], 
-                                   [W3j(w3j.ja, w3j.jb, w3j.jc-1, w3j.ma, w3j.mb, w3j.mc)], W6j[], W9j[])
+                                   [W3j(w3j.ja, w3j.jb, w3j.jc-1, w3j.ma, w3j.mb, w3j.mc)], W6j[], W9j[], Ylm[], Djpq[])
             push!( rexList, rex)
             rex = RacahExpression( Basic[], Integral[], 0, - sqrt( (w3j.jb+w3j.mb) * (w3j.jb-w3j.mb+1) * (w3j.jc-w3j.mc) * (w3j.jc-w3j.mc-1))/wa, 
                                    Kronecker[], Triangle[], [W3j(w3j.ja, w3j.jb, w3j.jc-1, w3j.ma, w3j.mb-1, w3j.mc+1)], W6j[], W9j[], Ylm[], Djpq[])

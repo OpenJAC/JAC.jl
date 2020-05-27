@@ -27,17 +27,19 @@ module AtomicState
     `struct  AtomicState.MeanFieldSettings`  
         ... a struct for defining the settings for a mean-field basis (orbital) representation.
 
-        + methodScf            ::String             ... Specify the SCF method: ["meanDFS", "meanHS"].
+        + methodScf            ::AbstractScField   
+            ... Specify the (mean) self-consistent field as DFSField() or HSField(); note that not all AbstractScField's 
+                allowed here.
     """
     struct  MeanFieldSettings
-        methodScf              ::String
+        methodScf              ::AbstractScField
     end
 
     """
     `AtomicState.MeanFieldSettings()`  ... constructor for setting the default values.
     """
     function MeanFieldSettings()
-    	MeanFieldSettings("meanDFS")
+    	MeanFieldSettings(DFSField())
     end
     
     
@@ -60,6 +62,10 @@ module AtomicState
 
     # `Base.string(basis::MeanFieldBasis)`  ... provides a String notation for the variable basis::MeanFieldBasi.
     function Base.string(basis::MeanFieldBasis)
+        if !(basis.settings.methodScf  in [DFSField(), HSField()])
+            error("A MeanFieldBasis presently supports only a DFSField() or HSField() but received:  $(basis.settings.methodScf)")
+        end
+        #
         sa = "Mean-field orbital basis for a $(basis.settings.methodScf) SCF field:"
         return( sa )
     end

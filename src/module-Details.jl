@@ -477,7 +477,7 @@ module Details
 
     ### `Data types calculating level properties`
 
-    + AtomicLevelProperty          ... an atomic level property that is supported by the JAC module, such as HFS, IsotopeShift, ....
+    + AbstractLevelProperty        ... an atomic level property that is supported by the JAC module, such as HFS, IsotopeShift, ....
     + Einstein.Settings            ... settings for Einstein A and B coefficients, calculated within a single given Multiplet.
     + Einstein.Outcome             ... (results of the) Einstein A and B coefficients for a single line.
     + Hfs.Settings                 ... settings for HFS A and B coefficients.

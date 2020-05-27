@@ -200,7 +200,7 @@ module Einstein
             ##x amplitude = transpose(line.finalLevel.mc) * matrix * line.initialLevel.mc 
             #
             amplitude = PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
-            ##x Defaults.warn(AddWarning, "amplitude = $amplitude,  testamp =  $testamp, Diff = $(amplitude-testamp) ")
+            ##x Defaults.warn(AddWarning(), "amplitude = $amplitude,  testamp =  $testamp, Diff = $(amplitude-testamp) ")
             #
             push!( newChannels, Einstein.Channel( channel.multipole, channel.gauge, amplitude) )
             if       channel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2

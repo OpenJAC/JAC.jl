@@ -28,7 +28,7 @@ module Atomic
         + name                           ::String                        ... A name associated to the computation.
         + nuclearModel                   ::Nuclear.Model          ... Model, charge and parameters of the nucleus.
         + grid                           ::Radial.Grid                   ... The radial grid to be used for the computation.
-        + properties                     ::Array{AtomicLevelProperty,1}  ... List of atomic properties to be calculated.
+        + properties                     ::Array{AbstractLevelProperty,1}... List of atomic properties to be calculated.
         + configs                        ::Array{Configuration,1}        ... A list of non-relativistic configurations.
         + asfSettings                    ::AsfSettings                   ... Provides the settings for the SCF process and for the CI and QED calculations.
         + initialConfigs                 ::Array{Configuration,1}        ... A list of initial-state configurations for some transition 
@@ -47,7 +47,7 @@ module Atomic
         + polaritySettings               ::MultipolePolarizibility.Settings   ... Settings for plasma-shift calculations.
         + yieldSettings                  ::DecayYield.Settings           ... Settings for fluoresence and Auger yield calculations.
         + zeemanSettings                 ::LandeZeeman.Settings          ... Settings for Lande-Zeeman coefficient calculations.
-        + process                        ::JAC.AtomicProcess             ... An (additional) process for which the properties are to be evaluated 
+        + process                        ::Basic.AbstractProcess         ... An (additional) process for which the properties are to be evaluated 
                                                                              for the given initial- and final-state configurations.
         + processSettings                ::Union{JAC.PhotoEmission.Settings, JAC.AutoIonization.Settings, JAC.PlasmaShift.AugerSettings, 
                                                  JAC.PhotoIonization.Settings, JAC.PlasmaShift.PhotoSettings, 
@@ -61,7 +61,7 @@ module Atomic
         name                           ::String
         nuclearModel                   ::Nuclear.Model
         grid                           ::Radial.Grid
-        properties                     ::Array{AtomicLevelProperty,1}
+        properties                     ::Array{AbstractLevelProperty,1}
         configs                        ::Array{Configuration,1}
         asfSettings                    ::AsfSettings
         initialConfigs                 ::Array{Configuration,1} 
@@ -80,7 +80,7 @@ module Atomic
         polaritySettings               ::MultipolePolarizibility.Settings
         yieldSettings                  ::DecayYield.Settings
         zeemanSettings                 ::LandeZeeman.Settings
-        process                        ::AtomicProcess
+        process                        ::AbstractProcess
         processSettings                ::Union{PhotoEmission.Settings, AutoIonization.Settings, PlasmaShift.AugerSettings, 
                                                PhotoIonization.Settings, PlasmaShift.PhotoSettings,
                                                PhotoRecombination.Settings, Dielectronic.Settings, ImpactExcitation.Settings,
@@ -100,14 +100,14 @@ module Atomic
     `JAC.Atomic.Computation()`  ... constructor for an 'empty' instance::Atomic.Computation.
     """
     function Computation()
-        Computation("", Nuclear.Model(1.), Radial.Grid(), AtomicLevelProperty[], 
+        Computation("", Nuclear.Model(1.), Radial.Grid(), AbstractLevelProperty[], 
                     Configuration[], AsfSettings(),
                     Configuration[], AsfSettings(),
                     Configuration[], AsfSettings(),
                     Configuration[], AsfSettings(),
                     AlphaVariation.Settings(), Einstein.Settings(), FormFactor.Settings(), Hfs.Settings(), IsotopeShift.Settings(), 
                     PlasmaShift.Settings(), MultipolePolarizibility.Settings(), DecayYield.Settings(),  LandeZeeman.Settings(), 
-                    NoProcess, PhotoEmission.Settings() )
+                    Basics.NoProcess(), PhotoEmission.Settings() )
     end
 
     
@@ -125,7 +125,7 @@ module Atomic
     """
     function Computation(comp::Atomic.Computation;
         name::Union{Nothing,String}=nothing,                                        nuclearModel::Union{Nothing,Nuclear.Model}=nothing,
-        grid::Union{Nothing,Radial.Grid}=nothing,                                   properties::Union{Nothing,Array{AtomicLevelProperty,1}}=nothing,   
+        grid::Union{Nothing,Radial.Grid}=nothing,                                   properties::Union{Nothing,Array{AbstractLevelProperty,1},Any}=nothing,   
         configs::Union{Nothing,Array{Configuration,1}}=nothing,                     asfSettings::Union{Nothing,AsfSettings}=nothing, 
         initialConfigs::Union{Nothing,Array{Configuration,1}}=nothing,              initialAsfSettings::Union{Nothing,AsfSettings}=nothing, 
         intermediateConfigs::Union{Nothing,Array{Configuration,1}}=nothing,         intermediateAsfSettings::Union{Nothing,AsfSettings}=nothing, 
@@ -135,7 +135,7 @@ module Atomic
         isotopeSettings::Union{Nothing,IsotopeShift.Settings}=nothing,              plasmaSettings::Union{Nothing,PlasmaShift.Settings}=nothing, 
         polaritySettings::Union{Nothing,MultipolePolarizibility.Settings}=nothing,  yieldSettings::Union{Nothing,DecayYield.Settings}=nothing, 
         zeemanSettings::Union{Nothing,LandeZeeman.Settings}=nothing, 
-        process::Union{Nothing,Basics.AtomicProcess}=nothing,                       processSettings::Union{Nothing,Any}=nothing,            
+        process::Union{Nothing,Basics.AbstractProcess}=nothing,                     processSettings::Union{Nothing,Any}=nothing,            
         printout::Bool=false)
         
         if  name                    == nothing  namex                    = comp.name                    else  namex                    = name                     end 

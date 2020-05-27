@@ -27,7 +27,7 @@ module Cascade
     `struct  Cascade.StepwiseDecayScheme  <:  Cascade.AbstractCascadeScheme`  
         ... a struct to represent (and generate) a mean-field orbital basis.
 
-        + processes             ::Array{Basics.AtomicProcess,1} ... List of the atomic processes that are supported 
+        + processes             ::Array{Basics.AbstractProcess,1} ... List of the atomic processes that are supported 
                                                                     and should be included into the cascade.
         + maxElectronLoss       ::Int64             ... (Maximum) Number of electrons in which the initial- and 
                                                         final-state configurations can differ from each other; 
@@ -39,7 +39,7 @@ module Cascade
         + shakeToShells         ::Array{Shell,1}    ... List of shells into which shake transitions may occur.
     """
     struct   StepwiseDecayScheme  <:  Cascade.AbstractCascadeScheme
-        processes               ::Array{Basics.AtomicProcess,1}
+        processes               ::Array{Basics.AbstractProcess,1}
         maxElectronLoss         ::Int64
         NoShakeDisplacements    ::Int64
         shakeFromShells         ::Array{Shell,1}
@@ -51,7 +51,7 @@ module Cascade
     `Cascade.StepwiseDecayScheme()`  ... constructor for an 'default' instance of a Cascade.StepwiseDecayScheme.
     """
     function StepwiseDecayScheme()
-        StepwiseDecayScheme([Radiative], 0, 0, Shell[], Shell[] )
+        StepwiseDecayScheme([Radiative()], 0, 0, Shell[], Shell[] )
     end
 
 
@@ -77,17 +77,17 @@ module Cascade
     `struct  Cascade.PhotonIonizationScheme  <:  Cascade.AbstractCascadeScheme`  
         ... a struct to represent (and generate) a mean-field orbital basis.
 
-        + processes             ::Array{Basics.AtomicProcess,1} ... List of the atomic processes that are supported 
-                                                                    and should be included into the cascade.
-        + maxPhotoElectrons     ::Int64                 ... (Maximum) Number of photo-electrons in which the initial- 
-                                                            and (photo-ionized) final-state configurations can differ
-                                                            from each other; this affects the number of ionized 
-                                                            multiplets in the cascade.
-        + photonEnergies        ::Array{Float64,1}      ... List of photon energies for which this photo-ionization 
-                                                            scheme is to be calculated.
+        + processes             ::Array{Basics.AbstractProcess,1} 
+            ... List of the atomic processes that are supported and should be included into the cascade.
+        + maxPhotoElectrons     ::Int64                 
+            ... (Maximum) Number of photo-electrons in which the initial-and (photo-ionized) final-state 
+                configurations can differ from each other; this affects the number of ionized 
+                multiplets in the cascade.
+        + photonEnergies        ::Array{Float64,1}      
+            ... List of photon energies for which this photo-ionization scheme is to be calculated.
     """
     struct   PhotonIonizationScheme  <:  Cascade.AbstractCascadeScheme
-        processes               ::Array{Basics.AtomicProcess,1}
+        processes               ::Array{Basics.AbstractProcess,1}
         maxPhotoElectrons       ::Int64
         photonEnergies          ::Array{Float64,1}
     end
@@ -121,13 +121,13 @@ module Cascade
     `struct  Cascade.ElectronExcitationScheme  <:  Cascade.AbstractCascadeScheme`  
         ... a struct to represent (and generate) a mean-field orbital basis.
 
-        + processes             ::Array{Basics.AtomicProcess,1} ... List of the atomic processes that are supported and should be included into the 
+        + processes             ::Array{Basics.AbstractProcess,1} ... List of the atomic processes that are supported and should be included into the 
                                                                     cascade.
         + electronEnergies      ::Array{Float64,1}              ... List of electron energies for which this electron-impact excitation scheme is 
                                                                     to be calculated.
     """
     struct   ElectronExcitationScheme  <:  Cascade.AbstractCascadeScheme
-        processes               ::Array{Basics.AtomicProcess,1}
+        processes               ::Array{Basics.AbstractProcess,1}
         electronEnergies        ::Array{Float64,1}
     end
 
@@ -218,7 +218,7 @@ module Cascade
             process, such as Auger, PhotoEmission, or others and two lists of initial- and final-state configuration that are (each) treated 
             together in a multiplet to allow for configuration interaction but to avoid 'double counting' of individual levels.
 
-        + process          ::JBasics.AtomicProcess         ... Atomic process that 'acts' in this step of the cascade.
+        + process          ::JBasics.AbstractProcess         ... Atomic process that 'acts' in this step of the cascade.
         + settings         ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings}        
                                                        ... Settings for this step of the cascade.
         + initialConfigs   ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state multiplet.
@@ -227,7 +227,7 @@ module Cascade
         + finalMultiplet   ::Multiplet                 ... Multiplet of the final-state levels of this step of the cascade.
     """
     struct  Step
-        process            ::Basics.AtomicProcess
+        process            ::Basics.AbstractProcess
         settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings}
         initialConfigs     ::Array{Configuration,1}
         finalConfigs       ::Array{Configuration,1}
@@ -573,12 +573,12 @@ module Cascade
     `struct  Cascade.LineIndex`  ... defines a line index with regard to the various lineLists of data::Cascade.LineIndex.
 
         + lineSet      ::Cascade.AbstractData    ... refers to the data set for which this index is defined.
-        + process      ::Basics.AtomicProcess    ... refers to the particular lineList of cascade (data).
+        + process      ::Basics.AbstractProcess  ... refers to the particular lineList of cascade (data).
         + index        ::Int64                   ... index of the corresponding line.
     """
     struct  LineIndex
         lineSet        ::Cascade.AbstractData 
-        process        ::Basics.AtomicProcess
+        process        ::Basics.AbstractProcess
         index          ::Int64 
     end 
 

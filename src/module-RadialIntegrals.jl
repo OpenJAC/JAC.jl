@@ -595,6 +595,43 @@ module  RadialIntegrals
   
   
     """
+    `RadialIntegrals.SlaterRkComponent_2dim(k::Int64, Ba::Array{Float64,1}, Bb::Array{Float64,1}, 
+                                                      Bc::Array{Float64,1}, Bd::Array{Float64,1}, grid::Radial.Grid)`  
+        ... computes one component of the (relativistic) Slater integral
+
+         R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d),   namely
+         W^k (abcd) = int_0^infty dr int_0^infty ds  B_a B_c            r_<^k / r_>^(k+1)  B_b B_d
+
+         of rank k for the four components Ba, Bb, ... above , and over the given grid by using an explicit 2-dimensional integration 
+         scheme; a value::Float64 is returned.
+    """
+    function SlaterRkComponent_2dim(k::Int64, Ba::Array{Float64,1}, Bb::Array{Float64,1}, Bc::Array{Float64,1}, Bd::Array{Float64,1}, grid::Radial.Grid)
+        function ul(r :: Float64, s :: Float64) :: Float64
+            if     r <= s    return( r^k/s^(k+1) )
+            elseif r > s     return( s^k/r^(k+1) )
+            end
+        end
+    
+        # Distinguish the radial integration for different grid definitions
+        if  grid.meshType == Radial.MeshGrasp()
+            error("stop a")
+        elseif  grid.meshType == Radial.MeshGL()
+            mtp_ac = min(size(Ba, 1), size(Bc, 1));    mtp_bd = min(size(Bb, 1), size(Bd, 1))
+            wac = zeros(mtp_ac);   wbd = zeros(mtp_bd)
+            for  r = 2:mtp_ac   wac[r] = (Ba[r] * Bc[r]) * grid.wr[r]  end
+            for  s = 2:mtp_bd   wbd[s] = (Bb[s] * Bd[s]) * grid.wr[s]  end
+            wa = 0.
+            for  r = 2:mtp_ac
+                for  s = 2:mtp_bd   wa = wa + wac[r] * ul(grid.r[r], grid.r[s]) * wbd[s]   end
+            end
+            return( wa )
+        else
+            error("stop b")
+        end
+    end
+  
+  
+    """
     `RadialIntegrals.SlaterRk_2dim(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
         ... computes the (relativistic) Slater integral
 

@@ -12,7 +12,7 @@ if  false
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.), 
                             initialConfigs=[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ],
                             finalConfigs  =[Configuration("1s^2 2s^2 2p^6")], 
-                            process = JAC.Rec, 
+                            process = Rec(), 
                             processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10., 30., 50.], [0.], 
                                                                         false, true, true, true, true, Tuple{Int64,Int64}[(1,1)]) )
 
@@ -24,7 +24,7 @@ elseif  false
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(92.), 
                             initialConfigs=[Configuration("1s")],
                             finalConfigs  =[Configuration("1s^2")], 
-                            process = JAC.Rec, 
+                            process = Rec(), 
                             processSettings=PhotoRecombination.Settings([E1, M1, E2, M2], [JAC.UseCoulomb, JAC.UseBabushkin], [10., 30., 50.], 
                                                                         [2.18, 21.8, 218.0], true, true, true, true, false, Tuple{Int64,Int64}[(1,1)]) )
 
@@ -37,7 +37,7 @@ elseif  true
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.), 
                             initialConfigs=[Configuration("1s^2")],
                             finalConfigs  =[Configuration("1s^2 2s"), Configuration("1s^2 3s"), Configuration("1s^2 3p"), Configuration("1s^2 3d")], 
-                            process = JAC.Rec, 
+                            process = Rec(), 
                             processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10.], 
                                                                         [2.18, 21.8, 218.0], false, false, false, true, false, Tuple{Int64,Int64}[(1,1)]) )
 

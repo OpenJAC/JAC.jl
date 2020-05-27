@@ -287,14 +287,14 @@ module Bsplines
     function generateSplinePrime(i::Int64, k::Int64, tlist::Array{Float64,1}, r::Float64)
         wa = 0.
         if  (tlist[i+k-1] - tlist[i]) == 0. 
-            Defaults.warn(AddWarning, "DB for i=$i, k=$k, tlist[i+k-1]=$(tlist[i+k-1]), tlist[i]=$(tlist[i]), bspline=$(generateSpline(i, k-1, tlist, r)), wa=$wa")  
+            Defaults.warn(AddWarning(), "DB for i=$i, k=$k, tlist[i+k-1]=$(tlist[i+k-1]), tlist[i]=$(tlist[i]), bspline=$(generateSpline(i, k-1, tlist, r)), wa=$wa")  
         else
             wa = wa + (k - 1)/(tlist[i+k-1] - tlist[i]) * generateSpline(i,   k-1, tlist, r)
         end
 
         
         if  (tlist[i+k] - tlist[i+1]) == 0.  
-            Defaults.warn(AddWarning, "DB for i=$i, k=$k, tlist[i+k]=$(tlist[i+k]), tlist[i+1]=$(tlist[i+1]), bspline=$(generateSpline(i+1, k-1, tlist, r)), wa=$wa")   
+            Defaults.warn(AddWarning(), "DB for i=$i, k=$k, tlist[i+k]=$(tlist[i+k]), tlist[i+1]=$(tlist[i+1]), bspline=$(generateSpline(i+1, k-1, tlist, r)), wa=$wa")   
         else
             wa = wa - (k - 1)/(tlist[i+k] - tlist[i+1]) * generateSpline(i+1, k-1, tlist, r)
         end
@@ -465,7 +465,7 @@ module Bsplines
         for  i = 1:nsL+nsS    
             for  j = i+1:nsL+nsS    
                 if  abs(  (wb[i,j] - wb[j,i])/wb[i,j] ) > 1.0e-8  
-                   Defaults.warn(AddWarning, "Nonsymmetric overlap at $i, $j with rel. D = $( abs((wb[i,j] - wb[j,i])/wb[i,j]) ) ")  end
+                   Defaults.warn(AddWarning(), "Nonsymmetric overlap at $i, $j with rel. D = $( abs((wb[i,j] - wb[j,i])/wb[i,j]) ) ")  end
                 wij = (wb[i,j] + wb[j,i]) / 2
                 wb[i,j] = wb[j,i] = wij
             end
@@ -512,12 +512,91 @@ module Bsplines
     """
     `Bsplines.solveSelfConsistentFieldOptimized(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis,
                                                     settings::AsfSettings; printout::Bool=true)` 
-        ... solves the self-consistent field for ...     A basis::Basis is returned.
+        ... solves the self-consistent field for an averaged-level scheme.  A basis::Basis is returned.
     """
     function solveSelfConsistentFieldOptimized(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
                                                settings::AsfSettings; printout::Bool=true) 
+        # Provide the deepest, i.e. the most strongly-bound kappa-subshell in the given basis                                       
+        function  deepestSubshell(kappa, basis)
+            for  sh  in  basis.subshells
+                if sh.kappa == kappa        return(sh)  end
+            end
+            error("stop a")
+        end
+        #
         Defaults.setDefaults("standard grid", primitives.grid)
+        # Define the storage for the calculations of matrices
+        if  printout    println(">>  for various B-spline matrices:")    end
+        storage  = Dict{Array{Any,1},Array{Float64,2}}()
         
+        # Set-up the overlap matrix; compute or fetch the diagonal 'overlap' blocks
+        grid = primitives.grid;   nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
+        wb = zeros( nsL+nsS, nsL+nsS )
+        wb[1:nsL,1:nsL]                 = generateMatrix!(0, "LL-overlap", primitives, storage)
+        wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = generateMatrix!(0, "SS-overlap", primitives, storage)
+        # Determine the symmetry block of this basis and define storage for the kappa blocks and orbitals from the last iteration
+        wNotYet = trues( length(basis.subshells) );   kappas = Int64[]
+        for  k = 1:length(basis.subshells)
+            sh = basis.subshells[k];   
+            if  wNotYet[k]   
+                push!(kappas, sh.kappa);    wNotYet[k] = false
+                for kx = 1:length(basis.subshells)   if wNotYet[kx]   &&   sh.kappa == basis.subshells[kx].kappa   wNotYet[kx] = false  end   end
+            end
+        end 
+        bsplineBlock = Dict{Int64,Basics.Eigen}();   previousOrbitals = deepcopy(basis.orbitals)
+        for  kappa  in  kappas           bsplineBlock[kappa]  = Basics.Eigen( zeros(2), [zeros(2), zeros(2)])   end
+        # Determine te nuclear potential once at the beginning
+        nuclearPotential  = Nuclear.nuclearPotential(nuclearModel, grid)
+        
+        # Start the SCF procedure for all symmetries
+        isNotSCF = true;   NoIteration = 0
+        while  isNotSCF
+            NoIteration = NoIteration + 1;   go_on = false 
+            if  NoIteration >  settings.maxIterationsScf
+                println("Maximum number of SCF iterations = $(settings.maxIterationsScf) is reached ... computations proceed.")
+                break
+            end
+            if  printout    println("\nIteration $NoIteration for symmetries ... ")    end
+            #
+            for kappa in kappas
+                # (1) Get all angular coefficients that refer to the given kappa-block
+                deepSubsh = deepestSubshell(kappa, basis)
+                wcoeffs = Basics.computeScfCoefficients(settings.methodScf, basis, deepSubsh)
+                # (2) Compute the direct and exchange matrices for the given kappa-block
+                wde = zeros( nsL+nsS, nsL+nsS )
+                for  coeff  in  wcoeffs[2]
+                    @show coeff
+                    wde = wde + coeff.V * JAC.InteractionStrength.matrixL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                            basis.orbitals[coeff.c], basis.orbitals[coeff.d], primitives)
+                end
+                error("xxx")
+                # (3) Set-up the diagonal part of the Hamiltonian matrix and add the direct and exchange-potential matrices
+                wa = Bsplines.setupLocalMatrix(kappa, primitives, nuclearPotential, storage)
+                wa = wa + wde
+                # (4) Solve the generalized eigenvalue problem
+                wc = Basics.diagonalize("generalized eigenvalues: Julia, eigfact", wa, wb)
+                # (5) Analyse and print information about the convergence of the symmetry blocks and the occupied orbitals
+                wcBlock = Basics.analyzeConvergence(bsplineBlock[kappa], wc)
+                if  wcBlock > 1.000 * settings.accuracyScf   go_on = true   end
+                for  sh in basis.subshells
+                    if      sh in settings.frozenSubshells   ## do nothing
+                    elseif  sh.kappa == kappa
+                        newOrbital = generateOrbitalFromPrimitives(sh, wc, primitives)
+                        wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
+                        if  wcOrbital > settings.accuracyScf   go_on = true   end
+                           sa = "  $sh::  en [a.u.] = " * @sprintf("%.7e", newOrbital.energy) * ";   self-cons'cy = "  
+                           sa = sa * @sprintf("%.4e", wcOrbital)   * "  ["
+                           sa = sa * @sprintf("%.4e", wcBlock)             * " for sym-block kappa = $kappa]"
+                           if  printout    println(sa)    end
+                        ## println("  $sh  en [a.u.] = $(newOrbital.energy)   self-consistency = $(wcOrbital), $(wcBlock) [kappa=$kappa] ") 
+                        previousOrbitals[sh] = newOrbital
+                    end
+                end
+                # (6) Re-define the bsplineBlock
+                bsplineBlock[kappa] = wc
+            end
+            if  go_on   nothing   else   break   end
+        end
         #
         #
         #
@@ -587,8 +666,8 @@ module Bsplines
                 ##x for  mx = 1:10:length(wp1.V)
                 ##x     @printf("%.8e  %.8e  %.8e  %.8e  \n", wp1.V[mx], wp2.V[mx], wp3.V[mx],wp4.V[mx])
                 ##x end
-                if       settings.methodScf == "meanHS"     wp = compute("radial potential: Hartree-Slater",    grid, wLevel)
-                elseif   settings.methodScf == "meanDFS"    wp = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
+                if       settings.methodScf == Basics.HSField()     wp = compute("radial potential: Hartree-Slater",    grid, wLevel)
+                elseif   settings.methodScf == Basics.DFSField()    wp = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
                 else     error("stop potential")
                 end
                 pot = Basics.add(nuclearPotential, wp)

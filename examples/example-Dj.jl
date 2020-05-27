@@ -28,7 +28,7 @@ elseif  true
     wc = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(54.), 
                             initialConfigs=[Configuration("1s^2 2s")],
                             finalConfigs  =[Configuration("1s^2 3s")], 
-                            process = JAC.MultiPhotonDE, 
+                            process = MultiPhotonDE(), 
                             processSettings=MultiPhotonDeExcitation.Settings(MultiPhotonDeExcitation.TwoPhotonAbsorptionMonochromatic(), 
                                                                     [E1,M1], [UseCoulomb], greenChannels, true, false, Tuple{Int64,Int64}[])  )
     wd = perform(wc)
@@ -56,7 +56,7 @@ elseif  true
     wc = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(54.), 
                             initialConfigs=[Configuration("1s^2 3s")],
                             finalConfigs  =[Configuration("1s^2 2s")], 
-                            process = JAC.MultiPhotonDE, 
+                            process = MultiPhotonDE(), 
                             processSettings=MultiPhotonDeExcitation.Settings(MultiPhotonDeExcitation.TwoPhotonEmission(), 
                                                                     [E1,M1], [UseCoulomb], greenChannels, true, false, Tuple{Int64,Int64}[])  )
     wd = perform(wc)

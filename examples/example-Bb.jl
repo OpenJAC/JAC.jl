@@ -4,7 +4,6 @@ println("Bb) Tests of the parity non-conservation, Schiff moment and anapole mom
 #
 grid = JAC.Radial.Grid(true)
 wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(26.), 
-                        properties=JAC.AtomicLevelProperty[],
                         configs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")] )
 
 wxa  = perform(wa; output=true)

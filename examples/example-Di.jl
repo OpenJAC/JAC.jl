@@ -6,7 +6,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(tr
                         initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                         intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                         finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
-                        process = JAC.Compton, 
+                        process = Compton(), 
                         processSettings=RayleighCompton.Settings()  )
 
 wb = perform(wa)

@@ -54,11 +54,11 @@
             if  printSummary   println(iostream, "\n* $st) Perform $(string(step.process)) amplitude computations for " *
                                                  "up to $nc decay lines (without selection rules): ")   end 
           
-            if      step.process == Basics.Auger 
+            if      step.process == Basics.Auger() 
                 newLines = AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
                                                               step.settings, output=true, printout=false) 
                 append!(linesA, newLines);    nt = length(linesA)
-            elseif  step.process == Basics.Radiative
+            elseif  step.process == Basics.Radiative()
                 newLines = PhotoEmission.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
                                                              step.settings, output=true, printout=false) 
                 append!(linesR, newLines);    nt = length(linesR)
@@ -99,7 +99,7 @@
                 if  printSummary   println(iostream, "\n* $st) Perform $(string(step.process)) amplitude computations for " *
                                                      "up to $nc ionizing lines (without selection rules): ")   end 
           
-                if      step.process == Basics.Photo
+                if      step.process == Basics.Photo()
                     newLines = PhotoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
                                                                    settings, output=true, printout=true) 
                     append!(linesP, newLines);    nt = length(linesP)
@@ -136,14 +136,14 @@
                         maxEn = max(maxEn, blockList[a].multiplet.levels[p].energy - blockList[b].multiplet.levels[q].energy)
                     end
                     for  process  in  comp.scheme.processes
-                        if      process == Basics.Radiative   
+                        if      process == Basics.Radiative()   
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons
                                 settings = PhotoEmission.Settings([E1], [UseBabushkin], false, false, false, Tuple{Int64,Int64}[], 0., 0., 1.0e6)
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
                             end
-                        elseif  process == Basics.Auger       
+                        elseif  process == Basics.Auger()       
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons + 1
                                 settings = AutoIonization.Settings(false, false, false, Tuple{Int64,Int64}[], 0., 1.0e6, 2, "Coulomb")
@@ -177,7 +177,7 @@
             for  initialBlock in initialList
                 for  ionizedBlock in ionizedList
                     for  process  in  comp.scheme.processes
-                        if      process == Basics.Photo   
+                        if      process == Basics.Photo()  
                             if  initialBlock.NoElectrons == ionizedBlock.NoElectrons + 1
                                 ##x settings = PhotoIonization.Settings()
                                 ##x for  en  in scheme.photonEnergies   push!(phEnergies, Defaults.convertUnits("energy: from atomic", en))   end

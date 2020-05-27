@@ -20,7 +20,7 @@ if  false
                               grid=grid, nuclearModel=Nuclear.Model(18.),
                               initialConfigs=[Configuration("[Ne] 3s^2 3p^6")],
                               finalConfigs  =[Configuration("[Ne] 3s^2 3p^5")], 
-                              process = JAC.Photo,  processSettings=photoSettings)
+                              process = Photo(),  processSettings=photoSettings)
     @show wa
     perform(wa)                                         
 
@@ -44,7 +44,7 @@ elseif false
                               grid=grid, nuclearModel=Nuclear.Model(26.),
                               initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                               finalConfigs  =[Configuration("1s^2")], 
-                              process = JAC.Photo,  processSettings=photoSettings)
+                              process = Photo(),  processSettings=photoSettings)
     @show wa
     perform(wa)                                         
 
@@ -67,7 +67,7 @@ elseif true
                               grid=grid, nuclearModel=Nuclear.Model(10.),
                               initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                               finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6")], 
-                              process = JAC.Photo,  processSettings=photoSettings)
+                              process = Photo(),  processSettings=photoSettings)
     @show wa
     perform(wa)                                         
 end

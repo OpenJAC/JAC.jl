@@ -371,7 +371,7 @@ module ManyElectron
 
         + generateScf          ::Bool               ... True, if a SCF need to be generated, and false otherwise (frozen orbitals).
         + breitScf             ::Bool               ... True, if Breit interaction is to be included into the SCF computations.
-        + methodScf            ::String             ... Specify the SCF method: ["AL", "OL", "EOL", "meanDFS", "meanHS"].
+        + methodScf            ::AbstractScField    ... Specify the SCF method, for instance, Basics.ALField(), etc.
         + startScf             ::String             ... Specify how the start orbitals are obtained ["hydrogenic", "fromOrbitals"].
         + startOrbitals        ::Dict{Subshell, Orbital}  ... List of start orbitals; hydrogenic orbitals are used 
                                                               if not found in this list.
@@ -395,7 +395,7 @@ module ManyElectron
     struct  AsfSettings
         generateScf            ::Bool 
         breitScf               ::Bool  
-        methodScf              ::String  
+        methodScf              ::AbstractScField 
         startScf               ::String 
         startOrbitals          ::Dict{Subshell, Orbital}
         levelsScf              ::Array{Int64,1}
@@ -420,7 +420,7 @@ module ManyElectron
     `ManyElectron.AsfSettings()`  ... constructor for setting the default values.
     """
     function AsfSettings()
-    	AsfSettings(false, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), Int64[1], 24, 1.0e-6, Subshell[], Subshell[],  
+    	AsfSettings(false, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), Int64[1], 24, 1.0e-6, Subshell[], Subshell[],  
     	            true, false, NoneQed(), "eigen", LSjjSettings(false), false, Int64[], false, LevelSymmetry[] )
     end
 
@@ -436,7 +436,7 @@ module ManyElectron
     """
     function AsfSettings(settings::AsfSettings; 
         generateScf::Union{Nothing,Bool}=nothing,                       breitScf::Union{Nothing,Bool}=nothing,         
-        methodScf::Union{Nothing,String}=nothing,                       startScf::Union{Nothing,String}=nothing,
+        methodScf::Union{Nothing,AbstractScField}=nothing,              startScf::Union{Nothing,String}=nothing,
         startOrbitals::Union{Nothing,Dict{Subshell, Orbital}}=nothing,  levelsScf::Union{Nothing,Array{Int64,1}}=nothing,   
         maxIterationsScf::Union{Nothing,Int64}=nothing,                 accuracyScf::Union{Nothing,Float64}=nothing,     
         shellSequenceScf::Union{Nothing,Array{Subshell,1}}=nothing,     frozenSubshells::Union{Nothing,Array{Subshell,1}}=nothing,         

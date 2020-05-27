@@ -16,7 +16,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel
                         initialConfigs=[Configuration("1s^2 2s")],
                         intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],  
                         finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ],  
-                        process = JAC.Dierec, 
+                        process = Dierec(), 
                         processSettings=Dielectronic.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, 
                                                               false, Tuple{Int64,Int64,Int64}[(1,5,0), (1,6,0)], 0., 0., 0., "Coulomb")  )
 
@@ -31,7 +31,7 @@ grid          = Radial.Grid(false)
 wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(26.), 
                         initialConfigs  =[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p 3p")],
                         finalConfigs    =[Configuration("1s^2 2s"), Configuration("1s^2 2p")], 
-                        process = JAC.Auger,  processSettings = augerSettings )
+                        process = Auger(),  processSettings = augerSettings )
 
 wb = perform(wa)
 
@@ -44,7 +44,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel
                                              Configuration("[Ne] 3p 4d"), Configuration("[Ne] 3p 4f") ],  
                         finalConfigs  =[Configuration("[Ne] 3s^2"),
                                         Configuration("[Ne] 3s 3p"), Configuration("[Ne] 3s 3d"), Configuration("[Ne] 3s 4d"), Configuration("[Ne] 3s 4f") ],
-                        process = JAC.Dierec, 
+                        process = Dierec(), 
                         processSettings=Dielectronic.Settings([E1, M1, M2, E2], [JAC.UseCoulomb, JAC.UseBabushkin], true, 
                                                               false, Tuple{Int64,Int64,Int64}[(1,10,1), (1,10,7)], 0., 0., 0., "Coulomb")  )
 
@@ -59,13 +59,12 @@ intermediateConfigs = Basics.generateConfigurations(refConfigs, fromShells, toSh
 grid=JAC.Radial.Grid(true)
 #== grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 5.0e-2, NoPoints = 2000)
 wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(74.0, "Fermi"), 
-                        properties=JAC.AtomicLevelProperty[],
                         configs=[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p"), Configuration("1s^2 2p^2"), Configuration("1s^2 2s 3s"), 
                                  Configuration("1s^2 2s 3p"), Configuration("1s^2 2s 3d"), Configuration("1s^2 2p 3s"), Configuration("1s^2 2p 3p"), 
                                  Configuration("1s^2 2p 3d")],
                         ## configs=[Configuration("1s^2 2s"), Configuration("1s^2 2p"), 
                         ##          Configuration("1s^2 7s"), Configuration("1s^2 7p"), Configuration("1s^2 7d"), Configuration("1s^2 7f")], 
-                        asfSettings=AsfSettings(true, false, "meanDFS", "hydrogenic", Dict{Subshell, Orbital}(), [1],    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
+                        asfSettings=AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), [1],    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
                                                 true, true, QedPetersburg(), "yyy", LSjjSettings(false),
                                                 false, [1,2,3,4], false, JAC.LevelSymmetry[] )  ) ==#
 
@@ -77,7 +76,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel
                                              Configuration("1s^2 2p 7d"), Configuration("1s^2 2p 7f")],  
                         finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p"), Configuration("1s^2 2s 7s"), Configuration("1s^2 2s 7p"),  
                                         Configuration("1s^2 2s 7d"), Configuration("1s^2 2s 7f")],
-                        process = JAC.Dierec, 
+                        process = Dierec(), 
                         processSettings=Dielectronic.Settings([E1], [JAC.UseCoulomb, JAC.UseBabushkin], true, 
                                                               false, Tuple{Int64,Int64,Int64}[(1,10,1), (1,10,7)], 0., 0., 0., "Coulomb")  )
 
