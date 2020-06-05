@@ -1145,32 +1145,58 @@ module Basics
     `abstract type Basics.AbstractScField` 
         ... defines an abstract and a number of singleton types to distinguish between different self-consistent fields
 
-      + struct ALField          ... to represent an average-level field.        
-      + struct OLField          ... to represent an optimized-level field.        
-      + struct EOLField         ... to represent an extended optimized-level field.        
-      + struct DFSField         ... to represent an mean Dirac-Fock-Slater field.        
-      + struct HSField          ... to represent an mean Hartree-Slater field.        
-      + struct NuclearField     ... to represent a pure nuclear (potential) field.        
+        + struct ALField          ... to represent an average-level field.        
+        + struct EOLField         ... to represent an (extended) optimized-level field.        
+        + struct DFSField         ... to represent an mean Dirac-Fock-Slater field.        
+        + struct HSField          ... to represent an mean Hartree-Slater field.        
+        + struct NuclearField     ... to represent a pure nuclear (potential) field.        
     """
     abstract type  AbstractScField                          end
     struct     ALField              <:  AbstractScField     end
-    struct     OLField              <:  AbstractScField     end
     struct     EOLField             <:  AbstractScField     end
     struct     DFSField             <:  AbstractScField     end
     struct     HSField              <:  AbstractScField     end
     struct     NuclearField         <:  AbstractScField     end
     
-    export  AbstractScField, ALField, OLField, EOLField, DFSField, HSField, NuclearField
+    export  AbstractScField, ALField, EOLField, DFSField, HSField, NuclearField
+
+    
+    """
+    `abstract type Basics.AbstractEeInteraction` 
+        ... defines an abstract and a number of singleton types for specifying the electron-electron interaction.
+
+        + struct CoulombInteraction   ... to represent the Coulomb part of the electron-electron interaction.        
+        + struct BreitInteraction     ... to represent the Breit part of the electron-electron interaction.        
+        + struct CoulombBreit         ... to represent the Coulomb+Breit part of the electron-electron interaction.        
+    """
+    abstract type  AbstractEeInteraction                          end
+    struct     CoulombInteraction   <:  AbstractEeInteraction     end
+    struct     BreitInteraction     <:  AbstractEeInteraction     end
+    struct     CoulombBreit         <:  AbstractEeInteraction     end
+    
+    export  AbstractEeInteraction, CoulombInteraction, BreitInteraction, CoulombBreit
+
+    
+    """
+    `abstract type Basics.AbstractCImethod` 
+        ... defines an abstract and a number of singleton types to determine CI matrix solutions.
+
+        + struct FullCIjulia          ... to diagonalize the full CI matrix with the internal Julia function.        
+    """
+    abstract type  AbstractCImethod                          end
+    struct     FullCIeigen          <:  AbstractCImethod     end
+    
+    export  AbstractCImethod, FullCIeigen
 
     
     """
     `abstract type Basics.AbstractPotential` 
         ... defines an abstract and a number of singleton types to distinguish between different (electronic) atomic potentials.
 
-      + struct DFSpotential     ... to represent a Dirac-Fock-Slater potential.        
-      + struct CoreHartree      ... to represent a core-Hartree potential.        
-      + struct KohnSham         ... to represent a Kohn-Sham potential.        
-      + struct HartreeSlater    ... to represent a Hartree-Slater potential.        
+        + struct DFSpotential     ... to represent a Dirac-Fock-Slater potential.        
+        + struct CoreHartree      ... to represent a core-Hartree potential.        
+        + struct KohnSham         ... to represent a Kohn-Sham potential.        
+        + struct HartreeSlater    ... to represent a Hartree-Slater potential.        
     """
     abstract type  AbstractPotential                        end
     struct    DFSpotential          <:  AbstractPotential   end
@@ -1185,18 +1211,18 @@ module Basics
     `abstract type Basics.AbstractLevelProperty` 
         ... defines an abstract and a number of singleton types to distinguish between different (electronic) atomic potentials.
 
-      + struct NoProperty       ... No level property defined.        
-      + struct Einstein         ... Einstein A, B coefficients and oscillator strength; although not a 'level property', in the Einstein module
-                                    these computations are treated within a single basis and without all relaxation effects, etc. The `Einstein'
-                                    property therefore helps to obtain a quick overview about transition probabilities of a transition arry
-                                    or if many of these Einstein coefficients need to be calculated for a cascade.   
-      + struct HFS              ... Hyperfine A and B parameters.     
-      + struct Isotope          ... Isotope shift M and F parameters.      
-      + struct LandeJ           ... Lande g_J factors.
-      + struct LandeF           ... Lande g_F factors.   
-      + struct Polarizibility   ... static and dynamic polarizibilities. 
-      + struct Plasma           ... CI computations including interactions from various plasma models. 
-      + struct Zeeman           ... Zeeman splitting of fine-structure levels.
+        + struct NoProperty       ... No level property defined.        
+        + struct Einstein         ... Einstein A, B coefficients and oscillator strength; although not a 'level property', in the Einstein module
+                                      these computations are treated within a single basis and without all relaxation effects, etc. The `Einstein'
+                                      property therefore helps to obtain a quick overview about transition probabilities of a transition arry
+                                      or if many of these Einstein coefficients need to be calculated for a cascade.   
+        + struct HFS              ... Hyperfine A and B parameters.     
+        + struct Isotope          ... Isotope shift M and F parameters.      
+        + struct LandeJ           ... Lande g_J factors.
+        + struct LandeF           ... Lande g_F factors.   
+        + struct Polarizibility   ... static and dynamic polarizibilities. 
+        + struct Plasma           ... CI computations including interactions from various plasma models. 
+        + struct Zeeman           ... Zeeman splitting of fine-structure levels.
     """
     abstract type  AbstractLevelProperty                         end
     struct    NoProperty            <:  AbstractLevelProperty    end
@@ -1234,27 +1260,27 @@ module Basics
     `abstract type Basics.AbstractProcess` 
         ... defines an abstract and a number of singleton types to distinguish different atomic processes.
 
-      + struct Auger            ... Auger transitions, i.e. single autoionization or the emission of a single free electron into the continuum.
-      + struct AugerInPlasma    ... Auger transitions but calculated for a specified plasma model.
-      + struct Compton          ... Rayleigh-Compton scattering cross sections.
-      + struct Coulex           ... Coulomb-excitation of target or projeticle electrons by fast, heavy ions.
-      + struct Coulion          ... Coulomb-ionization of target or projeticle electrons by fast, heavy ions.
-      + struct Dierec           ... di-electronic recombination, i.e. the dielectronic capture of a free electron and the subsequent emission of a photon.
-      + struct ImpactExcAuto    ... di-electronic recombination, i.e. the dielectronic capture of a free electron and the subsequent emission of a photon.
-      + struct MultiPhotonDE    ... multi-photon excitation and decay rates, including 2-photon, etc. processes.
-      + struct MultiPI          ... multi-photon (single-electron) ionization.
-      + struct MultiPDI         ... multi-photon (single-electron) double ionization.
-      + struct Photo            ... Photoionization processes, i.e. the emission of a single free electron into the continuum due to an external light field.
-      + struct PhotoExc         ... Photoexcitation rates.
-      + struct PhotoExcFluor    ... photoexcitation fluorescence rates and cross sections.
-      + struct PhotoExcAuto     ... photoexcitation autoionization cross sections and collision strengths.
-      + struct PhotoInPlasma    ... Photoionization processes but calculated for a specified plasma model.
-      + struct PhotoIonFluor    ... photoionization fluorescence rates and cross sections.
-      + struct PhotoIonAuto     ... photoionization autoionization cross sections and collision strengths.
-      + struct Radiative        ... Radiative (multipole) transitions between bound-state levels of the same charge state.
-      + struct Rec              ... radiative electron capture, i.e. the capture of a free electron with the simultaneous emission of a photon.
-      + struct Eimex            ... electron-impact excitation cross sections and collision strengths.
-      + struct RAuger           ... Radiative Auger rates.
+        + struct Auger            ... Auger transitions, i.e. single autoionization or the emission of a single free electron into the continuum.
+        + struct AugerInPlasma    ... Auger transitions but calculated for a specified plasma model.
+        + struct Compton          ... Rayleigh-Compton scattering cross sections.
+        + struct Coulex           ... Coulomb-excitation of target or projeticle electrons by fast, heavy ions.
+        + struct Coulion          ... Coulomb-ionization of target or projeticle electrons by fast, heavy ions.
+        + struct Dierec           ... di-electronic recombination, i.e. the dielectronic capture of a free electron and the subsequent emission of a photon.
+        + struct ImpactExcAuto    ... di-electronic recombination, i.e. the dielectronic capture of a free electron and the subsequent emission of a photon.
+        + struct MultiPhotonDE    ... multi-photon excitation and decay rates, including 2-photon, etc. processes.
+        + struct MultiPI          ... multi-photon (single-electron) ionization.
+        + struct MultiPDI         ... multi-photon (single-electron) double ionization.
+        + struct Photo            ... Photoionization processes, i.e. the emission of a single free electron into the continuum due to an external light field.
+        + struct PhotoExc         ... Photoexcitation rates.
+        + struct PhotoExcFluor    ... photoexcitation fluorescence rates and cross sections.
+        + struct PhotoExcAuto     ... photoexcitation autoionization cross sections and collision strengths.
+        + struct PhotoInPlasma    ... Photoionization processes but calculated for a specified plasma model.
+        + struct PhotoIonFluor    ... photoionization fluorescence rates and cross sections.
+        + struct PhotoIonAuto     ... photoionization autoionization cross sections and collision strengths.
+        + struct Radiative        ... Radiative (multipole) transitions between bound-state levels of the same charge state.
+        + struct Rec              ... radiative electron capture, i.e. the capture of a free electron with the simultaneous emission of a photon.
+        + struct Eimex            ... electron-impact excitation cross sections and collision strengths.
+        + struct RAuger           ... Radiative Auger rates.
     """
     abstract type  AbstractProcess                          end
     struct    NoProcess             <:  AbstractProcess     end
@@ -1347,6 +1373,7 @@ module Basics
     function generateLevelWithSymmetryReducedBasis          end
     function generateOrbitalsForBasis                       end
     function generateOrbitalsForPotential                   end
+    function generateOrbitalSuperposition                   end
     function generateShellList                              end
     function integrate                                      end
     function integrateOnGridNewtonCotes                     end
@@ -1355,8 +1382,10 @@ module Basics
     function interpolateOnGridGrasp92                       end
     function interpolateOnGridTrapezRule                    end
     function isSimilar                                      end
+    function isSymmetric                                    end
     function isStandardSubshellList                         end
     function isViolated                                     end
+    function isZero                                         end
     function merge                                          end
     function modifyLevelEnergies                            end
     function perform                                        end

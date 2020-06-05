@@ -27,12 +27,12 @@ module AtomicState
     `struct  AtomicState.MeanFieldSettings`  
         ... a struct for defining the settings for a mean-field basis (orbital) representation.
 
-        + methodScf            ::AbstractScField   
+        + scField           ::AbstractScField   
             ... Specify the (mean) self-consistent field as DFSField() or HSField(); note that not all AbstractScField's 
                 allowed here.
     """
     struct  MeanFieldSettings
-        methodScf              ::AbstractScField
+        scField              ::AbstractScField
     end
 
     """
@@ -45,7 +45,7 @@ module AtomicState
     
     # `Base.show(io::IO, settings::MeanFieldSettings)`  ... prepares a proper printout of the settings::MeanFieldSettings.
     function Base.show(io::IO, settings::MeanFieldSettings)
-    	  println(io, "methodScf:                $(settings.methodScf)  ")
+    	  println(io, "scField:                  $(settings.scField)  ")
     end
 
 
@@ -62,11 +62,11 @@ module AtomicState
 
     # `Base.string(basis::MeanFieldBasis)`  ... provides a String notation for the variable basis::MeanFieldBasi.
     function Base.string(basis::MeanFieldBasis)
-        if !(basis.settings.methodScf  in [DFSField(), HSField()])
-            error("A MeanFieldBasis presently supports only a DFSField() or HSField() but received:  $(basis.settings.methodScf)")
+        if !(basis.settings.scField  in [DFSField(), HSField()])
+            error("A MeanFieldBasis presently supports only a DFSField() or HSField() but received:  $(basis.settings.scField)")
         end
         #
-        sa = "Mean-field orbital basis for a $(basis.settings.methodScf) SCF field:"
+        sa = "Mean-field orbital basis for a $(basis.settings.scField) SCF field:"
         return( sa )
     end
 
@@ -83,19 +83,19 @@ module AtomicState
     `struct  AtomicState.RasSettings`  
         ... a struct for defining the settings for a restricted active-space computations.
 
-        + levelsScf            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
-        + maxIterationsScf     ::Int64              ... maximum number of SCF iterations in each RAS step.
-        + accuracyScf          ::Float64            ... convergence criterion for the SCF field.
+        + levelsScf            ::Array{Int64,1}         ... Levels on which the optimization need to be carried out.
+        + maxIterationsScf     ::Int64                  ... maximum number of SCF iterations in each RAS step.
+        + accuracyScf          ::Float64                ... convergence criterion for the SCF field.
         
-    	+ breitCI              ::Bool               ... logical flag to include Breit interactions.
-    	+ selectLevelsCI       ::Bool               ... true, if specific level (number)s have been selected.
-    	+ selectedLevelsCI     ::Array{Int64,1}     ... Level number that have been selected.
+    	+ eeInteractionCI      ::AbstractEeInteraction  ... logical flag to include Breit interactions.
+    	+ selectLevelsCI       ::Bool                   ... true, if specific level (number)s have been selected.
+    	+ selectedLevelsCI     ::Array{Int64,1}         ... Level number that have been selected.
     """
     struct  RasSettings
         levelsScf              ::Array{Int64,1}
         maxIterationsScf       ::Int64  
         accuracyScf            ::Float64 
-    	breitCI                ::Bool 
+    	eeInteractionCI        ::AbstractEeInteraction
     	selectLevelsCI         ::Bool 
     	selectedLevelsCI       ::Array{Int64,1} 
     end
@@ -113,7 +113,7 @@ module AtomicState
     	  println(io, "levelsScf:            $(settings.levelsScf)  ")
     	  println(io, "maxIterationsScf:     $(settings.maxIterationsScf)  ")
     	  println(io, "accuracyScf:          $(settings.accuracyScf)  ")
-    	  println(io, "breitCI:              $(settings.breitCI)  ")
+    	  println(io, "eeInteractionCI:      $(settings.eeInteractionCI)  ")
     	  println(io, "selectLevelsCI:       $(settings.selectLevelsCI)  ")
     	  println(io, "selectedLevelsCI:     $(settings.selectedLevelsCI)  ")
     end
@@ -269,14 +269,14 @@ module AtomicState
     `struct  AtomicState.CiSettings`  
         ... a struct for defining the settings for a configuration-interaction (CI) expansion.
 
-    	+ breitCI              ::Bool               ... logical flag to include Breit interactions.
-    	+ selectLevelsCI       ::Bool               ... true, if specific level (number)s have been selected.
-    	+ selectedLevelsCI     ::Array{Int64,1}     ... Level number that have been selected.
+    	+ eeInteractionCI      ::AbstractEeInteraction   ... logical flag to include Breit interactions.
+    	+ selectLevelsCI       ::Bool                    ... true, if specific level (number)s have been selected.
+    	+ selectedLevelsCI     ::Array{Int64,1}          ... Level number that have been selected.
     	+ selectSymmetriesCI   ::Bool                    ... true, if specific level symmetries have been selected.
     	+ selectedSymmetriesCI ::Array{LevelSymmetry,1}  ... Level symmetries that have been selected.
     """
     struct  CiSettings
-    	breitCI                ::Bool 
+    	eeInteractionCI        ::AbstractEeInteraction
     	selectLevelsCI         ::Bool 
     	selectedLevelsCI       ::Array{Int64,1} 
     	selectSymmetriesCI     ::Bool 	
@@ -287,37 +287,37 @@ module AtomicState
     `AtomicState.CiSettings()`  ... constructor for setting the default values.
     """
     function CiSettings()
-    	CiSettings(false, false, Int64[], false, LevelSymmetry[])
+    	CiSettings(CoulombInteraction(), false, Int64[], false, LevelSymmetry[])
     end
 
 
     """
     `AtomicState.CiSettings(settings::AtomicState.CiSettings;`
     
-            breitCI::Union{Nothing,Bool}=nothing, 
+            eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing, 
             selectLevelsCI::Union{Nothing,Bool}=nothing,                    selectedLevelsCI::Union{Nothing,Array{Int64,1}}=nothing, 
             selectSymmetriesCI::Union{Nothing,Bool}=nothing,                selectedSymmetriesCI::Union{Nothing,Array{LevelSymmetry,1}}=nothing)
                         
         ... constructor for modifying the given CiSettings by 'overwriting' the explicitly selected parameters.
     """
     function CiSettings(settings::AtomicState.CiSettings;
-        breitCI::Union{Nothing,Bool}=nothing, 
+        eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing, 
         selectLevelsCI::Union{Nothing,Bool}=nothing,                        selectedLevelsCI::Union{Nothing,Array{Int64,1}}=nothing, 
         selectSymmetriesCI::Union{Nothing,Bool}=nothing,                    selectedSymmetriesCI::Union{Nothing,Array{LevelSymmetry,1}}=nothing)
         
-        if  breitCI             == nothing   breitCIx              = settings.breitCI               else   breitCIx              = breitCI              end 
+        if  eeInteractionCI     == nothing   eeInteractionCIx      = settings.eeInteractionCI       else   eeInteractionCIx      = eeInteractionCI      end 
         if  selectLevelsCI      == nothing   selectLevelsCIx       = settings.selectLevelsCI        else   selectLevelsCIx       = selectLevelsCI       end 
         if  selectedLevelsCI    == nothing   selectedLevelsCIx     = settings.selectedLevelsCI      else   selectedLevelsCIx     = selectedLevelsCI     end 
         if  selectSymmetriesCI  == nothing   selectSymmetriesCIx   = settings.selectSymmetriesCI    else   selectSymmetriesCIx   = selectSymmetriesCI   end 
         if  selectedSymmetriesCI== nothing   selectedSymmetriesCIx = settings.selectedSymmetriesCI  else   selectedSymmetriesCIx = selectedSymmetriesCI end 
         
-        CiSettings( breitCIx, selectLevelsCIx, selectedLevelsCIx, selectSymmetriesCIx, selectedSymmetriesCIx)
+        CiSettings( eeInteractionCIx, selectLevelsCIx, selectedLevelsCIx, selectSymmetriesCIx, selectedSymmetriesCIx)
     end
     
     
     # `Base.show(io::IO, settings::CiSettings)`  ... prepares a proper printout of the settings::CiSettings.
     function Base.show(io::IO, settings::CiSettings)
-    	  println(io, "breitCI:                  $(settings.breitCI)  ")
+    	  println(io, "eeInteractionCI:          $(settings.eeInteractionCI)  ")
     	  println(io, "selectLevelsCI:           $(settings.selectLevelsCI)  ")
     	  println(io, "selectedLevelsCI:         $(settings.selectedLevelsCI)  ")
     	  println(io, "selectSymmetriesCI:       $(settings.selectSymmetriesCI)  ")

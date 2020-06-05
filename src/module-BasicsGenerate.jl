@@ -6,7 +6,7 @@
 module BascisGenerate
 
     using Printf, ..AngularMomentum, ..Atomic, ..AtomicState, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
-                  ..Einstein, ..ManyElectron, ..Nuclear, ..PhotoEmission, ..Radial
+                  ..Einstein, ..ManyElectron, ..Nuclear, ..PhotoEmission, ..Radial, ..RadialIntegrals
     
     export generate
 
@@ -46,7 +46,7 @@ module BascisGenerate
         nModel    = rep.nuclearModel
 
         # The asfSettings only define the SCF part and are partly derived from the MeanFieldSettings
-        asfSettings = AsfSettings(AsfSettings(); methodScf=repType.settings.methodScf) 
+        asfSettings = AsfSettings(AsfSettings(); scField=repType.settings.scField) 
         
         basis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
         if output    results = Base.merge( results, Dict("mean-field basis" => basis) )          end
@@ -98,8 +98,8 @@ module BascisGenerate
         println("*** Level symmetries = $symmetries ")
 
         # The asfSettings only define the CI part and are partly derived from the CiSettings
-        asfSettings = AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
-                                  true, repType.settings.breitCI, NoneQed(), "methodCI", LSjjSettings(false), 
+        asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    0, 0., Subshell[], Subshell[], 
+                                  repType.settings.eeInteractionCI, NoneQed(), FullCIeigen(), LSjjSettings(false), 
                                   repType.settings.selectLevelsCI, repType.settings.selectedLevelsCI, 
                                   repType.settings.selectSymmetriesCI, repType.settings.selectedSymmetriesCI) 
         
@@ -143,8 +143,8 @@ module BascisGenerate
         if output    results = Base.merge( results, Dict("reference multiplet" => Multiplet("Reference multiplet:", priorMultiplet.levels) ) )  end
 
         # The asfSettings only define the CI part of the RAS steps and partly derived from the RasSettings
-        asfSettings = AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
-                                  true, repType.settings.breitCI, NoneQed(), "methodCI", LSjjSettings(true), 
+        asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    0, 0., Subshell[], Subshell[], 
+                                  repType.settings.eeInteractionCI, NoneQed(), FullCIeigen(), LSjjSettings(true), 
                                   repType.settings.selectLevelsCI, repType.settings.selectedLevelsCI, false, LevelSymmetry[] ) 
         
         # Now, cycle over all steps of the RasExpansion
@@ -207,8 +207,8 @@ module BascisGenerate
         Basics.display(stdout, orbitals, rep.grid)
 
         # The asfSettings only define the CI part of the Green channels and are partly derived from the GreenSettings
-        asfSettings = AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), Int64[],    0, 0., Subshell[], Subshell[], 
-                                  true, false, NoneQed(), "methodCI", LSjjSettings(false), 
+        asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    0, 0., Subshell[], Subshell[], 
+                                  CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), 
                                   settings.selectLevels, settings.selectedLevels, false, LevelSymmetry[] ) 
         
         # Cycle over all selected level symmetries to generate the requested channels
@@ -1018,6 +1018,30 @@ module BascisGenerate
             end
         end
         return( orbitals )
+    end
+
+
+
+    """
+    `Basics.generateOrbitalSuperposition(a::Orbital, b::Orbital, cx::Float64, grid::Radial.Grid)`  
+        ... generates a superposition  a + cx * b of two given orbitals; the function just takes the linear combination
+            of the large and small components as well as the energy. The function assumes that both orbitals are defined on the same
+            grid. A re-normalized newOrbital::Orbital is returned for which the derivatives are not defined. 
+            This function is used to accelerate the convergence (hopefully).
+    """
+    function Basics.generateOrbitalSuperposition(a::Orbital, b::Orbital, cx::Float64, grid::Radial.Grid)
+        if  a.subshell != b.subshell  ||  !(a.isBound)  ||  !(b.isBound)   error("stop a")     end
+        mtp  = max(size(a.P, 1), size(b.P, 1));     newP = zeros(mtp);  newQ = zeros(mtp);   newEnergy = (a.energy + cx * b.energy) / (1 + cx)
+        mtpa = size(a.P, 1);    newP[1:mtpa] = a.P[1:mtpa];    newQ[1:mtpa] = a.Q[1:mtpa]
+        mtpb = size(b.P, 1);    newP[1:mtpb] = newP[1:mtpb] + cx * b.P[1:mtpb]    
+                                newQ[1:mtpb] = newQ[1:mtpb] + cx * b.Q[1:mtpb]
+        newOrbital = Orbital(a.subshell, a.isBound, a.useStandardGrid, newEnergy, newP, newQ, Float64[], Float64[], a.grid)
+        norm       = RadialIntegrals.overlap(newOrbital, newOrbital, grid)
+        ##x @show a.energy, b.energy, a.subshell, cx, norm
+        newP       = newP / sqrt(norm);      newQ = newQ / sqrt(norm)
+        newOrbital = Orbital(a.subshell, a.isBound, a.useStandardGrid, newEnergy, newP, newQ, Float64[], Float64[], a.grid)
+
+        return( newOrbital )
     end
 
     

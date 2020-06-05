@@ -25,8 +25,8 @@ module Dielectronic
                                                            resonance to the final levels.
         + mimimumPhotonEnergy   ::Float64              ... minimum transition energy for which photon transitions are 
                                                            included into the evaluation.
-        + augerOperator         ::String               ... Auger operator that is to be used for evaluating the Auger ampl's: 
-                                                           allowed values are: "Coulomb", "Breit", "Coulomb+Breit"
+        + augerOperator         ::AbstractEeInteraction               ... Auger operator that is to be used for evaluating the Auger ampl's: 
+                                                           allowed values are: CoulombInteraction(), BreitInteration(), CoulombBreit()
     """
     struct Settings 
         multipoles              ::Array{EmMultipole,1}

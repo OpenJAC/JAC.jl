@@ -11,4 +11,4 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(tr
 wb = perform(wa)
 
 
-## [E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], false, false, false, true, true, Tuple{Int64,Int64,Int64}[(1,1,0), (1,2,0), (1,2,0)], 0., 0., 0., "Coulomb"
+## [E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], false, false, false, true, true, Tuple{Int64,Int64,Int64}[(1,1,0), (1,2,0), (1,2,0)], 0., 0., 0., CoulombInteraction()

@@ -12,10 +12,13 @@ if  false
     wb = perform(wa)
 
 elseif  true
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(18., "point"), 
-                            configs=[Configuration("[Ne] 3s^2")],  ## , Basics.DFSField()
-                            asfSettings=AsfSettings(true, false, Basics.ALField(), "hydrogenic", Dict{Subshell, Orbital}(), [1],    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
-                                                    true, false, NoneQed(), "yyy", LSjjSettings(false),
+    grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-6,h = 3.0e-2, hp = 6.0e-2, NoPoints = 900)
+    grid = Radial.Grid(true)
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(16., "point"), 
+                            configs=[Configuration("[Ne] 3s^2 3p^2")],  ## , Basics.DFSField()
+                            asfSettings=AsfSettings(true, CoulombInteraction(), Basics.ALField(), StartFromHydrogenic(),  120, 1.0e-6, Subshell[], Subshell[], 
+                                                    ## [Subshell("1s_1/2")],
+                                                    CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false),
                                                     false, [1,2,3,4], false, JAC.LevelSymmetry[] )  )
 
     wb = perform(wa)

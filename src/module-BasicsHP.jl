@@ -160,6 +160,52 @@ module BasicsHP
 
         
     """
+    `Basics.isSymmetric(matrix::Array{Float64,2})`  
+        ... returns true if the matrix is symmetric and false otherwise; if not symmetric, the function prints the 
+            first 10 pairs  M_ij, M_ji  which violate the symmetry condition.
+    """
+    function Basics.isSymmetric(matrix::Array{Float64,2})
+        symmetric = true;    na = 0
+        if  size(matrix,1) !=  size(matrix,2)  error("not quadratic")   end
+        #
+        for j = 1:size(matrix,2)
+            for i = j+1:size(matrix,1)
+                if abs( matrix[i,j] - matrix[j,i]) > 1.0e-10   
+                    na = na + 1;   symmetric = false;   println("*** $i  $j  $(matrix[i,j])  $(matrix[j,i]) ")
+                    if  na >= 10   return( symmetric )  end
+                end
+            end
+        end
+        
+        return( symmetric )
+    end
+
+        
+    """
+    `Basics.isZero(matrix::Array{Float64,2})`  
+        ... returns true if the matrix is zero and false otherwise; it sums up the |M[i,j]^2 and prints the results. 
+            If not zero, the function prints the first 10 matrix elements  M_ij  which violate this condition.
+    """
+    function Basics.isZero(matrix::Array{Float64,2})
+        isz = true;    na = 0;   wa = 0.
+        #
+        for j = 1:size(matrix,2)
+            for i = 1:size(matrix,1)
+                wa = wa + abs( matrix[i,j])^2
+                #
+                if abs( matrix[i,j]) > 1.0e-10   
+                    na = na + 1;   isz = false;   println("*** $i  $j  $(matrix[i,j]) ")
+                    if  na >= 10   return( isz )    end
+                end
+            end
+        end
+        println(">> isZero():   sum^2 = $(wa)")
+        
+        return( isz )
+    end
+
+        
+    """
     `Basics.isViolated()`  ... returns true if some rule/limitation is violated, and false otherwise.
 
     + `(conf::Configuration, restriction::AbstractConfigurationRestriction)`  

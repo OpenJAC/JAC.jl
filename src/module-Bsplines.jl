@@ -5,7 +5,7 @@
 """
 module Bsplines
 
-    using  Printf, ..AngularMomentum, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear, JAC
+    using  Printf, LinearAlgebra, ..AngularMomentum, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear, JAC
     ##x global JAC_counter = 0
 
 
@@ -48,6 +48,21 @@ module Bsplines
         println(io, "grid:               $(primitives.grid)  ")
         println(io, "bsplinesL:          $(primitives.bsplinesL)  ")
         println(io, "bsplinesS:          $(primitives.bsplinesS)  ")
+    end
+
+
+    """
+    `Bsplines.extractBsplineVector(sh::Subshell, wc::Basics.Eigen, grid::Radial.Grid)`  
+        ... extract the (full) vector of B-spline coefficients for subshell sh from all solutions in wc
+            A  vector::Array{Float64,1} is returned.
+    """
+    function extractBsplineVector(sh::Subshell, wc::Basics.Eigen, grid::Radial.Grid)
+        nsL = grid.nsL;    nsS = grid.nsS
+        l  = Basics.subshell_l(sh);   ni = nsS + sh.n - l;          if   sh.kappa > 0   ni = ni + 1  end
+        en = wc.values[ni];        
+        ev = wc.vectors[ni];       if  length(ev) != nsL + nsS    error("stop a")                    end
+        ##x println(">> Bspline energy for $sh is:  $en ")
+        return(ev)
     end
 
 
@@ -123,14 +138,10 @@ module Bsplines
         for  i = 1:nsL   
             for  j = primitives.bsplinesL[i].lower:primitives.bsplinesL[i].upper  P[j]      = P[j] + ev[i] * primitives.bsplinesL[i].bs[j]      end
             for  j = primitives.bsplinesL[i].lower:primitives.bsplinesL[i].upper  Pprime[j] = Pprime[j] + ev[i] * primitives.bsplinesL[i].bp[j] end
-            ## for  j = 1:primitives.grid.nr  P[j]      = P[j] + ev[i] * primitives.bsplinesL[i].bs[j]      end
-            ## for  j = 1:primitives.grid.nr  Pprime[j] = Pprime[j] + ev[i] * primitives.bsplinesL[i].bp[j] end
         end 
         for  i = 1:nsS   
             for  j = primitives.bsplinesS[i].lower:primitives.bsplinesS[i].upper  Q[j]      = Q[j] + ev[nsL+i] * primitives.bsplinesS[i].bs[j]      end
             for  j = primitives.bsplinesS[i].lower:primitives.bsplinesS[i].upper  Qprime[j] = Qprime[j] + ev[nsL+i] * primitives.bsplinesS[i].bp[j] end
-            ## for  j = 1:primitives.grid.nr     Q[j]      = Q[j] + ev[nsL+i] * primitives.bsplinesS[i].bs[j]      end
-            ## for  j = 1:primitives.grid.nr     Qprime[j] = Qprime[j] + ev[nsL+i] * primitives.bsplinesS[i].bp[j] end
         end 
         
         # Determine the maximum number of grid points for this orbital and normalized it propery
@@ -149,10 +160,11 @@ module Bsplines
         orbital   = Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, Radial.Grid())
         
         # Renormalize the radial orbital   
-        wN        = sqrt( JAC.RadialIntegrals.overlap(orbital, orbital, primitives.grid) )
+        wN        = sqrt( JAC.RadialIntegrals.overlap(orbital, orbital, primitives.grid) )   ##x ;   @show sh, wN
         Px[1:mtp] = Px[1:mtp] / wN;    Qx[1:mtp] = Qx[1:mtp] / wN
         Pprimex[1:mtp] = Pprimex[1:mtp] / wN;    Qprimex[1:mtp] = Qprimex[1:mtp] / wN    
         
+        ##x return( orbital )
         return( Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, Radial.Grid()) )   
     end
 
@@ -169,17 +181,12 @@ module Bsplines
         for  i = 1:nsL   
             for  j = primitives.bsplinesL[i].lower:primitives.bsplinesL[i].upper  P[j]      = P[j] + ev[i] * primitives.bsplinesL[i].bs[j]      end
             for  j = primitives.bsplinesL[i].lower:primitives.bsplinesL[i].upper  Pprime[j] = Pprime[j] + ev[i] * primitives.bsplinesL[i].bp[j] end
-            ## for  j = 1:primitives.grid.nr  P[j]      = P[j] + ev[i] * primitives.bsplinesL[i].bs[j]      end
-            ## for  j = 1:primitives.grid.nr  Pprime[j] = Pprime[j] + ev[i] * primitives.bsplinesL[i].bp[j] end
         end 
         for  i = 1:nsS   
             for  j = primitives.bsplinesS[i].lower:primitives.bsplinesS[i].upper  Q[j]      = Q[j] + ev[nsL+i] * primitives.bsplinesS[i].bs[j]      end
             for  j = primitives.bsplinesS[i].lower:primitives.bsplinesS[i].upper  Qprime[j] = Qprime[j] + ev[nsL+i] * primitives.bsplinesS[i].bp[j] end
-            ## for  j = 1:primitives.grid.nr     Q[j]      = Q[j] + ev[nsL+i] * primitives.bsplinesS[i].bs[j]      end
-            ## for  j = 1:primitives.grid.nr     Qprime[j] = Qprime[j] + ev[nsL+i] * primitives.bsplinesS[i].bp[j] end
         end 
         
-        ##x mtp = primitives.grid.nr - 40
         Px      = zeros(mtp);    Qx      = zeros(mtp);    Px[1:mtp]      = P[1:mtp];         Qx[1:mtp]      = Q[1:mtp]    
         Pprimex = zeros(mtp);    Qprimex = zeros(mtp);    Pprimex[1:mtp] = Pprime[1:mtp];    Qprimex[1:mtp] = Qprime[1:mtp]    
         
@@ -199,8 +206,6 @@ module Bsplines
         if  wSign < 0.   Px[1:mtp] = -Px[1:mtp];   Qx[1:mtp] = -Qx[1:mtp]   
                          Pprimex[1:mtp] = -Pprimex[1:mtp];   Qprimex[1:mtp] = -Qprimex[1:mtp]   end  ==#
         
-        ##x println("nr = $(primitives.grid.nr),  mtp = $mtp")                 
-      
         return( Orbital(sh, false, true, energy, Px, Qx, Pprimex, Qprimex, Radial.Grid()) )   
     end
 
@@ -324,10 +329,8 @@ module Bsplines
         for  i = 1:nsS    
             for  j = 1:nsS    
                 wa[nsL+i,nsL+j] = JAC.RadialIntegrals.Vlocal(primitives.bsplinesS[i], primitives.bsplinesS[j], pot, primitives.grid)
-                ##x if  i >= j  && abs(wa[nsL+i,nsL+j]) > 1.0e-5   println("i = $i, j = $j, wa = $(wa[nsL+i,nsL+j]) ")   end
             end
         end
-        ##x error("stop for test reasons")
         # (3) Substract the rest mass from the 'SS' block
         wa[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = wa[nsL+1:nsL+nsS,nsL+1:nsL+nsS] - 2 * Defaults.getDefaults("speed of light: c")^2 * wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS]
         # (4) Compute or fetch the diagonal 'D_kappa' blocks
@@ -368,37 +371,9 @@ module Bsplines
         # Set-up the local Hamiltonian matrix
         wa = setupLocalMatrix(sh.kappa, primitives, pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}})
         wa[1:end,1:end] = wa[1:end,1:end] - energy * wb[1:end,1:end]
-        ##x wa[1:nsL+nsS,1:nsL+nsS] = wa[1:nsL+nsS,1:nsL+nsS] - energy * wb[1:end,1:end]
 
         return( wa )
     end
-
-
-    #==  """
-    `Bsplines.generateOrbitalContinuum(subshell::Subshell, energy::Float64, potential::Radial.Potential, grid::Radial.Grid, mtp::Int64, 
-                                           basis::Basis)`  
-        ... generates a continuum orbital for given subshell, energy and potential (effective charge Z(r)) within a B-spline basis. 
-            This orbital is constructed by setting up and solving a linear system of equations and orthogonal to all (bound) 
-            orbitals in the given basis. For this, the one-particle Dirac equation is re-written as matrix equation in 
-            order to determine coefficients in a B-spline basis. A continuum orbital::Radial.Orbital is returned.
-    """
-    function generateOrbitalContinuum(subshell::Subshell, energy::Float64, potential::Radial.Potential, grid::Radial.Grid, mtp::Int64, basis::Basis)
-        println("Now prepare a continuum orbital for $sh ")
-        N = 19;   K = 0
-        waL = Bsplines.generatePrimitives(4, N, grid )
-        waS = Bsplines.generatePrimitives(5, N, grid )
-        whe = zeros(N-1, N-1);   wd = zeros(N-1)
-        # First set up the matrix and overlap for the bound orbitals of the same symmetry
-        for   sh in basis.subshells
-            if  sh.kappa == subshell.kappa 
-               K = K + 1
-               ## for  n = 1:N-1   whe[K, n] =  
-            end
-        end 
-
-        ## solution = LAPACK.gesv!(whe, wed)
-        return( nothing )
-    end  ==#
 
 
 
@@ -510,96 +485,119 @@ module Bsplines
 
 
     """
-    `Bsplines.solveSelfConsistentFieldOptimized(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis,
-                                                    settings::AsfSettings; printout::Bool=true)` 
-        ... solves the self-consistent field for an averaged-level scheme.  A basis::Basis is returned.
+    `Bsplines.solveSelfConsistentALField(primitives::Bsplines.Primitives, 
+                                         nuclearModel::Nuclear.Model, basis::Basis, settings::AsfSettings; printout::Bool=true)` 
+        ... solves the self-consistent average-level field.  A basis::Basis is returned.
     """
-    function solveSelfConsistentFieldOptimized(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
-                                               settings::AsfSettings; printout::Bool=true) 
-        # Provide the deepest, i.e. the most strongly-bound kappa-subshell in the given basis                                       
-        function  deepestSubshell(kappa, basis)
-            for  sh  in  basis.subshells
-                if sh.kappa == kappa        return(sh)  end
-            end
-            error("stop a")
-        end
+    function  solveSelfConsistentALField(primitives::Bsplines.Primitives, 
+                                         nuclearModel::Nuclear.Model, basis::Basis, settings::AsfSettings; printout::Bool=true) 
         #
         Defaults.setDefaults("standard grid", primitives.grid)
+        #
         # Define the storage for the calculations of matrices
-        if  printout    println(">>  for various B-spline matrices:")    end
+        if  printout    println(">>  Storage for various B-spline matrices:")    end
         storage  = Dict{Array{Any,1},Array{Float64,2}}()
-        
+        #
         # Set-up the overlap matrix; compute or fetch the diagonal 'overlap' blocks
-        grid = primitives.grid;   nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
-        wb = zeros( nsL+nsS, nsL+nsS )
+        grid = primitives.grid;   nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS;    wb = zeros( nsL+nsS, nsL+nsS )
         wb[1:nsL,1:nsL]                 = generateMatrix!(0, "LL-overlap", primitives, storage)
         wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = generateMatrix!(0, "SS-overlap", primitives, storage)
-        # Determine the symmetry block of this basis and define storage for the kappa blocks and orbitals from the last iteration
-        wNotYet = trues( length(basis.subshells) );   kappas = Int64[]
-        for  k = 1:length(basis.subshells)
-            sh = basis.subshells[k];   
-            if  wNotYet[k]   
-                push!(kappas, sh.kappa);    wNotYet[k] = false
-                for kx = 1:length(basis.subshells)   if wNotYet[kx]   &&   sh.kappa == basis.subshells[kx].kappa   wNotYet[kx] = false  end   end
-            end
-        end 
-        bsplineBlock = Dict{Int64,Basics.Eigen}();   previousOrbitals = deepcopy(basis.orbitals)
-        for  kappa  in  kappas           bsplineBlock[kappa]  = Basics.Eigen( zeros(2), [zeros(2), zeros(2)])   end
+        #
+        # Define storage for the orbitals and Bspline vectors from the last iteration
+        kappas       = Int64[];     for  sh in basis.subshells    if !(sh.kappa in kappas)  push!(kappas, sh.kappa)      end     end
+        bsplineBlock = Dict{Int64,Basics.Eigen}();    
+        for  kappa  in  kappas     bsplineBlock[kappa]  = Basics.Eigen( zeros(2), [zeros(2), zeros(2)])                  end
+        previousOrbitals  = deepcopy(basis.orbitals);    previousBvectors  = Dict{Subshell,Array{Float64,1}}()
+        ##x ppreviousOrbitals = deepcopy(basis.orbitals);    ppreviousBvectors = Dict{Subshell,Array{Float64,1}}()
+        ##x energy_1s        = abs(basis.orbitals[Subshell("1s_1/2")].energy)
+         #
         # Determine te nuclear potential once at the beginning
-        nuclearPotential  = Nuclear.nuclearPotential(nuclearModel, grid)
+        nuclearPotential = Nuclear.nuclearPotential(nuclearModel, grid)
+        exchange         = true
         
         # Start the SCF procedure for all symmetries
-        isNotSCF = true;   NoIteration = 0
-        while  isNotSCF
-            NoIteration = NoIteration + 1;   go_on = false 
-            if  NoIteration >  settings.maxIterationsScf
-                println("Maximum number of SCF iterations = $(settings.maxIterationsScf) is reached ... computations proceed.")
-                break
+        NoIteration = 0
+        while  true
+            NoIteration = NoIteration + 1;   stopNowIteration = true
+            if      NoIteration >  settings.maxIterationsScf
+                    println("Maximum number of SCF iterations = $(settings.maxIterationsScf) is reached ... computations proceed.")
+                    break
+            elseif  printout    println("\nIteration $NoIteration for symmetries ... ")
             end
-            if  printout    println("\nIteration $NoIteration for symmetries ... ")    end
             #
-            for kappa in kappas
-                # (1) Get all angular coefficients that refer to the given kappa-block
-                deepSubsh = deepestSubshell(kappa, basis)
-                wcoeffs = Basics.computeScfCoefficients(settings.methodScf, basis, deepSubsh)
-                # (2) Compute the direct and exchange matrices for the given kappa-block
-                wde = zeros( nsL+nsS, nsL+nsS )
-                for  coeff  in  wcoeffs[2]
-                    @show coeff
-                    wde = wde + coeff.V * JAC.InteractionStrength.matrixL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
-                                                                                            basis.orbitals[coeff.c], basis.orbitals[coeff.d], primitives)
-                end
-                error("xxx")
-                # (3) Set-up the diagonal part of the Hamiltonian matrix and add the direct and exchange-potential matrices
-                wa = Bsplines.setupLocalMatrix(kappa, primitives, nuclearPotential, storage)
+            for (ish, sh) in  enumerate(basis.subshells)
+                if      sh in settings.frozenSubshells   continue    end
+                # (1) Get all angular coefficients that refer to the given subshell
+                wcoeffs = Basics.computeScfCoefficients(settings.scField, basis, sh)
+                # (2) Compute the direct and exchange matrices for the given subshell
+                wde  = zeros( nsL+nsS, nsL+nsS )
+                #
+                # Add large,large contributions
+                Sfunc = JAC.InteractionStrength.XS_Coulomb(true, true, wcoeffs[2], previousOrbitals, primitives.grid, exchange=exchange)
+                for j = 1:nsL   for i = 1:nsL
+                    Bi = primitives.bsplinesL[i];    Bj = primitives.bsplinesL[j];    nl = max(Bi.lower, Bj.lower);    nu = min(Bi.upper, Bj.upper)
+                    wme = 0.;   for  r = nl:nu   wme = wme + Bi.bs[r] * Bj.bs[r] * Sfunc[r] * primitives.grid.wr[r]   end;    wde[i,j] = wme
+                end             end
+                # Add large,small contributions
+                Sfunc = JAC.InteractionStrength.XS_Coulomb(true, false, wcoeffs[2], previousOrbitals, primitives.grid, exchange=exchange)
+                for j = 1:nsS   for i = 1:nsL
+                    Bi = primitives.bsplinesL[i];    Bj = primitives.bsplinesS[j];    nl = max(Bi.lower, Bj.lower);    nu = min(Bi.upper, Bj.upper)
+                    wme = 0.;   for  r = nl:nu   wme = wme + Bi.bs[r] * Bj.bs[r] * Sfunc[r] * primitives.grid.wr[r]   end;    wde[i,nsL+j] = wme
+                end             end
+                # Add small,large contributions
+                Sfunc = JAC.InteractionStrength.XS_Coulomb(false, true, wcoeffs[2], previousOrbitals, primitives.grid, exchange=exchange)
+                for j = 1:nsL   for i = 1:nsS
+                    Bi = primitives.bsplinesS[i];    Bj = primitives.bsplinesL[j];    nl = max(Bi.lower, Bj.lower);    nu = min(Bi.upper, Bj.upper)
+                    wme = 0.;   for  r = nl:nu   wme = wme + Bi.bs[r] * Bj.bs[r] * Sfunc[r] * primitives.grid.wr[r]   end;    wde[nsL+i,j] = wme
+                end             end
+                # Add small,small contributions
+                Sfunc = JAC.InteractionStrength.XS_Coulomb(false, false, wcoeffs[2], previousOrbitals, primitives.grid, exchange=exchange)
+                for j = 1:nsS   for i = 1:nsS
+                    Bi = primitives.bsplinesS[i];    Bj = primitives.bsplinesS[j];    nl = max(Bi.lower, Bj.lower);    nu = min(Bi.upper, Bj.upper)
+                    wme = 0.;   for  r = nl:nu   wme = wme + Bi.bs[r] * Bj.bs[r] * Sfunc[r] * primitives.grid.wr[r]   end;    wde[nsL+i,nsL+j] = wme
+                end             end
+                #
+                # (3) Set-up the diagonal part of the Hamiltonian matrix as well as the direct and exchange-potential matrices
+                wa = Bsplines.setupLocalMatrix(sh.kappa, primitives, nuclearPotential, storage)
+                ##x wx = 1.0;    if  NoIteration  > 1  bev = previousBvectors[sh];   wx = transpose(bev) * wb * bev;   @show  sh, wx     end
                 wa = wa + wde
-                # (4) Solve the generalized eigenvalue problem
-                wc = Basics.diagonalize("generalized eigenvalues: Julia, eigfact", wa, wb)
-                # (5) Analyse and print information about the convergence of the symmetry blocks and the occupied orbitals
-                wcBlock = Basics.analyzeConvergence(bsplineBlock[kappa], wc)
-                if  wcBlock > 1.000 * settings.accuracyScf   go_on = true   end
-                for  sh in basis.subshells
-                    if      sh in settings.frozenSubshells   ## do nothing
-                    elseif  sh.kappa == kappa
-                        newOrbital = generateOrbitalFromPrimitives(sh, wc, primitives)
-                        wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
-                        if  wcOrbital > settings.accuracyScf   go_on = true   end
-                           sa = "  $sh::  en [a.u.] = " * @sprintf("%.7e", newOrbital.energy) * ";   self-cons'cy = "  
-                           sa = sa * @sprintf("%.4e", wcOrbital)   * "  ["
-                           sa = sa * @sprintf("%.4e", wcBlock)             * " for sym-block kappa = $kappa]"
-                           if  printout    println(sa)    end
-                        ## println("  $sh  en [a.u.] = $(newOrbital.energy)   self-consistency = $(wcOrbital), $(wcBlock) [kappa=$kappa] ") 
-                        previousOrbitals[sh] = newOrbital
+                # (4) Add modifications of the Hamiltonian matrix to ensure orthogonality of orbitals
+                if  NoIteration  > 1  
+                    wf = wa
+                    for  (iotherSh,  otherSh) in  enumerate(basis.subshells)
+                        if  sh.kappa != otherSh.kappa      continue    end
+                        if  iotherSh >  ish                continue    end
+                        bev = previousBvectors[otherSh];   wx  = sum(bev.*bev);  ##x @show wx
+                        bev = bev / sqrt(wx);              wx  = sum(bev.*bev);  ##x @show wx
+                        wf  = (Matrix{Float64}(I, nsL+nsS, nsL+nsS) - (wb * bev * transpose(bev))) * wf * 
+                              (Matrix{Float64}(I, nsL+nsS, nsL+nsS) - (bev * transpose(bev) * wb))
+                        ##x if  NoIteration  > 2  
+                        ##x     bev = ppreviousBvectors[otherSh];  wx  = sum(bev.*bev);  ##x @show wx
+                        ##x     bev = bev / sqrt(wx);              wx  = sum(bev.*bev);  ##x @show wx
+                        ##x     wf  = (Matrix{Float64}(I, nsL+nsS, nsL+nsS) - (wb * bev * transpose(bev))) * wf * 
+                        ##x           (Matrix{Float64}(I, nsL+nsS, nsL+nsS) - (bev * transpose(bev) * wb))
+                        ##x end
                     end
+                    wa = wf
                 end
-                # (6) Re-define the bsplineBlock
-                bsplineBlock[kappa] = wc
+                # (5) Solve the generalized eigenvalue problem
+                wc = Basics.diagonalize("generalized eigenvalues: Julia, eigfact", wa, wb)
+                # (6) Analyse and print information about the convergence of the generated orbitals
+                newOrbital = generateOrbitalFromPrimitives(sh, wc, primitives)
+                ##x wx = abs(newOrbital.energy) / energy_1s / (sh.n^2);  @show sh, wx 
+                ##x if  NoIteration  > 2  newOrbital = Basics.generateOrbitalSuperposition(previousOrbitals[sh], newOrbital, 0.2, primitives.grid)   end
+                wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
+                if  wcOrbital > settings.accuracyScf   stopNowIteration = false   end
+                sa = "  $sh::  en [a.u.] = " * @sprintf("%.7e", newOrbital.energy) * ";   self-cons'cy = " * @sprintf("%.4e", wcOrbital) 
+                if  printout    println(sa)    end
+                # (7) Re-define the bsplineBlock as well as the previous orbitals and Bspline vectors
+                bsplineBlock[sh.kappa] = wc;    
+                ##x if NoIteration  > 1   ppreviousOrbitals[sh]  = deepcopy(previousOrbitals[sh]);   ppreviousBvectors[sh]  = deepcopy(previousBvectors[sh])    end
+                previousOrbitals[sh]   = newOrbital;    
+                previousBvectors[sh]   = extractBsplineVector(sh, bsplineBlock[sh.kappa], primitives.grid)
             end
-            if  go_on   nothing   else   break   end
+            if  stopNowIteration   break   end
         end
-        #
-        #
-        #
 
         newBasis = Basis(true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, previousOrbitals)
         return( newBasis )
@@ -608,12 +606,12 @@ module Bsplines
 
 
     """
-    `Bsplines.solveSelfConsistentFieldMean(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
-                                               settings::AsfSettings; printout::Bool=true)` 
+    `Bsplines.solveSelfConsistentMeanField(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
+                                           settings::AsfSettings; printout::Bool=true)` 
         ... solves the self-consistent field for a given local mean-field potential as specified by the settings::AsfSettings. 
             A basis::Basis is returned.
     """
-    function solveSelfConsistentFieldMean(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
+    function solveSelfConsistentMeanField(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, basis::Basis, 
                                           settings::AsfSettings; printout::Bool=true) 
         Defaults.setDefaults("standard grid", primitives.grid; printout=printout)
         # Define the storage for the calculations of matrices
@@ -658,16 +656,8 @@ module Bsplines
                 for i = 1:NoCsf   wmc[i] = wmc[i] / sqrt(wN)   end
                 wLevel = Level( AngularJ64(0), AngularM64(0), Basics.plus, 0, -1., 0., true, wBasis, wmc)
                 # (2) Re-compute the local potential
-                ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
-                ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
-                ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
-                ## wp4 = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
-                ##x println("\n Compare potentials \n   core-Hartree    Hartree-Slater    Kohn-Sham    Dirac-Fock-Slater")
-                ##x for  mx = 1:10:length(wp1.V)
-                ##x     @printf("%.8e  %.8e  %.8e  %.8e  \n", wp1.V[mx], wp2.V[mx], wp3.V[mx],wp4.V[mx])
-                ##x end
-                if       settings.methodScf == Basics.HSField()     wp = compute("radial potential: Hartree-Slater",    grid, wLevel)
-                elseif   settings.methodScf == Basics.DFSField()    wp = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
+                if       settings.scField == Basics.HSField()     wp = compute("radial potential: Hartree-Slater",    grid, wLevel)
+                elseif   settings.scField == Basics.DFSField()    wp = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
                 else     error("stop potential")
                 end
                 pot = Basics.add(nuclearPotential, wp)

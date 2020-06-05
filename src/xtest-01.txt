@@ -1,0 +1,152 @@
+
+  1s^2  (Z=18, point)
+  ====
+  1s_1/2::  en [a.u.] = -1.4529529e+02;   self-cons'cy = 3.8617e-08  [9.8651e-08 for sym-block kappa = -1]    HS-Field
+  1s_1/2::  en [a.u.] = -1.4683268e+02;   self-cons'cy = 2.0744e-08  [2.1573e-07 for sym-block kappa = -1]    DFS-field
+  1s_1/2::  en [a.u.] = -1.4594752e+02;   self-cons'cy = 1.0249e-09  [5.4103e-08 for sym-block kappa = -1]    AL, no exchange
+  1s_1/2::  en [a.u.] = -1.4590273e+02;   self-cons'cy = 1.1899e-09  [5.6946e-08 for sym-block kappa = -1]    AL, exchange, orthogonality
+ 
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     1    0 +     -3.141826727132088e+02    -8.549345987994444e+03    -8.549345987994444e+03                  HS-Field
+     1    0 +     -3.141950931406591e+02    -8.549683965040329e+03    -8.549683965040329e+03                  DFS-field
+     1    0 +     -3.141981433563045e+02    -8.549766965635699e+03    -8.549766965635699e+03                  AL, no exchange
+     1    0 +     -3.141981754807217e+02    -8.549767839785616e+03    -8.549767839785616e+03                  AL, exchange
+     1    0 +     -3.141981674616292e+02    -8.549767621574996e+03    -8.549767621574996e+03                  AL, exchange, orthogonality
+
+     
+  1s^2 2s^2  (Z=18, point)
+  =========
+  1s_1/2::  en [a.u.] = -1.3853316e+02;   self-cons'cy = 2.0060e-08  [1.7102e-07 for sym-block kappa = -1]    HS-Field
+  2s_1/2::  en [a.u.] = -2.9788048e+01;   self-cons'cy = 2.2992e-08  [1.7102e-07 for sym-block kappa = -1]
+  
+  1s_1/2::  en [a.u.] = -1.4007654e+02;   self-cons'cy = 2.5681e-07  [7.8941e-07 for sym-block kappa = -1]    DFS-field
+  2s_1/2::  en [a.u.] = -3.0218022e+01;   self-cons'cy = 2.8829e-07  [7.8941e-07 for sym-block kappa = -1]
+  
+  1s_1/2::  en [a.u.] = -1.3914491e+02;   self-cons'cy = 1.0028e-07  [4.0435e-07 for sym-block kappa = -1]    AL, no exchange, orthogonality
+  2s_1/2::  en [a.u.] = -2.7454191e+01;   self-cons'cy = 2.6350e-07  [4.0435e-07 for sym-block kappa = -1]
+
+  1s_1/2::  en [a.u.] = -1.4076788e+02;   self-cons'cy = 1.5560e-07  [7.5215e-07 for sym-block kappa = -1]    AL, exchange, orthogonality
+  2s_1/2::  en [a.u.] = -2.8573273e+01;   self-cons'cy = 6.4771e-07  [7.5215e-07 for sym-block kappa = -1] 
+
+  1s_1/2::  en [a.u.] = -1.4082576e+02;   self-cons'cy = 9.5992e-08  [                                        new AL, exchange, orthogonality
+  2s_1/2::  en [a.u.] = -2.8110193e+01;   self-cons'cy = 4.7447e-07  [
+
+  1s_1/2::  en [a.u.] = -1.4078214e+02;   self-cons'cy = 9.5865e-08  [                                        new AL, exchange, orthogonality, single Lagrange
+  2s_1/2::  en [a.u.] = -2.8108464e+01;   self-cons'cy = 4.7236e-07  [
+
+
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     1    0 +     -3.791754451382737e+02    -1.031788940696290e+04    -1.031788940696290e+04                  HS-field 
+     1    0 +     -3.791907790701610e+02    -1.031830666450269e+04    -1.031830666450269e+04                  DFS-field
+     1    0 +     -3.791629159559794e+02    -1.031754847054697e+04    -1.031754847054697e+04                  AL, no exchange, orthogonality
+     1    0 +     -3.791355768264233e+02    -1.031680453493917e+04    -1.031680453493917e+04                  AL, exchange, orthogonality
+     1    0 +     -3.791931208103529e+02    -1.031837038649901e+04    -1.031837038649901e+04                  new AL, exchange, orthogonality
+     1    0 +     -3.791925061727354e+02    -1.031835366135753e+04    -1.031835366135753e+04                  new AL, exchange, orthogonality, single Lagrange
+     
+  1s^2 2s^2 2p^6  (Z=18, point)
+  ==============
+  1s_1/2::  en [a.u.] = -1.1920786e+02;   self-cons'cy = 2.3434e-09  [1.7096e-07 for sym-block kappa = -1]    HS-field 
+  2s_1/2::  en [a.u.] = -1.6344997e+01;   self-cons'cy = 5.9496e-09  [1.7096e-07 for sym-block kappa = -1]
+  2p_1/2::  en [a.u.] = -1.4006377e+01;   self-cons'cy = 9.7018e-09  [9.0780e-08 for sym-block kappa = 1]
+  2p_3/2::  en [a.u.] = -1.3924321e+01;   self-cons'cy = 5.9024e-09  [9.7012e-07 for sym-block kappa = -2]
+
+  1s_1/2::  en [a.u.] = -1.2060850e+02;   self-cons'cy = 1.2899e-08  [3.7928e-08 for sym-block kappa = -1]    DFS-field
+  2s_1/2::  en [a.u.] = -1.6806525e+01;   self-cons'cy = 2.8725e-08  [3.7928e-08 for sym-block kappa = -1]
+  2p_1/2::  en [a.u.] = -1.4479216e+01;   self-cons'cy = 3.1213e-09  [2.5145e-08 for sym-block kappa = 1]
+  2p_3/2::  en [a.u.] = -1.4394491e+01;   self-cons'cy = 1.8565e-08  [1.1508e-07 for sym-block kappa = -2]
+
+  1s_1/2::  en [a.u.] = -1.2043371e+02;   self-cons'cy = 1.9840e-07  [7.6735e-07 for sym-block kappa = -1]    AL, no exchange, orthogonality
+  2s_1/2::  en [a.u.] = -1.4919963e+01;   self-cons'cy = 2.8766e-07  [7.6735e-07 for sym-block kappa = -1]
+  2p_1/2::  en [a.u.] = -1.2048664e+01;   self-cons'cy = 6.5634e-09  [2.9536e-07 for sym-block kappa = 1]
+  2p_3/2::  en [a.u.] = -1.2149503e+01;   self-cons'cy = 1.4437e-07  [1.4437e-07 for sym-block kappa = -2]
+  
+  1s_1/2::  en [a.u.] = -1.2221513e+02;   self-cons'cy = 9.9836e-08  [5.5804e-07 for sym-block kappa = -1]    AL, exchange, orthogonality
+  2s_1/2::  en [a.u.] = -1.6480335e+01;   self-cons'cy = 1.8395e-07  [5.5804e-07 for sym-block kappa = -1]
+  2p_1/2::  en [a.u.] = -1.2541254e+01;   self-cons'cy = 1.2375e-07  [2.4641e-07 for sym-block kappa = 1]
+  2p_3/2::  en [a.u.] = -1.2538204e+01;   self-cons'cy = 4.3356e-08  [1.3755e-07 for sym-block kappa = -2]
+
+  1s_1/2::  en [a.u.] = -1.2226737e+02;   self-cons'cy = 2.1049e-07  [                                        new AL, exchange, orthogonality
+  2s_1/2::  en [a.u.] = -1.6059314e+01;   self-cons'cy = 5.2374e-07  [
+  2p_1/2::  en [a.u.] = -1.2573562e+01;   self-cons'cy = 5.1149e-07  [
+  2p_3/2::  en [a.u.] = -1.2570392e+01;   self-cons'cy = 3.4047e-08  [   
+
+  1s_1/2::  en [a.u.] = -1.2222606e+02;   self-cons'cy = 2.1066e-07  [                                        new AL, exchange, orthogonality, single Lagrange
+  2s_1/2::  en [a.u.] = -1.6058905e+01;   self-cons'cy = 5.2702e-07  [
+  2p_1/2::  en [a.u.] = -1.2573632e+01;   self-cons'cy = 5.1610e-07  [
+  2p_3/2::  en [a.u.] = -1.2566634e+01;   self-cons'cy = 3.2445e-08  [
+  
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     1    0 +     -5.077329671624658e+02    -1.381611776453784e+04    -1.381611776453784e+04                  HS-field 
+     1    0 +     -5.077757866986790e+02    -1.381728294346694e+04    -1.381728294346694e+04                  DFS-field
+     1    0 +     -5.077420616346315e+02    -1.381636523773059e+04    -1.381636523773059e+04                  AL, no exchange, orthogonality
+     1    0 +     -5.077302993408057e+02    -1.381604516941282e+04    -1.381604516941282e+04  
+     1    0 +     -5.077338514643375e+02    -1.381614182761743e+04    -1.381614182761743e+04                  AL, exchange, orthogonality
+     1    0 +     -5.077794754944939e+02    -1.381738332071380e+04    -1.381738332071380e+04                  new AL, exchange, orthogonality
+     1    0 +     -5.077793487215673e+02    -1.381737987104676e+04    -1.381737987104676e+04                  new AL, exchange, orthogonality, single Lagrange
+     1    0 +     -5.077787479636925e+02    -1.381736352359232e+04    -1.381736352359232e+04
+
+  1s^2 2p^6  (Z=18, point)
+  =========
+  1s_1/2::  en [a.u.] = -1.2445956e+02;   self-cons'cy = 3.6311e-08  [3.0680e-07 for sym-block kappa = -1]    HS-field 
+  2p_1/2::  en [a.u.] = -1.8153196e+01;   self-cons'cy = 9.3225e-08  [1.6053e-07 for sym-block kappa = 1]
+  2p_3/2::  en [a.u.] = -1.8062426e+01;   self-cons'cy = 2.6306e-08  [3.2628e-07 for sym-block kappa = -2]
+ 
+  1s_1/2::  en [a.u.] = -1.2590032e+02;   self-cons'cy = 2.2364e-08  [4.7872e-07 for sym-block kappa = -1]    DFS-field
+  2p_1/2::  en [a.u.] = -1.8638750e+01;   self-cons'cy = 5.6056e-08  [1.0637e-07 for sym-block kappa = 1]
+  2p_3/2::  en [a.u.] = -1.8545068e+01;   self-cons'cy = 1.6911e-08  [2.6848e-07 for sym-block kappa = -2]
+
+  1s_1/2::  en [a.u.] = -1.2565927e+02;   self-cons'cy = 5.0486e-09  [1.3814e-07 for sym-block kappa = -1]    AL, no exchange, orthogonality
+  2p_1/2::  en [a.u.] = -1.5777363e+01;   self-cons'cy = 2.7969e-08  [4.2555e-08 for sym-block kappa = 1]
+  2p_3/2::  en [a.u.] = -1.5880625e+01;   self-cons'cy = 1.3170e-09  [5.5164e-07 for sym-block kappa = -2]
+
+  1s_1/2::  en [a.u.] = -1.2606342e+02;   self-cons'cy = 6.7127e-10  [1.0681e-07 for sym-block kappa = -1]    AL, exchange, orthogonality
+  2p_1/2::  en [a.u.] = -1.6138724e+01;   self-cons'cy = 6.8435e-09  [8.3226e-09 for sym-block kappa = 1]
+  2p_3/2::  en [a.u.] = -1.6130167e+01;   self-cons'cy = 6.5577e-10  [3.6884e-07 for sym-block kappa = -2]
+
+  1s_1/2::  en [a.u.] = -1.2606341e+02;   self-cons'cy = 1.5820e-07  [                                        new AL, exchange, orthogonality
+  2p_1/2::  en [a.u.] = -1.6138729e+01;   self-cons'cy = 5.7098e-07  [
+  2p_3/2::  en [a.u.] = -1.6130168e+01;   self-cons'cy = 1.7101e-07  [
+
+  
+  Eigenenergies:
+
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     1    0 +     -4.690281821037071e+02    -1.276290691748283e+04    -1.276290691748283e+04                  HS-field 
+     1    0 +     -4.690533429126370e+02    -1.276359157796720e+04    -1.276359157796720e+04                  DFS-field
+     1    0 +     -4.690240093044596e+02    -1.276279336983172e+04    -1.276279336983172e+04                  AL, no exchange, orthogonality
+     1    0 +     -4.690478722527234e+02    -1.276344271372850e+04    -1.276344271372850e+04                  AL, exchange, orthogonality
+     1    0 +     -4.690478721573971e+02    -1.276344271113454e+04    -1.276344271113454e+04                  new AL, exchange, orthogonality
+     
+  1s^2 2s^2 2p^6 3s^2 3p^6  (Z=20, Fermi)
+  ========================
+
+  1s_1/2::  en [a.u.] = -1.4370922e+02;   self-cons'cy = 7.6718e-09  [2.9845e-07 for sym-block kappa = -1]   HS-field 
+  2s_1/2::  en [a.u.] = -1.5251199e+01;   self-cons'cy = 4.6763e-08  [2.9845e-07 for sym-block kappa = -1]
+  3s_1/2::  en [a.u.] = -2.0751459e+00;   self-cons'cy = 1.3257e-07  [2.9845e-07 for sym-block kappa = -1]
+  2p_1/2::  en [a.u.] = -1.2437240e+01;   self-cons'cy = 1.9499e-08  [6.2825e-08 for sym-block kappa = 1]
+  3p_1/2::  en [a.u.] = -1.4016732e+00;   self-cons'cy = 6.2825e-08  [6.2825e-08 for sym-block kappa = 1]
+  2p_3/2::  en [a.u.] = -1.2305895e+01;   self-cons'cy = 9.8893e-09  [3.8175e-08 for sym-block kappa = -2]
+  3p_3/2::  en [a.u.] = -1.3879266e+00;   self-cons'cy = 2.7066e-08  [3.8175e-08 for sym-block kappa = -2]
+  
+  1s_1/2::  en [a.u.] = -1.4517009e+02;   self-cons'cy = 1.0266e-08  [5.0269e-07 for sym-block kappa = -1]   DFS-field
+  2s_1/2::  en [a.u.] = -1.5668826e+01;   self-cons'cy = 6.0754e-08  [5.0269e-07 for sym-block kappa = -1]
+  3s_1/2::  en [a.u.] = -2.2176767e+00;   self-cons'cy = 1.6531e-07  [5.0269e-07 for sym-block kappa = -1]
+  2p_1/2::  en [a.u.] = -1.2871579e+01;   self-cons'cy = 5.0099e-08  [1.6269e-07 for sym-block kappa = 1]
+  3p_1/2::  en [a.u.] = -1.5326460e+00;   self-cons'cy = 1.4446e-07  [1.6269e-07 for sym-block kappa = 1]
+  2p_3/2::  en [a.u.] = -1.2736569e+01;   self-cons'cy = 1.1725e-08  [8.2918e-08 for sym-block kappa = -2]
+  3p_3/2::  en [a.u.] = -1.5182041e+00;   self-cons'cy = 3.5825e-08  [8.2918e-08 for sym-block kappa = -2]
+  
+  Eigenenergies:
+
+  Level  J Parity          Hartrees                    eV                   [eV]
+
+     1    0 +     -6.790067751268684e+02    -1.847671546817255e+04    -1.847671546817255e+04                  HS-field 
+     1    0 +     -6.790653548538571e+02    -1.847830950373659e+04    -1.847830950373659e+04                  DFS-field
+     
+     
+     1    0 +     -6.775218420993627e+02    -1.843630838234725e+04    -1.843630838234725e+04                  AL, no exchange, orthogonality
+     1    0 +     -6.786103867403272e+02    -1.846592919077253e+04    -1.846592919077253e+04                  AL, exchange, orthogonality

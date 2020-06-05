@@ -25,17 +25,7 @@ module BascisPerform
 
         # Distinguish between the computation of level energies and properties and the simulation of atomic processes
         if   length(computation.configs) != 0
-            ##x if  computation.asfSettings.breitCI
-            ##x     @warn("perform: Test the Breit interaction; asfSettings = $(computation.asfSettings) ")
-            ##x     wx = ManyElectron.Multiplet("from Ratip2012", "../test/testBreit/FeX-small-csl.inp",
-            ##x                                     "../test/testBreit/FeX-small-scf.out","../test/testBreit/FeX-small-relci.mix-coulomb")  
-            ##x     basis     = wx.levels[1].basis
-            ##x     multiplet = perform("computation: CI", basis, nModel, computation.grid, computation.asfSettings)
-            ##x     error("stop after Breit test")
-            ##x end =#
             basis     = Basics.performSCF(computation.configs, nModel, computation.grid, computation.asfSettings)
-            ##x basis     = perform("computation: SCF", computation.configs, nModel, computation.grid, computation.asfSettings)
-            ##x multiplet = perform("computation: CI", basis, nModel, computation.grid, computation.asfSettings)
             multiplet = Basics.performCI( basis, nModel, computation.grid, computation.asfSettings)
             LSjj.expandLevelsIntoLS(multiplet, computation.asfSettings.jjLS)
             #
@@ -76,10 +66,6 @@ module BascisPerform
                                                         multiplet, nModel, computation.grid, computation.yieldSettings)     
                 if output    results = Base.merge( results, Dict("Fluorescence and AutoIonization yield outcomes:" => outcome) )   end
             end
-            ##x if  JAC.Green          in computation.properties   
-            ##x    outcome = JAC.GreenFunction.computeRepresentation(computation.configs, multiplet, nModel, computation.grid, computation.greenSettings)         
-            ##x    if output    results = Base.merge( results, Dict("Green function outcomes:" => outcome) )         end
-            ##x end
             if  Polarizibility()   in computation.properties   
                 outcome = JAC.MultipolePolarizibility.computeOutcomes(multiplet, nModel, computation.grid, computation.polaritySettings)         
                 if output    results = Base.merge( results, Dict("Polarizibility outcomes:" => outcome) )         end
@@ -93,14 +79,10 @@ module BascisPerform
         elseif  computation.process in [AugerInPlasma(), PhotoInPlasma()]
             pSettings        = computation.processSettings
             plasmaSettings   = PlasmaShift.Settings(pSettings.plasmaModel, pSettings.lambdaDebye, pSettings.ionSphereR0, pSettings.NoBoundElectrons)
-            ##x initialBasis     = perform("computation: SCF", computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
             initialBasis     = Basics.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
-            initialMultiplet = perform("computation: CI for plasma",  initialBasis, nModel, computation.grid, computation.initialAsfSettings,
-                                                                    plasmaSettings)
-            ##x finalBasis       = perform("computation: SCF", computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
+            initialMultiplet = perform("computation: CI for plasma",  initialBasis, nModel, computation.grid, computation.initialAsfSettings, plasmaSettings)
             finalBasis       = Basics.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
-            finalMultiplet   = perform("computation: CI for plasma",  finalBasis, nModel, computation.grid, computation.finalAsfSettings,
-                                                                    plasmaSettings)
+            finalMultiplet   = perform("computation: CI for plasma",  finalBasis, nModel, computation.grid, computation.finalAsfSettings, plasmaSettings)
             #
             if      computation.process == AugerInPlasma()   
                 outcome = JAC.AutoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
@@ -114,42 +96,19 @@ module BascisPerform
             
         else
             initialBasis     = Basics.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
-            ##x initialBasis     = perform("computation: SCF", computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
-            ##x initialMultiplet = perform("computation: CI",  initialBasis, nModel, computation.grid, computation.initialAsfSettings)
             initialMultiplet = Basics.performCI( initialBasis, nModel, computation.grid, computation.initialAsfSettings)
             finalBasis       = Basics.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
-            ##x finalBasis       = perform("computation: SCF", computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
-            ##x finalMultiplet   = perform("computation: CI",  finalBasis, nModel, computation.grid, computation.finalAsfSettings)
             finalMultiplet   = Basics.performCI(   finalBasis, nModel, computation.grid, computation.finalAsfSettings)
             #
             if computation.process in [PhotoExcFluor(), PhotoExcAuto(), PhotoIonFluor(), PhotoIonAuto(), ImpactExcAuto(), Dierec()]
                 intermediateBasis     = Basics.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
-                ##x intermediateBasis     = perform("computation: SCF", computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
-                ##x intermediateMultiplet = perform("computation: CI",  intermediateBasis, nModel, computation.grid, 
-                ##x                                                     computation.intermediateAsfSettings)
                 intermediateMultiplet = Basics.performCI( intermediateBasis, nModel, computation.grid, computation.intermediateAsfSettings)
             end
             #
             if      computation.process == Auger()   
-                ##x println(" ")
-                ##x for  i = 1:3   println("  perform-WARNING: Code modified to read in multiplets from Grasp computations and for testing integrals " *
-                ##x                        "and Auger amplitudes !!") 
-                ##x end
-                ##x initialMultiplet = JAC.ManyElectron.Multiplet("from Grasp2013", "TestAuger/belike-resonance-a-csl.inp",
-                ##x                                               "TestAuger/belike-resonance-a-scf.out","TestAuger/belike-resonance-a-relci.mix")  
-                ##x finalMultiplet   = JAC.ManyElectron.Multiplet("from Grasp2013", "TestAuger/belike-ground-a-csl.inp",
-                ##x                                               "TestAuger/belike-ground-a-scf.out","TestAuger/belike-ground-a-relci.mix") 
                 outcome = AutoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("AutoIonization lines:" => outcome) )                  end
             elseif  computation.process == Radiative() 
-                ##x println(" ")
-                ##x for  i = 1:3   println("  perform-WARNING: Code modified to read in multiplets from Grasp computations and for testing integrals " *
-                ##x                        "and radiative amplitudes !!") 
-                ##x end
-                ##x finalMultiplet   = JAC.ManyElectron.Multiplet("from Grasp2013", "TestRaditive/helike-resonance-a-csl.inp",
-                ##x                                               "TestRaditive/helike-resonance-a-scf.out","TestRaditive/helike-resonance-a-relci.mix")  
-                ##x initialMultiplet = JAC.ManyElectron.Multiplet("from Grasp2013", "TestRaditive/helike-resonance-a-csl.inp",
-                ##x                                               "TestRaditive/helike-resonance-a-scf.out","TestRaditive/helike-resonance-a-relci.mix") 
                 outcome = PhotoEmission.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("radiative lines:" => outcome) )              end
             elseif  computation.process == Photo()   
@@ -262,23 +221,6 @@ module BascisPerform
 
 
 
-    #============================================================================
-    """
-    `Basics.perform("computation: SCF", configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
-                                        printout::Bool=true)`  
-        ... to generate an atomic basis and to compute the self-consistent field (SCF) for this basis due to the given settings; 
-            a basis::Basis is returned.  
-    """
-    function Basics.perform(sa::String, configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
-                    printout::Bool=true)
-        !(sa == "computation: SCF")   &&   error("Unsupported keystring = $sa")
-        return( Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
-                                  printout=printout) )
-    end
-    ============================================================================#
-
-
-
     """
     `Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", configs::Array{Configuration,1}, 
                     initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)` 
@@ -291,18 +233,6 @@ module BascisPerform
         return( Basics.performCI(configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
                                  grid::Radial.Grid, settings::AsfSettings; printout=printout) )
     end
-
-    #============================================================================
-    """
-    `Basics.perform("computation: CI", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)`  
-        ... to  set-up and diagonalize from the (SCF) basis the configuration-interaction matrix and to derive and display the 
-            level structure of the corresponding multiplet due to the given settings; a multiplet::Multiplet is returned.   
-    """
-    function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
-        !(sa == "computation: CI")   &&   error("Unsupported keystring = $sa")
-        return( Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout=printout) )
-    end
-    ============================================================================#
 
 
     """
@@ -359,24 +289,22 @@ module BascisPerform
             if   is_filled    push!( coreSubshellList, subshellList[k])    end
         end
             
-        ##x waL = JAC.Bsplines.generatePrimitives(7, 7, grid);    nsL = length(waL.bsplines) - 3
-        ##x waS = JAC.Bsplines.generatePrimitives(8, 7, grid);    nsS = length(waS.bsplines) - 3 
         wa = Bsplines.generatePrimitives(grid)
 
         # Generate start orbitals
-        if  settings.startScf == "hydrogenic"
+        if  typeof(settings.startScfFrom) == StartFromHydrogenic
             println("Start SCF process with hydrogenic orbitals.")
             # Generate start orbitals for the SCF field by using B-splines
             ##x orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(waL, nsL, waS, nsS, nuclearModel, subshellList)
             orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(wa, nuclearModel, subshellList; printout=printout)
-        elseif  settings.startScf == "fromOrbitals"
+        elseif  typeof(settings.startScfFrom) == StartFromPrevious
             println("Start SCF process from given list of orbitals.")
             # Taking starting orbitals for the given dictionary; non-relativistic orbitals with a proper nuclear charge
             # are adapted if no orbital is found
             orbitals = Dict{Subshell, Orbital}()
             for  subsh in subshellList
-                if  haskey(settings.startOrbitals, subsh)  
-                    orb = settings.startOrbitals[subsh]
+                if  haskey(settings.startScfFrom.orbitals, subsh)  
+                    orb = settings.startScfFrom.orbitals[subsh]
                     orbitals = Base.merge( orbitals, Dict( subsh => orb) )
                 else
                     println("Start orbitals do not contain an Orbital for subshell $subsh ")
@@ -389,16 +317,14 @@ module BascisPerform
 
         # Perform the SCF computations for the orbitals due to the given settings
         basis    = Basis(true, NoElectrons, subshellList, csfList, coreSubshellList, orbitals)
-        if   settings.methodScf in [Basics.DFSField(), Basics.HSField()]
-            ##x newBasis = JAC.Bsplines.solveSelfConsistentFieldMean(waL, nsL, waS, nsS, nuclearModel, basis, settings) 
-            ##x newBasis = JAC.Bsplines.solveSelfConsistentFieldMean(wa, nuclearModel, basis, settings; printout=printout) 
-            basis = JAC.Bsplines.solveSelfConsistentFieldMean(wa, nuclearModel, basis, settings; printout=printout) 
-        elseif   settings.methodScf in [Basics.NuclearField()]  && settings.startScf == "hydrogenic" 
+        if   settings.scField in [Basics.DFSField(), Basics.HSField()]
+            basis = JAC.Bsplines.solveSelfConsistentMeanField(wa, nuclearModel, basis, settings; printout=printout) 
+        elseif   settings.scField in [Basics.NuclearField()]  && settings.startScfFrom == StartFromHydrogenic() 
             # Return the basis as already generated.
-        elseif   settings.methodScf in [Basics.ALField(), Basics.OLField()] 
-            ##x newBasis = JAC.Bsplines.solveSelfConsistentFieldOptimized(waL, nsL, waS, nsS, nuclearModel, basis, settings)
-            ##x newBasis = JAC.Bsplines.solveSelfConsistentFieldOptimized(wa, nuclearModel, basis, settings; printout=printout)
-            basis = JAC.Bsplines.solveSelfConsistentFieldOptimized(wa, nuclearModel, basis, settings; printout=printout)
+        elseif   settings.scField in [Basics.ALField()] 
+            basis = JAC.Bsplines.solveSelfConsistentALField(wa, nuclearModel, basis, settings; printout=printout)
+        elseif   typeof(settings.scField) == Basics.EOLField 
+            basis = JAC.Bsplines.solveSelfConsistentEOLField(wa, nuclearModel, basis, settings; printout=printout)
         else  error("stop b")
         end
         
@@ -427,12 +353,12 @@ module BascisPerform
         
         wa = Bsplines.generatePrimitives(grid)
         # Specify the AsfSettings for the given RAS step
-        asfSettings = AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), settings.levelsScf,    
+        asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    
                                   settings.maxIterationsScf, settings.accuracyScf, Subshell[], frozenSubshells, 
-                                  false, false, NoneQed(), "methodCI", LSjjSettings(false), 
+                                  CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), 
                                   settings.selectLevelsCI, settings.selectedLevelsCI, false, LevelSymmetry[] ) 
 
-        basis = JAC.Bsplines.solveSelfConsistentFieldMean(wa, nuclearModel, basis, asfSettings; printout=printout) 
+        basis = JAC.Bsplines.solveSelfConsistentMeanField(wa, nuclearModel, basis, asfSettings; printout=printout) 
         
         return( basis )  
     end

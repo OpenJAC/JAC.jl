@@ -6,7 +6,7 @@ setDefaults("method: continuum, Galerkin")           ## setDefaults("method: con
 setDefaults("method: normalization, pure Coulomb")   ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
 if  false
-    augerSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(1,0)], 0., 1.0e6, 2, "Coulomb")
+    augerSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(1,0)], 0., 1.0e6, 2, CoulombInteraction())
     grid          = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 1.3e-2, NoPoints = 800)
     
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.), 
@@ -17,7 +17,7 @@ if  false
     wb = perform(wa)
     
 else
-    augerSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(2,0), (4,0)], 0., 1.0e6, 4, "Coulomb")
+    augerSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(2,0), (4,0)], 0., 1.0e6, 4, CoulombInteraction())
     grid          = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 1.1e-2, NoPoints = 1100)
     
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(18.), 

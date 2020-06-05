@@ -327,6 +327,40 @@ module ManyElectron
         return( true )
     end
 
+    
+    """
+    `abstract type ManyElectron.AbstractStartOrbitals` 
+        ... defines an abstract and a number of singleton types to determine the orbitals from which the SCF computations start.
+
+        + struct StartFromHydrogenic   ... to start the SCF procedure from hydrogenic orbitals.        
+        + struct StartFromPrevious     ... to start the SCF procedure from previously calculated orbitals.        
+    """
+    abstract type  AbstractStartOrbitals                          end
+    struct     StartFromHydrogenic    <:  AbstractStartOrbitals   end
+    
+    export  AbstractStartOrbitals, StartFromHydrogenic, StartFromPrevious
+
+
+    """
+    `struct  ManyElectron.StartFromPrevious  <: ManyElectron.AbstractStartOrbitals`   ... to start from a set of previously calculated orbitals.
+
+        + orbitals      ::Dict{Subshell, Orbital}  ... set of previously-calculated orbitals. 
+    """
+    struct   StartFromPrevious  <: ManyElectron.AbstractStartOrbitals
+        orbitals        ::Dict{Subshell, Orbital}
+    end
+
+
+    function Base.string(from::ManyElectron.StartFromPrevious)
+        sa = " "
+        for  (sh,v) in from.orbitals  sa = sa * "  " * string(sh)   end
+        return( sa )
+    end
+
+    function Base.show(io::IO, from::ManyElectron.StartFromPrevious)
+        sa = "Start from previously-calculated orbitals for shells:\n" * string(from);       print(io, sa, "\n")
+    end
+
 
     """
     `struct  ManyElectron.LSjjSettings`  ... defines a type for the details and parameters for performing jj-LS expansions.
@@ -369,45 +403,38 @@ module ManyElectron
         ... a struct for defining the settings for the atomic state functions, i.e. the self-consistent-field (SCF) 
             and CI computations
 
-        + generateScf          ::Bool               ... True, if a SCF need to be generated, and false otherwise (frozen orbitals).
-        + breitScf             ::Bool               ... True, if Breit interaction is to be included into the SCF computations.
-        + methodScf            ::AbstractScField    ... Specify the SCF method, for instance, Basics.ALField(), etc.
-        + startScf             ::String             ... Specify how the start orbitals are obtained ["hydrogenic", "fromOrbitals"].
-        + startOrbitals        ::Dict{Subshell, Orbital}  ... List of start orbitals; hydrogenic orbitals are used 
-                                                              if not found in this list.
-        + levelsScf            ::Array{Int64,1}     ... Levels on which the optimization need to be carried out.
-        + maxIterationsScf     ::Int64              ... maximum number of SCF iterations
-        + accuracyScf          ::Float64            ... convergence criterion for the SCF field.
-        + shellSequenceScf     ::Array{Subshell,1}  ... Sequence of subshells to be optimized.
-        + frozenSubshells      ::Array{Subshell,1}  ... Sequence of subshells to be kept frozen.
+        + generateScf          ::Bool                   ... True, if a SCF need to be generated, and false otherwise (frozen orbitals).
+        + eeInteraction        ::AbstractEeInteraction  ... Specify the e-e interaction to be included into the SCF computations.
+        + scField              ::AbstractScField        ... Specify the self-consistent field, for instance, Basics.ALField(), etc.
+        + startScfFrom         ::AbstractStartOrbitals  ... Specify the orbitals to start the SCF computations
+        + maxIterationsScf     ::Int64                  ... maximum number of SCF iterations
+        + accuracyScf          ::Float64                ... convergence criterion for the SCF field.
+        + shellSequenceScf     ::Array{Subshell,1}      ... Sequence of subshells to be optimized.
+        + frozenSubshells      ::Array{Subshell,1}      ... Sequence of subshells to be kept frozen.
         
-    	+ coulombCI            ::Bool               ... logical flag to include Coulomb interactions.
-    	+ breitCI              ::Bool               ... logical flag to include Breit interactions.
-    	+ qedModel             ::AbstractQedModel   ... model for estimating QED corrections {NoneQed(), QedPetersburg(), QedSydney()}.
-    	+ methodCI             ::String             ... method for diagonalizing the matrix.
-    	+ jjLS                 ::LSjjSettings       ... settings to control a jj-LS transformation of atomic level, if requested.
+    	+ eeInteractionCI      ::AbstractEeInteraction  ... Specify the e-e interaction to be included into the CI computations.
+    	+ qedModel             ::AbstractQedModel       ... model for estimating QED corrections {NoneQed(), QedPetersburg(), QedSydney()}.
+    	+ methodCI             ::AbstractCImethod       ... method for diagonalizing the matrix.
+    	+ jjLS                 ::LSjjSettings           ... settings to control a jj-LS transformation of atomic level, if requested.
     	
-    	+ selectLevelsCI       ::Bool                          ... true, if specific level (number)s have been selected.
-    	+ selectedLevelsCI     ::Array{Int64,1}                ... Level number that have been selected.
-    	+ selectSymmetriesCI   ::Bool                          ... true, if specific level symmetries have been selected.
-    	+ selectedSymmetriesCI ::Array{LevelSymmetry,1}        ... Level symmetries that have been selected.
+    	+ selectLevelsCI       ::Bool                   ... true, if specific level (number)s have been selected.
+    	+ selectedLevelsCI     ::Array{Int64,1}         ... Level number that have been selected.
+    	+ selectSymmetriesCI   ::Bool                   ... true, if specific level symmetries have been selected.
+    	+ selectedSymmetriesCI ::Array{LevelSymmetry,1} ... Level symmetries that have been selected.
     """
     struct  AsfSettings
         generateScf            ::Bool 
-        breitScf               ::Bool  
-        methodScf              ::AbstractScField 
-        startScf               ::String 
-        startOrbitals          ::Dict{Subshell, Orbital}
-        levelsScf              ::Array{Int64,1}
+        eeInteraction          ::AbstractEeInteraction 
+        scField                ::AbstractScField 
+        startScfFrom           ::AbstractStartOrbitals
         maxIterationsScf       ::Int64 
         accuracyScf            ::Float64   
         shellSequenceScf       ::Array{Subshell,1}
         frozenSubshells        ::Array{Subshell,1}
         #
-    	coulombCI		       ::Bool 
-    	breitCI		           ::Bool 
+    	eeInteractionCI        ::AbstractEeInteraction
     	qedModel               ::AbstractQedModel 	
-    	methodCI               ::String	
+    	methodCI               ::AbstractCImethod
     	jjLS                   ::LSjjSettings
     	selectLevelsCI         ::Bool 
     	selectedLevelsCI       ::Array{Int64,1}
@@ -420,45 +447,40 @@ module ManyElectron
     `ManyElectron.AsfSettings()`  ... constructor for setting the default values.
     """
     function AsfSettings()
-    	AsfSettings(false, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), Int64[1], 24, 1.0e-6, Subshell[], Subshell[],  
-    	            true, false, NoneQed(), "eigen", LSjjSettings(false), false, Int64[], false, LevelSymmetry[] )
+    	AsfSettings(false, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(), 24, 1.0e-6, Subshell[], Subshell[],  
+    	            CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), false, Int64[], false, LevelSymmetry[] )
     end
 
 
     """
     `ManyElectron.AsfSettings(settings::AsfSettings;`
         
-                generateScf=..,       breitScf=..,            methodScf=..,          startScf=..,               startOrbitals=..,  
-                levelsScf=..,         maxIterationsScf=..,    accuracyScf=..,        shellSequenceScf=..,       frozenSubshells=..,         
-                coulombCI=..,         breitCI=..,             qedModel=..,           methodCI=..,               jjLS=..,  
+                generateScf=..,       eeInteraction=..,       scField=..,            startScfFrom=..,           maxIterationsScf=..,    
+                accuracyScf=..,       shellSequenceScf=..,    frozenSubshells=..,    eeInteractionCI=..,        qedModel=..,           
+                methodCI=..,          jjLS=..,   
                 selectLevelsCI=..,    selectedLevelsCI=..,    selectSymmetriesCI=.., selectedSymmetriesCI=..,   printout::Bool=false)
         ... constructor for re-defining a settings::AsfSettings.
     """
     function AsfSettings(settings::AsfSettings; 
-        generateScf::Union{Nothing,Bool}=nothing,                       breitScf::Union{Nothing,Bool}=nothing,         
-        methodScf::Union{Nothing,AbstractScField}=nothing,              startScf::Union{Nothing,String}=nothing,
-        startOrbitals::Union{Nothing,Dict{Subshell, Orbital}}=nothing,  levelsScf::Union{Nothing,Array{Int64,1}}=nothing,   
+        generateScf::Union{Nothing,Bool}=nothing,                       eeInteraction::Union{Nothing,AbstractEeInteraction}=nothing,         
+        scField::Union{Nothing,AbstractScField}=nothing,                startScfFrom::Union{Nothing,AbstractStartOrbitals}=nothing,
         maxIterationsScf::Union{Nothing,Int64}=nothing,                 accuracyScf::Union{Nothing,Float64}=nothing,     
-        shellSequenceScf::Union{Nothing,Array{Subshell,1}}=nothing,     frozenSubshells::Union{Nothing,Array{Subshell,1}}=nothing,         
-        coulombCI::Union{Nothing,Bool}=nothing,                         breitCI::Union{Nothing,Bool}=nothing,         
-        qedModel::Union{Nothing,AbstractQedModel}=nothing,              methodCI::Union{Nothing,String}=nothing,         
-        jjLS::Union{Nothing,LSjjSettings}=nothing,  
+        shellSequenceScf::Union{Nothing,Array{Subshell,1}}=nothing,     frozenSubshells::Union{Nothing,Array{Subshell,1}}=nothing, 
+        eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,  qedModel::Union{Nothing,AbstractQedModel}=nothing,              
+        methodCI::Union{Nothing,AbstractCImethod}=nothing,              jjLS::Union{Nothing,LSjjSettings}=nothing,  
         selectLevelsCI::Union{Nothing,Bool}=nothing,                    selectedLevelsCI::Union{Nothing,Array{Int64,1}}=nothing,         
         selectSymmetriesCI::Union{Nothing,Bool}=nothing,                selectedSymmetriesCI::Union{Nothing,Array{LevelSymmetry,1}}=nothing,         
         printout::Bool=false)
 
         if  generateScf         == nothing   generateScfx          = settings.generateScf           else   generateScfx          = generateScf          end 
-        if  breitScf            == nothing   breitScfx             = settings.breitScf              else   breitScfx             = breitScf             end 
-        if  methodScf           == nothing   methodScfx            = settings.methodScf             else   methodScfx            = methodScf            end 
-        if  startScf            == nothing   startScfx             = settings.startScf              else   startScfx             = startScf             end 
-        if  startOrbitals       == nothing   startOrbitalsx        = settings.startOrbitals         else   startOrbitalsx        = startOrbitals        end 
-        if  levelsScf           == nothing   levelsScfx            = settings.levelsScf             else   levelsScfx            = levelsScf            end 
+        if  eeInteraction       == nothing   eeInteractionx        = settings.eeInteraction         else   eeInteractionx        = eeInteraction        end 
+        if  scField             == nothing   scFieldx              = settings.scField               else   scFieldx              = scField              end 
+        if  startScfFrom        == nothing   startScfFromx         = settings.startScfFrom          else   startScfFromx         = startScfFrom         end 
         if  maxIterationsScf    == nothing   maxIterationsScfx     = settings.maxIterationsScf      else   maxIterationsScfx     = maxIterationsScf     end 
         if  accuracyScf         == nothing   accuracyScfx          = settings.accuracyScf           else   accuracyScf           = accuracyScf          end 
         if  shellSequenceScf    == nothing   shellSequenceScfx     = settings.shellSequenceScf      else   shellSequenceScfx     = shellSequenceScf     end 
         if  frozenSubshells     == nothing   frozenSubshellsx      = settings.frozenSubshells       else   frozenSubshellsx      = frozenSubshells      end 
-        if  coulombCI           == nothing   coulombCIx            = settings.coulombCI             else   coulombCIx            = coulombCI            end 
-        if  breitCI             == nothing   breitCIx              = settings.breitCI               else   breitCIx              = breitCI              end 
+        if  eeInteractionCI     == nothing   eeInteractionCIx      = settings.eeInteractionCI       else   eeInteractionCIx      = eeInteractionCI      end 
         if  qedModel            == nothing   qedModelx             = settings.qedModel              else   qedModelx             = qedModel             end 
         if  methodCI            == nothing   methodCIx             = settings.methodCI              else   methodCI              = methodCI             end 
         if  jjLS                == nothing   jjLSx                 = settings.jjLS                  else   jjLSx                 = jjLS                 end 
@@ -467,8 +489,8 @@ module ManyElectron
         if  selectSymmetriesCI  == nothing   selectSymmetriesCIx   = settings.selectSymmetriesCI    else   selectSymmetriesCIx   = selectSymmetriesCI   end 
         if  selectedSymmetriesCI== nothing   selectedSymmetriesCIx = settings.selectedSymmetriesCI  else   selectedSymmetriesCIx = selectedSymmetriesCI end 
         
-    	AsfSettings(generateScfx, breitScfx, methodScfx, startScfx, startOrbitalsx, levelsScfx, maxIterationsScfx, accuracyScfx, 
-    	            shellSequenceScfx, frozenSubshellsx, coulombCIx, breitCIx, qedModelx, methodCIx, jjLSx, 
+    	AsfSettings(generateScfx, eeInteractionx, scFieldx, startScfFromx, maxIterationsScfx, accuracyScfx, 
+    	            shellSequenceScfx, frozenSubshellsx, eeInteractionCIx, qedModelx, methodCIx, jjLSx, 
     	            selectLevelsCIx, selectedLevelsCIx, selectSymmetriesCIx, selectedSymmetriesCIx)
     end
     
@@ -476,18 +498,15 @@ module ManyElectron
     # `Base.show(io::IO, settings::AsfSettings)`  ... prepares a proper printout of the settings::AsfSettings.
     function Base.show(io::IO, settings::AsfSettings)
     	  println(io, "generateScf:          $(settings.generateScf)  ")
-    	  println(io, "breitScf:             $(settings.breitScf)  ")
-    	  println(io, "methodScf:            $(settings.methodScf)  ")
-    	  println(io, "startScf:             $(settings.startScf)  ")
-    	  println(io, "startOrbitals:        $(settings.startOrbitals)  ")
-    	  println(io, "levelsScf:            $(settings.levelsScf)  ")
+    	  println(io, "eeInteraction:        $(settings.eeInteraction)  ")
+    	  println(io, "scFieldf:             $(settings.scFieldf)  ")
+    	  println(io, "startScfFrom:         $(settings.startScfFrom)  ")
     	  println(io, "maxIterationsScf:     $(settings.maxIterationsScf)  ")
     	  println(io, "accuracyScf:          $(settings.accuracyScf)  ")
     	  println(io, "shellSequenceScf:     $(settings.shellSequenceScf)  ")
     	  println(io, "frozenSubshells:      $(settings.frozenSubshells)  ")
     	  #
-    	  println(io, "coulombCI:            $(settings.coulombCI)  ")
-    	  println(io, "breitCI:              $(settings.breitCI)  ")
+    	  println(io, "eeInteractionCI:      $(settings.eeInteractionCI)  ")
     	  println(io, "qedModel :            $(settings.qedModel)  ")
     	  println(io, "methodCI:             $(settings.methodCI)  ")
     	  println(io, "jjLS :                $(settings.jjLS.makeIt)  ")
@@ -514,17 +533,15 @@ module ManyElectron
     function  Base.:(==)(seta::AsfSettings, setb::AsfSettings)
     
     	if  seta.generateScf      !=  setb.generateScf                return( false )    end
-    	if  seta.breitScf         !=  setb.breitScf            	      return( false )    end
-    	if  seta.methodScf        !=  setb.methodScf                  return( false )    end
-    	if  seta.startScf         !=  setb.startScf                   return( false )    end
+    	if  seta.eeInteraction    !=  setb.eeInteraction              return( false )    end
+    	if  seta.scField          !=  setb.scField                    return( false )    end
+    	if  seta.startScfFrom     !=  setb.startScfFrom               return( false )    end
     	#   startOrbitals
-    	if  seta.levelsScf        !=  setb.levelsScf                  return( false )    end
     	if  seta.maxIterationsScf !=  setb.maxIterationsScf           return( false )    end
     	if  seta.accuracyScf      !=  setb.accuracyScf                return( false )    end
     	if  seta.shellSequenceScf !=  setb.shellSequenceScf           return( false )    end
     	if  seta.frozenSubshells  !=  setb.frozenSubshells            return( false )    end
-    	if  seta.coulombCI        !=  setb.coulombCI                  return( false )    end
-    	if  seta.breitCI          !=  setb.breitCI                    return( false )    end
+    	if  seta.eeInteractionCI  !=  setb.eeInteractionCI            return( false )    end
     	#   qedModel
     	#   methodCI
     	#   jjLS
@@ -945,7 +962,7 @@ module ManyElectron
         ... a struct for defining the atomic interactions to be incorporated into the representation of a multiplet.
     
     	+ Coulomb		           ::Bool 		      ... logical flag to include Coulomb interactions.
-    	+ Breit 		           ::Bool 		      ... logical flag to include Breit interactions.
+    	+ eeInteraction             ::AbstractEeInteraction 		      ... logical flag to include Breit interactions.
     	+ QED			           ::Bool 		      ... logical flag to include QED interactions.
     	+ diagonalizationMethod    ::String		      ... method for diagonalizing the matrix.
     	+ selectLevels  	       ::Bool 		      ... true, if specific level (number)s have been selected for computation.
@@ -960,7 +977,7 @@ module ManyElectron
     """
     struct  MultipletSettings
         Coulomb 		         ::Bool
-        Breit			         ::Bool
+        eeInteraction             ::AbstractEeInteraction
         QED			             ::Bool
     	diagonalizationMethod	 ::String
         selectLevels		     ::Bool

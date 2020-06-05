@@ -340,7 +340,8 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),  
                                 initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = Auger(),
-                                processSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(3,1), (4,1), (5,1), (6,1)], 0., 1.0e6, 2, "Coulomb") )
+                                processSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(3,1), (4,1), (5,1), (6,1)], 0., 1.0e6, 
+                                                                          2, CoulombInteraction()) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -907,7 +908,7 @@ module TestFrames
         wb = generate(wa, output=true)
         #
         orbitals    = wb["mean-field basis"].orbitals
-        ciSettings  = CiSettings(true, false, Int64[], false, LevelSymmetry[] )
+        ciSettings  = CiSettings(CoulombInteraction(), false, Int64[], false, LevelSymmetry[] )
         from        = [Shell("2s")]
         #
         frozen      = [Shell("1s")]
@@ -922,11 +923,13 @@ module TestFrames
         
         if  abs(orbitals[Subshell("1s_1/2")].energy + 18.705283) > 1.0e-3
             success = false
-            if printTest   info(iostream, "orbital energy $(orbitals[Subshell("1s_1/2")].energy) != -18.705283")     end
+            if printTest   @info(iostream, "orbital energy $(orbitals[Subshell("1s_1/2")].energy) != -18.705283")     end
+            @info(iostream, "orbital energy $(orbitals[Subshell("1s_1/2")].energy) != -18.705283")
         end
-        if  abs(wd["CI multiplet"].levels[1].energy + 74.840309)  > 1.0e-3
+        if  abs(wd["CI multiplet"].levels[1].energy + 74.840309)  > 1.0e-2
             success = false
-            if printTest   info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -74.840309")   end
+            if printTest   @info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -74.840309")   end
+            @info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -74.840309")
         end
 
         testPrint("testRepresentation_MeanFieldBasis_CiExpansion()::", success)
@@ -944,7 +947,7 @@ module TestFrames
         
         name        = "Beryllium 1s^2 2s^2 ^1S_0 ground state"
         refConfigs  = [Configuration("[He] 2s^2")]
-        rasSettings = RasSettings([1], 24, 1.0e-6, false, true, [1,2,3] )
+        rasSettings = RasSettings([1], 24, 1.0e-6, CoulombInteraction(), true, [1,2,3] )
         from        = [Shell("2s")]
         #
         frozen      = [Shell("1s")]

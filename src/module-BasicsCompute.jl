@@ -131,7 +131,7 @@ module BascisCompute
                 end
 
                 for  coeff in wa[2]
-                    if  settings.coulombCI
+                    if  settings.eeInteractionCI in [CoulombInteraction(), CoulombBreit()]
                         me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                      basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)
                     elseif  false
@@ -145,7 +145,7 @@ module BascisCompute
                                                                                         basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   
                     end
                                                                                             
-                    if  settings.breitCI
+                    if  settings.eeInteractionCI in [BreitInteraction(), CoulombBreit()]
                         me = me + coeff.V * JAC.InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                        basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)     
                     elseif  false
@@ -186,7 +186,8 @@ module BascisCompute
         end
         n = length(idx_csf)
         
-        if  settings.breitCI                 error("No Breit interaction supported for plasma computations; use breitCI=false  in the asfSettings.")    end   
+        if  settings.eeInteractionCI in [BreitInteraction(), CoulombBreit()]              
+                                             error("No Breit interaction supported for plasma computations; use breitCI=false  in the asfSettings.")    end   
         if  settings.qedModel != NoneQed()   error("No QED estimates supported for plasma computations; use qedModel=NoneQed()  in the asfSettings.")   end   
         
         # Now distinguis the CI matrix for different plasma models
@@ -207,7 +208,7 @@ module BascisCompute
                     end
 
                     for  coeff in wa[2]
-                        if  settings.coulombCI    
+                        if  settings.eeInteractionCI in [CoulombInteraction(), CoulombBreit()]
                             me = me + coeff.V * JAC.InteractionStrength.XL_Coulomb_DH(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                                 basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, 
                                                                                                 plasmaSettings.lambdaDebye)   end
@@ -506,10 +507,10 @@ module BascisCompute
                 end
 
                 for  coeff in wa[2]
-                    if  asfSettings.coulombCI    
+                    if  asfSettings.eeInteraction in [CoulombInteraction(), CoulombBreit()]   
                         me = me + coeff.V * InteractionStrength.XL_CoulombDamped(tau, coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                                 basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   end
-                    if  asfSettings.breitCI
+                    if  asfSettings.eeInteraction in [BreitInteraction(), CoulombBreit()]
                         me = me + coeff.V * InteractionStrength.XL_BreitDamped(tau, coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                               basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)     end
                 end
@@ -851,6 +852,12 @@ module BascisCompute
                 else    push!(vcoeffs, wa)
                 end
             end
+            if   subsh == coeff.b   &&   isCoulomb(coeff.nu, coeff.b, coeff.a, coeff.d, coeff.c)
+                wa = (coeff.nu, coeff.b, coeff.a, coeff.d, coeff.c)
+                if      wa in vcoeffs
+                else    push!(vcoeffs, wa)
+                end
+            end
         end
         # Now collect all contributions that belong to the selected reduced coefficients
         for  redCoeff in tcoeffs
@@ -864,8 +871,15 @@ module BascisCompute
         for  redCoeff in vcoeffs
             redV = 0.
             for coeff  in  allVcoeffs
-                wa = (coeff.nu, coeff.a, coeff.b, coeff.c, coeff.d)
-                if  wa == redCoeff      redV = redV + coeff.V   end
+                ## V = coeff.V
+                if      coeff.a == coeff.d   &&  coeff.a != coeff.b     V = coeff.V / 2.    
+                elseif  coeff.b == coeff.c   &&  coeff.a != coeff.b     V = coeff.V / 2.    
+                else                                                                V = coeff.V
+                end
+                wa = (coeff.nu, coeff.a, coeff.b, coeff.c, coeff.d);    
+                if  wa == redCoeff      redV = redV + V    end
+                wa = (coeff.nu, coeff.b, coeff.a, coeff.d, coeff.c)
+                if  wa == redCoeff      redV = redV + V    end
             end
             push!( Vcoeffs, JAC.AngularCoefficientsRatip2013.AngularVcoeff( redCoeff[1], redCoeff[2], redCoeff[3], redCoeff[4], redCoeff[5],  redV) )
         end

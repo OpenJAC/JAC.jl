@@ -18,13 +18,13 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel
                         finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ],  
                         process = Dierec(), 
                         processSettings=Dielectronic.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, 
-                                                              false, Tuple{Int64,Int64,Int64}[(1,5,0), (1,6,0)], 0., 0., 0., "Coulomb")  )
+                                                              false, Tuple{Int64,Int64,Int64}[(1,5,0), (1,6,0)], 0., 0., 0., CoulombInteraction())  )
 
 wb = perform(wa)
 
 elseif  false
 
-augerSettings = AutoIonization.Settings(true, true, false, Tuple{Int64,Int64}[(1,0)], 0., 1.0e6, 2, "Coulomb")
+augerSettings = AutoIonization.Settings(true, true, false, Tuple{Int64,Int64}[(1,0)], 0., 1.0e6, 2, CoulombInteraction())
 grid          = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 1.3e-2, NoPoints = 800)
 grid          = Radial.Grid(false)
     
@@ -46,7 +46,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel
                                         Configuration("[Ne] 3s 3p"), Configuration("[Ne] 3s 3d"), Configuration("[Ne] 3s 4d"), Configuration("[Ne] 3s 4f") ],
                         process = Dierec(), 
                         processSettings=Dielectronic.Settings([E1, M1, M2, E2], [JAC.UseCoulomb, JAC.UseBabushkin], true, 
-                                                              false, Tuple{Int64,Int64,Int64}[(1,10,1), (1,10,7)], 0., 0., 0., "Coulomb")  )
+                                                              false, Tuple{Int64,Int64,Int64}[(1,10,1), (1,10,7)], 0., 0., 0., CoulombInteraction())  )
 
 wb = perform(wa)
 
@@ -78,7 +78,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel
                                         Configuration("1s^2 2s 7d"), Configuration("1s^2 2s 7f")],
                         process = Dierec(), 
                         processSettings=Dielectronic.Settings([E1], [JAC.UseCoulomb, JAC.UseBabushkin], true, 
-                                                              false, Tuple{Int64,Int64,Int64}[(1,10,1), (1,10,7)], 0., 0., 0., "Coulomb")  )
+                                                              false, Tuple{Int64,Int64,Int64}[(1,10,1), (1,10,7)], 0., 0., 0., CoulombInteraction())  )
 
 wb = perform(wa)
 

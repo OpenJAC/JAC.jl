@@ -21,8 +21,8 @@ module AutoIonization
         + minAugerEnergy          ::Float64                      ... Minimum energy of free (Auger) electrons to be included.
         + maxAugerEnergy          ::Float64                      ... Maximum energy of free (Auger) electrons to be included.
         + maxKappa                ::Int64                        ... Maximum kappa value of partial waves to be included.
-        + operator                ::String                       ... Auger operator that is to be used for evaluating the Auger amplitudes: 
-                                                                     allowed values are: "Coulomb", "Breit", "Coulomb+Breit"
+        + operator                ::AbstractEeInteraction        ... Auger operator that is to be used for evaluating the Auger amplitudes: 
+                                                                     allowed values are: CoulombInteraction(), BreitInteraction(), ...
     """
     struct Settings
         calcAnisotropy            ::Bool         
@@ -32,7 +32,7 @@ module AutoIonization
         minAugerEnergy            ::Float64
         maxAugerEnergy            ::Float64
         maxKappa                  ::Int64
-        operator                  ::String 
+        operator                  ::AbstractEeInteraction 
     end 
 
 
@@ -40,7 +40,7 @@ module AutoIonization
     `AutoIonization.Settings()`  ... constructor for the default values of AutoIonization line computations
     """
     function Settings()
-        Settings(false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 10e5, 100, "Coulomb")
+        Settings(false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 10e5, 100, CoulombInteraction())
     end
 
 
@@ -152,11 +152,11 @@ module AutoIonization
     """
     `AutoIonization.amplitude(kind::String, channel::AutoIonization.Channel, continuumLevel::Level, initialLevel::Level, 
                               grid::Radial.Grid; printout::Bool=true)`  
-        ... to compute the kind = (Coulomb,  Breit  or Coulomb+Breit) Auger amplitude 
+        ... to compute the kind in  CoulombInteraction(), BreitInteraction(), CoulombBreit()   Auger amplitude 
             <(alpha_f J_f, kappa) J_i || O^(Auger, kind) || alpha_i J_i>  due to the interelectronic interaction for the given 
             final and initial level. A value::ComplexF64 is returned.
     """
-    function amplitude(kind::String, channel::AutoIonization.Channel, continuumLevel::Level, initialLevel::Level, grid::Radial.Grid; 
+    function amplitude(kind::AbstractEeInteraction, channel::AutoIonization.Channel, continuumLevel::Level, initialLevel::Level, grid::Radial.Grid; 
                        printout::Bool=true)
         nt = length(continuumLevel.basis.csfs);    ni = length(initialLevel.basis.csfs);    partial = Subshell(9,channel.kappa)
         if  printout  printstyled("Compute ($kind) Auger matrix of dimension $nt x $ni in the continuum- and initial-state bases " *
@@ -164,7 +164,7 @@ module AutoIonization
                                   color=:light_green)    end
         matrix = zeros(ComplexF64, nt, ni)
         #
-        if      kind in [ "Coulomb", "Breit", "Coulomb*Breit"]        ## pure V^Coulomb interaction
+        if      kind in [ CoulombInteraction(), BreitInteraction(), CoulombBreit()]        ## pure V^Coulomb interaction
         #-----------------------------------------------------
             for  r = 1:nt
                 ##x if  continuumLevel.basis.csfs[r].J != finalLevel.J      ||  continuumLevel.basis.csfs[r].parity   != finalLevel.parity    continue    end 
@@ -173,11 +173,11 @@ module AutoIonization
                     wa = compute("angular coefficients: e-e, Ratip2013", continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                     me = 0.
                     for  coeff in wa[2]
-                        if   kind in [ "Coulomb", "Coulomb+Breit"]    
+                        if   kind in [ CoulombInteraction(), CoulombBreit()]    
                             me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 
                                                     continuumLevel.basis.orbitals[coeff.a], continuumLevel.basis.orbitals[coeff.b],
                                                     initialLevel.basis.orbitals[coeff.c],   initialLevel.basis.orbitals[coeff.d], grid)   end
-                        if   kind in [ "Breit", "Coulomb*Breit"]    
+                        if   kind in [ BreitInteraction(), CoulombBreit()]    
                             me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, 
                                                     continuumLevel.basis.orbitals[coeff.a], continuumLevel.basis.orbitals[coeff.b],
                                                     initialLevel.basis.orbitals[coeff.c],   initialLevel.basis.orbitals[coeff.d], grid)   end
@@ -204,7 +204,7 @@ module AutoIonization
     """
     `AutoIonization.channelAmplitude(kind::String, channel::AutoIonization.Channel, energy::Float64, finalLevel::Level, 
                                      initialLevel::Level, grid::Radial.Grid)`  
-        ... to compute the kind = (Coulomb,  Breit  or Coulomb+Breit) Auger amplitude  
+        ... to compute the kind = (CoulombInteraction(), BreitInteraction(), CoulombBreit())   Auger amplitude  
             <(alpha_f J_f, kappa) J_i || O^(Auger, kind) || alpha_i J_i>  due to the interelectronic interaction for the given final and 
             initial level. A newChannel::AutoIonization.Channel is returned.
     """
@@ -415,7 +415,7 @@ module AutoIonization
         printstyled("AutoIonization.computeLinesPlasma(): The computation of Auger rates starts now ... \n", color=:light_green)
         printstyled("---------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        augerSettings = AutoIonization.Settings(false, settings.printBefore, settings.selectLines, settings.selectedLines, 0., 1.0e6, 100, "Coulomb")
+        augerSettings = AutoIonization.Settings(false, settings.printBefore, settings.selectLines, settings.selectedLines, 0., 1.0e6, 100, CoulombInteraction())
         lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, augerSettings)
         # Display all selected lines before the computations start
         if  settings.printBefore    AutoIonization.displayLines(lines)    end
