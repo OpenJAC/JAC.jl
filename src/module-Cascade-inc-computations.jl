@@ -146,7 +146,7 @@
                         elseif  process == Basics.Auger()       
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons + 1
-                                settings = AutoIonization.Settings(false, false, false, Tuple{Int64,Int64}[], 0., 1.0e6, 2, "Coulomb")
+                                settings = AutoIonization.Settings(false, false, false, Tuple{Int64,Int64}[], 0., 1.0e6, 2, CoulombInteraction())
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
                             end
@@ -206,11 +206,13 @@
     """
     function displayBlocks(stream::IO, blockList::Array{Cascade.Block,1}; sa::String="")
         #
+        nbl = 150
         println(stream, "\n* Configuration 'blocks' (multiplets) " * sa * "in the given (cascade) model: \n")
-        println(stream, "  ", TableStrings.hLine(134))
+        println(stream, "  ", TableStrings.hLine(nbl))
         println(stream, "      No.   Configurations                                                                       " *
+                        "      No. CSF  ",
                         "      Range of total energies " * TableStrings.inUnits("energy") ) 
-        println(stream, "  ", TableStrings.hLine(134))
+        println(stream, "  ", TableStrings.hLine(nbl))
         i = 0
         for  block  in  blockList
             i = i + 1;    
@@ -219,11 +221,13 @@
             en = Float64[];   for level in  block.multiplet.levels    push!(en, level.energy)    end
             minEn = minimum(en);   minEn = Defaults.convertUnits("energy: from atomic", minEn)
             maxEn = maximum(en);   maxEn = Defaults.convertUnits("energy: from atomic", maxEn)
-            sa = sa * TableStrings.flushleft(90, sb[1:end-2]; na=2) 
+            sa = sa * TableStrings.flushleft(87, sb[1:end-2]; na=2) 
+            sb = "          " * string( length(block.multiplet.levels) )
+            sa = sa * sb[end-9:end] * "      "
             sa = sa * TableStrings.flushleft(30, string( round(minEn)) * " ... " * string( round(maxEn)); na=2)
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(134))
+        println(stream, "  ", TableStrings.hLine(nbl))
 
         return( nothing )
     end
@@ -547,7 +551,7 @@
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
         println("\n* Electron configuration used in the " * sa * "cascade:")
-        @warn "*** Limit to just 2 configurations for each No. of electrons. ***"                       ## delete nxx
+        ## @warn "*** Limit to just 2 configurations for each No. of electrons. ***"                       ## delete nxx
         if  printSummary   println(iostream, "\n* Electron configuration used in the cascade:")    end
         confList = Configuration[];   nc = 0
         for  n = maxNoElectrons:-1:minNoElectrons
@@ -556,7 +560,7 @@
             if  printSummary   println(iostream, "\n    Configuration(s) with $n electrons:")      end
             for  conf in confs
                 if n == conf.NoElectrons  
-                    nxx = nxx + 1;    if nxx > 2   break    end                                            ## delete nxx
+                    ## nxx = nxx + 1;    if nxx > 2   break    end                                            ## delete nxx
                     nc = nc + 1
                     push!(confList, conf ) 
                     wa = Semiempirical.estimate("binding energy", round(Int64, Z), conf);    wa = Defaults.convertUnits("energy: from atomic", wa)

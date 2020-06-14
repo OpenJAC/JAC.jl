@@ -5,7 +5,7 @@
 """
 module Pulse
 
-    using   ..Basics
+    using   ..Basics, ..Defaults
     
     export  AbstractEnvelope, AbstractBeam
     
@@ -29,7 +29,7 @@ module Pulse
     struct   InfiniteEnvelope        <: Pulse.AbstractEnvelope    end
 
     function Base.string(env::InfiniteEnvelope)
-        sa = "Infinite pulse."
+        sa = "infinite pulse"
         return( sa )
     end
 
@@ -48,7 +48,7 @@ module Pulse
     end
 
     function Base.string(env::RectangularEnvelope)
-        sa = "Rectangular pulse of $(env.cycles) cycles."
+        sa = "rectangular pulse of $(env.cycles) cycles"
         return( sa )
     end
 
@@ -68,7 +68,7 @@ module Pulse
 
 
     function Base.string(env::SinSquaredEnvelope)
-        sa = "sin^2 pulse of $(env.cycles) cycles."
+        sa = "sin^2 pulse of $(env.cycles) cycles"
         return( sa )
     end
 
@@ -88,7 +88,7 @@ module Pulse
 
 
     function Base.string(env::GaussianEnvelope)
-        sa = "Gaussian pulse with pulse duration or FWHM = $(env.cycles) a.u."
+        sa = "Gaussian pulse with pulse duration or FWHM = $(env.cycles)"
         return( sa )
     end
 
@@ -123,6 +123,14 @@ module Pulse
         cep             ::Float64
     end
 
+    
+    """
+    `Pulse.PlaneWaveBeam()`  ... constructor for an `empty` instance of Pulse.PlaneWaveBeam().
+    """
+    function PlaneWaveBeam()
+        PlaneWaveBeam( 0., 0., 0. )
+    end
+
 
     function Base.string(beam::PlaneWaveBeam)
         sa = "Plane-wave beam/pulse with amplitude A0=$(beam.A0), frequency omega=$(beam.omega) a.u. and carrier-envelope phase cep=$(beam.cep)"
@@ -151,7 +159,7 @@ module Pulse
 
 
     """
-    `JAC.Pulse.Envelope()`  ... constructor for an `empty` instance of Pulse.Envelope().
+    `Pulse.Envelope()`  ... constructor for an `empty` instance of Pulse.Envelope().
     """
     function Envelope()
         Envelope( 0., 0., Float64[] )
@@ -175,7 +183,7 @@ module Pulse
 
 
     """
-    `JAC.Pulse.PolarizationType(sa::String)`  ... constructor for a given String.
+    `Pulse.PolarizationType(sa::String)`  ... constructor for a given String.
     """
     function PolarizationType(sa::String)
         if       sa == "linear"                  wa = Linear
@@ -234,7 +242,7 @@ module Pulse
 
 
     """
-    `JAC.Pulse.Polarization()`  ... constructor for an `empty` instance of Pulse.Polarization().
+    `Pulse.Polarization()`  ... constructor for an `empty` instance of Pulse.Polarization().
     """
     function Polarization()
         Polarization( NoType, 0., 0., SolidAngle(0., 0.), false, Complex(0.), Complex(0.) )
@@ -282,7 +290,7 @@ module Pulse
 
 
     """
-    `JAC.Pulse.ExperimentalCharacterization()`  ... constructor for an `empty` instance of ExperimentalCharacterization().
+    `Pulse.ExperimentalCharacterization()`  ... constructor for an `empty` instance of ExperimentalCharacterization().
     """
     function ExperimentalCharacterization()
         ExperimentalCharacterization( NoShape, SolidAngle(0., 0.), 0., 0., 0., 0., 0, EmMultipole[], Polarization() )
@@ -323,7 +331,7 @@ module Pulse
 
 
     """
-    `JAC.Pulse.Gaussian()`  ... constructor for an `empty` instance of Pulse.Gaussian().
+    `Pulse.Gaussian()`  ... constructor for an `empty` instance of Pulse.Gaussian().
     """
     function Gaussian()
         Gaussian( SolidAngle(0., 0.), 0., EmMultipole[], Pulse.Envelope(), Pulse.Polarization()  )
@@ -344,5 +352,126 @@ module Pulse
     ###################################################################################################################
     ###################################################################################################################
     
+
+
+    """
+    `Pulse.computeFieldAmplitude(intensity::Float64, omega::Float64)`  
+        ... compute the field amplitude from the given (maximum) intensity [in a.u.] and the central frequency [in a.u.]
+            of the light field: A0 = sqrt( 8pi * alpha * intensity) / omega.
+    """
+    function computeFieldAmplitude(intensity::Float64, omega::Float64)
+        wa = sqrt(8 * pi * Defaults.getDefaults("alpha") * intensity) / omega
+        return( wa )
+    end
+
+
+    """
+    `Pulse.envelopeVolkovIntegral(plus::Bool, envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
+        ... evaluates the envelope (time) integral F^(Volkov) [+/-; omega; f^(infinite); A; angles & energies] for an infinite pulse with given 
+            parameters; an ntg::Complex{Float64} is retured.
+    """
+    function envelopeVolkovIntegral(plus::Bool, envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        wa = 0. * im;                            
+        phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) / beam.omega;   Up = beam.A0^2 / 4
+        lambda = Basics.determinePolarizationLambda(polarization)
+        #
+        # Compute the summation over the Bessel functions first; start with value for s = 0
+        for  s = -10:10
+            if  plus   wb = Basics.diracDelta((s+1)*beam.omega + energyp - initialEn + Up, 1.0e-3)
+            else       wb = Basics.diracDelta((s-1)*beam.omega + energyp - initialEn + Up, 1.0e-3)       
+            end
+            #
+            if  wb != 0.
+                wa = wa + GSL.sf_bessel_Jnu(1.0*s, a) * exp(im*s + (phiCep - lambda*phip)) * wb
+            end
+        end
+        if  plus   wa = wa * 2pi * beam.A0 * exp(im*phiCep)
+        else       wa = wa * 2pi * beam.A0 * exp(-im*phiCep)
+        end
+        
+        return( wa )
+    end
+
+
+    """
+    `Pulse.envelopeVolkovIntegral(plus::Bool, envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
+        ... evaluates the envelope (time) integral F^(Volkov) [+/-; omega; f^(rectangular); A; angles & energies] for an infinite pulse with given 
+            parameters; an ntg::Complex{Float64} is retured.
+    """
+    function envelopeVolkovIntegral(plus::Bool, envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        wa = 0. * im;   Tp = 2pi * envelope.cycles / beam.omega
+        error("Not yet implemented.")
+        
+        return( wa )
+    end
+
+
+    """
+    `Pulse.envelopeQuadVolkovIntegral(envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
+        ... evaluates the envelope (time) integral F^(quad, Volkov) [f^(infinite); A; angles & energies] for an infinite pulse with given 
+            parameters; an ntg::Complex{Float64} is retured.
+    """
+    function envelopeQuadVolkovIntegral(envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                        thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        wa = 0. * im;                            
+        phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) / beam.omega;   Up = beam.A0^2 / 4
+        lambda = Basics.determinePolarizationLambda(polarization)
+        #
+        # Compute the summation over the Bessel functions first; start with value for s = 0
+        for  s = -10:10
+            wb = Basics.diracDelta(s*beam.omega + energyp - initialEn + Up, 1.0e-3)
+            #
+            if  wb != 0.    wa = wa + GSL.sf_bessel_Jnu(1.0*s, a) * exp(im*s + (phiCep - lambda*phip)) * wb     end
+        end
+        wa = wa * 4pi * Up
+        
+        return( wa )
+    end
+
+
+    """
+    `Pulse.envelopeQuadVolkovIntegral(envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
+        ... evaluates the envelope (time) integralF^(quad, Volkov) [f^(infinite); A; angles & energies]  for an rectangular pulse with given 
+            parameters; an ntg::Complex{Float64} is retured.
+    """
+    function envelopeQuadVolkovIntegral(envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                        thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        wa = 0. * im;   Tp = 2pi * envelope.cycles / beam.omega
+        error("Not yet implemented.")
+        
+        return( wa )
+    end
+
+
+    """
+    `Pulse.envelopeQuadVolkovIntegral(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
+        ... evaluates the envelope (time) integralF^(quad, Volkov) [f^(infinite); A; angles & energies]  for all pulses for which no analytical
+            expression is so easily available.an ntg::Complex{Float64} is retured.
+    """
+    function envelopeQuadVolkovIntegral(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                        thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        wa = 0. * im;   
+        # Collect parameters that are specific to a given pulse envelope
+        if       typeof(envelope) == SinSquaredEnvelope
+        elseif   typeof(envelope) == GaussianEnvelope
+        end
+        #
+        # Determine first the integrant; the timeGrid must still be adapted to thos
+        timeGrid = [0.1i for i = 1:10]
+        for   t  in  timeGrid 
+            phase = Pulse.volkovPhase(t, envelope) ## , ...)
+        end
+        #
+        error("Not yet implemented.")
+        
+        return( wa )
+    end
     
 end # module

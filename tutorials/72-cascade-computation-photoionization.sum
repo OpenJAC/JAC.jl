@@ -1,4 +1,4 @@
-Summary file opened at 2020-02-05T22:31: 
+Summary file opened at 2020-05-27T10:24: 
 ========================================   
 
 
@@ -6,7 +6,7 @@ Summary file opened at 2020-02-05T22:31:
 
   Level  J Parity          Hartrees                    eV                   [eV]
 
-     1    0 +     -1.286712211457433e+02    -3.501322268261606e+03    -3.501322268261606e+03 
+     1    0 +     -1.286711839956477e+02    -3.501321257356015e+03    -3.501321257356015e+03 
 
   Energy of each level relative to immediately lower level:
 
@@ -39,9 +39,8 @@ Summary file opened at 2020-02-05T22:31:
     Configuration(s) with 9 electrons:
       1s^1 2s^2 2p^6    av. BE = -1097.0  [eV]      (1)
       1s^2 2s^1 2p^6    av. BE = -1919.0  [eV]      (2)
-      1s^2 2s^2 2p^5    av. BE = -1946.0  [eV]      (3)
 
-* A total of 3 configuration have been defined for this cascade, and selected configurations could be removed here:  [currently not supported]
+* A total of 2 configuration have been defined for this cascade, and selected configurations could be removed here:  [currently not supported]
 
 * Generate blocks for the ionizing cascade 
 
@@ -58,7 +57,7 @@ Summary file opened at 2020-02-05T22:31:
 
   Level  J Parity          Hartrees                    eV                   [eV]
 
-     1    0 +     -1.286712211457433e+02    -3.501322268261606e+03    -3.501322268261606e+03 
+     1    0 +     -1.286711839956477e+02    -3.501321257356015e+03    -3.501321257356015e+03 
 
   Energy of each level relative to immediately lower level:
 
@@ -76,7 +75,7 @@ Summary file opened at 2020-02-05T22:31:
 
   Level  J Parity          Hartrees                    eV                   [eV]
 
-     1    1/2 +     -9.577771580230593e+01    -2.606244396810401e+03    -2.606244396810401e+03 
+     1    1/2 +     -9.577684766553450e+01    -2.606220773605595e+03    -2.606220773605595e+03 
 
   Energy of each level relative to immediately lower level:
 
@@ -94,7 +93,7 @@ Summary file opened at 2020-02-05T22:31:
 
   Level  J Parity          Hartrees                    eV                   [eV]
 
-     1    1/2 +     -1.266927100641048e+02    -3.447484239474294e+03    -3.447484239474294e+03 
+     1    1/2 +     -1.266920805286757e+02    -3.447467108942720e+03    -3.447467108942720e+03 
 
   Energy of each level relative to immediately lower level:
 
@@ -105,27 +104,6 @@ Summary file opened at 2020-02-05T22:31:
 
   Level  J Parity          Hartrees                    eV                   [eV]
 
-
-*  Multiplet computations for 1s^2 2s^2 2p^5  with 9 electrons ... 
-
-  Eigenenergies:
-
-  Level  J Parity          Hartrees                    eV                   [eV]
-
-     1    3/2 -     -1.277787243109875e+02    -3.477036192369440e+03    -3.477036192369440e+03 
-     2    1/2 -     -1.277739098949666e+02    -3.476905185436635e+03    -3.476905185436635e+03 
-
-  Energy of each level relative to immediately lower level:
-
-  Level  J Parity          Hartrees                    eV                   [eV]
-
-     2    1/2 -     4.814416020906265e-03    1.310069328057528e-01    1.310069328057528e-01 
-
-  Energy of each level relative to lowest level:
-
-  Level  J Parity          Hartrees                    eV                   [eV]
-
-     2    1/2 -     4.814416020906265e-03    1.310069328057528e-01    1.310069328057528e-01 
 
 * Configuration 'blocks' (multiplets) for the (initial part of the) ionizing cascade in the given (cascade) model: 
 
@@ -142,7 +120,6 @@ Summary file opened at 2020-02-05T22:31:
   --------------------------------------------------------------------------------------------------------------------------------------
         1   1s^1 2s^2 2p^6                                                                             -2606.0 ... -2606.0             
         2   1s^2 2s^1 2p^6                                                                             -3447.0 ... -3447.0             
-        3   1s^2 2s^2 2p^5                                                                             -3477.0 ... -3477.0             
   --------------------------------------------------------------------------------------------------------------------------------------
  
 * Steps that are defined for the current ionizing cascade due to the given approach:
@@ -152,10 +129,9 @@ Summary file opened at 2020-02-05T22:31:
   --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
        1     Photo         1, 1s^2 2s^2 2p^6                                          1, 1s^1 2s^2 2p^6                                        -895.0 ... -895.0
        2     Photo         1, 1s^2 2s^2 2p^6                                          1, 1s^2 2s^1 2p^6                                        -54.0 ... -54.0
-       3     Photo         1, 1s^2 2s^2 2p^6                                          2, 1s^2 2s^2 2p^5                                        -24.0 ... -24.0
   --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-* A total of 3 steps are still defined in the cascade.
+* A total of 2 steps are still defined in the cascade.
 
 
 * Perform ionizing computations for the photon energy 30.0  [a.u.]
@@ -180,24 +156,10 @@ Summary file opened at 2020-02-05T22:31:
        i-level-f         i--J^P--f       f--Energy--i        omega        Energy e_p     Multipoles   Cou -- Cross section -- Bab    
                                               [eV]            [eV]            [eV]                        [barn]          [barn]       
   ----------------------------------------------------------------------------------------------------------------------------------
-       1 --    1       0 + --> 1/2 +     5.383803e+01    8.163416e+02    7.625036e+02                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
+       1 --    1       0 + --> 1/2 +     5.385415e+01    8.163416e+02    7.624874e+02                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
   ----------------------------------------------------------------------------------------------------------------------------------
 
 *    Step 2:: A total of 1 Photo lines are calculated, giving now rise to a total of 1 Photo ionizing lines.
-
-* 3) Perform Photo amplitude computations for up to 2 ionizing lines (without selection rules): 
- 
-  Total photoionization cross sections for initially unpolarized atoms by unpolarized plane-wave photons:
- 
-  ----------------------------------------------------------------------------------------------------------------------------------
-       i-level-f         i--J^P--f       f--Energy--i        omega        Energy e_p     Multipoles   Cou -- Cross section -- Bab    
-                                              [eV]            [eV]            [eV]                        [barn]          [barn]       
-  ----------------------------------------------------------------------------------------------------------------------------------
-       1 --    1       0 + --> 3/2 -     2.428608e+01    8.163416e+02    7.920555e+02                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
-       1 --    2       0 + --> 1/2 -     2.441708e+01    8.163416e+02    7.919245e+02                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
-  ----------------------------------------------------------------------------------------------------------------------------------
-
-*    Step 3:: A total of 2 Photo lines are calculated, giving now rise to a total of 3 Photo ionizing lines.
 
 
 * Perform ionizing computations for the photon energy 60.0  [a.u.]
@@ -210,7 +172,7 @@ Summary file opened at 2020-02-05T22:31:
        i-level-f         i--J^P--f       f--Energy--i        omega        Energy e_p     Multipoles   Cou -- Cross section -- Bab    
                                               [eV]            [eV]            [eV]                        [barn]          [barn]       
   ----------------------------------------------------------------------------------------------------------------------------------
-       1 --    1       0 + --> 1/2 +     8.950779e+02    1.632683e+03    7.376053e+02                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
+       1 --    1       0 + --> 1/2 +     8.951005e+02    1.632683e+03    7.375827e+02                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
   ----------------------------------------------------------------------------------------------------------------------------------
 
 *    Step 1:: A total of 1 Photo lines are calculated, giving now rise to a total of 1 Photo ionizing lines.
@@ -223,24 +185,10 @@ Summary file opened at 2020-02-05T22:31:
        i-level-f         i--J^P--f       f--Energy--i        omega        Energy e_p     Multipoles   Cou -- Cross section -- Bab    
                                               [eV]            [eV]            [eV]                        [barn]          [barn]       
   ----------------------------------------------------------------------------------------------------------------------------------
-       1 --    1       0 + --> 1/2 +     5.383803e+01    1.632683e+03    1.578845e+03                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
+       1 --    1       0 + --> 1/2 +     5.385415e+01    1.632683e+03    1.578829e+03                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
   ----------------------------------------------------------------------------------------------------------------------------------
 
 *    Step 2:: A total of 1 Photo lines are calculated, giving now rise to a total of 2 Photo ionizing lines.
-
-* 3) Perform Photo amplitude computations for up to 2 ionizing lines (without selection rules): 
- 
-  Total photoionization cross sections for initially unpolarized atoms by unpolarized plane-wave photons:
- 
-  ----------------------------------------------------------------------------------------------------------------------------------
-       i-level-f         i--J^P--f       f--Energy--i        omega        Energy e_p     Multipoles   Cou -- Cross section -- Bab    
-                                              [eV]            [eV]            [eV]                        [barn]          [barn]       
-  ----------------------------------------------------------------------------------------------------------------------------------
-       1 --    1       0 + --> 3/2 -     2.428608e+01    1.632683e+03    1.608397e+03                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
-       1 --    2       0 + --> 1/2 -     2.441708e+01    1.632683e+03    1.608266e+03                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
-  ----------------------------------------------------------------------------------------------------------------------------------
-
-*    Step 3:: A total of 2 Photo lines are calculated, giving now rise to a total of 4 Photo ionizing lines.
 
 
 * Perform ionizing computations for the photon energy 90.0  [a.u.]
@@ -253,7 +201,7 @@ Summary file opened at 2020-02-05T22:31:
        i-level-f         i--J^P--f       f--Energy--i        omega        Energy e_p     Multipoles   Cou -- Cross section -- Bab    
                                               [eV]            [eV]            [eV]                        [barn]          [barn]       
   ----------------------------------------------------------------------------------------------------------------------------------
-       1 --    1       0 + --> 1/2 +     8.950779e+02    2.449025e+03    1.553947e+03                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
+       1 --    1       0 + --> 1/2 +     8.951005e+02    2.449025e+03    1.553924e+03                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
   ----------------------------------------------------------------------------------------------------------------------------------
 
 *    Step 1:: A total of 1 Photo lines are calculated, giving now rise to a total of 1 Photo ionizing lines.
@@ -266,26 +214,12 @@ Summary file opened at 2020-02-05T22:31:
        i-level-f         i--J^P--f       f--Energy--i        omega        Energy e_p     Multipoles   Cou -- Cross section -- Bab    
                                               [eV]            [eV]            [eV]                        [barn]          [barn]       
   ----------------------------------------------------------------------------------------------------------------------------------
-       1 --    1       0 + --> 1/2 +     5.383803e+01    2.449025e+03    2.395187e+03                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
+       1 --    1       0 + --> 1/2 +     5.385415e+01    2.449025e+03    2.395171e+03                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
   ----------------------------------------------------------------------------------------------------------------------------------
 
 *    Step 2:: A total of 1 Photo lines are calculated, giving now rise to a total of 2 Photo ionizing lines.
 
-* 3) Perform Photo amplitude computations for up to 2 ionizing lines (without selection rules): 
- 
-  Total photoionization cross sections for initially unpolarized atoms by unpolarized plane-wave photons:
- 
-  ----------------------------------------------------------------------------------------------------------------------------------
-       i-level-f         i--J^P--f       f--Energy--i        omega        Energy e_p     Multipoles   Cou -- Cross section -- Bab    
-                                              [eV]            [eV]            [eV]                        [barn]          [barn]       
-  ----------------------------------------------------------------------------------------------------------------------------------
-       1 --    1       0 + --> 3/2 -     2.428608e+01    2.449025e+03    2.424739e+03                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
-       1 --    2       0 + --> 1/2 -     2.441708e+01    2.449025e+03    2.424608e+03                 2.800285e+07    0.000000e+00                 1.000000e+00    0.000000e+00    
-  ----------------------------------------------------------------------------------------------------------------------------------
-
-*    Step 3:: A total of 2 Photo lines are calculated, giving now rise to a total of 4 Photo ionizing lines.
-
 * Write all results to disk; use:
-   JLD.save(''zzz-cascade-ionizing-computations-2020-02-05T22.jld'', results) 
+   JLD.save(''zzz-cascade-ionizing-computations-2020-05-27T10.jld'', results) 
    using JLD 
-   results = JLD.load(''zzz-cascade-ionizing-computations-2020-02-05T22.jld'')    ... to load the results back from file.
+   results = JLD.load(''zzz-cascade-ionizing-computations-2020-05-27T10.jld'')    ... to load the results back from file.

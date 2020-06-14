@@ -499,7 +499,7 @@ module ManyElectron
     function Base.show(io::IO, settings::AsfSettings)
     	  println(io, "generateScf:          $(settings.generateScf)  ")
     	  println(io, "eeInteraction:        $(settings.eeInteraction)  ")
-    	  println(io, "scFieldf:             $(settings.scFieldf)  ")
+    	  println(io, "scField:              $(settings.scField)  ")
     	  println(io, "startScfFrom:         $(settings.startScfFrom)  ")
     	  println(io, "maxIterationsScf:     $(settings.maxIterationsScf)  ")
     	  println(io, "accuracyScf:          $(settings.accuracyScf)  ")

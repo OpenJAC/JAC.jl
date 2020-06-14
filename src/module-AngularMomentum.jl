@@ -338,6 +338,48 @@ module AngularMomentum
 
 
     """
+    `AngularMomentum.sphericalYlm(l::Int64, m::Int64, theta::Float64, phi::Float64)`  
+        ... calculates the spherical harmonics for low l-values explicitly. A value::Complex{Float64} is returned.
+            Ylm = sqrt( (2*l+1) / (two*two*pi) ) * spherical_Clm(l,m,theta,phi).
+    """
+    function sphericalYlm(l::Int64, m::Int64, theta::Float64, phi::Float64)
+        one = 1.0 + 0.0im;    iphi = 0. + phi*im
+        #
+        if      l < abs(m)              ylm = 0 * one
+        elseif  l ==  0  &&   m == 0    ylm = one / (2*sqrt(pi))
+        elseif  l ==  1  &&   m ==  1   ylm = - sqrt(3 /(2*pi)) / 2 * sin(theta) * exp(iphi)
+        elseif  l ==  1  &&   m ==  0   ylm = sqrt(3/pi) / 2 * cos(theta) * one
+        elseif  l ==  1  &&   m == -1   ylm = sqrt(3/(2*pi)) / 2 * sin(theta) * exp(-iphi)
+        elseif  l ==  2  &&   m ==  2   ylm = sqrt(3*5/(2*pi)) / (2*2) * sin(theta) * sin(theta) * exp(2*iphi)
+        elseif  l ==  2  &&   m ==  1   ylm =  - sqrt(3*5/(2*pi)) / 2 * cos(theta) * sin(theta) * exp(iphi)
+        elseif  l ==  2  &&   m ==  0   ylm = sqrt(5/pi) / 4 * (3 * cos(theta) * cos(theta) - 1) * one
+        elseif  l ==  2  &&   m == -1   ylm = sqrt(3*5/(2*pi)) / 2 * cos(theta) * sin(theta) * exp(-iphi)
+        elseif  l ==  2  &&   m == -2   ylm = sqrt(3*5/(2*pi)) / 4 * sin(theta) * sin(theta) * exp(-2*iphi)
+        elseif  l ==  3  &&   m ==  3   ylm = - sqrt(5*7/pi) / 8 * sin(theta) * sin(theta) * sin(theta) * exp(3*iphi)
+        elseif  l ==  3  &&   m ==  2   ylm = sqrt(3*5*7/(2*pi)) / 4 * cos(theta) * sin(theta) * sin(theta) * exp(2*iphi)
+        elseif  l ==  3  &&   m ==  1   ylm = - sqrt(3*7/pi) / 8 * (5*cos(theta) * cos(theta) - 1) * sin(theta) * exp(iphi)
+        elseif  l ==  3  &&   m ==  0   ylm = sqrt(7/pi) / 4 * (5*cos(theta) * cos(theta) - 3) * cos(theta) * one
+        elseif  l ==  3  &&   m == -1   ylm = sqrt(3*7/pi) / 8 * (5*cos(theta) * cos(theta) - 1) * sin(theta) * exp(-iphi)
+        elseif  l ==  3  &&   m == -2   ylm = sqrt(3*5*7/(2*pi)) / 4 * cos(theta) * sin(theta) * sin(theta) * exp(-2*iphi)
+        elseif  l ==  3  &&   m == -3   ylm = sqrt(5*7/pi) / 8 * sin(theta) * sin(theta) * sin(theta) * exp(-3*iphi)
+        elseif  l ==  4  &&   m ==  4   ylm =  3 * sqrt(5*7/(2*pi)) / 16 * (sin(theta)^4) * exp(4*iphi)
+        elseif  l ==  4  &&   m ==  3   ylm = -3 * sqrt(5*7/pi) / 8 * (sin(theta)^3) * cos(theta) * exp(3*iphi)
+        elseif  l ==  4  &&   m ==  2   ylm =  3 * sqrt(5/(2*pi)) / 8 * sin(theta) * sin(theta) * (7*cos(theta)*cos(theta) - 1) * exp(2*iphi)
+        elseif  l ==  4  &&   m ==  1   ylm = -3 * sqrt(5/pi) / 8 * sin(theta) * (7*(cos(theta)^3) - 3*cos(theta)) * exp(iphi)
+        elseif  l ==  4  &&   m ==  0   ylm =  3 * sqrt(1/pi) / 16 * (35*(cos(theta)^4) - 30*cos(theta)*cos(theta) + 3) * one  
+        elseif  l ==  4  &&   m == -1   ylm =  3 * sqrt(5/pi) / 8 * sin(theta) * (7*(cos(theta)^3) - 3*cos(theta))* exp(-iphi)
+        elseif  l ==  4  &&   m == -2   ylm =  3 * sqrt(5/(2*pi)) / 8 * sin(theta) * sin(theta) * (7*cos(theta)*cos(theta) - 1) * exp(-2*iphi)
+        elseif  l ==  4  &&   m == -3   ylm =  3 * sqrt(5*7/pi) / 8 * (sin(theta)^3) * cos(theta) * exp(-3*iphi)
+        elseif  l ==  4  &&   m == -4   ylm =  3 * sqrt(5*7/(2*pi)) / 16 * (sin(theta)^4) * exp(-4*iphi)
+        else    error("stop a")
+            # Further values can be find in /home/fritzsch/fri/rabs-jena/rabs_dirac_orbital.f90
+        end
+        
+        return( ylm )
+    end
+
+
+    """
     `AngularMomentum.triangularDelta(ia2::Int64, ib2::Int64, ic2::Int64)`  
         ... calculates the tringular Delta(ja,jb,jc). The arguments in this integer function are i2a = 2*ja+1, ... 
             The result is 0 if the triangular condition failes and 1 otherwise. 

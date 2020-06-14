@@ -216,6 +216,32 @@ module BasicsAG
 
 
     """
+    `Basics.determinePolarizationVector(q::Int64, kind::Basics.AbstractPolarization; star::Bool=false)`  
+        ... determines the q-th component of the (complex and unit) polarization vector u for the given kind of polarization;
+            for star = true, the complex-conjugate component is returned.  a comp::Float64 is returned.
+    """
+    function Basics.determinePolarizationVector(q::Int64, kind::Basics.LinearPolarization; star::Bool=false)
+        if  q == 0   return( 0. )   else   return( 1/sqrt(2.) )        end
+    end
+    #
+    function Basics.determinePolarizationVector(q::Int64, kind::Basics.LeftCircular; star::Bool=false)
+        if  q == 1   return( 1. )   else   return( 0. )                end
+    end
+    #
+    function Basics.determinePolarizationVector(q::Int64, kind::Basics.RightCircular; star::Bool=false)
+        if  q == -1  return( 1. )   else   return( 0. )                end
+    end
+
+
+    """
+    `Basics.determinePolarizationLambda(kind::Basics.AbstractPolarization)`  
+        ... determines the (standard) lambda value for the given kind of polarization; a lambda::Int64 is returned.
+    """
+    function Basics.determinePolarizationLambda(kind::Basics.LeftCircular)   return(  1 )    end
+    function Basics.determinePolarizationLambda(kind::Basics.RightCircular)  return( -1 )    end
+
+
+    """
     `Basics.determineSelectedLines(lineList::Array{Tuple{Int64,Int64},1}, initialMultiplet::Multiplet, finalMultiplet::Multiplet)`  
         ... to determine the specified lines as tupels of initial- and final levels. A level index is 0 in lineList always refers to
             all levels from the corresponding multiplet. A (unique) newList::Array{Tuple{Int64,Int64},1} is returned.
@@ -305,6 +331,17 @@ module BasicsAG
         else     error("Unsupported keystring = $sa")
         end
     end
+
+
+    """
+    `Basics.diracDelta(x::Float64, dx::Float64)`  
+        ... evaluates Dirac's function  delta(x) = 0  for abs(x) > dx/2   and   delta(x) = 1/dx    for abs(x) <= dx/2;
+            a values::Float64 is returned.
+    """
+    function Basics.diracDelta(x::Float64, dx::Float64)    
+        if  abs(x) > dx/2   return( 0. )    else    return( 1/dx )  end
+    end
+    
 
     """
     `Basics.display("constants")`  or  `("physical constants")`  

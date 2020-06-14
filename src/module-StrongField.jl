@@ -5,7 +5,8 @@
 """
 module StrongField
 
-    using    Printf, ..Basics, ..Defaults, ..Radial, ..ManyElectron, ..Nuclear, ..Pulse, ..TableStrings
+    using    Printf, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..Radial, ..ManyElectron, 
+             ..Nuclear, ..Pulse, ..TableStrings
 
     export   aaaa
 
@@ -14,10 +15,12 @@ module StrongField
     `abstract type StrongField.AbstractSFAObservable` 
         ... defines an abstract and a number of types for the observables that can be computed with SFA amplitudes.
 
+        + struct SfaNoObservable            ... an empty instance of an observable that does not help compute anything.
         + struct SfaEnergyDistribution      ... to compute the energy distribution of the photoelectrons.
         + struct SfaMomentumDistribution    ... to compute the momentum distribution of the photoelectrons (not yet).
     """
-    abstract type  AbstractSFAObservable    end
+    abstract type  AbstractSFAObservable                                 end
+    struct   SfaNoObservable     <: StrongField.AbstractSFAObservable    end
 
 
     """
@@ -32,6 +35,17 @@ module StrongField
         theta           ::Float64
         phi             ::Float64
         energies        ::Array{Float64,1}
+    end
+    
+
+    """
+    `StrongField.SfaEnergyDistribution(theta::Float64, phi::Float64, NoEnergies::Int64, maxEnergy::Float64)`  
+        ... defines an energy distribution for given (theta,phi) and for NoEnergies between 0 < energy <= maxEnergy;
+            a dist::SfaEnergyDistribution is returned.
+    """
+    function SfaEnergyDistribution(theta::Float64, phi::Float64, NoEnergies::Int64, maxEnergy::Float64)
+        energies = Float64[];      for  i=1:NoEnergies   push!(energies, i*maxEnergy / NoEnergies)   end
+        SfaEnergyDistribution(theta, phi, energies)
     end
 
 
@@ -58,9 +72,9 @@ module StrongField
     struct         CoulombVolkov     <:  AbstractVolkovState   end
     struct         DistortedVolkov   <:  AbstractVolkovState   end
 
-    function Base.string(volkov::FreeVolkov)         return( "apply free-Volkov states" )         end
-    function Base.string(volkov::CoulombVolkov)      return( "apply Coulomb-Volkov states" )      end
-    function Base.string(volkov::DistortedVolkov)    return( "apply distorted-Volkov states" )    end
+    function Base.string(volkov::FreeVolkov)         return( "free-Volkov states" )         end
+    function Base.string(volkov::CoulombVolkov)      return( "Coulomb-Volkov states" )      end
+    function Base.string(volkov::DistortedVolkov)    return( "distorted-Volkov states" )    end
 
     
     """
@@ -85,7 +99,7 @@ module StrongField
         ... constructor for the default values of SFA computations.
     """
     function Settings()
-        Settings([E1], UseGauge[], false, false)
+        Settings([E1], [UseCoulomb], false, false)
     end
 
 
@@ -126,19 +140,33 @@ module StrongField
         settings             ::StrongField.Settings
     end 
 
+    
+    """
+    `StrongField.Computation()`  ... constructor for an `empty` instance of StrongField.Computation().
+    """
+    function Computation()
+        Computation( SfaNoObservable(), Nuclear.Model(1.0), Radial.Grid(true), Level(), Level(), 
+                     Pulse.PlaneWaveBeam(), Pulse.InfiniteEnvelope(), Basics.RightCircular(), FreeVolkov(), Settings()  )
+    end
+
+
+    # `Base.string(comp::StrongField.Computation)`  ... provides a String notation for the variable comp::StrongField.Computation.
+    function Base.string(comp::StrongField.Computation)
+        sa = "Strong-field computation:  " * string(comp.observable) * " for Z = $(comp.nuclearModel.Z)  with " * string(comp.volkov) * "\n"
+        sa = sa * " initial level with (J, P, energy) = ($(comp.initialLevel.J), $(comp.initialLevel.parity), $(comp.initialLevel.energy)) \n" 
+        sa = sa * " final level with   (J, P, energy) = ($(comp.finalLevel.J), $(comp.finalLevel.parity), $(comp.finalLevel.energy))   \n\n" 
+        sa = sa * "The incident laser pulse is described by the: \n "
+        sa = sa * string(comp.beam) * "\n " * string(comp.polarization) * "\n " * string(comp.envelope)
+        return( sa )
+    end
+
 
     # `Base.show(io::IO, comp::StrongField.Computation)`  ... prepares a proper printout of the variable comp::StrongField.Computation.
     function Base.show(io::IO, comp::StrongField.Computation) 
-        println(io, "observable:         $(comp.observable)  ")
-        println(io, "nuclearModel:       $(comp.nuclearModel)  ")
-        println(io, "grid:               $(comp.grid)  ")
-        println(io, "initialLevel:       $(comp.initialLevel)  ")
-        println(io, "finalLevel:         $(comp.finalLevel)  ")
-        println(io, "beam:               $(comp.beam)  ")
-        println(io, "envelope:           $(comp.envelope)  ")
-        println(io, "polarization:       $(comp.polarization)  ")
-        println(io, "volkov:             $(comp.volkov)  ")
-        println(io, "settings:           $(comp.settings)  ")
+        sa = Base.string(comp);             print(io, sa, "\n\n")
+        println(io, "Settings:              \n$(comp.settings)    ")  
+        println(io, "nuclearModel:          $(comp.nuclearModel)  ")
+        println(io, "grid:                  $(comp.grid)  ")
     end
 
 
@@ -165,7 +193,7 @@ module StrongField
     end
 
     function Base.show(io::IO, amp::StrongField.SphericalAmplitude)
-        sa = string(op);       print(io, sa, "\n")
+        sa = string(amp);       print(io, sa)
     end
 
 
@@ -176,11 +204,13 @@ module StrongField
 
         + theta         ::Float64             ... polar angles of the energy distribution
         + phi           ::Float64
-        + probabilities ::Array{Float64,1}    ... calculate probabilities of the energy distribution.
+        + energies      ::Array{Float64,1}    ... selected energies of the distribution.
+        + probabilities ::Array{Float64,1}    ... calculated probabilities of the energy distribution.
     """
     struct   OutcomeEnergyDistribution
         theta           ::Float64
         phi             ::Float64
+        energies        ::Array{Float64,1}
         probabilities   ::Array{Float64,1}
     end
 
@@ -189,6 +219,7 @@ module StrongField
     function Base.show(io::IO, outcome::StrongField.OutcomeEnergyDistribution) 
         println(io, "theta:             $(outcome.theta)  ")
         println(io, "phi:               $(outcome.phi)  ")
+        println(io, "energies:          $(outcome.energies)  ")
         println(io, "probabilities:     $(outcome.probabilities)  ")
     end
     
@@ -200,17 +231,25 @@ module StrongField
 
 
     """
-    `StrongField.computeEnvelopeIntegrals(observable::AbstractSFAObservable, beam::AbstractBeam, envelope::Pulse.AbstractEnvelope, 
-                                          polarization::Basics.AbstractPolarization)`  
+    `StrongField.computeEnvelopeIntegrals(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                          thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
         ... computes the pulse-envelope integrals for the given laser pulse; this pulse is completely specified by its beam character
             and parameters, the pulse-envelope parameters and the polarization of the light. A tuple of the two integrals
             (fVolkov, fVolkovSquared)::Tuple{Complex{Float64},Complex{Float64}} is returned.
     """
-    function computeEnvelopeIntegrals(observable::AbstractSFAObservable, beam::AbstractBeam, envelope::Pulse.AbstractEnvelope, 
-                                      polarization::Basics.AbstractPolarization)
-        fVolkov        = 1.0
-        fVolkovSquared = 1.0 
-        return( (fVolkov, fVolkovSquared) )
+    function computeEnvelopeIntegrals(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        fVolkovPlus    = Pulse.envelopeVolkovIntegral(true,  envelope, beam, polarization, thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        fVolkovMinus   = Pulse.envelopeVolkovIntegral(false, envelope, beam, polarization, thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        fVolkovSquared = Pulse.envelopeQuadVolkovIntegral(envelope, beam, polarization,    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        
+        println("> Envelope integrals for an $(string(envelope)) with A0=$(beam.A0), omega=$(beam.omega) [a.u.], cep=$(beam.cep)" * 
+                " and for $(string(polarization)) light are:" )
+        println("    F^(Volkov) [+; omega; f^(env); A]   = $fVolkovPlus" )
+        println("    F^(Volkov) [-; omega; f^(env); A]   = $fVolkovMinus" )
+        println("    F^(quad, Volkov) [f^(env); A]       = $fVolkovSquared" )
+        
+        return( (fVolkovPlus, fVolkovMinus, fVolkovSquared) )
     end
 
 
@@ -221,20 +260,50 @@ module StrongField
     """
     function  computeOutcome(obs::StrongField.SfaEnergyDistribution, amplitudes::Array{SphericalAmplitude,1})
         probabilities = Float64[]
+        for  amp  in  amplitudes   pp = sqrt(2*amp.energy);  push!(probabilities, pp * amp.value * conj(amp.value) )      end
         outcome = OutcomeEnergyDistribution(obs.theta, obs.phi, obs.energies, probabilities)
         return( outcome )
     end
 
 
     """
-    `StrongField.computeSphericalAmplitudes(comp::StrongField.Computation, envIntegrals::Tuple{Complex{Float64},Complex{Float64}})`  
+    `StrongField.computeSphericalAmplitudes(comp::StrongField.Computation)`  
         ... computes all necessary spherical amplitudes for the given initial and final levels, the Volkov states
             and polarization and by using the pulse envelope integrals. A newAmplitudes::Array{SphericalAmplitude,1} is returned.
     """
-    function  computeSphericalAmplitudes(comp::StrongField.Computation, envIntegrals::Tuple{Complex{Float64},Complex{Float64}})
+    function  computeSphericalAmplitudes(comp::StrongField.Computation)
+        newAmplitudes = SphericalAmplitude[]
+        #
         # First determine which spherical SFA amplitudes need to be computed before the actual computation starts
         sfaAmplitudes = StrongField.determineSphericalAmplitudes(comp.observable)
-        newAmplitudes = SphericalAmplitude[]
+        # Determine quantum numbers of the initial and final state
+        nqn = 1;    lqn = 0;    m = 0;    initialEn = comp.initialLevel.energy
+        #
+        # Compute the requested amplitudes
+        for  amp in  sfaAmplitudes
+            thetap        = amp.theta;   phip = amp.phi;     energyp = amp.energy
+            envIntegrals  = StrongField.computeEnvelopeIntegrals(comp.envelope, comp.beam, comp.polarization, thetap, phip, energyp, initialEn)
+            fVolkovPlus, fVolkovMinus, fVolkovSquared = envIntegrals
+            #
+            wminus = 0.0im;    wplus = 0.0im
+            # Collect contributions from all l_p, q terms; this summation will change in a (nljm) representation
+            for  lp = 0:2
+                for  q in [-1, 0, 1]
+                    reducedME = 1.0  ##  InteractionStrength.nrMomentum(amp.energy, lp, nqn, lqn)
+                    wminus = wminus + AngularMomentum.sphericalYlm(lp, m-q, amp.theta, amp.phi) * (-1)^q  * 
+                             Basics.determinePolarizationVector(q, comp.polarization)                     *
+                             AngularMomentum.ClebschGordan(lp, m, 1, -q, lp, m-q) * reducedME
+                    wminus = wminus + AngularMomentum.sphericalYlm(lqn, m+q, amp.theta, amp.phi)          * 
+                             Basics.determinePolarizationVector(q, comp.polarization, star=true)          *
+                             AngularMomentum.ClebschGordan(lqn, m, 1, q, lp, m+q) * reducedME 
+                end
+            end
+            wa = -im * sqrt(2/pi) * (fVolkovMinus * wminus + fVolkovPlus * wplus) - im / sqrt(2*pi) * fVolkovSquared 
+            push!(newAmplitudes, SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa))
+            
+            println(">> $(SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa))")
+        end
+        
         return( newAmplitudes )
     end
 
@@ -247,8 +316,9 @@ module StrongField
     """
     function  determineSphericalAmplitudes(observable::StrongField.SfaEnergyDistribution)
         amplitudes = StrongField.SphericalAmplitude[]
-        for  energy in observable.energies      push!(amplitudes, SphericalAmplitude(energy, theta, phi, 0.))     end
+        for  energy in observable.energies      push!(amplitudes, SphericalAmplitude(energy, observable.theta, observable.phi, 0.))     end
         
+        println("> A totel of $(length(amplitudes)) spherical amplitudes need to be calculated.")
         return( amplitudes )
     end
     
@@ -263,16 +333,15 @@ module StrongField
         nModel = comp.nuclearModel
         
         if       typeof(comp.observable) == StrongField.SfaEnergyDistribution
-            envIntegrals  = StrongField.computeEnvelopeIntegrals(comp.observable, comp.beam, comp.envelope, comp.polarization)
-            sfaAmplitudes = StrongField.computeSphericalAmplitudes(comp, envIntegrals)
+            sfaAmplitudes = StrongField.computeSphericalAmplitudes(comp)
             sfaOutcome    = StrongField.computeOutcome(comp.observable, sfaAmplitudes)
             if output    results = Base.merge( results, Dict("computation" => comp, "energy disribution" => sfaOutcome) )  end
         elseif   typeof(comp.observable) == StrongField.SfaMomentumDistribution
-                error("not yet implemented.")
+                 error("not yet implemented.")
         else     error("Undefined observable for strong-field computations.")
         end
         
-        return( 0. )
+        if  output   return( results)   else    return( nothing )   end
     end
 
 end # module

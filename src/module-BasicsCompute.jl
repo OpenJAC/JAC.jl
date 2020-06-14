@@ -114,7 +114,7 @@ module BascisCompute
         
         matrix = zeros(Float64, n, n)
         keep = true
-        JAC.InteractionStrength.XL_Coulomb_reset_storage(keep)
+        JAC.InteractionStrength.XL_Coulomb_reset_storage(keep, printout=false)
         JAC.InteractionStrength.XL_Breit_reset_storage(keep)
         print(">> performCI() ... ")
         @time   for  r = 1:n

@@ -1351,9 +1351,12 @@ module Basics
     function determineEnergySharings                        end
     function determineHoleShells                            end
     function determineParity                                end
+    function determinePolarizationLambda                    end
+    function determinePolarizationVector                    end
     function determineSelectedLines                         end
     function determineSelectedPathways                      end
     function diagonalize                                    end
+    function diracDelta                                     end
     function display                                        end
     function excludeDoubles                                 end
     function extractNoOpenShells                            end

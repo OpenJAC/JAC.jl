@@ -409,6 +409,9 @@ module BascisPerform
         # Generate first an effective nuclear charge Z(r) on the given grid
         potential = JAC.Nuclear.nuclearPotential(nuclearModel, grid)
         
+        keep = true
+        JAC.InteractionStrength.XL_Coulomb_reset_storage(keep)
+        #
         n = length(csfList);    matrix = zeros(Float64, n, n)
         for  r = 1:n
             wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[r])
@@ -419,10 +422,10 @@ module BascisPerform
             end
 
             for  coeff in wa[2]
-                if  settings.coulombCI    
+                if  settings.eeInteractionCI in [CoulombInteraction(), CoulombBreit()]
                     me = me + coeff.V * JAC.InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
-                                                                                     basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   end
-                if  settings.breitCI
+                                                                                     basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)   end
+                if  settings.eeInteractionCI in [BreitInteraction(), CoulombBreit()]
                     me = me + coeff.V * JAC.InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                    basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)     end
             end

@@ -48,6 +48,7 @@ module Defaults
     const CONVERT_ENERGY_AU_TO_EV           = HARTREE_ENERGY_EV
     const CONVERT_ENERGY_AU_TO_KAYSERS      = 2.0 * RYDBERG_IN_KAYSERS
     const CONVERT_ENERGY_AU_TO_PER_SEC      = 6.57968974479e15
+    const CONVERT_INTENSITY_AU_TO_W_CM2     = 3.50944758e16
     const CONVERT_TIME_AU_TO_SEC            = 2.418_884_254e-17
     const CONVERT_CROSS_SECTION_AU_TO_BARN  = BOHR_RADIUS_SI^2 * 1.0e28
     const CONVERT_RATE_AU_TO_PER_SEC        = (ELECTRON_MASS_IN_G/HBAR_IN_ERGS) * ((ELECTRON_CHARGE_IN_ESU^2/HBAR_IN_ERGS)^2)
@@ -117,6 +118,10 @@ module Defaults
     + `("energy: from predefined to atomic unit", value::Float64)`  or  `("energy: to atomic", value::Float64)`... to convert an energy value 
                                                     from the predefined to the atomic energy unit; a Float64 is returned.
     + `("energy: from eV to atomic unit", value::Float64)` ... to convert an energy value from eV to the atomic energy unit; a Float64 is returned.
+
+    + `("energy: from wavelength [nm] to atomic", value::Float64)` ... to convert a wavelength [nm] to the atomic energy unit; a Float64 is returned.
+
+    + `("intensity: from W/cm^2 to atomic", value::Float64)` ... to convert the intensity [in W/cm^2] to the atomic intensity unit; a Float64 is returned.
 
     + `("kinetic energy to wave number: atomic units", value::Float64)`  ... to convert a kinetic energy value (in a.u.) into a wave number
                                                     k (a.u.); a Float64 is returned.
@@ -197,6 +202,10 @@ module Defaults
             end
 
         elseif   sa in ["energy: from eV to atomic"]                        return( wa / CONVERT_ENERGY_AU_TO_EV )
+        elseif   sa in ["energy: from wavelength [nm] to atomic"]           return( 1.0e7 / (CONVERT_ENERGY_AU_TO_KAYSERS * wa) )
+
+        elseif   sa in ["intensity: from W/cm^2 to atomic"]                 return( wa / CONVERT_INTENSITY_AU_TO_W_CM2 )
+        elseif   sa in ["intensity: from atomic to W/cm^2"]                 return( wa * CONVERT_INTENSITY_AU_TO_W_CM2 )
 
         elseif    sa in ["rate: from atomic to predefined unit", "rate: from atomic"]
             if       Defaults.getDefaults("unit: rate") == "1/s"            return( wa * CONVERT_RATE_AU_TO_PER_SEC )

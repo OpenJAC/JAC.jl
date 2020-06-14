@@ -463,23 +463,24 @@
         
         # Loop through all (computation) data set and display the major results
         for  (i,data) in  enumerate(dataDicts)
-            multiplets  = data["initial multiplets:"]
-            gMultiplets = data["generated multiplets:"]
+            results     = data["results"]
+            multiplets  = results["initial multiplets:"]
+            gMultiplets = results["generated multiplets:"]
             nlev = 0;    for multiplet in multiplets     nlev  = nlev  + length(multiplet.levels)     end
             nglev = 0;   for multiplet in gMultiplets    nglev = nglev + length(multiplet.levels)     end
-            println("\n* $i) Data dictionary for cascade computation:   $(data["name"])  with  $nlev initial and  $nglev generated levels") 
+            println("\n* $i) Data dictionary for cascade computation:   $(results["name"])  with  $nlev initial and  $nglev generated levels") 
             println(  "  ===========================================")
             
             Cascade.displayLevels(stdout, multiplets, sa="initial ")
             if  printSummary 
-                println(iostream, "\n* $i) Data dictionary for cascade computation:   $(data["name"])  with  $nlev initial and  $nglev generated levels") 
+                println(iostream, "\n* $i) Data dictionary for cascade computation:   $(results["name"])  with  $nlev initial and  $nglev generated levels") 
                 println(iostream,   "  ===========================================")
                 Cascade.displayLevels(iostream, multiplets,  sa="initial ")
                 Cascade.displayLevels(iostream, gMultiplets, sa="generated ")        
             end
             #
-            if      haskey(data,"decay line data:")                lineData = data["decay line data:"]
-            elseif  haskey(data,"photo-ionizing line data:")       lineData = data["photo-ionizing line data:"]
+            if      haskey(results,"decay line data:")                lineData = results["decay line data:"]
+            elseif  haskey(results,"photo-ionizing line data:")       lineData = results["photo-ionizing line data:"]
             else    error("stop a")
             end
             levels = Cascade.extractLevels(lineData, settings)

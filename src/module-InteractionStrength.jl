@@ -665,12 +665,12 @@ module InteractionStrength
     
     
     """
-    `InteractionStrength.XL_Coulomb_reset_storage(keep::Bool)`  
+    `InteractionStrength.XL_Coulomb_reset_storage(keep::Bool; printout::Bool=false)`  
         ... resets the global storage of XL_Coulomb interaction strength; nothing is returned.
     """
-    function XL_Coulomb_reset_storage(keep::Bool)
+    function XL_Coulomb_reset_storage(keep::Bool; printout::Bool=false)
         if  keep
-            ##x println(">> Reset GBL_Storage_XL_Coulomb storage.")
+            if printout     println(">> Reset GBL_Storage_XL_Coulomb storage.")     end
             global GBL_Storage_XL_Coulomb = Dict{String, Float64}()
         else
         end
@@ -707,7 +707,8 @@ module InteractionStrength
                 ##x println(">> get value $XL_Coulomb  for $sa ")
             else
                 XL_Coulomb = InteractionStrength.XL_Coulomb(L::Int64, a, b, c, d, grid)
-                global GBL_Storage_XL_Coulomb = Base.merge(GBL_Storage_XL_Coulomb, Dict( sa => XL_Coulomb))
+                ## global GBL_Storage_XL_Coulomb = Base.merge(GBL_Storage_XL_Coulomb, Dict( sa => XL_Coulomb))
+                global GBL_Storage_XL_Coulomb[sa] = XL_Coulomb
             end
         else
             xc = AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
