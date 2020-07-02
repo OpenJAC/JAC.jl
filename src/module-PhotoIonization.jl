@@ -181,12 +181,12 @@ module PhotoIonization
 
     """
     `PhotoIonization.computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
-                                                     settings::PhotoIonization.Settings)`  
+                                                     settings::PhotoIonization.Settings; printout::Bool=false)`  
         ... to compute all amplitudes and properties of the given line; a line::PhotoIonization.Line is returned for which the amplitudes and 
             properties are now evaluated.
     """
     function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
-                                          settings::PhotoIonization.Settings)
+                                          settings::PhotoIonization.Settings; printout::Bool=false)
         newChannels = PhotoIonization.Channel[];;   contSettings = Continuum.Settings(false, nrContinuum);    csC = 0.;    csB = 0.
         for channel in line.channels
             newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)

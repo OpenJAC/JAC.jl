@@ -293,12 +293,12 @@ module BascisPerform
 
         # Generate start orbitals
         if  typeof(settings.startScfFrom) == StartFromHydrogenic
-            println("Start SCF process with hydrogenic orbitals.")
+            if  printout   println("Start SCF process with hydrogenic orbitals.")   end
             # Generate start orbitals for the SCF field by using B-splines
             ##x orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(waL, nsL, waS, nsS, nuclearModel, subshellList)
             orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(wa, nuclearModel, subshellList; printout=printout)
         elseif  typeof(settings.startScfFrom) == StartFromPrevious
-            println("Start SCF process from given list of orbitals.")
+            if  printout   println("Start SCF process from given list of orbitals.")    end
             # Taking starting orbitals for the given dictionary; non-relativistic orbitals with a proper nuclear charge
             # are adapted if no orbital is found
             orbitals = Dict{Subshell, Orbital}()

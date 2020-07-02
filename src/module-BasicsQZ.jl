@@ -265,6 +265,23 @@ module BasicsQZ
     
 
     """
+    `Basics.shiftTotalEnergies(multiplet::Multiplet, energyShift::Float64)`  
+        ... to shift the energies of all levels in the multiplet by energyShift [a.u.]; a (new) multiplet::Multiplet is returned.
+    """
+    function Basics.shiftTotalEnergies(multiplet::Multiplet, energyShift::Float64)
+        newLevels = Level[]
+        for lev in multiplet.levels
+            push!(newLevels, Level(lev.J, lev.M, lev.parity, lev.index, lev.energy + energyShift, lev.relativeOcc, lev.hasStateRep, lev.basis, lev.mc) )
+        end
+        
+        newMultiplet = Multiplet(multiplet.name, newLevels)
+        
+        return( newMultiplet )  
+    end
+    
+    
+
+    """
     `Basics.sortByEnergy(multiplet::Multiplet)`  
         ... to sort all levels in the multiplet into a sequence of increasing energy; a (new) multiplet::Multiplet is returned.
     """

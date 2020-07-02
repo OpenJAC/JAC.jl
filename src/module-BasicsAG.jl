@@ -479,6 +479,37 @@ module BasicsAG
         
         return( nothing )
     end
+   
+
+    """
+    `Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1})`  
+        ... display on stream the level energies of all given levels in ascending order, and together with the configuration of most leading term
+            in the level expansion. A neat table is printed but nothing is returned otherwise.
+    """
+    function Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1})
+        allLevels = Level[]
+        for  multiplet  in multiplets
+            for  level in  multiplet.levels   push!(allLevels, level)      end
+        end
+        sortedLevels = Base.sort( allLevels, lt=Base.isless)
+        energy0      = sortedLevels[1].energy
+        println(stream, "  ", TableStrings.hLine(84))
+        println(stream, "    J Parity   No. electrons    Energy " * TableStrings.inUnits("energy") * "        Leading configuration") 
+        println(stream, "  ", TableStrings.hLine(84))
+        for  level  in  sortedLevels
+            mc2  = level.mc .* level.mc;   index = findmax(mc2)[2]
+            conf = Basics.extractNonrelativisticConfigurationFromCsfR(level.basis.csfs[index],  level.basis)
+            #
+            sa   = TableStrings.flushright(12, string(LevelSymmetry(level.J, level.parity)))  * 
+                   TableStrings.flushright(12, string(conf.NoElectrons))                      * 
+                   TableStrings.flushright(20, @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", level.energy - energy0))) * "       " *
+                   TableStrings.flushleft(44, string(conf)) 
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(84))
+        
+        return( nothing )
+    end
 
 
     """

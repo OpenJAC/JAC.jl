@@ -1358,6 +1358,7 @@ module Basics
     function diagonalize                                    end
     function diracDelta                                     end
     function display                                        end
+    function displayLevels                                  end
     function excludeDoubles                                 end
     function extractNoOpenShells                            end
     function extractNonrelativisticShellList                end
@@ -1401,6 +1402,7 @@ module Basics
     function readMixFileRelci                               end
     function readMixingFileGrasp92                          end
     function recast                                         end
+    function shiftTotalEnergies                             end
     function sortByEnergy                                   end
     function tabulate                                       end
     function tabulateKappaSymmetryEnergiesDirac             end

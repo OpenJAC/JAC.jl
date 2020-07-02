@@ -160,10 +160,10 @@ module Semiempirical
                                              if wa[2]  == -1.   error("stop ad")   end
                 elseif  sh == Shell("3p")    if wa[6]  == -1.   wb = wb + v * wa[3]/12.   else    wb = wb + v * wa[6]    end
                                              if wa[3]  == -1.   error("stop af")   end
-                elseif  sh == Shell("3d")    if wa[8]  == -1.   error("stop ah")          else    wb = wb + v * wa[8]    end
-                elseif  sh == Shell("4s")    if wa[10] == -1.   error("stop aj")          else    wb = wb + v * wa[10]   end
-                elseif  sh == Shell("4p")    if wa[11] == -1.   error("stop ak")          else    wb = wb + v * wa[11]   end
-                else    error("No binding energy available for Z = $Z and subshell $sh ")
+                elseif  sh == Shell("3d")    if wa[8]  == -1.                             else    wb = wb + v * wa[8]    end
+                elseif  sh == Shell("4s")    if wa[10] == -1.                             else    wb = wb + v * wa[10]   end
+                elseif  sh == Shell("4p")    if wa[11] == -1.                             else    wb = wb + v * wa[11]   end
+                else    ## error("No binding energy available for Z = $Z and subshell $sh ")
                 end
             end
         else   error("Unsupported keystring")

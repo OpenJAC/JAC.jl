@@ -778,7 +778,7 @@ module Radial
         end
         mZbar   = sum(meanZbar) / nx;   for  i = 1:nx    devsZbar[i] = (meanZbar[i] - mZbar)^2    end
         stdZbar = sqrt( sum(devsZbar) / nx )
-        if  false  println(">> Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
+        if  true  println(">> Radial potential with effective charge Zbar=" * @sprintf("%.4e",mZbar) *
                           " (Delta-Zbar=" * @sprintf("%.4e",stdZbar) * ") at r=" * @sprintf("%.4e",pot.grid.r[mtp]) * " a.u." )    end
         
         return( mZbar )

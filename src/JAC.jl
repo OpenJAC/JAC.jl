@@ -72,7 +72,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        NoAmplitude, NoProcess, Nuclear, NoneQed, NoProperty, 
        Orbital, 
        perform, provide, PairA1P, PairAnnihilation1Photon, PairAnnihilation2Photon, PairProduction, ParityNonConservation, PeriodicTable,
-       Photo, PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
+       Photo, PhotoEmission, PhotoExc, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonization, PhotoIonizationFluores, 
        PhotoIonizationAutoion, PhotoRecombination, PlasmaShift, Plasma, Polarity, Pulse,
        QedPetersburg, QedSydney,
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RasSettings, RasStep, 

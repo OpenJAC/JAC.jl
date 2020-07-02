@@ -37,7 +37,9 @@ module Continuum
         
         phi0 = 0.3
         wc   = Defaults.getDefaults("speed of light: c");    q = sqrt( 2*energy + energy/(wc*wc));    kappa = sh.kappa
+        ##x @show pot
         Zbar = Radial.determineZbar(pot)
+        @show kappa, Zbar, wc
         y    = Zbar * (energy + wc^2) / (wc^2 * q);   gammaBar = sqrt(kappa^2 - Zbar^2 / wc^2)
         eta  = - (kappa - im*y) / (energy + wc^2) / (gammaBar + im*y) / (2im)
         NP   = sqrt( (energy + 2*wc^2)/(pi*wc^2*q) );   NQ = -sqrt( energy / (pi*wc^2*q) )
@@ -117,15 +119,15 @@ module Continuum
         settings.includeExchange   &&   error("Continuum orbital for local potential does not allow 'exchange'.")
         
         # Generate a continuum orbital due to the given solution method
-        if      Defaults.GBL_CONT_SOLUTION  ==  ContBessel 
+        if      Defaults.GBL_CONT_SOLUTION  ==  ContBessel() 
             cOrbital = Continuum.generateOrbitalBessel(energy, sh, pot.grid, settings)
-        elseif  Defaults.GBL_CONT_SOLUTION  ==  ContSine 
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  ContSine()
             cOrbital = Continuum.generateOrbitalPureSine(energy, sh, pot.grid, settings)
-        elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb 
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb()
             cOrbital = Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
-        elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb 
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb()
             cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
-        elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin
+        elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin()
             cOrbital = Continuum.generateOrbitalGalerkin(energy, sh, pot, settings)
         else    error("stop a")
         end
@@ -133,11 +135,11 @@ module Continuum
         ## return( cOrbital, 0., 0. )
         #
         # Normalize the continuum orbital and determine its phase
-        if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSine
+        if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSineNorm()
             cOrbital, phase, normFactor = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
-        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSine
+        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSineNorm()
             cOrbital, phase, normFactor = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
-        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussek
+        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussekNorm()
             cOrbital, phase, normFactor = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
         else    error("stop b")
         end
@@ -420,7 +422,7 @@ module Continuum
         mtp = size( cOrbital.P, 1) - 30;                    energy = cOrbital.energy;      kappa = cOrbital.subshell.kappa
         wc   = Defaults.getDefaults("speed of light: c");   E = wc^2 + cOrbital.energy;    q = sqrt( 2*energy + energy/(wc*wc))     
         qq = sqrt(E^2/wc^2 - wc^2)
-        @show q, qq
+        ##x @show q, qq
         
         if  true
             i = mtp;     dVdr = pot.Zr[i] / (pot.grid.r[i]^2);    V  = - pot.Zr[i] / pot.grid.r[i]
@@ -429,7 +431,7 @@ module Continuum
             ##x @show wc /2.
             ##x @show ((E-V)*dVdr - wc^2 *kappa*(kappa+1) /r0^3)
             ##x @show (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1) / r0^2))
-            @show Pe, Pep
+            ##x @show Pe, Pep
             U = wc /2. * ((E-V)*dVdr - wc^2 *kappa*(kappa+1) /r0^3) / (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1) / r0^2)^(3/2)) * Pe
             ## U = U - wc * (Pep + dVdr * Pe / (2*(E-V+ 2* wc^2)) ) / (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1)/r0^2)^(1/2))
             U = U - wc * (Pep + dVdr * Pe / (2*(E-V+ 2* wc^2)) ) / (( (E-V)^2 -wc^4 - wc^2 *kappa*(kappa+1)/r0^2)^(1/2))

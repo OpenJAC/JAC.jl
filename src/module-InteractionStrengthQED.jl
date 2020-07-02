@@ -94,7 +94,8 @@ module InteractionStrengthQED
     """
     function selfEnergyVolotka(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid, qgrid::Radial.GridGL)
         # Non-zero local amplitudes only for kappa_a = kappa_b
-        if      a.subshell != b.subshell  ||  a.subshell.n > 4   return( 0. )    end
+        if      a.subshell != b.subshell  ||  a.subshell.n > 4         return( 0. )    end
+        if      a.subshell.kappa == 3  ||  abs(a.subshell.kappa) > 3   return( 0. )    end
         
         if      a.subshell.kappa == -1   nn = 1;    elseif  a.subshell.kappa ==  1   nn = 2;    elseif  a.subshell.kappa == -2   nn = 2
         elseif  a.subshell.kappa ==  2   nn = 3;    elseif  a.subshell.kappa == -3   nn = 3

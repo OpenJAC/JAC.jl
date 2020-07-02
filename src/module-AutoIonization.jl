@@ -226,11 +226,11 @@ module AutoIonization
     """
     `AutoIonization.computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                                 settings::AutoIonization.Settings; printout::Bool=true)` 
-        ... to compute all amplitudes and properties of the given line; a line::Euer.Line is returned for which the amplitudes 
+        ... to compute all amplitudes and properties of the given line; a line::AutoIonization.Line is returned for which the amplitudes 
             and properties are now evaluated.
     """
-    function computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
-                                         settings::AutoIonization.Settings; printout::Bool=true) 
+    function computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, settings::AutoIonization.Settings; 
+                                         printout::Bool=true) 
         newChannels = AutoIonization.Channel[];   contSettings = Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
             newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
@@ -239,8 +239,8 @@ module AutoIonization
             cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
-            amplitude = AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
-            rate      = rate + conj(amplitude) * amplitude
+            amplitude  = AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
+            rate       = rate + conj(amplitude) * amplitude
             push!( newChannels, AutoIonization.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )
         end
         totalRate = 2pi* rate;   angularAlpha = 0.
@@ -370,13 +370,13 @@ module AutoIonization
 
     """
     `AutoIonization.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                                        settings::AutoIonization.Settings; output=true, printout::Bool=true)`  
+                                        settings::AutoIonization.Settings; output::Bool=true, printout::Bool=true)`  
         ... to compute the Auger transition amplitudes and all properties as requested by the given settings. The computations
             and printout is adapted for large cascade computations by including only lines with at least one channel and by sending
             all printout to a summary file only. A list of lines::Array{AutoIonization.Lines} is returned.
     """
     function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                                  settings::AutoIonization.Settings; output=true, printout::Bool=true)
+                                  settings::AutoIonization.Settings; output::Bool=true, printout::Bool=true)
         
         lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
@@ -391,6 +391,54 @@ module AutoIonization
             newLine = AutoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
             ##x if  rem(i,10) == 0    println("> Auger line $i:  ... not calculated ")  end
             ##x newLine = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, 1.0, 0.0, false, AutoIonization.Channel[] )
+            push!( newLines, newLine)
+        end
+        # Print all results to a summary file, if requested
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        if  printSummary   AutoIonization.displayRates(iostream, newLines, settings)     end
+        #
+        if    output    return( newLines )
+        else            return( nothing )
+        end
+    end
+
+
+
+    """
+    `AutoIonization.computeLinesFromOrbitals(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+                                             settings::AutoIonization.Settings, contOrbitals::Dict{Subshell, Orbital}; output::Bool=true, printout::Bool=true)`  
+        ... to compute the Auger transition amplitudes and all properties as requested by the given settings but by using the given set of 
+            continuum orbitals. The computations and printout is adapted for large cascade computations by including only lines with at least 
+            one channel and by sending all printout to a summary file only. A list of lines::Array{AutoIonization.Lines} is returned.
+    """
+    function  computeLinesFromOrbitals(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+                                       settings::AutoIonization.Settings, contOrbitals::Dict{Subshell, Orbital}; output::Bool=true, printout::Bool=true)
+
+        lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
+        # Calculate all amplitudes and requested properties
+        newLines = AutoIonization.Line[]
+        for  (i,line)  in  enumerate(lines)
+            if  rem(i,50) == 0    println("> Auger line $i:  ... calculated ")    end
+            # Calculate the individual channels with the given orbitals
+            newChannels = AutoIonization.Channel[];   rate = 0.
+            for channel in line.channels
+                newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
+                newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
+                sh         = Subshell(101, channel.kappa)
+                if haskey(contOrbitals, sh)   cOrbital = contOrbitals[sh]      else    println(">>> skip Auger channel for $sh");   continue    end
+                newiLevel  = Basics.generateLevelWithExtraSubshell(sh, newiLevel)
+                newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
+                newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, 0., 0.)
+                amplitude  = AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
+                rate       = rate + conj(amplitude) * amplitude
+                push!( newChannels, AutoIonization.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )
+            end
+            totalRate = 2pi* rate;   angularAlpha = 0.
+            newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, true, newChannels)
+            ##
+            ## if  settings.calcAnisotropy    angularAlpha = AutoIonization.computeIntrinsicAlpha(2, newLine)
+            ##  newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, real(angularAlpha), true, newChannels)
+            ## end
             push!( newLines, newLine)
         end
         # Print all results to a summary file, if requested

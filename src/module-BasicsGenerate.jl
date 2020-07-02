@@ -952,7 +952,7 @@ module BascisGenerate
         
         for  i = 1:length(basis.csfs)
             ##x println("*** dd $(basis.csfs[i].occupation)")
-            if  basis.csfs[i].J == nLevel.J  &&   basis.csfs[i].parity == nLevel.parity 
+            if  basis.csfs[i].J == nLevel.J  &&   basis.csfs[i].parity == nLevel.parity        &&    abs(nLevel.mc[i]) > 1.0e-7
                 push!(newCsfs, deepcopy(basis.csfs[i]));    push!(newMc, deepcopy(nLevel.mc[i]))
             end
         end

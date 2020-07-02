@@ -205,7 +205,7 @@ module ManyElectron
                 shocc == "[Ar]"  &&  continue 
                 shellDict = Base.merge( shellDict, Dict(Shell("3d") => 10, Shell("4s") => 2, Shell("4p") => 6));   NoElectrons = NoElectrons + 18   
                 shocc == "[Kr]"  &&  continue   
-                shellDict = Base.merge( shellDict, Dict(Shell("5s") => 10, Shell("5s") => 2, Shell("5p") => 6));   NoElectrons = NoElectrons + 18  
+                shellDict = Base.merge( shellDict, Dict(Shell("4d") => 10, Shell("5s") => 2, Shell("5p") => 6));   NoElectrons = NoElectrons + 18  
                 shocc == "[Xe]"  &&  continue 
             else
                 ia = findall(in("^"), shocc);    
@@ -447,7 +447,7 @@ module ManyElectron
     `ManyElectron.AsfSettings()`  ... constructor for setting the default values.
     """
     function AsfSettings()
-    	AsfSettings(false, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(), 24, 1.0e-6, Subshell[], Subshell[],  
+    	AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(), 24, 1.0e-6, Subshell[], Subshell[],  
     	            CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), false, Int64[], false, LevelSymmetry[] )
     end
 

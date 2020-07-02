@@ -151,15 +151,14 @@ module PhotoExcitation
 
 
     """
-    `PhotoExcitation.computeAmplitudesProperties(line::PhotoExcitation.Line, grid::Radial.Grid, settings::PhotoExcitation.Settings)`  
+    `PhotoExcitation.computeAmplitudesProperties(line::PhotoExcitation.Line, grid::Radial.Grid, settings::PhotoExcitation.Settings; printout::Bool=true)`  
         ... to compute all amplitudes and properties of the given line; a line::PhotoExcitation.Line is returned for which 
             the amplitudes and properties have now been evaluated.
     """
-    function  computeAmplitudesProperties(line::PhotoExcitation.Line, grid::Radial.Grid, settings::PhotoExcitation.Settings)
+    function  computeAmplitudesProperties(line::PhotoExcitation.Line, grid::Radial.Grid, settings::PhotoExcitation.Settings; printout::Bool=true)
         newChannels = PhotoEmission.Channel[]
         for  channel  in  line.channels
-            ##x println("channel = $channel ")
-            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
+            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid, printout=printout)
             push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
         end
         # Calculate the crossSection and stastistical tensors if requested
@@ -213,6 +212,43 @@ module PhotoExcitation
         if  printSummary    PhotoExcitation.displayCrossSections(iostream, lines, settings)   end
         #
         if    output    return( lines )
+        else            return( nothing )
+        end
+    end
+
+
+    """
+    `PhotoExcitation.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+                                         settings::PhotoExcitation.Settings; output::Bool=true, printout::Bool=true)`  
+        ... to compute the excitation (absorption) transition amplitudes and all properties as requested by the given settings. 
+            The computations and printout is adapted for larger cascade computations by including only lines with at least one channel 
+            and by sending all printout to a summary file only. A list of lines::Array{PhotoExcitation.Lines} is returned.
+    """
+    function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+                                         settings::PhotoExcitation.Settings; output::Bool=true, printout::Bool=true) 
+        # Define a common subshell list for both multiplets
+        subshellList = Basics.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
+        Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
+        lines = PhotoExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
+        # Display all selected lines before the computations start
+        # if  settings.printBefore    PhotoExcitation.displayLines(lines)    end
+        # Calculate all amplitudes and requested properties
+        newLines = PhotoExcitation.Line[]
+        for  (i,line)  in  enumerate(lines)
+            if  rem(i,50) == 0    println("> Excitation line $i:")   end
+            newLine = PhotoExcitation.computeAmplitudesProperties(line, grid, settings, printout=printout) 
+            #
+            # Don't add this line if it does not contribute to the decay
+            wa = 0.
+            for  ch in newLine.channels   wa = wa + abs(ch.amplitude)^2    end
+            if   wa == 0.    continue    end
+            push!( newLines, newLine)
+        end
+        # Print all results to a summary file, if requested
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        if  printSummary   PhotoExcitation.displayCrossSections(iostream, newLines, settings)    end
+        #
+        if    output    return( newLines )
         else            return( nothing )
         end
     end

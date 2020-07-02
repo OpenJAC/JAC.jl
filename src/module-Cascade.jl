@@ -5,20 +5,22 @@
 """
 module Cascade
 
-    using Dates, JLD2, Printf, ..AutoIonization, ..Basics, ..Defaults, ..DecayYield, ..Radial, ..ManyElectron, ..Nuclear, ..PhotoEmission, 
-                               ..PhotoIonization, ..Semiempirical, ..TableStrings
+    using Dates, JLD2, Printf, ..AutoIonization, ..Basics, ..Continuum, ..Defaults, ..DecayYield, ..Radial, ..ManyElectron, ..Nuclear, 
+                               ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..Semiempirical, ..TableStrings
 
     
     """
     `abstract type Cascade.AbstractCascadeScheme` 
         ... defines an abstract type to distinguish different excitation, ionization and decay schemes of an atomic cascade; see also:
         
-        + struct StepwiseDecayScheme       ... to represent a standard decay scheme, starting from one or several 
-                                               initial multiplets.
-        + struct PhotonIonizationScheme    ... to represent a (prior) photoionization part of a cascade for given 
-                                               photon energies.
-        + struct ElectronExcitationScheme  ... to represent a (prior) electron-impact excitation part of a cascade 
-                                               for given electron energies (not yet).
+        + struct StepwiseDecayScheme       
+            ... to represent a standard decay scheme, starting from one or several initial multiplets.
+        + struct PhotonIonizationScheme    
+            ... to represent a (prior) photoionization part of a cascade for given photon energies.
+        + struct PhotonExcitationScheme    
+            ... to represent a (prior) photo-excitation part of a cascade for a specified set of excitations.
+        + struct ElectronExcitationScheme  
+            ... to represent a (prior) electron-impact excitation part of a cascade for given electron energies (not yet).
     """
     abstract type  AbstractCascadeScheme       end
 
@@ -33,6 +35,9 @@ module Cascade
                                                         final-state configurations can differ from each other; 
                                                         this also determines the maximal steps of any particular 
                                                         decay path.
+        + chargeStateShifts     ::Dict{Int64,Float64} . (N => en) total energy shifts of all levels with N electrons;
+                                                        these shifts [in a.u.] help open/close decay channels by simply 
+                                                        shifting the total energies of all levels.
         + NoShakeDisplacements  ::Int64             ... Maximum number of electron displacements due to shake-up 
                                                         or shake-down processes in any individual step of cascade.
         + shakeFromShells       ::Array{Shell,1}    ... List of shells from which shake transitions may occur.
@@ -41,6 +46,7 @@ module Cascade
     struct   StepwiseDecayScheme  <:  Cascade.AbstractCascadeScheme
         processes               ::Array{Basics.AbstractProcess,1}
         maxElectronLoss         ::Int64
+        chargeStateShifts       ::Dict{Int64,Float64}
         NoShakeDisplacements    ::Int64
         shakeFromShells         ::Array{Shell,1}
         shakeToShells           ::Array{Shell,1}
@@ -51,7 +57,7 @@ module Cascade
     `Cascade.StepwiseDecayScheme()`  ... constructor for an 'default' instance of a Cascade.StepwiseDecayScheme.
     """
     function StepwiseDecayScheme()
-        StepwiseDecayScheme([Radiative()], 0, 0, Shell[], Shell[] )
+        StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, Shell[], Shell[] )
     end
 
 
@@ -67,6 +73,7 @@ module Cascade
         sa = Base.string(scheme);                print(io, sa, "\n")
         println(io, "processes:                  $(scheme.processes)  ")
         println(io, "maxElectronLoss:            $(scheme.maxElectronLoss)  ")
+        println(io, "chargeStateShifts:          $(scheme.chargeStateShifts)  ")
         println(io, "NoShakeDisplacements:       $(scheme.NoShakeDisplacements)  ")
         println(io, "shakeFromShells:            $(scheme.shakeFromShells)  ")
         println(io, "shakeToShells:              $(scheme.shakeToShells)  ")
@@ -118,13 +125,73 @@ module Cascade
 
 
     """
+    `struct  Cascade.PhotonExcitationScheme  <:  Cascade.AbstractCascadeScheme`  
+        ... a struct to define and describe a photo-excitation calculation for an atom in some initial state/configuration
+            and for a given set of shell-excitations
+
+        + processes             ::Array{Basics.AbstractProcess,1} 
+            ... List of the atomic processes that are supported and should be included into the cascade.  
+        + multipoles            ::Array{EmMultipole}           
+            ... Multipoles of the radiation field that are to be included into the excitation processes.
+        + minPhotonEnergy       ::Float64                 
+            ... Minimum photon energy [in a.u.] that restrict the number of excited configurations to be taken into accout.
+        + maxPhotonEnergy       ::Float64                 
+            ... Maximum photon energy [in a.u.] that restrict the number of excited configurations to be taken into accout.
+        + NoExcitations         ::Int64                 
+            ... (Maximum) Number of electron replacements with regard to the initial configurations/multiplets.
+        + excitationFromShells  ::Array{Shell,1}    
+            ... List of shells from which photo-excitations are to be considered.
+        + excitationToShells    ::Array{Shell,1}    
+            ... List of shells into which photo-excitations are to be considered, including possibly already occupied
+                shells.
+    """
+    struct   PhotonExcitationScheme  <:  Cascade.AbstractCascadeScheme
+        processes               ::Array{Basics.AbstractProcess,1}    
+        multipoles              ::Array{EmMultipole}  
+        minPhotonEnergy         ::Float64                 
+        maxPhotonEnergy         ::Float64                 
+        NoExcitations           ::Int64
+        excitationFromShells    ::Array{Shell,1}
+        excitationToShells      ::Array{Shell,1}
+    end
+
+
+    """
+    `Cascade.PhotonExcitationScheme()`  ... constructor for an 'default' instance of a Cascade.PhotonExcitationScheme.
+    """
+    function PhotonExcitationScheme()
+        PhotonExcitationScheme([PhotoExc()], [E1], 1.0, 100., 0, Shell[], Shell[] )
+    end
+
+
+    # `Base.string(scheme::PhotonExcitationScheme)`  ... provides a String notation for the variable scheme::PhotoAbsorptionScheme.
+    function Base.string(scheme::PhotonExcitationScheme)
+        sa = "Photon-excitation (scheme) due to processes:"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, scheme::PhotonExcitationScheme)`  ... prepares a proper printout of the scheme::PhotonExcitationScheme.
+    function Base.show(io::IO, scheme::PhotonExcitationScheme)
+        sa = Base.string(scheme);                print(io, sa, "\n")
+        println(io, "processes:                  $(scheme.processes)  ")
+        println(io, "multipoles:                 $(scheme.multipoles)  ")
+        println(io, "minPhotonEnergy:            $(scheme.minPhotonEnergy)  ")
+        println(io, "maxPhotonEnergy:            $(scheme.maxPhotonEnergy)  ")
+        println(io, "NoExcitations :             $(scheme.NoExcitations )  ")
+        println(io, "excitationFromShells:       $(scheme.excitationFromShells)  ")
+        println(io, "excitationToShells:         $(scheme.excitationToShells)  ")
+    end
+
+
+    """
     `struct  Cascade.ElectronExcitationScheme  <:  Cascade.AbstractCascadeScheme`  
         ... a struct to represent (and generate) a mean-field orbital basis.
 
-        + processes             ::Array{Basics.AbstractProcess,1} ... List of the atomic processes that are supported and should be included into the 
-                                                                    cascade.
-        + electronEnergies      ::Array{Float64,1}              ... List of electron energies for which this electron-impact excitation scheme is 
-                                                                    to be calculated.
+        + processes             ::Array{Basics.AbstractProcess,1} 
+            ... List of the atomic processes that are supported and should be included into the cascade.
+        + electronEnergies      ::Array{Float64,1}                
+            ... List of electron energies for which this electron-impact excitation scheme is to be calculated.
     """
     struct   ElectronExcitationScheme  <:  Cascade.AbstractCascadeScheme
         processes               ::Array{Basics.AbstractProcess,1}
@@ -228,7 +295,7 @@ module Cascade
     """
     struct  Step
         process            ::Basics.AbstractProcess
-        settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings}
+        settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings}
         initialConfigs     ::Array{Configuration,1}
         finalConfigs       ::Array{Configuration,1}
         initialMultiplet   ::Multiplet
@@ -333,6 +400,7 @@ module Cascade
     function Base.string(comp::Cascade.Computation)
         if        typeof(comp.scheme) == Cascade.StepwiseDecayScheme     sb = "stepwise decay scheme"
         elseif    typeof(comp.scheme) == Cascade.PhotonIonizationScheme  sb = "(prior) photo-ionization scheme"
+        elseif    typeof(comp.scheme) == Cascade.PhotonExcitationScheme  sb = "photo-excitation scheme"
         else      error("unknown typeof(comp.scheme)")
         end
         
@@ -423,6 +491,30 @@ module Cascade
         println(io, "photonEnergy:            $(data.photonEnergy)  ")
         println(io, "linesP:                  $(data.linesP)  ")
     end
+
+
+    """
+    `struct  Cascade.ExcitationData  <:  Cascade.AbstractData`  ... defines a type for an atomic cascade, i.e. lists of excitation lines.
+
+        + linesE         ::Array{PhotoExcitation.Line,1}        ... List of photoionization lines.
+    """  
+    struct  ExcitationData  <:  Cascade.AbstractData
+        linesE           ::Array{PhotoExcitation.Line,1}
+    end 
+
+
+    """
+    `Cascade.ExcitationData()`  ... (simple) constructor for cascade excitation data.
+    """
+    function ExcitationData()
+        ExcitationData(Array{PhotoExcitation.Line,1}[] )
+    end
+
+
+    # `Base.show(io::IO, data::Cascade.ExcitationData)`  ... prepares a proper printout of the variable data::Cascade.ExcitationData.
+    function Base.show(io::IO, data::Cascade.ExcitationData) 
+        println(io, "linesE:                  $(data.linesE)  ")
+    end
     
 
     #######################################################################################################################################
@@ -434,10 +526,12 @@ module Cascade
     `abstract type  Cascade.AbstractSimulationProperty`  
         ... defines an abstract and various singleton types for the different properties that can be obtained from the simulation of cascade data.
 
-        + struct IonDistribution         ... simulate the 'ion distribution' as it is found after all cascade 
-                                             processes are completed.
-        + struct FinalLevelDistribution  ... simulate the 'final-level distribution' as it is found after all cascade 
-                                             processes are completed.
+        + struct IonDistribution         
+            ... simulate the 'ion distribution' as it is found after all cascade processes are completed.
+        + struct FinalLevelDistribution  
+            ... simulate the 'final-level distribution' as it is found after all cascade processes are completed.
+        + struct PhotoAbsorption  
+            ... simulate the photoabsorption cross sections for a given set of photo-excitation and ionization processes.
         + struct DecayPathes             ... determine the major 'decay pathes' of the cascade.
         + struct ElectronIntensities     ... simulate the electron-line intensities as function of electron energy.
         + struct PhotonIntensities       ... simulate  the photon-line intensities as function of electron energy. 
@@ -446,6 +540,7 @@ module Cascade
     abstract type  AbstractSimulationProperty                              end
     struct   IonDistribution              <:  AbstractSimulationProperty   end
     struct   FinalLevelDistribution       <:  AbstractSimulationProperty   end
+    struct   PhotoAbsorption              <:  AbstractSimulationProperty   end
     struct   DecayPathes                  <:  AbstractSimulationProperty   end
     struct   ElectronIntensities          <:  AbstractSimulationProperty   end
     struct   PhotonIntensities            <:  AbstractSimulationProperty   end
@@ -473,11 +568,11 @@ module Cascade
 
         + minElectronEnergy   ::Float64     ... Minimum electron energy for the simulation of electron spectra.
         + maxElectronEnergy   ::Float64     ... Maximum electron energy for the simulation of electron spectra.
-        + minPhotonEnergy     ::Float64     ... Minimum photon energy for the simulation of electron spectra.
-        + maxPhotonEnergy     ::Float64     ... Maximum photon energy for the simulation of electron spectra.
+        + minPhotonEnergy     ::Float64     ... Minimum photon energy for the simulation of photon/absorption spectra.
+        + maxPhotonEnergy     ::Float64     ... Maximum photon energy for the simulation of photon/absorption spectra.
         + initialPhotonEnergy ::Float64     ... Photon energy for which photoionization data are considered. 
-        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   ... List of one or several (tupels of) levels 
-                                            in the overall cascade tree together with their relative population.
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
     """
     struct  SimulationSettings
         minElectronEnergy     ::Float64
@@ -511,17 +606,17 @@ module Cascade
     """
     `struct  Cascade.Simulation`  ... defines a simulation on some given cascade (data).
 
-        + name            ::String                                      ... Name of the simulation
-        + properties      ::Array{Cascade.AbstractSimulationProperty,1} ... Properties that are considered in this 
-                                                                            simulation of the cascade (data).
-        + method          ::Cascade.AbstractSimulationMethod    ... Method that is used in the cascade simulation; 
-                                                                    cf. Cascade.SimulationMethod.
+        + name            ::String                              ... Name of the simulation
+        + property        ::Cascade.AbstractSimulationProperty 
+            ... Property that is to be considered in this simulation of the cascade (data).
+        + method          ::Cascade.AbstractSimulationMethod    
+            ... Method that is used in the cascade simulation; cf. Cascade.SimulationMethod.
         + settings        ::Cascade.SimulationSettings          ... Settings for performing these simulations.
         + computationData ::Array{Dict{String,Any},1}           ... Date on which the simulations are performed
     """
     struct  Simulation
         name              ::String
-        properties        ::Array{Cascade.AbstractSimulationProperty,1}
+        property          ::Cascade.AbstractSimulationProperty
         method            ::Cascade.AbstractSimulationMethod
         settings          ::Cascade.SimulationSettings 
         computationData   ::Array{Dict{String,Any},1}
@@ -532,7 +627,7 @@ module Cascade
     `Cascade.Simulation()`  ... constructor for an 'default' instance of a Cascade.Simulation.
     """
     function Simulation()
-        Simulation("Default cascade simulation", Cascade.AbstractSimulationProperty[], Cascade.ProbPropagation(), 
+        Simulation("Default cascade simulation", Cascade.PhotoAbsorption(), Cascade.ProbPropagation(), 
                    Cascade.SimulationSettings(), Array{Dict{String,Any},1}[] )
     end
 
@@ -545,24 +640,24 @@ module Cascade
         ... constructor for re-defining the computation::Cascade.Simulation.
     """
     function Simulation(sim::Cascade.Simulation;                              
-        name::Union{Nothing,String}=nothing,                                  properties::Union{Nothing,Array{Cascade.AbstractSimulationProperty,1}}=nothing,
+        name::Union{Nothing,String}=nothing,                                  property::Union{Nothing,Cascade.AbstractSimulationProperty}=nothing,
         method::Union{Nothing,Cascade.AbstractSimulationMethod}=nothing,      settings::Union{Nothing,Cascade.SimulationSettings}=nothing,    
         computationData::Union{Nothing,Array{Dict{String,Any},1}}=nothing )
  
-        if  name            == nothing   namex            = sim.name              else  namex = name                          end 
-        if  properties      == nothing   propertiesx      = sim.properties        else  propertiesx = properties              end 
-        if  method          == nothing   methodx          = sim.method            else  methodx = method                      end 
-        if  settings        == nothing   settingsx        = sim.settings          else  settingsx = settings                  end 
-        if  computationData == nothing   computationDatax = sim.computationData   else  computationDatax = computationData    end 
+        if  name            == nothing   namex            = sim.name              else  namex            = name                end 
+        if  property        == nothing   propertyx        = sim.property          else  propertyx        = property            end 
+        if  method          == nothing   methodx          = sim.method            else  methodx          = method              end 
+        if  settings        == nothing   settingsx        = sim.settings          else  settingsx        = settings            end 
+        if  computationData == nothing   computationDatax = sim.computationData   else  computationDatax = computationData     end 
     	
-    	Simulation(namex, propertiesx, methodx, settingsx, computationDatax)
+    	Simulation(namex, propertyx, methodx, settingsx, computationDatax)
     end
 
 
     # `Base.show(io::IO, simulation::Cascade.Simulation)`  ... prepares a proper printout of the variable simulation::Cascade.Simulation.
     function Base.show(io::IO, simulation::Cascade.Simulation) 
         println(io, "name:              $(simulation.name)  ")
-        println(io, "properties:        $(simulation.properties)  ")
+        println(io, "property:          $(simulation.property)  ")
         println(io, "method:            $(simulation.method)  ")
         println(io, "computationData:   ... based on $(length(simulation.computationData)) cascade data sets ")
         println(io, "> settings:      \n$(simulation.settings)  ")
@@ -633,6 +728,31 @@ module Cascade
                 return( true )
         else    return( false )
         end
+    end
+
+
+    """
+    `struct  Cascade.AbsorptionCrossSection`  
+        ... defines the absorption cross section for a particular (incident) photon energy in terms of its discrete and 
+            (direct photoionization) contributions. Of course, this absorption cross section depends on the relative population
+            of the initial levels.
+
+        + photonEnergy ::Float64    ... incident photon energy/photon-energy dependence of the absorption spectrum.
+        + excitationCS ::Float64    ... contribution due to discrete excitation processes.
+        + ionizationCS ::Float64    ... contribution due to contineous ionization processes.
+    """
+    struct  AbsorptionCrossSection
+        photonEnergy   ::Float64
+        excitationCS   ::Float64
+        ionizationCS   ::Float64
+    end 
+
+
+    # `Base.show(io::IO, cs::Cascade.AbsorptionCrossSection)`  ... prepares a proper printout of the variable cs::Cascade.AbsorptionCrossSection.
+    function Base.show(io::IO, cs::Cascade.AbsorptionCrossSection) 
+        println(io, "photonEnergy:      $(cs.photonEnergy)  ")
+        println(io, "excitationCS:      $(cs.excitationCS)  ")
+        println(io, "ionizationCS:      $(cs.ionizationCS)  ")
     end
     
     
