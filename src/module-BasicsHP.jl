@@ -6,7 +6,7 @@
 """
 module BasicsHP
 
-    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Hfs, ..ManyElectron, ..Nuclear, ..PhotoEmission,
+    using Printf, ..AngularMomentum, ..Basics, ..Cascade, ..Continuum, ..Defaults, ..Hfs, ..ManyElectron, ..Nuclear, ..PhotoEmission,
                   ..Radial, ..TableStrings
     
     export isless
@@ -141,6 +141,11 @@ module BasicsHP
 
     function Base.isless(x::Basics.AngularJ64, y::Basics.AngularJ64)
         return x.num < y.num
+    end
+
+
+    function Base.isless(x::Cascade.AbsorptionCrossSection, y::Cascade.AbsorptionCrossSection)
+        return x.photonEnergy < y.photonEnergy
     end
 
         

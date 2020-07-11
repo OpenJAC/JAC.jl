@@ -213,7 +213,52 @@
 
         return( nothing )
     end
+    
 
+    """
+    `Cascade.displayPhotoAbsorptionSpectrum(stream::IO, crossSections::Array{Cascade.AbsorptionCrossSection,1}, settings::Cascade.SimulationSettings)` 
+        ... displays the photoabsorption cross sections a neat table. Nothing is returned.
+    """
+    function displayPhotoAbsorptionSpectrum(stream::IO, crossSections::Array{Cascade.AbsorptionCrossSection,1}, settings::Cascade.SimulationSettings)
+        nd = 83
+        println(stream, " ")
+        println(stream, "* Absorption cross sections:  ")
+        println(stream, " ")
+        sMinEn = @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", settings.minPhotonEnergy))
+        sMaxEn = @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", settings.maxPhotonEnergy))
+        println(stream, "  Absorption cross sections are determined for photon energies between " * sMinEn * " and "  *
+                        sMaxEn * TableStrings.inUnits("energy") * " as well as for levels \n  with the initial population " *
+                        "$(settings.initialOccupations) \n")
+        println(stream, "  ", TableStrings.hLine(nd))
+        sa = "  "
+        sa = sa * TableStrings.center(16, "Energy "        * TableStrings.inUnits("energy"); na=5)
+        sa = sa * TableStrings.center(10, "Ionization CS " * TableStrings.inUnits("cross section"); na=11)
+        sa = sa * TableStrings.center(10, "Excitation CS " * TableStrings.inUnits("cross section"); na=11)
+        println(stream, sa)
+        sa = "                      Coulomb       Babushkin         Coulomb       Babushkin"
+        println(stream, sa)
+        println(stream, "  ", TableStrings.hLine(nd))
+        #
+        for  cs in  crossSections
+            sa = "     "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", cs.photonEnergy)) * "     "
+            if     cs.ionizationCS == Basics.EmProperty(0.)       sa = sa * "                                         "
+            else   sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs.ionizationCS.Coulomb))   * "   " 
+                   sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs.ionizationCS.Babushkin)) * "         "
+            end
+            #
+            if     cs.ionizationCS == Basics.EmProperty(0.)       sa = sa * "                                         "
+            else   sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs.excitationCS.Coulomb))   * "   " 
+                   sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs.excitationCS.Babushkin)) * "    "
+            end
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nd))
+
+        return( nothing )
+    end
+    
+    
 
     """
     `Cascade.displayRelativeOccupation(stream::IO, levels::Array{Cascade.Level,1}, settings::Cascade.SimulationSettings)` 
@@ -252,21 +297,31 @@
 
 
     """
-    `Cascade.extractPhotoIonizationEnergies(dataDicts::Array{Dict{String,Any},1})` 
-        ... returns the (incident) photon energies for which photoionization data were computed.
+    `Cascade.extractPhotoExcitationData(dataDicts::Array{Dict{String,Any},1})` 
+        ... returns the available photoexcitation data.
     """
-    function extractPhotoIonizationEnergies(dataDicts::Array{Dict{String,Any},1})
-        photonEnergies = Float64[];   idx = 0
-        for (i, data) in  enumerate(dataDicts)
-            results     = data["results"]
-            if  haskey(results,"photo-ionizing line data:")       lineData = results["photo-ionizing line data:"];      idx = i   
-                for  lines in  lineData  push!(photonEnergies, lines.photonEnergy)     end
-                @warn("Only one set of photoionization data can presently be recognized properly.")
-                break
-            end
+    function extractPhotoExcitationData(dataDicts::Array{Dict{String,Any},1})
+        photoexcitationData = Cascade.ExcitationData[]
+        for data  in  dataDicts       results = data["results"]
+            if  haskey(results, "photo-excited line data:")  push!(photoexcitationData, results["photo-excited line data:"])   end
         end
         
-        return( (photonEnergies, dataDicts[idx]) )
+        return( photoexcitationData )
+    end
+    
+
+
+    """
+    `Cascade.extractPhotoIonizationData(dataDicts::Array{Dict{String,Any},1})` 
+        ... returns the available photoionization data.
+    """
+    function extractPhotoIonizationData(dataDicts::Array{Dict{String,Any},1})
+        photoionizationData = Cascade.PhotoIonData[]
+        for data  in  dataDicts       results = data["results"]
+            if  haskey(results, "photo-ionizing line data:")  photoionizationData = results["photo-ionizing line data:"]    end
+        end
+        
+        return( photoionizationData )
     end
 
 
@@ -423,6 +478,96 @@
             end
         end
         error("findLevelIndex():  No index was found;\n   level = $(level) ")
+    end
+
+
+    """
+    `Cascade.generateAbsorptionCrossSections(excitationData::Array{Cascade.ExcitationData,1}, 
+                                             ionizationData::Array{Cascade.PhotoIonData,1}, settings::Cascade.SimulationSettings)` 
+        ... generates a list of photo-absorption cross sections by cycling through all (photo-) excitationData and ionizationData.
+            The photoionization contributions to the absorption cross section is obtained by averaging the photoionization cross sections
+            for the given occupation of the initial levels; for the photoionization contributions to the absorption cross section,
+            the (relative) cross section for the excitation line of interest is taken and the associated ionization part obtained
+            from the linear interpolation/extrapolation of the previously determined photoionization cross sections.
+            An list of crossSections::Array{AbsorptionCrossSection,1} is returned which is ordered by energy.
+    """
+    function generateAbsorptionCrossSections(excitationData::Array{Cascade.ExcitationData,1}, 
+                                             ionizationData::Array{Cascade.PhotoIonData,1}, settings::Cascade.SimulationSettings)
+        ionizationCS = Cascade.AbsorptionCrossSection[];    excitationCS = Cascade.AbsorptionCrossSection[]
+        # First collect the contributions of the initially occupied levels from the photoionization cross sections, and
+        # weigthed by the relative population; data are collected for all available photon energies as they might be needed for
+        # interpolation
+        for  data  in  ionizationData
+            cs = Basics.EmProperty(0.)
+            for  (levelIdx, occ)  in  settings.initialOccupations
+                for  line  in  data.linesP
+                    ##x @show  line.photonEnergy, data.photonEnergy
+                    if  abs( (line.photonEnergy - data.photonEnergy)/line.photonEnergy ) > 1.0e-5     error("stop a")      end
+                    if  line.initialLevel.index ==  levelIdx            cs = cs + occ * line.crossSection                  end
+                end
+            end
+            push!(ionizationCS, Cascade.AbsorptionCrossSection(data.photonEnergy, Basics.EmProperty(0.), cs))
+        end
+        ##x @show ionizationCS
+        #
+        # Next determine all excitation cross sections for the requested interval of photon energies; here the photon energies are
+        # simply given by the photon excitation energies, and which must be in the requested interval. There will be one
+        # cross section for each photoexcitation independent of possible blendings.
+        for  data  in  excitationData
+            ics = Basics.EmProperty(0.);   ecs = Basics.EmProperty(0.)
+            for  (levelIdx, occ)  in  settings.initialOccupations
+                for  line  in  data.linesE
+                    addEcs = false
+                    if  settings.minPhotonEnergy <= line.omega <= settings.maxPhotonEnergy     &&
+                        line.initialLevel.index ==  levelIdx            
+                        ecs = occ * line.crossSection;      addEcs = true 
+                    end
+                    if  addEcs      ics = Cascade.interpolateIonizationCS(line.omega, ionizationCS)
+                                    push!(excitationCS, Cascade.AbsorptionCrossSection(line.omega, ecs, ics))
+                    end
+                end
+            end
+        end
+        
+        # Append those (pure) ionization cross sections which belong the requested interval
+        for  cs in  ionizationCS
+            if  settings.minPhotonEnergy <= cs.photonEnergy <= settings.maxPhotonEnergy     push!(excitationCS, cs)     end
+        end
+        sortedCS = Base.sort( excitationCS , lt=Base.isless)
+        return( sortedCS )
+    end
+    
+
+
+    """
+    `Cascade.interpolateIonizationCS(photonEnergy::Float64, ionizationCS::Array{Cascade.AbsorptionCrossSection,1})` 
+        ... interpolates (or extrapolates) the ionization cross sections as defined by ionizationCS for the given photonEnergy.
+            If photonEnergy is outside the photon energies from ionizationCS, simply the cross section from the nearest energy
+            is returned; if photonEnergy lays between two photon energies from ionizationCS, a simple linear interpolation
+            rules is applied here. A cs::Basics.EmProperty is returned.
+    """
+    function interpolateIonizationCS(photonEnergy::Float64, ionizationCS::Array{Cascade.AbsorptionCrossSection,1})
+        imin = imax = 0
+        for  (i, ionCS)  in  enumerate(ionizationCS)
+           if  ionCS.photonEnergy <= photonEnergy   imin = i    end
+        end
+        for  (i, ionCS)  in  enumerate(ionizationCS)
+           if  ionCS.photonEnergy >  photonEnergy   imax = i;   break    end
+        end
+        ##x @show imin, imax
+        #
+        if       imin == 0  &&  imax == 1        return(ionizationCS[1].ionizationCS)
+        elseif   imax == 0                       return(ionizationCS[end].ionizationCS)
+        elseif   imax - imin == 1
+            deltaEnergy = photonEnergy - ionizationCS[imin].photonEnergy
+            totalEnergy = ionizationCS[imax].photonEnergy - ionizationCS[imin].photonEnergy  
+            csCou       = ionizationCS[imin].ionizationCS.Coulomb + 
+                          deltaEnergy/totalEnergy * (ionizationCS[imax].ionizationCS.Coulomb - ionizationCS[imin].ionizationCS.Coulomb)
+            csBab       = ionizationCS[imin].ionizationCS.Babushkin + 
+                          deltaEnergy/totalEnergy * (ionizationCS[imax].ionizationCS.Babushkin - ionizationCS[imin].ionizationCS.Babushkin)
+            return( EmProperty(csCou, csBab) )
+        else  error("stop b")    
+        end
     end
 
 
@@ -631,10 +776,14 @@
         crossSections = Cascade.AbsorptionCrossSection[]
         # Display the initial (relative) occupation and the photon energies for which photo-ionization cross sections are available
         Cascade.displayRelativeOccupation(stdout, levels, simulation.settings)
-        photonEnergies = Cascade.extractPhotoIonizationEnergies(simulation.computationData)
-        println("\n* Photo-ionization data are defined for the photon energies [in a.u.]: \n   $(photonEnergies[1])")
+        excitationData = Cascade.extractPhotoExcitationData(simulation.computationData)
+        ionizationData = Cascade.extractPhotoIonizationData(simulation.computationData)
+        photonEnergies = Float64[];   for data  in  ionizationData   push!(photonEnergies, data.photonEnergy)   end
+        println("\n* Photo-ionization data are defined for the photon energies [in a.u.]: \n   $photonEnergies")
+        crossSections = Cascade.generateAbsorptionCrossSections(excitationData, ionizationData, simulation.settings)
         #
-        if  printSummary   Cascade.displayPhotoAbsorptionSpectrum(iostream, crossSections)    end
+        Cascade.displayPhotoAbsorptionSpectrum(stdout, crossSections, simulation.settings)
+        if  printSummary   Cascade.displayPhotoAbsorptionSpectrum(iostream, crossSections, simulation.settings)    end
 
         return( nothing )
     end

@@ -42,7 +42,7 @@ module PhotoIonization
     `PhotoIonization.Settings()`  ... constructor for the default values of photoionization line computations
     """
     function Settings()
-        Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb], Float64[], false, false, false, false, 
+        Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb, Basics.UseBabushkin], Float64[], false, false, false, false, 
                  false, Tuple{Int64,Int64}[], Basics.ExpStokes())
     end
 

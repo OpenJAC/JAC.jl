@@ -737,14 +737,14 @@ module Cascade
             (direct photoionization) contributions. Of course, this absorption cross section depends on the relative population
             of the initial levels.
 
-        + photonEnergy ::Float64    ... incident photon energy/photon-energy dependence of the absorption spectrum.
-        + excitationCS ::Float64    ... contribution due to discrete excitation processes.
-        + ionizationCS ::Float64    ... contribution due to contineous ionization processes.
+        + photonEnergy ::Float64              ... incident photon energy/photon-energy dependence of the absorption spectrum.
+        + excitationCS ::Basics.EmProperty    ... contribution due to discrete excitation processes.
+        + ionizationCS ::Basics.EmProperty    ... contribution due to contineous ionization processes.
     """
     struct  AbsorptionCrossSection
         photonEnergy   ::Float64
-        excitationCS   ::Float64
-        ionizationCS   ::Float64
+        excitationCS   ::Basics.EmProperty
+        ionizationCS   ::Basics.EmProperty
     end 
 
 

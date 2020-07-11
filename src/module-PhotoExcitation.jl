@@ -156,17 +156,28 @@ module PhotoExcitation
             the amplitudes and properties have now been evaluated.
     """
     function  computeAmplitudesProperties(line::PhotoExcitation.Line, grid::Radial.Grid, settings::PhotoExcitation.Settings; printout::Bool=true)
-        newChannels = PhotoEmission.Channel[]
+        newChannels = PhotoEmission.Channel[];    
         for  channel  in  line.channels
-            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid, printout=printout)
+            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, line.omega, 
+                                                line.finalLevel, line.initialLevel, grid, printout=printout)
             push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
         end
         # Calculate the crossSection and stastistical tensors if requested
-        crossSection = EmProperty(-1., -1.)    # Cross sections for linear-polarized plane-wave photons
-        staTensor    = TensorComp[]
-        if  settings.calcTensors
-            push!(staTensor, TensorComp(0, 0, 1.))
+        csCoulomb = csBabushkin = 0.
+        for  channel  in  newChannels
+            if      channel.gauge == Basics.Coulomb     csCoulomb   = csCoulomb    +  channel.amplitude * conj(channel.amplitude)
+            elseif  channel.gauge == Basics.Babushkin   csBabushkin = csBabushkin  +  channel.amplitude * conj(channel.amplitude)
+            elseif  channel.gauge == Basics.Magnetic    csBabushkin = csBabushkin  +  channel.amplitude * conj(channel.amplitude)
+                                                        csCoulomb   = csCoulomb    +  channel.amplitude * conj(channel.amplitude)
+            else    error("stop a")
+            end
         end
+        Ji2 = AngularMomentum.twoJ(line.initialLevel.J)
+        csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.omega / (2*(Ji2 + 1))
+        crossSection = EmProperty(csFactor*csCoulomb, csFactor*csBabushkin)
+        staTensor    = TensorComp[]
+        if  settings.calcTensors    push!(staTensor, TensorComp(0, 0, 1.))      end
+        
         line = PhotoExcitation.Line( line.initialLevel, line.finalLevel, line.omega, crossSection, staTensor, true, newChannels)
         return( line )
     end

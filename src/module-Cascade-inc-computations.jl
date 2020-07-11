@@ -318,7 +318,7 @@
                     for  process  in  comp.scheme.processes
                         if      process == Basics.PhotoExc()  
                             if  initialBlock.NoElectrons == excitedBlock.NoElectrons
-                                settings = PhotoExcitation.Settings([E1], [UseBabushkin], false, false, false, false, false, Tuple{Int64,Int64}[], 
+                                settings = PhotoExcitation.Settings([E1], [UseCoulomb, UseBabushkin], false, false, false, false, false, Tuple{Int64,Int64}[], 
                                                                     0., 0., 1.0e6, Basics.ExpStokes() )
                                 push!( stepList, Cascade.Step(process, settings, initialBlock.confs, excitedBlock.confs, 
                                                                                  initialBlock.multiplet, excitedBlock.multiplet) )
@@ -345,7 +345,7 @@
     function displayBlocks(stream::IO, blockList::Array{Cascade.Block,1}; sa::String="")
         #
         nbl = 150
-        println(stream, "\n* Configuration 'blocks' (multiplets) " * sa * "in the given (cascade) model: \n")
+        println(stream, "\n* Configuration 'blocks' (multiplets) " * sa * "in the given cascade model: \n")
         println(stream, "  ", TableStrings.hLine(nbl))
         println(stream, "      No.   Configurations                                                                       " *
                         "      No. CSF  ",
@@ -622,7 +622,6 @@
             for  conf in confList   if  conf in initialConfList   nothing   else   push!(initialConfList, conf)      end      end
         end
         blockConfList = Basics.generateConfigurations(initialConfList, scheme.excitationFromShells, scheme.excitationToShells, scheme.NoExcitations)
-        ##x @show blockConfList
         # Exclude configurations with too low or too high mean energies as well as those that are parity forbidden for the given multipoles
         hasPlus = false;   hasMinus = false
         for  conf  in  initialConfList   
@@ -630,10 +629,11 @@
         end
         en     = Float64[];   for conf in initialConfList    push!(en, -Semiempirical.estimate("binding energy", round(Int64, nm.Z), conf))   end
         maxen  = maximum(en);    minen  = minimum(en);  
+        println(">>> initial configuration(s) have energies from $minen  to  $maxen  [a.u.].")
         #
         newBlockConfList = Configuration[]
         for  conf  in  blockConfList    meanEnergy = -Semiempirical.estimate("binding energy", round(Int64, nm.Z), conf) 
-            if  meanEnergy > minen + scheme.minPhotonEnergy   &&   meanEnergy < maxen + scheme.maxPhotonEnergy
+            if  minen + scheme.minPhotonEnergy  <= meanEnergy <= maxen + scheme.maxPhotonEnergy
                 if      hasPlus  &&  hasMinus                                                                        push!(newBlockConfList, conf)   
                 elseif  M1 in scheme.multipoles  ||  E2 in scheme.multipoles  ||  M2 in scheme.multipoles            push!(newBlockConfList, conf)  
                 elseif  hasPlus  &&  E1 in scheme.multipoles  &&   Basics.determineParity(conf) == Basics.minus      push!(newBlockConfList, conf)  
@@ -1032,7 +1032,7 @@
             results = Base.merge( results, Dict("cascade scheme"             => comp.scheme) ) 
             results = Base.merge( results, Dict("initial multiplets:"        => multiplets) )    
             results = Base.merge( results, Dict("generated multiplets:"      => gMultiplets) )    
-            results = Base.merge( results, Dict("photo-ionizing line data:"  => data) )
+            results = Base.merge( results, Dict("photo-excited line data:"   => data) )
             #
             #  Write out the result to file to later continue with simulations on the cascade data
             filename = "zzz-cascade-excitation-computations-" * string(Dates.now())[1:13] * ".jld"
