@@ -16,17 +16,15 @@ module PhotoExcitationAutoion
 
         + multipoles              ::Array{Basics.EmMultipole,1}    ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{Basics.UseGauge,1}       ... Specifies the gauges to be included into the computations.
-        + printBefore  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
-        + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
-        + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
+        + printBefore             ::Bool                           ... True, if all energies and lines are printed before their evaluation.
+        + pathwaySelection        ::PathwaySelection               ... Specifies the selected levels/pathways, if any.
         + maxKappa                ::Int64                              ... Maximum kappa value of partial waves to be included.
     """
     struct Settings
         multipoles                ::Array{Basics.EmMultipole,1}
         gauges                    ::Array{Basics.UseGauge,1} 
-        printBefore    ::Bool
-        selectPathways            ::Bool
-        selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
+        printBefore               ::Bool 
+        pathwaySelection          ::PathwaySelection 
         maxKappa                  ::Int64 
     end 
 
@@ -36,7 +34,7 @@ module PhotoExcitationAutoion
         ... constructor for the default values of photon-impact excitation-autoionizaton settings.
     """
     function Settings()
-        Settings( Basics.EmMultipole[], UseGauge[], false,  false, Tuple{Int64,Int64,Int64}[], 0)
+        Settings( Basics.EmMultipole[], UseGauge[], false,  PathwaySelection(), 0)
     end
 
 
@@ -45,9 +43,8 @@ module PhotoExcitationAutoion
     function Base.show(io::IO, settings::PhotoExcitationAutoion.Settings) 
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
-        println(io, "printBefore:  $(settings.printBefore)  ")
-        println(io, "selectPathways:          $(settings.selectPathways)  ")
-        println(io, "selectedPathways:        $(settings.selectedPathways)  ")
+        println(io, "printBefore:             $(settings.printBefore)  ")
+        println(io, "pathwaySelection:        $(settings.pathwaySelection)  ")
         println(io, "maxKappa:                $(settings.maxKappa)  ")
     end
 
@@ -191,77 +188,26 @@ module PhotoExcitationAutoion
     """
     function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                 settings::PhotoExcitationAutoion.Settings)
-        if    settings.selectPathways    selectPathways = true;   selectedPathways = Basics.determine("selected pathways", settings.selectedPathways)
-        else                             selectPathways = false
-        end
-    
         pathways = PhotoExcitationAutoion.Pathway[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  n = 1:length(intermediateMultiplet.levels)
-                for  f = 1:length(finalMultiplet.levels)
-                    if  selectPathways  &&  !(haskey(selectedPathways, (i,n,f)) )    continue   end
-                    ##x println("PhotoExcitationAutoion.determineLines-aa: angular i = $i, f = $f")
-                    eEnergy = intermediateMultiplet.levels[n].energy - initialMultiplet.levels[i].energy
-                    aEnergy = intermediateMultiplet.levels[n].energy - finalMultiplet.levels[f].energy
-                    if  eEnergy < 0.   ||   aEnergy < 0    continue    end
-
-                    rSettings = PhotoEmission.Settings( settings.multipoles, settings.gauges, false, false, false, Tuple{Int64,Int64}[], 0., 0., 0.)
-                    eChannels = PhotoEmission.determineChannels(intermediateMultiplet.levels[n], initialMultiplet.levels[i], rSettings) 
-                    aSettings = AutoIonization.Settings( false, false, false, Tuple{Int64,Int64}[], 0., 0., settings.maxKappa, "Coulomb")
-                    aChannels = AutoIonization.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], aSettings) 
-                    push!( pathways, PhotoExcitationAutoion.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[n], 
-                                            finalMultiplet.levels[f], eEnergy, aEnergy, EmProperty(0., 0.), true, eChannels, aChannels) )
+        for  iLevel  in  initialMultiplet.levels
+            for  nLevel  in  intermediateMultiplet.levels
+                for  fLevel  in  finalMultiplet.levels
+                    if  Basics.selectLevelTriple(iLevel, nLevel, fLevel, settings.pathwaySelection)
+                        eEnergy = nLevel.energy - iLevel.energy
+                        aEnergy = nLevel.energy - fLevel.energy
+                        if  eEnergy < 0.   ||   aEnergy < 0    continue    end
+                        rSettings = PhotoEmission.Settings( settings.multipoles, settings.gauges, false, false, LineSelection(), 0., 0., 0.)
+                        eChannels = PhotoEmission.determineChannels(nLevel, iLevel, rSettings) 
+                        aSettings = AutoIonization.Settings( false, false, LineSelection(), 0., 0., settings.maxKappa, CoulombInteraction())
+                        aChannels = AutoIonization.determineChannels(fLevel, nLevel, aSettings) 
+                        push!( pathways, PhotoExcitationAutoion.Pathway(iLevel, nLevel, fLevel, eEnergy, aEnergy, EmProperty(0., 0.), 
+                                                                        true, eChannels, aChannels) )
+                    end
                 end
             end
         end
         return( pathways )
     end
-
-
-    #==
-    """
-    `PhotoExcitationAutoion.determineChannels(finalLevel::Level, intermediateLevel::Level, initialLevel::Level, 
-                                              settings::PhotoExcitationAutoion.Settings)`  
-        ... to determine a list of photoexcitation-autoionization Channels for a pathway from the initial to and 
-            intermediate and to a final level, and by taking into account the particular settings of for this computation; 
-            an Array{PhotoExcitationAutoion.Channel,1} is returned.
-    """
-    function determineChannels(finalLevel::Level, intermediateLevel::Level, initialLevel::Level, settings::PhotoExcitationAutoion.Settings)
-        symi      = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
-        symn      = LevelSymmetry(intermediateLevel.J, intermediateLevel.parity)
-        # Determine first the radiative channels
-        rChannels = PhotoEmission.Channel[];   
-        for  mp in settings.multipoles
-            if   AngularMomentum.isAllowedMultipole(symi, mp, symn)
-                hasMagnetic = false
-                for  gauge in settings.gauges
-                    # Include further restrictions if appropriate
-                    if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      push!(rChannels, PhotoEmission.Channel(mp, Basics.Coulomb,   0.) )
-                    elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    push!(rChannels, PhotoEmission.Channel(mp, Basics.Babushkin, 0.) )  
-                    elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)                  push!(rChannels, PhotoEmission.Channel(mp,Basics.Magnetic,  0.) );
-                                                        hasMagnetic = true; 
-                    end 
-                end
-            end
-        end
-
-        # Determine next the AutoIonization channels
-        aChannels = AutoIonization.Channel[];   
-        kappaList = AngularMomentum.allowedKappaSymmetries(symn, symf)
-        for  kappa in kappaList
-            push!(aChannels, AutoIonization.Channel(kappa, symi, 0., Complex(0.)) )
-        end
-
-        # Now combine all these channels
-        channels  = PhotoExcitationAutoion.Channel[]; 
-        for    r in rChannels  
-            for    a in aChannels    
-                push!(channels,  PhotoExcitationAutoion.Channel(r, a) )    
-            end
-        end
- 
-        return( channels )  
-    end  ==#
 
 
     """
@@ -270,10 +216,11 @@ module PhotoExcitationAutoion
             all selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayPathways(pathways::Array{PhotoExcitationAutoion.Pathway,1})
+        nx = 170
         println(" ")
         println("  Selected photo-excitation-autoionization pathways:")
         println(" ")
-        println("  ", TableStrings.hLine(170))
+        println("  ", TableStrings.hLine(nx))
         sa = "     ";   sb = "     "
         sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);          
         sa = sa * TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=3);
@@ -283,7 +230,7 @@ module PhotoExcitationAutoion
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=3)
         sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
         sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(170)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
             sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
@@ -307,7 +254,7 @@ module PhotoExcitationAutoion
                 sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
             end
         end
-        println("  ", TableStrings.hLine(170))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -319,10 +266,11 @@ module PhotoExcitationAutoion
             nothing is returned otherwise.
     """
     function  displayResults(stream::IO, pathways::Array{PhotoExcitationAutoion.Pathway,1})
+        nx = 135
         println(stream, " ")
         println(stream, "  Partial photo-excitation & autoionization cross sections:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(135))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "     ";   sb = "     "
         sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);          
         sa = sa * TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=3);
@@ -334,7 +282,7 @@ module PhotoExcitationAutoion
         sa = sa * TableStrings.center(30, "Cou -- Cross sections -- Bab"; na=2);       
         sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section")*"          "*
                                               TableStrings.inUnits("cross section"); na=2)
-        println(stream, sa);    println(stream, sb);    println("  ", TableStrings.hLine(135)) 
+        println(stream, sa);    println(stream, sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
             sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
@@ -355,7 +303,7 @@ module PhotoExcitationAutoion
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection.Babushkin))   * "    "
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(135))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

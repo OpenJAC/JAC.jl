@@ -11,15 +11,13 @@ module DecayYield
     `struct  DecayYield.Settings`  ... defines a type for the details and parameters of computing fluorescence and Auger yields.
 
         + approach                 ::String         ... Determines the applied cascade approach for the yields: {"AverageSCA", "SCA"}.
-        + printBefore   ::Bool           ... True if a list of selected levels is to be printed before the actual computations start. 
-        + selectLevels             ::Bool           ... True if individual levels are selected for the computation.
-        + selectedLevels           ::Array{Level,1} ... List of selected levels.
+        + printBefore              ::Bool           ... True if a list of selected levels is to be printed before the actual computations start. 
+        + levelSelection           ::LevelSelection ... Specifies the selected levels, if any.
     """
     struct Settings 
         approach                   ::String 
-        printBefore     ::Bool
-        selectLevels               ::Bool
-        selectedLevels             ::Array{Level,1}
+        printBefore                ::Bool   
+        levelSelection             ::LevelSelection
     end 
 
 
@@ -28,16 +26,15 @@ module DecayYield
         ... constructor for an `empty` instance of DecayYield.Settings for the computation of fluorescence and Auger yields.
     """
     function Settings()
-        Settings("AverageSCA", false, false, Level[])
+        Settings("AverageSCA", false, LevelSelection() )
     end
 
 
     # `Base.show(io::IO, settings::DecayYield.Settings)`  ... prepares a proper printout of the variable settings::DecayYield.Settings.
     function Base.show(io::IO, settings::DecayYield.Settings) 
         println(io, "approach:                 $(settings.approach)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
-        println(io, "selectLevels:             $(settings.selectLevels)  ")
-        println(io, "selectedLevels:           $(settings.selectedLevels)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "levelSelection:           $(settings.levelSelection)  ")
     end
 
 
@@ -109,12 +106,12 @@ module DecayYield
         else    error("Improper (cascade) approach for yield computations; approach = $(settings.approach)")    
         end
         wa = Cascade.Computation(Cascade.Computation(), name="photon lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
-                                 scheme=Cascade.StepwiseDecayScheme([Radiative], 0, 0, Shell[], Shell[]),
+                                 scheme=Cascade.StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, Shell[], Shell[]),
                                  approach=cApproach, initialConfigs=initialConfigs)
         wb = perform(wa, output=true, outputToFile=false);   linesR = wb["decay line data:"].linesR
         println("\nPerform a cascade computation for all (single-electron) Auger decay channels of the levels from the initial configurations:")
         wa = Cascade.Computation(Cascade.Computation(), name="Auger lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
-                                 scheme=Cascade.StepwiseDecayScheme([Auger], 1, 0, Shell[], Shell[]),
+                                 scheme=Cascade.StepwiseDecayScheme([Auger()], 1, Dict{Int64,Float64}(), 0, Shell[], Shell[]),
                                  approach=cApproach, initialConfigs=initialConfigs)
         wb = perform(wa, output=true, outputToFile=false);   linesA = wb["decay line data:"].linesA
         #
@@ -143,14 +140,11 @@ module DecayYield
             initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::DecayYield.Settings) 
-        if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
-        else                          selectLevels   = false
-        end
-    
         outcomes = DecayYield.Outcome[]
-        for  i = 1:length(multiplet.levels)
-            if  selectLevels  &&  !(haskey(selectedLevels, i))    continue   end
-            push!( outcomes, DecayYield.Outcome(multiplet.levels[i], 0, 0, EmProperty(0.), 0., EmProperty(0.), EmProperty(0.)) )
+        for  level  in  multiplet.levels
+            if  Basics.selectLevel(level, settings.levelSelection)
+                push!( outcomes, DecayYield.Outcome(level, 0, 0, EmProperty(0.), 0., EmProperty(0.), EmProperty(0.)) )
+            end
         end
         return( outcomes )
     end
@@ -162,16 +156,17 @@ module DecayYield
             selected levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{DecayYield.Outcome,1})
+        nx = 43
         println(" ")
         println("  Selected DecayYield levels:")
         println(" ")
-        println("  ", TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
         sa = sa * TableStrings.center(14, "Energy"; na=4);              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(43)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -180,7 +175,7 @@ module DecayYield
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             println( sa )
         end
-        println("  ", TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -192,6 +187,7 @@ module DecayYield
             is returned otherwise.
     """
     function  displayResults(stream::IO, outcomes::Array{DecayYield.Outcome,1}, settings::DecayYield.Settings)
+        nx = 149
         println(stream, " ")
         println(stream, "  Fluorescence and Auger decay yields:")
         println(stream, " ")
@@ -202,7 +198,7 @@ module DecayYield
         end
         #
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(149))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
@@ -214,7 +210,7 @@ module DecayYield
         sa = sa * TableStrings.center( 6, "No_A"    ; na=3);                          sb = sb * TableStrings.hBlank(9)
         sa = sa * TableStrings.center(10, "rate_A"; na=2);                            sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(24, "Cou -- omega_A -- Bab"; na=3);             sb = sb * TableStrings.hBlank(27)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(149)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -233,7 +229,7 @@ module DecayYield
             sa = sa * @sprintf("%.4e", outcome.omegaA.Babushkin)                                * "  "
             println(stream, sa )
         end
-        println(stream, "  ", TableStrings.hLine(149), "\n\n")
+        println(stream, "  ", TableStrings.hLine(nx), "\n\n")
         #
         return( nothing )
     end

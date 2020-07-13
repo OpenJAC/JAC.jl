@@ -6,7 +6,6 @@
 module Hfs
 
     using Printf, ..AngularMomentum, ..Basics,  ..Defaults, ..InteractionStrength, ..ManyElectron, ..Radial, ..Nuclear, ..TableStrings
-    ##x global JAC_counter = 0
     
 
     """
@@ -233,33 +232,31 @@ module Hfs
                                                            printed, and false otherwise.
         + calcIJFexpansion          ::Bool             ... True if the selected atomic levels are to be represented in a IJF-coupled basis,
                                                            and false otherwise.
-        + printBefore    ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
+        + printBefore    ::Bool                        ... True if a list of selected levels is printed before the actual computations start. 
         + printDeltaEF              ::Bool             ... True if the energy shift of E_F (with regard to E_J) is to be printed, and false otherwise.
-        + selectLevels              ::Bool             ... True if individual levels are selected for the computation.
-        + selectedLevels            ::Array{Int64,1}   ... List of selected levels.
+        + levelSelection            ::LevelSelection   ... Specifies the selected levels, if any.
     """
     struct Settings
         calcT1                      ::Bool
         calcT2                      ::Bool
         calcNondiagonal             ::Bool 
         calcIJFexpansion            ::Bool 
-        printBefore      ::Bool 
-        printDeltaEF                ::Bool
-        selectLevels                ::Bool
-        selectedLevels              ::Array{Int64,1}
+        printBefore                 ::Bool 
+        printDeltaEF                ::Bool  
+        levelSelection              ::LevelSelection
     end 
 
 
     """
     `Hfs.Settings(; calcT1::Bool=true,` calcT2::Bool=false, calcNondiagonal::Bool=false, calcIJFexpansion::Bool=false, 
                         printBefore::Bool=false, printDeltaEF::Bool=false, 
-                        selectLevels::Bool=false, selectedLevels::Array{Int64,1}=Int64[]) 
+                        levelSelection::LevelSelection=LevelSelection()) 
         ... keyword constructor to overwrite selected value of Einstein line computations.
     """
     function Settings(; calcT1::Bool=true, calcT2::Bool=false, calcNondiagonal::Bool=false, calcIJFexpansion::Bool=false, 
                         printBefore::Bool=false, printDeltaEF::Bool=false, 
-                        selectLevels::Bool=false, selectedLevels::Array{Int64,1}=Int64[])
-        Settings(calcT1, calcT2, calcNondiagonal, calcIJFexpansion, printBefore, printDeltaEF, selectLevels, selectedLevels)
+                        levelSelection::LevelSelection=LevelSelection())
+        Settings(calcT1, calcT2, calcNondiagonal, calcIJFexpansion, printBefore, printDeltaEF, levelSelection)
     end
 
 
@@ -269,10 +266,9 @@ module Hfs
         println(io, "calcT2:                   $(settings.calcT2)  ")
         println(io, "calcNondiagonal:          $(settings.calcNondiagonal)  ")
         println(io, "calcIJFexpansion:         $(settings.calcIJFexpansion)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
         println(io, "printDeltaEF:             $(settings.printDeltaEF)  ")
-        println(io, "selectLevels:             $(settings.selectLevels)  ")
-        println(io, "selectedLevels:           $(settings.selectedLevels)  ")
+        println(io, "levelSelection:           $(settings.levelSelection)  ")
     end
 
 
@@ -340,7 +336,6 @@ module Hfs
     """
     function  computeAmplitudesProperties(outcome::Hfs.Outcome, grid::Radial.Grid, settings::Hfs.Settings, im::Hfs.InteractionMatrix)
         AIoverMu = 0.0;   BoverQ = 0.0;   amplitudeT1 = 0.0;   amplitudeT2 = 0.0;    J = AngularMomentum.oneJ(outcome.Jlevel.J)
-        ##x println("++ AngJ = $(outcome.Jlevel.J)  J = $J ")
         if  settings.calcT1  &&  outcome.Jlevel.J != AngularJ64(0)
             if  im.calcT1   amplitudeT1 = transpose(outcome.Jlevel.mc) * im.matrixT1 * outcome.Jlevel.mc
             else            amplitudeT1 = Hfs.amplitude("T^(1) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
@@ -429,7 +424,6 @@ module Hfs
             # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)
             evector   = eigen.vectors[ev];    en = eigen.values[ev]
             parity    = Basics.plus;    F = AngularJ64(0);     MF = AngularM64(0)
-            ##x println("len = $(length(hfsBasis.vectors))  evector = $evector   ")
             for  r = 1:length(hfsBasis.vectors)
                 if  abs(evector[r]) > 1.0e-6    
                     parity = hfsBasis.vectors[r].levelJ.parity
@@ -492,7 +486,6 @@ module Hfs
         end
         #
         im = Hfs.InteractionMatrix(calcT1, calcT2, matrixT1, matrixT2)
-        ##x println("im = $im")
         #
         return( im )
     end
@@ -583,14 +576,11 @@ module Hfs
             level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::Hfs.Settings) 
-        if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
-        else                          selectLevels   = false
-        end
-    
         outcomes = Hfs.Outcome[]
-        for  i = 1:length(multiplet.levels)
-            if  selectLevels  &&  !(haskey(selectedLevels, i))    continue   end
-            push!( outcomes, Hfs.Outcome(multiplet.levels[i], 0., 0., 0., 0., AngularJ64(0), false, false) )
+        for  level  in  multiplet.levels
+            if  Basics.selectLevel(level, settings.levelSelection)
+                push!( outcomes, Hfs.Outcome(level, 0., 0., 0., 0., AngularJ64(0), false, false) )
+            end
         end
         return( outcomes )
     end
@@ -602,30 +592,28 @@ module Hfs
             all (pairwise) hyperfine amplitudes is printed but nothing is returned otherwise.
     """
     function  displayNondiagonal(stream::IO, multiplet::Multiplet, grid::Radial.Grid, settings::Hfs.Settings)
-        if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
-        else                          selectLevels   = false
-        end
-    
+        # Determine pairs to be calculated
         pairs = Tuple{Int64,Int64}[]
-        for  f = 1:length(multiplet.levels)
-            if  selectLevels  &&  !(haskey(selectedLevels, f))    continue   end
-            for  i = f:length(multiplet.levels)
-                if  selectLevels  &&  !(haskey(selectedLevels, i))    continue   end
-                push!( pairs, (f,i) )
+        for  (f, fLevel)  in  enumerate(multiplet.levels)
+            for  (i, iLevel)  in  enumerate(multiplet.levels)
+                if  Basics.selectLevel(fLevel, settings.levelSelection)  &&   Basics.selectLevel(iLevel, settings.levelSelection)
+                    push!( pairs, (f,i) )
+                end
             end
         end
         #
+        nx = 107
         println(stream, " ")
         println(stream, "  Selected (non-) diagonal hyperfine amplitudes:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(107))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  "
         sa = sa * TableStrings.center(10, "Level_f"; na=2)
         sa = sa * TableStrings.center(10, "Level_i"; na=2)
         sa = sa * TableStrings.center(10, "J^P_f";   na=3)
         sa = sa * TableStrings.center(57, "T1   --   Amplitudes   --   T2"; na=4);              
         sa = sa * TableStrings.center(10, "J^P_f";   na=4)
-        println(stream, sa);    println(stream, "  ", TableStrings.hLine(107)) 
+        println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx)) 
         #  
         for  (f,i) in pairs
             sa   = "  ";    
@@ -641,7 +629,7 @@ module Hfs
             sa   = sa * TableStrings.center(10, string(symi); na=4)
             println(stream, sa )
         end
-        println(stream, "  ", TableStrings.hLine(107))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -653,16 +641,17 @@ module Hfs
             selected levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{Hfs.Outcome,1})
+        nx = 43
         println(" ")
         println("  Selected HFS levels:")
         println(" ")
-        println("  ", TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
         sa = sa * TableStrings.center(14, "Energy"; na=4);              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(43)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
@@ -671,7 +660,7 @@ module Hfs
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.Jlevel.energy)) * "    "
             println( sa )
         end
-        println("  ", TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(nx))
         println(" ")
         #
         return( nothing )
@@ -684,10 +673,11 @@ module Hfs
             parameters are taken from the nuclear model. A neat table is printed but nothing is returned otherwise.
     """
     function  displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1}, nm::Nuclear.Model, settings::Hfs.Settings)
+        nx = 117
         println(stream, " ")
         println(stream, "  HFS parameters and amplitudes:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(117))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
@@ -696,7 +686,7 @@ module Hfs
         sa = sa * TableStrings.center(31, "A/mu [mu_N]  --  HFS  --  B/Q [barn]"; na=4);              
         sb = sb * TableStrings.center(31, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.center(32, "T1 -- Amplitudes -- T2"    ; na=4);        sb = sb * TableStrings.hBlank(36)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(117)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
@@ -713,12 +703,13 @@ module Hfs
             sa = sa * @sprintf("%.8e %s %.8e", outcome.amplitudeT1.re, "  ", outcome.amplitudeT2.re) * "    "
             println(stream, sa )
         end
-        println(stream, "  ", TableStrings.hLine(117))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         #
         if !settings.printDeltaEF   return( nothing )   end
         #
         # Printout the Delta E_F energy shifts of the hyperfine levels |alpha F> with regard to the (electronic) levels |alpha J>
+        nx = 90
         println(stream, " ")
         println(stream, "  HFS Delta E_F energy shifts with regard to the (electronic) level energies E_J:")
         println(stream, " ")
@@ -726,7 +717,7 @@ module Hfs
         println(stream, "    Nuclear magnetic-dipole moment    mu = $(nm.mu)    ")
         println(stream, "    Nuclear electric-quadrupole moment Q = $(nm.Q)     ")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(90))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
@@ -735,7 +726,7 @@ module Hfs
         sa = sa * TableStrings.center(14, "Delta E_F"; na=4);                         
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.center(14, "C factor"; na=4);                         
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(90)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
@@ -756,7 +747,6 @@ module Hfs
                     energy  = energy +  outcome.BoverQ * nm.Q * 3/4 * (Cfactor*(Cfactor+1) - spinI*(spinI+1)*J*(J+1) ) /
                                         ( 2spinI*(2spinI-1)*J*(2J-1) )
                 end
-                ##x println("energy-b = $energy  outcome.BoverQ = $(outcome.BoverQ) Q = $(nm.Q)")
                 sb = TableStrings.center(10, string(Fsym); na=2)
                 sb = sb * TableStrings.flushright(16, @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))) * "    "
                 sb = sb * TableStrings.flushright(12, @sprintf("%.5e", Cfactor))
@@ -766,7 +756,7 @@ module Hfs
                 end
             end
         end
-        println(stream, "  ", TableStrings.hLine(90))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

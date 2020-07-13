@@ -16,9 +16,7 @@ module Dielectronic
         + multipoles            ::Array{EmMultipoles}  ... Multipoles of the radiation field that are to be included.
         + gauges                ::Array{UseGauge}      ... Specifies the gauges to be included into the computations.
         + printBefore           ::Bool                 ... True, if all energies and pathways are printed before their eval.
-        + selectPathways        ::Bool                 ... True if particular pathways are selected for the computations.
-        + selectedPathways      ::Array{Tuple{Int64,Int64,Int64},1}  
-                                                       ... List of pathways, given by tupels (inital, inmediate, final).
+        + pathwaySelection      ::PathwaySelection     ... Specifies the selected levels/pathways, if any.
         + electronEnergyShift   ::Float64              ... An overall energy shift for all electron energies (i.e. from the 
                                                            initial to the resonance levels.
         + photonEnergyShift     ::Float64              ... An overall energy shift for all photon energies (i.e. from the 
@@ -31,13 +29,12 @@ module Dielectronic
     struct Settings 
         multipoles              ::Array{EmMultipole,1}
         gauges                  ::Array{UseGauge}
-        printBefore             ::Bool
-        selectPathways          ::Bool
-        selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}
+        printBefore             ::Bool 
+        pathwaySelection        ::PathwaySelection
         electronEnergyShift     ::Float64
         photonEnergyShift       ::Float64
         mimimumPhotonEnergy     ::Float64
-        augerOperator           ::String
+        augerOperator           ::AbstractEeInteraction
     end 
 
 
@@ -46,37 +43,35 @@ module Dielectronic
         ... constructor for the default values of dielectronic recombination pathway computations.
     """
     function Settings()
-        Settings([E1], UseGauge[], false, false, Tuple{Int64,Int64,Int64}[], 0., 0., 0., "Coulomb")
+        Settings([E1], UseGauge[], false, PathwaySelection(), 0., 0., 0., "Coulomb")
     end
 
 
     """
     ` (set::Dielectronic.Settings;`
     
-            multipoles=..,          gauges=..,                  printBefore=..,             selectPathways=..,             
-            selectedPathways=..,    electronEnergyShift=..,     photonEnergyShift=..,       mimimumPhotonEnergy=..,
-            augerOperator=..)
+            multipoles=..,           gauges=..,                  printBefore=..,             pathwaySelection=..,             
+            electronEnergyShift=..,  photonEnergyShift=..,       mimimumPhotonEnergy=..,     augerOperator=..)
                         
         ... constructor for modifying the given Dielectronic.Settings by 'overwriting' the previously selected parameters.
     """
     function Settings(set::Dielectronic.Settings;    
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                        gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
-        printBefore::Union{Nothing,Bool}=nothing,                                       selectPathways::Union{Nothing,Bool}=nothing,
-        selectedPathways::Union{Nothing,Array{Tuple{Int64,Int64,Int64},1}}=nothing,     electronEnergyShift::Union{Nothing,Float64}=nothing,
+        printBefore::Union{Nothing,Bool}=nothing,                                       pathwaySelection::Union{Nothing,PathwaySelection}=nothing, 
+        electronEnergyShift::Union{Nothing,Float64}=nothing,
         photonEnergyShift::Union{Nothing,Float64}=nothing,                              mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,
-        augerOperator::Union{Nothing,String}=nothing)
+        augerOperator::Union{Nothing,AbstractEeInteraction}=nothing)
         
         if  multipoles          == nothing   multipolesx          = set.multipoles            else  multipolesx          = multipoles           end 
         if  gauges              == nothing   gaugesx              = set.gauges                else  gaugesx              = gauges               end 
         if  printBefore         == nothing   printBeforex         = set.printBefore           else  printBeforex         = printBefore          end 
-        if  selectPathways      == nothing   selectPathwaysx      = set.selectPathways        else  selectPathwaysx      = selectPathways       end 
-        if  selectedPathways    == nothing   selectedPathwaysx    = set.selectedPathways      else  selectedPathwaysx    = selectedPathways     end 
+        if  pathwaySelection    == nothing   pathwaySelectionx    = set.pathwaySelection      else  pathwaySelectionx    = pathwaySelection     end 
         if  electronEnergyShift == nothing   electronEnergyShiftx = set.electronEnergyShift   else  electronEnergyShiftx = electronEnergyShift  end 
         if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift     else  photonEnergyShiftx   = photonEnergyShift    end 
         if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy   else  mimimumPhotonEnergyx = mimimumPhotonEnergy  end 
         if  augerOperator       == nothing   augerOperatorx       = set.augerOperator         else  augerOperatorx       = augerOperator        end 
 
-        Settings( multipolesx, gaugesx, printBeforex, selectPathwaysx, selectedPathwaysx, electronEnergyShiftx, photonEnergyShiftx, 
+        Settings( multipolesx, gaugesx, printBeforex, pathwaySelectionx, electronEnergyShiftx, photonEnergyShiftx, 
                   mimimumPhotonEnergyx, augerOperatorx )
     end
 
@@ -86,8 +81,7 @@ module Dielectronic
         println(io, "multipoles:                 $(settings.multipoles)  ")
         println(io, "use-gauges:                 $(settings.gauges)  ")
         println(io, "printBefore:                $(settings.printBefore)  ")
-        println(io, "selectPathways:             $(settings.selectPathways)  ")
-        println(io, "selectedPathways:           $(settings.selectedPathways)  ")
+        println(io, "pathwaySelection:           $(settings.pathwaySelection)  ")
         println(io, "electronEnergyShift:        $(settings.electronEnergyShift)  ")
         println(io, "photonEnergyShift:          $(settings.photonEnergyShift)  ")
         println(io, "mimimumPhotonEnergy:        $(settings.mimimumPhotonEnergy)  ")
@@ -245,7 +239,6 @@ module Dielectronic
         
         if hasCaptureChannels
             # Simply copy the results from previous computation of the same channels
-            ##x println("copy from previous pathway")
             newcChannels = deepcopy(lastCaptureChannels)
             for cChannel in newcChannels
                 rate     = rate + conj(cChannel.amplitude) * cChannel.amplitude
@@ -256,25 +249,13 @@ module Dielectronic
             intermediateLevel = deepcopy(pathway.intermediateLevel)
             Defaults.setDefaults("relativistic subshell list", intermediateLevel.basis.subshells; printout=false)
             for cChannel in pathway.captureChannels
-                ##x @show intermediateLevel.basis.csfs[1].occupation
                 newnLevel = Basics.generateLevelWithSymmetryReducedBasis(intermediateLevel, intermediateLevel.basis.subshells)
-                ##x @show newnLevel.basis.csfs[1].occupation
                 newiLevel = Basics.generateLevelWithSymmetryReducedBasis(initialLevel, newnLevel.basis.subshells)
                 newnLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, cChannel.kappa), newnLevel)
                 cOrbital, phase  = Continuum.generateOrbitalForLevel(pathway.electronEnergy, Subshell(101, cChannel.kappa), newiLevel, nm, grid, contSettings)
                 newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, cChannel.symmetry, newiLevel)
                 newcChannel = AutoIonization.Channel( cChannel.kappa, cChannel.symmetry, phase, Complex(0.))
-                ##x @show "++++++++"
-                ##x @show Defaults.GBL_STANDARD_SUBSHELL_LIST
-                ##x @show newiLevel.basis.subshells
-                ##x @show newnLevel.basis.subshells
-                ##x @show newcLevel.basis.subshells
-                ##x @show newiLevel.basis.csfs[1].occupation
-                ##x @show newnLevel.basis.csfs[1].occupation
-                ##x @show newcLevel.basis.csfs[1].occupation
-                ##x amplitude   = 0.;   phase = 0.
                 amplitude   = AutoIonization.amplitude(settings.augerOperator, cChannel, newnLevel, newcLevel, grid)
-                ##x @show amplitude
                 rate        = rate + conj(amplitude) * amplitude
                 newcChannel = AutoIonization.Channel( cChannel.kappa, cChannel.symmetry, phase, amplitude)
                 push!( newcChannels, newcChannel)
@@ -287,14 +268,9 @@ module Dielectronic
         
         newpChannels = PhotoEmission.Channel[];    rateC = 0.;    rateB = 0.
         for pChannel in pathway.photonChannels
-            ##x @show finalLevel
-            ##x @show intermediateLevel
-            ##x @show intermediateLevel.basis.subshells
-            ##x @show intermediateLevel.basis.csfs[1].occupation
             amplitude   = PhotoEmission.amplitude("emission", pChannel.multipole, pChannel.gauge, pathway.photonEnergy, 
                                                   finalLevel, intermediateLevel, grid, display=false, printout=false)
             newpChannel = PhotoEmission.Channel( pChannel.multipole, pChannel.gauge, amplitude)
-            ##x @show newpChannel.gauge, amplitude
             push!( newpChannels, newpChannel)
             if       newpChannel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2
             elseif   newpChannel.gauge == Basics.Babushkin   rateB = rateB + abs(amplitude)^2
@@ -304,7 +280,6 @@ module Dielectronic
         captureRate     = 2pi* rate
         wa              = 8.0pi * Defaults.getDefaults("alpha") * pathway.photonEnergy / (AngularMomentum.twoJ(pathway.intermediateLevel.J) + 1) * 
                                                                                          (AngularMomentum.twoJ(pathway.finalLevel.J) + 1)
-        ##x @show  wa, rateC, rateB
         photonRate      = EmProperty(wa * rateC, wa * rateB)  
         angularBeta     = EmProperty(-9., -9.)
         wa              = Defaults.convertUnits("kinetic energy to wave number: atomic units", pathway.electronEnergy)
@@ -465,25 +440,19 @@ module Dielectronic
     """
     function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                 settings::Dielectronic.Settings)
-        if    settings.selectPathways    selectPathways = true;    
-              selectedPathways = Basics.determineSelectedPathways(settings.selectedPathways, initialMultiplet, intermediateMultiplet, finalMultiplet)
-        else                             selectPathways = false
-        end
-    
         pathways = Dielectronic.Pathway[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  n = 1:length(intermediateMultiplet.levels)
-                for  f = 1:length(finalMultiplet.levels)
-                    if  selectPathways  &&  !((i,n,f) in selectedPathways )    continue   end
-                    eEnergy = intermediateMultiplet.levels[n].energy - initialMultiplet.levels[i].energy
-                    pEnergy = intermediateMultiplet.levels[n].energy - finalMultiplet.levels[f].energy
-                    if  pEnergy < 0.   ||   eEnergy < 0.    continue    end
-
-                    cChannels = Dielectronic.determineCaptureChannels(intermediateMultiplet.levels[n], initialMultiplet.levels[i], settings) 
-                    pChannels = Dielectronic.determinePhotonChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], settings) 
-                    push!( pathways, Dielectronic.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[n], finalMultiplet.levels[f], 
-                                                          eEnergy, pEnergy, 0., EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), 
-                                                          true, cChannels, pChannels) )
+        for  iLevel  in  initialMultiplet.levels
+            for  nLevel  in  intermediateMultiplet.levels
+                for  fLevel  in  finalMultiplet.levels
+                    if  Basics.selectLevelTriple(iLevel, nLevel, fLevel, settings.pathwaySelection)
+                        eEnergy = nLevel.energy - iLevel.energy
+                        pEnergy = nLevel.energy - fLevel.energy
+                        if  pEnergy < 0.   ||   eEnergy < 0.    continue    end
+                        cChannels = Dielectronic.determineCaptureChannels(nLevel, iLevel, settings) 
+                        pChannels = Dielectronic.determinePhotonChannels( fLevel, nLevel, settings) 
+                        push!( pathways, Dielectronic.Pathway(iLevel, nLevel, fLevel, eEnergy, pEnergy, 0., EmProperty(0., 0.), 
+                                                              EmProperty(0., 0.), EmProperty(0., 0.), true, cChannels, pChannels) )
+                    end
                 end
             end
         end
@@ -497,10 +466,11 @@ module Dielectronic
             transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayPathways(pathways::Array{Dielectronic.Pathway,1})
+        nx = 180
         println(" ")
         println("  Selected dielectronic-recombination pathways:")
         println(" ")
-        println("  ", TableStrings.hLine(180))
+        println("  ", TableStrings.hLine(nx))
         sa = "     ";   sb = "     "
         sa = sa * TableStrings.center(23, "Levels"; na=4);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=4);          
         sa = sa * TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=3);
@@ -508,7 +478,7 @@ module Dielectronic
         sb = sb * TableStrings.center(26, "electron        photon "; na=5)
         sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
         sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(180)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
             sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
@@ -531,7 +501,7 @@ module Dielectronic
                 sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
             end
         end
-        println("  ", TableStrings.hLine(180))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -542,10 +512,11 @@ module Dielectronic
         ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
     """
     function  displayResults(stream::IO, pathways::Array{Dielectronic.Pathway,1}, settings::Dielectronic.Settings)
+        nx = 150
         println(stream, " ")
         println(stream, "  Partial (Auger) capture and radiative decay rates:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(150))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "    ";   sb = "    "
         sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);          
         sa = sa * TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);
@@ -554,7 +525,7 @@ module Dielectronic
         sa = sa * TableStrings.center(10, "Multipoles"; na=6);        sb = sb * TableStrings.hBlank(17)
         sa = sa * TableStrings.center(36, "Rates  " * TableStrings.inUnits("rate"); na=2);   
         sb = sb * TableStrings.center(36, "(Auger) capture    Cou--photon--Bab";        na=2)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(150)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
             sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
@@ -578,14 +549,15 @@ module Dielectronic
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", pathway.photonRate.Babushkin))   * "  "
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(150))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         #
         #
+        nx = 135
         println(stream, " ")
         println(stream, "  Partial resonance strength:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(135))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "    ";   sb = "    "
         sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);          
         sa = sa * TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);
@@ -594,7 +566,7 @@ module Dielectronic
         sa = sa * TableStrings.center(10, "Multipoles"; na=5);        sb = sb * TableStrings.hBlank(16)
         sa = sa * TableStrings.center(26, "S * Gamma_m  " * TableStrings.inUnits("reduced strength"); na=2);   
         sb = sb * TableStrings.center(26, " Cou -- photon -- Bab";        na=2)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(135)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
             sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
@@ -618,7 +590,7 @@ module Dielectronic
             sa = sa * @sprintf("%.4e", wa * pathway.reducedStrength.Babushkin)   * "     "
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(135))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -629,10 +601,11 @@ module Dielectronic
         ... to list all results for the resonances. A neat table is printed but nothing is returned otherwise.
     """
     function  displayResults(stream::IO, resonances::Array{Dielectronic.Resonance,1}, settings::Dielectronic.Settings)
+        nx = 160
         println(stream, " ")
         println(stream, "  Total Auger rates, radiative rates and resonance strengths:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(160))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-m"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--m"; na=2);                         sb = sb * TableStrings.hBlank(20)
@@ -647,7 +620,7 @@ module Dielectronic
         sb = sb * TableStrings.center(12, TableStrings.inUnits("resonance strength");  na=2)
         sa = sa * TableStrings.center(18, "Widths Gamma_m"; na=2);       
         sb = sb * TableStrings.center(16, TableStrings.inUnits("energy"); na=6)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(160)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  resonance in resonances
             sa  = "";      isym = LevelSymmetry( resonance.initialLevel.J,      resonance.initialLevel.parity)
@@ -666,7 +639,7 @@ module Dielectronic
             sa = sa * "(" * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", wa)) * ")"                     * "   "
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(160))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

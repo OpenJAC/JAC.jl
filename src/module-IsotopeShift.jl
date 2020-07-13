@@ -211,72 +211,6 @@ module IsotopeShift
     end
 
 
-    #==
-    """
-    `IsotopeShift.computeMatrixMnms_old(basis::Basis, grid::Radial.Grid, settings::IsotopeShift.Settings)`     
-        ... to compute the matrix M_nms = (<csf_r|| H_nms ||csf_s>) of the normal mass shift for the given CSF basis; 
-            a (length(basis.csfs) x length(basis.csfs)}-dimensional matrix::Array{Float64,2) is returned. See Naze 
-            et al., CPC 184 (2013) 2187, section 4.1 for further details on the decomposition of H_nms.  
-    """
-    function  computeMatrixMnms_old(basis::Basis, grid::Radial.Grid, settings::IsotopeShift.Settings) 
-        n = length(basis.csfs)
-  
-        print("Compute M_nms matrix of dimension $n x $n for the given basis ...")
-        matrix = zeros(Float64, n, n)
-        for  r = 1:n
-            for  s = 1:n
-                wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[s])
-                me = 0.
-                for  coeff in wa[1]
-                    jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
-                    me = me + coeff.T * sqrt( jj + 1) * 
-                                        InteractionStrength.hamiltonian_nms(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
-                end
-                matrix[r,s] = me
-            end
-        end 
-        println("   ... done.")
-        return( matrix )
-    end
-
-
-
-    """
-    `IsotopeShift.computeMatrixMsms_old(k::Int64, basis::Basis, grid::Radial.Grid, settings::IsotopeShift.Settings)` 
-        ... to compute the matrix M_sms (k=1,2,3) = (<csf_r|| H_sms,k ||csf_s>) of the specific mass shift for the given 
-            CSF basis; a (length(basis.csfs) x length(basis.csfs)}-dimensional matrix::Array{Float64,2) is returned. 
-            See Naze et al., CPC 184 (2013) 2187, section 4.2 for further details on the decomposition of H_sms.  
-    """
-    function  computeMatrixMsms_old(k::Int64, basis::Basis, grid::Radial.Grid, settings::IsotopeShift.Settings) 
-        n = length(basis.csfs)
-  
-        print("Compute M_sms (k=$k) matrix of dimension $n x $n for the given basis ...")
-        matrix = zeros(Float64, n, n)
-        for  r = 1:n
-            for  s = 1:n
-                wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[s])
-                me = 0.
-                for  coeff in wa[2]
-                    jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
-                    if       k == 1    wa = InteractionStrength.X1_sms1(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
-                                                                                      basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)
-                    elseif   k == 2    wa = InteractionStrength.X1_sms2(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
-                                                                                      basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid) 
-                    elseif   k == 3    wa = InteractionStrength.X1_sms3(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b], 
-                                                                                      basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)
-                    else   error("stop a")
-                    end
-                    me = me + coeff.V * sqrt( jj + 1) * wa
-                end
-                matrix[r,s] = me
-            end
-        end 
-        println("   ... done.")
-        return( matrix )
-    end
-    ==#
-
-
     """
     `IsotopeShift.computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings; output=true)` 
         ... to compute (as selected) the isotope-shift M and F parameters for the levels of the given multiplet and as 
@@ -333,16 +267,17 @@ module IsotopeShift
             selected levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{IsotopeShift.Outcome,1})
+        nx = 43
         println(" ")
         println("  Selected IsotopeShift levels:")
         println(" ")
-        println("  ", TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
         sa = sa * TableStrings.center(14, "Energy"; na=4);              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(43)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = Basics.LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -351,7 +286,7 @@ module IsotopeShift
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             println( sa )
         end
-        println("  ", TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -363,10 +298,11 @@ module IsotopeShift
             is returned otherwise.
     """
     function  displayResults(stream::IO, outcomes::Array{IsotopeShift.Outcome,1})
+        nx = 102
         println(stream, " ")
         println(stream, "  IsotopeShift parameters and amplitudes:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(102))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  ";   sc = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
@@ -383,7 +319,7 @@ module IsotopeShift
         sc = sc * TableStrings.center(11, "[a.u.]" ; na=4)
         sa = sa * TableStrings.center(11, " F ";   na=4)              
         sb = sb * TableStrings.center(11, "[..]" ; na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, sc);    println(stream, "  ", TableStrings.hLine(102)) 
+        println(stream, sa);    println(stream, sb);    println(stream, sc);    println(stream, "  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -402,10 +338,11 @@ module IsotopeShift
             sb = sb * @sprintf("%.5e", outcome.F)                                                              * "    "
             println(stream, sb )
         end
-        println(stream, "  ", TableStrings.hLine(102), "\n\n")
+        println(stream, "  ", TableStrings.hLine(nx), "\n\n")
         #
         # Now printout the individual amplitudes in an extra table
-        println(stream, "  ", TableStrings.hLine(158))
+        nx = 158
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
@@ -415,7 +352,7 @@ module IsotopeShift
         sa = sa * TableStrings.center(26, "H^(sms,A) amplitude"  ; na=3);             sb = sb * TableStrings.hBlank(35)
         sa = sa * TableStrings.center(26, "H^(sms,B) amplitude"  ; na=3);             sb = sb * TableStrings.hBlank(35)
         sa = sa * TableStrings.center(26, "H^(sms,C) amplitude"  ; na=3);             sb = sb * TableStrings.hBlank(35)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(158)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -428,7 +365,7 @@ module IsotopeShift
             sa = sa * @sprintf("%.5e %s %.5e", outcome.amplitudeKsmsC.re, " ", outcome.amplitudeKsmsC.im) * "    "
             println(stream, sa )
         end
-        println(stream, "  ", TableStrings.hLine(158))
+        println(stream, "  ", TableStrings.hLine(nx))
 
         return( nothing )
     end

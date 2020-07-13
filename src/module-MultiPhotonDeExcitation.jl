@@ -207,11 +207,10 @@ module MultiPhotonDeExcitation
         + process                 ::MultiPhotonDeExcitation.AbstractMultiPhotonProcess      ... considered multi-photon process.
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
-        + greenChannels           ::Array{AtomicState.GreenChannel,1}    ... Green function channels for these multi-photon calculations 
-                                                                             which need to be generated independently.
+        + greenChannels           ::Array{AtomicState.GreenChannel,1}    
+            ... Green function channels for these multi-photon calculations which need to be generated independently.
         + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
 
     """
     struct Settings 
@@ -219,9 +218,8 @@ module MultiPhotonDeExcitation
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         greenChannels             ::Array{AtomicState.GreenChannel,1}
-        printBefore               ::Bool
-        selectLines               ::Bool
-        selectedLines             ::Array{Tuple{Int64,Int64},1} 
+        printBefore               ::Bool  
+        lineSelection             ::LineSelection   
     end 
 
 
@@ -229,7 +227,7 @@ module MultiPhotonDeExcitation
     `MultiPhotonDeExcitation.Settings()`  ... constructor for the default values of multi-photon excitation and decay rates.
     """
     function Settings()
-        Settings( TwoPhotonEmission(), EmMultipole[], UseGauge[], AtomicState.GreenExpansion(), false, false, Tuple{Int64,Int64}[])
+        Settings( TwoPhotonEmission(), EmMultipole[], UseGauge[], AtomicState.GreenExpansion(), false, LineSelection() )
     end
 
 
@@ -242,8 +240,7 @@ module MultiPhotonDeExcitation
         print(io,   "greenChannels:             (settings.greenChannels)  ... with symmetries:   ")
         for channel in settings.greenChannels  print(io, "   $(channel.symmetry)")  end;   println(io, " ")
         println(io, "printBefore:              $(settings.printBefore)  ")
-        println(io, "selectLines:              $(settings.selectLines)  ")
-        println(io, "selectedLines:            $(settings.selectedLines)  ")
+        println(io, "lineSelection:            $(settings.lineSelection)  ")
     end
     
     include("module-MultiPhotonDeExc-inc-2pAbsMono.jl")

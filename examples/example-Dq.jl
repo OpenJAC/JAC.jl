@@ -5,8 +5,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(tr
                         initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                         finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
                         process = RAuger(), 
-                        processSettings=RadiativeAuger.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], 6, true, false, 
-                                                                Tuple{Int64,Int64}[], 0., 1.0e6, 2)  )
+                        processSettings=RadiativeAuger.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], 6, true, LineSelection(), 0., 1.0e6, 2)  )
 
 wb = perform(wa)
 

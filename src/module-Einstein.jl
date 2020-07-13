@@ -196,11 +196,8 @@ module Einstein
         global JAC_counter
         newChannels = Einstein.Channel[];    rateC = 0.;    rateB = 0.
         for channel in line.channels
-            ##x matrix    = Einstein.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid, settings)
-            ##x amplitude = transpose(line.finalLevel.mc) * matrix * line.initialLevel.mc 
             #
             amplitude = PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
-            ##x Defaults.warn(AddWarning(), "amplitude = $amplitude,  testamp =  $testamp, Diff = $(amplitude-testamp) ")
             #
             push!( newChannels, Einstein.Channel( channel.multipole, channel.gauge, amplitude) )
             if       channel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2
@@ -215,37 +212,6 @@ module Einstein
         angularBeta = EmProperty(-9., -9.)
         line = Einstein.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, true, newChannels)
         return( line )
-    end
-
-
-    """
-    `Einstein.computeMatrix_obsolete(Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid, 
-                                     settings::Einstein.Settings)`  
-        ... to compute the matrix Mp = (<csf_r|| O^Mp (gauge) ||csf_s>) of the multipole interaction for the given CSF basis and 
-            transition energy ``ω``. A (length(basis.csfs) x length(basis.csfs)}-dimensional matrix::Array{Float64,2) is returned. 
-    """
-    function  computeMatrix_obsolete(Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid, 
-                                     settings::Einstein.Settings)  
-        if length(finalLevel.basis.csfs) != length(initialLevel.basis.csfs)   error("stop a")   end
-        n = length(initialLevel.basis.csfs);    matrix = zeros(ComplexF64, n, n)
-  
-        printstyled("Compute radiative $(Mp) matrix of dimension $n x $n in a common bases for the transition " *
-                                       "[$(initialLevel.index)-$(finalLevel.index)] ... ", color=:light_green)
-        for  r = 1:n
-            if  finalLevel.basis.csfs[r].J != finalLevel.J    ||  finalLevel.basis.csfs[r].parity   != finalLevel.parity    continue    end 
-            for  s = 1:n
-                if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity  continue    end 
-                wa = compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
-                me = 0.
-                for  coeff in wa
-                    me = me + coeff.T * InteractionStrength.MbaCheng(Mp, gauge, omega, finalLevel.basis.orbitals[coeff.a],  
-                                                                                       initialLevel.basis.orbitals[coeff.b], grid)
-                end
-                matrix[r,s] = me
-            end
-        end 
-        println("done.")
-        return( matrix )
     end
 
 
@@ -331,10 +297,11 @@ module Einstein
             push!(irates, EmProperty( waCoulomb, waBabushkin) )
         end
         
+        nx = 108
         println(stream, " ")
         println(stream, "  Radiative lifetimes (as derived from these computations):")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(108))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                              sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                              sb = sb * TableStrings.hBlank(14)
@@ -345,7 +312,7 @@ module Einstein
         sb = sb * TableStrings.center(26, "[a.u.]"*"          "*TableStrings.inUnits("time"); na=5)
         sa = sa * TableStrings.center(12, "Decay widths"; na=4);       
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(108)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #    
         for  ii = 1:length(ilevels)
             sa = istr[ii]
@@ -359,7 +326,7 @@ module Einstein
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic",     irates[ii].Babushkin) )
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(108))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -371,17 +338,18 @@ module Einstein
             all selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{Einstein.Line,1})
+        nx = 115
         println(" ")
         println("  Selected Einstein lines:")
         println(" ")
-        println("  ", TableStrings.hLine(115))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
         sa = sa * TableStrings.center(14, "Energy"; na=4);              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.flushleft(30, "List of multipoles"; na=4);             sb = sb * TableStrings.hBlank(34)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(115)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -396,7 +364,7 @@ module Einstein
             sa = sa * TableStrings.multipoleGaugeTupels(50, mpGaugeList)
             println( sa )
         end
-        println("  ", TableStrings.hLine(115))
+        println("  ", TableStrings.hLine(nx))
         println(" ")
         #
         return( nothing )
@@ -409,10 +377,11 @@ module Einstein
             returned otherwise.
     """
     function  displayRates(stream::IO, lines::Array{Einstein.Line,1})
+        nx = 145
         println(stream, " ")
         println(stream, "  Einstein coefficients, transition rates and oscillator strengths:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(145))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -425,7 +394,7 @@ module Einstein
         sa = sa * TableStrings.center(11, "Osc. strength"    ; na=3);                 sb = sb * TableStrings.hBlank(17)
         sa = sa * TableStrings.center(12, "Decay widths"; na=4);       
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(145)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             for  ch in line.channels
@@ -445,7 +414,7 @@ module Einstein
                 println(stream, sa)
             end
         end
-        println(stream, "  ", TableStrings.hLine(145))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

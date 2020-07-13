@@ -157,7 +157,6 @@ module BasicsHP
             if the relative energy abs( (E_a - E_b)/E_a ) < relAcc. It returns false otherwise.
     """
     function Basics.isSimilar(keya::LevelKey, keyb::LevelKey, relAcc::Float64)
-        ##x println("** isSimilar abs() = $(abs( (keya.energy - keyb.energy)/keya.energy ))")
         if  keya.sym == keyb.sym   &&   abs( (keya.energy - keyb.energy)/keya.energy ) < relAcc    return(true)
         else                                                                                       return(false)
         end
@@ -413,7 +412,6 @@ module BasicsHP
                 append!(wa, wb)
                 push!(labels, "$(orb.subshell):large")
             end
-            ##x print("labels = $labels ")
             x = grid.r[1:N];     y = reshape(wa, (N, np))
 
         elseif   sa == "radial orbitals: small"
@@ -423,7 +421,6 @@ module BasicsHP
                 append!(wa, wb)
                 push!(labels, "$(orb.subshell):small")
             end
-            ##x print("labels = $labels ")
             x = grid.r[1:N];     y = reshape(wa, (N, np))
 
         elseif   sa == "radial orbitals: both"
@@ -432,8 +429,7 @@ module BasicsHP
                 wb = wc;    nx = min(length(orb.Q), N);   wb[1:nx] = orb.Q[1:nx];    append!(wa, wb)
                 push!(labels, "$(orb.subshell):large");   push!(labels, "$(orb.subshell):small")
             end
-            ##x print("labels = $labels ")
-            x = grid.r[1:N];     y = reshape(wa, (N, 2np))
+             x = grid.r[1:N];     y = reshape(wa, (N, 2np))
 
         else   error("Unsupported keystring = $sa") 
         end

@@ -8,7 +8,6 @@ module AutoIonization
 
     using  Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, 
                    ..PlasmaShift, ..Radial, ..TableStrings
-    ##x global JAC_counter = 0
     
     """
     `struct  Settings`  ... defines a type for the details and parameters of computing Auger lines.
@@ -16,8 +15,7 @@ module AutoIonization
         + calcAnisotropy          ::Bool                         ... True, if the intrinsic alpha_2,4 angular parameters are to be calculated, 
                                                                      and false otherwise.
         + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
         + minAugerEnergy          ::Float64                      ... Minimum energy of free (Auger) electrons to be included.
         + maxAugerEnergy          ::Float64                      ... Maximum energy of free (Auger) electrons to be included.
         + maxKappa                ::Int64                        ... Maximum kappa value of partial waves to be included.
@@ -26,9 +24,8 @@ module AutoIonization
     """
     struct Settings
         calcAnisotropy            ::Bool         
-        printBefore               ::Bool
-        selectLines               ::Bool  
-        selectedLines             ::Array{Tuple{Int64,Int64},1}
+        printBefore               ::Bool 
+        lineSelection             ::LineSelection 
         minAugerEnergy            ::Float64
         maxAugerEnergy            ::Float64
         maxKappa                  ::Int64
@@ -40,28 +37,27 @@ module AutoIonization
     `AutoIonization.Settings()`  ... constructor for the default values of AutoIonization line computations
     """
     function Settings()
-        Settings(false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 10e5, 100, CoulombInteraction())
+        Settings(false, false, LineSelection(), 0., 10e5, 100, CoulombInteraction())
     end
 
 
     """
     `AutoIonization.Settings(set::AutoIonization.Settings;`
     
-            calcAnisotropy=..,      printBefore=..,             selectLines=..,         selectedLines=..,       
+            calcAnisotropy=..,      printBefore=..,              
             minAugerEnergy=..,      maxAugerEnergy=..,          maxKappa=..,            operator=..)
                         
         ... constructor for modifying the given AutoIonization.Settings by 'overwriting' the previously selected parameters.
     """
     function Settings(set::AutoIonization.Settings;    
         calcAnisotropy::Union{Nothing,Bool}=nothing,            printBefore::Union{Nothing,Bool}=nothing, 
-        selectLines::Union{Nothing,Bool}=nothing,               selectedLines::Union{Nothing,Array{Tuple{Int64,Int64},1}}=nothing,  
+        lineSelection::Union{Nothing,LineSelection}=nothing, 
         minAugerEnergy::Union{Nothing,Float64}=nothing,         maxAugerEnergy::Union{Nothing,Float64}=nothing,
         maxKappa::Union{Nothing,Int64}=nothing,                 operator::Union{Nothing,String}=nothing)  
         
         if  calcAnisotropy  == nothing   calcAnisotropyx  = set.calcAnisotropy    else  calcAnisotropyx  = calcAnisotropy   end 
         if  printBefore     == nothing   printBeforex     = set.printBefore       else  printBeforex     = printBefore      end 
-        if  selectLines     == nothing   selectLinesx     = set.selectLines       else  selectLinesx     = selectLines      end 
-        if  selectedLines   == nothing   selectedLinesx   = set.selectedLines     else  selectedLinesx   = selectedLines    end 
+        if  lineSelection   == nothing   lineSelectionx   = set.lineSelection     else  lineSelectionx   = lineSelection    end 
         if  minAugerEnergy  == nothing   minAugerEnergyx  = set.minAugerEnergy    else  minAugerEnergyx  = minAugerEnergy   end 
         if  maxAugerEnergy  == nothing   maxAugerEnergyx  = set.maxAugerEnergy    else  maxAugerEnergyx  = maxAugerEnergy   end 
         if  maxKappa        == nothing   maxKappax        = set.maxKappa          else  maxKappax        = maxKappa         end 
@@ -75,8 +71,7 @@ module AutoIonization
     function Base.show(io::IO, settings::AutoIonization.Settings) 
         println(io, "calcAnisotropy:                $(settings.calcAnisotropy)  ")
         println(io, "printBefore:                   $(settings.printBefore)  ")
-        println(io, "selectLines:                   $(settings.selectLines)  ")
-        println(io, "selectedLines:                 $(settings.selectedLines)  ")
+        println(io, "lineSelection:                 $(settings.lineSelection)  ")
         println(io, "minAugerEnergy:                $(settings.minAugerEnergy)  ")
         println(io, "maxAugerEnergy:                $(settings.maxAugerEnergy)  ")
         println(io, "maxKappa:                      $(settings.maxKappa)  ")
@@ -112,9 +107,9 @@ module AutoIonization
         + electronEnergy ::Float64         ... Energy of the (incoming free) electron.
         + totalRate      ::Float64         ... Total rate of this line.
         + angularAlpha   ::Float64         ... Angular alpha_2 coefficient.
-        + hasChannels    ::Bool            ... Determines whether the individual scattering (sub-) channels are defined 
-                                               in terms of their free-electron energy, kappa and the total angular 
-                                               momentum/parity as well as the amplitude, or not.
+        + hasChannels    ::Bool            
+            ... Determines whether the individual scattering (sub-) channels are defined in terms of their free-electron energy, kappa 
+                and the total angular momentum/parity as well as the amplitude, or not.
         + channels       ::Array{AutoIonization.Channel,1}  ... List of AutoIonization channels of this line.
     """
     struct  Line
@@ -165,9 +160,8 @@ module AutoIonization
         matrix = zeros(ComplexF64, nt, ni)
         #
         if      kind in [ CoulombInteraction(), BreitInteraction(), CoulombBreit()]        ## pure V^Coulomb interaction
-        #-----------------------------------------------------
+        #--------------------------------------------------------------------------
             for  r = 1:nt
-                ##x if  continuumLevel.basis.csfs[r].J != finalLevel.J      ||  continuumLevel.basis.csfs[r].parity   != finalLevel.parity    continue    end 
                 for  s = 1:ni
                     if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity      continue    end 
                     wa = compute("angular coefficients: e-e, Ratip2013", continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s])
@@ -302,7 +296,6 @@ module AutoIonization
                           AngularMomentum.Wigner_6j(Ji, j, Jf, jp, Ji, AngularJ64(k)) * 
                           AngularMomentum.Wigner_6j(l,  j, AngularJ64(1//2), jp, lp, AngularJ64(k)) * 
                           cha.amplitude * conj(chp.amplitude)
-                ##x println("wa = $wa")
             end    
         end
         value = AngularMomentum.phaseFactor([Ji, +1, Jf, +1, AngularJ64(k), -1, AngularJ64(1//2)]) * 
@@ -389,8 +382,6 @@ module AutoIonization
         for  (i,line)  in  enumerate(lines)
             if  rem(i,10) == 0    println("> Auger line $i:  ... calculated ")    end
             newLine = AutoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
-            ##x if  rem(i,10) == 0    println("> Auger line $i:  ... not calculated ")  end
-            ##x newLine = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, 1.0, 0.0, false, AutoIonization.Channel[] )
             push!( newLines, newLine)
         end
         # Print all results to a summary file, if requested
@@ -513,20 +504,15 @@ module AutoIonization
             Apart from the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::AutoIonization.Settings)
-        if    settings.selectLines    selectLines   = true
-            selectedLines = Basics.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
-        else                          selectLines   = false
-        end
-    
         lines = AutoIonization.Line[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  f = 1:length(finalMultiplet.levels)
-                if  selectLines  &&  !((i,f) in selectedLines )    continue   end
-                energy = initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy
-                if   energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
-
-                channels = AutoIonization.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
-                push!( lines, AutoIonization.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], energy, 0., 0., true, channels) )
+        for  iLevel  in  initialMultiplet.levels
+            for  fLevel  in  finalMultiplet.levels
+                if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    energy = iLevel.energy - fLevel.energy
+                    if   energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
+                    channels = AutoIonization.determineChannels(fLevel, iLevel, settings) 
+                    push!( lines, AutoIonization.Line(iLevel, fLevel, energy, 0., 0., true, channels) )
+                end
             end
         end
         return( lines )
@@ -539,10 +525,11 @@ module AutoIonization
             transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{AutoIonization.Line,1})
+        nx = 150
         println(" ")
         println("  Selected Auger lines:")
         println(" ")
-        println("  ", TableStrings.hLine(150))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                                sb = sb * TableStrings.hBlank(22)
@@ -552,7 +539,7 @@ module AutoIonization
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.flushleft(37, "List of kappas and total symmetries"; na=4)  
         sb = sb * TableStrings.flushleft(37, "partial (total J^P)                "; na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(150)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -568,7 +555,7 @@ module AutoIonization
             sa = sa * TableStrings.kappaSymmetryTupels(80, kappaSymmetryList)
             println( sa )
         end
-        println("  ", TableStrings.hLine(150), "\n")
+        println("  ", TableStrings.hLine(nx), "\n")
         #
         return( nothing )
     end
@@ -579,10 +566,11 @@ module AutoIonization
         ... to list all lifetimes as associated with the selected lines. A neat table is printed but nothing is returned otherwise.
     """
     function  displayLifetimes(stream::IO, lines::Array{AutoIonization.Line,1})
+        nx = 104
         println(stream, " ")
         println(stream, "  Auger lifetimes, total rates and widths:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(104))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level";    na=2);                           sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center( 8, "J^P";      na=4);                           sb = sb * TableStrings.hBlank(12)
@@ -592,7 +580,7 @@ module AutoIonization
         sb = sb * TableStrings.center(14,TableStrings.inUnits("rate"); na=4)
         sa = sa * TableStrings.center(42, "Widths"; na=2);       
         sb = sb * TableStrings.center(42, "  Hartrees         Kaysers           eV"; na=2)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(104)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         # 
         notYetDone = trues(1000)
         for  line in lines
@@ -613,7 +601,7 @@ module AutoIonization
                 println(stream, sa)
             end
         end
-        println(stream, "  ", TableStrings.hLine(104))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -625,10 +613,11 @@ module AutoIonization
             otherwise.
     """
     function  displayRates(stream::IO, lines::Array{AutoIonization.Line,1}, settings::AutoIonization.Settings)
+        nx = 106
         println(stream, " ")
         if  settings.calcAnisotropy    println(stream, "  Auger rates and intrinsic angular parameters: \n")
         else                           println(stream, "  Auger rates (without angular parameters): \n")        end
-        println(stream, "  ", TableStrings.hLine(106))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -639,7 +628,7 @@ module AutoIonization
         sa = sa * TableStrings.center(14, "Auger rate"; na=2);       
         sb = sb * TableStrings.center(14, TableStrings.inUnits("rate"); na=2)
         sa = sa * TableStrings.center(15, "alpha_2"; na=2);                           sb = sb * TableStrings.hBlank(18)     
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(106)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -652,7 +641,7 @@ module AutoIonization
             sa = sa * TableStrings.flushright(13, @sprintf("%.4e", line.angularAlpha))            * "    "
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(106))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

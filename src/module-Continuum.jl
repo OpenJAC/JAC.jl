@@ -8,7 +8,6 @@ module Continuum
 
     using  GSL, Printf, SpecialFunctions
     using  ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear
-    ##x global JAC_counter = 0
 
 
     """
@@ -81,7 +80,6 @@ module Continuum
         Defaults.warn(AddWarning(), "All continuum orbitals are generated in a local (DFS) potential.")  
         
         # Generate a continuum orbital due to the given solution method
-        ##x println("Defaults.GBL_CONT_SOLUTION = $(Defaults.GBL_CONT_SOLUTION)")
         if      Defaults.GBL_CONT_SOLUTION  ==  ContBessel() 
             cOrbital = Continuum.generateOrbitalBessel(energy, sh, grid::Radial.Grid, settings)
         elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb() 
@@ -144,7 +142,6 @@ module Continuum
         else    error("stop b")
         end
         #
-        ##x println("*** phase = $phase   normFactor = $normFactor")
         return( cOrbital, phase, normFactor )
     end
 
@@ -186,8 +183,6 @@ module Continuum
         wc = wb * adjoint(wb)
         wd  = Basics.diagonalize("matrix: Julia, eigfact", wc)
         wx  =  adjoint(wd.vectors[1]) * wd.vectors[1]
-        ##x println("*** wx-norm = $wx")
-        ##x println("Galerkin: A-eigenvalues = $(wd.values)")
         
         cOrbital = Bsplines.generateOrbitalFromPrimitives(energy, sh, settings.mtp, wd.vectors[1], wa)  
         mtp = size(cOrbital.P,1)
@@ -386,7 +381,6 @@ module Continuum
                 theta = q * pot.grid.r[i]  +  y * log(2q * pot.grid.r[i])  - angle( SpecialFunctions.gamma(gammaBar + im*y) )  -  pi*gammaBar/2  +  eta.re
                 phi = at - theta;       phi = rem(phi, 2*pi) + pi
                 A   = cOrbital.P[i] / cos(theta + phi);             N   = NP / A
-                ##x println("***** thetaprime = $thetaprime    theta = $theta    phi = $phi    A = $A")
                 if  abs(N) > 1.0e1   
                     println("**Skip normalization at i = $i, r[i] = $(pot.grid.r[i])  A = $A   phi = $phi  corbital $(cOrbital.P[i])");   continue   end
                 # Collect data to form the mean and standard deviations

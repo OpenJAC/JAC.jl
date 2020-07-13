@@ -246,10 +246,11 @@ module PairAnnihilation1Photon
          otherwise.
     """
     function  displayLines(lines::Array{PairAnnihilation1Photon.Line,1})
+        nx = 175
         println(" ")
         println("  Selected pair-annihilation single-photon emission lines:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(175))
+        println("  ", JAC.TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * JAC.TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * JAC.TableStrings.hBlank(20)
         sa = sa * JAC.TableStrings.center(18, "i--J^P--f"; na=4);                                sb = sb * JAC.TableStrings.hBlank(22)
@@ -257,7 +258,7 @@ module PairAnnihilation1Photon
         sb = sb * JAC.TableStrings.center(38, " i--f       positron      omega"; na=4)
         sa = sa * JAC.TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
         sb = sb * JAC.TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(175)) 
+        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -279,7 +280,7 @@ module PairAnnihilation1Photon
                 sb = JAC.TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
             end
         end
-        println("  ", JAC.TableStrings.hLine(175))
+        println("  ", JAC.TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -290,10 +291,11 @@ module PairAnnihilation1Photon
          etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
     """
     function  displayResults(lines::Array{PairAnnihilation1Photon.Line,1})
+        nx = 128
         println(" ")
         println("  Pair-annihilation single-photon emission cross sections:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(128))
+        println("  ", JAC.TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * JAC.TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * JAC.TableStrings.hBlank(20)
         sa = sa * JAC.TableStrings.center(18, "i--J^P--f"; na=4);                                sb = sb * JAC.TableStrings.hBlank(22)
@@ -303,7 +305,7 @@ module PairAnnihilation1Photon
         sa = sa * JAC.TableStrings.center(30, "Cou -- Cross section -- Bab"; na=3)      
         sb = sb * JAC.TableStrings.center(30, JAC.TableStrings.inUnits("cross section") * "          " * 
                                               JAC.TableStrings.inUnits("cross section"); na=3)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(128)) 
+        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -324,7 +326,7 @@ module PairAnnihilation1Photon
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin))   * "    "
             println(sa)
         end
-        println("  ", JAC.TableStrings.hLine(128))
+        println("  ", JAC.TableStrings.hLine(nx))
         #
         return( nothing )
     end

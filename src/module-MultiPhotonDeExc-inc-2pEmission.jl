@@ -283,27 +283,24 @@
             properties are set to zero during this initialization process.  
     """
     function  determineLines_2pEmission(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::MultiPhotonDeExcitation.Settings)
-        if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
-        else                          selectLines   = false
-        end
-        
         # The number of energy sharings are provided by the settings
         noSharings = settings.process.noSharings
         sharings   = QuadGK.gauss(noSharings)
     
         lines = MultiPhotonDeExcitation.Line_2pEmission[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  f = 1:length(finalMultiplet.levels)
-                if  selectLines  &&  !(haskey(selectedLines, (i,f)) )    continue   end
-                energy   = abs( initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy)
-                omegas   = Float64[];    weights = Float64[];    energyDiffCs = EmProperty[]
-                for  j = 1:noSharings
-                    push!( omegas, sharings[1][j]*energy/2. + energy/2.);    push!( weights, sharings[1][j]*energy/2. )
-                    push!( energyDiffCs, EmProperty(0., 0.))    
+        for  iLevel  in  initialMultiplet.levels
+            for  fLevel  in  finalMultiplet.levels
+                if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    energy   = abs( iLevel.energy - fLevel.energy)
+                    omegas   = Float64[];    weights = Float64[];    energyDiffCs = EmProperty[]
+                    for  j = 1:noSharings
+                        push!( omegas, sharings[1][j]*energy/2. + energy/2.);    push!( weights, sharings[1][j]*energy/2. )
+                        push!( energyDiffCs, EmProperty(0., 0.))    
+                    end
+                    channels     = MultiPhotonDeExcitation.determineChannels_2pEmission(fLevel, iLevel, energy, omegas, settings) 
+                    push!( lines, MultiPhotonDeExcitation.Line_2pEmission(iLevel, fLevel, energy, 
+                                                               omegas, weights, energyDiffCs, EmProperty(0., 0.), true, channels) )
                 end
-                channels     = MultiPhotonDeExcitation.determineChannels_2pEmission(finalMultiplet.levels[f], initialMultiplet.levels[i], energy, omegas, settings) 
-                push!( lines, MultiPhotonDeExcitation.Line_2pEmission(initialMultiplet.levels[i], finalMultiplet.levels[f], energy, 
-                                                                      omegas, weights, energyDiffCs, EmProperty(0., 0.), true, channels) )
             end
         end
         return( lines )
@@ -316,10 +313,11 @@
             transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines_2pEmission(lines::Array{MultiPhotonDeExcitation.Line_2pEmission,1})
+        nx = 170
         println(" ")
         println("  Selected two-photon emission lines with given photon splitting:")
         println(" ")
-        println("  ", TableStrings.hLine(170))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  ";   sc = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=2);                         sb = sb * TableStrings.hBlank(20)
@@ -330,7 +328,7 @@
         sc = sb[1:end-35] * TableStrings.hBlank(35)
         sb = sb * TableStrings.flushleft(90, "List of multipoles & intermediate level symmetries"; na=4)            
         sc = sc * TableStrings.flushleft(90, "(K-rank, multipole_1, Jsym, multipole_2, gauge), ..."; na=4)
-        println(sa);    println(sb);    println(sc);    println("  ", TableStrings.hLine(170)) 
+        println(sa);    println(sb);    println(sc);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -353,7 +351,7 @@
                 sb = TableStrings.hBlank( length(sa) );    sb = sb * wa[i];    println( sb )
             end
         end
-        println("  ", TableStrings.hLine(170))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -368,12 +366,13 @@
     """
     function  displayCrossSections_2pEmission(stream::IO, properties::Array{AbstractMultiPhotonProperty,1},
                                               lines::Array{Line_2pEmission,1})
+        nx = 95
         println(stream, " ")
         println(stream, "  Two-photon emission with given splitting of photon energies:")
         println(stream, " ")
         println(stream, "  Energy-differential cross sections:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(95))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -384,7 +383,7 @@
         sa = sa * TableStrings.center(28, "Cou -- cross section -- Bab"; na=4);              
         sb = sb * TableStrings.center(28, TableStrings.inUnits("cross section") * "           " * TableStrings.inUnits("cross section"); na=4)
 
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(95)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -397,7 +396,7 @@
             ##x sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Babushkin))        * "        "
             println(stream, sa )
         end
-        println(stream, "  ", TableStrings.hLine(95))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

@@ -13,15 +13,13 @@ module AlphaVariation
     `struct  AlphaVariation.Settings`  ... defines a type for the details and parameters of computing alpha-variation parameters.
 
         + calcK                    ::Bool             ... True if the enhancement factor need to be calculated, and false otherwise.
-        + printBefore   ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
-        + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
-        + selectedLevels           ::Array{Level,1}   ... List of selected levels.
+        + printBefore              ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
+        + levelSelection           ::LevelSelection   ... Specifies the selected levels, if any.
     """
     struct Settings 
         calcK                      ::Bool
-        printBefore     ::Bool
-        selectLevels               ::Bool
-        selectedLevels             ::Array{Level,1}
+        printBefore                ::Bool 
+        levelSelection             ::LevelSelection
     end 
 
 
@@ -29,7 +27,7 @@ module AlphaVariation
     `JAC.AlphaVariation.Settings()`  ... constructor for an `empty` instance of AlphaVariation.Settings for the computation of alpha variation parameters.
     """
     function Settings()
-        Settings(false, false, false, Level[])
+        Settings(false, false, LevelSelection() )
     end
 
 
@@ -37,8 +35,7 @@ module AlphaVariation
     function Base.show(io::IO, settings::AlphaVariation.Settings) 
         println(io, "calcK:                    $(settings.calcK)  ")
         println(io, "printBefore:              $(settings.printBefore)  ")
-        println(io, "selectLevels:             $(settings.selectLevels)  ")
-        println(io, "selectedLevels:           $(settings.selectedLevels)  ")
+        println(io, "levelSelection:           $(settings.levelSelection)  ")
     end
 
 
@@ -109,14 +106,11 @@ module AlphaVariation
          during the initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::AlphaVariation.Settings) 
-        if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
-        else                          selectLevels   = false
-        end
-    
         outcomes = AlphaVariation.Outcome[]
-        for  i = 1:length(multiplet.levels)
-            if  selectLevels  &&  !(haskey(selectedLevels, i))    continue   end
-            push!( outcomes, AlphaVariation.Outcome(multiplet.levels[i], 0.) )
+        for  level  in  multiplet.levels
+            if  Basics.selectLevel(level, settings.levelSelection)
+                push!( outcomes, AlphaVariation.Outcome(level, 0.) )
+            end
         end
         return( outcomes )
     end
@@ -127,16 +121,17 @@ module AlphaVariation
          for the computations. A small neat table of all selected levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{AlphaVariation.Outcome,1})
+        nx = 43
         println(" ")
         println("  Selected AlphaVariation levels:")
         println(" ")
-        println("  ", JAC.TableStrings.hLine(43))
+        println("  ", JAC.TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
         sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
         sa = sa * JAC.TableStrings.center(14, "Energy"; na=4);              
         sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
-        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(43)) 
+        println(sa);    println(sb);    println("  ", JAC.TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -145,7 +140,7 @@ module AlphaVariation
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             println( sa )
         end
-        println("  ", JAC.TableStrings.hLine(43))
+        println("  ", JAC.TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -156,10 +151,11 @@ module AlphaVariation
          selected levels. A neat table is printed but nothing is returned otherwise.
     """
     function  displayResults(stream::IO, outcomes::Array{AlphaVariation.Outcome,1})
+        nx = 64
         println(stream, " ")
         println(stream, "  Alpha variation parameters:")
         println(stream, " ")
-        println(stream, "  ", JAC.TableStrings.hLine(64))
+        println(stream, "  ", JAC.TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * JAC.TableStrings.center(10, "Level"; na=2);                             sb = sb * JAC.TableStrings.hBlank(12)
         sa = sa * JAC.TableStrings.center(10, "J^P";   na=4);                             sb = sb * JAC.TableStrings.hBlank(14)
@@ -167,7 +163,7 @@ module AlphaVariation
         sb = sb * JAC.TableStrings.center(14, JAC.TableStrings.inUnits("energy"); na=4)
         sa = sa * JAC.TableStrings.center(14, "K";     na=4)              
         sb = sb * JAC.TableStrings.center(14, "    " ; na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(64)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", JAC.TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -178,7 +174,7 @@ module AlphaVariation
             sa = sa * @sprintf("%.8e", outcome.K)                                               * "    "
             println(stream, sa )
         end
-        println(stream, "  ", JAC.TableStrings.hLine(64), "\n\n")
+        println(stream, "  ", JAC.TableStrings.hLine(nx), "\n\n")
         #
         return( nothing )
     end

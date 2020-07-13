@@ -60,8 +60,7 @@ module Defaults
     const newtonCotesCoefficients           = fivePointCoefficients
 
     n = FINITE_DIFFERENCE_NPOINTS     
-    ##x const weights = Array{Float64}(2*n + 1, 2*n + 1)     
-    const weights = Array{Float64}(undef, 2*n + 1, 2*n + 1)
+     const weights = Array{Float64}(undef, 2*n + 1, 2*n + 1)
     for i = 1:2*n + 1       
         weights[i,:] = Math.finiteDifferenceWeights(-n + i - 1, 2*n + 1, order=1)[2,:]     
     end
@@ -305,7 +304,7 @@ module Defaults
         ... to (pre-) define the unit for the printout and communications of times with the JAC module.
     """
     function setDefaults(sa::String)
-        global GBL_FRAMEWORK, GBL_CONT_SOLUTION, GBL_CONT_NORMALIZATION  ##x , GBL_QED_MODEL
+        global GBL_FRAMEWORK, GBL_CONT_SOLUTION, GBL_CONT_NORMALIZATION  
 
         if        sa == "framework: relativistic"                            GBL_FRAMEWORK           = "relativistic"    
         elseif    sa == "framework: non-relativistic"                        GBL_FRAMEWORK           = "non-relativistic"  

@@ -8,7 +8,6 @@ module  RadialIntegrals
 
     using  GSL, QuadGK
     using  ..AngularMomentum, ..Basics, ..Bsplines, ..Defaults,  ..Radial, ..Math, ..ManyElectron, ..Nuclear
-    ##x global JAC_counter = 0
   
   
     """

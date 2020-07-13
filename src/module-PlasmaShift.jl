@@ -8,47 +8,6 @@ module PlasmaShift
 
     using Printf, ..Basics, ..Defaults, ..Nuclear, ..ManyElectron, ..Radial, ..TableStrings
 
-    #============================
-    """
-    `@enum   PlasmaModel`  ... defines a enumeration for the (allowed) plasma models.
-
-        + NoPlasmaModel      ... No plasma model defined.
-        + DebyeHueckel       ... Debye-Hueckel plasma model.
-        + IonSphere          ... Ion-sphere (not yet supported).
-    """
-    @enum   PlasmaModel    NoPlasmaModel    DebyeHueckel    DebeyBox    IonSphere
-
-
-    """
-    `PlasmaModel(sa::String)`  ... constructor for a given String.
-    """
-    function PlasmaModel(sa::String)
-        if       sa == "No Model"              wa = NoPlasmaModel
-        elseif   sa == "Debye-Hueckel"         wa = DebyeHueckel
-        elseif   sa == "DebeyBox"              wa = DebeyBox
-        elseif   sa == "IonSphere"             wa = IonSphere
-        else     error("stop a")
-        end
-
-        return( UseGauge(wa) )
-    end  
-
-
-    # `Base.show(io::IO, model::PlasmaModel)`  ... prepares a proper printout of the variable model::PlasmaModel.
-    function Base.show(io::IO, model::PlasmaModel) 
-        print(io, string(model) )
-    end
-
-
-    # `Base.string(model::PlasmaModel)`  ... provides a proper printout of the variable model::PlasmaModel.
-    function Base.string(model::PlasmaModel) 
-        if       model == NoPlasmaModel     return("No plasma model")
-        elseif   model == DebyeHueckel      return("Debye-Hueckel model")
-        elseif   model == DebeyBox          return("Debey-box model")
-        elseif   model == IonSphere         return("Ion-sphere model")
-        else     error("stop a")
-        end
-    end          ==========================================#
 
     
     """
@@ -124,8 +83,7 @@ module PlasmaShift
         + ionSphereR0            ::Float64                       ... The effective radius of the ion-sphere model.
         + NoBoundElectrons       ::Int64                         ... Effective number of bound electrons.
         + printBefore            ::Bool                          ... True, if all energies and lines are printed before their evaluation.
-        + selectLines            ::Bool                          ... True, if lines are selected individually for the computations.
-        + selectedLines          ::Array{Tuple{Int64,Int64},1}   ... List of lines, given by tupels (inital-level, final-level).
+        + lineSelection          ::LineSelection                 ... Specifies the selected levels, if any.
     """
     struct AugerSettings 
         plasmaModel              ::AbstractPlasmaModel
@@ -133,8 +91,7 @@ module PlasmaShift
         ionSphereR0              ::Float64
         NoBoundElectrons         ::Int64
         printBefore              ::Bool 
-        selectLines              ::Bool
-        selectedLines            ::Array{Tuple{Int64,Int64},1}
+        lineSelection            ::LineSelection
     end 
 
 
@@ -142,7 +99,7 @@ module PlasmaShift
     `PlasmaShift.AugerSettings()`  ... constructor for a standard instance of PlasmaShift.AugerSettings.
     """
     function AugerSettings()
-        AugerSettings(DebyeHueckel(), 0.25, 0., 0, true, false, Tuple{Int64,Int64}[])
+        AugerSettings(DebyeHueckel(), 0.25, 0., 0, true, LineSelection() )
     end
 
 
@@ -153,8 +110,7 @@ module PlasmaShift
         println(io, "ionSphereR0:             $(settings.ionSphereR0)  ")
         println(io, "NoBoundElectrons:        $(settings.NoBoundElectrons)  ")
         println(io, "printBefore:             $(settings.printBefore)  ")
-        println(io, "selectLines:             $(settings.selectLines)  ")
-        println(io, "selectedLines:           $(settings.selectedLines)  ")
+        println(io, "lineSelection:           $(settings.lineSelection)  ")
     end
 
 
@@ -170,8 +126,7 @@ module PlasmaShift
         + gauges                 ::Array{Basics.UseGauge}        ... Specifies the gauges to be included into the computations.
         + photonEnergies         ::Array{Float64,1}              ... List of photon energies.  
         + printBefore            ::Bool                          ... True, if all energies and lines are printed before their evaluation.
-        + selectLines            ::Bool                          ... True, if lines are selected individually for the computations.
-        + selectedLines          ::Array{Tuple{Int64,Int64},1}   ... List of lines, given by tupels (inital-level, final-level).
+        + lineSelection          ::LineSelection                 ... Specifies the selected levels, if any.
     """
     struct PhotoSettings 
         plasmaModel              ::AbstractPlasmaModel
@@ -182,8 +137,7 @@ module PlasmaShift
         gauges                   ::Array{Basics.UseGauge}  
         photonEnergies           ::Array{Float64,1} 
         printBefore              ::Bool 
-        selectLines              ::Bool
-        selectedLines            ::Array{Tuple{Int64,Int64},1}
+        lineSelection            ::LineSelection
     end 
 
 
@@ -191,7 +145,7 @@ module PlasmaShift
     `PlasmaShift.PhotoSettings()`  ... constructor for a standard instance of PlasmaShift.PhotoSettings.
     """
     function PhotoSettings()
-        PhotoSettings(DebyeHueckel(), 0.25, 0., 0, [E1], [Basics.UseCoulomb], Float64[], true, false, Tuple{Int64,Int64}[])
+        PhotoSettings(DebyeHueckel(), 0.25, 0., 0, [E1], [Basics.UseCoulomb], Float64[], true, LineSelection() )
     end
 
 
@@ -205,8 +159,7 @@ module PlasmaShift
         println(io, "gauges:                  $(settings.gauges)  ")
         println(io, "photonEnergies:          $(settings.photonEnergies)  ")
         println(io, "printBefore:             $(settings.printBefore)  ")
-        println(io, "selectLines:             $(settings.selectLines)  ")
-        println(io, "selectedLines:           $(settings.selectedLines)  ")
+        println(io, "lineSelection:           $(settings.lineSelection)  ")
     end
 
 
@@ -245,6 +198,7 @@ module PlasmaShift
             is returned otherwise.
     """
     function  displayResults(stream::IO, multiplet::Multiplet, pMultiplet::Multiplet, settings::PlasmaShift.Settings)
+        nx = 64
         println(stream, " ")
         println(stream, " ")
         println(stream, "  Plasma shifts for $(settings.plasmaModel):")
@@ -257,7 +211,7 @@ module PlasmaShift
         end
         
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(64))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
@@ -265,7 +219,7 @@ module PlasmaShift
         sb = sb * TableStrings.center(18, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.center(14, "Delta E";     na=4)              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(64)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #  
         for  i  in  1:length(multiplet.levels)
             sa  = "  ";    sym = LevelSymmetry( multiplet.levels[i].J, multiplet.levels[i].parity);    
@@ -280,7 +234,7 @@ module PlasmaShift
             end
             println(stream, sa )
         end
-        println(stream, "  ", TableStrings.hLine(64), "\n\n")
+        println(stream, "  ", TableStrings.hLine(nx), "\n\n")
         #
         return( nothing )
     end

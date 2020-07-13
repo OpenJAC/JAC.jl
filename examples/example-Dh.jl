@@ -10,9 +10,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel
                         intermediateConfigs=[Configuration("1s 2s^2"), Configuration("1s 2p^2")],
                         finalConfigs=[Configuration("1s^2")], 
                         process = PhotoExcAuto(), 
-                        processSettings=PhotoExcitationAutoion.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, false, Tuple{Int64,Int64}[], 2)  )
+                        processSettings=PhotoExcitationAutoion.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, PathwaySelection(), 2)  )
 
 wb = perform(wa)
 setDefaults("print summary: close", "")
-
-##                      processSettings=PhotoExcitationAutoion.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, false, Tuple{Int64,Int64}[], 2)  )

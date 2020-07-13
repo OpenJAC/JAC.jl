@@ -199,15 +199,6 @@ module BasicsQZ
         energies = avg_energy + eval
         eigenvectors = read(f, (Float64, no_csf, no_asf))
 
-        ##x @show no_electrons
-        ##x @show no_csf
-        ##x @show no_subshells
-        ##x @show no_asf
-        ##x println("angular momenta = ", js)
-        ##x @show parities
-        ##x @show energies
-        ##x println("first eigenvector = ", eigenvectors[:,1])
-
         close(f)
         multiplet = Multiplet(name, Level[] )
         return( multiplet )
@@ -236,8 +227,6 @@ module BasicsQZ
             a Float64 is returned.
     """
     function Basics.recast(sa::String, line::Union{Einstein.Line,PhotoEmission.Line}, wa::Float64)
-        ##x global  CONVERT_ENERGY_AU_TO_EV, CONVERT_ENERGY_AU_TO_KAYSERS, CONVERT_ENERGY_AU_TO_PER_SEC, CONVERT_TIME_AU_TO_SEC,
-        ##x         CONVERT_CROSS_SECTION_AU_TO_BARN,  CONVERT_RATE_AU_TO_PER_SEC 
     
         if       sa == "rate: radiative, to decay width"
             width = Defaults.convertUnits("energy: from atomic", wa)
@@ -262,7 +251,90 @@ module BasicsQZ
         end
     end
     
+
+    """
+    `Basics.selectLevel(level::Level, levelSelection::LevelSelection)`  
+        ... returns true::Bool if the levelSelection is inactive or if the level has been selected due to its 
+            indices or symmetries; in all other case, false::Bool is returned.
+    """
+    function Basics.selectLevel(level::Level, levelSelection::LevelSelection)
+        if  levelSelection.active
+            # Test for level index
+            if  level.index  in  levelSelection.indices                                 return( true )   end
+            if  LevelSymmetry(level.J, level.parity)  in  levelSelection.symmetries     return( true )   end
+        else                                                                            return( true ) 
+        end
+        return( false )
+    end
     
+
+    """
+    `Basics.selectLevelPair(iLevel::Level, fLevel::Level, lineSelection::LineSelection)`  
+        ... returns true::Bool if the lineSelection is inactive or if the pair (iLevel, fLevel) has been selected due to its 
+            indices or symmetries; in all other case, false::Bool is returned.
+    """
+    function Basics.selectLevelPair(iLevel::Level, fLevel::Level, lineSelection::LineSelection)
+        if     lineSelection.active
+            # Test for level indexPairs
+            for ip in  lineSelection.indexPairs
+                if      ip[1] == 0  &&  ip[2] == fLevel.index    return( true ) 
+                elseif  ip[2] == 0  &&  ip[1] == iLevel.index    return( true ) 
+                elseif  ip == (iLevel.index, fLevel.index)       return( true ) 
+                end
+            end
+            # Test for level symmetries
+            for sp in  lineSelection.symmetryPairs
+                if      ip == (LevelSymmetry(iLevel.J, iLevel.parity),  LevelSymmetry(fLevel.J, fLevel.parity))   return( true ) 
+                end
+            end
+        else                                                     return( true ) 
+        end
+        return( false )
+    end
+    
+
+    """
+    `Basics.selectLevelTriple(iLevel::Level, nLevel::Level, fLevel::Level, pathwaySelection::PathwaySelection)`  
+        ... returns true::Bool if the pathwaySelection is inactive or if the triple (iLevel, nLevel, fLevel) has been selected 
+            due to its indices or symmetries; in all other case, false::Bool is returned.
+    """
+    function Basics.selectLevelTriple(iLevel::Level, nLevel::Level, fLevel::Level, pathwaySelection::PathwaySelection)
+        if     pathwaySelection.active
+            # Test for level indexTriples
+            for ip in  pathwaySelection.indexTriples
+                if      ip[1] == 0  &&  ip[2] == nLevel.index  &&  ip[3] == fLevel.index    return( true ) 
+                elseif  ip[2] == 0  &&  ip[1] == iLevel.index  &&  ip[3] == fLevel.index    return( true ) 
+                elseif  ip[3] == 0  &&  ip[1] == iLevel.index  &&  ip[2] == nLevel.index    return( true ) 
+                elseif  ip == (iLevel.index, nLevel.index, fLevel.index)                    return( true ) 
+                end
+            end
+            # Test for level symmetries
+            for sp in  pathwaySelection.symmetryTriples
+                if      ip == (LevelSymmetry(iLevel.J, iLevel.parity),  LevelSymmetry(nLevel.J, nLevel.parity),  
+                               LevelSymmetry(fLevel.J, fLevel.parity))                      return( true ) 
+                end
+            end
+        else                                                                                return( true ) 
+        end
+        return( false )
+    end
+    
+
+    """
+    `Basics.selectSymmetry(sym::LevelSymmetry, levelSelection::LevelSelection)`  
+        ... returns true::Bool if the levelSelection is inactive or if the symmetry sym has been selected; 
+            in all other case, false::Bool is returned.
+    """
+    function Basics.selectSymmetry(sym::LevelSymmetry, levelSelection::LevelSelection)
+        if  levelSelection.active
+            if      length(levelSelection.symmetries) == 0    return( true )  
+            elseif  sym in levelSelection.symmetries          return( true )
+            end
+        else                                                  return( true ) 
+        end
+        return( false )
+    end
+
 
     """
     `Basics.shiftTotalEnergies(multiplet::Multiplet, energyShift::Float64)`  
@@ -429,10 +501,10 @@ module BasicsQZ
             returned.
     """
     function Basics.tabulateKappaSymmetryEnergiesDirac(kappa::Int64, evalues::Array{Float64,1}, ns::Int64, nuclearModel::Nuclear.Model)
-        Z = nuclearModel.Z
+        Z = nuclearModel.Z;    nx = 77
         # Determine the allowed principal quantum numbers n
         l = Basics.subshell_l(Subshell(101,kappa))
-        println("  ", TableStrings.hLine(77))
+        println("  ", TableStrings.hLine(nx))
         sa = "  "
         sa = sa * TableStrings.center( 7, "Index";            na=2)
         sa = sa * TableStrings.center(10, "Subshell";         na=3)
@@ -440,7 +512,7 @@ module BasicsQZ
         sa = sa * TableStrings.center(17, "Dirac-E  [a.u.]";  na=2)
         sa = sa * TableStrings.center(17, "Delta-E / |E|";    na=2)
         println(sa)
-        println("  ", TableStrings.hLine(77))
+        println("  ", TableStrings.hLine(nx))
         for  i = ns+1:ns+38
             sa = " " * TableStrings.center( 6, TableStrings.level(i-ns); na=2)
             sa = sa *  TableStrings.flushright(10, string(Subshell(i-ns+l, kappa)); na=6)
@@ -460,31 +532,10 @@ module BasicsQZ
             if  evalues[i]-en >= 0.   sa = sa * "+"   end;    sa = sa * @sprintf("%.8e", (evalues[i]-en)/abs(evalues[i])) * "    "
             println(sa)
         end
-        println("  ", TableStrings.hLine(77))
+        println("  ", TableStrings.hLine(nx))
 
         return( nothing )
     end
-
-    
-    #==
-    """
-    `Basics.tools()`  ... select different tools from a menu for which no further input is required.
-    """
-    function Basics.tools(x::Int64)
-        println("Tools.select(): A menu if nothing comes in")
-        #
-        t1 = "Simple tools JAC without input: "
-        b1 = dropdown(["Start task", "Grid calculator", "Another task"])
-        b2 = slider(1:100, label = "To what extent?", value = 33)
-        update = button("Update")
-        ui = vbox( hbox( pad(1em, t1) ),
-                hbox( pad(1em, b1), pad(1em, b2), pad(1em, update) )
-                )
-        Interact.display(ui)
-        output = Interact.@map (&update;  (observe(b1)[], observe(b2)[]) ) 
-        return( output )
-    end
-    ==#
 
 
     """

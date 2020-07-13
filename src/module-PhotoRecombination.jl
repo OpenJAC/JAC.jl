@@ -19,8 +19,7 @@ module PhotoRecombination
         + calcAnisotropy          ::Bool                         ... True, if the overall anisotropy is to be calculated.
         + calcTensors             ::Bool                         ... True, if the statistical tensors are to be calculated and false otherwise.
         + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
     """
     struct Settings
         multipoles                ::Array{EmMultipole}
@@ -30,9 +29,8 @@ module PhotoRecombination
         useIonEnergies            ::Bool
         calcAnisotropy            ::Bool
         calcTensors               ::Bool 
-        printBefore               ::Bool
-        selectLines               ::Bool
-        selectedLines             ::Array{Tuple{Int64,Int64},1} 
+        printBefore               ::Bool 
+        lineSelection             ::LineSelection 
     end 
 
 
@@ -40,7 +38,7 @@ module PhotoRecombination
     `PhotoRecombination.Settings()`  ... constructor for the default values of photo recombination line computations
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], Float64[], Float64[], false, false, false, false, false, Tuple{Int64,Int64}[])
+        Settings(EmMultipole[], UseGauge[], Float64[], Float64[], false, false, false, false, LineSelection() )
     end
 
 
@@ -54,9 +52,8 @@ module PhotoRecombination
         println(io, "useIonEnergies:           $(settings.useIonEnergies)  ")
         println(io, "calcAnisotropy:           $(settings.calcAnisotropy)  ")
         println(io, "calcTensors:              $(settings.calcTensors)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
-        println(io, "selectLines:              $(settings.selectLines)  ")
-        println(io, "selectedLines:            $(settings.selectedLines)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "lineSelection:            $(settings.lineSelection)  ")
     end
 
 
@@ -330,46 +327,38 @@ module PhotoRecombination
             to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoRecombination.Settings)
-        if    settings.selectLines    selectLines   = true;   
-                                      selectedLines = Basics.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
-        else                          selectLines   = false
-        end
-    
         lines = PhotoRecombination.Line[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  f = 1:length(finalMultiplet.levels)
-                if  selectLines  &&  !((i,f) in selectedLines )    continue   end
-                ##x println("PhotoRecombination.determineLines-aa:  i = $i, f = $f")
-                #
-                electronEnergies = Float64[]
-                if  settings.useIonEnergies 
-                    for en in settings.ionEnergies
-                        # E^(electron) [keV] = E^(projectile) [MeV/u] / 1.8228885
-                        en_au = 1000. / 1.8228885 * Defaults.convertUnits("energy: from eV to atomic", en);      push!(electronEnergies, en_au)
-                    end
-                else
-                    for en in settings.electronEnergies 
-                       en_au = Defaults.convertUnits("energy: to atomic", en);      push!(electronEnergies, en_au)
-                    end
-                    betaGamma2 = 1.0
-                end
-                #
-                for  en in electronEnergies
-                    betaGamma2 = 1.0
-                    if  true ## settings.useIonEnergies 
-                        ##x lorentz_gamma   = one + tline%e_energy / (c*c)
-                        ##x lorentz_beta    = sqrt( one - (one/(lorentz_gamma*lorentz_gamma)) )
-                        wc         = Defaults.getDefaults("speed of light: c")
-                        Gamma      = 1.0 + en / wc^2
-                        beta       = sqrt( 1.0 - 1.0/Gamma^2)
-                        betaGamma2 = beta^2 * Gamma^2
+        for  iLevel  in  initialMultiplet.levels
+            for  fLevel  in  finalMultiplet.levels
+                if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    #
+                    electronEnergies = Float64[]
+                    if  settings.useIonEnergies 
+                        for en in settings.ionEnergies
+                            # E^(electron) [keV] = E^(projectile) [MeV/u] / 1.8228885
+                            en_au = 1000. / 1.8228885 * Defaults.convertUnits("energy: from eV to atomic", en);      push!(electronEnergies, en_au)
+                        end
+                    else
+                        for en in settings.electronEnergies 
+                            en_au = Defaults.convertUnits("energy: to atomic", en);      push!(electronEnergies, en_au)
+                        end
+                        betaGamma2 = 1.0
                     end
                     #
-                    if  en < 0    continue   end 
-                    omega    = en + initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy
-                    channels = PhotoRecombination.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
-                    push!( lines, PhotoRecombination.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], en, omega, betaGamma2,
-                                                          EmProperty(0., 0.), true, channels) )
+                    for  en in electronEnergies
+                        betaGamma2 = 1.0
+                        if  true ## settings.useIonEnergies 
+                            wc         = Defaults.getDefaults("speed of light: c")
+                            Gamma      = 1.0 + en / wc^2
+                            beta       = sqrt( 1.0 - 1.0/Gamma^2)
+                            betaGamma2 = beta^2 * Gamma^2
+                        end
+                        #
+                        if  en < 0    continue   end 
+                        omega    = en + iLevel.energy - fLevel.energy
+                        channels = PhotoRecombination.determineChannels(fLevel, iLevel, settings) 
+                        push!( lines, PhotoRecombination.Line(iLevel, fLevel, en, omega, betaGamma2, EmProperty(0., 0.), true, channels) )
+                    end
                 end
             end
         end
@@ -383,11 +372,11 @@ module PhotoRecombination
             transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{PhotoRecombination.Line,1})
-        ndashs = 181
+        nx = 181
         println(" ")
         println("  Selected photorecombination lines:")
         println(" ")
-        println("  ", TableStrings.hLine(ndashs))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                                sb = sb * TableStrings.hBlank(22)
@@ -401,7 +390,7 @@ module PhotoRecombination
         sb = sb * TableStrings.center( 7, "gamma^2"; na=2)
         sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
         sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(ndashs)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -424,7 +413,7 @@ module PhotoRecombination
                 sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
             end
         end
-        println("  ", TableStrings.hLine(ndashs), "\n")
+        println("  ", TableStrings.hLine(nx), "\n")
         #
         return( nothing )
     end
@@ -436,11 +425,11 @@ module PhotoRecombination
             returned otherwise.
     """
     function  displayResults(stream::IO, lines::Array{PhotoRecombination.Line,1}, settings::PhotoRecombination.Settings)
-        if  settings.useIonEnergies   ndashs = 165    else  ndashs = 141   end
+        if  settings.useIonEnergies   nx = 165    else  nx = 141   end
         println(stream, " ")
         println(stream, "  Photorecombination cross sections:")
         println(stream, "  ")
-        println(stream, "  ", TableStrings.hLine(ndashs))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(16, "i--J^P--f"   ; na=3);                       sb = sb * TableStrings.hBlank(19)
@@ -460,7 +449,7 @@ module PhotoRecombination
         sa = sa * TableStrings.center(30, "Cou -- Cross section -- Bab"; na=3)      
         sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section") * "          " * 
                                               TableStrings.inUnits("cross section"); na=3)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(ndashs)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = " ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -487,14 +476,15 @@ module PhotoRecombination
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin))   * "    "
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(ndashs))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         #
         if  settings.calcAnisotropy  
+            nx = 133
             println(stream, " ")
             println(stream, "  Anisotropy angular parameters beta_nu of the emitted photons for initially unpolarized ions:")
             println(stream, " ")
-            println(stream, "  ", TableStrings.hLine(133))
+            println(stream, "  ", TableStrings.hLine(nx))
             sa = "  ";   sb = "  "
             sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(20)
             sa = sa * TableStrings.center(16, "i--J^P--f"   ; na=3);                       sb = sb * TableStrings.hBlank(19)
@@ -506,7 +496,7 @@ module PhotoRecombination
             sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
             sa = sa * TableStrings.center(10, "Multipoles"; na=5);                         sb = sb * TableStrings.hBlank(15)
             sa = sa * TableStrings.flushleft(57, "beta's"; na=4)  
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(133)) 
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
             #   
             for  line in lines
                 sa  = " ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -536,7 +526,7 @@ module PhotoRecombination
                 be = PhotoRecombination.computeAnisotropyParameter(4, Basics.Babushkin, line);   sa = sa * @sprintf("%.4e", be.re) * " (4, B);  "
                 println(stream, sa);   sa = TableStrings.hBlank(102)
             end
-            println(stream, "  ", TableStrings.hLine(133))
+            println(stream, "  ", TableStrings.hLine(nx))
         end
         #
         #

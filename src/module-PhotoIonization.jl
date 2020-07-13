@@ -20,8 +20,7 @@ module PhotoIonization
         + calcPartialCs           ::Bool                         ... True, if partial cross sections are to be calculated and false otherwise.  
         + calcTensors             ::Bool                         ... True, if statistical tensors of the excited atom are to be calculated and false o/w. 
         + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
         + stokes                  ::ExpStokes                    ... Stokes parameters of the incident radiation.
     """
     struct Settings 
@@ -32,8 +31,7 @@ module PhotoIonization
         calcPartialCs             ::Bool 
         calcTensors               ::Bool 
         printBefore               ::Bool
-        selectLines               ::Bool
-        selectedLines             ::Array{Tuple{Int64,Int64},1} 
+        lineSelection             ::LineSelection
         stokes                    ::ExpStokes
     end 
 
@@ -43,7 +41,7 @@ module PhotoIonization
     """
     function Settings()
         Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb, Basics.UseBabushkin], Float64[], false, false, false, false, 
-                 false, Tuple{Int64,Int64}[], Basics.ExpStokes())
+                 LineSelection(), Basics.ExpStokes())
     end
 
 
@@ -51,8 +49,8 @@ module PhotoIonization
     `PhotoIonization.Settings(set::PhotoIonization.Settings;`
     
             multipoles=..,          gauges=..,                  photonEnergies=..,          calcAnisotropy=..,    
-            calcPartialCs0..,       calcTensors=..,             printBefore=..,             selectLines=..,             
-            selectedLines=..,       stokes=..)
+            calcPartialCs0..,       calcTensors=..,             printBefore=..,             lineSelection=..,             
+            stokes=..)
                         
         ... constructor for modifying the given PhotoIonization.Settings by 'overwriting' the previously selected parameters.
     """
@@ -60,8 +58,8 @@ module PhotoIonization
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
         photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,                calcAnisotropy::Union{Nothing,Bool}=nothing,
         calcPartialCs::Union{Nothing,Bool}=nothing,                             calcTensors::Union{Nothing,Bool}=nothing,                       
-        printBefore::Union{Nothing,Bool}=nothing,                               selectLines::Union{Nothing,Bool}=nothing,           
-        selectedLines::Union{Nothing,Array{Tuple{Int64,Int64},1}}=nothing,      stokes::Union{Nothing,ExpStokes}=nothing)  
+        printBefore::Union{Nothing,Bool}=nothing,                               lineSelection::Union{Nothing,LineSelection}=nothing,                           
+        stokes::Union{Nothing,ExpStokes}=nothing)  
         
         if  multipoles      == nothing   multipolesx      = set.multipoles        else  multipolesx      = multipoles       end 
         if  gauges          == nothing   gaugesx          = set.gauges            else  gaugesx          = gauges           end 
@@ -70,12 +68,11 @@ module PhotoIonization
         if  calcPartialCs   == nothing   calcPartialCsx   = set.calcPartialCs     else  calcPartialCsx   = calcPartialCs    end 
         if  calcTensors     == nothing   calcTensorsx     = set.calcTensors       else  calcTensorsx     = calcTensors      end 
         if  printBefore     == nothing   printBeforex     = set.printBefore       else  printBeforex     = printBefore      end 
-        if  selectLines     == nothing   selectLinesx     = set.selectLines       else  selectLinesx     = selectLines      end 
-        if  selectedLines   == nothing   selectedLinesx   = set.selectedLines     else  selectedLinesx   = selectedLines    end 
+        if  lineSelection   == nothing   lineSelectionx   = set.lineSelection     else  lineSelectionx   = lineSelection    end 
         if  stokes          == nothing   stokesx          = set.stokes            else  stokesx          = stokes           end 
 
         Settings( multipolesx, gaugesx, photonEnergiesx, calcAnisotropyx, calcPartialCsx, calcTensorsx, printBeforex, 
-                  selectLinesx, selectedLinesx, stokesx)
+                  lineSelectionx, stokesx)
     end
 
 
@@ -88,8 +85,7 @@ module PhotoIonization
         println(io, "calcPartialCs:            $(settings.calcPartialCs)  ")
         println(io, "calcTensors:              $(settings.calcTensors)  ")
         println(io, "printBefore:              $(settings.printBefore)  ")
-        println(io, "selectLines:              $(settings.selectLines)  ")
-        println(io, "selectedLines:            $(settings.selectedLines)  ")
+        println(io, "lineSelection:            $(settings.lineSelection)  ")
         println(io, "stokes:                   $(settings.stokes)  ")
     end
 
@@ -196,7 +192,6 @@ module PhotoIonization
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
             amplitude  = PhotoIonization.amplitude("photoionization", newChannel, line.photonEnergy, newcLevel, newiLevel, grid)
-            ##x println("***AmplitudesProperties:  amplitude = $amplitude ")
             push!( newChannels, PhotoIonization.Channel(newChannel.multipole, newChannel.gauge, newChannel.kappa, newChannel.symmetry, 
                                                         newChannel.phase, amplitude) )
             if       channel.gauge == Basics.Coulomb     csC = csC + abs(amplitude)^2
@@ -209,10 +204,8 @@ module PhotoIonization
         csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
         csFactor     = 4 * pi^2 / Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
-        ##x println("photo cs = $crossSection")
         newLine = PhotoIonization.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, 
                                         crossSection, true, newChannels)
-        ##x println("photo newLine = $newLine")
         return( newLine )
     end
 
@@ -491,24 +484,18 @@ module PhotoIonization
             is returned. Apart from the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoIonization.Settings)
-        if    settings.selectLines    selectLines   = true;                         
-                       selectedLines = Basics.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
-        else                          selectLines   = false
-        end
-    
         lines = PhotoIonization.Line[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  f = 1:length(finalMultiplet.levels)
-                if  selectLines  &&  !((i,f) in selectedLines )    continue   end
-                for  omega in settings.photonEnergies
-                    # Photon energies are still in 'pre-defined' units; convert to Hartree
-                    omega_au = Defaults.convertUnits("energy: to atomic", omega)
-                    energy   = omega_au - (finalMultiplet.levels[f].energy - initialMultiplet.levels[i].energy)
-                    if  energy < 0    continue   end  
-
-                    channels = PhotoIonization.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
-                    push!( lines, PhotoIonization.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], energy, omega_au, 
-                                                       EmProperty(0., 0.), true, channels) )
+        for  iLevel  in  initialMultiplet.levels
+            for  fLevel  in  finalMultiplet.levels
+                if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    for  omega in settings.photonEnergies
+                        # Photon energies are still in 'pre-defined' units; convert to Hartree
+                        omega_au = Defaults.convertUnits("energy: to atomic", omega)
+                        energy   = omega_au - (fLevel.energy - iLevel.energy)
+                        if  energy < 0    continue   end  
+                        channels = PhotoIonization.determineChannels(fLevel, iLevel, settings) 
+                        push!( lines, PhotoIonization.Line(iLevel, fLevel, energy, omega_au, EmProperty(0., 0.), true, channels) )
+                    end
                 end
             end
         end
@@ -522,10 +509,11 @@ module PhotoIonization
             transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{PhotoIonization.Line,1})
+        nx = 175
         println(" ")
         println("  Selected photoionization lines:")
         println(" ")
-        println("  ", TableStrings.hLine(175))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(18)
         sa = sa * TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * TableStrings.hBlank(20)
@@ -537,7 +525,7 @@ module PhotoIonization
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
         sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(175)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -560,7 +548,7 @@ module PhotoIonization
                 sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
             end
         end
-        println("  ", TableStrings.hLine(175), "\n")
+        println("  ", TableStrings.hLine(nx), "\n")
         #
         return( nothing )
     end
@@ -572,10 +560,11 @@ module PhotoIonization
             is returned otherwise.
     """
     function  displayResults(stream::IO, lines::Array{PhotoIonization.Line,1}, settings::PhotoIonization.Settings)
+        nx = 130
         println(stream, " ")
         println(stream, "  Total photoionization cross sections for initially unpolarized atoms by unpolarized plane-wave photons:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(130))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(18)
         sa = sa * TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * TableStrings.hBlank(22)
@@ -589,7 +578,7 @@ module PhotoIonization
         sa = sa * TableStrings.center(30, "Cou -- Cross section -- Bab"; na=3)      
         sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section") * "          " * 
                                               TableStrings.inUnits("cross section"); na=3)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(130)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -612,14 +601,15 @@ module PhotoIonization
             sa = sa * @sprintf("%.6e", line.crossSection.Babushkin)   * "    "
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(130))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         #
-        if  settings.calcPartialCs   
+        if  settings.calcPartialCs  
+            nx = 144 
             println(stream, " ")
             println(stream, "  Partial cross sections for initially unpolarized atoms by unpolarized plane-wave photons:")
             println(stream, " ")
-            println(stream, "  ", TableStrings.hLine(144))
+            println(stream, "  ", TableStrings.hLine(nx))
                 sa = "  ";   sb = "  "
             sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(18)
             sa = sa * TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * TableStrings.hBlank(22)
@@ -634,7 +624,7 @@ module PhotoIonization
             sa = sa * TableStrings.center(30, "Cou -- Partial cross section -- Bab"; na=3)      
             sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section") * "          " * 
                                                   TableStrings.inUnits("cross section"); na=3)
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(144)) 
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
             #   
             for  line in lines
                 sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -663,18 +653,19 @@ module PhotoIonization
                     println(stream, sb)
                 end
             end
-            println(stream, "  ", TableStrings.hLine(144))
+            println(stream, "  ", TableStrings.hLine(nx))
         end
         #
         #
-        if  settings.calcTensors   
+        if  settings.calcTensors  
+            nx = 144 
             println(stream, " ")
             println(stream, "  Reduced statistical tensors of the photoion in its final level after the photoionization ")
             println(stream, "  of initially unpolarized atoms by plane-wave photons with given Stokes parameters (density matrix):")
             println(stream, "\n     + tensors are printed for k = 0, 1, 2 and if non-zero only.")
             println(stream,   "     + Stokes parameters are:  P1 = $(settings.stokes.P1),  P2 = $(settings.stokes.P2),  P3 = $(settings.stokes.P3) ")
             println(stream, " ")
-            println(stream, "  ", TableStrings.hLine(144))
+            println(stream, "  ", TableStrings.hLine(nx))
                 sa = "  ";   sb = "  "
             sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(18)
             sa = sa * TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * TableStrings.hBlank(22)
@@ -687,7 +678,7 @@ module PhotoIonization
             sa = sa * TableStrings.center(10, "Multipoles"; na=1);                              sb = sb * TableStrings.hBlank(13)
             sa = sa * TableStrings.center(10, "k    q"; na=4);                                  sb = sb * TableStrings.hBlank(11)
             sa = sa * TableStrings.center(30, "Cou --  rho_kq (J_f)  -- Bab"; na=3)      
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(144)) 
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
             #   
             for  line in lines
                 sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -717,7 +708,7 @@ module PhotoIonization
                     end
                 end
             end
-            println(stream, "  ", TableStrings.hLine(144))
+            println(stream, "  ", TableStrings.hLine(nx))
         end
         #
         return( nothing )

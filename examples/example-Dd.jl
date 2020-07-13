@@ -38,8 +38,8 @@ elseif  true
                             initialConfigs=[Configuration("1s^2")],
                             finalConfigs  =[Configuration("1s^2 2s"), Configuration("1s^2 3s"), Configuration("1s^2 3p"), Configuration("1s^2 3d")], 
                             process = Rec(), 
-                            processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10.], 
-                                                                        [2.18, 21.8, 218.0], false, false, false, true, false, Tuple{Int64,Int64}[(1,1)]) )
+                            processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10.], [2.18, 21.8, 218.0], 
+                                                                        false, false, false, true, LineSelection(false, indexPairs=[(1,0)]) ) )
 
     wb = perform(wa)
 

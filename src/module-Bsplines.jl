@@ -6,7 +6,6 @@
 module Bsplines
 
     using  Printf, LinearAlgebra, ..AngularMomentum, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear, JAC
-    ##x global JAC_counter = 0
 
 
     """
@@ -61,7 +60,6 @@ module Bsplines
         l  = Basics.subshell_l(sh);   ni = nsS + sh.n - l;          if   sh.kappa > 0   ni = ni + 1  end
         en = wc.values[ni];        
         ev = wc.vectors[ni];       if  length(ev) != nsL + nsS    error("stop a")                    end
-        ##x println(">> Bspline energy for $sh is:  $en ")
         return(ev)
     end
 
@@ -160,11 +158,10 @@ module Bsplines
         orbital   = Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, Radial.Grid())
         
         # Renormalize the radial orbital   
-        wN        = sqrt( JAC.RadialIntegrals.overlap(orbital, orbital, primitives.grid) )   ##x ;   @show sh, wN
+        wN        = sqrt( JAC.RadialIntegrals.overlap(orbital, orbital, primitives.grid) )   
         Px[1:mtp] = Px[1:mtp] / wN;    Qx[1:mtp] = Qx[1:mtp] / wN
         Pprimex[1:mtp] = Pprimex[1:mtp] / wN;    Qprimex[1:mtp] = Qprimex[1:mtp] / wN    
         
-        ##x return( orbital )
         return( Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, Radial.Grid()) )   
     end
 
@@ -508,9 +505,7 @@ module Bsplines
         bsplineBlock = Dict{Int64,Basics.Eigen}();    
         for  kappa  in  kappas     bsplineBlock[kappa]  = Basics.Eigen( zeros(2), [zeros(2), zeros(2)])                  end
         previousOrbitals  = deepcopy(basis.orbitals);    previousBvectors  = Dict{Subshell,Array{Float64,1}}()
-        ##x ppreviousOrbitals = deepcopy(basis.orbitals);    ppreviousBvectors = Dict{Subshell,Array{Float64,1}}()
-        ##x energy_1s        = abs(basis.orbitals[Subshell("1s_1/2")].energy)
-         #
+        #
         # Determine te nuclear potential once at the beginning
         nuclearPotential = Nuclear.nuclearPotential(nuclearModel, grid)
         exchange         = true
@@ -559,7 +554,6 @@ module Bsplines
                 #
                 # (3) Set-up the diagonal part of the Hamiltonian matrix as well as the direct and exchange-potential matrices
                 wa = Bsplines.setupLocalMatrix(sh.kappa, primitives, nuclearPotential, storage)
-                ##x wx = 1.0;    if  NoIteration  > 1  bev = previousBvectors[sh];   wx = transpose(bev) * wb * bev;   @show  sh, wx     end
                 wa = wa + wde
                 # (4) Add modifications of the Hamiltonian matrix to ensure orthogonality of orbitals
                 if  NoIteration  > 1  

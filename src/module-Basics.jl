@@ -15,12 +15,11 @@ module Basics
             CartesianVector, compute, diagonalize,
             estimate, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
             generate,
-            ##x HalfInt, HalfInteger, 
             interpolate, integrate, 
-            LevelSymmetry, LevelKey,
+            LevelSymmetry, LevelKey, LevelSelection, LineSelection, 
             modify, 
             oplus,
-            Photo, Parity, perform, provide,
+            Photo, Parity, perform, provide, PathwaySelection,
             Radiative,
             SolidAngle, Shell, Subshell, subshell_2j,
             tabulate, tools, TensorComp, 
@@ -420,6 +419,147 @@ module Basics
     end
 
 
+    
+    """
+    `struct  Basics.LevelSelection`  
+        ... defines a struct to specify a list of levels by means of their (level) indices or level symmetries.
+
+        + active       ::Bool                     ... true, if some selection has been made.
+        + indices      ::Array{Int64,1}           ... List of selected indices.
+        + symmetries   ::Array{LevelSymmetry,1}   ... List of selected symmetries
+    """
+    struct  LevelSelection
+        active         ::Bool  
+        indices        ::Array{Int64,1}
+        symmetries     ::Array{LevelSymmetry,1}
+    end
+
+
+    """
+    `Basics.LevelSelection()`  ... constructor for an inactive LevelSelection.
+    """
+    function  LevelSelection()
+        LevelSelection( false, Int64[], LevelSymmetry[])    
+    end
+
+
+    """
+    `Basics.LevelSelection(active::Bool; indices::Array{Int64,1}=Int64[], symmetries::Array{LevelSymmetry,1}=LevelSymmetry[])`  
+        ... constructor for specifying the details of a LevelSelection.
+    """
+    function  LevelSelection(active::Bool; indices::Array{Int64,1}=Int64[], symmetries::Array{LevelSymmetry,1}=LevelSymmetry[])
+        if  active   LevelSelection( true, indices, symmetries)  
+        else         LevelSelection()
+        end
+    end
+
+    function Base.show(io::IO, selection::LevelSelection) 
+        print(io, string(selection) )
+    end
+
+    function Base.string(selection::LevelSelection) 
+        if  selection.active   sa = "LevelSelection:  indices = $(selection.indices);    symmetries = $(selection.symmetries)."
+        else                   sa = "Inactive LevelSelection."
+        end
+        return( sa )
+    end
+
+
+    """
+    `struct  Basics.LineSelection`  
+        ... defines a struct to specify a list of level pair by means of their (level) indices or level symmetries.
+
+        + active        ::Bool                                          ... true, if some selection has been made.
+        + indexPairs    ::Array{Tuple{Int64,Int64},1}                   ... List of selected index pairs.
+        + symmetryPairs ::Array{Tuple{LevelSymmetry,LevelSymmetry},1}   ... List of selected symmetry pairs.
+    """
+    struct  LineSelection
+        active          ::Bool  
+        indexPairs      ::Array{Tuple{Int64,Int64},1}
+        symmetryPairs   ::Array{Tuple{LevelSymmetry,LevelSymmetry},1}
+    end
+
+
+    """
+    `Basics.LineSelection()`  ... constructor for an inactive LineSelection.
+    """
+    function  LineSelection()
+        LineSelection( false, Tuple{Int64,Int64}[], Tuple{LevelSymmetry,LevelSymmetry}[])    
+    end
+
+
+    """
+    `Basics.LineSelection(active::Bool; indexPairs::Array{Tuple{Int64,Int64},1}=Tuple{Int64,Int64}[],
+                                        symmetryPairs::Array{Tuple{LevelSymmetry,LevelSymmetry},1}=Tuple{LevelSymmetry,LevelSymmetry}[])`  
+        ... constructor for specifying the details of a LineSelection.
+    """
+    function  LineSelection(active::Bool; indexPairs::Array{Tuple{Int64,Int64},1}=Tuple{Int64,Int64}[],
+                                          symmetryPairs::Array{Tuple{LevelSymmetry,LevelSymmetry},1}=Tuple{LevelSymmetry,LevelSymmetry}[])
+        if  active   LineSelection( true, indexPairs, symmetryPairs)  
+        else         LineSelection()
+        end
+    end
+
+    function Base.show(io::IO, selection::LineSelection) 
+        print(io, string(selection) )
+    end
+
+    function Base.string(selection::LineSelection) 
+        if  selection.active   sa = "LineSelection:  indexPairs = $(selection.indexPairs);    symmetryPairs = $(selection.symmetryPairs)."
+        else                   sa = "Inactive LineSelection."
+        end
+        return( sa )
+    end
+
+
+    """
+    `struct  Basics.PathwaySelection`  
+        ... defines a struct to specify a list of level triple (pathways) by means of their (level) indices or level symmetries.
+
+        + active          ::Bool                                          ... true, if some selection has been made.
+        + indexTriples    ::Array{Tuple{Int64,Int64,Int64},1}             ... List of selected index triples.
+        + symmetryTriples ::Array{Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry},1}  ... List of selected symmetry triples.
+    """
+    struct  PathwaySelection
+        active            ::Bool  
+        indexTriples      ::Array{Tuple{Int64,Int64,Int64},1}  
+        symmetryTriples   ::Array{Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry},1}
+    end
+
+
+    """
+    `Basics.PathwaySelection()`  ... constructor for an inactive PathwaySelection.
+    """
+    function  PathwaySelection()
+        PathwaySelection( false, Tuple{Int64,Int64,Int64}[], Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry}[])    
+    end
+
+
+    """
+    `Basics.PathwaySelection(active::Bool; indexTriples::Array{Tuple{Int64,Int64,Int64},1}=Tuple{Int64,Int64,Int64}[],
+                   symmetryTriples::Array{Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry},1}=Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry}[])`  
+        ... constructor for specifying the details of a PathwaySelection.
+    """
+    function  PathwaySelection(active::Bool; indexTriples::Array{Tuple{Int64,Int64,Int64},1}=Tuple{Int64,Int64,Int64}[],
+                symmetryTriples::Array{Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry},1}=Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry}[])
+        if  active   PathwaySelection( true, indexTriples, symmetryTriples)  
+        else         PathwaySelection()
+        end
+    end
+
+    function Base.show(io::IO, selection::PathwaySelection) 
+        print(io, string(selection) )
+    end
+
+    function Base.string(selection::PathwaySelection) 
+        if  selection.active   sa = "PathwaySelection:  indexTriples = $(selection.indexTriples);    symmetryTriples = $(selection.symmetryTriples)."
+        else                   sa = "Inactive PathwaySelection."
+        end
+        return( sa )
+    end
+
+    
+    
     """
     `struct  Basics.Shell`  ... defines a enumeration for the allowed values of a non-relativistic shell.  
 
@@ -1402,6 +1542,10 @@ module Basics
     function readMixFileRelci                               end
     function readMixingFileGrasp92                          end
     function recast                                         end
+    function selectLevel                                    end
+    function selectLevelPair                                end
+    function selectLevelTriple                              end
+    function selectSymmetry                                 end
     function shiftTotalEnergies                             end
     function sortByEnergy                                   end
     function tabulate                                       end

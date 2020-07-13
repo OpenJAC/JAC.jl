@@ -274,10 +274,11 @@ module ImpactExcitationAutoion
             selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayPathways(pathways::Array{ImpactExcitationAutoion.Pathway,1})
+        nx = 179
         println(" ")
         println("  Selected electron-impact excitation-autoionization pathways:")
         println(" ")
-        println("  ", TableStrings.hLine(179))
+        println("  ", TableStrings.hLine(nx))
         sa = "     ";   sb = "     "
         sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);          
         sa = sa * TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=3);
@@ -285,7 +286,7 @@ module ImpactExcitationAutoion
         sb = sb * TableStrings.center(58, "  m--i        m--f     e^-(in)     e^-(out)    e^-(Auger)"; na=4)
         sa = sa * TableStrings.flushleft(57, "List of partial waves and total symmetries"; na=4)  
         sb = sb * TableStrings.flushleft(57, "(partial_in -> partial_out) J_total^P [partial_Auger] "; na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(179)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
             sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
@@ -317,7 +318,7 @@ module ImpactExcitationAutoion
                 println( sb )
             end
         end
-        println("  ", TableStrings.hLine(179))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -329,10 +330,11 @@ module ImpactExcitationAutoion
             otherwise.
     """
     function  displayResults(pathways::Array{ImpactExcitationAutoion.Pathway,1})
+        nx = 133
         println(" ")
         println("  Electron-impact excitation-autoionization cross sections:")
         println(" ")
-        println("  ", TableStrings.hLine(133))
+        println("  ", TableStrings.hLine(nx))
         sa = "     ";   sb = "     "
         sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);          
         sa = sa * TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=3);
@@ -340,7 +342,7 @@ module ImpactExcitationAutoion
         sb = sb * TableStrings.center(58, "  m--i        m--f     e^-(in)     e^-(out)    e^-(Auger)"; na=3)
         sa = sa * TableStrings.center(16, "Cross sections"; na=2);       
         sb = sb * TableStrings.center(16, TableStrings.inUnits("cross section"); na=2)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(133)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
             sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
@@ -359,7 +361,7 @@ module ImpactExcitationAutoion
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection))   * "  "
             println(sa)
         end
-        println("  ", TableStrings.hLine(133))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

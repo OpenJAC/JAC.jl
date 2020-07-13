@@ -52,7 +52,6 @@ module HydrogenicIon
         value = r^(l+1) / factorial(2l+1) * sqrt( factorial(n+l) / (factorial(n-l-1) *2n)) *
                 (2Z / n)^(l+1.5) * exp(-Z*r/n) 
         
-        ##x if  abs(value) < 1.e-15  &&  2Z*r/n > 99.   warn(AddWarning, "orbital: value = $value  2Z*r/n = $(2Z*r/n) ");    return(0.)   end
         if  abs(value) < 1.e-15  &&  2Z*r/n > 99.    return(0.)   end
         
         value = value * GSL.hypergeom(-(n-l-1.), 2l+2., 2Z*r/n)

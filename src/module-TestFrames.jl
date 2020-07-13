@@ -5,7 +5,7 @@
 """
 module TestFrames
 
-    using Printf, JAC, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
+    using Printf, JLD, JAC, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
     
     export testDummy
 
@@ -316,7 +316,7 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
                                 nuclearModel=Nuclear.Model(26.), properties=[AlphaX()], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                alphaSettings=AlphaVariation.Settings(true, true, false, Int64[]) )
+                                alphaSettings=AlphaVariation.Settings(true, true, LevelSelection() ) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -340,8 +340,8 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),  
                                 initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = Auger(),
-                                processSettings = AutoIonization.Settings(true, true, true, Tuple{Int64,Int64}[(3,1), (4,1), (5,1), (6,1)], 0., 1.0e6, 
-                                                                          2, CoulombInteraction()) )
+                                processSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(3,1), (4,1), (5,1), (6,1)]), 
+                                                                          0., 1.0e6, 2, CoulombInteraction()) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -349,6 +349,108 @@ module TestFrames
         success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-AutoIonization-approved.sum"), 
                                     joinpath(@__DIR__, "..", "test", "test-AutoIonization-new.sum"), "Auger rates and intrinsic", 5) 
         testPrint("testModule_AutoIonization()::", success)
+        return(success)  
+    end
+
+
+
+    """
+    `TestFrames.testModule_Cascade_StepwiseDecay(; short::Bool=true)`  ... tests on module Cascade.
+    """
+    function testModule_Cascade_StepwiseDecay(; short::Bool=true) 
+        Defaults.setDefaults("method: continuum, asymptotic Coulomb")    ## setDefaults("method: continuum, Galerkin")
+        Defaults.setDefaults("method: normalization, pure sine")         ## setDefaults("method: normalization, pure Coulomb") 
+        Defaults.setDefaults("print summary: open", "test-Cascade-StepwiseDecay-new.sum")
+        printstyled("\n\nTest the module  Cascade for the StepwiseDecayScheme ... \n", color=:cyan)
+        ### Make the tests
+        name = "Cascade after neon 1s --> 3p excitation"
+        grid = Radial.Grid(false)
+        wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(10.), grid=grid, approach=Cascade.AverageSCA(),
+                                   scheme=Cascade.StepwiseDecayScheme([Auger(), Radiative()], 1, Dict{Int64,Float64}(), 0, Shell[], Shell[]),
+                                   initialConfigs=[Configuration("1s^1 2s^2 2p^6 3p")] )
+        println(wa)
+        wb = perform(wa; output=true)
+        ###
+        Defaults.setDefaults("print summary: close", "")
+        # Make the comparison with approved data
+        success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Cascade-StepwiseDecay-approved.sum"), 
+                                    joinpath(@__DIR__, "..", "test", "test-Cascade-StepwiseDecay-new.sum"), "Steps that are defined for the curren", 15) 
+        testPrint("testModule_Cascade-StepwiseDecay()::", success)
+        return(success)  
+    end
+
+
+    """
+    `TestFrames.testModule_Cascade_PhotonIonization(; short::Bool=true)`  ... tests on module Cascade.
+    """
+    function testModule_Cascade_PhotonIonization(; short::Bool=true) 
+        Defaults.setDefaults("method: continuum, asymptotic Coulomb")    ## setDefaults("method: continuum, Galerkin")
+        Defaults.setDefaults("method: normalization, pure sine")         ## setDefaults("method: normalization, pure Coulomb") 
+        Defaults.setDefaults("print summary: open", "test-Cascade-PhotonIonization-new.sum")
+        printstyled("\n\nTest the module  Cascade for the PhotonIonizationScheme ... \n", color=:cyan)
+        ### Make the tests
+        name = "Photoionization of Si- "
+        grid = Radial.Grid(Radial.Grid(false); rnt = 3.0e-6, h = 2.0e-2, hp = 3.0e-2, NoPoints=1110)
+        wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(10.), grid=grid, approach=Cascade.AverageSCA(),
+                                   scheme=Cascade.PhotonIonizationScheme([Photo()], 1, [5.0]),
+                                   initialConfigs=[Configuration("1s^2 2s^2 2p^5")] )
+        wb = perform(wa; output=true)
+        ###
+        Defaults.setDefaults("print summary: close", "")
+        # Make the comparison with approved data
+        success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Cascade-PhotonIonization-approved.sum"), 
+                                    joinpath(@__DIR__, "..", "test", "test-Cascade-PhotonIonization-new.sum"), "Total photoionization cross sections for", 15) 
+        testPrint("testModule_Cascade-PhotonIonization()::", success)
+        return(success)  
+    end
+
+
+    """
+    `TestFrames.testModule_Cascade_PhotonExcitation(; short::Bool=true)`  ... tests on module Cascade.
+    """
+    function testModule_Cascade_PhotonExcitation(; short::Bool=true) 
+        Defaults.setDefaults("method: continuum, asymptotic Coulomb")    ## setDefaults("method: continuum, Galerkin")
+        Defaults.setDefaults("method: normalization, pure sine")         ## setDefaults("method: normalization, pure Coulomb") 
+        Defaults.setDefaults("print summary: open", "test-Cascade-PhotonExcitation-new.sum")
+        printstyled("\n\nTest the module  Cascade for the PhotonExcitationScheme ... \n", color=:cyan)
+        ### Make the tests
+        grid = Radial.Grid(Radial.Grid(false); rnt = 3.0e-6, h = 2.0e-2, hp = 3.0e-2, NoPoints=1110)
+        name = "Photoabsorption calculations for Ne^+ for energies = [1, 4] a.u."
+        wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(10.), grid=grid, approach=Cascade.AverageSCA(),
+                                   scheme=Cascade.PhotonExcitationScheme([PhotoExc()], [E1], 0.5, 4.0, 1, [Shell("2s"), Shell("2p")], 
+                                                                         [Shell("2s"), Shell("2p"), Shell("3p"), Shell("4p"), Shell("5p")]),
+                                                                         initialConfigs=[Configuration("1s^2 2s^2 2p^5")] )
+        wb = perform(wa; output=true)
+        ###
+        Defaults.setDefaults("print summary: close", "")
+        # Make the comparison with approved data
+        success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Cascade-PhotonExcitation-approved.sum"), 
+                                    joinpath(@__DIR__, "..", "test", "test-Cascade-PhotonExcitation-new.sum"), "Steps that are defined for the", 15) 
+        testPrint("testModule_Cascade-PhotonExcitation()::", success)
+        return(success)  
+    end
+
+
+    """
+    `TestFrames.testModule_Cascade_Simulation(; short::Bool=true)`  ... tests on module Cascade.
+    """
+    function testModule_Cascade_Simulation(; short::Bool=true) 
+        Defaults.setDefaults("print summary: open", "test-Cascade-Simulation-new.sum")
+        printstyled("\n\nTest the module  Cascade for Simulations ... \n", color=:cyan)
+        ### Make the tests
+        datafile = joinpath(@__DIR__, "..", "test", "approved", "test-Cascade-StepwiseDecay-data.jld")
+        data = [JLD.load(datafile)]
+        name = "Simulation of the neon 1s^-1 3p decay"
+
+        wc   = Cascade.Simulation(Cascade.Simulation(), name=name, property=Cascade.IonDistribution(), 
+                                  settings=Cascade.SimulationSettings(0., 0., 0., 0., 0., [(1, 2.0), (2, 1.0), (3, 0.5)]), computationData=data )
+        wd = perform(wc; output=true)
+        ###
+        Defaults.setDefaults("print summary: close", "")
+        # Make the comparison with approved data
+        success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Cascade-Simulation-approved.sum"), 
+                                    joinpath(@__DIR__, "..", "test", "test-Cascade-Simulation-new.sum"), "(Final) Ion distribution for", 7) 
+        testPrint("testModule_Cascade-Simulation()::", success)
         return(success)  
     end
 
@@ -385,7 +487,7 @@ module TestFrames
         grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800)
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.),  
                                 configs=[Configuration("1s 2s^2 2p^6")],
-                                properties=[JAC.Yields], yieldSettings=DecayYield.Settings("SCA", true, false, Int64[]) )
+                                properties=[Yields()], yieldSettings=DecayYield.Settings("SCA", true, LevelSelection() ) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -412,7 +514,8 @@ module TestFrames
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
                                 process = Dierec(), 
                                 processSettings=Dielectronic.Settings([E1, M1], [UseCoulomb, UseBabushkin], false, 
-                                                                    true, Tuple{Int64,Int64,Int64}[(1,1,0)], 0., 0., 0., "Coulomb")  )
+                                                                      PathwaySelection(true, indexTriples=[(1,1,0)]), 0., 0., 0., CoulombInteraction() )  
+)
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -461,7 +564,7 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
                                 nuclearModel=Nuclear.Model(26.); properties=[FormF()], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                formSettings=FormFactor.Settings([0.1], true, false, Int64[]) )
+                                formSettings=FormFactor.Settings([0.1], true, LevelSelection() ) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -484,7 +587,7 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
                                 nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0); properties=[HFS()],
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                hfsSettings=Hfs.Settings(true, true, true, true, true, true, false, Int64[] ) )
+                                hfsSettings=Hfs.Settings(true, true, true, true, true, true, LevelSelection() ) )
 
         wb = perform(wa)
         ###
@@ -534,7 +637,7 @@ module TestFrames
                                 nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.75, AngularJ64(5//2), 1.0, 2.0),
                                 properties=[LandeJ()], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                zeemanSettings=LandeZeeman.Settings(true, true, true, true, 0., true, false, Int64[] ) )
+                                zeemanSettings=LandeZeeman.Settings(true, true, true, true, 0., true, LevelSelection() ) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -613,7 +716,7 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
                                 nuclearModel=Nuclear.Model(26.); properties=[Polarizibility()], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                polaritySettings=MultipolePolarizibility.Settings(EmMultipole[], 0, 0, Float64[], false, false, Int64[]) )
+                                polaritySettings=MultipolePolarizibility.Settings(EmMultipole[], 0, 0, Float64[], false, LevelSelection() ) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -700,7 +803,7 @@ module TestFrames
                                 finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
                                 process = PhotoExc(), 
                                 processSettings=PhotoExcitation.Settings([E1, M1], [UseCoulomb, UseBabushkin], true, true, true, true, 
-                                                                    false, Tuple{Int64,Int64}[], 0., 0., 1.0e6, Basics.ExpStokes(0., 0., 0.) ) )
+                                                                         LineSelection(), 0., 0., 1.0e6, Basics.ExpStokes(0., 0., 0.) ) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -727,7 +830,8 @@ module TestFrames
                                 intermediateConfigs=[Configuration("1s 2s^2"), Configuration("1s 2p^2")],
                                 finalConfigs=[Configuration("1s^2")], 
                                 process = PhotoExcAuto(), 
-                                processSettings=PhotoExcitationAutoion.Settings([E1, M1], [UseCoulomb, UseBabushkin], true, true, Tuple{Int64,Int64,Int64}[(1,1,1)], 2)  )
+                                processSettings=PhotoExcitationAutoion.Settings([E1, M1], [UseCoulomb, UseBabushkin], true, 
+                                                                                PathwaySelection(true, indexTriples=[(1,1,1)]), 2 ) )
 
     wb = perform(wa)
         ###
@@ -756,8 +860,8 @@ module TestFrames
                                 intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
                                 process = PhotoExcFluor(), 
-                                processSettings=PhotoExcitationFluores.Settings([E1, M1], [UseCoulomb, UseBabushkin], 
-                                                                                true, true, Tuple{Int64,Int64,Int64}[(1,1,1)])  )
+                                processSettings=PhotoExcitationFluores.Settings([E1, M1], [UseCoulomb, UseBabushkin], true, 
+                                                     PathwaySelection(true, indexTriples=[(1,1,1)]) )  )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -786,7 +890,7 @@ module TestFrames
                                 finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
                                 process = Photo(), 
                                 processSettings=PhotoIonization.Settings([E1, M1], [UseCoulomb, UseBabushkin], [3000., 4000.], false, true, true, true, 
-                                                true, Tuple{Int64,Int64}[(1,1), (1,2)], ExpStokes(1., 0., 0.)) )
+                                                                         LineSelection(true, indexPairs=[(1,1), (1,2)]), ExpStokes(1., 0., 0.)) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -812,7 +916,7 @@ module TestFrames
                                 finalConfigs  =[Configuration("1s^2 2s"), Configuration("1s^2 3s"), Configuration("1s^2 3p"), Configuration("1s^2 3d")], 
                                 process = Rec(), 
                                 processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10.], 
-                                                     [2.18, 21.8, 218.0], false, false, false, true, false, Tuple{Int64,Int64}[(1,1)]) )
+                                                     [2.18, 21.8, 218.0], false, false, false, true, LineSelection() ) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -837,7 +941,7 @@ module TestFrames
                                 finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
                                 process = Radiative(), 
                                 processSettings=PhotoEmission.Settings([E1, M1, E2, M2], [UseCoulomb, UseBabushkin], true, true, 
-                                true, Tuple{Int64,Int64}[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)], 0., 0., 10000. ) )
+                                    LineSelection(true, indexPairs=[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)]), 0., 0., 10000. ) )
         ##x streamDummy = open(pwd() * "/runtests.dummy", "w")
         ##x redirect_stdout(streamDummy) do   
         wb = perform(wa)   
@@ -851,24 +955,6 @@ module TestFrames
         testPrint("testModule_PhotoEmission()::", success)
         return(success)  
     end
-
-
-
-    #== """
-    `TestFrames.testModule_RacahAlgebra(; short::Bool=true)`  ... tests on module RacahAlgebra.
-    """
-    function testModule_RacahAlgebra(; short::Bool=true)
-        success = true
-        printstyled("\n\nTest the module  RacahAlgebra  ... \n", color=:cyan)
-        ### Make the tests
-        # Test the implemented recursion relations
-        success = success  &&  RacahAlgebra.testRecursions(; short=short)
-        # Test the implemented sum rule evaluation
-        success = success  &&  RacahAlgebra.testSumRules(; short=short)
-        ###
-        testPrint("testModule_RacahAlgebra()::", success)
-        return(success)  
-    end  ==#
 
 
 
@@ -908,7 +994,7 @@ module TestFrames
         wb = generate(wa, output=true)
         #
         orbitals    = wb["mean-field basis"].orbitals
-        ciSettings  = CiSettings(CoulombInteraction(), false, Int64[], false, LevelSymmetry[] )
+        ciSettings  = CiSettings(CoulombInteraction(), LevelSelection() )
         from        = [Shell("2s")]
         #
         frozen      = [Shell("1s")]
@@ -947,7 +1033,7 @@ module TestFrames
         
         name        = "Beryllium 1s^2 2s^2 ^1S_0 ground state"
         refConfigs  = [Configuration("[He] 2s^2")]
-        rasSettings = RasSettings([1], 24, 1.0e-6, CoulombInteraction(), true, [1,2,3] )
+        rasSettings = RasSettings([1], 24, 1.0e-6, CoulombInteraction(), LevelSelection(true, indices=[1,2,3]) )
         from        = [Shell("2s")]
         #
         frozen      = [Shell("1s")]
@@ -985,7 +1071,7 @@ module TestFrames
         
         name          = "Lithium 1s^2 2s ground configuration"
         refConfigs    = [Configuration("[He] 2s")]
-        greenSettings = GreenSettings(5, [0, 1, 2], 0.01, true, false, Int64[])
+        greenSettings = GreenSettings(5, [0, 1, 2], 0.01, true, LevelSelection() )
         #
         wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
                                      ## GreenExpansion( AtomicState.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(), 

@@ -9,7 +9,7 @@ setDefaults("print summary: open", "zzz-Dielectronic.sum")
 setDefaults("method: continuum, Galerkin")            ## setDefaults("method: continuum, Galerkin") setDefaults("method: continuum, asymptotic Coulomb") 
 setDefaults("method: normalization, pure sine")       ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
-if  false
+if  true
 grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 1.0e-2, NoPoints = 900)
 ## grid = Radial.Grid(false)
 wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(18.), 
@@ -18,7 +18,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel
                         finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ],  
                         process = Dierec(), 
                         processSettings=Dielectronic.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, 
-                                                              false, Tuple{Int64,Int64,Int64}[(1,5,0), (1,6,0)], 0., 0., 0., CoulombInteraction())  )
+                                                              PathwaySelection(false, indexTriples=[(1,5,0), (1,6,0)]), 0., 0., 0., CoulombInteraction())  )
 
 wb = perform(wa)
 

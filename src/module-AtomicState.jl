@@ -1,6 +1,7 @@
 
 """
-`module  JAC.AtomicState`  ... a submodel of JAC that contains all methods to set-up and process atomic representations.
+`module  JAC.AtomicState`  
+    ... a submodel of JAC that contains all methods to set-up and process atomic representations.
 """
 module AtomicState
 
@@ -88,23 +89,21 @@ module AtomicState
         + accuracyScf          ::Float64                ... convergence criterion for the SCF field.
         
     	+ eeInteractionCI      ::AbstractEeInteraction  ... logical flag to include Breit interactions.
-    	+ selectLevelsCI       ::Bool                   ... true, if specific level (number)s have been selected.
-    	+ selectedLevelsCI     ::Array{Int64,1}         ... Level number that have been selected.
+        + levelSelectionCI     ::LevelSelection         ... Specifies the selected levels, if any.
     """
     struct  RasSettings
         levelsScf              ::Array{Int64,1}
         maxIterationsScf       ::Int64  
         accuracyScf            ::Float64 
-    	eeInteractionCI        ::AbstractEeInteraction
-    	selectLevelsCI         ::Bool 
-    	selectedLevelsCI       ::Array{Int64,1} 
+    	eeInteractionCI        ::AbstractEeInteraction 
+    	levelSelectionCI       ::LevelSelection
     end
 
     """
     `AtomicState.RasSettings()`  ... constructor for setting the default values.
     """
     function RasSettings()
-    	RasSettings(Int64[1], 24, 1.0e-6, false, false, Int64[])
+    	RasSettings(Int64[1], 24, 1.0e-6, false, LevelSelection() )
     end
     
     
@@ -114,8 +113,7 @@ module AtomicState
     	  println(io, "maxIterationsScf:     $(settings.maxIterationsScf)  ")
     	  println(io, "accuracyScf:          $(settings.accuracyScf)  ")
     	  println(io, "eeInteractionCI:      $(settings.eeInteractionCI)  ")
-    	  println(io, "selectLevelsCI:       $(settings.selectLevelsCI)  ")
-    	  println(io, "selectedLevelsCI:     $(settings.selectedLevelsCI)  ")
+    	  println(io, "levelSelectionCI:     $(settings.levelSelectionCI)  ")
     end
 
 
@@ -270,58 +268,42 @@ module AtomicState
         ... a struct for defining the settings for a configuration-interaction (CI) expansion.
 
     	+ eeInteractionCI      ::AbstractEeInteraction   ... logical flag to include Breit interactions.
-    	+ selectLevelsCI       ::Bool                    ... true, if specific level (number)s have been selected.
-    	+ selectedLevelsCI     ::Array{Int64,1}          ... Level number that have been selected.
-    	+ selectSymmetriesCI   ::Bool                    ... true, if specific level symmetries have been selected.
-    	+ selectedSymmetriesCI ::Array{LevelSymmetry,1}  ... Level symmetries that have been selected.
+        + levelSelectionCI     ::LevelSelection          ... Specifies the selected levels, if any.
     """
     struct  CiSettings
-    	eeInteractionCI        ::AbstractEeInteraction
-    	selectLevelsCI         ::Bool 
-    	selectedLevelsCI       ::Array{Int64,1} 
-    	selectSymmetriesCI     ::Bool 	
-    	selectedSymmetriesCI   ::Array{LevelSymmetry,1} 
+    	eeInteractionCI        ::AbstractEeInteraction 
+    	levelSelectionCI       ::LevelSelection
     end
 
     """
     `AtomicState.CiSettings()`  ... constructor for setting the default values.
     """
     function CiSettings()
-    	CiSettings(CoulombInteraction(), false, Int64[], false, LevelSymmetry[])
+    	CiSettings(CoulombInteraction(), LevelSelection() )
     end
 
 
     """
     `AtomicState.CiSettings(settings::AtomicState.CiSettings;`
     
-            eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing, 
-            selectLevelsCI::Union{Nothing,Bool}=nothing,                    selectedLevelsCI::Union{Nothing,Array{Int64,1}}=nothing, 
-            selectSymmetriesCI::Union{Nothing,Bool}=nothing,                selectedSymmetriesCI::Union{Nothing,Array{LevelSymmetry,1}}=nothing)
+            eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,    levelSelectionCI::Union{Nothing,LevelSelection}=nothing)
                         
         ... constructor for modifying the given CiSettings by 'overwriting' the explicitly selected parameters.
     """
     function CiSettings(settings::AtomicState.CiSettings;
-        eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing, 
-        selectLevelsCI::Union{Nothing,Bool}=nothing,                        selectedLevelsCI::Union{Nothing,Array{Int64,1}}=nothing, 
-        selectSymmetriesCI::Union{Nothing,Bool}=nothing,                    selectedSymmetriesCI::Union{Nothing,Array{LevelSymmetry,1}}=nothing)
+        eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,        levelSelectionCI::Union{Nothing,LevelSelection}=nothing)
         
         if  eeInteractionCI     == nothing   eeInteractionCIx      = settings.eeInteractionCI       else   eeInteractionCIx      = eeInteractionCI      end 
-        if  selectLevelsCI      == nothing   selectLevelsCIx       = settings.selectLevelsCI        else   selectLevelsCIx       = selectLevelsCI       end 
-        if  selectedLevelsCI    == nothing   selectedLevelsCIx     = settings.selectedLevelsCI      else   selectedLevelsCIx     = selectedLevelsCI     end 
-        if  selectSymmetriesCI  == nothing   selectSymmetriesCIx   = settings.selectSymmetriesCI    else   selectSymmetriesCIx   = selectSymmetriesCI   end 
-        if  selectedSymmetriesCI== nothing   selectedSymmetriesCIx = settings.selectedSymmetriesCI  else   selectedSymmetriesCIx = selectedSymmetriesCI end 
+        if  levelSelectionCI    == nothing   levelSelectionCIx     = settings.levelSelectionCI      else   levelSelectionCIx     = levelSelectionCI     end 
         
-        CiSettings( eeInteractionCIx, selectLevelsCIx, selectedLevelsCIx, selectSymmetriesCIx, selectedSymmetriesCIx)
+        CiSettings( eeInteractionCIx, levelSelectionCIx)
     end
     
     
     # `Base.show(io::IO, settings::CiSettings)`  ... prepares a proper printout of the settings::CiSettings.
     function Base.show(io::IO, settings::CiSettings)
     	  println(io, "eeInteractionCI:          $(settings.eeInteractionCI)  ")
-    	  println(io, "selectLevelsCI:           $(settings.selectLevelsCI)  ")
-    	  println(io, "selectedLevelsCI:         $(settings.selectedLevelsCI)  ")
-    	  println(io, "selectSymmetriesCI:       $(settings.selectSymmetriesCI)  ")
-    	  println(io, "selectedSymmetriesCI:     $(settings.selectedSymmetriesCI)  ")
+    	  println(io, "levelSelectionCI:         $(settings.levelSelectionCI)  ")
     end
 
 
@@ -394,16 +376,14 @@ module AtomicState
         + dampingTau               ::Float64          ... factor tau (> 0.) that is used to 'damp' the one- and two-electron
                                                           interactions strength: exp( - tau * r)
         + printBefore              ::Bool             ... True if a short overview is to be printed before. 
-        + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
-        + selectedLevels           ::Array{Int64,1}   ... List of selected levels.
+        + levelSelection           ::LevelSelection   ... Specifies the selected levels, if any.
     """
     struct GreenSettings 
         nMax                       ::Int64
         lValues                    ::Array{Int64,1}
         dampingTau                 ::Float64
         printBefore                ::Bool 
-        selectLevels               ::Bool
-        selectedLevels             ::Array{Int64,1}
+        levelSelection             ::LevelSelection
     end 
 
 
@@ -411,7 +391,7 @@ module AtomicState
     `AtomicState.GreenSettings()`  ... constructor for an `empty` instance of AtomicState.GreenSettings.
     """
     function GreenSettings()
-        Settings( 0, Int64[], 0., false, false, Int64[])
+        Settings( 0, Int64[], 0., false, LevelSelection() )
     end
 
 
@@ -421,8 +401,7 @@ module AtomicState
         println(io, "lValues:                  $(settings.lValues)  ")
         println(io, "dampingTau:               $(settings.dampingTau)  ")
         println(io, "printBefore:              $(settings.printBefore)  ")
-        println(io, "selectLevels:             $(settings.selectLevels)  ")
-        println(io, "selectedLevels:           $(settings.selectedLevels)  ")
+        println(io, "levelSelection:           $(settings.levelSelection)  ")
     end
 
 
@@ -526,6 +505,67 @@ module AtomicState
     """
     function Representation()
         Representation("", Nuclear.Model(1.0), Radial.Grid(), ManyElectron.Configuration[], CiExpansion())
+    end
+
+    
+    """
+    `AtomicState.Representation( ... example for the generation of a mean-field basis)`  
+    
+            name        = "Oxygen 1s^2 2s^2 2p^4 ground configuration"
+            grid        = Radial.Grid(true)
+            nuclearM    = Nuclear.Model(8.)
+            refConfigs  = [Configuration("[He] 2s^2 2p^4")]
+            mfSettings  = MeanFieldSettings()
+            Representation(name, nuclearM, grid, refConfigs, MeanFieldBasis(mfSettings) )
+        
+    `AtomicState.Representation( ... example for the computation of a configuration-interaction (CI) expansion)`  
+    
+            name        = "Oxygen 1s^2 2s^2 2p^4 ground configuration"
+            grid        = Radial.Grid(true)
+            nuclearM    = Nuclear.Model(8.)
+            refConfigs  = [Configuration("[He] 2s^2 2p^4")]
+            orbitals    = wb["mean-field basis"].orbitals #   get a proper set of orbitals
+            ciSettings  = CiSettings(true, false, Int64[], false, LevelSymmetry[] )
+            from        = [Shell("2s")]
+            to          = [Shell("2s"), Shell("2p")]
+            excitations = RasStep(RasStep(), seFrom=from, seTo=to, deFrom=from, deTo=to, frozen=[Shell("1s")])
+            Representation(name, nuclearM, grid, refConfigs, CiExpansion(orbitals, excitations, ciSettings) )
+        
+    `AtomicState.Representation( ... example for the computation of a restricted-active-space (RAS) expansion)`  
+    
+            name        = "Beryllium 1s^2 2s^2 ^1S_0 ground state"
+            refConfigs  = [Configuration("[He] 2s^2")]
+            rasSettings = RasSettings([1], 24, 1.0e-6, CoulombInteraction(), true, [1,2,3] )
+            from        = [Shell("2s")]
+            
+            frozen      = [Shell("1s")]
+            to          = [Shell("2s"), Shell("2p")]
+            step1       = RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
+
+            append!(frozen, [Shell("2s"), Shell("2p")])
+            append!(to,     [Shell("3s"), Shell("3p"), Shell("3d")])
+            step2       = RasStep(step1; seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
+
+            append!(frozen, [Shell("3s"), Shell("3p"), Shell("3d")])
+            append!(to,     [Shell("4s"), Shell("4p"), Shell("4d"), Shell("4f")])
+            step3       = RasStep(step2, seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
+
+            Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs, 
+                           RasExpansion(LevelSymmetry(0, Basics.plus), 4, [step1, step2, step3], rasSettings) )
+        
+    `AtomicState.Representation( ... example for the computation of Green(function) expansion)`  
+
+            name            = "Lithium 1s^2 2s ground configuration"
+            refConfigs      = [Configuration("[He] 2s")]
+            levelSymmetries = [LevelSymmetry(1//2, Basics.plus), LevelSymmetry(3//2, Basics.plus)]
+            greenSettings   = GreenSettings(5, [0, 1, 2], 0.01, true, false, Int64[])
+            Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
+                           GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 3, greenSettings) ) 
+                           
+        ... These simple examples can be further improved by overwriting the corresponding parameters.
+    """
+    function Representation(wa::Bool)    
+        AtomicState.Representation()    
     end
 
 

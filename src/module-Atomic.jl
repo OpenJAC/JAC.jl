@@ -1,7 +1,8 @@
 
 """
-`module  JAC.Atomic`  ... a submodel of JAC that contains all methods to set-up and process (simple) atomic and SCF computations as well as 
-                          atomic representations.
+`module  JAC.Atomic`  
+    ... a submodel of JAC that contains all methods to set-up and process (simple) atomic and SCF computations as well as 
+        atomic representations.
 """
 module Atomic
 
@@ -14,48 +15,45 @@ module Atomic
           ..PhotoIonizationFluores, ..PhotoIonizationAutoion, ..ImpactExcitationAutoion, ..RadiativeAuger, 
           ..MultiPhotonIonization, ..MultiPhotonDoubleIon, ..InternalConversion
 
-    ##x export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, 
-    ##x         GreenSettings, GreenChannel, GreenExpansion, Representation
-
-    ##x include("../src/module-Atomic-inc-AtomicState.jl")
-    
-
     
     """
-    `struct  Computation`  ... defines a type for defining  (the model of simple) atomic computation of a single multiplet, 
-                               including the SCF and CI as well as level properties and transition property calculations.
+    `struct  Computation`  
+        ... defines a type for defining  (the model of simple) atomic computation of a single multiplet, 
+            including the SCF and CI as well as level properties and transition property calculations.
 
-        + name                           ::String                        ... A name associated to the computation.
-        + nuclearModel                   ::Nuclear.Model          ... Model, charge and parameters of the nucleus.
-        + grid                           ::Radial.Grid                   ... The radial grid to be used for the computation.
-        + properties                     ::Array{AbstractLevelProperty,1}... List of atomic properties to be calculated.
-        + configs                        ::Array{Configuration,1}        ... A list of non-relativistic configurations.
-        + asfSettings                    ::AsfSettings                   ... Provides the settings for the SCF process and for the CI and QED calculations.
-        + initialConfigs                 ::Array{Configuration,1}        ... A list of initial-state configurations for some transition 
-                                                                             property calculation, such as radiative transition, Auger, etc. 
-        + initialAsfSettings             ::AsfSettings                   ... Provides the SCF and CI settings for the initial-state multiplet.
-        + intermediateConfigs            ::Array{Configuration,1}        ... A list of initial-state configurations.
-        + intermediateAsfSettings        ::AsfSettings                   ... Provides the SCF settings for the intermediate-state multiplet.
-        + finalConfigs                   ::Array{Configuration,1}        ... A list of final-state configurations.
-        + finalAsfSettings               ::AsfSettings                   ... Provides the SCF and CI settings for the final-state multiplet.
-        + alphaSettings                  ::AlphaVariation.Settings       ... Settings for alpha-variation parameter calculations.
-        + einsteinSettings               ::Einstein.Settings             ... Settings for Einstein coefficient calculations.
-        + formSettings                   ::FormFactor.Settings           ... Settings for atomic form factor calculations.
-        + hfsSettings                    ::Hfs.Settings                  ... Settings for hyperfine parameter calculations.
-        + isotopeSettings                ::IsotopeShift.Settings         ... Settings for isotope shift parameter calculations.
-        + plasmaSettings                 ::PlasmaShift.Settings          ... Settings for plasma-shift calculations.
-        + polaritySettings               ::MultipolePolarizibility.Settings   ... Settings for plasma-shift calculations.
-        + yieldSettings                  ::DecayYield.Settings           ... Settings for fluoresence and Auger yield calculations.
-        + zeemanSettings                 ::LandeZeeman.Settings          ... Settings for Lande-Zeeman coefficient calculations.
-        + process                        ::Basic.AbstractProcess         ... An (additional) process for which the properties are to be evaluated 
-                                                                             for the given initial- and final-state configurations.
+        + name                           ::String                          ... A name associated to the computation.
+        + nuclearModel                   ::Nuclear.Model                   ... Model, charge and parameters of the nucleus.
+        + grid                           ::Radial.Grid                     ... The radial grid to be used for the computation.
+        + properties                     ::Array{AbstractLevelProperty,1}  ... List of atomic properties to be calculated.
+        + configs                        ::Array{Configuration,1}          ... A list of non-relativistic configurations.
+        + asfSettings                    ::AsfSettings                     
+            ... Provides the settings for the SCF process and for the CI and QED calculations.
+        + initialConfigs                 ::Array{Configuration,1}        
+            ... A list of initial-state configurations for some transition property calculation, such as radiative transition, Auger, etc. 
+        + initialAsfSettings             ::AsfSettings                     ... Provides the SCF and CI settings for the initial-state multiplet.
+        + intermediateConfigs            ::Array{Configuration,1}          ... A list of initial-state configurations.
+        + intermediateAsfSettings        ::AsfSettings                     ... Provides the SCF settings for the intermediate-state multiplet.
+        + finalConfigs                   ::Array{Configuration,1}          ... A list of final-state configurations.
+        + finalAsfSettings               ::AsfSettings                     ... Provides the SCF and CI settings for the final-state multiplet.
+        + alphaSettings                  ::AlphaVariation.Settings         ... Settings for alpha-variation parameter calculations.
+        + einsteinSettings               ::Einstein.Settings               ... Settings for Einstein coefficient calculations.
+        + formSettings                   ::FormFactor.Settings             ... Settings for atomic form factor calculations.
+        + hfsSettings                    ::Hfs.Settings                    ... Settings for hyperfine parameter calculations.
+        + isotopeSettings                ::IsotopeShift.Settings           ... Settings for isotope shift parameter calculations.
+        + plasmaSettings                 ::PlasmaShift.Settings            ... Settings for plasma-shift calculations.
+        + polaritySettings               ::MultipolePolarizibility.Settings .. Settings for polarizibility calculations.
+        + yieldSettings                  ::DecayYield.Settings             ... Settings for fluoresence and Auger yield calculations.
+        + zeemanSettings                 ::LandeZeeman.Settings            ... Settings for Lande-Zeeman coefficient calculations.
+        + process                        ::Basic.AbstractProcess           
+            ... An (additional) process for which the properties are to be evaluated for the given initial- and final-state configurations.
         + processSettings                ::Union{JAC.PhotoEmission.Settings, JAC.AutoIonization.Settings, JAC.PlasmaShift.AugerSettings, 
                                                  JAC.PhotoIonization.Settings, JAC.PlasmaShift.PhotoSettings, 
                                                  JAC.PhotoExcitation.Settings, JAC.PhotoExcitationAutoion.Settings, JAC.PhotoRecombination.Settings, 
                                                  JAC.ImpactExcitation.Settings, JAC.Dielectronic.Settings, RadiativeAuger.Settings,
                                                  JAC.PairAnnihilation1Photon.Settings, JAC.ImpactExcitationAutoion.Settings, 
                                                  JAC.MultiPhotonDeExcitation.Settings, JAC.CoulombExcitation.Settings, 
-                                                 JAC.CoulombIonization.Settings} ... Provides the settings for the selected process.
+                                                 JAC.CoulombIonization.Settings} 
+            ... Provides the settings for the selected process.
     """
     struct  Computation
         name                           ::String
@@ -73,7 +71,6 @@ module Atomic
         alphaSettings                  ::AlphaVariation.Settings
         einsteinSettings               ::Einstein.Settings
         formSettings                   ::FormFactor.Settings
-        ##x greenSettings                  ::GreenFunction.Settings
         hfsSettings                    ::Hfs.Settings
         isotopeSettings                ::IsotopeShift.Settings
         plasmaSettings                 ::PlasmaShift.Settings
@@ -97,7 +94,7 @@ module Atomic
 
 
     """
-    `JAC.Atomic.Computation()`  ... constructor for an 'empty' instance::Atomic.Computation.
+    `Atomic.Computation()`  ... constructor for an 'empty' instance::Atomic.Computation.
     """
     function Computation()
         Computation("", Nuclear.Model(1.), Radial.Grid(), AbstractLevelProperty[], 
@@ -194,6 +191,41 @@ module Atomic
                          
         if printout  Base.show(cp)      end
         return( cp )
+    end
+
+    
+    """
+    `Atomic.Computation( ... example for SCF computations)`  
+    
+            grid     = Radial.Grid(true)
+            nuclearM = Nuclear.Model(18., "Fermi")
+            settings = AsfSettings(AsfSettings(), selectLevelsCI = true, selectedLevelsCI = [1,2, 4,5, 7,8], jjLS = LSjjSettings(false) )
+            configs  = [Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")]
+            Atomic.Computation(Atomic.Computation(), name="Example", grid=grid, nuclearModel=nuclearM, configs=configs, asfSettings=settings )
+        
+    `Atomic.Computation( ... example for the computation of atomic properties)`  
+    
+            grid        = Radial.Grid(true)
+            nuclearM    = Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0)
+            hfsSettings = Hfs.Settings(true, true, false, false, false, false, false, Int64[] )
+            configs     = [Configuration("[Ne] 3s"), Configuration("[Ne] 3p"), Configuration("[Ne] 3d")]
+            Atomic.Computation(Atomic.Computation(), name="Example", grid=grid, nuclearModel=nuclearM, configs=configs, properties=[HFS()],
+                               hfsSettings=hfsSettings )
+        
+    `Atomic.Computation( ... example for the computation of one atomic process)`  
+    
+            grid           = Radial.Grid(true)
+            initialConfigs = [Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")]
+            finalConfigs   = [Configuration("[Ne] 3s^2 3p^5")] 
+            photoSettings  = PhotoEmission.Settings(PhotoEmission.Settings(), multipoles=[E1, M1], gauges=[UseCoulomb], printBefore=true)
+            Atomic.Computation(Atomic.Computation(), name="Example", grid=grid, nuclearModel=nuclearM;
+                              initialConfigs=initialConfigs, finalConfigs=finalConfigs, 
+                              process = Radiative(), processSettings=photoSettings ); 
+        
+        ... These simple examples can be further improved by overwriting the corresponding parameters.
+    """
+    function Computation(wa::Bool)    
+        Atomic.Computation()    
     end
 
 

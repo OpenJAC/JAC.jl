@@ -20,8 +20,7 @@ module PhotoExcitation
                                                                      calculated and false otherwise. 
         + calcTensors             ::Bool                         ... True, if the statistical tensors of the excited atom are to be calculated and false otherwise. 
         + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
         + photonEnergyShift       ::Float64                      ... An overall energy shift for all photon energies.
         + mimimumPhotonEnergy     ::Float64                      ... minimum transition energy for which (photon) transitions are included into the
                                                                      computation.
@@ -34,9 +33,8 @@ module PhotoExcitation
         calcForStokes             ::Bool
         calcPhotonDm              ::Bool  
         calcTensors               ::Bool  
-        printBefore               ::Bool
-        selectLines               ::Bool
-        selectedLines             ::Array{Tuple{Int64,Int64},1}
+        printBefore               ::Bool 
+        lineSelection             ::LineSelection
         photonEnergyShift         ::Float64
         mimimumPhotonEnergy       ::Float64   
         maximumPhotonEnergy       ::Float64     
@@ -48,7 +46,7 @@ module PhotoExcitation
     `PhotoExcitation.Settings()`  ... 'empty' constructor for the default values of photo-excitation line computations
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], false, false, false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0., Basics.ExpStokes())
+        Settings(EmMultipole[], UseGauge[], false, false, false, false, LineSelection(), 0., 0., 0., Basics.ExpStokes())
     end
 
 
@@ -56,7 +54,7 @@ module PhotoExcitation
     `PhotoExcitation.Settings(set::PhotoExcitation.Settings;`
     
             multipoles=..,          gauges=..,                  calcForStokes=..,           calcPhotonDm=..,    
-            calcTensors=..,         printBefore=..,             selectLines=..,             selectedLines=..,  
+            calcTensors=..,         printBefore=..,             lineSelection=..,    
             photonEnergyShift=..,   mimimumPhotonEnergy=..,     maximumPhotonEnergy=..,     stokes=..)
                         
         ... constructor for modifying the given PhotoExcitation.Settings by 'overwriting' the previously selected parameters.
@@ -65,7 +63,7 @@ module PhotoExcitation
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,        gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
         calcForStokes::Union{Nothing,Bool}=nothing,                     calcPhotonDm::Union{Nothing,Bool}=nothing,    
         calcTensors::Union{Nothing,Bool}=nothing,                       printBefore::Union{Nothing,Bool}=nothing,  
-        selectLines::Union{Nothing,Bool}=nothing,                       selectedLines::Union{Nothing,Array{Tuple{Int64,Int64},1}}=nothing,  
+        lineSelection::Union{Nothing,LineSelection}=nothing, 
         photonEnergyShift::Union{Nothing,Float64}=nothing,              mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,     
         maximumPhotonEnergy::Union{Nothing,Float64}=nothing,            stokes::Union{Nothing,ExpStokes}=nothing)  
         
@@ -75,15 +73,14 @@ module PhotoExcitation
         if  calcPhotonDm        == nothing   calcPhotonDmx        = set.calcPhotonDm            else  calcPhotonDmx        = calcPhotonDm          end 
         if  calcTensors         == nothing   calcTensorsx         = set.calcTensors             else  calcTensorsx         = calcTensors           end 
         if  printBefore         == nothing   printBeforex         = set.printBefore             else  printBeforex         = printBefore           end 
-        if  selectLines         == nothing   selectLinesx         = set.selectLines             else  selectLinesx         = selectLines           end 
-        if  selectedLines       == nothing   selectedLinesx       = set.selectedLines           else  selectedLinesx       = selectedLines         end 
-        if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift       else  photonEnergyShiftx   = photonEnergyShift     end 
+        if  lineSelection       == nothing   lineSelectionx       = set.lineSelection           else  lineSelectionx       = lineSelection         end 
+       if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift       else  photonEnergyShiftx   = photonEnergyShift     end 
         if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy     else  mimimumPhotonEnergyx = mimimumPhotonEnergy   end 
         if  maximumPhotonEnergy == nothing   maximumPhotonEnergyx = set.maximumPhotonEnergy     else  maximumPhotonEnergyx = maximumPhotonEnergy   end 
         if  stokes              == nothing   stokesx              = set.stokes                  else  stokesx              = stokes                end 
         
-        Settings( multipolesx, gaugesx, calcForStokesx, calcPhotonDmx, calcTensorsx, printBeforex, selectLinesx, selectedLinesx, 
-                         photonEnergyShiftx, mimimumPhotonEnergyx, maximumPhotonEnergyx, stokesx)
+        Settings( multipolesx, gaugesx, calcForStokesx, calcPhotonDmx, calcTensorsx, printBeforex, lineSelectionx,
+                  photonEnergyShiftx, mimimumPhotonEnergyx, maximumPhotonEnergyx, stokesx)
     end
 
 
@@ -95,8 +92,7 @@ module PhotoExcitation
         println(io, "calcPhotonDm:             $(settings.calcPhotonDm)  ")
         println(io, "calcTensors:              $(settings.calcTensors)  ")
         println(io, "printBefore:              $(settings.printBefore)  ")
-        println(io, "selectLines:              $(settings.selectLines)  ")
-        println(io, "selectedLines:            $(settings.selectedLines)  ")
+        println(io, "lineSelection:            $(settings.lineSelection)  ")
         println(io, "photonEnergyShift:        $(settings.photonEnergyShift)  ")
         println(io, "mimimumPhotonEnergy:      $(settings.mimimumPhotonEnergy)  ")
         println(io, "maximumPhotonEnergy:      $(settings.maximumPhotonEnergy)  ")
@@ -266,37 +262,6 @@ module PhotoExcitation
 
 
     """
-    `PhotoExcitation.computeMatrix_obsolete(Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalBasis::Basis, initialBasis::Basis, 
-                                            grid::Radial.Grid, settings::PhotoExcitation.Settings)`  
-        ... to compute the transition matrix (O^Mp_rs) = (<finalCSF_r|| O^Mp (omega; gauge) ||initialCSF_s>) of the Mp multiplet field 
-            for the given transition energy and gauge, and between the CSF_r from the finalBasis and the CSF_s from the initialBasis. 
-            A (non-quadratic) matrix::Array{Float64,2} with dimensions [length(finalBasis.csfs) x length(initialBasis.csfs)] is returned. 
-            Note that this transition matrix is specific to transitions of the given multipolarity and omega.
-    """
-    function computeMatrix_obsolete(Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalBasis::Basis, initialBasis::Basis, 
-                                    grid::Radial.Grid, settings::PhotoExcitation.Settings)
-        nf = length(finalBasis.csfs);    ni = length(initialBasis.csfs)
-  
-        print("Compute radiative T^L matrix of dimension $nf x $ni for the given initial- and final-state bases ...")
-        matrix = zeros(Float64, nf, ni)
-        for  r = 1:nf
-            for  s = 1:ni
-                wa = compute("angular coefficients: 1-p, Ratip2013", Mp.L, finalBasis.csfs[r], initialBasis.csfs[s])
-                me = 0.
-                for  coeff in wa
-                    jj = Basics.subshell_2j(finalBasis.orbitals[coeff.a].subshell)
-                    me = me + coeff.T * sqrt( jj + 1) * InteractionStrength.multipole(Mp, gauge, omega, finalBasis.orbitals[coeff.a],  
-                                                                                                            initialBasis.orbitals[coeff.b], grid)
-                end
-                matrix[r,s] = me
-            end
-        end 
-        println("   ... done.")
-        return( matrix )
-    end
-
-
-    """
     `PhotoExcitation.computeStatisticalTensor(k::Int64, q::Int64, line::PhotoExcitation.Line, stokes::ExpStokes)`  
         ... to compute the statistical tensor (component) rho_{k,q} of the final level for the excitation of unpolarized atoms by 
             plane-wave photons, whose polarization is described by the given (experimental) Stokes parameters. 
@@ -343,22 +308,16 @@ module PhotoExcitation
             zero during the initialization process.  
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoExcitation.Settings)
-        if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
-        else                          selectLines   = false
-        end
-    
         lines = PhotoExcitation.Line[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  f = 1:length(finalMultiplet.levels)
-                if  selectLines  &&  !(haskey(selectedLines, (i,f)) )    continue   end
-                ##x println("PhotoExcitation.determineLines-aa: angular i = $i, f = $f")
-                omega    = abs( finalMultiplet.levels[f].energy - initialMultiplet.levels[i].energy) + settings.photonEnergyShift
-                if   omega == 0.  ||  omega < settings.mimimumPhotonEnergy  ||  omega > settings.maximumPhotonEnergy    continue   end  
-
-                channels = PhotoExcitation.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings)
-                if   length(channels) == 0   continue   end
-                push!( lines, PhotoExcitation.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], omega, EmProperty(0., 0.), 
-                                                   TensorComp[], true, channels) )
+        for  iLevel  in  initialMultiplet.levels
+            for  fLevel  in  finalMultiplet.levels
+                if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    omega    = abs( fLevel.energy - iLevel.energy) + settings.photonEnergyShift
+                    if   omega == 0.  ||  omega < settings.mimimumPhotonEnergy  ||  omega > settings.maximumPhotonEnergy    continue   end  
+                    channels = PhotoExcitation.determineChannels(fLevel, iLevel, settings)
+                    if   length(channels) == 0   continue   end
+                    push!( lines, PhotoExcitation.Line(iLevel, fLevel, omega, EmProperty(0., 0.), TensorComp[], true, channels) )
+                end
             end
         end
         return( lines )
@@ -371,17 +330,18 @@ module PhotoExcitation
             selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{PhotoExcitation.Line,1})
+        nx = 120
         println(" ")
         println("  Selected photo-excitation lines:")
         println(" ")
-        println("  ", TableStrings.hLine(120))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
         sa = sa * TableStrings.center(14, "Energy"; na=4);              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.flushleft(30, "List of multipoles"; na=4);             sb = sb * TableStrings.hBlank(34)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(120)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -397,7 +357,7 @@ module PhotoExcitation
             sa = sa * TableStrings.multipoleGaugeTupels(50, mpGaugeList)
             println( sa )
         end
-        println("  ", TableStrings.hLine(120))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -409,10 +369,11 @@ module PhotoExcitation
             is returned otherwise.
     """
     function  displayCrossSections(stream::IO, lines::Array{PhotoExcitation.Line,1}, settings::PhotoExcitation.Settings)
+        nx = 105
         println(stream, " ")
         println(stream, "  Photo-excitation cross sections for (completely) linearly-polarized plane-wave photons:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(105))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -422,7 +383,7 @@ module PhotoExcitation
         sa = sa * TableStrings.center(30, "Cou -- Cross section -- Bab"; na=2);       
         sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section")*"          "*
                                               TableStrings.inUnits("cross section"); na=2)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(105)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -442,7 +403,7 @@ module PhotoExcitation
             ##x sa = sa * @sprintf("%.6e", line.anisotropy.Babushkin)    * "    "
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(105))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         #
         if  settings.calcForStokes
@@ -450,7 +411,7 @@ module PhotoExcitation
             println(stream, " ")
             println(stream, "  Photo-excitation cross sections for incident plane-wave photons with given $stokes:")
             println(stream, " ")
-            println(stream, "  ", TableStrings.hLine(105))
+            println(stream, "  ", TableStrings.hLine(nx))
             sa = "  ";   sb = "  "
             sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
             sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -460,7 +421,7 @@ module PhotoExcitation
             sa = sa * TableStrings.center(30, "Cou -- Cross section -- Bab"; na=2);       
             sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section")*"          "*
                                                   TableStrings.inUnits("cross section"); na=2)
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(105)) 
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
             for  line in lines
                 sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                                fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -478,17 +439,18 @@ module PhotoExcitation
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", crossSection.Babushkin))   * "    "
                 println(stream, sa)
             end
-            println(stream, "  ", TableStrings.hLine(105))
+            println(stream, "  ", TableStrings.hLine(nx))
         end
         #
         #
         if  settings.calcTensors
+            nx = 145
             stokes = settings.stokes
             println(stream, " ")
             println(stream, "  Statistical tensors rho_kq  and alignment parameters A_kq for the excitation by incident plane-wave photons")
             println(stream, "  with given $stokes:")
             println(stream, " ")
-            println(stream, "  ", TableStrings.hLine(145))
+            println(stream, "  ", TableStrings.hLine(nx))
             sa = "  ";   sb = "  "
             sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
             sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -498,7 +460,7 @@ module PhotoExcitation
             sa = sa * TableStrings.center(12, "     k    q    "; na=0);                   sb = sb * TableStrings.hBlank(14)
             sa = sa * TableStrings.center(26, "Cou -- rho_kq -- Bab"; na=5);              sb = sb * TableStrings.hBlank(14)   
             sa = sa * TableStrings.center(26, "Cou --  A_kq  -- Bab"; na=2);              sb = sb * TableStrings.hBlank(14)   
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(145)) 
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
             for  line in lines
                 sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                                fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -528,7 +490,7 @@ module PhotoExcitation
                     end
                 end
             end
-            println(stream, "  ", TableStrings.hLine(145))
+            println(stream, "  ", TableStrings.hLine(nx))
         end
         #
         #

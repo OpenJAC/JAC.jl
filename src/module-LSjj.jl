@@ -240,8 +240,6 @@ function expandLevelsIntoLS(multiplet::Multiplet, settings::ManyElectron.LSjjSet
         # Create a dictionary of (empty) eigenvectors for the selected levels
         mcVectors = Dict{Int64, Array{Float64,1}}()
         for index in indexList    mcVectors = Base.merge( mcVectors, Dict(index => zeros(ncsfs)) )    end
-        ##x println("mcVectors = $mcVectors")
-        ##x println("indexList = $indexList")
         
         # Expand in terms, if requested, all relativistic CSF into the nonrelativistic basis
         for  r = 1:length(multiplet.levels[1].basis.csfs)
@@ -255,7 +253,6 @@ function expandLevelsIntoLS(multiplet::Multiplet, settings::ManyElectron.LSjjSet
             for  levelR  in  multiplet.levels  
                 if  levelR.index  in  indexList
                     mcLevel = levelR.mc[r]
-                    ##x println("levelR.index = $(levelR.index)  mcLevel = $mcLevel  mcCsfR = $mcCsfR")
                     mcVectors[levelR.index] = mcVectors[levelR.index] + mcLevel * mcCsfR
                 end
             end
@@ -398,7 +395,6 @@ function expandCsfRintoNonrelativisticBasis(openShells::OneOpenShell, csfR::CsfR
         for  s = 1:length(basisNR.csfs)
             csfNR = basisNR.csfs[s]
             if  csfR.J != csfNR.J   
-                ##x println("yyy: Jr = $(csfR.J)  Jnr = $(csfNR.J) ")
                 push!( mcVector, 0.)
             else
                 me = 0.
@@ -421,7 +417,6 @@ function expandCsfRintoNonrelativisticBasis(openShells::OneOpenShell, csfR::CsfR
         end
     end
     #
-    ##x println("expandCsfRintoNonrelativisticBasis():: mcVector = $mcVector")
     return( mcVector )
 end
 
@@ -499,7 +494,6 @@ function expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::Csf
                     for  T2 in T2List
                         wa1 = LSjj.getLSjjCoefficient(rsh1.l, N1, LS_jj_qn(w1, QQ1, LL1, SS1, Basics.twice(T1), Nm1, QQm1, JJm1, QQp1, JJp1) )
                         wa2 = LSjj.getLSjjCoefficient(rsh2.l, N2, LS_jj_qn(w2, QQ2, LL2, SS2, Basics.twice(T2), Nm2, QQm2, JJm2, QQp2, JJp2) )
-                        ##x println("T1 = $T1   T2 = $T2   wa1 = $wa1   wa2 = $wa2")
                         if AngularMomentum.triangularDelta(T1,Jm1,Jp1) == 1  &&  T1 == Xp1
                             me  = me + sqrt(AngularMomentum.bracket([T1, T2, L12, S12])) * AngularMomentum.Wigner_9j(L1,S1,T1, L2,S2,T2, L12,S12,J) *
                                        ## phase from Valeria (2020) which seem to have no effect upon the expansion
@@ -514,7 +508,6 @@ function expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::Csf
         end
     end
     #
-    ##x println("expandCsfRintoNonrelativisticBasis():: mcVector = $mcVector")
     return( mcVector )
 end
 
@@ -620,7 +613,6 @@ function expandCsfRintoNonrelativisticBasis(openShells::ThreeOpenShells, csfR::C
         end
     end
     #
-    ##x println("expandCsfRintoNonrelativisticBasis():: mcVector = $mcVector")
     return( mcVector )
 end
 
@@ -678,7 +670,6 @@ function extractOpenShellQNfromCsfNR(csfNR::CsfNR, basisNR::BasisNR)
         end
     end
     
-    ##x println("LSjj.extractShellOccupationFromCsfNR()::  csfNR = $csfNR  \n  wa = $wa")
     return( wa )
 end
 
@@ -694,7 +685,6 @@ function generateNonrelativisticCsfList(confList::Array{Configuration,1}, shellL
 
     # Cycle through all configurations 
     for conf  in  confList
-        ##x println("conf = $conf")
         first = true;    parity  = Basics.determineParity(conf)
         for  shell  in shellList
             if   shell  in  keys(conf.shells)    occ = conf.shells[shell]    else    occ = 0    end

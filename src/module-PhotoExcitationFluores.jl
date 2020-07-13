@@ -16,16 +16,14 @@ module PhotoExcitationFluores
 
         + multipoles              ::Array{EmMultipole,1}   ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge,1}      ... Specifies the gauges to be included into the computations.
-        + printBefore  ::Bool                   ... True, if all energies and lines are printed before their evaluation.
-        + selectPathways          ::Bool                   ... True if particular pathways are selected for the computations.
-        + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
+        + printBefore             ::Bool                   ... True, if all energies and lines are printed before their evaluation.
+        + pathwaySelection        ::PathwaySelection       ... Specifies the selected levels/pathways, if any.
     """
     struct Settings
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge,1} 
-        printBefore    ::Bool
-        selectPathways            ::Bool
-        selectedPathways          ::Array{Tuple{Int64,Int64,Int64},1}
+        printBefore               ::Bool  
+        pathwaySelection          ::PathwaySelection
      end 
 
 
@@ -34,7 +32,7 @@ module PhotoExcitationFluores
         ... constructor for the default values of photon-impact excitation-autoionizaton settings.
     """
     function Settings()
-        Settings( Basics.EmMultipole[], UseGauge[], false,  false, Tuple{Int64,Int64,Int64}[])
+        Settings( Basics.EmMultipole[], UseGauge[], false,  PathwaySelection() )
     end
 
 
@@ -43,25 +41,9 @@ module PhotoExcitationFluores
     function Base.show(io::IO, settings::PhotoExcitationFluores.Settings) 
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
-        println(io, "printBefore:  $(settings.printBefore)  ")
-        println(io, "selectPathways:          $(settings.selectPathways)  ")
-        println(io, "selectedPathways:        $(settings.selectedPathways)  ")
+        println(io, "printBefore:             $(settings.printBefore)  ")
+        println(io, "pathwaySelection:        $(settings.pathwaySelection)  ")
     end
-
-
-    #==
-    """
-    `struct  PhotoExcitationFluores.Channel`  
-        ... defines a type for a photon-impact excitaton & autoionization channel that specifies 
-            all quantum numbers, phases and amplitudes.
-
-        + excitationChannel  ::PhotoEmission.Channel       ... Channel that describes the photon-impact excitation process.
-        + augerChannel       ::AutoIonization.Channel      ... Channel that describes the subsequent Auger/autoionization process.
-    """
-    struct  Channel
-        excitationChannel    ::PhotoEmission.Channel
-        augerChannel         ::AutoIonization.Channel
-    end ==#
 
 
     """
@@ -190,25 +172,20 @@ module PhotoExcitationFluores
     """
     function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                 settings::PhotoExcitationFluores.Settings)
-        if    settings.selectPathways    selectPathways = true;    
-              selectedPathways = Basics.determineSelectedPathways(settings.selectedPathways, initialMultiplet, intermediateMultiplet, finalMultiplet)
-        else                             selectPathways = false
-        end
-    
         pathways = PhotoExcitationFluores.Pathway[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  n = 1:length(intermediateMultiplet.levels)
-                for  f = 1:length(finalMultiplet.levels)
-                    if  selectPathways  &&  !((i,n,f) in selectedPathways )    continue   end
-                    eEnergy = intermediateMultiplet.levels[n].energy - initialMultiplet.levels[i].energy
-                    fEnergy = intermediateMultiplet.levels[n].energy - finalMultiplet.levels[f].energy
-                    if  eEnergy < 0.   ||   fEnergy < 0.    continue    end
-
-                    rSettings = PhotoEmission.Settings( settings.multipoles, settings.gauges, false, false, false, Tuple{Int64,Int64}[], 0., 0., 0.)
-                    eChannels = PhotoEmission.determineChannels(intermediateMultiplet.levels[n], initialMultiplet.levels[i], rSettings) 
-                    fChannels = PhotoEmission.determineChannels(finalMultiplet.levels[f], intermediateMultiplet.levels[n], rSettings) 
-                    push!( pathways, PhotoExcitationFluores.Pathway(initialMultiplet.levels[i], intermediateMultiplet.levels[i], finalMultiplet.levels[f], 
-                                                                    eEnergy, fEnergy, EmProperty(0., 0.), true, eChannels, fChannels) )
+        for  iLevel  in  initialMultiplet.levels
+            for  nLevel  in  intermediateMultiplet.levels
+                for  fLevel  in  finalMultiplet.levels
+                    if  Basics.selectLevelTriple(iLevel, nLevel, fLevel, settings.pathwaySelection)
+                        eEnergy = nLevel.energy - iLevel.energy
+                        fEnergy = nLevel.energy - fLevel.energy
+                        if  eEnergy < 0.   ||   fEnergy < 0.    continue    end
+                        rSettings = PhotoEmission.Settings( settings.multipoles, settings.gauges, false, false, LineSelection(), 0., 0., 0.)
+                        eChannels = PhotoEmission.determineChannels(nLevel, iLevel, rSettings) 
+                        fChannels = PhotoEmission.determineChannels(fLevel, nLevel, rSettings) 
+                        push!( pathways, PhotoExcitationFluores.Pathway(iLevel, nLevel, fLevel, eEnergy, fEnergy, EmProperty(0., 0.), 
+                                                                        true, eChannels, fChannels) )
+                    end
                 end
             end
         end
@@ -223,10 +200,11 @@ module PhotoExcitationFluores
             is returned otherwise.
     """
     function  displayResults(stream::IO, pathways::Array{PhotoExcitationFluores.Pathway,1}, settings::PhotoExcitationFluores.Settings)
+        nx = 150
         println(stream, " ")
         println(stream, "  Partial excitation & fluorescence cross sections:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(150))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "    ";   sb = "    "
         sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  e  --  f"; na=2);          
         sa = sa * TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * TableStrings.center(23, "i  --  e  --  f"; na=2);
@@ -237,7 +215,7 @@ module PhotoExcitationFluores
         sa = sa * TableStrings.center(36, "Cou -- cross sections -- Bab";        na=2)
         sb = sb * TableStrings.center(36, TableStrings.inUnits("cross section") * "          " * 
                                               TableStrings.inUnits("cross section"); na=3)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(150)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
             sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
@@ -266,7 +244,7 @@ module PhotoExcitationFluores
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection.Babushkin))   * "  "
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(150))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

@@ -355,8 +355,7 @@ module BascisPerform
         # Specify the AsfSettings for the given RAS step
         asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    
                                   settings.maxIterationsScf, settings.accuracyScf, Subshell[], frozenSubshells, 
-                                  CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), 
-                                  settings.selectLevelsCI, settings.selectedLevelsCI, false, LevelSymmetry[] ) 
+                                  CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), settings.levelSelectionCI ) 
 
         basis = JAC.Bsplines.solveSelfConsistentMeanField(wa, nuclearModel, basis, asfSettings; printout=printout) 
         
@@ -492,7 +491,8 @@ module BascisPerform
         multiplets = Multiplet[]
         for  (sym,v) in  symmetries
             # Skip the symmetry block if it not selected
-            if  settings.selectSymmetriesCI    &&   !(sym in settings.selectedSymmetriesCI)     continue    end
+            @show  sym, settings.levelSelectionCI,  Basics.selectSymmetry(sym, settings.levelSelectionCI)
+            if  !Basics.selectSymmetry(sym, settings.levelSelectionCI)     continue    end
             matrix = compute("matrix: CI, J^P symmetry", sym, basis, nuclearModel, grid, settings; printout=printout)
             eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
             levels = Level[]
@@ -515,20 +515,8 @@ module BascisPerform
         
         # Determine the level list to be printed out
         levelNos = Int64[]
-        if      settings.selectLevelsCI  &&  settings.selectSymmetriesCI
-            for (ilev, level) in  enumerate(mp.levels)
-                if  LevelSymmetry(level.J, level.parity)  in  settings.selectedSymmetriesCI  &&  ilev in  settings.selectedLevelsCI 
-                    push!(levelNos, ilev)       
-                end
-            end
-        elseif  settings.selectLevelsCI
-            levels = deepcopy(settings.selectedLevelsCI)
-        elseif  settings.selectSymmetriesCI
-            for (ilev, level) in  enumerate(mp.levels)
-                if  LevelSymmetry(level.J, level.parity)  in  settings.selectedSymmetriesCI     push!(levelNos, ilev)   end
-            end
-        else
-            for (ilev, level) in  enumerate(mp.levels)       push!(levelNos, ilev)   end
+        for (ilev, level) in  enumerate(mp.levels)
+            if  Basics.selectLevel(level, settings.levelSelectionCI)    push!(levelNos, ilev)    end
         end
         
         # Display all level energies and energy splittings

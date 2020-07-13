@@ -16,9 +16,8 @@ module MultiPhotonDoubleIon
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + NoPhotons               ::Int64                        ... Number of photons in the multi-photon ionization
         + photonEnergies          ::Array{Float64,1}             ... List of photon energies.
-        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
 
     """
     struct Settings 
@@ -26,9 +25,8 @@ module MultiPhotonDoubleIon
         gauges                    ::Array{UseGauge}
         NoPhotons                 ::Int64
         photonEnergies            ::Array{Float64,1} 
-        printBefore    ::Bool
-        selectLines               ::Bool
-        selectedLines             ::Array{Tuple{Int64,Int64},1} 
+        printBefore               ::Bool  
+        lineSelection             ::LineSelection
     end 
 
 
@@ -36,7 +34,7 @@ module MultiPhotonDoubleIon
     `MultiPhotonDoubleIon.Settings()`  ... constructor for the default values of multi-photon two-electron (double) ionization estimates.
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], 0, Float64[], false, false, Tuple{Int64,Int64}[])
+        Settings(EmMultipole[], UseGauge[], 0, Float64[], false, LineSelection() )
     end
 
 
@@ -47,9 +45,8 @@ module MultiPhotonDoubleIon
         println(io, "gauges:                   $(settings.gauges)  ")
         println(io, "NoPhotons:                $(settings.NoPhotons)  ")
         println(io, "photonEnergies:           $(settings.photonEnergies)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
-        println(io, "selectLines:              $(settings.selectLines)  ")
-        println(io, "selectedLines:            $(settings.selectedLines)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "lineSelection:            $(settings.lineSelection)  ")
     end
 
 

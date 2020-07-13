@@ -12,18 +12,16 @@ module ImpactExcitation
 
         + electronEnergies        ::Array{Float64,1}             ... List of impact-energies of the incoming elecgtrons.
         + includeBreit            ::Bool                         ... True if the Breit interaction is to be included, and false otherwise.
-        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True if particular lines are selected for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
         + maxKappa                ::Int64                        ... Maximum kappa value of partial waves to be included.
         + energyShift             ::Float64                      ... An overall energy shift for all transitions |i> --> |f>.
     """
     struct Settings
         electronEnergies          ::Array{Float64,1}
         includeBreit              ::Bool
-        printBefore    ::Bool 
-        selectLines               ::Bool 
-        selectedLines             ::Array{Tuple{Int64,Int64},1}
+        printBefore               ::Bool 
+        lineSelection             ::LineSelection  
         maxKappa                  ::Int64
         energyShift               ::Float64    
     end 
@@ -33,7 +31,7 @@ module ImpactExcitation
     `ImpactExcitation.Settings()`  ... constructor for the default values of electron-impact excitation line computations.
     """
     function Settings()
-       Settings( Float64[], false, false, false, Tuple{Int64,Int64}[], 0, 0.)
+       Settings( Float64[], false, false, LineSelection(), 0, 0.)
     end
 
 
@@ -41,9 +39,8 @@ module ImpactExcitation
     function Base.show(io::IO, settings::ImpactExcitation.Settings) 
         println(io, "electronEnergies:           $(settings.electronEnergies)  ")
         println(io, "includeBreit:               $(settings.includeBreit)  ")
-        println(io, "printBefore:     $(settings.printBefore)  ")
-        println(io, "selectLines:                $(settings.selectLines)  ")
-        println(io, "selectedLines:              $(settings.selectedLines)  ")
+        println(io, "printBefore:                $(settings.printBefore)  ")
+        println(io, "lineSelection:              $(settings.lineSelection)  ")
         println(io, "maxKappa:                   $(settings.maxKappa)  ")
         println(io, "energyShift:                $(settings.energyShift)  ")
     end
@@ -246,22 +243,17 @@ module ImpactExcitation
             returned. Apart from the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::ImpactExcitation.Settings)
-        if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
-        else                          selectLines   = false
-        end
-    
         lines = ImpactExcitation.Line[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  f = 1:length(finalMultiplet.levels)
-                if  selectLines  &&  !(haskey(selectedLines, (i,f)) )    continue   end
-                for  en in settings.electronEnergies
-                    initialElectronEnergy  = en
-                    finalElectronEnergy    = en - (initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy) + settings.energyShift
-                    if  finalElectronEnergy < 0    continue   end  
-
-                    channels = ImpactExcitation.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
-                    push!( lines, ImpactExcitation.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], 
-                                                        initialElectronEnergy, finalElectronEnergy, 0., true, channels) )
+        for  iLevel  in  initialMultiplet.levels
+            for  fLevel  in  finalMultiplet.levels
+                if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    for  en in settings.electronEnergies
+                        initialElectronEnergy  = en
+                        finalElectronEnergy    = en - (iLevel.energy - fLevel.energy) + settings.energyShift
+                        if  finalElectronEnergy < 0    continue   end  
+                        channels = ImpactExcitation.determineChannels(fLevel, iLevel, settings) 
+                        push!( lines, ImpactExcitation.Line(iLevel, fLevel, initialElectronEnergy, finalElectronEnergy, 0., true, channels) )
+                    end
                 end
             end
         end
@@ -275,10 +267,11 @@ module ImpactExcitation
             selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{ImpactExcitation.Line,1})
+        nx = 180
         println(" ")
         println("  Selected electron-impact ionization lines:")
         println(" ")
-        println("  ", TableStrings.hLine(180))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=3);                                sb = sb * TableStrings.hBlank(22)
@@ -290,7 +283,7 @@ module ImpactExcitation
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.flushleft(57, "List of partial waves and total symmetries"; na=4)  
         sb = sb * TableStrings.flushleft(57, "partial-in [total J^P] partial-out        "; na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(180)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #
         NoLines = 0   
         for  line in lines
@@ -318,7 +311,7 @@ module ImpactExcitation
                break   
             end
         end
-        println("  ", TableStrings.hLine(180))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -330,10 +323,11 @@ module ImpactExcitation
             returned otherwise.
     """
     function  displayResults(lines::Array{ImpactExcitation.Line,1})
+        nx = 113
         println(" ")
         println("  Electron-impact excitation cross sections:")
         println(" ")
-        println("  ", TableStrings.hLine(113))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
@@ -346,7 +340,7 @@ module ImpactExcitation
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
         sa = sa * TableStrings.center(15, "Cross section"; na=3)      
         sb = sb * TableStrings.center(15, TableStrings.inUnits("cross section"); na=3)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(113)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -360,7 +354,7 @@ module ImpactExcitation
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection))    * "    "
             println(sa)
         end
-        println("  ", TableStrings.hLine(113))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

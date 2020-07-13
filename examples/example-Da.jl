@@ -5,7 +5,7 @@ println("Da) Test of the PhotoEmission module with ASF from an internally genera
 setDefaults("unit: rate", "1/s")
 setDefaults("print summary: open", "zzz-radiative.sum")
 
-if  false
+if  true
 
     grid = Radial.Grid(true)
     setDefaults("standard grid", grid)

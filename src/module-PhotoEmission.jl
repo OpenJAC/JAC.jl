@@ -18,8 +18,7 @@ module PhotoEmission
         + calcAnisotropy          ::Bool                    ... True, if the anisotropy (structure) functions are to be 
                                                                 calculated and false otherwise 
         + printBefore             ::Bool                    ... True, if all energies and lines are printed before comput.
-        + selectLines             ::Bool                    ... True, if lines are selected individually for the computat.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines as tupels (inital-level, final-level).
+        + lineSelection           ::LineSelection          ... Specifies the selected levels, if any.
         + photonEnergyShift       ::Float64                 ... An overall energy shift for all photon energies.
         + mimimumPhotonEnergy     ::Float64                 ... minimum transition energy for which (photon) transitions 
                                                                 are included into the computation.
@@ -30,9 +29,8 @@ module PhotoEmission
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge}
         calcAnisotropy            ::Bool         
-        printBefore               ::Bool
-        selectLines               ::Bool
-        selectedLines             ::Array{Tuple{Int64,Int64},1}
+        printBefore               ::Bool 
+        lineSelection             ::LineSelection 
         photonEnergyShift         ::Float64
         mimimumPhotonEnergy       ::Float64   
         maximumPhotonEnergy       ::Float64     
@@ -43,7 +41,7 @@ module PhotoEmission
     `PhotoEmission.Settings()`  ... constructor for the default values of radiative line computations
     """
     function Settings()
-        Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], false, false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 10000.)
+        Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], false, false, LineSelection(), 0., 0., 10000.)
     end
 
 
@@ -51,7 +49,7 @@ module PhotoEmission
     `PhotoEmission.Settings(set::PhotoEmission.Settings;`
     
             multipoles::=..,        gauges=..,          calcAnisotropy=..,          printBefore=..,
-            selectLines=..,         selectedLines=..,   photonEnergyShift=..,       mimimumPhotonEnergy=.., 
+            line=..,         selectedLines=..,   photonEnergyShift=..,       mimimumPhotonEnergy=.., 
             maximumPhotonEnergy=..) 
                         
         ... constructor for modifying the given PhotoEmission.Settings by 'overwriting' the previously selected parameters.
@@ -59,7 +57,7 @@ module PhotoEmission
     function Settings(set::PhotoEmission.Settings;    
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    gauges::Union{Nothing,Array{UseGauge}}=nothing,
         calcAnisotropy::Union{Nothing,Bool}=nothing,                printBefore::Union{Nothing,Bool}=nothing,
-        selectLines::Union{Nothing,Bool}=nothing,                   selectedLines::Union{Nothing,Array{Tuple{Int64,Int64},1}}=nothing,
+        lineSelection::Union{Nothing,LineSelection}=nothing, 
         photonEnergyShift::Union{Nothing,Float64}=nothing,          mimimumPhotonEnergy::Union{Nothing,Float64}=nothing, 
         maximumPhotonEnergy::Union{Nothing,Float64}=nothing)
         
@@ -67,13 +65,12 @@ module PhotoEmission
         if  gauges              == nothing   gaugesx              = set.gauges                  else  gaugesx              = gauges                end 
         if  calcAnisotropy      == nothing   calcAnisotropyx      = set.calcAnisotropy          else  calcAnisotropyx      = calcAnisotropy        end 
         if  printBefore         == nothing   printBeforex         = set.printBefore             else  printBeforex         = printBefore           end 
-        if  selectLines         == nothing   selectLinesx         = set.selectLines             else  selectLinesx         = selectLines           end 
-        if  selectedLines       == nothing   selectedLinesx       = set.selectedLines           else  selectedLinesx       = selectedLines         end 
+        if  lineSelection       == nothing   lineSelectionx       = set.lineSelection           else  lineSelectionx       = lineSelection         end 
         if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift       else  photonEnergyShiftx   = photonEnergyShift     end 
         if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy     else  mimimumPhotonEnergyx = mimimumPhotonEnergy   end 
         if  maximumPhotonEnergy == nothing   maximumPhotonEnergyx = set.maximumPhotonEnergy     else  maximumPhotonEnergyx = maximumPhotonEnergy   end 
         
-        Settings( multipolesx, gaugesx, calcAnisotropyx, printBeforex, selectLinesx, selectedLinesx, 
+        Settings( multipolesx, gaugesx, calcAnisotropyx, printBeforex, lineSelectionx,    ## selectLinesx, selectedLinesx, 
                   photonEnergyShiftx, mimimumPhotonEnergyx, maximumPhotonEnergyx)
     end
 
@@ -84,8 +81,7 @@ module PhotoEmission
         println(io, "gauges:                 $(settings.gauges)  ")
         println(io, "calcAnisotropy:         $(settings.calcAnisotropy)  ")
         println(io, "printBefore:            $(settings.printBefore)  ")
-        println(io, "selectLines:            $(settings.selectLines)  ")
-        println(io, "selectedLines:          $(settings.selectedLines)  ")
+        println(io, "lineSelection:          $(settings.lineSelection)  ")
         println(io, "photonEnergyShift:      $(settings.photonEnergyShift)  ")
         println(io, "mimimumPhotonEnergy:    $(settings.mimimumPhotonEnergy)  ")
         println(io, "maximumPhotonEnergy:    $(settings.maximumPhotonEnergy)  ")
@@ -328,49 +324,6 @@ module PhotoEmission
 
 
     """
-    `PhotoEmission.computeMatrix_obsolete(Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid,
-                                 settings::PhotoEmission.Settings)`  
-        ... to compute the transition matrix (O^Mp_rs) = (<finalCSF_r|| O^Mp (omega; gauge) ||initialCSF_s>)   of the 
-            Mp multiplet field for the given transition energy and gauge, and between the CSF_r from the basis of the finalLevel 
-            and the CSF_s from the basis of the initialLevel. A (non-quadratic) matrix::Array{Float64,2} with dimensions 
-            [length(finalBasis.csfs) x length(initialBasis.csfs)] is returned. Note that this transition matrix is specific 
-            to a particular transitions with the given multipolarity and omega.
-    """
-    function computeMatrix_obsolete(Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid, 
-                           settings::PhotoEmission.Settings)
-        nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
-  
-        print("Compute radiative $(Mp) matrix of dimension $nf x $ni in the initial- and final-state bases for the transition " *
-              "[$(initialLevel.index)-$(finalLevel.index)] ... ")
-        matrix = zeros(ComplexF64, nf, ni)
-        for  r = 1:nf
-            if  finalLevel.basis.csfs[r].J != finalLevel.J          ||  finalLevel.basis.csfs[r].parity   != finalLevel.parity    continue    end 
-            for  s = 1:ni
-                if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity  continue    end 
-                ##x wb = compute("angular coefficients: 1-p, Ratip2013",  Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
-                wa = compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
-                me = 0.
-                for  coeff in wa
-                    ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
-                    jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
-                    MbaCheng  = InteractionStrength.MbaEmissionCheng(Mp, gauge, omega, finalLevel.basis.orbitals[coeff.a],  
-                                                                                   initialLevel.basis.orbitals[coeff.b], grid)
-                    MbaAndrey = InteractionStrength.MbaEmissionAndrey(Mp, gauge, omega, finalLevel.basis.orbitals[coeff.a],  
-                                                                                    initialLevel.basis.orbitals[coeff.b], grid)
-                    ##x println("M-Cheng = $MbaCheng,  M-Andrey = $MbaAndrey,  a = $(coeff.a),  b = $(coeff.b),  T = $(coeff.T)")
-                    me = me + coeff.T *   ## sqrt( (ja + 1)/(jb + 1) ) * ##   0.707106781186548 *
-                              InteractionStrength.MbaEmissionCheng(Mp, gauge, omega, finalLevel.basis.orbitals[coeff.a],  
-                                                                                 initialLevel.basis.orbitals[coeff.b], grid)
-                end
-                matrix[r,s] = me
-            end
-        end 
-        println("done.")
-        return( matrix )
-    end
-
-
-    """
     `PhotoEmission.determineChannels(finalLevel::Level, initialLevel::Level, settings::PhotoEmission.Settings)`  
         ... to determine a list of PhotoEmission.Channel for a transitions from the initial to final level and by taking into 
             account the particular settings of for this computation; an Array{PhotoEmission.Channel,1} is returned.
@@ -403,22 +356,17 @@ module PhotoEmission
             to zero during the initialization process.  
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoEmission.Settings)
-        if    settings.selectLines    selectLines   = true
-            selectedLines = Basics.determineSelectedLines(settings.selectedLines, initialMultiplet, finalMultiplet)
-        else                          selectLines   = false
-        end
-    
         lines = PhotoEmission.Line[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  f = 1:length(finalMultiplet.levels)
-                if  selectLines  &&  !((i,f) in selectedLines )    continue   end
-                omega = initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy   + settings.photonEnergyShift
-                if  omega <= settings.mimimumPhotonEnergy  ||  omega > settings.maximumPhotonEnergy    continue   end  
+        for  iLevel  in  initialMultiplet.levels
+            for  fLevel  in  finalMultiplet.levels
+                if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    omega = iLevel.energy - fLevel.energy   + settings.photonEnergyShift
+                    if  omega <= settings.mimimumPhotonEnergy  ||  omega > settings.maximumPhotonEnergy    continue   end  
 
-                channels = PhotoEmission.determineChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
-                if   length(channels) == 0   continue   end
-                push!( lines, PhotoEmission.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], omega, EmProperty(0., 0.), EmProperty(0., 0.),
-                                             true, channels) )
+                    channels = PhotoEmission.determineChannels(fLevel, iLevel, settings) 
+                    if   length(channels) == 0   continue   end
+                    push!( lines, PhotoEmission.Line(iLevel, fLevel, omega, EmProperty(0., 0.), EmProperty(0., 0.), true, channels) )
+                end
             end
         end
         return( lines )
@@ -431,10 +379,11 @@ module PhotoEmission
             returned otherwise.
     """
     function  displayAnisotropies(stream::IO, lines::Array{PhotoEmission.Line,1})
+        nx = 153
         println(stream, " ")
         println(stream, "  Anisotropy (structure) functions:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(153))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -445,7 +394,7 @@ module PhotoEmission
         sa = sa * TableStrings.center(14, "f_2 (Babushkin)"; na=3);       
         sa = sa * TableStrings.center(14, "f_4 (Coulomb)";   na=3);       
         sa = sa * TableStrings.center(14, "f_4 (Babushkin)"; na=3);       
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(153)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             f2Coulomb   = 0.0im;    f2Babushkin   = 0.0im;    f4Coulomb = 0.0im;    f4Babushkin = 0.0im;   mpList = EmMultipole[]
@@ -519,7 +468,7 @@ module PhotoEmission
             sa = sa * TableStrings.flushright(15, @sprintf("%.8e", f4Babushkin.re);  na=3)
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(153))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -555,10 +504,11 @@ module PhotoEmission
             push!(irates, EmProperty( waCoulomb, waBabushkin) )
         end
         
+        nx = 105
         println(stream, " ")
         println(stream, "  PhotoEmission lifetimes (as derived from these computations):")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(105))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                              sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                              sb = sb * TableStrings.hBlank(14)
@@ -569,7 +519,7 @@ module PhotoEmission
         sb = sb * TableStrings.center(26, "[a.u.]"*"          "*TableStrings.inUnits("time"); na=5)
         sa = sa * TableStrings.center(12, "Decay widths"; na=4);       
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(105)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #    
         for  ii = 1:length(ilevels)
             sa = istr[ii]
@@ -583,7 +533,7 @@ module PhotoEmission
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic",     irates[ii].Babushkin) )
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(105))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -595,17 +545,18 @@ module PhotoEmission
             selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{PhotoEmission.Line,1})
+        nx = 95
         println(" ")
         println("  Selected radiative lines:")
         println(" ")
-        println("  ", TableStrings.hLine(95))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
         sa = sa * TableStrings.center(14, "Energy"; na=4);              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.flushleft(30, "List of multipoles"; na=4);             sb = sb * TableStrings.hBlank(34)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(95)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -620,7 +571,7 @@ module PhotoEmission
             sa = sa * TableStrings.multipoleGaugeTupels(50, mpGaugeList)
             println( sa )
         end
-        println("  ", TableStrings.hLine(95))
+        println("  ", TableStrings.hLine(nx))
         println(" ")
         #
         return( nothing )
@@ -633,10 +584,11 @@ module PhotoEmission
             returned otherwise.
     """
     function  displayRates(stream::IO, lines::Array{PhotoEmission.Line,1})
+        nx = 145
         println(stream, " ")
         println(stream, "  Einstein coefficients, transition rates and oscillator strengths:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(145))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -649,7 +601,7 @@ module PhotoEmission
         sa = sa * TableStrings.center(11, "Osc. strength"    ; na=3);                 sb = sb * TableStrings.hBlank(17)
         sa = sa * TableStrings.center(12, "Decay widths"; na=4);       
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(145)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             for  ch in line.channels
@@ -670,7 +622,7 @@ module PhotoEmission
                 println(stream, sa)
             end
         end
-        println(stream, "  ", TableStrings.hLine(145))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

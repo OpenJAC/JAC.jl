@@ -11,15 +11,13 @@ module FormFactor
     `struct  FormFactor.Settings`  ... defines a type for the details and parameters of computing alpha-variation parameters.
 
         + qList                    ::Array{Float64,1} ... List of q-values in [a.u.]
-        + printBefore   ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
-        + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
-        + selectedLevels           ::Array{Level,1}   ... List of selected levels.
+        + printBefore              ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
+        + levelSelection           ::LevelSelection   ... Specifies the selected levels, if any.
     """
     struct Settings 
         qList                      ::Array{Float64,1} 
-        printBefore     ::Bool
-        selectLevels               ::Bool
-        selectedLevels             ::Array{Level,1}
+        printBefore                ::Bool  
+        levelSelection             ::LevelSelection
     end 
 
 
@@ -27,16 +25,15 @@ module FormFactor
     `FormFactor.Settings()`  ... constructor for an `empty` instance of FormFactor.Settings for the computation of atomic form factors.
     """
     function Settings()
-        Settings(Float64[0., 0.1, 1.0, 10.], false, false, Level[])
+        Settings(Float64[0., 0.1, 1.0, 10.], false, LevelSelection() )
     end
 
 
     # `Base.show(io::IO, settings::FormFactor.Settings)`  ... prepares a proper printout of the variable settings::FormFactor.Settings.
     function Base.show(io::IO, settings::FormFactor.Settings) 
         println(io, "qList:                    $(settings.qList)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
-        println(io, "selectLevels:             $(settings.selectLevels)  ")
-        println(io, "selectedLevels:           $(settings.selectedLevels)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "levelSelection:           $(settings.levelSelection)  ")
     end
 
 
@@ -186,7 +183,6 @@ module FormFactor
         # Calculate all amplitudes and requested properties
         newOutcomes = FormFactor.Outcome[]
         for  outcome in outcomes
-            ##x standardFs = Float64[];    modifiedFs = Float64[]
             newOutcome = FormFactor.computeAmplitudesProperties(outcome, nm, grid, settings) 
             push!( newOutcomes, newOutcome)
         end
@@ -209,14 +205,11 @@ module FormFactor
             initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::FormFactor.Settings) 
-        if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
-        else                          selectLevels   = false
-        end
-    
         outcomes = FormFactor.Outcome[]
-        for  i = 1:length(multiplet.levels)
-            if  selectLevels  &&  !(haskey(selectedLevels, i))    continue   end
-            push!( outcomes, FormFactor.Outcome(multiplet.levels[i], settings.qList, Float64[], Float64[] ) )
+        for  level  in  multiplet.levels
+            if  Basics.selectLevel(level, settings.levelSelection)
+                push!( outcomes, FormFactor.Outcome(level, settings.qList, Float64[], Float64[] ) )
+            end
         end
         return( outcomes )
     end
@@ -228,17 +221,18 @@ module FormFactor
             selected levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{FormFactor.Outcome,1})
+        nx = 86
         println(" ")
         println("  Selected FormFactor levels:")
         println(" ")
-        println("  ", TableStrings.hLine(86))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
         sa = sa * TableStrings.center(14, "Energy"; na=4);              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
         sa = sa * "  q-values  ...";                                                      sb = sb * "   [a.u.]"
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(86)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -251,7 +245,7 @@ module FormFactor
             if  length(outcome.qValues) >  3   sa = sa * "...    "   else   sa = sa * "    "             end
             println( sa ) 
         end
-        println("  ", TableStrings.hLine(86))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -263,10 +257,11 @@ module FormFactor
             nothing is returned otherwise.
     """
     function  displayResults(stream::IO, outcomes::Array{FormFactor.Outcome,1})
+        nx = 88
         println(stream, " ")
         println(stream, "  Standard and modified atomic form factors [note F^(standard) (0) = N_e]:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(88))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
@@ -276,7 +271,7 @@ module FormFactor
         sa = sa * TableStrings.center(14, "standard F";     na=1) 
         sa = sa * TableStrings.center(14, "modified F";     na=4) 
         sb = sb * TableStrings.center(14, "    " ; na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(88)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -295,7 +290,7 @@ module FormFactor
                 println(stream, sa )
             end
         end
-        println(stream, "  ", TableStrings.hLine(88), "\n\n")
+        println(stream, "  ", TableStrings.hLine(nx), "\n\n")
         #
         return( nothing )
     end

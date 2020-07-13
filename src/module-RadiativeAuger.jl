@@ -13,9 +13,8 @@ module RadiativeAuger
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + NoEnergySharings        ::Int64                        ... Number of energy sharings that are used in the computations for each line.
-        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
         + minAugerEnergy          ::Float64                      ... Minimum energy of free (Auger) electrons to be included.
         + maxAugerEnergy          ::Float64                      ... Maximum energy of free (Auger) electrons to be included.
         + maxKappa                ::Int6464                      ... Maximum kappa value of partial waves to be included.
@@ -24,9 +23,8 @@ module RadiativeAuger
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         NoEnergySharings          ::Int64
-        printBefore    ::Bool
-        selectLines               ::Bool  
-        selectedLines             ::Array{Tuple{Int64,Int64},1}
+        printBefore               ::Bool  
+        lineSelection             ::LineSelection 
         minAugerEnergy            ::Float64
         maxAugerEnergy            ::Float64
         maxKappa                  ::Int64
@@ -37,7 +35,7 @@ module RadiativeAuger
     `RadiativeAuger.Settings()`  ... constructor for the default values of RadiativeAuger line computations
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], 0, false, false, Array{Tuple{Int64,Int64},1}[], 0., 10e5, 100)
+        Settings(EmMultipole[], UseGauge[], 0, false, false, LineSelection(), 0., 10e5, 100)
     end
 
 
@@ -46,9 +44,8 @@ module RadiativeAuger
         println(io, "multipoles:                   $(settings.multipoles)  ")
         println(io, "gauges:                       $(settings.gauges)  ")
         println(io, "NoEnergySharings:             $(settings.NoEnergySharings)  ")
-        println(io, "printBefore:       $(settings.printBefore)  ")
-        println(io, "selectLines:                  $(settings.selectLines)  ")
-        println(io, "selectedLines:                $(settings.selectedLines)  ")
+        println(io, "printBefore:                  $(settings.printBefore)  ")
+        println(io, "lineSelection:                $(settings.lineSelection)  ")
         println(io, "minAugerEnergy:               $(settings.minAugerEnergy)  ")
         println(io, "maxAugerEnergy:               $(settings.maxAugerEnergy)  ")
         println(io, "maxKappa:                     $(settings.maxKappa)  ")
@@ -206,19 +203,15 @@ module RadiativeAuger
             returned. Apart from the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::RadiativeAuger.Settings)
-        if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
-        else                          selectLines   = false
-        end
-    
         lines = RadiativeAuger.Line[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  f = 1:length(finalMultiplet.levels)
-                if  selectLines  &&  !(haskey(selectedLines, (i,f)) )    continue   end
-                energy    = initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy
-                if  energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
-
-                channels = RadiativeAuger.determineSharingsAndChannels(finalMultiplet.levels[f], initialMultiplet.levels[i], energy, settings) 
-                push!( lines, RadiativeAuger.Line(initialMultiplet.levels[i], finalMultiplet.levels[f], EmProperty(0., 0.,), true, channels) )
+        for  iLevel  in  initialMultiplet.levels
+            for  fLevel  in  finalMultiplet.levels
+                if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    energy    = iLevel.energy - fLevel.energy
+                    if  energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
+                    channels = RadiativeAuger.determineSharingsAndChannels(fLevel, iLevel, energy, settings) 
+                    push!( lines, RadiativeAuger.Line(iLevel, fLevel, EmProperty(0., 0.,), true, channels) )
+                end
             end
         end
         return( lines )
@@ -266,10 +259,11 @@ module RadiativeAuger
             of all selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines(lines::Array{RadiativeAuger.Line,1})
+        nx = 170
         println(" ")
         println("  Selected radiative-Auger lines:")
         println(" ")
-        println("  ", TableStrings.hLine(170))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -277,7 +271,7 @@ module RadiativeAuger
         sb = sb * TableStrings.center(34, "i -- f        omega     e_Auger  "; na=4)
         sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
         sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(170)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -302,7 +296,7 @@ module RadiativeAuger
                 end
             end
         end
-        println("  ", TableStrings.hLine(170))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -313,10 +307,11 @@ module RadiativeAuger
         ... to list all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
     """
     function  displayResults(lines::Array{RadiativeAuger.Line,1})
+        nx = 148
         println(" ")
         println("  Radiative-Auger rates:")
         println(" ")
-        println("  ", TableStrings.hLine(148))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -326,7 +321,7 @@ module RadiativeAuger
         sb = sb * TableStrings.center(30, TableStrings.inUnits("rate") * "          " * TableStrings.inUnits("rate"); na=3)
         sa = sa * TableStrings.center(30, "Cou -- total rate -- Bab"; na=3)      
         sb = sb * TableStrings.center(30, TableStrings.inUnits("rate") * "          " * TableStrings.inUnits("rate"); na=3)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(148)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #  
         for  line in lines
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -349,7 +344,7 @@ module RadiativeAuger
                 println(sa*sb)
             end
         end
-        println("  ", TableStrings.hLine(148))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

@@ -111,9 +111,8 @@ module LandeZeeman
         + includeSchwinger       ::Bool              ... True if Schwinger's QED correction ``\\Delta N^(1)`` is to be included, 
                                                          and false otherwise.
         + BField                 ::Float64           ... Strength of the magnetic field in [Tesla]
-        + printBefore ::Bool              ... True if a list of selected levels is printed before the actual computations start. 
-        + selectLevels           ::Bool              ... true, if specific level (number)s have been selected for computation.
-        + selectedLevels         ::Array{Int64,1}    ... Level number that have been selected.
+        + printBefore            ::Bool              ... True if a list of selected levels is printed before the actual computations start. 
+        + levelSelection         ::LevelSelection    ... Specifies the selected levels, if any.
     """
     struct Settings 
         calcLandeJ               ::Bool
@@ -121,10 +120,9 @@ module LandeZeeman
         calcZeeman               ::Bool
         includeSchwinger         ::Bool
         BField                   ::Float64
-        printBefore   ::Bool 
-        selectLevels             ::Bool
-        selectedLevels           ::Array{Int64,1}
-    end 
+        printBefore              ::Bool 
+        levelSelection           ::LevelSelection
+     end 
 
 
     """
@@ -132,7 +130,7 @@ module LandeZeeman
         ... constructor for an `empty` instance of ZeemanSettings for the computation of isotope M and F parameters.
      """
      function Settings()
-         Settings(false, false, false, false, 0., false, false, Level[])
+         Settings(false, false, false, false, 0., false, LevelSelection() )
     end
 
 
@@ -143,9 +141,8 @@ module LandeZeeman
         println(io, "calcZeeman:               $(settings.calcZeeman)  ")
         println(io, "includeSchwinger:         $(settings.includeSchwinger)  ")
         println(io, "BField:                   $(settings.BField)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
-        println(io, "selectLevels:             $(settings.selectLevels)  ")
-        println(io, "selectedLevels:           $(settings.selectedLevels)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "levelSelection:           $(settings.levelSelection)  ")
     end
 
 
@@ -261,19 +258,15 @@ module LandeZeeman
             still set to zero during the initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::LandeZeeman.Settings) 
-        if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
-        else                          selectLevels   = false
-        end
-
         # Define values that depend on the requested computations
         nuclearI = AngularJ64(0);    hasJsublevels = false;    Jsublevels = LandeZeeman.SublevelJ[]
                                      hasFsublevels = false;    Fsublevels = LandeZeeman.SublevelF[]
 
         outcomes = LandeZeeman.Outcome[]
-        for  i = 1:length(multiplet.levels)
-            if  selectLevels  &&  !(haskey(selectedLevels, i))    continue   end
-            push!( outcomes, LandeZeeman.Outcome(multiplet.levels[i], 0., 0., 0., nuclearI, 
-                                                 hasJsublevels, Jsublevels, hasFsublevels, Fsublevels) )
+        for  level  in  multiplet.levels
+            if  Basics.selectLevel(level, settings.levelSelection)
+                push!( outcomes, LandeZeeman.Outcome(level, 0., 0., 0., nuclearI, hasJsublevels, Jsublevels, hasFsublevels, Fsublevels) )
+            end
         end
         return( outcomes )
     end
@@ -285,16 +278,17 @@ module LandeZeeman
             levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{LandeZeeman.Outcome,1})
+        nx = 43
         println(" ")
         println("  Selected Lande-Zeeman levels:")
         println(" ")
-        println("  ", TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
         sa = sa * TableStrings.center(14, "Energy"; na=4);              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(43)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
@@ -303,7 +297,7 @@ module LandeZeeman
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.Jlevel.energy)) * "    "
             println( sa )
         end
-        println("  ", TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -317,10 +311,11 @@ module LandeZeeman
     function  displayResults(stream::IO, outcomes::Array{LandeZeeman.Outcome,1}, nm::Nuclear.Model, settings::LandeZeeman.Settings)
         #
         if  settings.calcLandeJ
+            nx = 135
             println(stream, " ")
             println(stream, "  Lande g_J factors and Zeeman amplitudes:")
             println(stream, " ")
-            println(stream, "  ", TableStrings.hLine(135))
+            println(stream, "  ", TableStrings.hLine(nx))
             sa = "  ";   sb = "  "
             sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
             sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
@@ -329,7 +324,7 @@ module LandeZeeman
             sa = sa * TableStrings.center(12, "Lande-J"; na=8);                           sb = sb * TableStrings.hBlank(20)          
             sa = sa * TableStrings.center(62, "N1   -- Zeeman Amplitudes --   Delta N1"    ; na=4) 
             sb = sb * TableStrings.center(62, "   Re              Im                 Re              Im"; na=5)
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(135)) 
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
             #  
             for  outcome in outcomes
                 sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
@@ -344,14 +339,15 @@ module LandeZeeman
                 sa = sa * TableStrings.flushright(15, @sprintf("%.8e", outcome.amplitudeDeltaN1.im) ) * "    "
                 println(stream, sa )
             end
-            println(stream, "  ", TableStrings.hLine(135))
+            println(stream, "  ", TableStrings.hLine(nx))
         end
         #
         if  settings.calcLandeF
+            nx = 80
             println(stream, " ")
             println(stream, "  Hyperfine levels and Lande g_F factors:")
             println(stream, " ")
-            println(stream, "  ", TableStrings.hLine(80))
+            println(stream, "  ", TableStrings.hLine(nx))
             sa = "  ";   sb = "  "
             sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
             sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
@@ -359,7 +355,7 @@ module LandeZeeman
             sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=5)
             sa = sa * TableStrings.center(10, "F^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
             sa = sa * TableStrings.center(12, "Lande-F"; na=8);                           sb = sb * TableStrings.hBlank(20)          
-            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(80)) 
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
             #
             for  outcome in outcomes
                 sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
@@ -380,15 +376,16 @@ module LandeZeeman
                     println(stream, sa )
                 end
             end
-            println(stream, "  ", TableStrings.hLine(80))
+            println(stream, "  ", TableStrings.hLine(nx))
         end
         #
         if  settings.calcZeeman
+            nx = 135
             println(stream, " ")
             println(stream, "  Zeeman splittings of (hyper-) fine-structure levels:")
             println(stream, " ")
-            println(stream, "  ", TableStrings.hLine(135))
-            println(stream, "  ", TableStrings.hLine(135))
+            println(stream, "  ", TableStrings.hLine(nx))
+            println(stream, "  ", TableStrings.hLine(nx))
         end
         #
         return( nothing )

@@ -243,14 +243,14 @@
                         if      process == Basics.Radiative()   
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons
-                                settings = PhotoEmission.Settings([E1], [UseBabushkin], false, false, false, Tuple{Int64,Int64}[], 0., 0., 1.0e6)
+                                settings = PhotoEmission.Settings([E1], [UseBabushkin], false, false, LineSelection(), 0., 0., 1.0e6)
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
                             end
                         elseif  process == Basics.Auger()       
                             if  a == b   ||   minEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons + 1
-                                settings = AutoIonization.Settings(false, false, false, Tuple{Int64,Int64}[], 0., 1.0e6, 3, CoulombInteraction())
+                                settings = AutoIonization.Settings(false, false, LineSelection(), 0., 1.0e6, 3, CoulombInteraction())
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
                             end
@@ -283,8 +283,6 @@
                     for  process  in  comp.scheme.processes
                         if      process == Basics.Photo()  
                             if  initialBlock.NoElectrons == ionizedBlock.NoElectrons + 1
-                                ##x settings = PhotoIonization.Settings()
-                                ##x for  en  in scheme.photonEnergies   push!(phEnergies, Defaults.convertUnits("energy: from atomic", en))   end
                                 settings = PhotoIonization.Settings()   ##x settings, photonEnergies=[1.0], printBefore=false)
                                 push!( stepList, Cascade.Step(process, settings, initialBlock.confs, ionizedBlock.confs, 
                                                                                  initialBlock.multiplet, ionizedBlock.multiplet) )
@@ -318,7 +316,7 @@
                     for  process  in  comp.scheme.processes
                         if      process == Basics.PhotoExc()  
                             if  initialBlock.NoElectrons == excitedBlock.NoElectrons
-                                settings = PhotoExcitation.Settings([E1], [UseCoulomb, UseBabushkin], false, false, false, false, false, Tuple{Int64,Int64}[], 
+                                settings = PhotoExcitation.Settings([E1], [UseCoulomb, UseBabushkin], false, false, false, false, LineSelection(), 
                                                                     0., 0., 1.0e6, Basics.ExpStokes() )
                                 push!( stepList, Cascade.Step(process, settings, initialBlock.confs, excitedBlock.confs, 
                                                                                  initialBlock.multiplet, excitedBlock.multiplet) )
@@ -344,13 +342,13 @@
     """
     function displayBlocks(stream::IO, blockList::Array{Cascade.Block,1}; sa::String="")
         #
-        nbl = 150
+        nx = 150
         println(stream, "\n* Configuration 'blocks' (multiplets) " * sa * "in the given cascade model: \n")
-        println(stream, "  ", TableStrings.hLine(nbl))
+        println(stream, "  ", TableStrings.hLine(nx))
         println(stream, "      No.   Configurations                                                                       " *
                         "      No. CSF  ",
                         "      Range of total energies " * TableStrings.inUnits("energy") ) 
-        println(stream, "  ", TableStrings.hLine(nbl))
+        println(stream, "  ", TableStrings.hLine(nx))
         i = 0
         for  block  in  blockList
             i = i + 1;    
@@ -365,7 +363,7 @@
             sa = sa * TableStrings.flushleft(30, string( round(minEn)) * " ... " * string( round(maxEn)); na=2)
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(nbl))
+        println(stream, "  ", TableStrings.hLine(nx))
 
         return( nothing )
     end
@@ -376,6 +374,7 @@
         ... display on stream the initial configurations as well as the calculated levels for all initial multiplets.
     """
     function displayLevels(stream::IO, multiplets::Array{Multiplet,1}; sa::String="")
+        nx = 44
         println(stream, " ")
         println(stream, "* Configurations and levels for all given " * sa * "multiplets of the cascade, relative to the lowest:")
         for  multiplet  in multiplets
@@ -384,16 +383,16 @@
             for  conf in confList
                 println(stream, "  $conf")
             end
-            println(stream, "  ", TableStrings.hLine(44))
+            println(stream, "  ", TableStrings.hLine(nx))
             println(stream, "    Level  J Parity          Energy " * TableStrings.inUnits("energy") ) 
-            println(stream, "  ", TableStrings.hLine(44))
+            println(stream, "  ", TableStrings.hLine(nx))
             for  i = 1:length(multiplet.levels)
                 lev = multiplet.levels[i]
                 en  = lev.energy - multiplet.levels[1].energy;    en_requested = Defaults.convertUnits("energy: from atomic", en)
                 sc  = "   "  * TableStrings.level(i) * "     " * string(LevelSymmetry(lev.J, lev.parity)) * "     "
                 @printf(stream, "%s %.15e %s", sc, en_requested, "\n")
             end
-            println(stream, "  ", TableStrings.hLine(44))
+            println(stream, "  ", TableStrings.hLine(nx))
         end
         return( nothing )
     end
@@ -405,10 +404,11 @@
             sa::String can be used to display details about the given steps
     """
     function displaySteps(stream::IO, steps::Array{Cascade.Step,1}; sa::String="")
+       nx = 170
         println(stream, " ")
         println(stream, "* Steps that are defined for the current " * sa * "cascade due to the given approach:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(170))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  "
         sa = sa * TableStrings.center( 9, "Step-No"; na=2)
         sa = sa * TableStrings.flushleft(11, "Process"; na=1)
@@ -416,7 +416,7 @@
         sa = sa * TableStrings.flushleft(55, "Final:  No CSF, configuration(s)"; na=4)
         sa = sa * TableStrings.flushleft(40, "Energies from ... to in " * TableStrings.inUnits("energy"); na=4)
         println(stream, sa)
-        println(stream, "  ", TableStrings.hLine(170))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         for  i = 1:length(steps)
             sa = " " * TableStrings.flushright( 7, string(i); na=5)
@@ -436,7 +436,7 @@
             sa = sa * string( round(minEn)) * " ... " * string( round(maxEn))
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(170))
+        println(stream, "  ", TableStrings.hLine(nx))
     end
     
     
@@ -486,7 +486,6 @@
                 end
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
                 println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
-                ##x if  printSummary   println(iostream, "* ... and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")   end
             end
         elseif    comp.approach == SCA()
             if printout
@@ -514,7 +513,6 @@
                 multiplet = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
                 println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
-                ##x if  printSummary   println(iostream, "and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")   end
             end
         else  error("Unsupported cascade approach.")
         end
@@ -643,7 +641,6 @@
             else        println(">>> exclude $conf with energy $meanEnergy [a.u.] because of energy reasons.")
             end
         end
-        ##x @show newBlockConfList
 
         return( (initialConfList, newBlockConfList)  )
     end
@@ -667,12 +664,10 @@
         en     = Float64[];   for conf in confList    push!(en, -Semiempirical.estimate("binding energy", round(Int64, nm.Z), conf))   end
         maxen  = maximum(en)
         shList = Basics.generate("shells: ordered list for NR configurations", newconfList)
-        ##x println("xx  $(multiplets)   $(maxen)  $(shList)    $(newconfList)")
         
         # Collect all configuration with up to maxPhotoElectrons less electrons
         initialConfList = deepcopy(newconfList);      
         allnewconfList  = Configuration[];    confList = deepcopy(newconfList);    newconfList = Configuration[]
-        ##x println("aa  $(length(confList))")
         for ne = 1:maxPhotoElectrons
             for  sh in shList
                 for conf in confList
@@ -682,7 +677,6 @@
             end
             append!(allnewconfList, newconfList)
             confList = deepcopy(newconfList);    newconfList = Configuration[]
-            ##x println("bb  $(length(confList))")
         end
         
         # Exclude double configurations as well as those with too high average energy
@@ -690,12 +684,9 @@
         newconfList = Configuration[]
         for  conf in confList  
             enconf = -Semiempirical.estimate("binding energy", round(Int64, nm.Z), conf)
-            ##x @show enconf, maxen, maxPhotonEnergy
             if enconf - maxen < maxPhotonEnergy   push!(newconfList, conf)    end
         end
-        ##x println("cc  $(length(newconfList))")
 
-        ##x @show length(initialConfList), length(newconfList)
         return( (initialConfList, newconfList)  )
     end
 
@@ -885,7 +876,6 @@
         Cascade.displaySteps(stdout, wd, sa="decay ")
         if  printSummary   Cascade.displaySteps(iostream, wd, sa="decay ")    end      
         we   = Cascade.modifySteps(wd)
-        ##x @time data = Cascade.computeStepsOld(scheme, comp, we)
         @time data = Cascade.computeSteps(scheme, comp, we)
         if output    
             results = Base.merge( results, Dict("name"                  => comp.name) ) 
@@ -945,7 +935,6 @@
         wb2 = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa[2], sa="(generated part of the) ionizing ")
         #
         # Determine first all configuration 'blocks' and from them the individual steps of the cascade
-        ##x @show length(wa[1]), length(wa[2])
         wc1 = Cascade.generateBlocks(comp, wb1, basis.orbitals, sa="for the ionizing cascade ")
         wc2 = Cascade.generateBlocks(comp, wb2, basis.orbitals, sa="for the ionizing cascade ", printout=false)
         Cascade.displayBlocks(stdout, wc1, sa="for the (initial part of the) ionizing cascade ");      
@@ -972,7 +961,6 @@
                     "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
             if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
                                                  "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
-            ##x JLD.save(filename, results)
             JLD2.@save filename results
         end
         ## return( results )
@@ -1013,7 +1001,6 @@
         wb2 = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa[2], sa="(generated part of the) photo-excited ")
         #
         # Determine first all configuration 'blocks' and from them the individual steps of the cascade
-        ##x @show length(wa[1]), length(wa[2])
         wc1 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb1)
         wc2 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb2, printout=false)
         Cascade.displayBlocks(stdout, wc1, sa="for the (initial part of the) excited cascade ");      
@@ -1040,7 +1027,6 @@
                     "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
             if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
                                                  "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
-            ##x JLD.save(filename, results)
             JLD2.@save filename results
         end
         ## return( results )

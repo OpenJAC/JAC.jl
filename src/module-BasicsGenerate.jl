@@ -87,7 +87,7 @@ module BascisGenerate
         end
         
         # Generate all level symmetries that need to be taken into account
-        if     repType.settings.selectSymmetriesCI      symmetries = repType.selectedSymmetriesCI
+        if     length(repType.settings.levelSelectionCI.symmetries) != 0    symmetries = repType.settings.levelSelectionCI.symmetries
         else   symmetries = LevelSymmetry[]
             for csf in csfList
                 if      LevelSymmetry(csf.J, csf.parity)  in  symmetries
@@ -100,8 +100,7 @@ module BascisGenerate
         # The asfSettings only define the CI part and are partly derived from the CiSettings
         asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    0, 0., Subshell[], Subshell[], 
                                   repType.settings.eeInteractionCI, NoneQed(), FullCIeigen(), LSjjSettings(false), 
-                                  repType.settings.selectLevelsCI, repType.settings.selectedLevelsCI, 
-                                  repType.settings.selectSymmetriesCI, repType.settings.selectedSymmetriesCI) 
+                                  repType.settings.levelSelectionCI) 
         
         basis      = Basics.generateBasis(rep.refConfigs, symmetries, repType.excitations)
         basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )  
@@ -144,8 +143,7 @@ module BascisGenerate
 
         # The asfSettings only define the CI part of the RAS steps and partly derived from the RasSettings
         asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    0, 0., Subshell[], Subshell[], 
-                                  repType.settings.eeInteractionCI, NoneQed(), FullCIeigen(), LSjjSettings(true), 
-                                  repType.settings.selectLevelsCI, repType.settings.selectedLevelsCI, false, LevelSymmetry[] ) 
+                                  repType.settings.eeInteractionCI, NoneQed(), FullCIeigen(), LSjjSettings(true), repType.settings.levelSelectionCI ) 
         
         # Now, cycle over all steps of the RasExpansion
         for (istep, step)  in  enumerate(repType.steps)
@@ -208,8 +206,7 @@ module BascisGenerate
 
         # The asfSettings only define the CI part of the Green channels and are partly derived from the GreenSettings
         asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    0, 0., Subshell[], Subshell[], 
-                                  CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), 
-                                  settings.selectLevels, settings.selectedLevels, false, LevelSymmetry[] ) 
+                                  CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), settings.levelSelection ) 
         
         # Cycle over all selected level symmetries to generate the requested channels
         for  levelSymmetry  in  repType.levelSymmetries
@@ -222,7 +219,6 @@ module BascisGenerate
         # Print all results to screen
         Basics.display(stdout, channels)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        ##x println("iostream = $iostream")
         if  printSummary    Basics.display(iostream, channels)         end
         
         if output    results = Base.merge( results, Dict("Green channels" => channels) )   end
@@ -421,7 +417,6 @@ module BascisGenerate
                 # Now support also all couplings of the subshell states with the CSFs that were built-up so far
                 stateList   = ManyElectron.provideSubshellStates(subsh, occ)
                 currentCsfs = CsfR[]
-                ##x for  i = 1:length(previousCsfs)    println("generate-aa: ", previousCsfs[i])    end
                 for  csf in  previousCsfs
                     for  state in stateList
                         occupation = deepcopy(csf.occupation);    seniority = deepcopy(csf.seniority);    
@@ -484,7 +479,7 @@ module BascisGenerate
                 if  a in ks     push!(subshells, a);    break    end
             end 
         end
-        ##x println("***subshells = $subshells")
+
         return( subshells )
     end
 
@@ -543,7 +538,6 @@ module BascisGenerate
             end
             println("*** extended subshells from two basis = $subshells")
         end
-        ##x println("subshells from two basis = $subshells")
 
         return( subshells )
     end
@@ -661,14 +655,12 @@ module BascisGenerate
             if  addTo    push!(confList, confa)     end
         end
         for  i = 1:length(confList)    println(">> include ", confList[i])    end
-        ##x println("***bb confList = $confList")
         #
         relconfList = ConfigurationR[]
         for  conf in confList
             wa = Basics.generate("configuration list: relativistic", conf)
             append!( relconfList, wa)
         end
-        ##x println("***cc relconfList = $relconfList")
         subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
         Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
 
@@ -677,7 +669,6 @@ module BascisGenerate
         for  relconf in relconfList
             newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
             for  csf in newCsfs     if  LevelSymmetry(csf.J, csf.parity) in symmetries   push!(csfList, csf)   end   end
-            ##x append!( csfList, newCsfs)
         end
 
         # Determine the number of electrons and the list of coreSubshells
@@ -735,8 +726,6 @@ module BascisGenerate
         end
         
         confList = Base.unique(confList)
-        ##x println("***aa refConfigs = $refConfigs,  fromShells = $fromShells,  toShells = $toShells")
-        ##x println("***aa confList   = $confList")
         
         return( confList )
     end
@@ -811,7 +800,6 @@ module BascisGenerate
             for  (fromShell,occ)  in  conf.shells
                 for  toShell  in  shellList
                     newShells = deepcopy( conf.shells )
-                    ##x print("newShells = $newShells   fromShell = $fromShell    toShell = $toShell")
                     if      fromShell == toShell    
                     elseif  haskey(conf.shells, toShell )   fromOcc = occ;   toOcc = conf.shells[toShell]
                             if  fromOcc - 1 < 0                        println("..");    continue    end
@@ -838,10 +826,6 @@ module BascisGenerate
         nafter      = length(newConfList)
         println(">> Number of generated configurations for $exScheme is: $nbefore (before) and $nafter (after).")
 
-        #
-        ##x push!( newConfList, confs[1])
-        ##x push!( newConfList, Configuration("[Ne] 3s 3p^6 4s") )
-        ##x push!( newConfList, Configuration("[Ne] 3s 3p^6 5s") )
         return( newConfList )
     end
 
@@ -926,32 +910,24 @@ module BascisGenerate
     """
     function Basics.generateLevelWithSymmetryReducedBasis(level::Level, subshells::Array{Subshell,1})
         testBasis = level.basis;    newCsfs = CsfR[];    newMc = Float64[]
-        ##x @show testBasis.subshells
-        ##x @show           subshells
-        
-        ##x println("aa:  subshells = $subshells   testsubshells = $(testBasis.subshells)")
+
         # Decide of whether the basis need to be extended by some subshells
         nt = length(testBasis.subshells)
         if      testBasis.subshells == subshells      basis = testBasis;    nLevel = level
-            ##x println("*** aa")
         elseif  nt >= length(subshells)               error("stop a")
         elseif  nt + 1 == length(subshells)  &&  testBasis.subshells == subshells[1:nt]
                 nLevel = Basics.generateLevelWithExtraSubshell(subshells[end], level)
                 basis  = nLevel.basis
-            ##x println("*** bb")
         else
             nLevel  = level
             for  ns = nt+1:length(subshells)
                 nLevel = Basics.generateLevelWithExtraSubshell(subshells[ns], nLevel)
             end
             basis  = nLevel.basis
-            ##x println("bb:  subshells = $subshells   testsubshells = $(basis.subshells)")
-            ##x println("*** cc")
         end
             
         
         for  i = 1:length(basis.csfs)
-            ##x println("*** dd $(basis.csfs[i].occupation)")
             if  basis.csfs[i].J == nLevel.J  &&   basis.csfs[i].parity == nLevel.parity        &&    abs(nLevel.mc[i]) > 1.0e-7
                 push!(newCsfs, deepcopy(basis.csfs[i]));    push!(newMc, deepcopy(nLevel.mc[i]))
             end
@@ -1037,7 +1013,6 @@ module BascisGenerate
                                 newQ[1:mtpb] = newQ[1:mtpb] + cx * b.Q[1:mtpb]
         newOrbital = Orbital(a.subshell, a.isBound, a.useStandardGrid, newEnergy, newP, newQ, Float64[], Float64[], a.grid)
         norm       = RadialIntegrals.overlap(newOrbital, newOrbital, grid)
-        ##x @show a.energy, b.energy, a.subshell, cx, norm
         newP       = newP / sqrt(norm);      newQ = newQ / sqrt(norm)
         newOrbital = Orbital(a.subshell, a.isBound, a.useStandardGrid, newEnergy, newP, newQ, Float64[], Float64[], a.grid)
 
@@ -1064,7 +1039,6 @@ module BascisGenerate
                 if  n >= ll + 1     push!( shellList, Shell(n,ll))      end    
             end
         end
-        ##x println("shellList = $shellList ")
         
         # Now bring the shells in standard order
         newShellList = Shell[]

@@ -6,8 +6,6 @@
 """
 module AngularCoefficientsRatip2013
 
-    ##x using ..JAC: AngularJ64, twice, CsfR, getsubshells, have_same_subshells, Parity, plus, minus, Subshell, SubshellQuantumNumbers
-    ##x using ..JAC: AngularJ64, CsfR, Parity, plus, minus, Subshell # , SubshellQuantumNumbers
     using  ..Basics,  ..Defaults,  ..ManyElectron
     using  Libdl: dlopen, dlsym
 
@@ -49,7 +47,6 @@ module AngularCoefficientsRatip2013
          kappa::Int32   # integer
     end
 
-    ##x Fnkappa(s::Subshell) = begin qn = SubshellQuantumNumbers(string(s)); return Fnkappa(qn[1], qn[2]) end
     Fnkappa(s::Subshell) = Fnkappa(s.n, s.kappa)
 
 

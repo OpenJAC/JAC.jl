@@ -15,18 +15,16 @@ module CoulombExcitation
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + energies                ::Array{Float64,1}             ... List of ... energies.
         + calcAlignment           ::Bool                         ... True, if alignment parameters to be calculated and false otherwise.
-        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
     """
     struct Settings 
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         photonEnergies            ::Array{Float64,1} 
         calcAlignment             ::Bool 
-        printBefore    ::Bool
-        selectLines               ::Bool
-        selectedLines             ::Array{Tuple{Int64,Int64},1} 
+        printBefore               ::Bool 
+        lineSelection             ::LineSelection
     end 
 
 
@@ -34,7 +32,7 @@ module CoulombExcitation
     `CoulombExcitation.Settings()`  ... constructor for the default values of Coulomb-excitation line computations.
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], Float64[], false, false, false, Tuple{Int64,Int64}[])
+        Settings(EmMultipole[], UseGauge[], Float64[], false, false, LineSelection())
     end
 
 
@@ -44,9 +42,8 @@ module CoulombExcitation
         println(io, "gauges:                   $(settings.gauges)  ")
         println(io, "photonEnergies:           $(settings.photonEnergies)  ")
         println(io, "calcAlignment:            $(settings.calcAlignment)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
-        println(io, "selectLines:              $(settings.selectLines)  ")
-        println(io, "selectedLines:            $(settings.selectedLines)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "lineSelection:            $(settings.lineSelection)  ")
     end
 
 

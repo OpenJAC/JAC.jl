@@ -37,7 +37,6 @@ module BasicsAG
     function  Basics.addZerosToCsfR(nz::Int64, csf::CsfR)
         !csf.useStandardSubshells   &&   error("Zeros can only be added to CSF with standard subshell order.")
         
-        ##x println("nz = $nz")
         occupation = csf.occupation;   seniority = csf.seniority;    subshellJ = csf.subshellJ;    subshellX = csf.subshellX 
         
         for  i = 1:nz
@@ -134,9 +133,7 @@ module BasicsAG
         else     wa = 0.;   wa = max(wa, abs( (a.energy-b.energy) / (a.energy+b.energy) ));   nx = min(length(a.P), length(b.P))
                 #=== for  i = 1:nx 
                     wp = abs(a.P[i])+abs(b.P[i]);    if  wp > 1.0e-10   wa = max(wa, abs( (a.P[i]-b.P[i]) / wp ))   end 
-                    ##x if  abs( (a.P[i]-b.P[i]) / wp ) > 1.01    Defaults.warn(AddWarning(), "analyzeConv: P, i = $i Pa=$(a.P[i]) Pb=$(b.P[i])")   end
                     wp = abs(a.Q[i])+abs(b.Q[i]);    if  wp > 1.0e-10   wa = max(wa, abs( (a.Q[i]-b.Q[i]) / wp ))   end   
-                    ##x if  abs( (a.Q[i]-b.Q[i]) / wp ) > 1.01    Defaults.warn(AddWarning(), "analyzeConv: Q, i = $i Qa=$(a.Q[i]) Qb=$(b.Q[i]) ")   end
                 end ===#
         end
         return( wa )
@@ -297,8 +294,6 @@ module BasicsAG
         if       sa == "matrix: Julia, eigfact" 
             # Use the standard eigfact() method from Julia for a quadratic, full matrix   
             wa = eigen( matrix )
-            ##x println("diagonalize-ab: values  = ", wa[:values] )
-            ##x println("diagonalize-ac: vectors = ", wa[:vectors] )
             vectors = Vector{Float64}[];    wb = wa.vectors;    d = size(wb)[1]
             for  i = 0:d-1    push!(vectors, wb[i*d+1:i*d+d])    end
             wc = Basics.Eigen( wa.values, vectors )
@@ -318,13 +313,9 @@ module BasicsAG
         if       sa == "generalized eigenvalues: Julia, eigfact" 
             # Use the standard eigfact() method from Julia for two quadratic, full matrices   
             wa = eigen( matrixA, matrixB )
-            ##x println("diagonalize-ab: values  = ", wa[:values] )
-            ##x println("diagonalize-ac: vectors = ", wa[:vectors] )
-            ##x vectors = Vector{Float64}[];    wb = wa[:vectors];    d = size(wb)[1]
             vectors = Vector{Float64}[];    wb = wa.vectors;    d = size(wb)[1]
             # for  i = 0:d-1    push!(vectors, real(wb[i*d+1:i*d+d]) )    end
             for  i = 0:d-1    push!(vectors, wb[i*d+1:i*d+d] )    end
-            ##x wc = Basics.Eigen( wa[:values], vectors )
             # wc = Basics.Eigen( real(wa.values), vectors )
             wc = Basics.Eigen( wa.values, vectors )
             return( wc )
@@ -388,15 +379,16 @@ module BasicsAG
         ... displays the generated list of configurations in a compact form; nothing is returned in this case.
     """
     function  Basics.display(stream::IO, configs::Array{Configuration,1})
+        nx = 85
         println(" ")
         println("  Generated list of (non-relativistic) configurations that contribute to the representation:")
         ## println(" ")
-        println("  ", TableStrings.hLine(85))
+        println("  ", TableStrings.hLine(nx))
         for  i = 1:length(configs)
             sa = string("(", i, ")" );    sa = TableStrings.flushright(9, sa, na=3);   sa = sa * string(configs[i])
             println(sa)
         end 
-        println("  ", TableStrings.hLine(85))
+        println("  ", TableStrings.hLine(nx))
         
         return( nothing )
     end
@@ -413,10 +405,11 @@ module BasicsAG
         println(stream, "  Relativistic orbitals:")
         println(stream, " ")
         if  longTable
-            println(stream, "  ", TableStrings.hLine(108))
+            nx = 108
+            println(stream, "  ", TableStrings.hLine(nx))
             println(stream, "   Subshell   isBound   energy [a.u.]     energy " * TableStrings.inUnits("energy") * 
                             "   st-grid   r_max [a.u.]    <r> [a.u.]    <r^2> [a.u.]  ")
-            println(stream, "  ", TableStrings.hLine(108))
+            println(stream, "  ", TableStrings.hLine(nx))
             #
             for  sh  in Defaults.GBL_STANDARD_SUBSHELL_LIST
                 if haskey(orbitals, sh)
@@ -426,7 +419,6 @@ module BasicsAG
                     if !v.useStandardGrid   error("Non-standard grids not yet implemented.")    end
                     p2 = Float64[];    for  p in v.P    push!(p2, p*p)   end
                     imax    = findmax(p2)
-                    ##x println("length-p2 = $(length(p2)) imax =  $imax ")
                     rmax    = grid.r[imax[2]]
                     rmean   = RadialIntegrals.rkDiagonal(1, v, v, grid)
                     r2mean  = RadialIntegrals.rkDiagonal(2, v, v, grid)
@@ -438,11 +430,12 @@ module BasicsAG
                     println(sa)
                 end
             end 
-            println("  ", TableStrings.hLine(108))
+            println("  ", TableStrings.hLine(nx))
         else
-            println(stream, "  ", TableStrings.hLine(62))
+            nx = 62
+            println(stream, "  ", TableStrings.hLine(nx))
             println(stream, "   Subshell   isBound   energy [a.u.]     energy " * TableStrings.inUnits("energy") * "   st-grid ")
-            println(stream, "  ", TableStrings.hLine(62))
+            println(stream, "  ", TableStrings.hLine(nx))
             #
             for  sh  in Defaults.GBL_STANDARD_SUBSHELL_LIST
                 if haskey(orbitals, sh)
@@ -453,7 +446,7 @@ module BasicsAG
                     println(sa)
                 end
             end 
-            println("  ", TableStrings.hLine(62))
+            println("  ", TableStrings.hLine(nx))
         end
         
         return( nothing )
@@ -487,15 +480,15 @@ module BasicsAG
             in the level expansion. A neat table is printed but nothing is returned otherwise.
     """
     function Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1})
-        allLevels = Level[]
+        allLevels = Level[];    nx = 84
         for  multiplet  in multiplets
             for  level in  multiplet.levels   push!(allLevels, level)      end
         end
         sortedLevels = Base.sort( allLevels, lt=Base.isless)
         energy0      = sortedLevels[1].energy
-        println(stream, "  ", TableStrings.hLine(84))
+        println(stream, "  ", TableStrings.hLine(nx))
         println(stream, "    J Parity   No. electrons    Energy " * TableStrings.inUnits("energy") * "        Leading configuration") 
-        println(stream, "  ", TableStrings.hLine(84))
+        println(stream, "  ", TableStrings.hLine(nx))
         for  level  in  sortedLevels
             mc2  = level.mc .* level.mc;   index = findmax(mc2)[2]
             conf = Basics.extractNonrelativisticConfigurationFromCsfR(level.basis.csfs[index],  level.basis)
@@ -506,7 +499,7 @@ module BasicsAG
                    TableStrings.flushleft(44, string(conf)) 
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(84))
+        println(stream, "  ", TableStrings.hLine(nx))
         
         return( nothing )
     end
@@ -556,14 +549,12 @@ module BasicsAG
         ... determine the number of open (nonrelativistic) shells in conf; a singleton of type AbstractOpenShell is returned.
     """
     function Basics.extractNoOpenShells(conf::Configuration)
-        ##x println("conf = $conf")
         ns = 0
         for  (shell, occ)  in conf.shells
             if      occ == 0  ||  occ == 2*(2*shell.l + 1)
             else    ns = ns + 1
             end
         end
-        ##x println("conf = $conf  ns = $ns")
         
         if      ns == 0   return ( LSjj.ZeroOpenShell() )
         elseif  ns == 1   return ( LSjj.OneOpenShell() )
@@ -587,7 +578,6 @@ module BasicsAG
             l = Basics.subshell_l(subsh);   shell = Shell( subsh.n, l)
             if  shell in shellList      else  push!(shellList, shell)   end
         end 
-        ##x println("Basics.extractNonrelativisticShellList()::  shellList = $shellList")
         
         return( shellList )
     end
@@ -618,7 +608,6 @@ module BasicsAG
                 if  conf in confList    continue;    else    push!( confList,  conf)    end
             end
         end 
-        ##x println("Basics.extractNonrelativisticConfigurations()::  confList = $confList")
         
         return( confList )
     end
@@ -646,7 +635,6 @@ module BasicsAG
         if      basis.NoElectrons != NoElectrons    error("stop a")
         else    conf = Configuration(newShells, NoElectrons)
         end 
-        ##x println("Basics.extractNonrelativisticConfigurationFromCsfR()::  conf = $conf")
         
         return( conf )
     end
@@ -690,8 +678,6 @@ module BasicsAG
             end
         end
         
-        ##x println("Basics.extractOpenShellQNfromCsfR()::  csfR = $csfR  \n  wa = $wa")
-        
         return( wa )
     end
 
@@ -710,8 +696,7 @@ module BasicsAG
         end
         
         shellList = unique(shellList)
-        ##x println("ee shellList = $shellList ")
-        subshellList = Subshell[]
+         subshellList = Subshell[]
         
         for  sh in shellList    
             if  sh.l == 0    push!( subshellList, Subshell(sh.n, -1))
@@ -745,7 +730,6 @@ module BasicsAG
         end
         
         shellList = unique(shellList)
-        ##x println("ee shellList = $shellList ")
         subshellList = Subshell[]
         
         for  sh in shellList    
@@ -754,7 +738,6 @@ module BasicsAG
             end
         end
         
-        ##x println("ee subshellList = $subshellList ")
         return( subshellList )
     end
 
@@ -778,7 +761,6 @@ module BasicsAG
             else    push!( occList, csfR.occupation[s] + csfR.occupation[s+1])
             end
         end 
-        ##x println("Basics.extractShellOccupationFromCsfR()::  shellList = $shellList,  occList = $occList")
         
         return( (shellList, occList) )
     end

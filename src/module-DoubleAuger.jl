@@ -11,17 +11,15 @@ module DoubleAuger
     """
     `struct  DoubleAuger.Settings`  ... defines a type for the settings in estimating double-Auger and autoionization rates.
 
-        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
         + minAugerEnergy          ::Float64                      ... Minimum energy of free (Auger) electrons to be included.
         + maxAugerEnergy          ::Float64                      ... Maximum energy of free (Auger) electrons to be included.
         + maxKappa                ::Int6464                      ... Maximum kappa value of partial waves to be included.
     """
     struct Settings
-        printBefore    ::Bool
-        selectLines               ::Bool  
-        selectedLines             ::Array{Tuple{Int64,Int64},1}
+        printBefore               ::Bool 
+        lineSelection             ::LineSelection 
         minAugerEnergy            ::Float64
         maxAugerEnergy            ::Float64
         maxKappa                  ::Int64
@@ -32,15 +30,14 @@ module DoubleAuger
     `JAC.DoubleAuger.Settings()`  ... constructor for the default values of DoubleAuger line computations
     """
     function Settings()
-        Settings(false, false, Array{Tuple{Int64,Int64},1}[], 0., 10e5, 100)
+        Settings(false, LineSelection(), 0., 10e5, 100)
     end
 
 
     # `Base.show(io::IO, settings::DoubleAuger.Settings)`  ... prepares a proper printout of the variable settings::DoubleAuger.Settings.
     function Base.show(io::IO, settings::DoubleAuger.Settings) 
-        println(io, "printBefore:       $(settings.printBefore)  ")
-        println(io, "selectLines:                  $(settings.selectLines)  ")
-        println(io, "selectedLines:                $(settings.selectedLines)  ")
+        println(io, "printBefore:                  $(settings.printBefore)  ")
+        println(io, "lineSelection:                $(settings.lineSelection)  ")
         println(io, "minAugerEnergy:               $(settings.minAugerEnergy)  ")
         println(io, "maxAugerEnergy:               $(settings.maxAugerEnergy)  ")
         println(io, "maxKappa:                     $(settings.maxKappa)  ")

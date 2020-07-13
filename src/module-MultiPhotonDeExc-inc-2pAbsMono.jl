@@ -359,19 +359,16 @@
     """
     function  determineLines_2pAbsorptionMonochromatic(finalMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                                        settings::MultiPhotonDeExcitation.Settings)
-        if    settings.selectLines    selectLines   = true;   selectedLines = Basics.determine("selected lines", settings.selectedLines)
-        else                          selectLines   = false
-        end
-    
         lines = MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic[]
-        for  i = 1:length(initialMultiplet.levels)
-            for  f = 1:length(finalMultiplet.levels)
-                if  selectLines  &&  !(haskey(selectedLines, (i,f)) )    continue   end
-                energy   = abs( initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy)
-                omega    = abs( initialMultiplet.levels[i].energy - finalMultiplet.levels[f].energy) / 2.
-                channels = MultiPhotonDeExcitation.determineChannels_2pAbsorptionMonochromatic(omega, finalMultiplet.levels[f], initialMultiplet.levels[i], settings) 
-                push!( lines, MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic(initialMultiplet.levels[i], finalMultiplet.levels[f], energy, omega,
-                                                                                     EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), true, channels) )
+        for  iLevel  in  initialMultiplet.levels
+            for  fLevel  in  finalMultiplet.levels
+                if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    energy   = abs( iLevel.energy - fLevel.energy)
+                    omega    = abs( iLevel.energy - fLevel.energy) / 2.
+                    channels = MultiPhotonDeExcitation.determineChannels_2pAbsorptionMonochromatic(omega, fLevel, iLevel, settings) 
+                    push!( lines, MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic(iLevel, fLevel, energy, omega,
+                                                               EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), true, channels) )
+                end
             end
         end
         return( lines )
@@ -384,10 +381,11 @@
             transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines_2pAbsorptionMonochromatic(lines::Array{MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic,1})
+        nx = 175
         println(" ")
         println("  Selected two-photon absorption lines by monochromatic and equally-polarized photons:")
         println(" ")
-        println("  ", TableStrings.hLine(175))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=2);                         sb = sb * TableStrings.hBlank(20)
@@ -397,7 +395,7 @@
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.flushleft(90, "List of multipoles & intermediate level symmetries"; na=4)            
         sb = sb * TableStrings.flushleft(90, "(K-rank, multipole_1, Jsym, multipole_2, gauge), ..."; na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(175)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -417,7 +415,7 @@
                 sb = TableStrings.hBlank( length(sa) );    sb = sb * wa[i];    println( sb )
             end
         end
-        println("  ", TableStrings.hLine(175))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -432,6 +430,7 @@
     """
     function  displayCrossSections_2pAbsorptionMonochromatic(stream::IO, properties::Array{AbstractMultiPhotonProperty,1},
                                                              lines::Array{Line_2pAbsorptionMonochromatic,1})
+        nx = 75
         println(stream, " ")
         println(stream, "  Two-photon absorption by monochromatic and equally-polarized photons (usually from the same beam):")
         println(stream, " ")
@@ -447,7 +446,7 @@
             end
         end
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(75 + 30noCs))
+        println(stream, "  ", TableStrings.hLine(nx + 30noCs))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
@@ -460,7 +459,7 @@
             sb = sb * TableStrings.center(28, TableStrings.inUnits("cross section") * "           " * TableStrings.inUnits("cross section"); na=4)
         end
 
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(75 + 30noCs)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx + 30noCs)) 
         #   
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -483,7 +482,7 @@
             end
             println(stream, sa )
         end
-        println(stream, "  ", TableStrings.hLine(75 + 30noCs))
+        println(stream, "  ", TableStrings.hLine(nx + 30noCs))
         #
         return( nothing )
     end

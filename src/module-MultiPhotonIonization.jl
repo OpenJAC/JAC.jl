@@ -14,18 +14,16 @@ module MultiPhotonIonization
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + photonEnergies          ::Array{Float64,1}             ... List of photon energies.
-        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
 
     """
     struct Settings 
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         photonEnergies            ::Array{Float64,1} 
-        printBefore    ::Bool
-        selectLines               ::Bool
-        selectedLines             ::Array{Tuple{Int64,Int64},1} 
+        printBefore               ::Bool  
+        lineSelection             ::LineSelection  
     end 
 
 
@@ -33,7 +31,7 @@ module MultiPhotonIonization
     `MultiPhotonIonization.Settings()`  ... constructor for the default values of multi-photon (single-electron) ionization estimates.
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], Float64[], false, false, Tuple{Int64,Int64}[])
+        Settings(EmMultipole[], UseGauge[], Float64[], false, LineSelection() )
     end
 
 
@@ -43,9 +41,8 @@ module MultiPhotonIonization
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
         println(io, "photonEnergies:           $(settings.photonEnergies)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
-        println(io, "selectLines:              $(settings.selectLines)  ")
-        println(io, "selectedLines:            $(settings.selectedLines)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "lineSelection:            $(settings.lineSelection)  ")
     end
 
 

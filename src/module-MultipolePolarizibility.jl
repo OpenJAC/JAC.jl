@@ -78,19 +78,17 @@ module MultipolePolarizibility
         + nLower                    ::Int64                 ... Lower and upper indices in the configurations for the summation 
         + nUpper                    ::Int64                     over the intermediate levels.
         + omegas                    ::Array{Float64,1}      ... List of omegas (energies) of the dynamic polarizibility.
-        + printBefore    ::Bool                  ... True if a list of selected levels is printed before the 
+        + printBefore               ::Bool                  ... True if a list of selected levels is printed before the 
                                                                 actual computations start. 
-        + selectLevels              ::Bool                  ... True if individual levels are selected for the computation.
-        + selectedLevels            ::Array{Int64,1}        ... List of selected levels.
+        + levelSelection            ::LevelSelection        ... Specifies the selected levels, if any.
     """
     struct Settings
         multipoles                  ::Array{EmMultipole,1}
         nLower                      ::Int64  
         nUpper                      ::Int64
         omegas                      ::Array{Float64,1}
-        printBefore      ::Bool 
-        selectLevels                ::Bool
-        selectedLevels              ::Array{Int64,1}
+        printBefore                 ::Bool 
+        levelSelection              ::LevelSelection
     end 
 
 
@@ -99,7 +97,7 @@ module MultipolePolarizibility
         ... constructor for an `empty` instance of MultipolePolarizibility.Settings for the computation dynamic polarizibilities.
     """
     function Settings()
-        Settings(EmMultipole[], 0, 0, Float64[], false, false, Int64[])
+        Settings(EmMultipole[], 0, 0, Float64[], false, LevelSelection() )
     end
 
 
@@ -110,9 +108,8 @@ module MultipolePolarizibility
         println(io, "nLower:                   $(settings.nLower)  ")
         println(io, "nUpper:                   $(settings.nUpper)  ")
         println(io, "omegas:                   $(settings.omegas)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
-        println(io, "selectLevels:             $(settings.selectLevels)  ")
-        println(io, "selectedLevels:           $(settings.selectedLevels)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "levelSelection:           $(settings.levelSelection)  ")
     end
 
 
@@ -168,14 +165,11 @@ module MultipolePolarizibility
             level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::MultipolePolarizibility.Settings) 
-        if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
-        else                          selectLevels   = false
-        end
-    
         outcomes = MultipolePolarizibility.Outcome[]
-        for  i = 1:length(multiplet.levels)
-            if  selectLevels  &&  !(haskey(selectedLevels, i))    continue   end
-            push!( outcomes, MultipolePolarizibility.Outcome(multiplet.levels[i], MultipolePolarizibility.Amplitude[]) )
+        for  level  in  multiplet.levels
+            if  Basics.selectLevel(level, settings.levelSelection)
+                push!( outcomes, MultipolePolarizibility.Outcome(level, MultipolePolarizibility.Amplitude[]) )
+            end
         end
         return( outcomes )
     end
@@ -187,16 +181,17 @@ module MultipolePolarizibility
             levels and their energies is printed but nothing is returned otherwise.
     """
     function  displayOutcomes(outcomes::Array{MultipolePolarizibility.Outcome,1})
+        nx = 43
         println(" ")
         println("  Selected MultipolePolarizibility levels:")
         println(" ")
-        println("  ", TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
         sa = sa * TableStrings.center(14, "Energy"; na=4);              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(43)) 
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -205,7 +200,7 @@ module MultipolePolarizibility
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
             println( sa )
         end
-        println("  ", TableStrings.hLine(43))
+        println("  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end
@@ -217,10 +212,11 @@ module MultipolePolarizibility
             returned otherwise.
     """
     function  displayResults(stream::IO, outcomes::Array{MultipolePolarizibility.Outcome,1})
+        nx = 64
         println(stream, " ")
         println(stream, "  Multipole polarizibilities and amplitudes:")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(64))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
         sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
@@ -228,7 +224,7 @@ module MultipolePolarizibility
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.center(14, "xxx";     na=4)              
         sb = sb * TableStrings.center(14, "    " ; na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(64)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -238,7 +234,7 @@ module MultipolePolarizibility
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy))              * "    "
             println(stream, sa )
         end
-        println(stream, "  ", TableStrings.hLine(64), "\n\n")
+        println(stream, "  ", TableStrings.hLine(nx), "\n\n")
         #
         return( nothing )
     end

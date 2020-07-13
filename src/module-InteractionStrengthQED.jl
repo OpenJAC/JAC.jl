@@ -35,21 +35,11 @@ module InteractionStrengthQED
         # Define a grid for the t-integration
         qgrid = Radial.GridGL("QED",  7)
         if  a.subshell == b.subshell == Subshell("1s_1/2")    println(" ")    end
-        ##x if  a.subshell == b.subshell == Subshell("1s_1/2")    println("qgrid =  $qgrid")    end
         # Re-define the hydrogenic values of the 
-        ##x println("\n>> Defaults.GBL_QED_NUCLEAR_CHARGE = $(Defaults.GBL_QED_NUCLEAR_CHARGE) ")
         if  nm.Z != Defaults.GBL_QED_NUCLEAR_CHARGE
             println(">> Calculate hydrogenic values only if necessary.")
             alpha = Defaults.getDefaults("alpha")
-            ##x # Make a first approximation
-            ##x ax  = HydrogenicIon.radialOrbital(Subshell("1s_1/2"), nm.Z, grid);    wc1 = 1.12* RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ##x ax  = HydrogenicIon.radialOrbital(Subshell("2p_1/2"), nm.Z, grid);    wc2 = 1.8 * RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ##x ax  = HydrogenicIon.radialOrbital(Subshell("2p_3/2"), nm.Z, grid);    wc3 = 1.09* RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ##x ax  = HydrogenicIon.radialOrbital(Subshell("3d_3/2"), nm.Z, grid);    wc4 = 1.8 * RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ##x ax  = HydrogenicIon.radialOrbital(Subshell("3d_5/2"), nm.Z, grid);    wc5 = 1.05* RadialIntegrals.qedDampedOverlap(alpha, ax, ax, grid)
-            ##x Defaults.setDefaults("QED: damped-hydrogenic", nm.Z, [wc1, wc2, wc3, wc4, wc5] )
-            ##x println("Redefined damped radial integrals GBL_QED_HYDROGENIC_LAMBDAC = $(Defaults.GBL_QED_HYDROGENIC_LAMBDAC)")
-            ##x # Make these values more accurate
+
             wp           = Bsplines.generatePrimitives(grid)
             subshellList = [Subshell("1s_1/2"), Subshell("2p_1/2"), Subshell("2p_3/2"), Subshell("3d_3/2"), Subshell("3d_5/2")]
             orbitals     = Bsplines.generateOrbitalsHydrogenic(wp, nm, subshellList; printout=true)
@@ -68,7 +58,6 @@ module InteractionStrengthQED
         end
         
         if      qed == QedSydney()
-            ##x nucpot = Nuclear.nuclearPotential(nm, grid)
             wa = RadialIntegrals.qedUehlingSimple(a, b, pot, grid, qgrid) + 
                  ## RadialIntegrals.qedWichmannKrollSimple(a, b, pot, grid, qgrid) + 
                  ## RadialIntegrals.qedElectricFormFactor(a, b, pot, grid, qgrid) + 

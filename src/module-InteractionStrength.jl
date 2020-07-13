@@ -7,7 +7,6 @@
 module InteractionStrength
 
     using  GSL, JAC, ..AngularMomentum, ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals
-    ##x global JAC_counter = 0
 
 
     """
@@ -64,7 +63,6 @@ module InteractionStrength
     function hfs_t1(a::Orbital, b::Orbital, grid::Radial.Grid)
         # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
         minusa = Subshell(1, -a.subshell.kappa)
-        ##x wa = - Defaults.getDefaults("alpha") * (a.subshell.kappa + b.subshell.kappa) * AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell) *
         wb =   - (a.subshell.kappa + b.subshell.kappa) * AngularMomentum.CL_reduced_me_rb(minusa, 1, b.subshell)
         wc =   RadialIntegrals.rkNonDiagonal(-2, a, b, grid)
         wa =   wb * wc
@@ -263,14 +261,6 @@ module InteractionStrength
         ##x println("\nBreit strength: L=$L, nx = $(length(xcList)) ")
         XL_Breit = XL_Breit0_densities(xcList, grid)
         #
-        ##x XL_Breit = 0.
-        ##x for  xc in xcList
-        ##x     wb = RadialIntegrals.W5_Integral(xc.mu, xc.nu, xc.a ,xc.c ,xc.b ,xc.d, grid)
-        ##x     println("Breit0: nu=$(xc.nu), a=$(xc.a.subshell), b=$(xc.b.subshell), c=$(xc.c.subshell), d=$(xc.d.subshell), " *
-        ##x             "coeff=$(xc.coeff), wx=$wb, wges= $(xc.coeff * wb)")
-        ##x     XL_Breit = XL_Breit + xc.coeff * wb
-        ##x end
-        ##x #
         return( XL_Breit )
     end
     
@@ -312,7 +302,6 @@ module InteractionStrength
             sa = "XL" * string(L) * " " * string(a.subshell) * string(b.subshell) * string(c.subshell) * string(d.subshell)
             if haskey(GBL_Storage_XL_Breit, sa )
                 XL_Breit = GBL_Storage_XL_Breit[sa]
-                ##x println(">> get value $XL_Breit  for $sa ")
             else
                 xcList   = XL_Breit0_coefficients(L,a,b,c,d)
                 XL_Breit = XL_Breit0_densities(xcList, grid)
@@ -612,16 +601,12 @@ module InteractionStrength
                 elseif  coeff.a == coeff.c  &&  !(large)  &&  !(largep)
                     mtp_bd = min(size(b.Q, 1), size(d.Q, 1));    for  s = 2:mtp_bd   ws[s] = ws[s] + coeff.V * xc * b.Q[s] * d.Q[s]* ul(L, grid.r[r], grid.r[s])    end 
                 elseif  coeff.a == coeff.d  &&  exchange  &&  large  &&  largep         
-                    ##xif  coeff.a.kappa == coeff.d.kappa   xc = xc / 2.   end
                     mtp_bc = min(size(b.P, 1), size(c.P, 1));    for  s = 2:mtp_bc   ws[s] = ws[s] + coeff.V * xc * b.P[s] * c.P[s]* ul(L, grid.r[r], grid.r[s])    end 
                 elseif  coeff.a == coeff.d  &&  exchange  &&  !(large)  &&  largep 
-                    ##xif  coeff.a.kappa == coeff.d.kappa   xc = xc / 2.   end
                     mtp_bc = min(size(b.Q, 1), size(c.P, 1));    for  s = 2:mtp_bc   ws[s] = ws[s] + coeff.V * xc * b.Q[s] * c.P[s]* ul(L, grid.r[r], grid.r[s])    end 
                 elseif  coeff.a == coeff.d  &&  exchange  &&  large     &&  !(largep)
-                    ##xif  coeff.a.kappa == coeff.d.kappa   xc = xc / 2.   end
-                    mtp_bc = min(size(b.P, 1), size(c.Q, 1));    for  s = 2:mtp_bc   ws[s] = ws[s] + coeff.V * xc * b.P[s] * c.Q[s]* ul(L, grid.r[r], grid.r[s])    end 
+                     mtp_bc = min(size(b.P, 1), size(c.Q, 1));    for  s = 2:mtp_bc   ws[s] = ws[s] + coeff.V * xc * b.P[s] * c.Q[s]* ul(L, grid.r[r], grid.r[s])    end 
                 elseif  coeff.a == coeff.d  &&  exchange  &&  !(large)  &&  !(largep)
-                    ##x if  coeff.a.kappa == coeff.d.kappa   xc = xc / 2.   end
                     mtp_bc = min(size(b.Q, 1), size(c.Q, 1));    for  s = 2:mtp_bc   ws[s] = ws[s] + coeff.V * xc * b.Q[s] * c.Q[s]* ul(L, grid.r[r], grid.r[s])    end 
                 elseif  coeff.a == coeff.d  &&  !(exchange)
                 elseif  coeff.a == coeff.c  &&  (large     &&  !(largep)   ||   !(large)  &&  largep)
@@ -655,9 +640,6 @@ module InteractionStrength
         xc = AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
         if   rem(L,2) == 1    xc = - xc    end 
         
-        ##x za = RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid);   zb = RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
-        ##x if abs( (za-zb)/za ) > 1.0e-12    println("XL_Coulomb: Slater  za = $za   zb = $zb  ")   end
-
         XL_Coulomb = xc * RadialIntegrals.SlaterRk_2dim_WO(L, a, b, c, d, grid)
         ##x XL_Coulomb = xc * RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
         return( XL_Coulomb )
@@ -704,7 +686,6 @@ module InteractionStrength
             sa = "XL" * string(L) * " " * string(a.subshell) * string(b.subshell) * string(c.subshell) * string(d.subshell)
             if haskey(GBL_Storage_XL_Coulomb, sa )
                 XL_Coulomb = GBL_Storage_XL_Coulomb[sa]
-                ##x println(">> get value $XL_Coulomb  for $sa ")
             else
                 XL_Coulomb = InteractionStrength.XL_Coulomb(L::Int64, a, b, c, d, grid)
                 ## global GBL_Storage_XL_Coulomb = Base.merge(GBL_Storage_XL_Coulomb, Dict( sa => XL_Coulomb))
@@ -739,9 +720,6 @@ module InteractionStrength
         xc = AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
         if   rem(L,2) == 1    xc = - xc    end 
         
-        ##x za = RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid);   zb = RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
-        ##x if abs( (za-zb)/za ) > 1.0e-12    println("XL_Coulomb: Slater  za = $za   zb = $zb  ")   end
-
         XL_Coulomb = xc * RadialIntegrals.SlaterRk_2dim_Damped(tau::Float64, L, a, b, c, d, grid)
         ##x XL_Coulomb = xc * RadialIntegrals.SlaterRk_new(L, a, b, c, d, grid)
         return( XL_Coulomb )

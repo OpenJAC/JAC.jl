@@ -7,7 +7,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(tr
                         initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                         finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
                         process = Eimex(), 
-                        processSettings=ImpactExcitation.Settings([100., 200.], false, true, false, Tuple{Int64,Int64}[], 2, 0.) )
+                        processSettings=ImpactExcitation.Settings([100., 200.], false, true, LineSelection(), 2, 0.) )
 
 wb = perform(wa)
 

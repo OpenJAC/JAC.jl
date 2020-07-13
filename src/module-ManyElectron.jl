@@ -368,15 +368,13 @@ module ManyElectron
         + makeIt         ::Bool            ... True, if the jj-LS expansion is to be made and false otherwise.
         + minWeight      ::Float64         ... minimum weight with which a (relativistic) CSF must contribute to (at least one) level.
         + printWeight    ::Float64         ... minimum weight of a nonrelativistic CSF to be printed out in the final expansion.
-        + selectLevels   ::Bool            ... True, if levels are selected individually for the computations.
-        + selectedLevels ::Array{Int64,1}  ... List of levels.
+        + levelSelection ::LevelSelection  ... Specifies the selected levels, if any.
     """
     struct LSjjSettings 
         makeIt          ::Bool
         minWeight       ::Float64 
-        printWeight     ::Float64
-        selectLines     ::Bool
-        selectedLines   ::Array{Int64,1}    
+        printWeight     ::Float64  
+        levelSelection  ::LevelSelection
     end 
 
 
@@ -384,7 +382,7 @@ module ManyElectron
     `LSjjSettings(makeIt::Bool)`  ... constructor for the default values of jj-LS transformations.
     """
     function LSjjSettings(makeIt::Bool)
-        LSjjSettings(makeIt, 0.05, 0.1, false, Int64[])
+        LSjjSettings(makeIt, 0.05, 0.1, LevelSelection() )
     end
 
 
@@ -393,8 +391,7 @@ module ManyElectron
         println(io, "makeIt:            $(settings.makeIt)  ")
         println(io, "minWeight:         $(settings.minWeight)  ")
         println(io, "printWeight:       $(settings.printWeight)  ")
-        println(io, "selectLines:       $(settings.selectLines)  ")
-        println(io, "selectedLines:     $(settings.selectedLines)  ")
+        println(io, "levelSelection:    $(settings.levelSelection)  ")
     end
 
 
@@ -416,11 +413,7 @@ module ManyElectron
     	+ qedModel             ::AbstractQedModel       ... model for estimating QED corrections {NoneQed(), QedPetersburg(), QedSydney()}.
     	+ methodCI             ::AbstractCImethod       ... method for diagonalizing the matrix.
     	+ jjLS                 ::LSjjSettings           ... settings to control a jj-LS transformation of atomic level, if requested.
-    	
-    	+ selectLevelsCI       ::Bool                   ... true, if specific level (number)s have been selected.
-    	+ selectedLevelsCI     ::Array{Int64,1}         ... Level number that have been selected.
-    	+ selectSymmetriesCI   ::Bool                   ... true, if specific level symmetries have been selected.
-    	+ selectedSymmetriesCI ::Array{LevelSymmetry,1} ... Level symmetries that have been selected.
+        + levelSelectionCI     ::LevelSelection         ... Specifies the selected levels, if any.
     """
     struct  AsfSettings
         generateScf            ::Bool 
@@ -435,11 +428,8 @@ module ManyElectron
     	eeInteractionCI        ::AbstractEeInteraction
     	qedModel               ::AbstractQedModel 	
     	methodCI               ::AbstractCImethod
-    	jjLS                   ::LSjjSettings
-    	selectLevelsCI         ::Bool 
-    	selectedLevelsCI       ::Array{Int64,1}
-    	selectSymmetriesCI     ::Bool 	
-    	selectedSymmetriesCI   ::Array{LevelSymmetry,1} 
+    	jjLS                   ::LSjjSettings 
+    	levelSelectionCI       ::LevelSelection
      end
 
 
@@ -448,7 +438,7 @@ module ManyElectron
     """
     function AsfSettings()
     	AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(), 24, 1.0e-6, Subshell[], Subshell[],  
-    	            CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), false, Int64[], false, LevelSymmetry[] )
+    	            CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), LevelSelection() )
     end
 
 
@@ -457,8 +447,8 @@ module ManyElectron
         
                 generateScf=..,       eeInteraction=..,       scField=..,            startScfFrom=..,           maxIterationsScf=..,    
                 accuracyScf=..,       shellSequenceScf=..,    frozenSubshells=..,    eeInteractionCI=..,        qedModel=..,           
-                methodCI=..,          jjLS=..,   
-                selectLevelsCI=..,    selectedLevelsCI=..,    selectSymmetriesCI=.., selectedSymmetriesCI=..,   printout::Bool=false)
+                methodCI=..,          jjLS=..,                LevelSelection=..,     printout::Bool=false)
+                ##x selectLevelsCI=..,    selectedLevelsCI=..,    selectSymmetriesCI=.., selectedSymmetriesCI=..,   printout::Bool=false)
         ... constructor for re-defining a settings::AsfSettings.
     """
     function AsfSettings(settings::AsfSettings; 
@@ -468,9 +458,7 @@ module ManyElectron
         shellSequenceScf::Union{Nothing,Array{Subshell,1}}=nothing,     frozenSubshells::Union{Nothing,Array{Subshell,1}}=nothing, 
         eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,  qedModel::Union{Nothing,AbstractQedModel}=nothing,              
         methodCI::Union{Nothing,AbstractCImethod}=nothing,              jjLS::Union{Nothing,LSjjSettings}=nothing,  
-        selectLevelsCI::Union{Nothing,Bool}=nothing,                    selectedLevelsCI::Union{Nothing,Array{Int64,1}}=nothing,         
-        selectSymmetriesCI::Union{Nothing,Bool}=nothing,                selectedSymmetriesCI::Union{Nothing,Array{LevelSymmetry,1}}=nothing,         
-        printout::Bool=false)
+        levelSelectionCI::Union{Nothing,LevelSelection}=nothing,        printout::Bool=false)
 
         if  generateScf         == nothing   generateScfx          = settings.generateScf           else   generateScfx          = generateScf          end 
         if  eeInteraction       == nothing   eeInteractionx        = settings.eeInteraction         else   eeInteractionx        = eeInteraction        end 
@@ -484,14 +472,10 @@ module ManyElectron
         if  qedModel            == nothing   qedModelx             = settings.qedModel              else   qedModelx             = qedModel             end 
         if  methodCI            == nothing   methodCIx             = settings.methodCI              else   methodCI              = methodCI             end 
         if  jjLS                == nothing   jjLSx                 = settings.jjLS                  else   jjLSx                 = jjLS                 end 
-        if  selectLevelsCI      == nothing   selectLevelsCIx       = settings.selectLevelsCI        else   selectLevelsCIx       = selectLevelsCI       end 
-        if  selectedLevelsCI    == nothing   selectedLevelsCIx     = settings.selectedLevelsCI      else   selectedLevelsCIx     = selectedLevelsCI     end 
-        if  selectSymmetriesCI  == nothing   selectSymmetriesCIx   = settings.selectSymmetriesCI    else   selectSymmetriesCIx   = selectSymmetriesCI   end 
-        if  selectedSymmetriesCI== nothing   selectedSymmetriesCIx = settings.selectedSymmetriesCI  else   selectedSymmetriesCIx = selectedSymmetriesCI end 
+        if  levelSelectionCI    == nothing   levelSelectionCIx     = settings.levelSelectionCI      else   levelSelectionCI      = levelSelectionCI     end 
         
     	AsfSettings(generateScfx, eeInteractionx, scFieldx, startScfFromx, maxIterationsScfx, accuracyScfx, 
-    	            shellSequenceScfx, frozenSubshellsx, eeInteractionCIx, qedModelx, methodCIx, jjLSx, 
-    	            selectLevelsCIx, selectedLevelsCIx, selectSymmetriesCIx, selectedSymmetriesCIx)
+    	            shellSequenceScfx, frozenSubshellsx, eeInteractionCIx, qedModelx, methodCIx, jjLSx, levelSelectionCIx)
     end
     
     
@@ -509,11 +493,8 @@ module ManyElectron
     	  println(io, "eeInteractionCI:      $(settings.eeInteractionCI)  ")
     	  println(io, "qedModel :            $(settings.qedModel)  ")
     	  println(io, "methodCI:             $(settings.methodCI)  ")
-    	  println(io, "jjLS :                $(settings.jjLS.makeIt)  ")
-    	  println(io, "selectLevelsCI:       $(settings.selectLevelsCI)  ")
-    	  println(io, "selectedLevelsCI:     $(settings.selectedLevelsCI)  ")
-    	  println(io, "selectSymmetriesCI:   $(settings.selectSymmetriesCI)  ")
-    	  println(io, "selectedSymmetriesCI: $(settings.selectedSymmetriesCI)  ")
+    	  println(io, "jjLS:                 $(settings.jjLS.makeIt)  ")
+    	  println(io, "levelSelectionCI:     $(settings.levelSelectionCI)  ")
     end
     
     
@@ -954,36 +935,6 @@ module ManyElectron
     function Base.show(io::IO, multiplet::Multiplet) 
         println(io, "name:        $(multiplet.name)  ")
         println(io, "levels:      $(multiplet.levels)  ")
-    end
-    
-    
-    """
-    `struct  ManyElectron.MultipletSettings`  
-        ... a struct for defining the atomic interactions to be incorporated into the representation of a multiplet.
-    
-    	+ Coulomb		           ::Bool 		      ... logical flag to include Coulomb interactions.
-    	+ eeInteraction             ::AbstractEeInteraction 		      ... logical flag to include Breit interactions.
-    	+ QED			           ::Bool 		      ... logical flag to include QED interactions.
-    	+ diagonalizationMethod    ::String		      ... method for diagonalizing the matrix.
-    	+ selectLevels  	       ::Bool 		      ... true, if specific level (number)s have been selected for computation.
-    	+ selectedLevels	       ::Array{Int64,1}	  ... Level number that have been selected.
-    	+ selectSymmetries	       ::Bool 		      ... true, if specific level symmetries have been selected for computation.
-    	+ selectededSymmetries     ::Array{LevelSymmetry,1}   ... Level symmetries that have been selected.
-    
-    	### `Methods for diagonalization`  
-    
-    	* `eigval`	       The internal Julia method for diagonalizing a quadratic matrix
-    	*
-    """
-    struct  MultipletSettings
-        Coulomb 		         ::Bool
-        eeInteraction             ::AbstractEeInteraction
-        QED			             ::Bool
-    	diagonalizationMethod	 ::String
-        selectLevels		     ::Bool
-        selectedLevels  	     ::Array{Int64,1}
-        selectSymmetries	     ::Bool
-        selectedSymmetries	     ::Array{LevelSymmetry,1}
     end
     
     

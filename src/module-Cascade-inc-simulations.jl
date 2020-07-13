@@ -37,26 +37,6 @@
         println("> Append $nnew (new) levels to $nA levels results in a total of $nN levels (with $nmod modified levels) in the list.")
         return( newlevels )
     end
-
-
-    #===
-    """
-    `Cascade.appendLevels!(allLevels::Array{Cascade.Level,1}, levels::Array{Cascade.Level,1})` 
-        ... appends the (cascade) levels to allLevels if they do not yet occur in the list; a message is issued about the number
-            of levels before and after this 'addition'. The argument allLevels is modified but nothing (else) is returned.
-    """
-    function  appendLevels!(allLevels::Array{Cascade.Level,1}, levels::Array{Cascade.Level,1})
-        naBefore = length(allLevels);   nlev = length(levels)
-        for  level in levels
-            append = true
-            for allLevel in allLevels   if  level == allLevel   append = false;     break   end     end
-            if  append   push!(allLevels, level)    end
-        end
-        naAfter = length(allLevels)
-        println("> Append $nlev (new) levels to $naBefore levels results in a total of $naAfter levels in the list.")
-        return( nothing )
-    end
-    ==#
     
     
     """
@@ -64,17 +44,17 @@
         ... displays the (current or final) ion distribution in a neat table. Nothing is returned.
     """
     function displayIonDistribution(stream::IO, sc::String, levels::Array{Cascade.Level,1})
-        minElectrons = 1000;   maxElectrons = 0;   totalProb = 0.
+        minElectrons = 1000;   maxElectrons = 0;   totalProb = 0.;    nx = 31
         for  level in levels   minElectrons = min(minElectrons, level.NoElectrons);   maxElectrons = max(maxElectrons, level.NoElectrons)   end
         println(stream, " ")
         println(stream, "  (Final) Ion distribution for the cascade:  $sc ")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(31))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  "
         sa = sa * TableStrings.center(14, "No. electrons"; na=4)        
         sa = sa * TableStrings.center(10,"Rel. occ.";      na=2)
         println(stream, sa)
-        println(stream, "  ", TableStrings.hLine(31))
+        println(stream, "  ", TableStrings.hLine(nx))
         for n = maxElectrons:-1:minElectrons
             sa = "             " * string(n);   sa = sa[end-10:end];   prob = 0.
             for  level in levels    if  n == level.NoElectrons   prob = prob + level.relativeOcc    end    end
@@ -82,7 +62,7 @@
             println(stream, sa)
             totalProb = totalProb + prob
         end
-        println(stream, "  ", TableStrings.hLine(31))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  Total distributed probability:  " * @sprintf("%.5e", totalProb)
         println(stream, sa)
 
@@ -96,7 +76,7 @@
             occupation are displayed here. Nothing is returned.
     """
     function displayLevelDistribution(stream::IO, sc::String, levels::Array{Cascade.Level,1})
-        minElectrons = 1000;   maxElectrons = 0;   energies = zeros(length(levels))
+        minElectrons = 1000;   maxElectrons = 0;   energies = zeros(length(levels));    nx = 69
         for  i = 1:length(levels)
             minElectrons = min(minElectrons, levels[i].NoElectrons);   maxElectrons = max(maxElectrons, levels[i].NoElectrons)
             energies[i]  = levels[i].energy   
@@ -106,7 +86,7 @@
         println(stream, " ")
         println(stream, "  (Final) Level distribution for the cascade:  $sc")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(69))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  "
         sa = sa * TableStrings.center(14, "No. electrons"; na=2)        
         sa = sa * TableStrings.center( 8, "Lev-No"; na=2)        
@@ -114,7 +94,7 @@
         sa = sa * TableStrings.center(16, "Energy " * TableStrings.inUnits("energy"); na=5)
         sa = sa * TableStrings.center(10, "Rel. occ.";                                    na=2)
         println(stream, sa)
-        println(stream, "  ", TableStrings.hLine(69))
+        println(stream, "  ", TableStrings.hLine(nx))
         for n = maxElectrons:-1:minElectrons
             sa = "            " * string(n);        sa  = sa[end-10:end]
             for  en in enIndices
@@ -129,7 +109,7 @@
                 end
             end
         end
-        println(stream, "  ", TableStrings.hLine(69))
+        println(stream, "  ", TableStrings.hLine(nx))
 
         return( nothing )
     end
@@ -142,7 +122,7 @@
             enables one to recognize (and perhaps later add) missing parent and daughter levels. Nothing is returned.
     """
     function displayLevelTree(stream::IO, levels::Array{Cascade.Level,1}; extended::Bool=false)
-        minElectrons = 1000;   maxElectrons = 0;   energies = zeros(length(levels))
+        minElectrons = 1000;   maxElectrons = 0;   energies = zeros(length(levels));    nx = 179;    ny = 65
         for  i = 1:length(levels)
             minElectrons = min(minElectrons, levels[i].NoElectrons);   maxElectrons = max(maxElectrons, levels[i].NoElectrons)
             energies[i]  = levels[i].energy   
@@ -152,7 +132,7 @@
         println(stream, " ")
         println(stream, "* Level tree of this cascade:  **name ?? **")
         println(stream, " ")
-        if  extended    println(stream, "  ", TableStrings.hLine(179))  else    println(stream, "  ", TableStrings.hLine(65))  end
+        if  extended    println(stream, "  ", TableStrings.hLine(nx))  else    println(stream, "  ", TableStrings.hLine(ny))  end
         sa = " "
         sa = sa * TableStrings.center( 6, "No. e-"; na=2)        
         sa = sa * TableStrings.center( 6, "Lev-No"; na=2)        
@@ -165,7 +145,7 @@
         end
         # 
         println(stream, sa)
-        if  extended    println(stream, "  ", TableStrings.hLine(179))  else    println(stream, "  ", TableStrings.hLine(65))  end
+        if  extended    println(stream, "  ", TableStrings.hLine(nx))  else    println(stream, "  ", TableStrings.hLine(ny))  end
         for n = maxElectrons:-1:minElectrons
             sa = "            " * string(n);     sa  = sa[end-5:end]
             for  en in enIndices
@@ -209,7 +189,7 @@
                 end
             end
         end
-        if  extended    println(stream, "  ", TableStrings.hLine(179))  else    println(stream, "  ", TableStrings.hLine(65))  end
+        if  extended    println(stream, "  ", TableStrings.hLine(nx))  else    println(stream, "  ", TableStrings.hLine(ny))  end
 
         return( nothing )
     end
@@ -220,7 +200,7 @@
         ... displays the photoabsorption cross sections a neat table. Nothing is returned.
     """
     function displayPhotoAbsorptionSpectrum(stream::IO, crossSections::Array{Cascade.AbsorptionCrossSection,1}, settings::Cascade.SimulationSettings)
-        nd = 83
+        nx = 83
         println(stream, " ")
         println(stream, "* Absorption cross sections:  ")
         println(stream, " ")
@@ -229,7 +209,7 @@
         println(stream, "  Absorption cross sections are determined for photon energies between " * sMinEn * " and "  *
                         sMaxEn * TableStrings.inUnits("energy") * " as well as for levels \n  with the initial population " *
                         "$(settings.initialOccupations) \n")
-        println(stream, "  ", TableStrings.hLine(nd))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  "
         sa = sa * TableStrings.center(16, "Energy "        * TableStrings.inUnits("energy"); na=5)
         sa = sa * TableStrings.center(10, "Ionization CS " * TableStrings.inUnits("cross section"); na=11)
@@ -237,7 +217,7 @@
         println(stream, sa)
         sa = "                      Coulomb       Babushkin         Coulomb       Babushkin"
         println(stream, sa)
-        println(stream, "  ", TableStrings.hLine(nd))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         for  cs in  crossSections
             sa = "     "
@@ -253,7 +233,7 @@
             end
             println(stream, sa)
         end
-        println(stream, "  ", TableStrings.hLine(nd))
+        println(stream, "  ", TableStrings.hLine(nx))
 
         return( nothing )
     end
@@ -266,10 +246,11 @@
             for levels in the settings which do not exist in the present simulation. Nothing is returned.
     """
     function displayRelativeOccupation(stream::IO, levels::Array{Cascade.Level,1}, settings::Cascade.SimulationSettings)
+       nx = 69
         println(stream, " ")
         println(stream, "* Initial level occupation:  ")
         println(stream, " ")
-        println(stream, "  ", TableStrings.hLine(69))
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  "
         sa = sa * TableStrings.center(14, "No. electrons"; na=2)        
         sa = sa * TableStrings.center( 8, "Lev-No"; na=2)        
@@ -289,7 +270,7 @@
             sd = sd * "      " * @sprintf("%.5e", level.relativeOcc) 
             println(stream, sd)
         end
-        println(stream, "  ", TableStrings.hLine(69))
+        println(stream, "  ", TableStrings.hLine(nx))
 
         return( nothing )
     end
@@ -508,7 +489,6 @@
             end
             push!(ionizationCS, Cascade.AbsorptionCrossSection(data.photonEnergy, Basics.EmProperty(0.), cs))
         end
-        ##x @show ionizationCS
         #
         # Next determine all excitation cross sections for the requested interval of photon energies; here the photon energies are
         # simply given by the photon excitation energies, and which must be in the requested interval. There will be one
@@ -554,7 +534,6 @@
         for  (i, ionCS)  in  enumerate(ionizationCS)
            if  ionCS.photonEnergy >  photonEnergy   imax = i;   break    end
         end
-        ##x @show imin, imax
         #
         if       imin == 0  &&  imax == 1        return(ionizationCS[1].ionizationCS)
         elseif   imax == 0                       return(ionizationCS[end].ionizationCS)
@@ -636,8 +615,6 @@
                         if      daugther.process == Basics.Radiative()     rates[i] = daugther.lineSet.linesR[idx].photonRate.Babushkin
                         elseif  daugther.process == Basics.Auger()         rates[i] = daugther.lineSet.linesA[idx].totalRate
                         elseif  daugther.process == Basics.Photo()         rates[i] = daugther.lineSet.linesP[idx].crossSection.Coulomb
-                                ##x println("Cou = $(daugther.lineSet.linesP[idx].crossSection.Coulomb),  Bab = $(daugther.lineSet.linesP[idx].crossSection.Babushkin)" )
-                                ##x println("photon energy = $(daugther.lineSet.linesP[idx].photonEnergy)")
                         else    error("stop a; process = $(daugther.process) ")
                         end
                     end
@@ -686,7 +663,6 @@
             end
         end
         push!( levels, newLevel)
-        ##x info("... one level added, n = $(length(levels)) ")
         return( nothing )
     end
 
@@ -727,7 +703,6 @@
             else    error("stop a")
             end
             levels = Cascade.extractLevels(lineData, settings)
-            ##x Cascade.appendLevels!(allLevels, levels)
             allLevels = Cascade.addLevels(allLevels, levels)
         end
         
@@ -753,11 +728,11 @@
         ##x end
         Cascade.propagateProbability!(levels)   ##x , simulation.cascadeData)
         #
-        if  Cascade.IonDistribution()        in simulation.properties    
+        if  typeof(simulation.property) == Cascade.IonDistribution   
             Cascade.displayIonDistribution(stdout, simulation.name, levels)     
             if  printSummary   Cascade.displayIonDistribution(iostream, simulation.name, levels)      end
         end
-        if  Cascade.FinalLevelDistribution() in simulation.properties    
+        if  typeof(simulation.property) == Cascade.FinalLevelDistribution    
             Cascade.displayLevelDistribution(stdout, simulation.name, levels)   
             if  printSummary   Cascade.displayLevelDistribution(iostream, simulation.name, levels)    end
         end
