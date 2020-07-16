@@ -1,12 +1,3 @@
-
-"""
-`module  JAC.BasicsAG`  
-    ... a submodel of JAC that contains methods that support tasks related to spectroscopic computation.
-"""
-module BasicsAG
-
-    using Printf,  LinearAlgebra, ..AngularMomentum, ..Atomic, ..AtomicState, ..Basics, ..Continuum, ..Defaults, ..Einstein, 
-                   ..LSjj, ..ManyElectron, ..PhotoEmission, ..Radial, ..RadialIntegrals, ..TableStrings
     
     export recastAG
 
@@ -307,7 +298,7 @@ module BasicsAG
     """
     `Basics.diagonalize("generalized eigenvalues: Julia, eigfact", matrixA::Array{Float64,2}, matrixB::Array{Float64,2})`  
         ... to apply the standard eigfact() method from Julia for a generalized eigenvalue problem with two quadratic   
-            (full) matrices; nothing about the symmetry of the matrix is assumed here; an eigen::JAC.Eigen is returned.
+            (full) matrices; nothing about the symmetry of the matrix is assumed here; an eigen::Basics.Eigen is returned.
     """
     function Basics.diagonalize(sa::String, matrixA::Array{Float64,2}, matrixB::Array{Float64,2})
         if       sa == "generalized eigenvalues: Julia, eigfact" 
@@ -764,5 +755,3 @@ module BasicsAG
         
         return( (shellList, occList) )
     end
-
-end # module

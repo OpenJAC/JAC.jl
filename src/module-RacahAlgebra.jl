@@ -57,8 +57,7 @@ module  RacahAlgebra
 
     """
     `Base.:(==)(wa::Kronecker, wb::Kronecker)`  
-        ... compares two (symbolic) Kronecker deltas and return true if all subfields are equal under permutation, 
-            and false otherwise.
+        ... compares two (symbolic) Kronecker deltas and return true if all subfields are equal under permutation, and false otherwise.
     """
     function  Base.:(==)(wa::Kronecker, wb::Kronecker)
         if  (wa.i == wb.i  &&  wa.k == wb.k)   ||    (wa.i == wb.k  &&  wa.k == wb.i)    return( true )
@@ -312,7 +311,8 @@ module  RacahAlgebra
 
 
     """
-    `struct  RacahAlgebra.Djpq`  ... defines a type for the (small and real !!) Wigner rotation matrix d^(j)_pq (beta) with symbolic arguments.
+    `struct  RacahAlgebra.Djpq`  
+        ... defines a type for the (small and real !!) Wigner rotation matrix d^(j)_pq (beta) with symbolic arguments.
 
         + j, p, q              ::Basic   ... angular momenta
         + beta                 ::Basic   ... rotation angle
@@ -355,7 +355,8 @@ module  RacahAlgebra
 
 
     """
-    `struct  RacahAlgebra.Integral`  ... defines an (finite) integral, typically over some angle, Int_low^up d var with symbolic arguments.
+    `struct  RacahAlgebra.Integral`  
+        ... defines an (finite) integral, typically over some angle, Int_low^up d var with symbolic arguments.
 
         + var                  ::Basic   ... integration variable, typically an angle (theta, phi, beta, ...)
         + low, up              ::Basic   ... lower, upper integration bound
@@ -1369,10 +1370,9 @@ module  RacahAlgebra
 
     """
     `RacahAlgebra.selectW6j(n::Int64)`  
-        ... selects one of various pre-defined Wigner 6j symbols for which usually special values are known;
-            this function has been implemented mainly for test purposes. A w6j::W6j is returned. 
-            If n = 99, all pre-defined Wigner 6j symbols are printed to screen and nothing is returned in this
-            case.
+        ... selects one of various pre-defined Wigner 6j symbols for which usually special values are known; this function has been 
+            implemented mainly for test purposes. A w6j::W6j is returned. If n = 99, all pre-defined Wigner 6j symbols are printed to 
+            screen and nothing is returned in this case.
     """
     function selectW6j(n::Int64)
         if  n == 99     for  i = 1:20   println("  $i    $(selectW6j(i))")      end
@@ -1450,7 +1450,7 @@ module  RacahAlgebra
         j = Basic(:j);    J = Basic(:J);    m = Basic(:m);    M  = Basic(:M)
         a = Basic(:a);    b = Basic(:b);    c = Basic(:c);    d  = Basic(:d);    ee  = Basic(:ee);    f  = Basic(:f) 
         g = Basic(:g);    h = Basic(:h);    k = Basic(:k);    l  = Basic(:l);    p   = Basic(:p);     q  = Basic(:q);     
-        r = Basic(:r);    s = Basic(:s);    t = Basic(:t);    X = Basic(:X);    Y = Basic(:Y);    Z = Basic(:Z);
+        r = Basic(:r);    s = Basic(:s);    t = Basic(:t);    X = Basic(:X);     Y   = Basic(:Y);     Z  = Basic(:Z);
           
             
         na  = Basic(:na);    np  = Basic(:np);     nq  = Basic(:nq);     ee  = Basic(:ee);    ap  = Basic(:ap) 
@@ -1613,7 +1613,7 @@ module  RacahAlgebra
         j = Basic(:j);    J = Basic(:J);    m = Basic(:m);    M  = Basic(:M)
         a = Basic(:a);    b = Basic(:b);    c = Basic(:c);    d  = Basic(:d);    ee  = Basic(:ee);    f  = Basic(:f) 
         g = Basic(:g);    h = Basic(:h);    k = Basic(:k);    l  = Basic(:l);    p   = Basic(:p);     q  = Basic(:q);     
-        r = Basic(:r);    s = Basic(:s);    t = Basic(:t);    X = Basic(:X);    Y = Basic(:Y);    Z = Basic(:Z);
+        r = Basic(:r);    s = Basic(:s);    t = Basic(:t);    X = Basic(:X);     Y   = Basic(:Y);     Z  = Basic(:Z);
         
         # Integral rules for one Ylm symbol   ... to be adapted
         if      n ==  1     w3j = W3j(j, j, J, m, -m, M)
@@ -2063,7 +2063,7 @@ module  RacahAlgebra
     function symmetricForms(w6j::RacahAlgebra.W6j; regge::Bool=false)
         rexList = RacahExpression[]
         deltas  = Kronecker[];    triangles = Triangle[];   w3js = W3j[];   w6js = W6j[];   w9js = W9j[];   ylms = Ylm[];   djpqs = Djpq[];   ints = Integral[]
-        sums    = Basic[];    phase = Basic(0);    weight = Basic(1)
+        sums    = Basic[];        phase = Basic(0);    weight = Basic(1)
         
         if regge    error("stop a")
         else
@@ -2198,7 +2198,7 @@ module  RacahAlgebra
     function symmetricForms(ylm::RacahAlgebra.Ylm)
         rexList = RacahExpression[]
         deltas  = Kronecker[];    triangles = Triangle[];   w3js = W3j[];   w6js = W6j[];   w9js = W9j[];   ylms = Ylm[];   djpqs = Djpq[];   ints = Integral[]
-        sums    = Basic[];    phase = Basic(0);    weight = Basic(1)
+        sums    = Basic[];        phase = Basic(0);         weight = Basic(1)
         
         l = ylm.l;  m = ylm.m;   theta = ylm.theta;    phi = ylm.phi
         push!( rexList, RacahExpression( sums, ints, phase,       weight, deltas, triangles, w3js, w6js, w9js, [Ylm(l,m,theta,phi)],                      djpqs ) )

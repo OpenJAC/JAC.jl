@@ -1352,10 +1352,6 @@ module Basics
         ... defines an abstract and a number of singleton types to distinguish between different (electronic) atomic potentials.
 
         + struct NoProperty       ... No level property defined.        
-        + struct Einstein         ... Einstein A, B coefficients and oscillator strength; although not a 'level property', in the Einstein module
-                                      these computations are treated within a single basis and without all relaxation effects, etc. The `Einstein'
-                                      property therefore helps to obtain a quick overview about transition probabilities of a transition arry
-                                      or if many of these Einstein coefficients need to be calculated for a cascade.   
         + struct HFS              ... Hyperfine A and B parameters.     
         + struct Isotope          ... Isotope shift M and F parameters.      
         + struct LandeJ           ... Lande g_J factors.
@@ -1363,11 +1359,15 @@ module Basics
         + struct Polarizibility   ... static and dynamic polarizibilities. 
         + struct Plasma           ... CI computations including interactions from various plasma models. 
         + struct Zeeman           ... Zeeman splitting of fine-structure levels.
+        + struct EinsteinX        
+            ... Einstein A, B coefficients and oscillator strength; although not a 'level property', in the Einstein module these computations 
+                are treated within a single basis and without all relaxation effects, etc. The `Einstein' property therefore helps to obtain a 
+                quick overview about transition probabilities of a transition arry or if many of these Einstein coefficients need to be 
+                calculated for a cascade.   
     """
     abstract type  AbstractLevelProperty                         end
     struct    NoProperty            <:  AbstractLevelProperty    end
     struct    AlphaX                <:  AbstractLevelProperty    end
-    struct    EinsteinX             <:  AbstractLevelProperty    end
     struct    FormF                 <:  AbstractLevelProperty    end
     struct    HFS                   <:  AbstractLevelProperty    end
     struct    Isotope               <:  AbstractLevelProperty    end
@@ -1377,6 +1377,7 @@ module Basics
     struct    Polarizibility        <:  AbstractLevelProperty    end
     struct    Yields                <:  AbstractLevelProperty    end
     struct    Zeeman                <:  AbstractLevelProperty    end
+    struct    EinsteinX             <:  AbstractLevelProperty    end
 
     
     export  AbstractProperty,  NoProperty,  AlphaX,  EinsteinX,  FormF,  HFS,  Isotope,  LandeJ,  LandeF, Plasma,  

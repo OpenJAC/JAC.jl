@@ -1,7 +1,7 @@
 
 """
-`module  JAC.ImpactIonization`  ... a submodel of JAC that contains all methods for computing electron impact ionization cross sections; 
-                                    it is using JAC, JAC.ManyElectron, JAC.ImpactExcitation, JAC.AutoIonization.
+`module  JAC.ImpactIonization`  
+    ... a submodel of JAC that contains all methods for computing electron impact ionization cross sections.
 """
 module ImpactIonization
 
@@ -39,8 +39,9 @@ module ImpactIonization
 
 
     """
-    `struct  ImpactIonization.Channel`  ... defines a type for a electron-impact ionization channel to help characterize the incoming and 
-                                            two outgoing (continuum) states of many electron-states with (two) free electron
+    `struct  ImpactIonization.Channel`  
+        ... defines a type for a electron-impact ionization channel to help characterize the incoming and two outgoing (continuum) 
+            states of many electron-states with (two) free electron
 
         + initialEpsilon   ::Float64            ... energy of the incoming free-electron
         + finalEpsilon     ::Float64            ... energy of the outgoing free-electron

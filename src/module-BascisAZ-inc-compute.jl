@@ -1,13 +1,4 @@
 
-"""
-`module  JAC.BascisCompute`  
-    ... a submodel of JAC that contains methods that support tasks related to spectroscopic computation.
-"""
-module BascisCompute
-
-    using Printf, JAC, ..AngularMomentum, ..AtomicState, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, 
-                       ..Nuclear, ..PlasmaShift, ..Radial
-    
     export compute
 
 
@@ -99,7 +90,7 @@ module BascisCompute
         if printout    print("Compute CI matrix of dimension $n x $n for the symmetry $(string(JP.J))^$(string(JP.parity)) ...")    end
 
         # Generate an effective nuclear charge Z(r) on the given grid
-        potential = JAC.Nuclear.nuclearPotential(nuclearModel, grid)
+        potential = Nuclear.nuclearPotential(nuclearModel, grid)
         if  settings.qedModel in [QedPetersburg(), QedSydney()]    
             meanPot = potential
             ## meanPot = compute("radial potential: Dirac-Fock-Slater", grid, basis)
@@ -109,8 +100,8 @@ module BascisCompute
         
         matrix = zeros(Float64, n, n)
         keep = true
-        JAC.InteractionStrength.XL_Coulomb_reset_storage(keep, printout=false)
-        JAC.InteractionStrength.XL_Breit_reset_storage(keep)
+        InteractionStrength.XL_Coulomb_reset_storage(keep, printout=false)
+        InteractionStrength.XL_Breit_reset_storage(keep)
         print(">> performCI() ... ")
         @time   for  r = 1:n
             for  s = 1:n
@@ -118,10 +109,10 @@ module BascisCompute
                 me = 0.
                 for  coeff in wa[1]
                     jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
-                    me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
+                    me = me + coeff.T * sqrt( jj + 1) * RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
                     if  settings.qedModel != NoneQed()  
-                        me = me + JAC.InteractionStrengthQED.qedLocal(basis.orbitals[coeff.a], basis.orbitals[coeff.b], nuclearModel, 
-                                                                      settings.qedModel, meanPot, grid)  
+                        me = me + InteractionStrengthQED.qedLocal(basis.orbitals[coeff.a], basis.orbitals[coeff.b], nuclearModel, 
+                                                                  settings.qedModel, meanPot, grid)  
                     end
                 end
 
@@ -141,7 +132,7 @@ module BascisCompute
                     end
                                                                                             
                     if  settings.eeInteractionCI in [BreitInteraction(), CoulombBreit()]
-                        me = me + coeff.V * JAC.InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                        me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                        basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)     
                     elseif  false
                         xl1 = InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
@@ -186,11 +177,11 @@ module BascisCompute
         if  settings.qedModel != NoneQed()   error("No QED estimates supported for plasma computations; use qedModel=NoneQed()  in the asfSettings.")   end   
         
         # Now distinguis the CI matrix for different plasma models
-        if  plasmaSettings.plasmaModel == JAC.PlasmaShift.DebyeHueckel()
+        if  plasmaSettings.plasmaModel == PlasmaShift.DebyeHueckel()
             if printout    print("Compute DebyeHueckel-CI matrix of dimension $n x $n for the symmetry $(string(JP.J))^$(string(JP.parity)) ...")    end
 
             # Generate an effective nuclear charge Z(r) for a screened Debye-Hueckel potential on the given grid
-            potential = JAC.Nuclear.nuclearPotentialDH(nuclearModel, grid, plasmaSettings.lambdaDebye)
+            potential = Nuclear.nuclearPotentialDH(nuclearModel, grid, plasmaSettings.lambdaDebye)
 
             matrix = zeros(Float64, n, n)
             for  r = 1:n
@@ -199,12 +190,12 @@ module BascisCompute
                     me = 0.
                     for  coeff in wa[1]
                         jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
-                        me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
+                        me = me + coeff.T * sqrt( jj + 1) * RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
                     end
 
                     for  coeff in wa[2]
                         if  settings.eeInteractionCI in [CoulombInteraction(), CoulombBreit()]
-                            me = me + coeff.V * JAC.InteractionStrength.XL_Coulomb_DH(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                            me = me + coeff.V * InteractionStrength.XL_Coulomb_DH(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                                 basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, 
                                                                                                 plasmaSettings.lambdaDebye)   end
                     end
@@ -235,10 +226,10 @@ module BascisCompute
             condition. Radial orbitals can be obtained for the ground-state configuration for all elements with 55 <= Z <= 92. 
     """
     function Basics.compute(sa::String, subshell::Subshell, Z::Int64)
-        if      sa == "radial orbital: NR, Bunge (1993)"          wa = JAC.Radial.OrbitalBunge1993(subshell,Z)
-        elseif  sa == "radial orbital: NR, McLean (1981)"         wa = JAC.Radial.OrbitalMcLean1981(subshell,Z)
-        elseif  sa == "radial orbital: hydrogenic"                wa = JAC.Radial.OrbitalHydrogenic(subshell,Z)
-        elseif  sa == "radial orbital: Thomas-Fermi"              wa = JAC.Radial.OrbitalThomasFermi(subshell,Z)
+        if      sa == "radial orbital: NR, Bunge (1993)"          wa = Radial.OrbitalBunge1993(subshell,Z)
+        elseif  sa == "radial orbital: NR, McLean (1981)"         wa = Radial.OrbitalMcLean1981(subshell,Z)
+        elseif  sa == "radial orbital: hydrogenic"                wa = Radial.OrbitalHydrogenic(subshell,Z)
+        elseif  sa == "radial orbital: Thomas-Fermi"              wa = Radial.OrbitalThomasFermi(subshell,Z)
         else    error("Unsupported keystring = $sa ")
         end
 
@@ -553,12 +544,12 @@ module BascisCompute
         # Define the integrant and take the integrals
         for i = 1:npoints
             for j = 1:npoints    rg = max( grid.r[i],  grid.r[j]);    wx[j] = rhoc[j]/rg   end
-            wb[i] = JAC.RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
+            wb[i] = RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
         end
         # Define the potential with regard to Z(r)
         for i = 1:npoints    wb[i] = - wb[i] * grid.r[i]   end
         #
-        wc = JAC.Radial.Potential("CoreHartree", wb, grid)
+        wc = Radial.Potential("CoreHartree", wb, grid)
         return( wc )
     end
 
@@ -580,12 +571,12 @@ module BascisCompute
             occa = Basics.computeMeanSubshellOccupation(a, [level])
             orba = basis.orbitals[a];   nrho = length(orba.P);      rhoaa  = zeros(nrho)
             for  i = 1:nrho    rhoaa[i] = orba.P[i]^2 + orba.Q[i]^2    end
-            for  i = 1:nrho    wx[i]    = wx[i] - occa * JAC.RadialIntegrals.Yk_ab(0, grid.r[i], rhoaa, nrho, grid)   end
-            Yk = JAC.RadialIntegrals.Yk_ab(0, grid.r[nrho], rhoaa, nrho, grid)
+            for  i = 1:nrho    wx[i]    = wx[i] - occa * RadialIntegrals.Yk_ab(0, grid.r[i], rhoaa, nrho, grid)   end
+            Yk = RadialIntegrals.Yk_ab(0, grid.r[nrho], rhoaa, nrho, grid)
             for  i = nrho+1:npoints       wx[i] = wx[i] - occa * Yk    end
         end
         
-        wc = JAC.Radial.Potential("Hartree", wx, grid)
+        wc = Radial.Potential("Hartree", wx, grid)
         return( wc )
     end
 
@@ -609,15 +600,15 @@ module BascisCompute
             occa = Basics.computeMeanSubshellOccupation(a, [level])
             orba = basis.orbitals[a];   nrho = length(orba.P);      rhoaa  = zeros(nrho)
             for  i = 1:nrho    rhoaa[i] = orba.P[i]^2 + orba.Q[i]^2    end
-            for  i = 1:nrho    wx[i]    = wx[i]  - occa * JAC.RadialIntegrals.Yk_ab(0, grid.r[i], rhoaa, nrho, grid)   end
+            for  i = 1:nrho    wx[i]    = wx[i]  - occa * RadialIntegrals.Yk_ab(0, grid.r[i], rhoaa, nrho, grid)   end
             for  i = 1:nrho    rho[i]   = rho[i] + occa * rhoaa[i]     end
-            Yk = JAC.RadialIntegrals.Yk_ab(0, grid.r[nrho], rhoaa, nrho, grid)
+            Yk = RadialIntegrals.Yk_ab(0, grid.r[nrho], rhoaa, nrho, grid)
             for  i = nrho+1:npoints       wx[i] = wx[i] - occa * Yk    end
         end
         ## for  i = 2:npoints     rho[i]   = rho[i] / (4pi * grid.r[i])   end;       rho[1] = 0.
         for  i = 2:npoints     wx[i]    = wx[i] + (3/2) * (3/(4pi^2 * grid.r[i]^2) * rho[i])^(1/3) * grid.r[i] / 2   end
         #
-        wc = JAC.Radial.Potential("Hartree-Slater", wx, grid)
+        wc = Radial.Potential("Hartree-Slater", wx, grid)
         return( wc )
     end
 
@@ -666,7 +657,7 @@ module BascisCompute
             The Dirac-Fock-Slater potential is defined by
 
                                                                 [   3                   ]^(1/3)
-                V_DFS(r) = int_0^infty dr'  rho_t(r') / r_>  --  [-----------   rho_t(r) ]
+                V_DFS(r) = int_0^infty dr'  rho_t(r') / r_>  -- [-----------   rho_t(r) ]
                                                                 [ 4 pi^2 r^2            ]
 
             with r_> = max(r,r')  and  rho_t(r) = sum_a (Pa^2(r) + Qa^2(r))   ... charge density of all electrons.  
@@ -882,5 +873,3 @@ module BascisCompute
         
         return( Tcoeffs, Vcoeffs )
     end
-
-end # module

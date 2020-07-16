@@ -133,32 +133,17 @@ module RadiativeAuger
             and properties have now been evaluated.
     """
     function  computeAmplitudesProperties(line::RadiativeAuger.Line, grid::Radial.Grid, settings::RadiativeAuger.Settings)
-        JAC_counter = 1
         newSharings = RadiativeAuger.Sharing[]
         for sharing in line.sharings
             newChannels = RadiativeAuger.Channel[]
             for channel in sharing.channels
                 # Generate a continuum orbital
-                JAC_counter = JAC_counter + 1
-                if   JAC_counter < 20   println("RadiativeAuger.computeAmplitudesProperties-aa: warning ... no coninuum orbital is generated.")  end
-                phase  = 0.
-                # Define a proper continuum basis from the finalLevel.basis and the continuum orbital
-                JAC_counter = JAC_counter + 1
-                if   JAC_counter < 20   println("RadiativeAuger.computeAmplitudesProperties-ab: warning ... no coninuum basis is generated.") end
-                # Compute the transition matrix for the continuum and the initial-state basis
-                JAC_counter = JAC_counter + 1
-                if   JAC_counter < 20   println("RadiativeAuger.computeAmplitudesProperties-ac: warning ... no transition matrix is computed.") end
-                # matrix    = RadiativeAuger.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
-                #                                              line.initialLevel.basis, grid, settings)
-                # amplitude = line.finalLevel.mc * matrix * line.initialLevel.mc 
                 amplitude = 1.0 
                 push!( newChannels, RadiativeAuger.Channel( channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, amplitude) )
             end
             push!( newSharings, RadiativeAuger.Sharing( sharing.photonEnergy, sharing.electronEnergy, EmProperty(-1., -1.), true, newChannels) )
         end
         # Calculate the totalRate 
-        JAC_counter = JAC_counter + 1
-        if   JAC_counter < 20   println("RadiativeAuger.computeAmplitudesProperties-ba: warning ... totalRate set to -1.") end
         totalRate = EmProperty(-1., -1.)
         line = RadiativeAuger.Line( line.initialLevel, line.finalLevel, totalRate, true, newSharings)
         return( line )

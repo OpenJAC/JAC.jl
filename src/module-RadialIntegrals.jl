@@ -598,11 +598,11 @@ module  RadialIntegrals
                                                       Bc::Array{Float64,1}, Bd::Array{Float64,1}, grid::Radial.Grid)`  
         ... computes one component of the (relativistic) Slater integral
 
-         R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d),   namely
-         W^k (abcd) = int_0^infty dr int_0^infty ds  B_a B_c            r_<^k / r_>^(k+1)  B_b B_d
+            R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d),   namely
+            W^k (abcd) = int_0^infty dr int_0^infty ds  B_a B_c            r_<^k / r_>^(k+1)  B_b B_d
 
-         of rank k for the four components Ba, Bb, ... above , and over the given grid by using an explicit 2-dimensional integration 
-         scheme; a value::Float64 is returned.
+            of rank k for the four components Ba, Bb, ... above , and over the given grid by using an explicit 2-dimensional integration 
+            scheme; a value::Float64 is returned.
     """
     function SlaterRkComponent_2dim(k::Int64, Ba::Array{Float64,1}, Bb::Array{Float64,1}, Bc::Array{Float64,1}, Bd::Array{Float64,1}, grid::Radial.Grid)
         function ul(r :: Float64, s :: Float64) :: Float64
@@ -634,10 +634,10 @@ module  RadialIntegrals
     `RadialIntegrals.SlaterRk_2dim(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
         ... computes the (relativistic) Slater integral
 
-         R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d)
+        R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d)
 
-         of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration scheme; a 
-         value::Float64 is returned.
+        of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration scheme; a 
+        value::Float64 is returned.
     """
     function SlaterRk_2dim(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Radial.Orbital, grid::Radial.Grid)
         function ul(r :: Float64, s :: Float64) :: Float64
@@ -680,10 +680,10 @@ module  RadialIntegrals
     `RadialIntegrals.SlaterRk_2dim_WO(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
         ... computes the (relativistic) Slater integral
 
-         R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d)
+            R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d)
 
-         of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration scheme
-         but without optimization (WO); a value::Float64 is returned.
+            of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration scheme
+            but without optimization (WO); a value::Float64 is returned.
     """
     function SlaterRk_2dim_WO(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Radial.Orbital, grid::Radial.Grid)
         function ul(r :: Float64, s :: Float64) :: Float64
@@ -724,10 +724,10 @@ module  RadialIntegrals
     `RadialIntegrals.SlaterRk_2dim_Damped(tau::Float64, k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
         ... computes the (relativistic) Slater integral
 
-         R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d) * exp(-tau * r - tau*s)
+            R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d) * exp(-tau * r - tau*s)
 
-         of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration scheme; a 
-         value::Float64 is returned.
+            of rank k for the four orbitals a, b, c, d, and over the given grid by using an explicit 2-dimensional integration scheme; a 
+            value::Float64 is returned.
     """
     function SlaterRk_2dim_Damped(tau::Float64, k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Radial.Orbital, grid::Radial.Grid)
         function ul(r :: Float64, s :: Float64) :: Float64
@@ -760,10 +760,10 @@ module  RadialIntegrals
     `RadialIntegrals.SlaterRk_new(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Orbital, grid::Radial.Grid)`  
         ... computes the (relativistic) Slater integral
 
-         R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d)
+            R^k (abcd) = int_0^infty dr int_0^infty ds (P_a P_c + Q_a Q_c) r_<^k / r_>^(k+1) (P_b P_d + Q_b Q_d)
 
-         of rank k for the four orbitals a, b, c, d, and over the given grid by using a factorized integration scheme; a 
-         value::Float64 is returned.
+            of rank k for the four orbitals a, b, c, d, and over the given grid by using a factorized integration scheme; a 
+            value::Float64 is returned.
     """
     function SlaterRk_new(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Radial.Orbital, d::Radial.Orbital, grid::Radial.Grid)
         function ul(r :: Float64, s :: Float64) :: Float64

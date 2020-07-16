@@ -13,9 +13,8 @@ module Einstein
     `struct  Einstein.Settings`  ... defines a type for the details and parameters of computing Einstein lines and coefficients
 
         + multipoles              ::Array{EmMultipoles}          ... Specifies the multipoles of the radiation field that are to be included.
-        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
-        + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
         + photonEnergyShift       ::Float64                      ... An overall energy shift for all photon energies.
         + mimimumPhotonEnergy     ::Float64                      ... minimum transition energy for which (photon) transitions are included into the
                                                                      computation.
@@ -23,9 +22,8 @@ module Einstein
     """
     struct Settings 
         multipoles                ::Array{EmMultipole,1}
-        printBefore    ::Bool
-        selectLines               ::Bool  
-        selectedLines             ::Array{Tuple{Int64,Int64},1}
+        printBefore               ::Bool 
+        lineSelection             ::LineSelection
         photonEnergyShift         ::Float64
         mimimumPhotonEnergy       ::Float64
         maximumPhotonEnergy       ::Float64 
@@ -35,20 +33,19 @@ module Einstein
     """
     `Einstein.Settings(settings::Einstein.Settings;`
         
-                multipoles=..,            printBefore=..,      selectLines=..,             selectedLines=..,     
+                multipoles=..,            printBefore=..,      lineSelection=..,     
                 photonEnergyShift=..,     mimimumPhotonEnergy=..,         maximumPhotonEnergy=..)
                 
         ... constructor for re-defining the settings::Einstein.Settings.
     """
     function Settings(settings::Einstein.Settings;                            multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    
-        printBefore::Union{Nothing,Bool}=nothing,                             selectLines::Union{Nothing,Bool}=nothing,    
-        selectedLines::Union{Nothing,Array{Tuple{Int64,Int64},1}}=nothing,    photonEnergyShift::Union{Nothing,Float64}=nothing,  
+        printBefore::Union{Nothing,Bool}=nothing,                             lineSelection::Union{Nothing,LineSelection}=nothing, 
+        photonEnergyShift::Union{Nothing,Float64}=nothing,  
         mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,                  maximumPhotonEnergy::Union{Nothing,Float64}=nothing)
 
         if  multipoles         == nothing   multipolesx          = settings.multipoles            else  multipolesx = multipoles                   end 
-        if  printBefore        == nothing   printBeforex      = settings.printBefore   else  printBeforex = printBefore                 end 
-        if  selectLines        == nothing   selectLinesx         = settings.selectLines           else  selectLinesx = selectLines                 end 
-        if  selectedLines      == nothing   selectedLinesx       = settings.selectedLines         else  selectedLinesx = selectedLines             end 
+        if  printBefore        == nothing   printBeforex         = settings.printBefore           else  printBeforex = printBefore                 end 
+        if  lineSelection      == nothing   lineSelectionx       = set.lineSelection              else  lineSelectionx = lineSelection             end 
         if  photonEnergyShift  == nothing   photonEnergyShiftx   = settings.photonEnergyShift     else  photonEnergyShiftx = photonEnergyShift     end 
         if  mimimumPhotonEnergy== nothing   mimimumPhotonEnergyx = settings.mimimumPhotonEnergy   else  mimimumPhotonEnergyx = mimimumPhotonEnergy end 
         if  maximumPhotonEnergy== nothing   maximumPhotonEnergyx = settings.maximumPhotonEnergy   else  maximumPhotonEnergyx = maximumPhotonEnergy end 
@@ -61,11 +58,11 @@ module Einstein
     `Einstein.Settings()`  ... constructor for the default values of Einstein line computations.
     """
     function Settings()
-        Settings(EmMultipole[], false, false, Array{Tuple{Int64,Int64},1}[], 0., 0., 0.)
+        Settings(EmMultipole[], false, LineSelection(), 0., 0., 0.)
     end
 
 
-    """
+    #== """
     `Einstein.Settings(multipoles::Array{EmMultipole,1};` printBefore::Bool=false, 
                        selectLines::Bool=false, selectedLines::Array{Tuple{Int64,Int64},1}=Tuple{Int64,Int64}[],
                        photonEnergyShift::Float64=0., mimimumPhotonEnergy::Float64=0., maximumPhotonEnergy::Float64=0.) 
@@ -76,15 +73,14 @@ module Einstein
                       photonEnergyShift::Float64=0., mimimumPhotonEnergy::Float64=0., maximumPhotonEnergy::Float64=0.)
         println("!!! UPDATE: Remove this call and use Einstein.Settings(settings::Einstein.Settings) instead.")
         Settings(multipoles, printBefore, selectLines, selectedLines, photonEnergyShift, mimimumPhotonEnergy, maximumPhotonEnergy)
-    end
+    end  ==#
 
 
     # `Base.show(io::IO, settings::Einstein.Settings)`  ... prepares a proper printout of the variable settings::Einstein.Settings.
     function Base.show(io::IO, settings::Einstein.Settings) 
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "printBefore:              $(settings.printBefore)  ")
-        println(io, "selectLines:              $(settings.selectLines)  ")
-        println(io, "selectedLines:            $(settings.selectedLines)  ")
+        println(io, "lineSelection:            $(settings.lineSelection)  ")
         println(io, "photonEnergyShift:        $(settings.photonEnergyShift)  ")
         println(io, "mimimumPhotonEnergy:      $(settings.mimimumPhotonEnergy)  ")
         println(io, "maximumPhotonEnergy:      $(settings.maximumPhotonEnergy)  ")
@@ -245,6 +241,29 @@ module Einstein
             process.
     """
     function  determineLines(multiplet::Multiplet, settings::Einstein.Settings)
+        lines = Einstein.Line[]
+        for  iLevel  in  multiplet.levels
+            for  fLevel  in  multiplet.levels
+                if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    omega    = iLevel.energy - fLevel.energy + settings.photonEnergyShift
+                    if  omega <= settings.mimimumPhotonEnergy  ||  omega > settings.maximumPhotonEnergy    continue   end  
+                    channels = determineChannels(fLevel, iLevel, settings) 
+                    push!( lines, Einstein.Line(iLevel, fLevel, omega, EmProperty(0., 0.), EmProperty(0., 0.), true, channels) )
+                end
+            end
+        end
+        return( lines )
+    end
+
+
+    #== """
+    `Einstein.determineLines(multiplet::Multiplet, settings::Einstein.Settings)`  
+        ... to determine a list of EinsteinLine's for transitions between the lines from the given multiplet and by taking 
+            into account the particular selections and settings of for this computation; an Array{Einstein.Line,1} is 
+            returned. Apart from the level specification, all physical properties are set to zero during the initialization 
+            process.
+    """
+    function  determineLines(multiplet::Multiplet, settings::Einstein.Settings)
         if    settings.selectLines    selectLines   = true
             selectedLines = Basics.determineSelectedLines(settings.selectedLines, multiplet, multiplet)
         else                          selectLines   = false
@@ -263,7 +282,7 @@ module Einstein
             end
         end
         return( lines )
-    end
+    end ==#
 
 
     """

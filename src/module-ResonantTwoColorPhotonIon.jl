@@ -1,16 +1,17 @@
 
 """
-`module  JAC.ResonantTwoColorPhotonIon`  ... a submodel of JAC that contains all methods for computing resonant two-color 
-                                             (two-photon & single-electron) ionization cross sections; it is using JAC, JAC.ManyElectron.
+`module  JAC.ResonantTwoColorPhotonIon`  
+    ... a submodel of JAC that contains all methods for computing resonant two-color (two-photon & single-electron) ionization cross 
+        sections.
 """
 module ResonantTwoColorPhotonIon
 
-    using JAC, JAC.ManyElectron
+    using ..ManyElectron
 
 
     """
-    `struct  ResonantTwoColorPhotonIon.Settings`  ... defines a type for the settings in estimating resonant two-color (two-photon & 
-                                                      single-electron) ionization cross sections.
+    `struct  ResonantTwoColorPhotonIon.Settings`  
+        ... defines a type for the settings in estimating resonant two-color (two-photon & single-electron) ionization cross sections.
 
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
@@ -28,7 +29,7 @@ module ResonantTwoColorPhotonIon
 
 
     """
-    `JAC.ResonantTwoColorPhotonIon.Settings()`  ... constructor for the default values of resonant two-color (two-photon & single-electron) 
+    `ResonantTwoColorPhotonIon.Settings()`  ... constructor for the default values of resonant two-color (two-photon & single-electron) 
          ionization estimates.
     """
     function Settings()

@@ -1,7 +1,8 @@
 
 """
-`module  JAC.Semiempirical`  ... a submodel of JAC that contains all methods to set-up and process (simple)  semiempirical estimations of 
-                                 atomic properties that cannot be calculated so easily in a rigorious manner.
+`module  JAC.Semiempirical`  
+    ... a submodel of JAC that contains all methods to set-up and process (simple)  semiempirical estimations of 
+        atomic properties that cannot be calculated so easily in a rigorious manner.
 """
 module Semiempirical
 
@@ -44,27 +45,28 @@ module Semiempirical
 
     #=========================================
     """
-    `struct  Estimation`  ... defines a type for defining  (a framework for) semiempirical estimates of different properties that cannot
-                              be calculated rigoriously in JAC.
+    `struct  Estimation`  
+        ... defines a type for defining  (a framework for) semiempirical estimates of different properties that cannot be calculated 
+            rigoriously in JAC.
 
         + calcCrossSections    ::Bool                        ... True, if atomic cross sections of some kind are to be calculated
         + crossSection         ::AtomicCrossSection          ... Selected cross sections type.
         + config               ::Configuration               ... A non-relativistic configurations for which computations are to be carried out.
-        + crossSectionSettings ::Union{JAC.ImpactIonization.Settings} ... Provides the settings for the selected cross section estimates.
+        + crossSectionSettings ::Union{ImpactIonization.Settings} ... Provides the settings for the selected cross section estimates.
     """
     struct  Estimation
         calcCrossSections      ::Bool  
         crossSection           ::AtomicCrossSection
         config                 ::Configuration
-        crossSectionSettings   ::Union{JAC.ImpactIonization.Settings}
+        crossSectionSettings   ::Union{ImpactIonization.Settings}
     end 
 
 
     """
-    `JAC.Semiempirical.Estimation()`  ... constructor for an 'empty' instance::Semiempirical.Estimation.
+    `Semiempirical.Estimation()`  ... constructor for an 'empty' instance::Semiempirical.Estimation.
     """
     function Estimation()
-        Estimation(false, NoCrossSection, Configuration(), JAC.ImpactIonization.Settings() )
+        Estimation(false, NoCrossSection, Configuration(), ImpactIonization.Settings() )
     end
 
 
@@ -78,8 +80,9 @@ module Semiempirical
 
 
     """
-    `JAC.Semiempirical.Estimation("interactive")`  ... constructor to generate a new instance of Semiempirical.Estimation interactively by 
-         replying to some detailed dialog.  **Not yet fully implemented !**
+    `Semiempirical.Estimation("interactive")`  
+        ... constructor to generate a new instance of Semiempirical.Estimation interactively by replying to some detailed dialog.  
+            **Not yet fully implemented !**
     """
     function Semiempirical.Estimation(sa::String)
         sa != "interactive"   &&    error("Unsupported keystring = $sa.")

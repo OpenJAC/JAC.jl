@@ -1,11 +1,12 @@
 
 """
-`module  JAC.REDA`  ... a submodel of JAC that contains all methods for computing resonant-excitation (sequential) double-autoionization 
-                        cross sections and rates; it is using JAC, JAC.ManyElectron, JAC.AutoIonization, JAC.ImpactExcitation.
+`module  JAC.REDA`  
+    ... a submodel of JAC that contains all methods for computing resonant-excitation (sequential) double-autoionization 
+        cross sections and rates.
 """
 module REDA 
 
-    using JAC, JAC.ManyElectron, JAC.AutoIonization, JAC.ImpactExcitation
+    using ..ManyElectron, ..AutoIonization, ..ImpactExcitation
 
 
     """
@@ -14,8 +15,8 @@ module REDA
 
         + electronEnergies   ::Array{Float64,1}          ... List of impact-energies of the incoming elecgtrons.
         + selectPathways     ::Bool                      ... True if particular pathways are selected for the computations.
-        + selectedPathways   ::Array{Tuple{Int64,Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels 
-                                                             (inital, inmediate1, inmediate2, final).
+        + selectedPathways   ::Array{Tuple{Int64,Int64,Int64,Int64},1}  
+            ... List of list of pathways, given by tupels (inital, inmediate1, inmediate2, final).
         + maxKappa           ::Int64                     ... Maximum kappa value of partial waves to be included.
     """
     struct Settings
@@ -27,7 +28,7 @@ module REDA
 
 
     """
-    `JAC.REDA.Settings()`  ... constructor for the default values of resonant-excitation (sequential) double-autoionization settings.
+    `REDA.Settings()`  ... constructor for the default values of resonant-excitation (sequential) double-autoionization settings.
     """
     function Settings()
        Settings( Float64[], false, Tuple{Int64,Int64,Int64,Int64}[], 0)
@@ -47,20 +48,21 @@ module REDA
     `struct  REDA.Channel`  ... defines a type for a resonant-excitation (sequential) double-autoionization channel that specifies 
              all quantum numbers, phases and amplitudes.
 
-        + excitationChannel  ::JAC.ImpactExcitation.Channel      ... Channel that describes the electron-impact excitation process.
-        + augerChannel1      ::JAC.AutoIonization.Channel        ... Channel that describes the first subsequent Auger/autoionization process.
-        + augerChannel2      ::JAC.AutoIonization.Channel        ... Channel that describes the second Auger/autoionization process.
+        + excitationChannel  ::ImpactExcitation.Channel      ... Channel that describes the electron-impact excitation process.
+        + augerChannel1      ::AutoIonization.Channel        ... Channel that describes the first subsequent Auger/autoionization process.
+        + augerChannel2      ::AutoIonization.Channel        ... Channel that describes the second Auger/autoionization process.
     """
     struct  Channel
-        excitationChannel    ::JAC.ImpactExcitation.Channel
-        augerChannel1        ::JAC.AutoIonization.Channel
-        augerChannel2        ::JAC.AutoIonization.Channel
+        excitationChannel    ::ImpactExcitation.Channel
+        augerChannel1        ::AutoIonization.Channel
+        augerChannel2        ::AutoIonization.Channel
     end 
 
 
     """
-    `struct  REDA.Pathway`  ... defines a type for a electron-impact excitation (sequential) double-autoionization pathway that may include
-             the definition of different excitation and autoionization channels and their corresponding amplitudes.
+    `struct  REDA.Pathway`  
+        ... defines a type for a electron-impact excitation (sequential) double-autoionization pathway that may include the definition of 
+            different excitation and autoionization channels and their corresponding amplitudes.
 
         + initialLevel           ::Level           ... initial-(state, N-electron) level
         + intermediateLevelm     ::Level           ... intermediate-(state, N+1 electron) level m
@@ -71,9 +73,9 @@ module REDA
         + electronAugerEnergy1   ::Float64         ... energy of the (first emitted Auger) electron
         + electronAugerEnergy2   ::Float64         ... energy of the (second emitted Auger) electron
         + crossSection           ::Float64         ... total cross section of this pathway
-        + hasChannels            ::Bool            ... Determines whether the individual excitation and autoionization channels are defined 
-                                                       in terms of their free-electron kappa's, phases and the total angular momentum/parity as 
-                                                       well as the amplitude, or not.
+        + hasChannels            ::Bool            
+            ... Determines whether the individual excitation and autoionization channels are defined in terms of their free-electron kappa's, 
+                phases and the total angular momentum/parity as well as the amplitude, or not.
         + channels               ::Array{REDA.Channel,1}  ... List of channels of this pathway.
     """
     struct  Pathway
@@ -92,8 +94,9 @@ module REDA
 
 
     """
-    `JAC.REDA.Pathway()`  ... constructor for an electron-impact excitation (sequential) double-autoionization pathway between a specified 
-         initial, two intermediate and final level.
+    `REDA.Pathway()`  
+        ... constructor for an electron-impact excitation (sequential) double-autoionization pathway between a specified initial, two 
+            intermediate and final level.
     """
     function Pathway()
         Pathway(Level(), Level(), Level(), Level(), 0., 0., 0., 0., 0., false, REDA.Channel[] )

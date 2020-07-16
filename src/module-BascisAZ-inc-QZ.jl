@@ -1,13 +1,3 @@
-
-"""
-`module  JAC.BasicsQZ`  
-    ... a submodel of JAC that contains methods for setting-up and performing atomic structure computations,
-        i.e. self-consistent-fields, configuration-interaction, etc.
-"""
-module BasicsQZ
-
-    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Einstein, ..Hfs, 
-          ..ManyElectron, ..Nuclear, ..PhotoEmission, ..Radial, ..TableStrings
     
     export dummyQZ
 
@@ -570,5 +560,3 @@ module BasicsQZ
         end
     end
 
-
-end # module

@@ -1,13 +1,3 @@
-
-"""
-`module  JAC.BasicsHP`  
-    ... a submodel of JAC that contains methods for setting-up and performing atomic structure computations,
-        i.e. self-consistent-fields, configuration-interaction, etc.
-"""
-module BasicsHP
-
-    using Printf, ..AngularMomentum, ..Basics, ..Cascade, ..Continuum, ..Defaults, ..Hfs, ..ManyElectron, ..Nuclear, ..PhotoEmission,
-                  ..Radial, ..TableStrings
     
     export isless
 
@@ -466,5 +456,3 @@ module BasicsHP
         error("call instead:  using Plots; pyplot()    ... to access this method simply by plot(...) ... not yet implemented !")
     end
 
-
-end # module

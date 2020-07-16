@@ -7,7 +7,6 @@
 module PhotoExcitation
 
     using Printf, ..AngularMomentum, ..Basics,  ..Basics,  ..Defaults, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
-    ##x global JAC_counter = 0
 
     """
     `struct  PhotoExcitation.Settings`  ... defines a type for the details and parameters of computing photo-excitation  lines.
@@ -74,7 +73,7 @@ module PhotoExcitation
         if  calcTensors         == nothing   calcTensorsx         = set.calcTensors             else  calcTensorsx         = calcTensors           end 
         if  printBefore         == nothing   printBeforex         = set.printBefore             else  printBeforex         = printBefore           end 
         if  lineSelection       == nothing   lineSelectionx       = set.lineSelection           else  lineSelectionx       = lineSelection         end 
-       if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift       else  photonEnergyShiftx   = photonEnergyShift     end 
+        if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift       else  photonEnergyShiftx   = photonEnergyShift     end 
         if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy     else  mimimumPhotonEnergyx = mimimumPhotonEnergy   end 
         if  maximumPhotonEnergy == nothing   maximumPhotonEnergyx = set.maximumPhotonEnergy     else  maximumPhotonEnergyx = maximumPhotonEnergy   end 
         if  stokes              == nothing   stokesx              = set.stokes                  else  stokesx              = stokes                end 

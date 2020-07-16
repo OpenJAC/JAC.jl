@@ -448,7 +448,6 @@ module ManyElectron
                 generateScf=..,       eeInteraction=..,       scField=..,            startScfFrom=..,           maxIterationsScf=..,    
                 accuracyScf=..,       shellSequenceScf=..,    frozenSubshells=..,    eeInteractionCI=..,        qedModel=..,           
                 methodCI=..,          jjLS=..,                LevelSelection=..,     printout::Bool=false)
-                ##x selectLevelsCI=..,    selectedLevelsCI=..,    selectSymmetriesCI=.., selectedSymmetriesCI=..,   printout::Bool=false)
         ... constructor for re-defining a settings::AsfSettings.
     """
     function AsfSettings(settings::AsfSettings; 

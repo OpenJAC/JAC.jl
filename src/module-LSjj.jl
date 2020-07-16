@@ -1,7 +1,8 @@
 
 """
-`module JAC.LSjj`  ... a submodel of JAC that contains methods and (numerical) values for performing the jj-LS transformation of atomic
-                       levels; this transformation is mainly based on global data lists which are only accessible within this module.
+`module JAC.LSjj`  
+    ... a submodel of JAC that contains methods and (numerical) values for performing the jj-LS transformation of atomic
+        levels; this transformation is mainly based on global data lists which are only accessible within this module.
 """
 module  LSjj
 
@@ -213,185 +214,255 @@ module  LSjj
     end
 
 
-"""
-`LSjj.expandLevelsIntoLS(multiplet::Multiplet, settings::ManyElectron.LSjjSettings)  
-    ... expand and print all (selected) levels from the multiplet into their LS representation. The request is controlled
-        by settings.makeIt  and the details of this expansion by further parameters given in these settings.
-        nothing is returned.
-"""
-function expandLevelsIntoLS(multiplet::Multiplet, settings::ManyElectron.LSjjSettings)
-    # Return immediately if not expansion is to be made.
-    if  !(settings.makeIt)   return( nothing )    end
-    
-    # Determine all selected levels by their indiced; at present, simply all levels are transformed at present
-    indexList = Int64[]
-    for  levelR in multiplet.levels    push!(indexList, levelR.index)     end
-    
-    # Make the jj-LS expansion of all selected levels
-    if  Basics.isStandardSubshellList(multiplet.levels[1].basis)
-        shellList = Basics.extractNonrelativisticShellList(multiplet.levels[1].basis.subshells) 
-        confList  = Basics.extractNonrelativisticConfigurations(multiplet.levels[1].basis)
-        csfsNR    = LSjj.generateNonrelativisticCsfList(confList, shellList)
-        basisNR   = BasisNR(multiplet.levels[1].basis.NoElectrons, shellList, csfsNR)
-        ncsfs     = length(basisNR.csfs)
-        printstyled("\n  LSjj.expandLevelsIntoLS():: Relativistic basis with $(length(multiplet.levels[1].basis.csfs)) CsfR " *
-                    "will be transformed into a nonrelativistic basis with $ncsfs CsfNR. \n", color=:light_green)
-                
-        # Create a dictionary of (empty) eigenvectors for the selected levels
-        mcVectors = Dict{Int64, Array{Float64,1}}()
-        for index in indexList    mcVectors = Base.merge( mcVectors, Dict(index => zeros(ncsfs)) )    end
+    """
+    `LSjj.expandLevelsIntoLS(multiplet::Multiplet, settings::ManyElectron.LSjjSettings)  
+        ... expand and print all (selected) levels from the multiplet into their LS representation. The request is controlled
+            by settings.makeIt  and the details of this expansion by further parameters given in these settings.
+            nothing is returned.
+    """
+    function expandLevelsIntoLS(multiplet::Multiplet, settings::ManyElectron.LSjjSettings)
+        # Return immediately if not expansion is to be made.
+        if  !(settings.makeIt)   return( nothing )    end
         
-        # Expand in terms, if requested, all relativistic CSF into the nonrelativistic basis
-        for  r = 1:length(multiplet.levels[1].basis.csfs)
-            csfR = multiplet.levels[1].basis.csfs[r]
-            # Cycle over this CSF if it has too low weight (not yet)
-            # Determine the number of open shells in CsfR
-            conf       = Basics.extractNonrelativisticConfigurationFromCsfR(csfR, multiplet.levels[1].basis)
-            openShells = Basics.extractNoOpenShells(conf)
-            mcCsfR     = LSjj.expandCsfRintoNonrelativisticBasis(openShells, csfR, multiplet.levels[1].basis, basisNR)
-            # Cycle through all selected levels    
+        # Determine all selected levels by their indiced; at present, simply all levels are transformed at present
+        indexList = Int64[]
+        for  levelR in multiplet.levels    push!(indexList, levelR.index)     end
+        
+        # Make the jj-LS expansion of all selected levels
+        if  Basics.isStandardSubshellList(multiplet.levels[1].basis)
+            shellList = Basics.extractNonrelativisticShellList(multiplet.levels[1].basis.subshells) 
+            confList  = Basics.extractNonrelativisticConfigurations(multiplet.levels[1].basis)
+            csfsNR    = LSjj.generateNonrelativisticCsfList(confList, shellList)
+            basisNR   = BasisNR(multiplet.levels[1].basis.NoElectrons, shellList, csfsNR)
+            ncsfs     = length(basisNR.csfs)
+            printstyled("\n  LSjj.expandLevelsIntoLS():: Relativistic basis with $(length(multiplet.levels[1].basis.csfs)) CsfR " *
+                        "will be transformed into a nonrelativistic basis with $ncsfs CsfNR. \n", color=:light_green)
+                    
+            # Create a dictionary of (empty) eigenvectors for the selected levels
+            mcVectors = Dict{Int64, Array{Float64,1}}()
+            for index in indexList    mcVectors = Base.merge( mcVectors, Dict(index => zeros(ncsfs)) )    end
+            
+            # Expand in terms, if requested, all relativistic CSF into the nonrelativistic basis
+            for  r = 1:length(multiplet.levels[1].basis.csfs)
+                csfR = multiplet.levels[1].basis.csfs[r]
+                # Cycle over this CSF if it has too low weight (not yet)
+                # Determine the number of open shells in CsfR
+                conf       = Basics.extractNonrelativisticConfigurationFromCsfR(csfR, multiplet.levels[1].basis)
+                openShells = Basics.extractNoOpenShells(conf)
+                mcCsfR     = LSjj.expandCsfRintoNonrelativisticBasis(openShells, csfR, multiplet.levels[1].basis, basisNR)
+                # Cycle through all selected levels    
+                for  levelR  in  multiplet.levels  
+                    if  levelR.index  in  indexList
+                        mcLevel = levelR.mc[r]
+                        mcVectors[levelR.index] = mcVectors[levelR.index] + mcLevel * mcCsfR
+                    end
+                end
+            end
+            
+            # Use the dictionary of expansion coefficients to define the nonrelativistic levels and multiplet
+            levelsNR = LevelNR[]
             for  levelR  in  multiplet.levels  
                 if  levelR.index  in  indexList
-                    mcLevel = levelR.mc[r]
-                    mcVectors[levelR.index] = mcVectors[levelR.index] + mcLevel * mcCsfR
+                    levelNR = LevelNR( levelR.J, levelR.parity, levelR.index, levelR.energy, basisNR, mcVectors[levelR.index])
+                    push!( levelsNR, levelNR)
+                end
+            end
+            multipletNR = MultipletNR( "LS-expanded " * multiplet.name, levelsNR)
+            
+            # Check the consistency of the LS expansion of the selected levels
+            LSjj.checkLSexpansion(multipletNR)
+            
+            # Print the results to screen and elsewhere
+            LSjj.displayLSexpansion(stdout, multiplet, multipletNR)
+            printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+            if  printSummary   LSjj.displayLSexpansion(iostream, multiplet, multipletNR)    end
+            
+        else  
+            @warn "LSjj.expandLevelsIntoLS():: Inappropriate basis without a standard list of subshells;" *
+                "no jj-LS epxansion is supported in this case."
+        end
+        
+        return( nothing )
+    end
+
+
+    """
+    `LSjj.checkLSexpansion(multipletNR::MultipletNR)`
+        ... to check the consistency and normalization of the transformed eigenvectors; nothing is returned.
+    """
+    function checkLSexpansion(multipletNR::MultipletNR) 
+        basis = multipletNR.levels[1].basis
+        for  level  in  multipletNR.levels
+            weight = 0.
+            for  r = 1:length(basis.csfs)    
+                weight = weight + level.mc[r]*level.mc[r]
+                if  level.mc[r]^2 > 0.  &&  level.J != basis.csfs[r].J   
+                    println("Level $(level.index):: Total angular momenta $(level.J)  !=  $(basis.csfs[r].J) for r = $r")
+                end
+            end
+            #
+            if  weight < 0.99   println("Level $(level.index):: Total weight $weight  < 1.0 ")      end
+        end
+        return( nothing )
+    end
+
+
+
+    """
+    `LSjj.displayLSexpansion(stream::IO, multiplet::Multiplet, multipletNR::MultipletNR)`
+        ... to display the LS expansion of the selected (relativistic) levels from multiplet in a neat format;
+            nothing is returned.
+    """
+    function displayLSexpansion(stream::IO, multiplet::Multiplet, multipletNR::MultipletNR)
+        
+        println(stream, " ")
+        println(stream, "  LS-expansion of selected atomic levels:")
+        println(stream, " ")
+        
+        # Determine all selected levels by their indiced; at present, simply all levels are transformed at present
+        indexList = Int64[]
+        for  levelR in multiplet.levels    push!(indexList, levelR.index)     end
+        
+        for  levelR  in  multiplet.levels
+            if  levelR.index in indexList
+                # First, find the levelR in multipletNR.levels
+                for  levelNR in multipletNR.levels
+                    if  levelNR.index == levelR.index
+                        # Extract the weights of all (nonrelativistic) configurations for the selected level
+                        weights = LSjj.extractConfigurationWeightsOfLevelNR(levelNR)
+                        # Find the configuration with the largest weight
+                        wa = 0.;    conf = Configuration("1s")
+                        for (k,v) in  weights
+                            if  v > wa      wa = v;     conf = k    end
+                        end
+                        # Print the level details and the weight of the 'most important' nonrelativistic configuration
+                        println(stream, "    Level   $(levelNR.index)      $(LevelSymmetry(levelNR.J,levelNR.parity))   " *
+                                        @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", levelNR.energy))  * "  " *
+                                        TableStrings.inUnits("energy") * "  has weight " * @sprintf("%.4e", wa) * " of $conf" )
+                        # Next, print also the contribution of the major nonrelativistic csf
+                        wb = abs.(levelNR.mc);   wb = wb.^2;   idx = sortperm(wb, rev = true)
+                        for  ix = 1:min(3, length(idx))
+                            wx = wb[ idx[ix] ]
+                            if   wx > 1.0e-4    println(stream, "       $(ix))   " * @sprintf("%.4e", wx) * "   of  " *
+                                                        LSjj.shortString(levelNR.basis.csfs[ idx[ix] ], levelNR.basis) )    end
+                        end
+                        println("")
+                    end
                 end
             end
         end
         
-        # Use the dictionary of expansion coefficients to define the nonrelativistic levels and multiplet
-        levelsNR = LevelNR[]
-        for  levelR  in  multiplet.levels  
-            if  levelR.index  in  indexList
-                levelNR = LevelNR( levelR.J, levelR.parity, levelR.index, levelR.energy, basisNR, mcVectors[levelR.index])
-                push!( levelsNR, levelNR)
+        return( nothing )
+    end
+
+
+    """
+    `LSjj.expandCsfRintoNonrelativisticBasis(openShells::ZeroOpenShell, csfR::CsfR, basisR::Basis, basisNR::BasisNR)`
+        ... to expand a relativistic CsfR without any nonrelativistic open shell into the given nonrelativistic basis; 
+            a mcVector::Array{Float64,1} is returned with the same lengths as length(basisNR.csfs). It is checked that the 
+            expansion is complete, and a warning is issued if this is not the case.
+    """
+    function expandCsfRintoNonrelativisticBasis(openShells::ZeroOpenShell, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
+        if  csfR.J != AngularJ64(0)  ||   csfR.parity != Basics.plus    error("stop a")   end
+        mcVector = Float64[]
+        confR     = Basics.extractNonrelativisticConfigurationFromCsfR(csfR,  basisR)
+        for  csf in basisNR.csfs
+            confNR = LSjj.extractConfigurationFromCsfNR(csf, basisNR)   
+            if      confR == confNR    push!( mcVector, 1.0)
+            else                       push!( mcVector, 0.0)
             end
         end
-        multipletNR = MultipletNR( "LS-expanded " * multiplet.name, levelsNR)
-        
-        # Check the consistency of the LS expansion of the selected levels
-        LSjj.checkLSexpansion(multipletNR)
-        
-        # Print the results to screen and elsewhere
-        LSjj.displayLSexpansion(stdout, multiplet, multipletNR)
-        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   LSjj.displayLSexpansion(iostream, multiplet, multipletNR)    end
-        
-    else  
-        @warn "LSjj.expandLevelsIntoLS():: Inappropriate basis without a standard list of subshells;" *
-              "no jj-LS epxansion is supported in this case."
+        return( mcVector )
     end
-    
-    return( nothing )
-end
 
 
-"""
-`LSjj.checkLSexpansion(multipletNR::MultipletNR)`
-    ... to check the consistency and normalization of the transformed eigenvectors; nothing is returned.
-"""
-function checkLSexpansion(multipletNR::MultipletNR) 
-    basis = multipletNR.levels[1].basis
-    for  level  in  multipletNR.levels
-        weight = 0.
-        for  r = 1:length(basis.csfs)    
-            weight = weight + level.mc[r]*level.mc[r]
-            if  level.mc[r]^2 > 0.  &&  level.J != basis.csfs[r].J   
-                println("Level $(level.index):: Total angular momenta $(level.J)  !=  $(basis.csfs[r].J) for r = $r")
+    """
+    `LSjj.expandCsfRintoNonrelativisticBasis(openShells::OneOpenShell, csfR::CsfR, basisR::Basis, basisNR::BasisNR)`
+        ... to expand a relativistic CsfR with one nonrelativistic open shell into the given nonrelativistic basis; 
+            a mcVector::Array{Float64,1} is returned with the same lengths as length(basisNR.csfs). It is checked that the 
+            expansion is complete, and a warning is issued if this is not the case.
+    """
+    function expandCsfRintoNonrelativisticBasis(openShells::OneOpenShell, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
+        mcVector      = Float64[]
+        # Find the open subshells and determine all the quantum numbers
+        rQN           = Basics.extractOpenShellQNfromCsfR(csfR, basisR)
+        rShells, rOCC = Basics.extractShellOccupationFromCsfR(csfR, basisR)
+        
+        if  length( keys(rQN) ) != 1    error("stop a")     end
+        if  rShells != basisNR.shells   error("stop b")     end
+        
+        for  (rsh, rv)  in  rQN
+            rQNm = rv[1];   rQNp = rv[2]    # Get QN of the relativistic subshells
+            for  s = 1:length(basisNR.csfs)
+                csfNR = basisNR.csfs[s]
+                if  csfR.J != csfNR.J   
+                    push!( mcVector, 0.)
+                else
+                    me = 0.
+                    if  rOCC == csfNR.occupation
+                        nrQN = LSjj.extractOpenShellQNfromCsfNR(csfNR, basisNR)
+                        if  length( keys(nrQN) ) != 1    error("stop c")     end
+                        for  (nrsh, nrv)  in  nrQN
+                            if  rsh != nrsh              error("stop d")     end
+                            # Determine the jj-LS overlap coefficient from the tabulation; no re-coupling coefficients need to be
+                            # considered for a single nonrelativistic open shell
+                            if  rsh.l == 0  twojm = 1    else    twojm = 2*rsh.l - 1  end
+                            twojp = 2*rsh.l + 1 
+                            QQm = Int64( (twojm+1)/2 - rQNm[3]);     QQp = Int64( (twojp+1)/2 - rQNp[3])
+                            me  = LSjj.getLSjjCoefficient(rsh.l, nrv[2], 
+                                    LS_jj_qn(nrv[3], nrv[4], nrv[5], nrv[6], rQNp[5], rQNm[2], QQm, rQNm[4], QQp, rQNp[4]) )
+                        end
+                    end
+                    push!( mcVector, me)
+                end
             end
         end
         #
-        if  weight < 0.99   println("Level $(level.index):: Total weight $weight  < 1.0 ")      end
+        return( mcVector )
     end
-    return( nothing )
-end
 
 
-
-"""
-`LSjj.displayLSexpansion(stream::IO, multiplet::Multiplet, multipletNR::MultipletNR)`
-    ... to display the LS expansion of the selected (relativistic) levels from multiplet in a neat format;
-        nothing is returned.
-"""
-function displayLSexpansion(stream::IO, multiplet::Multiplet, multipletNR::MultipletNR)
-    
-    println(stream, " ")
-    println(stream, "  LS-expansion of selected atomic levels:")
-    println(stream, " ")
-    
-    # Determine all selected levels by their indiced; at present, simply all levels are transformed at present
-    indexList = Int64[]
-    for  levelR in multiplet.levels    push!(indexList, levelR.index)     end
-    
-    for  levelR  in  multiplet.levels
-        if  levelR.index in indexList
-            # First, find the levelR in multipletNR.levels
-            for  levelNR in multipletNR.levels
-                if  levelNR.index == levelR.index
-                    # Extract the weights of all (nonrelativistic) configurations for the selected level
-                    weights = LSjj.extractConfigurationWeightsOfLevelNR(levelNR)
-                    # Find the configuration with the largest weight
-                    wa = 0.;    conf = Configuration("1s")
-                    for (k,v) in  weights
-                        if  v > wa      wa = v;     conf = k    end
-                    end
-                    # Print the level details and the weight of the 'most important' nonrelativistic configuration
-                    println(stream, "    Level   $(levelNR.index)      $(LevelSymmetry(levelNR.J,levelNR.parity))   " *
-                                    @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", levelNR.energy))  * "  " *
-                                    TableStrings.inUnits("energy") * "  has weight " * @sprintf("%.4e", wa) * " of $conf" )
-                    # Next, print also the contribution of the major nonrelativistic csf
-                    wb = abs.(levelNR.mc);   wb = wb.^2;   idx = sortperm(wb, rev = true)
-                    for  ix = 1:min(3, length(idx))
-                        wx = wb[ idx[ix] ]
-                        if   wx > 1.0e-4    println(stream, "       $(ix))   " * @sprintf("%.4e", wx) * "   of  " *
-                                                    LSjj.shortString(levelNR.basis.csfs[ idx[ix] ], levelNR.basis) )    end
-                    end
-                    println("")
+    """
+    `LSjj.expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)`
+        ... to expand a relativistic CsfR with two nonrelativistic open shells into the given nonrelativistic basis; 
+            a mcVector::Array{Float64,1} is returned with the same lengths as length(basisNR.csfs). It is checked that the 
+            expansion is complete, and a warning is issued if this is not the case.
+    """
+    function expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
+        mcVector      = Float64[]
+        # Find the open subshells and determine all the quantum numbers
+        rQN           = Basics.extractOpenShellQNfromCsfR(csfR, basisR)
+        rShells, rOCC = Basics.extractShellOccupationFromCsfR(csfR, basisR)
+        rKeys         = keys(rQN)
+        
+        if  length(rKeys) != 2          error("stop a")     end
+        if  rShells != basisNR.shells   error("stop b")     end
+        
+        # Initialize all quantum numbers that occur in loops below
+        rsh1 = rsh2 = nrsh1 = nrsh2 = Shell("9m")   
+        Nm1 = JJm1 = JJp1 = XXp1 = QQm1 = QQp1 = Nm2 = JJm2 = JJp2 = XXm2 = QQm2 = QQp2 = 0  
+        Jm1 = Jp1 = Xp1 = Jm2 = Jp2 = Xm2 = L1 = S1 = L2 = S2 = L12 = S12 = J = AngularJ64(0)
+        N1 = w1 = QQ1 = LL1 = SS1 = N2 = w2 = QQ2 = LL2 = SS2 =  0 
+        
+        # Set open-shell QN for the given csfR
+        ns = 0
+        for  rsh in rShells
+            if  rsh in rKeys
+                ns = ns + 1;    rv = rQN[rsh];    rQNm = rv[1];    rQNp = rv[2]
+                twojp = 2*rsh.l + 1;        if  rsh.l == 0  twojm = 1    else    twojm = 2*rsh.l - 1  end
+                #
+                if      ns == 1  Nm1 = rQNm[2];    JJm1 = rQNm[4];       JJp1 = rQNp[4];         XXp1 = rQNp[5];    rsh1 = rsh
+                                QQm1 = Int64( (twojm+1)/2 - rQNm[3]);   QQp1 = Int64( (twojp+1)/2 - rQNp[3])
+                                Jm1  = AngularJ64(JJm1//2);             Jp1  = AngularJ64(JJp1//2);    Xp1  = AngularJ64(XXp1//2)
+                elseif  ns == 2  Nm2 = rQNm[2];    JJm2 = rQNm[4];       JJp2 = rQNp[4];         XXm2 = rQNm[5];    rsh2 = rsh
+                                QQm2 = Int64( (twojm+1)/2 - rQNm[3]);   QQp2 = Int64( (twojp+1)/2 - rQNp[3])
+                                Jm2  = AngularJ64(JJm2//2);             Jp2  = AngularJ64(JJp2//2);    Xm2  = AngularJ64(XXm2//2)
+                else    error("stop c")     
                 end
             end
         end
-    end
-    
-    return( nothing )
-end
-
-
-"""
-`LSjj.expandCsfRintoNonrelativisticBasis(openShells::ZeroOpenShell, csfR::CsfR, basisR::Basis, basisNR::BasisNR)`
-    ... to expand a relativistic CsfR without any nonrelativistic open shell into the given nonrelativistic basis; 
-        a mcVector::Array{Float64,1} is returned with the same lengths as length(basisNR.csfs). It is checked that the 
-        expansion is complete, and a warning is issued if this is not the case.
-"""
-function expandCsfRintoNonrelativisticBasis(openShells::ZeroOpenShell, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
-    if  csfR.J != AngularJ64(0)  ||   csfR.parity != Basics.plus    error("stop a")   end
-    mcVector = Float64[]
-    confR     = Basics.extractNonrelativisticConfigurationFromCsfR(csfR,  basisR)
-    for  csf in basisNR.csfs
-        confNR = LSjj.extractConfigurationFromCsfNR(csf, basisNR)   
-        if      confR == confNR    push!( mcVector, 1.0)
-        else                       push!( mcVector, 0.0)
-        end
-    end
-    return( mcVector )
-end
-
-
-"""
-`LSjj.expandCsfRintoNonrelativisticBasis(openShells::OneOpenShell, csfR::CsfR, basisR::Basis, basisNR::BasisNR)`
-    ... to expand a relativistic CsfR with one nonrelativistic open shell into the given nonrelativistic basis; 
-        a mcVector::Array{Float64,1} is returned with the same lengths as length(basisNR.csfs). It is checked that the 
-        expansion is complete, and a warning is issued if this is not the case.
-"""
-function expandCsfRintoNonrelativisticBasis(openShells::OneOpenShell, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
-    mcVector      = Float64[]
-    # Find the open subshells and determine all the quantum numbers
-    rQN           = Basics.extractOpenShellQNfromCsfR(csfR, basisR)
-    rShells, rOCC = Basics.extractShellOccupationFromCsfR(csfR, basisR)
-    
-    if  length( keys(rQN) ) != 1    error("stop a")     end
-    if  rShells != basisNR.shells   error("stop b")     end
-    
-    for  (rsh, rv)  in  rQN
-        rQNm = rv[1];   rQNp = rv[2]    # Get QN of the relativistic subshells
+        
+        # Now cycle over all nonrelativistic csfNR in the given basis
         for  s = 1:length(basisNR.csfs)
             csfNR = basisNR.csfs[s]
             if  csfR.J != csfNR.J   
@@ -399,727 +470,657 @@ function expandCsfRintoNonrelativisticBasis(openShells::OneOpenShell, csfR::CsfR
             else
                 me = 0.
                 if  rOCC == csfNR.occupation
-                    nrQN = LSjj.extractOpenShellQNfromCsfNR(csfNR, basisNR)
-                    if  length( keys(nrQN) ) != 1    error("stop c")     end
-                    for  (nrsh, nrv)  in  nrQN
-                        if  rsh != nrsh              error("stop d")     end
-                        # Determine the jj-LS overlap coefficient from the tabulation; no re-coupling coefficients need to be
-                        # considered for a single nonrelativistic open shell
-                        if  rsh.l == 0  twojm = 1    else    twojm = 2*rsh.l - 1  end
-                        twojp = 2*rsh.l + 1 
-                        QQm = Int64( (twojm+1)/2 - rQNm[3]);     QQp = Int64( (twojp+1)/2 - rQNp[3])
-                        me  = LSjj.getLSjjCoefficient(rsh.l, nrv[2], 
-                                LS_jj_qn(nrv[3], nrv[4], nrv[5], nrv[6], rQNp[5], rQNm[2], QQm, rQNm[4], QQp, rQNp[4]) )
+                    nrQN   = LSjj.extractOpenShellQNfromCsfNR(csfNR, basisNR)
+                    nrKeys = keys(nrQN)
+                    # Set open-shell QN for the given csfNR in the loop
+                    ns = 0
+                    for  rsh in rShells
+                        if  rsh in nrKeys
+                            ns = ns + 1;    nrv = nrQN[rsh]
+                            if      ns == 1     N1 = nrv[2];     w1 = nrv[3];   QQ1 = nrv[4];    LL1 = nrv[5];    SS1 = nrv[6];    nrsh1 = rsh
+                                                L1 = AngularJ64(LL1//2);        S1  = AngularJ64(SS1//2)
+                            elseif  ns == 2     N2 = nrv[2];     w2 = nrv[3];   QQ2 = nrv[4];    LL2 = nrv[5];    SS2 = nrv[6];    nrsh2 = rsh
+                                                L2 = AngularJ64(LL2//2);        S2  = AngularJ64(SS2//2)
+                                                L12 = AngularJ64(nrv[7]//2);    S12 = AngularJ64(nrv[8]//2);      J = csfR.J
+                            else    error("stop d")     
+                            end
+                        end
+                    end
+                    #
+                    if  rsh1 != nrsh1   ||   rsh2 != nrsh2      error("stop e")     end
+                    
+                    # Cycle over all intermediate angular momenta T1, T2
+                    T1List = oplus(L1, S1);     T2List = oplus(L2, S2)
+                    for  T1 in T1List
+                        for  T2 in T2List
+                            wa1 = LSjj.getLSjjCoefficient(rsh1.l, N1, LS_jj_qn(w1, QQ1, LL1, SS1, Basics.twice(T1), Nm1, QQm1, JJm1, QQp1, JJp1) )
+                            wa2 = LSjj.getLSjjCoefficient(rsh2.l, N2, LS_jj_qn(w2, QQ2, LL2, SS2, Basics.twice(T2), Nm2, QQm2, JJm2, QQp2, JJp2) )
+                            if AngularMomentum.triangularDelta(T1,Jm1,Jp1) == 1  &&  T1 == Xp1
+                                me  = me + sqrt(AngularMomentum.bracket([T1, T2, L12, S12])) * AngularMomentum.Wigner_9j(L1,S1,T1, L2,S2,T2, L12,S12,J) *
+                                        ## phase from Valeria (2020) which seem to have no effect upon the expansion
+                                        ## AngularMomentum.phaseFactor([L1, 1, S1, -1, T1,  1, L2, 1, S2, -1, T2, 1, L12, 1, S12, -1, J]) *   ## phase from Valeria (2020)
+                                        AngularMomentum.phaseFactor([Jm2, 1, Jp2, 1, T1, 1, J]) * 
+                                        sqrt(AngularMomentum.bracket([T2, Xm2])) * AngularMomentum.Wigner_6j(T1, Jm2, Xm2, Jp2, J, T2) * wa1 * wa2
+                            end
+                        end
                     end
                 end
                 push!( mcVector, me)
             end
         end
+        #
+        return( mcVector )
     end
-    #
-    return( mcVector )
-end
 
 
-"""
-`LSjj.expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)`
-    ... to expand a relativistic CsfR with two nonrelativistic open shells into the given nonrelativistic basis; 
-        a mcVector::Array{Float64,1} is returned with the same lengths as length(basisNR.csfs). It is checked that the 
-        expansion is complete, and a warning is issued if this is not the case.
-"""
-function expandCsfRintoNonrelativisticBasis(openShells::TwoOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
-    mcVector      = Float64[]
-    # Find the open subshells and determine all the quantum numbers
-    rQN           = Basics.extractOpenShellQNfromCsfR(csfR, basisR)
-    rShells, rOCC = Basics.extractShellOccupationFromCsfR(csfR, basisR)
-    rKeys         = keys(rQN)
-    
-    if  length(rKeys) != 2          error("stop a")     end
-    if  rShells != basisNR.shells   error("stop b")     end
-    
-    # Initialize all quantum numbers that occur in loops below
-    rsh1 = rsh2 = nrsh1 = nrsh2 = Shell("9m")   
-    Nm1 = JJm1 = JJp1 = XXp1 = QQm1 = QQp1 = Nm2 = JJm2 = JJp2 = XXm2 = QQm2 = QQp2 = 0  
-    Jm1 = Jp1 = Xp1 = Jm2 = Jp2 = Xm2 = L1 = S1 = L2 = S2 = L12 = S12 = J = AngularJ64(0)
-    N1 = w1 = QQ1 = LL1 = SS1 = N2 = w2 = QQ2 = LL2 = SS2 =  0 
-    
-    # Set open-shell QN for the given csfR
-    ns = 0
-    for  rsh in rShells
-        if  rsh in rKeys
-            ns = ns + 1;    rv = rQN[rsh];    rQNm = rv[1];    rQNp = rv[2]
-            twojp = 2*rsh.l + 1;        if  rsh.l == 0  twojm = 1    else    twojm = 2*rsh.l - 1  end
-            #
-            if      ns == 1  Nm1 = rQNm[2];    JJm1 = rQNm[4];       JJp1 = rQNp[4];         XXp1 = rQNp[5];    rsh1 = rsh
-                             QQm1 = Int64( (twojm+1)/2 - rQNm[3]);   QQp1 = Int64( (twojp+1)/2 - rQNp[3])
-                             Jm1  = AngularJ64(JJm1//2);             Jp1  = AngularJ64(JJp1//2);    Xp1  = AngularJ64(XXp1//2)
-            elseif  ns == 2  Nm2 = rQNm[2];    JJm2 = rQNm[4];       JJp2 = rQNp[4];         XXm2 = rQNm[5];    rsh2 = rsh
-                             QQm2 = Int64( (twojm+1)/2 - rQNm[3]);   QQp2 = Int64( (twojp+1)/2 - rQNp[3])
-                             Jm2  = AngularJ64(JJm2//2);             Jp2  = AngularJ64(JJp2//2);    Xm2  = AngularJ64(XXm2//2)
-            else    error("stop c")     
-            end
-        end
-    end
-    
-    # Now cycle over all nonrelativistic csfNR in the given basis
-    for  s = 1:length(basisNR.csfs)
-        csfNR = basisNR.csfs[s]
-        if  csfR.J != csfNR.J   
-            push!( mcVector, 0.)
-        else
-            me = 0.
-            if  rOCC == csfNR.occupation
-                nrQN   = LSjj.extractOpenShellQNfromCsfNR(csfNR, basisNR)
-                nrKeys = keys(nrQN)
-                # Set open-shell QN for the given csfNR in the loop
-                ns = 0
-                for  rsh in rShells
-                    if  rsh in nrKeys
-                        ns = ns + 1;    nrv = nrQN[rsh]
-                        if      ns == 1     N1 = nrv[2];     w1 = nrv[3];   QQ1 = nrv[4];    LL1 = nrv[5];    SS1 = nrv[6];    nrsh1 = rsh
-                                            L1 = AngularJ64(LL1//2);        S1  = AngularJ64(SS1//2)
-                        elseif  ns == 2     N2 = nrv[2];     w2 = nrv[3];   QQ2 = nrv[4];    LL2 = nrv[5];    SS2 = nrv[6];    nrsh2 = rsh
-                                            L2 = AngularJ64(LL2//2);        S2  = AngularJ64(SS2//2)
-                                            L12 = AngularJ64(nrv[7]//2);    S12 = AngularJ64(nrv[8]//2);      J = csfR.J
-                        else    error("stop d")     
-                        end
-                    end
-                end
+    """
+    `LSjj.expandCsfRintoNonrelativisticBasis(openShells::ThreeOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)`
+        ... to expand a relativistic CsfR with three nonrelativistic open shells into the given nonrelativistic basis; 
+            a mcVector::Array{Float64,1} is returned with the same lengths as length(basisNR.csfs). It is checked that the 
+            expansion is complete, and a warning is issued if this is not the case.
+    """
+    function expandCsfRintoNonrelativisticBasis(openShells::ThreeOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
+        mcVector      = Float64[]
+        # Find the open subshells and determine all the quantum numbers
+        rQN           = Basics.extractOpenShellQNfromCsfR(csfR, basisR)
+        rShells, rOCC = Basics.extractShellOccupationFromCsfR(csfR, basisR)
+        rKeys         = keys(rQN)
+        
+        if  length(rKeys) != 3          error("stop a")     end
+        if  rShells != basisNR.shells   error("stop b")     end
+        
+        # Initialize all quantum numbers that occur in loops below
+        rsh1 = rsh2 = rsh3 = nrsh1 = nrsh2 = nrsh3 = Shell("9m")   
+        Nm1 = JJm1 = JJp1 = XXp1 = QQm1 = QQp1 = Nm2 = JJm2 = JJp2 = XXm2 = QQm2 = QQp2 = Nm3 = JJm3 = JJp3 = XXm3 = QQm3 = QQp3 = 0  
+        Jm1 = Jp1 = Xp1 = Jm2 = Jp2 = Xm2 = Jm3 = Jp3 = Xm3 = L1 = S1 = L2 = S2 = L3 = S3 = L12 = S12 = T12 = L123 = S123 = J = AngularJ64(0)
+        N1 = w1 = QQ1 = LL1 = SS1 = N2 = w2 = QQ2 = LL2 = SS2 = N3 = w3 = QQ3 = LL3 = SS3 =  0 
+        
+        # Set open-shell QN for the given csfR
+        ns = 0
+        for  rsh in rShells
+            if  rsh in rKeys
+                ns = ns + 1;    rv = rQN[rsh];    rQNm = rv[1];    rQNp = rv[2]
+                twojp = 2*rsh.l + 1;        if  rsh.l == 0  twojm = 1    else    twojm = 2*rsh.l - 1  end
                 #
-                if  rsh1 != nrsh1   ||   rsh2 != nrsh2      error("stop e")     end
-                
-                # Cycle over all intermediate angular momenta T1, T2
-                T1List = oplus(L1, S1);     T2List = oplus(L2, S2)
-                for  T1 in T1List
-                    for  T2 in T2List
-                        wa1 = LSjj.getLSjjCoefficient(rsh1.l, N1, LS_jj_qn(w1, QQ1, LL1, SS1, Basics.twice(T1), Nm1, QQm1, JJm1, QQp1, JJp1) )
-                        wa2 = LSjj.getLSjjCoefficient(rsh2.l, N2, LS_jj_qn(w2, QQ2, LL2, SS2, Basics.twice(T2), Nm2, QQm2, JJm2, QQp2, JJp2) )
-                        if AngularMomentum.triangularDelta(T1,Jm1,Jp1) == 1  &&  T1 == Xp1
-                            me  = me + sqrt(AngularMomentum.bracket([T1, T2, L12, S12])) * AngularMomentum.Wigner_9j(L1,S1,T1, L2,S2,T2, L12,S12,J) *
-                                       ## phase from Valeria (2020) which seem to have no effect upon the expansion
-                                       ## AngularMomentum.phaseFactor([L1, 1, S1, -1, T1,  1, L2, 1, S2, -1, T2, 1, L12, 1, S12, -1, J]) *   ## phase from Valeria (2020)
-                                       AngularMomentum.phaseFactor([Jm2, 1, Jp2, 1, T1, 1, J]) * 
-                                       sqrt(AngularMomentum.bracket([T2, Xm2])) * AngularMomentum.Wigner_6j(T1, Jm2, Xm2, Jp2, J, T2) * wa1 * wa2
-                        end
-                    end
+                if      ns == 1  Nm1 = rQNm[2];    JJm1 = rQNm[4];       JJp1 = rQNp[4];         XXp1 = rQNp[5];    rsh1 = rsh
+                                QQm1 = Int64( (twojm+1)/2 - rQNm[3]);   QQp1 = Int64( (twojp+1)/2 - rQNp[3])
+                                Jm1  = AngularJ64(JJm1//2);             Jp1  = AngularJ64(JJp1//2);    Xp1  = AngularJ64(XXp1//2)
+                elseif  ns == 2  Nm2 = rQNm[2];    JJm2 = rQNm[4];       JJp2 = rQNp[4];         XXm2 = rQNm[5];    rsh2 = rsh
+                                QQm2 = Int64( (twojm+1)/2 - rQNm[3]);   QQp2 = Int64( (twojp+1)/2 - rQNp[3])
+                                Jm2  = AngularJ64(JJm2//2);             Jp2  = AngularJ64(JJp2//2);    Xm2  = AngularJ64(XXm2//2)
+                elseif  ns == 3  Nm3 = rQNm[2];    JJm3 = rQNm[4];       JJp3 = rQNp[4];         XXm3 = rQNm[5];    rsh3 = rsh
+                                QQm3 = Int64( (twojm+1)/2 - rQNm[3]);   QQp3 = Int64( (twojp+1)/2 - rQNp[3])
+                                Jm3  = AngularJ64(JJm3//2);             Jp3  = AngularJ64(JJp3//2);    Xm3  = AngularJ64(XXm3//2)
+                else    error("stop c")     
                 end
             end
-            push!( mcVector, me)
         end
-    end
-    #
-    return( mcVector )
-end
-
-
-"""
-`LSjj.expandCsfRintoNonrelativisticBasis(openShells::ThreeOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)`
-    ... to expand a relativistic CsfR with three nonrelativistic open shells into the given nonrelativistic basis; 
-        a mcVector::Array{Float64,1} is returned with the same lengths as length(basisNR.csfs). It is checked that the 
-        expansion is complete, and a warning is issued if this is not the case.
-"""
-function expandCsfRintoNonrelativisticBasis(openShells::ThreeOpenShells, csfR::CsfR, basisR::Basis, basisNR::BasisNR)
-    mcVector      = Float64[]
-    # Find the open subshells and determine all the quantum numbers
-    rQN           = Basics.extractOpenShellQNfromCsfR(csfR, basisR)
-    rShells, rOCC = Basics.extractShellOccupationFromCsfR(csfR, basisR)
-    rKeys         = keys(rQN)
-    
-    if  length(rKeys) != 3          error("stop a")     end
-    if  rShells != basisNR.shells   error("stop b")     end
-    
-    # Initialize all quantum numbers that occur in loops below
-    rsh1 = rsh2 = rsh3 = nrsh1 = nrsh2 = nrsh3 = Shell("9m")   
-    Nm1 = JJm1 = JJp1 = XXp1 = QQm1 = QQp1 = Nm2 = JJm2 = JJp2 = XXm2 = QQm2 = QQp2 = Nm3 = JJm3 = JJp3 = XXm3 = QQm3 = QQp3 = 0  
-    Jm1 = Jp1 = Xp1 = Jm2 = Jp2 = Xm2 = Jm3 = Jp3 = Xm3 = L1 = S1 = L2 = S2 = L3 = S3 = L12 = S12 = T12 = L123 = S123 = J = AngularJ64(0)
-    N1 = w1 = QQ1 = LL1 = SS1 = N2 = w2 = QQ2 = LL2 = SS2 = N3 = w3 = QQ3 = LL3 = SS3 =  0 
-    
-    # Set open-shell QN for the given csfR
-    ns = 0
-    for  rsh in rShells
-        if  rsh in rKeys
-            ns = ns + 1;    rv = rQN[rsh];    rQNm = rv[1];    rQNp = rv[2]
-            twojp = 2*rsh.l + 1;        if  rsh.l == 0  twojm = 1    else    twojm = 2*rsh.l - 1  end
-            #
-            if      ns == 1  Nm1 = rQNm[2];    JJm1 = rQNm[4];       JJp1 = rQNp[4];         XXp1 = rQNp[5];    rsh1 = rsh
-                             QQm1 = Int64( (twojm+1)/2 - rQNm[3]);   QQp1 = Int64( (twojp+1)/2 - rQNp[3])
-                             Jm1  = AngularJ64(JJm1//2);             Jp1  = AngularJ64(JJp1//2);    Xp1  = AngularJ64(XXp1//2)
-            elseif  ns == 2  Nm2 = rQNm[2];    JJm2 = rQNm[4];       JJp2 = rQNp[4];         XXm2 = rQNm[5];    rsh2 = rsh
-                             QQm2 = Int64( (twojm+1)/2 - rQNm[3]);   QQp2 = Int64( (twojp+1)/2 - rQNp[3])
-                             Jm2  = AngularJ64(JJm2//2);             Jp2  = AngularJ64(JJp2//2);    Xm2  = AngularJ64(XXm2//2)
-            elseif  ns == 3  Nm3 = rQNm[2];    JJm3 = rQNm[4];       JJp3 = rQNp[4];         XXm3 = rQNm[5];    rsh3 = rsh
-                             QQm3 = Int64( (twojm+1)/2 - rQNm[3]);   QQp3 = Int64( (twojp+1)/2 - rQNp[3])
-                             Jm3  = AngularJ64(JJm3//2);             Jp3  = AngularJ64(JJp3//2);    Xm3  = AngularJ64(XXm3//2)
-            else    error("stop c")     
-            end
-        end
-    end
-    
-    # Now cycle over all nonrelativistic csfNR in the given basis
-    for  s = 1:length(basisNR.csfs)
-        csfNR = basisNR.csfs[s]
-        if  csfR.J != csfNR.J   
-            push!( mcVector, 0.)
-        else
-            me = 0.
-            if  rOCC == csfNR.occupation
-                nrQN   = LSjj.extractOpenShellQNfromCsfNR(csfNR, basisNR)
-                nrKeys = keys(nrQN)
-                # Set open-shell QN for the given csfNR in the loop
-                ns = 0
-                for  rsh in rShells
-                    if  rsh in nrKeys
-                        ns = ns + 1;    nrv = nrQN[rsh]
-                        if      ns == 1     N1 = nrv[2];     w1 = nrv[3];   QQ1 = nrv[4];    LL1 = nrv[5];    SS1 = nrv[6];    nrsh1 = rsh
-                                            L1 = AngularJ64(LL1//2);        S1  = AngularJ64(SS1//2)
-                        elseif  ns == 2     N2 = nrv[2];     w2 = nrv[3];   QQ2 = nrv[4];    LL2 = nrv[5];    SS2 = nrv[6];    nrsh2 = rsh
-                                            L2 = AngularJ64(LL2//2);        S2  = AngularJ64(SS2//2)
-                                            L12 = AngularJ64(nrv[7]//2);    S12 = AngularJ64(nrv[8]//2);
-                        elseif  ns == 3     N3 = nrv[2];     w3 = nrv[3];   QQ3 = nrv[4];    LL3 = nrv[5];    SS3 = nrv[6];    nrsh3 = rsh
-                                            L3 = AngularJ64(LL3//2);        S3  = AngularJ64(SS3//2)
-                                            L123 = AngularJ64(nrv[7]//2);   S123 = AngularJ64(nrv[8]//2);     J = csfR.J
-                        else    error("stop d")     
+        
+        # Now cycle over all nonrelativistic csfNR in the given basis
+        for  s = 1:length(basisNR.csfs)
+            csfNR = basisNR.csfs[s]
+            if  csfR.J != csfNR.J   
+                push!( mcVector, 0.)
+            else
+                me = 0.
+                if  rOCC == csfNR.occupation
+                    nrQN   = LSjj.extractOpenShellQNfromCsfNR(csfNR, basisNR)
+                    nrKeys = keys(nrQN)
+                    # Set open-shell QN for the given csfNR in the loop
+                    ns = 0
+                    for  rsh in rShells
+                        if  rsh in nrKeys
+                            ns = ns + 1;    nrv = nrQN[rsh]
+                            if      ns == 1     N1 = nrv[2];     w1 = nrv[3];   QQ1 = nrv[4];    LL1 = nrv[5];    SS1 = nrv[6];    nrsh1 = rsh
+                                                L1 = AngularJ64(LL1//2);        S1  = AngularJ64(SS1//2)
+                            elseif  ns == 2     N2 = nrv[2];     w2 = nrv[3];   QQ2 = nrv[4];    LL2 = nrv[5];    SS2 = nrv[6];    nrsh2 = rsh
+                                                L2 = AngularJ64(LL2//2);        S2  = AngularJ64(SS2//2)
+                                                L12 = AngularJ64(nrv[7]//2);    S12 = AngularJ64(nrv[8]//2);
+                            elseif  ns == 3     N3 = nrv[2];     w3 = nrv[3];   QQ3 = nrv[4];    LL3 = nrv[5];    SS3 = nrv[6];    nrsh3 = rsh
+                                                L3 = AngularJ64(LL3//2);        S3  = AngularJ64(SS3//2)
+                                                L123 = AngularJ64(nrv[7]//2);   S123 = AngularJ64(nrv[8]//2);     J = csfR.J
+                            else    error("stop d")     
+                            end
                         end
                     end
-                end
-                #
-                if  rsh1 != nrsh1   ||   rsh2 != nrsh2   ||   rsh3 != nrsh3      error("stop e")     end
-                
-                # Cycle over all intermediate angular momenta T1, T2, T12, T3
-                T1List = oplus(L1, S1);     T2List = oplus(L2, S2);     T3List = oplus(L3, S3);     T12List = oplus(L12, S12)
-                for  T1 in T1List
-                    for  T2 in T2List
-                        for  T3 in T3List
-                            wa1 = LSjj.getLSjjCoefficient(rsh1.l, N1, LS_jj_qn(w1, QQ1, LL1, SS1, Basics.twice(T1), Nm1, QQm1, JJm1, QQp1, JJp1) )
-                            wa2 = LSjj.getLSjjCoefficient(rsh2.l, N2, LS_jj_qn(w2, QQ2, LL2, SS2, Basics.twice(T2), Nm2, QQm2, JJm2, QQp2, JJp2) )
-                            wa3 = LSjj.getLSjjCoefficient(rsh3.l, N3, LS_jj_qn(w3, QQ3, LL3, SS3, Basics.twice(T3), Nm3, QQm3, JJm3, QQp3, JJp3) )
-                            for  T12 in T12List
-                                ##x println("T1 = $T1   T2 = $T2   T3 = $T3   wa1 = $wa1   wa2 = $wa2   wa3 = $wa3")
-                                if AngularMomentum.triangularDelta(T1,Jm1,Jp1) == 1  &&  T1 == Xp1  &&
-                                   AngularMomentum.triangularDelta(T2,Jm2,Jp2) == 1  &&  AngularMomentum.triangularDelta(T3,Jm3,Jp3) == 1
-                                    me  = me + sqrt(AngularMomentum.bracket([T1, T2, T3, T12, L12, L123, S12, S123])) * 
-                                               AngularMomentum.Wigner_9j(L2,L1,L12, S2,S1,S12, T2,T1,T12) * AngularMomentum.Wigner_9j(J,L123,S123, T3,L3,S3, T12,L12,S12) *
-                                               AngularMomentum.phaseFactor([L1, 1, S1, -1, T1,  1, L2, 1, S2, 1, L3, -1, L123, 1, S3, -1, S123, -1, J, -1, T12, -1, T12]) * 
-                                               AngularMomentum.phaseFactor([Xp1, 1, Xp1, 1, Jm2, 1, Jp2, 1, T2, 1, T12, 1, T12, 1, Jm3, 1, Jp3, 1, T3]) * 
-                                               sqrt(AngularMomentum.bracket([T2, Xm2, T3, Xm3])) * AngularMomentum.Wigner_6j(Jm2, Jp2, T2, T12, Xp1, Xm2) * 
-                                               AngularMomentum.Wigner_6j(Jm3, Jp3, T3, J, T12, Xm3) *  wa1 * wa2 * wa3
+                    #
+                    if  rsh1 != nrsh1   ||   rsh2 != nrsh2   ||   rsh3 != nrsh3      error("stop e")     end
+                    
+                    # Cycle over all intermediate angular momenta T1, T2, T12, T3
+                    T1List = oplus(L1, S1);     T2List = oplus(L2, S2);     T3List = oplus(L3, S3);     T12List = oplus(L12, S12)
+                    for  T1 in T1List
+                        for  T2 in T2List
+                            for  T3 in T3List
+                                wa1 = LSjj.getLSjjCoefficient(rsh1.l, N1, LS_jj_qn(w1, QQ1, LL1, SS1, Basics.twice(T1), Nm1, QQm1, JJm1, QQp1, JJp1) )
+                                wa2 = LSjj.getLSjjCoefficient(rsh2.l, N2, LS_jj_qn(w2, QQ2, LL2, SS2, Basics.twice(T2), Nm2, QQm2, JJm2, QQp2, JJp2) )
+                                wa3 = LSjj.getLSjjCoefficient(rsh3.l, N3, LS_jj_qn(w3, QQ3, LL3, SS3, Basics.twice(T3), Nm3, QQm3, JJm3, QQp3, JJp3) )
+                                for  T12 in T12List
+                                    ##x println("T1 = $T1   T2 = $T2   T3 = $T3   wa1 = $wa1   wa2 = $wa2   wa3 = $wa3")
+                                    if AngularMomentum.triangularDelta(T1,Jm1,Jp1) == 1  &&  T1 == Xp1  &&
+                                    AngularMomentum.triangularDelta(T2,Jm2,Jp2) == 1  &&  AngularMomentum.triangularDelta(T3,Jm3,Jp3) == 1
+                                        me  = me + sqrt(AngularMomentum.bracket([T1, T2, T3, T12, L12, L123, S12, S123])) * 
+                                                AngularMomentum.Wigner_9j(L2,L1,L12, S2,S1,S12, T2,T1,T12) * AngularMomentum.Wigner_9j(J,L123,S123, T3,L3,S3, T12,L12,S12) *
+                                                AngularMomentum.phaseFactor([L1, 1, S1, -1, T1,  1, L2, 1, S2, 1, L3, -1, L123, 1, S3, -1, S123, -1, J, -1, T12, -1, T12]) * 
+                                                AngularMomentum.phaseFactor([Xp1, 1, Xp1, 1, Jm2, 1, Jp2, 1, T2, 1, T12, 1, T12, 1, Jm3, 1, Jp3, 1, T3]) * 
+                                                sqrt(AngularMomentum.bracket([T2, Xm2, T3, Xm3])) * AngularMomentum.Wigner_6j(Jm2, Jp2, T2, T12, Xp1, Xm2) * 
+                                                AngularMomentum.Wigner_6j(Jm3, Jp3, T3, J, T12, Xm3) *  wa1 * wa2 * wa3
+                                    end
                                 end
                             end
                         end
                     end
                 end
+                push!( mcVector, me)
             end
-            push!( mcVector, me)
         end
+        #
+        return( mcVector )
     end
-    #
-    return( mcVector )
-end
 
 
-"""
-`LSjj.extractConfigurationFromCsfNR(csfNR::CsfNR, basisNR::BasisNR)`
-    ... to extract the nonrelativistic configuration from the given csfNR, if this is part of basisNR.
-        A nonrelativistic conf::Configuration is returned.
-"""
-function extractConfigurationFromCsfNR(csfNR::CsfNR, basisNR::BasisNR)
-    shells = Dict{Shell,Int64}()
-    for  s = 1:length(basisNR.shells)
-        shell = basisNR.shells[s];    occ = csfNR.occupation[s]
-        if  occ > 0     shells = Base.merge( shells, Dict( shell => occ))   end
-    end
-    conf   = Configuration( shells, basisNR.NoElectrons)
-    return( conf )
-end
-
-
-"""
-`LSjj.extractConfigurationWeightsOfLevelNR(levelNR::LevelNR)`
-    ... to extract the nonrelativistic configurations and their (total) weights that contribute to the given levelNR;
-        a dictionary weights::Dict{Configuration,Float64} is returned.
-"""
-function extractConfigurationWeightsOfLevelNR(levelNR::LevelNR)
-    weights = Dict{String,Float64}()
-    for  s = 1:length(levelNR.basis.csfs)
-        csf  = levelNR.basis.csfs[s];    weight = abs(levelNR.mc[s])^2
-        conf = Base.string(LSjj.extractConfigurationFromCsfNR(csf, levelNR.basis))
-        if      haskey(weights, conf)    weights[conf] = weights[conf] + weight
-        else    weights = Base.merge( weights, Dict( conf => weight))
+    """
+    `LSjj.extractConfigurationFromCsfNR(csfNR::CsfNR, basisNR::BasisNR)`
+        ... to extract the nonrelativistic configuration from the given csfNR, if this is part of basisNR.
+            A nonrelativistic conf::Configuration is returned.
+    """
+    function extractConfigurationFromCsfNR(csfNR::CsfNR, basisNR::BasisNR)
+        shells = Dict{Shell,Int64}()
+        for  s = 1:length(basisNR.shells)
+            shell = basisNR.shells[s];    occ = csfNR.occupation[s]
+            if  occ > 0     shells = Base.merge( shells, Dict( shell => occ))   end
         end
+        conf   = Configuration( shells, basisNR.NoElectrons)
+        return( conf )
     end
-    
-    return( weights )
-end
 
 
-"""
-`LSjj.extractOpenShellQNfromCsfNR(csfNR::CsfNR, basisNR::BasisNR)`  
-    ... extracts the quantum numbers of the nonrelativistic open shells from the given csfNR. Here, we assume that csfNR is 
-        defined in the given basis. An nrQN::Dict{Shell,NTuple{8,Int64}} = Dict(shell => qn ) is returned with 
-        qn = (idx, N, w, QQ, LL, SS, LLx, SSx) which contains all the shell quantum numbers and their coupling in csfNR.
-"""
-function extractOpenShellQNfromCsfNR(csfNR::CsfNR, basisNR::BasisNR)
-    wa = Dict{Shell,NTuple{8,Int64}}()
-    for  s = 1:length(basisNR.shells)
-        shell = basisNR.shells[s];   occ = csfNR.occupation[s]
-        # Now collect the quantum numbers into tuples
-        if  0 < occ < 2* (2*shell.l + 1)
-            wa = Base.merge( wa, Dict(shell => (s, csfNR.occupation[s], csfNR.w[s], csfNR.QQ[s], 
-                                                Basics.twice(csfNR.shellL[s]), Basics.twice(csfNR.shellS[s]), 
-                                                Basics.twice(csfNR.shellLX[s]), Basics.twice(csfNR.shellSX[s])) ) )
+    """
+    `LSjj.extractConfigurationWeightsOfLevelNR(levelNR::LevelNR)`
+        ... to extract the nonrelativistic configurations and their (total) weights that contribute to the given levelNR;
+            a dictionary weights::Dict{Configuration,Float64} is returned.
+    """
+    function extractConfigurationWeightsOfLevelNR(levelNR::LevelNR)
+        weights = Dict{String,Float64}()
+        for  s = 1:length(levelNR.basis.csfs)
+            csf  = levelNR.basis.csfs[s];    weight = abs(levelNR.mc[s])^2
+            conf = Base.string(LSjj.extractConfigurationFromCsfNR(csf, levelNR.basis))
+            if      haskey(weights, conf)    weights[conf] = weights[conf] + weight
+            else    weights = Base.merge( weights, Dict( conf => weight))
+            end
         end
+        
+        return( weights )
     end
-    
-    return( wa )
-end
 
 
-"""
-`LSjj.generateNonrelativisticCsfList(confList::Array{Configuration,1}, shellList::Array{Shell,1})`
-    ... to construct from a given list of configuration all possible (nonrelativistic) CSF with regard to the 
-        given shellList; a unique list::Array{CsfNR,1} is returned.  
-"""
-function generateNonrelativisticCsfList(confList::Array{Configuration,1}, shellList::Array{Shell,1}) 
-    
-    csfList = CsfNR[];    previousCsfs = CsfNR[]
+    """
+    `LSjj.extractOpenShellQNfromCsfNR(csfNR::CsfNR, basisNR::BasisNR)`  
+        ... extracts the quantum numbers of the nonrelativistic open shells from the given csfNR. Here, we assume that csfNR is 
+            defined in the given basis. An nrQN::Dict{Shell,NTuple{8,Int64}} = Dict(shell => qn ) is returned with 
+            qn = (idx, N, w, QQ, LL, SS, LLx, SSx) which contains all the shell quantum numbers and their coupling in csfNR.
+    """
+    function extractOpenShellQNfromCsfNR(csfNR::CsfNR, basisNR::BasisNR)
+        wa = Dict{Shell,NTuple{8,Int64}}()
+        for  s = 1:length(basisNR.shells)
+            shell = basisNR.shells[s];   occ = csfNR.occupation[s]
+            # Now collect the quantum numbers into tuples
+            if  0 < occ < 2* (2*shell.l + 1)
+                wa = Base.merge( wa, Dict(shell => (s, csfNR.occupation[s], csfNR.w[s], csfNR.QQ[s], 
+                                                    Basics.twice(csfNR.shellL[s]), Basics.twice(csfNR.shellS[s]), 
+                                                    Basics.twice(csfNR.shellLX[s]), Basics.twice(csfNR.shellSX[s])) ) )
+            end
+        end
+        
+        return( wa )
+    end
 
-    # Cycle through all configurations 
-    for conf  in  confList
-        first = true;    parity  = Basics.determineParity(conf)
-        for  shell  in shellList
-            if   shell  in  keys(conf.shells)    occ = conf.shells[shell]    else    occ = 0    end
-            if   first
-                stateList   = LSjj.provideShellStates(shell, occ)
-                currentCsfs = CsfNR[]
-                for  state in stateList
-                    push!( currentCsfs, CsfNR( AngularJ64(0), parity, [state.occ], [state.w], [state.QQ],
-                                               [AngularJ64(state.LL//2)], [AngularJ64(state.SS//2)],
-                                               [AngularJ64(state.LL//2)], [AngularJ64(state.SS//2)] ) )
-                end
-                previousCsfs = copy(currentCsfs)
-                first        = false
-            else
-                # Now support also all couplings of the subshell states with the CSFs that were built-up so far
-                stateList   = LSjj.provideShellStates(shell, occ)
-                currentCsfs = CsfNR[]
-                ##x for  i = 1:length(previousCsfs)    println("generate-aa: ", previousCsfs[i])    end
-                for  csf in  previousCsfs
+
+    """
+    `LSjj.generateNonrelativisticCsfList(confList::Array{Configuration,1}, shellList::Array{Shell,1})`
+        ... to construct from a given list of configuration all possible (nonrelativistic) CSF with regard to the 
+            given shellList; a unique list::Array{CsfNR,1} is returned.  
+    """
+    function generateNonrelativisticCsfList(confList::Array{Configuration,1}, shellList::Array{Shell,1}) 
+        
+        csfList = CsfNR[];    previousCsfs = CsfNR[]
+
+        # Cycle through all configurations 
+        for conf  in  confList
+            first = true;    parity  = Basics.determineParity(conf)
+            for  shell  in shellList
+                if   shell  in  keys(conf.shells)    occ = conf.shells[shell]    else    occ = 0    end
+                if   first
+                    stateList   = LSjj.provideShellStates(shell, occ)
+                    currentCsfs = CsfNR[]
                     for  state in stateList
-                        occupation = deepcopy(csf.occupation);    w = deepcopy(csf.w);    QQ = deepcopy(csf.QQ);    
-                        shellL     = deepcopy(csf.shellL);        shellS  = deepcopy(csf.shellS)
-                        push!(occupation, state.occ);   push!(w, state.w);   push!(QQ, state.QQ);   
-                        push!(shellL, AngularJ64(state.LL//2) );  push!(shellS, AngularJ64(state.SS//2) )  
-                        newLXList = oplus( csf.shellLX[end], AngularJ64(state.LL//2) )
-                        newSXList = oplus( csf.shellSX[end], AngularJ64(state.SS//2) )
-                        for  newLX in newLXList
-                            for  newSX in newSXList
-                                shellLX = deepcopy(csf.shellLX);   push!(shellLX, newLX) 
-                                shellSX = deepcopy(csf.shellSX);   push!(shellSX, newSX) 
-                                push!( currentCsfs, CsfNR( AngularJ64(0), parity, occupation, w, QQ, shellL, shellS, shellLX, shellSX) ) 
+                        push!( currentCsfs, CsfNR( AngularJ64(0), parity, [state.occ], [state.w], [state.QQ],
+                                                [AngularJ64(state.LL//2)], [AngularJ64(state.SS//2)],
+                                                [AngularJ64(state.LL//2)], [AngularJ64(state.SS//2)] ) )
+                    end
+                    previousCsfs = copy(currentCsfs)
+                    first        = false
+                else
+                    # Now support also all couplings of the subshell states with the CSFs that were built-up so far
+                    stateList   = LSjj.provideShellStates(shell, occ)
+                    currentCsfs = CsfNR[]
+                    ##x for  i = 1:length(previousCsfs)    println("generate-aa: ", previousCsfs[i])    end
+                    for  csf in  previousCsfs
+                        for  state in stateList
+                            occupation = deepcopy(csf.occupation);    w = deepcopy(csf.w);    QQ = deepcopy(csf.QQ);    
+                            shellL     = deepcopy(csf.shellL);        shellS  = deepcopy(csf.shellS)
+                            push!(occupation, state.occ);   push!(w, state.w);   push!(QQ, state.QQ);   
+                            push!(shellL, AngularJ64(state.LL//2) );  push!(shellS, AngularJ64(state.SS//2) )  
+                            newLXList = oplus( csf.shellLX[end], AngularJ64(state.LL//2) )
+                            newSXList = oplus( csf.shellSX[end], AngularJ64(state.SS//2) )
+                            for  newLX in newLXList
+                                for  newSX in newSXList
+                                    shellLX = deepcopy(csf.shellLX);   push!(shellLX, newLX) 
+                                    shellSX = deepcopy(csf.shellSX);   push!(shellSX, newSX) 
+                                    push!( currentCsfs, CsfNR( AngularJ64(0), parity, occupation, w, QQ, shellL, shellS, shellLX, shellSX) ) 
+                                end
                             end
                         end
                     end
+                    previousCsfs = copy(currentCsfs)
                 end
-                previousCsfs = copy(currentCsfs)
+            end
+            append!( csfList, previousCsfs)
+        end
+        currentCsfs = CsfNR[]
+        for  csf in  csfList   #### previousCsfs
+            newJList = oplus( csf.shellLX[end], csf.shellSX[end] )
+            ##x println("abc: LX = $(csf.shellLX[end])   SX = $(csf.shellSX[end])   newJList = $newJList")
+            for  newJ in newJList
+                push!( currentCsfs, CsfNR( newJ, csf.parity, csf.occupation, csf.w, csf.QQ, csf.shellL, csf.shellS, csf.shellLX, csf.shellSX) )
             end
         end
-        append!( csfList, previousCsfs)
+        
+        ##x println("Final Csfs = $currentCsfs ")
+        return( currentCsfs )
     end
-    currentCsfs = CsfNR[]
-    for  csf in  csfList   #### previousCsfs
-        newJList = oplus( csf.shellLX[end], csf.shellSX[end] )
-        ##x println("abc: LX = $(csf.shellLX[end])   SX = $(csf.shellSX[end])   newJList = $newJList")
-        for  newJ in newJList
-            push!( currentCsfs, CsfNR( newJ, csf.parity, csf.occupation, csf.w, csf.QQ, csf.shellL, csf.shellS, csf.shellLX, csf.shellSX) )
+
+
+
+    """
+    `LSjj.provideShellStates(sh::Shell, occ::Int64)` 
+        ... to provide all antisymmetric ShellStates within the nonrelativistic quasi-spin scheme for the given 
+            shell and occupation; these shell states are listed by Gaigalas et al., CPC 135 (2002) 219.
+            An Array{ShellStateNR,1} is returned.
+    """
+    function provideShellStates(sh::Shell, occ::Int64)
+        wb = LSjj.ShellStateNR[]
+
+        #                                                                                w QQ LL SS
+        if       sh.l == 0
+            if       occ == 0  || occ == 2      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 0, 0) );       return(wb)
+            elseif   occ == 1                   push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 0, 1) );       return(wb)
+            end
+        elseif   sh.l == 1
+            if       occ == 0  || occ == 6      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 0, 0) );       return(wb)
+            elseif   occ == 1  || occ == 5      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 1) );       return(wb)
+            elseif   occ == 2  || occ == 4      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 4, 0) );       return(wb)
+            elseif   occ == 3                   push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 0, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 4, 1) );       return(wb)
+            end
+        elseif   sh.l == 2
+            if       occ == 0  || occ == 10     push!( wb, LSjj.ShellStateNR( sh, occ, 0, 5, 0, 0) );       return(wb)
+            elseif   occ == 1  || occ == 9      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 4, 4, 1) );       return(wb)
+            elseif   occ == 2  || occ == 8      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 5, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 8, 0) );       return(wb)
+            elseif   occ == 3  || occ == 7      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 6, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 4, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2,10, 1) );       return(wb)
+            elseif   occ == 4  || occ == 6      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 4, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 4, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 8, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 5, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 6, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,12, 0) );       return(wb)
+            elseif   occ == 5                   push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 0, 5) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 4, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 6, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 8, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 0, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 4, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2,10, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0,12, 1) );       return(wb)
+            else     error("stop c")
+            end
+        elseif   sh.l == 3
+            if       occ == 0  || occ == 14     push!( wb, LSjj.ShellStateNR( sh, occ, 1, 7, 0, 0) );       return(wb)
+            elseif   occ == 1  || occ == 13     push!( wb, LSjj.ShellStateNR( sh, occ, 1, 6, 6, 1) );       return(wb)
+            elseif   occ == 2  || occ == 12     push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 7, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,12, 0) );       return(wb)
+            elseif   occ == 3  || occ == 11     push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 0, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 4, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 6, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 8, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,12, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 2, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 6, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,10, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4,10, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,12, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,14, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,16, 1) );       return(wb)
+            elseif   occ == 4  || occ == 10     push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 0, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 4, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 6, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 8, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,12, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 4, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 4, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 8, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 8, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 8, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,12, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,12, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,14, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,14, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,16, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,18, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 7, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 6, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,10, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,10, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,12, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,12, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3,12, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,14, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,16, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,16, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,20, 0) );       return(wb)
+            elseif   occ == 5  || occ ==  9     push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 5) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 6, 5) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2,10, 5) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 0, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2, 2, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2, 2, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 4, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2, 4, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 4, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 6, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2, 6, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 6, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 6, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 8, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2, 8, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 8, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 8, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2,10, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,10, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,10, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,12, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,12, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,12, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2,14, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,14, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2,16, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2,18, 3) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 2, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2, 2, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 2, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 2, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2, 4, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 6, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 2, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 7, 2, 6, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 2, 8, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,10, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4,10, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,10, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2,10, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2,10, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 2,10, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 7, 2,10, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,12, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,12, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,12, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2,12, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2,12, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,14, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,14, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,14, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2,14, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2,14, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,16, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,16, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,16, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2,18, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,18, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2,20, 1) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2,22, 1) );       return(wb)
+
+            elseif   occ == 6  || occ ==  8     push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 6, 6) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 0, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 2, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 4, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1, 4, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1, 4, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 6, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1, 6, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 8, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1, 8, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1, 8, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 1,10, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,10, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,12, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,12, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,14, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,16, 4) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1, 2, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 4, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 4, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1, 4, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1, 4, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 4, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 7, 1, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 8, 1, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 9, 1, 6, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 8, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 8, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 8, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1, 8, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 8, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1, 8, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 7, 1, 8, 8) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 7, 1,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 8, 1,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 9, 1,10, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,12, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,12, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,12, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1,12, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1,12, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1,12, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,14, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,14, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,14, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1,14, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1,14, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1,14, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,16, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,16, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,16, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,18, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,18, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,18, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,20, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,22, 2) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 7, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1, 0, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 2, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1, 4, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 6, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1, 6, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1, 6, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1, 6, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 7, 1, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 8, 1, 8, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,10, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,10, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,10, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1,10, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,12, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,12, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3,12, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1,12, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1,12, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1,12, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 7, 1,12, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,14, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,14, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,14, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,16, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,16, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,16, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1,16, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 1,18, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,18, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,20, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,20, 0) )
+                                                push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,24, 0) );       return(wb)
+            else     error("stop d")
+            end
+
+        # For an extension to other subshell-occupations, see the Racah-manual; Table ...
+        else  error("stop a")
         end
     end
-    
-    ##x println("Final Csfs = $currentCsfs ")
-    return( currentCsfs )
-end
 
 
-
-"""
-`LSjj.provideShellStates(sh::Shell, occ::Int64)` 
-    ... to provide all antisymmetric ShellStates within the nonrelativistic quasi-spin scheme for the given 
-        shell and occupation; these shell states are listed by Gaigalas et al., CPC 135 (2002) 219.
-        An Array{ShellStateNR,1} is returned.
-"""
-function provideShellStates(sh::Shell, occ::Int64)
-    wb = LSjj.ShellStateNR[]
-
-    #                                                                                w QQ LL SS
-    if       sh.l == 0
-        if       occ == 0  || occ == 2      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 0, 0) );       return(wb)
-        elseif   occ == 1                   push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 0, 1) );       return(wb)
+    """
+    `LSjj.shortString(csfNR::CsfNR, basisNR::BasisNR)`
+        ... to compose a single-line string of the nonrelativistic csfNR, if this is part of basisNR.
+            Only the open shells are printed out explicity; an sa::String is returned.
+    """
+    function shortString(csfNR::CsfNR, basisNR::BasisNR)
+        function  letter(La::AngularJ64) 
+            L  = Int64( Basics.twice(La)/2 )
+            wa = [ "P", "D", "F", "G", "H", "I", "K", "L", "M", "N", "O", "Q"]
+            if      L == 0      wb = "S"    
+            elseif  L in 1:12    wb = wa[L]
+            else    error("stop a")
+            end
+            return( wb )
         end
-    elseif   sh.l == 1
-        if       occ == 0  || occ == 6      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 0, 0) );       return(wb)
-        elseif   occ == 1  || occ == 5      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 1) );       return(wb)
-        elseif   occ == 2  || occ == 4      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 4, 0) );       return(wb)
-        elseif   occ == 3                   push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 0, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 4, 1) );       return(wb)
+        #
+        function  multiplicity(S::AngularJ64) 
+            return( string(Basics.twice(S) + 1) )
         end
-    elseif   sh.l == 2
-        if       occ == 0  || occ == 10     push!( wb, LSjj.ShellStateNR( sh, occ, 0, 5, 0, 0) );       return(wb)
-        elseif   occ == 1  || occ == 9      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 4, 4, 1) );       return(wb)
-        elseif   occ == 2  || occ == 8      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 5, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 8, 0) );       return(wb)
-        elseif   occ == 3  || occ == 7      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 6, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 4, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2,10, 1) );       return(wb)
-        elseif   occ == 4  || occ == 6      push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 4, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 4, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 8, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 5, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 6, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,12, 0) );       return(wb)
-        elseif   occ == 5                   push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 0, 5) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 4, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 6, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 8, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 0, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 4, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2,10, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 0,12, 1) );       return(wb)
-        else     error("stop c")
+        
+        sa = "  "
+        for  s = 1:length(basisNR.shells)
+            shell = basisNR.shells[s];    occ = csfNR.occupation[s]
+            if  occ == 0  ||  occ == 2(shell.l + 1)     break   end
+            sa = sa * "[" * string(shell) * "^" * string(occ) * " ^" * multiplicity(csfNR.shellS[s]) * letter(csfNR.shellL[s]) * 
+                    "] " * " ^" * multiplicity(csfNR.shellSX[s]) * letter(csfNR.shellLX[s])
         end
-    elseif   sh.l == 3
-        if       occ == 0  || occ == 14     push!( wb, LSjj.ShellStateNR( sh, occ, 1, 7, 0, 0) );       return(wb)
-        elseif   occ == 1  || occ == 13     push!( wb, LSjj.ShellStateNR( sh, occ, 1, 6, 6, 1) );       return(wb)
-        elseif   occ == 2  || occ == 12     push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 7, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,12, 0) );       return(wb)
-        elseif   occ == 3  || occ == 11     push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 0, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 4, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 6, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 8, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,12, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 2, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 6, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,10, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4,10, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,12, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,14, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,16, 1) );       return(wb)
-        elseif   occ == 4  || occ == 10     push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 0, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 4, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 6, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 8, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,12, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 4, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 4, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 8, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 8, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 8, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,12, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,12, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,14, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,14, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,16, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,18, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 7, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 6, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,10, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,10, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,12, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,12, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3,12, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,14, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,16, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,16, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,20, 0) );       return(wb)
-        elseif   occ == 5  || occ ==  9     push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 2, 5) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2, 6, 5) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2,10, 5) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 0, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2, 2, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2, 2, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 4, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2, 4, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 4, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 6, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2, 6, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 6, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 6, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 8, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2, 8, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 8, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 8, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2,10, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,10, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,10, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,12, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,12, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,12, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2,14, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,14, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2,16, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2,18, 3) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 2, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2, 2, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 2, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 2, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2, 4, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 6, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 2, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 7, 2, 6, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 2, 8, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,10, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 4,10, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,10, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2,10, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2,10, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 2,10, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 7, 2,10, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,12, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,12, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,12, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2,12, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2,12, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,14, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,14, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,14, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 2,14, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 2,14, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 4,16, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,16, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 2,16, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2,18, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 2,18, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 2,20, 1) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 2,22, 1) );       return(wb)
-
-        elseif   occ == 6  || occ ==  8     push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 6, 6) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 3, 0, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 2, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 4, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1, 4, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1, 4, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 6, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1, 6, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 8, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1, 8, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1, 8, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 1,10, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,10, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,12, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,12, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,14, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,16, 4) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1, 2, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 4, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 4, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1, 4, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1, 4, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 4, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 7, 1, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 8, 1, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 9, 1, 6, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 8, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 8, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 8, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1, 8, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 8, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1, 8, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 7, 1, 8, 8) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 7, 1,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 8, 1,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 9, 1,10, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,12, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,12, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,12, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1,12, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1,12, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1,12, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,14, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,14, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,14, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1,14, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1,14, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1,14, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,16, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,16, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,16, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,18, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,18, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,18, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,20, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,22, 2) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 7, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1, 0, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1, 2, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1, 4, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3, 6, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1, 6, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1, 6, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1, 6, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 3, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 7, 1, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 8, 1, 8, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,10, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,10, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,10, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1,10, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 5,12, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,12, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 3,12, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1,12, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 5, 1,12, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 6, 1,12, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 7, 1,12, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,14, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,14, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,14, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,16, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 3,16, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 3, 1,16, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 4, 1,16, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 1,18, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,18, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 1, 3,20, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 2, 1,20, 0) )
-                                            push!( wb, LSjj.ShellStateNR( sh, occ, 0, 1,24, 0) );       return(wb)
-        else     error("stop d")
-        end
-
-    # For an extension to other subshell-occupations, see the Racah-manual; Table ...
-    else  error("stop a")
+        sa = sa * " ^" * multiplicity(csfNR.shellSX[end]) * letter(csfNR.shellLX[end]) * "_" * string(csfNR.J)
+        return( sa )
     end
-end
-
-
-"""
-`LSjj.shortString(csfNR::CsfNR, basisNR::BasisNR)`
-    ... to compose a single-line string of the nonrelativistic csfNR, if this is part of basisNR.
-        Only the open shells are printed out explicity; an sa::String is returned.
-"""
-function shortString(csfNR::CsfNR, basisNR::BasisNR)
-    function  letter(La::AngularJ64) 
-        L  = Int64( Basics.twice(La)/2 )
-        wa = [ "P", "D", "F", "G", "H", "I", "K", "L", "M", "N", "O", "Q"]
-        if      L == 0      wb = "S"    
-        elseif  L in 1:12    wb = wa[L]
-        else    error("stop a")
-        end
-        return( wb )
-    end
-    #
-    function  multiplicity(S::AngularJ64) 
-        return( string(Basics.twice(S) + 1) )
-    end
-    
-    sa = "  "
-    for  s = 1:length(basisNR.shells)
-        shell = basisNR.shells[s];    occ = csfNR.occupation[s]
-        if  occ == 0  ||  occ == 2(shell.l + 1)     break   end
-        sa = sa * "[" * string(shell) * "^" * string(occ) * " ^" * multiplicity(csfNR.shellS[s]) * letter(csfNR.shellL[s]) * 
-                  "] " * " ^" * multiplicity(csfNR.shellSX[s]) * letter(csfNR.shellLX[s])
-    end
-    sa = sa * " ^" * multiplicity(csfNR.shellSX[end]) * letter(csfNR.shellLX[end]) * "_" * string(csfNR.J)
-    return( sa )
-end
 
 
 

@@ -7,7 +7,6 @@
 module PhotoEmission
 
     using Printf, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Radial, ..TableStrings
-    ##x global JAC_counter = 0
 
 
     """

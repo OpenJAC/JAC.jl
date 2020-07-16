@@ -586,4 +586,3 @@ module AtomicState
     end
 
 end # module
-    

@@ -1,7 +1,7 @@
 
 """
-`module  JAC.Pulse`  ... a submodel of JAC that contains all structs and methods to deal with time-dependent pulses of the em field; 
-                         it is using JAC.
+`module  JAC.Pulse`  
+    ... a submodel of JAC that contains all structs and methods to deal with time-dependent pulses of the em field.
 """
 module Pulse
 

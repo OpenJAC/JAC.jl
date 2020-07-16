@@ -46,13 +46,13 @@ module Atomic
         + zeemanSettings                 ::LandeZeeman.Settings            ... Settings for Lande-Zeeman coefficient calculations.
         + process                        ::Basic.AbstractProcess           
             ... An (additional) process for which the properties are to be evaluated for the given initial- and final-state configurations.
-        + processSettings                ::Union{JAC.PhotoEmission.Settings, JAC.AutoIonization.Settings, JAC.PlasmaShift.AugerSettings, 
-                                                 JAC.PhotoIonization.Settings, JAC.PlasmaShift.PhotoSettings, 
-                                                 JAC.PhotoExcitation.Settings, JAC.PhotoExcitationAutoion.Settings, JAC.PhotoRecombination.Settings, 
-                                                 JAC.ImpactExcitation.Settings, JAC.Dielectronic.Settings, RadiativeAuger.Settings,
-                                                 JAC.PairAnnihilation1Photon.Settings, JAC.ImpactExcitationAutoion.Settings, 
-                                                 JAC.MultiPhotonDeExcitation.Settings, JAC.CoulombExcitation.Settings, 
-                                                 JAC.CoulombIonization.Settings} 
+        + processSettings                ::Union{PhotoEmission.Settings, AutoIonization.Settings, PlasmaShift.AugerSettings, 
+                                                 PhotoIonization.Settings, PlasmaShift.PhotoSettings, 
+                                                 PhotoExcitation.Settings, PhotoExcitationAutoion.Settings, PhotoRecombination.Settings, 
+                                                 ImpactExcitation.Settings, Dielectronic.Settings, RadiativeAuger.Settings,
+                                                 PairAnnihilation1Photon.Settings, ImpactExcitationAutoion.Settings, 
+                                                 MultiPhotonDeExcitation.Settings, CoulombExcitation.Settings, 
+                                                 CoulombIonization.Settings} 
             ... Provides the settings for the selected process.
     """
     struct  Computation
@@ -111,7 +111,7 @@ module Atomic
     """
     `Atomic.Computation(comp::Atomic.Computation;`
     
-        name=..,                nuclearModel=..,            grid=..,                    configs=..,             asfSettings=..,     
+        name=..,                nuclearModel=..,            grid=..,                    configs=..,                   asfSettings=..,     
         initialConfigs=..,      initialAsfSettings=..,      intermediateConfigs=..,     intermediateAsfSettings=.., 
         finalConfigs=..,        finalAsfSettings=..,        alphaSettings=..,           einsteinSettings=.., 
         formSettings=..,        hfsSettings=..,             isotopeSettings=..,         plasmaSettings=..,

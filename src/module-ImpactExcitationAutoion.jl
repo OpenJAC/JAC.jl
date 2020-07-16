@@ -123,22 +123,8 @@ module ImpactExcitationAutoion
             which the amplitudes and properties have now been evaluated.
     """
     function  computeAmplitudesProperties(pathway::ImpactExcitationAutoion.Pathway, grid::Radial.Grid, settings::ImpactExcitationAutoion.Settings)
-        global JAC_counter
         newChannels = ImpactExcitationAutoion.Channel[]
         for channel in pathway.channels
-            # Generate a continuum orbital
-            JAC_counter = JAC_counter + 1
-            if   JAC_counter < 20   println("ImpactExcitationAutoion.computeAmplitudesProperties-aa: warning ... no cont. orb. is generated.")  end
-            initialPhase  = 0.;    finalPhase = 0;    augerPhase = 0
-            # Define a proper continuum basis from the finalLevel.basis and the continuum orbital
-            JAC_counter = JAC_counter + 1
-            if   JAC_counter < 20   println("ImpactExcitationAutoion.computeAmplitudesProperties-ab: warning ... no cont. basis generated.") end
-            # Compute the transition matrix for the continuum and the initial-state basis
-            JAC_counter = JAC_counter + 1
-            if   JAC_counter < 20   println("ImpactExcitationAutoion.computeAmplitudesProperties-ac: warning ... no trans-matrix computed.") end
-            # matrix    = PhotoExcitationAutoion.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
-            #                                                      line.initialLevel.basis, grid, settings)
-            # amplitude = line.finalLevel.mc * matrix * line.initialLevel.mc 
             amplitude = 1.0 
             exChannel = channel.excitationChannel
             eChannel  = ImpactExcitation.Channel( exChannel.initialKappa, exChannel.finalKappa, exChannel.symmetry, 
@@ -147,8 +133,6 @@ module ImpactExcitationAutoion
             push!( newChannels, ImpactExcitationAutoion.Channel(eChannel, aChannel) )
         end
         # Calculate the totalRate 
-        JAC_counter = JAC_counter + 1
-        if   JAC_counter < 20   println("ImpactExcitationAutoion.computeAmplitudesProperties-ba: warning ... crossSection set to -1.") end
         crossSection = 1.
         pathway = ImpactExcitationAutoion.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, 
                                                    pathway.electronInEnergy, pathway.electronOutEnergy, pathway.electronAugerEnergy, 

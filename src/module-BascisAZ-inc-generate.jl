@@ -1,15 +1,5 @@
-
-"""
-`module  JAC.BascisGenerate`  
-    ... a submodel of JAC that contains methods that support tasks related to spectroscopic computation.
-"""
-module BascisGenerate
-
-    using Printf, ..AngularMomentum, ..Atomic, ..AtomicState, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
-                  ..Einstein, ..ManyElectron, ..Nuclear, ..PhotoEmission, ..Radial, ..RadialIntegrals
     
     export generate
-
 
 
     """
@@ -1052,5 +1042,4 @@ module BascisGenerate
         return( newShellList )
     end
 
-
-end # module
+    

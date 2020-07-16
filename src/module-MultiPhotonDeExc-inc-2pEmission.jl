@@ -40,8 +40,8 @@
         + energyDiffCs     ::Array{EmProperty,1}  ... energy-differential cross section for the selected omegas.
         + totalCs          ::EmProperty           ... Total cross section for right-circularly polarized incident light.
         + csUnpolarized    ::EmProperty           ... Total cross section.
-        + hasChannels      ::Bool                 ... Determines whether the individual (sub-) channels are defined in terms of their 
-                                                      multipolarities, etc., or not.
+        + hasChannels      ::Bool                 
+            ... Determines whether the individual (sub-) channels are defined in terms of their multipolarities, etc., or not.
         + channels         ::Array{MultiPhotonDeExcitation.Channel_2pEmission,1}  
                                                   ... List of MultiPhotonDeExcitation.Channel_2pEmission's of this line.
     """
@@ -186,7 +186,7 @@
     """
     function computeReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega2::Float64, multipole2::EmMultipole, Jsym::LevelSymmetry, 
                                                                                omega1::Float64, multipole1::EmMultipole, initialLevel::Level,
-                                                               gauge::EmGauge, grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})
+                                            gauge::EmGauge, grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})
         U = Complex(0.);    found = false
         for channel in greenChannels
             if  Jsym == channel.symmetry

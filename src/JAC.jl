@@ -88,21 +88,21 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        Zeeman
      
 # Basic data and data structures
-include("module-Basics.jl");        using ..Basics
-include("module-Radial.jl");        using ..Radial
-include("module-Math.jl");          using ..Math
-include("module-Defaults.jl");      using ..Defaults
-include("module-ManyElectron.jl");  using ..ManyElectron
-include("module-Nuclear.jl");       using ..Nuclear
-include("module-SpinAngular.jl");   using ..SpinAngular
-include("module-BiOrthogonal.jl");  using ..BiOrthogonal
+include("module-Basics.jl");            using ..Basics
+include("module-Radial.jl");            using ..Radial
+include("module-Math.jl");              using ..Math
+include("module-Defaults.jl");          using ..Defaults
+include("module-ManyElectron.jl");      using ..ManyElectron
+include("module-Nuclear.jl");           using ..Nuclear
+include("module-SpinAngular.jl");       using ..SpinAngular
+include("module-BiOrthogonal.jl");      using ..BiOrthogonal
 
 # Specialized functions/methods to manipulate these data
 include("module-AngularMomentum.jl")
 include("module-AngularCoefficients-Ratip2013.jl")
 include("module-Bsplines.jl")
 include("module-Continuum.jl")
-include("module-ConfigurationSpace.jl")
+##x include("module-ConfigurationSpace.jl")
 include("module-Details.jl")
 include("module-RadialIntegrals.jl")
 include("module-HydrogenicIon.jl")
@@ -111,7 +111,7 @@ include("module-InteractionStrengthQED.jl")
 include("module-PeriodicTable.jl")
 include("module-TableStrings.jl")
 include("module-Tools.jl")
-include("module-AtomicState.jl");   using ..AtomicState
+include("module-AtomicState.jl");       using ..AtomicState
 include("module-LSjj.jl")
 
 # Functions/methods for atomic amplitudes
@@ -128,7 +128,7 @@ include("module-LandeZeeman.jl")
 include("module-AlphaVariation.jl")
 include("module-FormFactor.jl")
 include("module-DecayYield.jl")
-include("module-CloseCoupling.jl")
+##x include("module-CloseCoupling.jl")
 include("module-MultipolePolarizibility.jl")
 include("module-PlasmaShift.jl")
 
@@ -173,27 +173,22 @@ include("module-StrongField.jl")
 include("module-Semiempirical.jl")
 
 # Functions/methods for atomic and cascade computations
-include("module-Atomic.jl");        using ..Atomic
-include("module-Cascade.jl");       using ..Cascade
+include("module-Atomic.jl");            using ..Atomic
+include("module-Cascade.jl");           using ..Cascade
 
 # Functions/methods for symbolic computations
 include("module-RacahAlgebra.jl");      using ..RacahAlgebra
 include("module-SphericalTensor.jl");   using ..SphericalTensor
 
 # Basic functions/methods to manipulate these data
-include("module-BasicsAG.jl")
-include("module-BasicsCompute.jl")
-include("module-BasicsGenerate.jl")
-include("module-BasicsHP.jl")
-include("module-BasicsPerform.jl")
-include("module-BasicsQZ.jl")
+include("module-BasicsAZ.jl")
 include("module-ManyElectronAZ.jl")
 
 # Specialized macros
 ##x include("macro-racahsum.jl")
 
 # All test functions/methods stay with the JAC root module
-include("module-TestFrames.jl");  using ..TestFrames
+include("module-TestFrames.jl");        using ..TestFrames
     
 function __init__()
     # The following variables need to be initialized at runtime to enable precompilation

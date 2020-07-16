@@ -138,19 +138,15 @@ module ImpactExcitation
             properties are now evaluated.
     """
     function  computeAmplitudesProperties(line::ImpactExcitation.Line, grid::Radial.Grid, settings::ImpactExcitation.Settings)
-        global JAC_counter
         newChannels = ImpactExcitation.Channel[]
         for channel in line.channels
             # Generate two continuum orbitals
-            JAC_counter = JAC_counter + 1
-            if   JAC_counter < 20   println("ImpactExcitation.computeAmplitudesProperties-aa: warning ... no coninuum orbitals are generated.") end
+            println("ImpactExcitation.computeAmplitudesProperties-aa: warning ... no coninuum orbitals are generated.")
             initialPhase = 0.;    finalPhase = 0.
             # Define a proper continuum basis from the initialLevel.basis and finalLevel.basis with the two continuum orbital
-            JAC_counter = JAC_counter + 1
-            if   JAC_counter < 20   println("ImpactExcitation.computeAmplitudesProperties-ab: warning ... no continuum bases are generated.") end
+            println("ImpactExcitation.computeAmplitudesProperties-ab: warning ... no continuum bases are generated.")
             # Compute the transition matrix for the two constructed continuum bases
-            JAC_counter = JAC_counter + 1
-            if   JAC_counter < 20   println("ImpactExcitation.computeAmplitudesProperties-ac: warning ... no transition matrix is computed.") end
+            println("ImpactExcitation.computeAmplitudesProperties-ac: warning ... no transition matrix is computed.")
             # matrix    = ImpactExcitation.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
             #                                                line.initialLevel.basis, grid, settings)
             # amplitude = line.finalLevel.mc * matrix * line.initialLevel.mc 
@@ -159,8 +155,7 @@ module ImpactExcitation
                                                           initialPhase, finalPhase, amplitude) )
         end
         # Calculate the electron-impact excitation strength and cross section
-        JAC_counter = JAC_counter + 1
-        if   JAC_counter < 20   println("ImpactExcitation.computeAmplitudesProperties-ba: warning ... cs and strength set to -1.") end
+        println("ImpactExcitation.computeAmplitudesProperties-ba: warning ... cs and strength set to -1.")
         crossSection = -1.
         line = ImpactExcitation.Line( line.initialLevel, line.finalLevel, line.initialElectronEnergy, line.finalElectronEnergy, 
                                       crossSection, true, newChannels)

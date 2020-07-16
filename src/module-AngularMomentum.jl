@@ -288,8 +288,8 @@ module AngularMomentum
 
         if        pa == Basics.plus    &&   Le   &&   pb == Basics.minus        return( true )
         elseif    pa == Basics.minus   &&   Le   &&   pb == Basics.plus         return( true )
-        elseif    pa == pb          &&   !(Le)                                          return( true )
-        else                                                                            return( false )
+        elseif    pa == pb          &&   !(Le)                                  return( true )
+        else                                                                    return( false )
         end
     end
 
@@ -308,12 +308,12 @@ module AngularMomentum
              if  list[i+1] != 1   &&  list[i+1] != -1                error("Wrong type of argument $(i+1); must be +-1")    end
         end
         #
-        ja = list[1];        if  ja.den  == 1    jm2 = 2ja.num                  else   jm2 = ja.num                  end 
+        ja = list[1];        if  ja.den  == 1    jm2 = 2ja.num                  else   jm2 = ja.num                         end 
         for  i = 2:2:length(list)
-           ja = list[i+1];   if  ja.den  == 1    jm2 = jm2 + list[i]*2ja.num    else   jm2 = jm2 + list[i]*ja.num    end 
+           ja = list[i+1];   if  ja.den  == 1    jm2 = jm2 + list[i]*2ja.num    else   jm2 = jm2 + list[i]*ja.num           end 
         end
         #
-        if rem(jm2,2) != 0    error("Improper combination of angular momenta")   end
+        if rem(jm2,2) != 0    error("Improper combination of angular momenta")  end
 
         return( (-1.)^(jm2/2) )
     end
@@ -561,6 +561,5 @@ module AngularMomentum
         w9j = 2.0
         return( w9j )
     end
-    
 
 end # module

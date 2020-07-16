@@ -1,12 +1,3 @@
-
-"""
-`module  JAC.BascisPerform`  
-    ... a submodel of JAC that contains methods that support tasks related to spectroscopic computation.
-"""
-module BascisPerform
-
-    using Dates, JLD, Printf, JAC, ..AngularMomentum, ..Atomic, ..AtomicState, ..Basics, ..Bsplines, ..Cascade, 
-                 ..Continuum, ..Defaults, ..Einstein, ..ManyElectron, ..Nuclear, ..PlasmaShift, ..Radial
     
     export perform
 
@@ -34,44 +25,44 @@ module BascisPerform
             
             # Now compute all requested properties
             if  EinsteinX()        in computation.properties   
-                outcome = JAC.Einstein.computeLines(multiplet,        computation.grid, computation.einsteinSettings)    
+                outcome = Einstein.computeLines(multiplet,        computation.grid, computation.einsteinSettings)    
                 if output    results = Base.merge( results, Dict("Einstein lines:" => outcome) )                  end
             end
             if  HFS()              in computation.properties       && computation.hfsSettings.calcIJFexpansion  
-                outcome = JAC.Hfs.computeHyperfineMultiplet(multiplet, nModel, computation.grid, computation.hfsSettings)         
+                outcome = Hfs.computeHyperfineMultiplet(multiplet, nModel, computation.grid, computation.hfsSettings)         
                 if output    results = Base.merge( results, Dict("IJF multiplet:" => outcome) )                   end
             end
             if  HFS()              in computation.properties
-                outcome = JAC.Hfs.computeOutcomes(multiplet, nModel,  computation.grid, computation.hfsSettings)         
+                outcome = Hfs.computeOutcomes(multiplet, nModel,  computation.grid, computation.hfsSettings)         
                 if output    results = Base.merge( results, Dict("HFS outcomes:" => outcome) )                    end
             end
             if  LandeJ()           in computation.properties   
-                outcome = JAC.LandeZeeman.computeOutcomes(multiplet, nModel,  computation.grid, computation.zeemanSettings)      
+                outcome = LandeZeeman.computeOutcomes(multiplet, nModel,  computation.grid, computation.zeemanSettings)      
                 if output    results = Base.merge( results, Dict("Zeeman parameter outcomes:" => outcome) )       end
             end
             if  Isotope()          in computation.properties   
-                outcome = JAC.IsotopeShift.computeOutcomes(multiplet, nModel, computation.grid, computation.isotopeSettings)         
+                outcome = IsotopeShift.computeOutcomes(multiplet, nModel, computation.grid, computation.isotopeSettings)         
                 if output    results = Base.merge( results, Dict("Isotope parameter outcomes:" => outcome) )      end
             end
             if  AlphaX()           in computation.properties   
-                outcome = JAC.AlphaVariation.computeOutcomes(multiplet, nModel, computation.grid, computation.alphaSettings)         
+                outcome = AlphaVariation.computeOutcomes(multiplet, nModel, computation.grid, computation.alphaSettings)         
                 if output    results = Base.merge( results, Dict("alpha variation parameter outcomes:" => outcome) )      end
             end
             if  FormF()            in computation.properties   
-                outcome = JAC.FormFactor.computeOutcomes(multiplet, nModel, computation.grid, computation.formSettings)         
+                outcome = FormFactor.computeOutcomes(multiplet, nModel, computation.grid, computation.formSettings)         
                 if output    results = Base.merge( results, Dict("Form factor outcomes:" => outcome) )            end
             end
             if  Yields()           in computation.properties   
-                outcome = JAC.DecayYield.computeOutcomes(computation.configs, computation.asfSettings, 
+                outcome = DecayYield.computeOutcomes(computation.configs, computation.asfSettings, 
                                                         multiplet, nModel, computation.grid, computation.yieldSettings)     
                 if output    results = Base.merge( results, Dict("Fluorescence and AutoIonization yield outcomes:" => outcome) )   end
             end
             if  Polarizibility()   in computation.properties   
-                outcome = JAC.MultipolePolarizibility.computeOutcomes(multiplet, nModel, computation.grid, computation.polaritySettings)         
+                outcome = MultipolePolarizibility.computeOutcomes(multiplet, nModel, computation.grid, computation.polaritySettings)         
                 if output    results = Base.merge( results, Dict("Polarizibility outcomes:" => outcome) )         end
             end
             if  Plasma()           in computation.properties   
-                outcome = JAC.PlasmaShift.computeOutcomes(multiplet, nModel, computation.grid, computation.asfSettings, computation.plasmaSettings)         
+                outcome = PlasmaShift.computeOutcomes(multiplet, nModel, computation.grid, computation.asfSettings, computation.plasmaSettings)         
                 if output    results = Base.merge( results, Dict("Plasma shift outcomes:" => outcome) )            end
             end
         
@@ -85,10 +76,10 @@ module BascisPerform
             finalMultiplet   = perform("computation: CI for plasma",  finalBasis, nModel, computation.grid, computation.finalAsfSettings, plasmaSettings)
             #
             if      computation.process == AugerInPlasma()   
-                outcome = JAC.AutoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+                outcome = AutoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("AutoIonization lines in plasma:" => outcome) )         end
             elseif  computation.process == PhotoInPlasma()  
-                outcome = JAC.PhotoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+                outcome = PhotoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Photo lines in plasma:" => outcome) )                  end
             else
                 error("stop a")
@@ -121,58 +112,58 @@ module BascisPerform
                 outcome = ImpactExcitation.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("impact-excitation lines:" => outcome) )      end
             elseif  computation.process == PhotoExc()
-                outcome = JAC.PhotoExcitation.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = PhotoExcitation.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo-excitation lines:" => outcome) )       end
             elseif  computation.process == PairA1P()  
-                outcome = JAC.PairAnnihilation1Photon.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = PairAnnihilation1Photon.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("pair-annihilation-1-photon lines:" => outcome) )       end
             elseif  computation.process == MultiPhotonDE()
-                outcome = JAC.MultiPhotonDeExcitation.computeLines(computation.processSettings.process,
+                outcome = MultiPhotonDeExcitation.computeLines(computation.processSettings.process,
                                                                    finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("multi-photon-de-excitation lines:" => outcome) )       end
             elseif  computation.process == RAuger()
-                outcome = JAC.RadiativeAuger.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = RadiativeAuger.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("radiative Auger sharings:" => outcome) )               end
             elseif  computation.process == Coulex()
-                outcome = JAC.CoulombExcitation.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = CoulombExcitation.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Coulomb excitation lines:" => outcome) )               end
             elseif  computation.process == Coulion()
-                outcome = JAC.CoulombIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = CoulombIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Coulomb ionization lines:" => outcome) )               end
             elseif  computation.process == PhotoExcAuto()  
-                outcome = JAC.PhotoExcitationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 
+                outcome = PhotoExcitationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo-excitation-autoionization pathways:" => outcome) )      end
             elseif  computation.process == PhotoExcFluor()
-                outcome = JAC.PhotoExcitationFluores.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
+                outcome = PhotoExcitationFluores.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo-excitation-fluorescence pathways:" => outcome) )        end
             elseif  computation.process == PhotoIonAuto()   
-                outcome = JAC.PhotoIonizationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
+                outcome = PhotoIonizationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo-ionization-autoionization pathways:" => outcome) )      end
             elseif  computation.process == PhotoIonFluor()  
-                outcome = JAC.PhotoIonizationFluores.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
+                outcome = PhotoIonizationFluores.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo-ionizatiton-fluorescence pathways:" => outcome) )        end
             elseif  computation.process == ImpactExcAuto()  
-                outcome = JAC.ImpactExcitationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
+                outcome = ImpactExcitationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("impact-excitation-autoionization pathways:" => outcome) )     end
             elseif  computation.process == Compton()   
-                outcome = JAC.RayleighCompton.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = RayleighCompton.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Rayleigh-Compton lines:" => outcome) )        end
             elseif  computation.process == MultiPI()   
-                outcome = JAC.MultiPhotonIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = MultiPhotonIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("multi-photon single ionization:" => outcome) )        end
             elseif  computation.process == MultiPDI()   
-                outcome = JAC.MultiPhotonDoubleIon.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = MultiPhotonDoubleIon.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("multi-photon double ionization:" => outcome) )        end
             elseif  computation.process == InternalConv()   
-                outcome = JAC.InternalConversion.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = InternalConversion.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("internal conversion lines:" => outcome) )        end
             elseif  computation.process == Dierec()  
-                outcome = JAC.Dielectronic.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 
+                outcome = Dielectronic.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("dielectronic recombination pathways:" => outcome) )           end
             else
@@ -295,8 +286,8 @@ module BascisPerform
         if  typeof(settings.startScfFrom) == StartFromHydrogenic
             if  printout   println("Start SCF process with hydrogenic orbitals.")   end
             # Generate start orbitals for the SCF field by using B-splines
-            ##x orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(waL, nsL, waS, nsS, nuclearModel, subshellList)
-            orbitals  = JAC.Bsplines.generateOrbitalsHydrogenic(wa, nuclearModel, subshellList; printout=printout)
+            ##x orbitals  = Bsplines.generateOrbitalsHydrogenic(waL, nsL, waS, nsS, nuclearModel, subshellList)
+            orbitals  = Bsplines.generateOrbitalsHydrogenic(wa, nuclearModel, subshellList; printout=printout)
         elseif  typeof(settings.startScfFrom) == StartFromPrevious
             if  printout   println("Start SCF process from given list of orbitals.")    end
             # Taking starting orbitals for the given dictionary; non-relativistic orbitals with a proper nuclear charge
@@ -308,7 +299,7 @@ module BascisPerform
                     orbitals = Base.merge( orbitals, Dict( subsh => orb) )
                 else
                     println("Start orbitals do not contain an Orbital for subshell $subsh ")
-                    orb      = JAC.HydrogenicIon.radialOrbital(subsh, nuclearModel.Z, grid)
+                    orb      = HydrogenicIon.radialOrbital(subsh, nuclearModel.Z, grid)
                     orbitals = Base.merge( orbitals, Dict( subsh => orb) ) 
                 end
             end
@@ -318,13 +309,13 @@ module BascisPerform
         # Perform the SCF computations for the orbitals due to the given settings
         basis    = Basis(true, NoElectrons, subshellList, csfList, coreSubshellList, orbitals)
         if   settings.scField in [Basics.DFSField(), Basics.HSField()]
-            basis = JAC.Bsplines.solveSelfConsistentMeanField(wa, nuclearModel, basis, settings; printout=printout) 
+            basis = Bsplines.solveSelfConsistentMeanField(wa, nuclearModel, basis, settings; printout=printout) 
         elseif   settings.scField in [Basics.NuclearField()]  && settings.startScfFrom == StartFromHydrogenic() 
             # Return the basis as already generated.
         elseif   settings.scField in [Basics.ALField()] 
-            basis = JAC.Bsplines.solveSelfConsistentALField(wa, nuclearModel, basis, settings; printout=printout)
+            basis = Bsplines.solveSelfConsistentALField(wa, nuclearModel, basis, settings; printout=printout)
         elseif   typeof(settings.scField) == Basics.EOLField 
-            basis = JAC.Bsplines.solveSelfConsistentEOLField(wa, nuclearModel, basis, settings; printout=printout)
+            basis = Bsplines.solveSelfConsistentEOLField(wa, nuclearModel, basis, settings; printout=printout)
         else  error("stop b")
         end
         
@@ -357,7 +348,7 @@ module BascisPerform
                                   settings.maxIterationsScf, settings.accuracyScf, Subshell[], frozenSubshells, 
                                   CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), settings.levelSelectionCI ) 
 
-        basis = JAC.Bsplines.solveSelfConsistentMeanField(wa, nuclearModel, basis, asfSettings; printout=printout) 
+        basis = Bsplines.solveSelfConsistentMeanField(wa, nuclearModel, basis, asfSettings; printout=printout) 
         
         return( basis )  
     end
@@ -406,10 +397,10 @@ module BascisPerform
     
         # Calculate the diagonal part of the Hamiltonian matrix and define a multiplet for these approximate ASf;
         # Generate first an effective nuclear charge Z(r) on the given grid
-        potential = JAC.Nuclear.nuclearPotential(nuclearModel, grid)
+        potential = Nuclear.nuclearPotential(nuclearModel, grid)
         
         keep = true
-        JAC.InteractionStrength.XL_Coulomb_reset_storage(keep)
+        InteractionStrength.XL_Coulomb_reset_storage(keep)
         #
         n = length(csfList);    matrix = zeros(Float64, n, n)
         for  r = 1:n
@@ -417,15 +408,15 @@ module BascisPerform
             me = 0.
             for  coeff in wa[1]
                 jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
-                me = me + coeff.T * sqrt( jj + 1) * JAC.RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
+                me = me + coeff.T * sqrt( jj + 1) * RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
             end
 
             for  coeff in wa[2]
                 if  settings.eeInteractionCI in [CoulombInteraction(), CoulombBreit()]
-                    me = me + coeff.V * JAC.InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                    me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                      basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)   end
                 if  settings.eeInteractionCI in [BreitInteraction(), CoulombBreit()]
-                    me = me + coeff.V * JAC.InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                    me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                    basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)     end
             end
             matrix[r,r] = me
@@ -475,7 +466,7 @@ module BascisPerform
     function Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
         
         # Determine the J^P symmetry blocks
-        symmetries = Dict{JAC.LevelSymmetry,Int64}()
+        symmetries = Dict{LevelSymmetry,Int64}()
         for  csf in basis.csfs
             sym = LevelSymmetry(csf.J, csf.parity)
             if     haskey(symmetries, sym)    symmetries[sym] = symmetries[sym] + 1
@@ -547,7 +538,7 @@ module BascisPerform
                               settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)
         
         # Determine the J^P symmetry blocks
-        symmetries = Dict{JAC.LevelSymmetry,Int64}()
+        symmetries = Dict{LevelSymmetry,Int64}()
         for  csf in basis.csfs
             sym = LevelSymmetry(csf.J, csf.parity)
             if     haskey(symmetries, sym)    symmetries[sym] = symmetries[sym] + 1
@@ -601,5 +592,3 @@ module BascisPerform
     
         return( mp )
     end
-
-end # module

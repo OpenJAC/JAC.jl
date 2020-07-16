@@ -1,22 +1,23 @@
 
 """
-`module  JAC.PairProduction`  ... a submodel of JAC that contains all methods for computing positron-bound-electron pair production (PEPP) 
-                                  by single-photon absorption cross sections and rates; photon + |i(N)> --> |f(N+1)> + e^+;
-                                  it is using JAC, JAC.ManyElectron. 
+`module  JAC.PairProduction`  
+    ... a submodel of JAC that contains all methods for computing positron-bound-electron pair production (PEPP) by single-photon 
+        absorption cross sections and rates; photon + |i(N)> --> |f(N+1)> + e^+. 
 """
 module PairProduction 
 
-    using JAC, JAC.ManyElectron
+    using JAC, ..ManyElectron
 
 
     """
-    `struct  PairProduction.Settings`  ... defines a type for the details and parameters in computing positron-bound-electron pair production 
-                                           (PEPP) with single-photon absorption (positron) lines; photon + |i(N)> --> |f(N+1)> + e^+.
+    `struct  PairProduction.Settings`  
+        ... defines a type for the details and parameters in computing positron-bound-electron pair production (PEPP) with single-photon 
+            absorption (positron) lines; photon + |i(N)> --> |f(N+1)> + e^+.
 
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + photonEnergies          ::Array{Float64,1}             ... List of photon energies.
-        + printBefore  ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + selectLines             ::Bool                         ... True, if lines are selected individually for the computations.
         + selectedLines           ::Array{Tuple{Int64,Int64},1}  ... List of lines, given by tupels (inital-level, final-level).
     """
@@ -24,14 +25,14 @@ module PairProduction
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         photonEnergies            ::Array{Float64,1} 
-        printBefore    ::Bool
+        printBefore               ::Bool
         selectLines               ::Bool
         selectedLines             ::Array{Tuple{Int64,Int64},1} 
     end 
 
 
     """
-    `JAC.PairProduction.Settings()`  ... constructor for the default values of pair-production positron line computations
+    `PairProduction.Settings()`  ... constructor for the default values of pair-production positron line computations.
     """
     function Settings()
         Settings(EmMultipole[], UseGauge[], Float64[], false, false, Tuple{Int64,Int64}[])
@@ -43,7 +44,7 @@ module PairProduction
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
         println(io, "photonEnergies:           $(settings.photonEnergies)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
         println(io, "selectLines:              $(settings.selectLines)  ")
         println(io, "selectedLines:            $(settings.selectedLines)  ")
     end
@@ -94,7 +95,7 @@ module PairProduction
 
 
     """
-    `JAC.PairProduction.Line()`  ... 'empty' constructor for a pair-production (positron) line between a specified initial and final level.
+    `PairProduction.Line()`  ... 'empty' constructor for a pair-production (positron) line between a specified initial and final level.
     """
     function Line()
         Line(Level(), Level(), 0., 0., EmProperty(0., 0.), false, PairProduction[] )

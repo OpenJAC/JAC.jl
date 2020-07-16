@@ -1,11 +1,11 @@
 
 """
-`module  JAC.READI`  ... a submodel of JAC that contains all methods for computing resonant-excitation Auger double-ionization cross 
-                         sections and rates; it is using JAC, JAC.ManyElectron, JAC.DoubleAuger.
+`module  JAC.READI`  
+    ... a submodel of JAC that contains all methods for computing resonant-excitation Auger double-ionization cross sections and rates.
 """
 module READI 
 
-    using JAC, JAC.ManyElectron, JAC.DoubleAuger
+    using ..ManyElectron, ..DoubleAuger
 
 
     """
@@ -26,7 +26,7 @@ module READI
 
 
     """
-    `JAC.READI.Settings()`  ... constructor for the default values of resonant-excitation Auger double-ionization settings.
+    `READI.Settings()`  ... constructor for the default values of resonant-excitation Auger double-ionization settings.
     """
     function Settings()
        Settings( Float64[], false, Tuple{Int64,Int64,Int64}[], 0)
@@ -46,19 +46,20 @@ module READI
     `struct  READI.Channel`  ... defines a type for a resonant-excitation Auger double-ionization channel that specifies 
                                  all quantum numbers, phases and amplitudes.
 
-        + excitationChannel  ::JAC.ImpactExcitation.Channel      ... Channel that describes the electron-impact excitation process.
-        + augerChannel1      ::JAC.AutoIonization.Channel        ... Channel that describes the first subsequent Auger/autoionization process.
-        + augerChannel2      ::JAC.AutoIonization.Channel        ... Channel that describes the second Auger/autoionization process.
+        + excitationChannel  ::ImpactExcitation.Channel      ... Channel that describes the electron-impact excitation process.
+        + augerChannel1      ::AutoIonization.Channel        ... Channel that describes the first subsequent Auger/autoionization process.
+        + augerChannel2      ::AutoIonization.Channel        ... Channel that describes the second Auger/autoionization process.
     """
     struct  Channel
-        excitationChannel    ::JAC.ImpactExcitation.Channel
-        channel              ::JAC.DoubleAuger.Channel
+        excitationChannel    ::ImpactExcitation.Channel
+        channel              ::DoubleAuger.Channel
     end 
 
 
     """
-    `struct  READI.Pathway`  ... defines a type for a resonant-excitation Auger double-ionization pathway that may include
-                                 the definition of different excitation and double Auger channels and their corresponding amplitudes.
+    `struct  READI.Pathway`  
+        ... defines a type for a resonant-excitation Auger double-ionization pathway that may include the definition of different 
+            excitation and double Auger channels and their corresponding amplitudes.
 
         + initialLevel           ::Level         ... initial-(state, N-electron) level
         + intermediateLevel      ::Level         ... intermediate-(state, N+1 electron) level m
@@ -88,8 +89,9 @@ module READI
 
 
     """
-    `JAC.READI.Pathway()`  ... constructor for an electron-impact excitation Auger double ionization pathway between a specified 
-                               initial, intermediate and final level.
+    `READI.Pathway()`  
+        ... constructor for an electron-impact excitation Auger double ionization pathway between a specified 
+            initial, intermediate and final level.
     """
     function Pathway()
         Pathway(Level(), Level(), Level(), 0., 0., 0., 0., 0., false, READI.Channel[] )

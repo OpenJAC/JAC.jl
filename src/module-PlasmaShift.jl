@@ -9,7 +9,6 @@ module PlasmaShift
     using Printf, ..Basics, ..Defaults, ..Nuclear, ..ManyElectron, ..Radial, ..TableStrings
 
 
-    
     """
     `abstract type PlasmaShift.AbstractPlasmaModel` 
         ... defines an abstract and a number of singleton types for the the (allowed) plasma models.

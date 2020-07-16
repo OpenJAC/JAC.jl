@@ -1,8 +1,7 @@
 
 """
 `module  PhotoExcitationAutoion`  
-    ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross 
-        sections and rates.
+    ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross sections and rates.
 """
 module PhotoExcitationAutoion 
 
@@ -18,7 +17,7 @@ module PhotoExcitationAutoion
         + gauges                  ::Array{Basics.UseGauge,1}       ... Specifies the gauges to be included into the computations.
         + printBefore             ::Bool                           ... True, if all energies and lines are printed before their evaluation.
         + pathwaySelection        ::PathwaySelection               ... Specifies the selected levels/pathways, if any.
-        + maxKappa                ::Int64                              ... Maximum kappa value of partial waves to be included.
+        + maxKappa                ::Int64                          ... Maximum kappa value of partial waves to be included.
     """
     struct Settings
         multipoles                ::Array{Basics.EmMultipole,1}
@@ -60,10 +59,9 @@ module PhotoExcitationAutoion
         + excitEnergy         ::Float64         ... photon excitation energy of this pathway
         + electronEnergy      ::Float64         ... energy of the (finally outgoing, scattered) electron
         + crossSection        ::EmProperty      ... total cross section of this pathway
-        + hasChannels         ::Bool            ... Determines whether the individual excitation and autoionization channels 
-                                                    are defined in terms of their multipole, gauge, free-electron kappa, 
-                                                    phases and the total angular momentum/parity as well as the amplitude, 
-                                                    or not.
+        + hasChannels         ::Bool            
+            ... Determines whether the individual excitation and autoionization channels are defined in terms of their multipole, 
+                gauge, free-electron kappa, phases and the total angular momentum/parity as well as the amplitude, or not.
         + excitChannels       ::Array{PhotoEmission.Channel,1}  ... List of excitation channels of this pathway.
         + augerChannels       ::Array{AutoIonization.Channel,1} ... List of Auger channels of this pathway.
     """

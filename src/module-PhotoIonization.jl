@@ -8,7 +8,6 @@ module PhotoIonization
 
     using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Radial, ..Nuclear, ..ManyElectron, ..PhotoEmission, 
                   ..PlasmaShift, ..TableStrings
-    ##x global JAC_counter = 0
 
     """
     `struct  PhotoIonization.Settings`  ... defines a type for the details and parameters of computing photoionization lines.

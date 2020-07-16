@@ -1,16 +1,13 @@
 
 """
-`module  JAC.BiOrthogonal`  ... a submodel of JAC that contains all methods for a bi-orthogonal transformation of two non-orthogonal
-                                orbitals set.
+`module  JAC.BiOrthogonal`  
+    ... a submodel of JAC that contains all methods for a bi-orthogonal transformation of two non-orthogonal orbitals set.
 """
 module BiOrthogonal
 
     using Printf, JAC, ..Basics,  ..Defaults, ..ManyElectron, ..Radial
 
 
-
-    
-    
 
     """
     `BiOrthogonal.computeTransformation(leftMp::Multiplet, rightMp::Multiplet)`  

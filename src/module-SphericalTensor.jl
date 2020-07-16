@@ -553,7 +553,6 @@ module  SphericalTensor
     `SphericalTensor.conjugate(tn::SphericalTensor.TensorProduct)`  
         ... conjugates the (abstract) spherical matrix element by conjugating all parts of the tensor operator and by interchanging 
             the individual tensor components of each tensor product.
-            left- and right-hand states. A conjtensor::SphericalTensor.AbstractSphericalTensor is returned.
     """
     function conjugate(tn::SphericalTensor.TensorProduct)
         
@@ -673,5 +672,3 @@ module  SphericalTensor
    
 end # module
    
-
-    

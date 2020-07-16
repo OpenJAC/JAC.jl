@@ -1,11 +1,11 @@
 
 """
-`module  JAC.Statistical`  ... a submodel of JAC that contains all structs and methods to deal with time-dependent statistical tensors;
-                               it is using JAC, JAC.ManyElectron.
+`module  JAC.Statistical`  
+    ... a submodel of JAC that contains all structs and methods to deal with time-dependent statistical tensors.
 """
 module Statistical
 
-    using JAC, JAC.ManyElectron
+    using ..ManyElectron
 
 
     """
@@ -26,7 +26,7 @@ module Statistical
 
 
     """
-    `JAC.Statistical.ResonanceR()`  ... constructor for an `empty` instance of Statistical.ResonanceR().
+    `Statistical.ResonanceR()`  ... constructor for an `empty` instance of Statistical.ResonanceR().
     """
     function ResonanceR()
         ResonanceR( true, Level(), 0., 0. )
@@ -61,7 +61,7 @@ module Statistical
 
 
     """
-    `JAC.Statistical.Tensor()`  ... constructor for an `empty` instance of Statistical.Tensor().
+    `Statistical.Tensor()`  ... constructor for an `empty` instance of Statistical.Tensor().
     """
     function Tensor()
         Tensor( AngularJ64(0), AngularM64(0), ResonanceR(), ResonanceR(), Complex(0.) )

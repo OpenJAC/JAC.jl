@@ -1,11 +1,12 @@
 
 """
-`module  JAC.DoubleAuger`  ... a submodel of JAC that contains all methods for computing double Auger and autoionization amplitudes 
-                               and rates; it is using JAC, JAC.ManyElectron, JAC.ImpactExcitation, JAC.AutoIonization.
+`module  JAC.DoubleAuger`  
+    ... a submodel of JAC that contains all methods for computing double Auger and autoionization amplitudes 
+        and rates.
 """
 module DoubleAuger
 
-    using JAC, JAC.ManyElectron, JAC.ImpactExcitation, JAC.AutoIonization
+    using JAC, ..ManyElectron, ..ImpactExcitation, ..AutoIonization
 
 
     """
@@ -27,7 +28,7 @@ module DoubleAuger
 
 
     """
-    `JAC.DoubleAuger.Settings()`  ... constructor for the default values of DoubleAuger line computations
+    `DoubleAuger.Settings()`  ... constructor for the default values of DoubleAuger line computations
     """
     function Settings()
         Settings(false, LineSelection(), 0., 10e5, 100)

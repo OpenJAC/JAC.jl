@@ -1,13 +1,11 @@
 
 """
 `module  JAC.PhotoExcitationFluores`  
-    ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross 
-        sections and rates.
+    ... a submodel of JAC that contains all methods for computing photo-excitation-autoionization cross sections and rates.
 """
 module PhotoExcitationFluores 
 
     using Printf, ..AutoIonization, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
-    #x global JAC_counter = 0
 
     """
     `struct  PhotoExcitationFluores.Settings`  
@@ -47,8 +45,9 @@ module PhotoExcitationFluores
 
 
     """
-    `struct  PhotoExcitationFluores.Pathway`  ... defines a type for a photon-impact excitation pathway that may include the definition 
-                                                      of different excitation and autoionization channels and their corresponding amplitudes.
+    `struct  PhotoExcitationFluores.Pathway`  
+        ... defines a type for a photon-impact excitation pathway that may include the definition of different excitation and 
+            autoionization channels and their corresponding amplitudes.
 
         + initialLevel        ::Level                  ... initial-(state) level
         + intermediateLevel   ::Level                  ... intermediate-(state) level

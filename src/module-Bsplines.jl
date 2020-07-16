@@ -66,7 +66,7 @@ module Bsplines
 
     """
     `Bsplines.generateMatrix!(kappa::Int64, TTp::String, primitives::Bsplines.Primitives, storage::Dict{Array{Any,1},Array{Float64,2}})`  
-         ... generates some (specified part of the Hamiltonian) matrix for the generalized eigenvalue problem and stores them into 
+        ... generates some (specified part of the Hamiltonian) matrix for the generalized eigenvalue problem and stores them into 
             the dictionary storage. The methods first tests of whether this matrix has been computed before alreay. Apart from the 
             overlap matrices (kappa = 0), all matrices belong to a particular single-electron angular momentum and to some matrix-block 
             of the overall eigenvalue problem. TTp = { 'LL', 'LS', 'SL', 'SS'} specifies the particular block, for which the B-splines 
@@ -168,7 +168,7 @@ module Bsplines
 
     """
     `Bsplines.generateOrbitalFromPrimitives(energy::Float64, sh::Subshell, mtp::Int64, ev::Array{Float64,1}, primitives::Bsplines.Primitives)`  
-         ... generates the large and small components for the subshell sh from the primitives and the eigenvector ev. 
+        ... generates the large and small components for the subshell sh from the primitives and the eigenvector ev. 
             A (non-normalized) orbital::Orbital is returned.
     """
     function generateOrbitalFromPrimitives(energy::Float64, sh::Subshell, mtp::Int64, ev::Array{Float64,1}, primitives::Bsplines.Primitives)

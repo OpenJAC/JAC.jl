@@ -6,8 +6,6 @@
 module IsotopeShift
 
     using Printf, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
-    global JAC_counter = 0
-
 
     """
     `struct  IsotopeShift.Settings`  
@@ -186,7 +184,6 @@ module IsotopeShift
             which the amplitudes and properties are now evaluated explicitly.
     """
     function  computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings)
-        global JAC_counter
         Knms  = 0.0;    Ksms  = 0.0;    F  = 0.0;    
         amplitudeKnms  = 0.0;    amplitudeKsmsA  = 0.0;   amplitudeKsmsB  = 0.0;  amplitudeKsmsC  = 0.0;
         if  settings.calcNMS
