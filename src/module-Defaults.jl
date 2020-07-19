@@ -274,8 +274,8 @@ module Defaults
             energies are given in eV and cross sections in barn. Note that, internally, atomic units are used throughout for 
             all the computations within the program. nothing is returned if not indicated otherwise.
 
-    + `("framework: relativistic")`  or  `("framework: non-relativistic")`   
-        ... to define a relativistic or non-relativistic framework for all subsequent computations. 
+    ## + `("framework: relativistic")`  or  `("framework: non-relativistic")`   
+    ##     ... to define a relativistic or non-relativistic framework for all subsequent computations. 
 
     + `("method: continuum, spherical Bessel")`  or  `("method: continuum, pure sine")`  or  
       `("method: continuum, asymptotic Coulomb")`  or  `("method: continuum, nonrelativistic Coulomb")`  or  

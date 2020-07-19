@@ -4,8 +4,8 @@
     """
     `Cascade.computeDecayYieldOutcome(outcome::DecayYield.Outcome, linesR::Array{PhotoEmission.Line,1}, 
                                       linesA::Array{AutoIonization.Line,1}, settings::DecayYield.Settings)` 
-        ... to compute the flourescence and Auger yields for a single outcome as specified by its level; an 
-            outcome::DecayYield.Outcome is returned in which all physical parameters are now specified for the given
+        ... to compute the flourescence and Auger yields for a single decay yield outcome as specified by the corresponding
+            level; an outcome::DecayYield.Outcome is returned in which all physical parameters are now specified for the given
             decay-yield.
     """
     function computeDecayYieldOutcome(outcome::DecayYield.Outcome, linesR::Array{PhotoEmission.Line,1}, 
@@ -37,46 +37,8 @@
 
 
     """
-    `Cascade.computeStepsOld(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
-        ... computes in turn all the requested transition amplitudes and PhotoEmission.Line's, AutoIonization.Line's, 
-            etc. for all pre-specified decay steps of the cascade. When compared with standard computations of these atomic 
-            processes, however, the amount of output is largely reduced and often just printed into the summary file. 
-            A set of  data::Cascade.DecayData  is returned.
-    """
-    function computeStepsOld(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
-        linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[]    
-        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        nt = 0;   st = 0
-        for  step  in  stepList
-            st = st + 1
-            nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels)
-            println("\n  $st) Perform $(string(step.process)) amplitude computations for up to $nc decay lines (without selection rules): ")
-            if  printSummary   println(iostream, "\n* $st) Perform $(string(step.process)) amplitude computations for " *
-                                                 "up to $nc decay lines (without selection rules): ")   end 
-          
-            if      step.process == Basics.Auger() 
-                newLines = AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
-                                                              step.settings, output=true, printout=false) 
-                append!(linesA, newLines);    nt = length(linesA)
-            elseif  step.process == Basics.Radiative()
-                newLines = PhotoEmission.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
-                                                             step.settings, output=true, printout=false) 
-                append!(linesR, newLines);    nt = length(linesR)
-            else   error("Unsupported atomic process for cascade computations.")
-            end
-            println("     Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, giving now rise " *
-                    "to a total of $nt $(string(step.process)) decay lines." )
-            if  printSummary   println(iostream, "\n*    Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, " *
-                                                 "giving now rise to a total of $nt $(string(step.process)) decay lines." )   end      
-        end
-        #
-        data = Cascade.DecayData(linesR, linesA)
-    end
-
-
-    """
     `Cascade.computeSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
-        ... computes in turn all the requested transition amplitudes and PhotoEmission.Line's, AutoIonization.Line's, 
+        ... computes in turn all the requested transition amplitudes as well as PhotoEmission.Line's, AutoIonization.Line's, 
             etc. for all pre-specified decay steps of the cascade. When compared with standard computations of these atomic 
             processes, however, the amount of output is largely reduced and often just printed into the summary file. 
             A set of  data::Cascade.DecayData  is returned.
@@ -108,7 +70,6 @@
                         sh           = Subshell(101, kappa);     nrContinuum = Continuum.gridConsistency(meanEn, comp.grid)
                         contSettings = Continuum.Settings(false, nrContinuum);   
                         npot         = Nuclear.nuclearPotential(comp.nuclearModel, comp.grid)
-                        ##x @show comp.nuclearModel.Z
                         ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
                         ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
                         ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
@@ -147,7 +108,7 @@
 
     """
     `Cascade.computeSteps(scheme::Cascade.PhotonIonizationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
-        ... computes in turn all the requested transition amplitudes and PhotoIonization.Line's, etc. for all pre-specified 
+        ... computes in turn all the requested transition amplitudes as well as PhotoIonization.Line's, etc. for all pre-specified 
             (photo-) ionizing steps of the cascade. When compared with standard computations of these atomic processes, however, 
             the amount of output is largely reduced and often just printed into the summary file. A set of  
             data::Cascade.PhotoIonData  is returned.
@@ -191,9 +152,9 @@
 
     """
     `Cascade.computeSteps(scheme::Cascade.PhotonExcitationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
-        ... computes in turn all the requested transition amplitudes and PhotoExcitation.Line's, etc. for all pre-specified excitation steps 
-            of the cascade. When compared with standard excitation computations, however, the amount of output is largely reduced and 
-            often just printed into the summary file. A set of  data::Cascade.ExcitationData  is returned.
+        ... computes in turn all the requested transition amplitudes as well as PhotoExcitation.Line's, etc. for all pre-specified 
+            excitation steps of the cascade. When compared with standard excitation computations, however, the amount of output is 
+            largely reduced and often just printed into the summary file. A set of  data::Cascade.ExcitationData  is returned.
     """
     function computeSteps(scheme::Cascade.PhotonExcitationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
         linesE = PhotoExcitation.Line[]    
@@ -779,7 +740,7 @@
             if  printSummary   println(iostream, "\n    Configuration(s) with $n electrons:")      end
             for  conf in confs
                 if n == conf.NoElectrons  
-                    ## nxx = nxx + 1;    if nxx > 4   break    end                                            ## delete nxx
+                    ## nxx = nxx + 1;    if nxx > 4   break    end                                         ## delete nxx
                     nc = nc + 1
                     push!(confList, conf ) 
                     wa = Semiempirical.estimate("binding energy", round(Int64, Z), conf);    wa = Defaults.convertUnits("energy: from atomic", wa)

@@ -14,22 +14,22 @@
         other (elementary) processes. JAC also facilitates interactive computations, the simulation of atomic cascades, the time-evolution 
         of statistical tensors, a few semi-empirical estimates of atomic properties as well as the simplification of symbolic expressions
         from Racah's algebra. -- In addition, the JAC module supports the display of level energies, electron and photon spectra, 
-        radial orbitals and and other atomic data.
+        radial orbitals and other atomic data.
 
 
 **`Perform (atomic) computations of different complexity:`**  
     JAC will eventually support **ten kinds** of computations which can be summarized as follows:
 
    + Atomic computations, based on explicitly specified electron configurations.
-   + Restricted active-space computations (RAS; partly implemented).
+   + Restricted active-space computations (RAS).
    + Interactive computations.
    + Atomic cascade computations (partly implemented).
-   + Atomic representations (Green and close-coupling functions, complex rotation; not yet implemented).
-   + Atomic responses (not yet implemented).
+   + Atomic representations (Green and close-coupling functions, complex rotation; partly implemented).
+   + Atomic responses (partly implemented).
    + Atomic descriptors for machine learning algorithms (not yet implemented).
    + Time-evolution of statistical tensors in (intense) light pusles (not yet implemented).
    + Semi-empirical estimates of cross sections, etc. (partly implemented).
-   + Symbolic evaluation of expressions from Racah's algebra, etc. (partly implemented).
+   + Symbolic evaluation of expressions from Racah's algebra, etc.
 
 
 **`Further details and information`**
@@ -80,7 +80,8 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RAuger, RasSettings, RasStep, 
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation,
        RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
-       SchiffMoment, setDefaults, Shell, Spectroscopy, SphericalTensor, StartFromHydrogenic, StartFromPrevious, StrongField, Subshell,
+       SchiffMoment, Semiempirical, setDefaults, Shell, Spectroscopy, SphericalTensor, 
+       StartFromHydrogenic, StartFromPrevious, StrongField, Subshell,
        tabulate, TestFrames, Triangle, tools,
        UseCoulomb, UseBabushkin, UseGauge,
        WeightedCartesian, W3j, W6j, W9j,

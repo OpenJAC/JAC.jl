@@ -3,12 +3,12 @@
 
     """
     `Cascade.addLevels(levelsA::Array{Cascade.Level,1}, levelsB::Array{Cascade.Level,1})` 
-        ... adds two sets of levels so that each levels occurs only 'once' in the list; however, this addition requires also that the
-            parent and daughter processes are added properly so that all information is later available for the simulations.
-            It is assumed that all daugther and parent (processes) appear only once if levels from different data sets
-            (Cascade.DecayData, Cascade.PhotoIonData) are added to each other.
-            A message is issued about the number of levels before and after this 'addition', and how many levels have been modified.
-            Note that all relative occucations are set to zero in this addition; a newlevels::Array{Cascade.Level,1} is returned.
+        ... adds two sets of levels so that each levels occurs only 'once' in the list; in practice, however, this 'addition' requires also 
+            that the parent and daughter processes are added properly so that all information is later available for the simulations.
+            It is assumed here that all daugther and parent (processes) appear only once if levels from different data sets
+            (Cascade.DecayData, Cascade.PhotoIonData) are added to each other. A message is issued about the number of levels before and 
+            after this 'addition', and how many of the levels have been modified by this method. Note that all relative occucations are 
+            set to zero in this addition; a newlevels::Array{Cascade.Level,1} is returned.
     """
     function  addLevels(levelsA::Array{Cascade.Level,1}, levelsB::Array{Cascade.Level,1})
         nA = length(levelsA);   nB = length(levelsB);    nmod = 0;    nnew = 0;    newlevels = Cascade.Level[];  appendedB = falses(nB)
@@ -242,8 +242,8 @@
 
     """
     `Cascade.displayRelativeOccupation(stream::IO, levels::Array{Cascade.Level,1}, settings::Cascade.SimulationSettings)` 
-        ... displays the (initial) relative occupation of the levels in a neat table; an error message is issued if population is
-            for levels in the settings which do not exist in the present simulation. Nothing is returned.
+        ... displays the (initial) relative occupation of the levels in a neat table; an error message is issued if the population is
+            given for those levels in the settings, which do not exist in the present simulation. Nothing is returned.
     """
     function displayRelativeOccupation(stream::IO, levels::Array{Cascade.Level,1}, settings::Cascade.SimulationSettings)
        nx = 69
@@ -467,9 +467,10 @@
                                              ionizationData::Array{Cascade.PhotoIonData,1}, settings::Cascade.SimulationSettings)` 
         ... generates a list of photo-absorption cross sections by cycling through all (photo-) excitationData and ionizationData.
             The photoionization contributions to the absorption cross section is obtained by averaging the photoionization cross sections
-            for the given occupation of the initial levels; for the photoionization contributions to the absorption cross section,
-            the (relative) cross section for the excitation line of interest is taken and the associated ionization part obtained
-            from the linear interpolation/extrapolation of the previously determined photoionization cross sections.
+            for the occupation of the given initial levels; for the photoionization contributions to the absorption cross section,
+            the (relative) cross section is taken at neighboured energies of the excitation line of interest, and the associated 
+            ionization contribution is obtained from a linear interpolation of two neighboured photon energies or the (constant)
+            extrapolation of just one neighboured photon energies of the previously determined photoionization cross sections.
             An list of crossSections::Array{AbsorptionCrossSection,1} is returned which is ordered by energy.
     """
     function generateAbsorptionCrossSections(excitationData::Array{Cascade.ExcitationData,1}, 
@@ -722,10 +723,9 @@
     function simulateLevelDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
-        ##x Cascade.displayLevelTree(stdout, levels, simulation.cascadeData, extended=false)
-        ##x if  printSummary   Cascade.displayLevelTree(iostream, levels, simulation.cascadeData, extended=false)
-        ##x                    Cascade.displayLevelTree(iostream, levels, simulation.cascadeData, extended=true)
-        ##x end
+        ## Cascade.displayLevelTree(stdout, levels, simulation.cascadeData, extended=false)
+        ## if  printSummary   Cascade.displayLevelTree(iostream, levels, simulation.cascadeData, extended=false)
+        ##                    Cascade.displayLevelTree(iostream, levels, simulation.cascadeData, extended=true)         end
         Cascade.propagateProbability!(levels)   ##x , simulation.cascadeData)
         #
         if  typeof(simulation.property) == Cascade.IonDistribution   
