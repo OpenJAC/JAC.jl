@@ -48,7 +48,7 @@
 """
 module JAC
 
-using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, GaussQuadrature, QuadGK, GSL, JLD2, SymEngine  ## , Interact
+using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, QuadGK, GSL, JLD2, SymEngine  ## , Interact, GaussQuadrature
 
 export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod, AbstractPotential, AbstractQedModel, AbstractStartOrbitals,
        add, analyze, AlphaX, AlphaVariation, AnapoleMoment, 

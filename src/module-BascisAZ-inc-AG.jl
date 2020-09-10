@@ -139,7 +139,7 @@
             GaussQuadrature is 'used'.
     """
     function Basics.determineEnergySharings(energy::Float64, NoEnergySharings::Int64)
-        xx, ww = GaussQuadrature.legendre(NoEnergySharings)
+        ## xx, ww = GaussQuadrature.legendre(NoEnergySharings)
         sharings = Tuple{Float64,Float64}[]
         for  x in xx
             xrel = (x+1.) / 2
