@@ -325,7 +325,7 @@ module Radial
     # `Base.show(io::IO, grid::GridGL)`  ... prepares a proper printout of the variable grid::GridGL.
     function Base.show(io::IO, grid::GridGL) 
         print(io, "Gauss-Legendre grid with $(grid.nt) mesh points: \n")
-        print(io, "t:   ", grid.t[1:5],    "  ...  ", grid.t[grid.nt-4:grid.nt],    "\n") 
+        print(io, "t:   ", grid.t[1:5],    "  ...  ", grid.t[grid.nt-4:grid.nt],     "\n") 
         print(io, "w:   ", grid.wt[1:5],   "  ...  ", grid.wt[grid.nt-4:grid.nt],    "\n") 
     end
     
@@ -333,7 +333,7 @@ module Radial
     """
     `struct  Radial.GridGH`  ... defines a type for Gauss-Hermite grid of given order
     
-        + nt           ::Int64                 ... number of mesh points in the grid.
+        + nt           ::Int64                ... number of mesh points in the grid.
         + t            ::Array{Float64,1}     ... mesh points in the variable t.
         + wt           ::Array{Float64,1}     ... weights to the mesh points in t.
     """
