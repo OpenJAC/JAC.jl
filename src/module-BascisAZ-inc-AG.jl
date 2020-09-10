@@ -452,7 +452,7 @@
                     sen_au = @sprintf("%.8e", v.energy)
                     sen    = @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", v.energy))
                     if !v.useStandardGrid   error("Non-standard grids not yet implemented.")    end
-                    p2 = Float64[];    for  p in v.P    push!(p2, p*p)   end
+                    p2 = zeros( size(v.P, 1) );    p2 = p2 .+ (v.P .* v.P);    p2 = p2 .+ (v.Q .* v.Q)
                     imax    = findmax(p2)
                     rmax    = grid.r[imax[2]]
                     rmean   = RadialIntegrals.rkDiagonal(1, v, v, grid)
