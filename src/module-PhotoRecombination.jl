@@ -195,7 +195,7 @@ module PhotoRecombination
             elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
             end
         end
-        Ji2 = AngularMomentum.twoJ(line.initialLevel.J)
+        Ji2 = Basics.twice(line.initialLevel.J)
         csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 * line.photonEnergy / (Ji2 + 1)
         crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
         newLine      = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, line.betaGamma2, 

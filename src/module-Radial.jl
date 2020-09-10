@@ -329,6 +329,46 @@ module Radial
         print(io, "w:   ", grid.wt[1:5],   "  ...  ", grid.wt[grid.nt-4:grid.nt],    "\n") 
     end
     
+    
+    """
+    `struct  Radial.GridGH`  ... defines a type for Gauss-Hermite grid of given order
+    
+        + nt           ::Int64                 ... number of mesh points in the grid.
+        + t            ::Array{Float64,1}     ... mesh points in the variable t.
+        + wt           ::Array{Float64,1}     ... weights to the mesh points in t.
+    """
+    struct  GridGH
+        nt             ::Int64  
+        t              ::Array{Float64,1}
+        wt             ::Array{Float64,1}
+    end
+    
+    
+    """
+    `Radial.GridGH(orderGH::Int64; printout::Bool=false)`  
+        ... constructor to define Gauss-Hermite grid.
+    """
+    function GridGH(orderGH::Int64; printout::Bool=false)
+        t = Float64[];    wt = Float64[]
+        
+        wax = gausshermite(orderGH) #this function is included in the package FastGaussQuadrature
+        
+        t = wax[1]
+        wt = wax[2]
+        
+        if  printout   println("Gauss-Hermite grid with $orderGH mesh points.")   end
+           
+        GridGH(orderGH, t, wt)
+    end
+
+    
+    # `Base.show(io::IO, grid::GridGH)`  ... prepares a proper printout of the variable grid::GridGH.
+    function Base.show(io::IO, grid::GridGH) 
+        print(io, "Gauss-Hermite grid with $(grid.nt) mesh points: \n")
+        print(io, "t:   ", grid.t[1:5],    "  ...  ", grid.t[grid.nt-4:grid.nt],    "\n") 
+        print(io, "w:   ", grid.wt[1:5],   "  ...  ", grid.wt[grid.nt-4:grid.nt],    "\n") 
+    end
+    
 
 
     """

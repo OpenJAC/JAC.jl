@@ -167,7 +167,7 @@ module PhotoExcitation
             else    error("stop a")
             end
         end
-        Ji2 = AngularMomentum.twoJ(line.initialLevel.J)
+        Ji2 = Basics.twice(line.initialLevel.J)
         csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.omega / (2*(Ji2 + 1))
         crossSection = EmProperty(csFactor*csCoulomb, csFactor*csBabushkin)
         staTensor    = TensorComp[]

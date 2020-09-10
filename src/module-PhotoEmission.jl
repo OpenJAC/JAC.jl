@@ -313,8 +313,8 @@ module PhotoEmission
         end
         #     
         # Calculate the photonrate and angular beta if requested 
-        wa = 8.0pi * Defaults.getDefaults("alpha") * line.omega / (AngularMomentum.twoJ(line.initialLevel.J) + 1) * 
-                                                      (AngularMomentum.twoJ(line.finalLevel.J) + 1)
+        wa = 8.0pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) * 
+                                                      (Basics.twice(line.finalLevel.J) + 1)
         photonrate  = EmProperty(wa * rateC, wa * rateB)    
         angularBeta = EmProperty(-9., -9.)
         line = PhotoEmission.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, true, newChannels)
@@ -455,10 +455,10 @@ module PhotoEmission
                     end
                 end
             end
-            f2Coulomb   = f2Coulomb   / normCoulomb   * sqrt(AngularMomentum.twoJ(line.initialLevel.J) + 1) / 2.
-            f4Coulomb   = f4Coulomb   / normCoulomb   * sqrt(AngularMomentum.twoJ(line.initialLevel.J) + 1) / 2.
-            f2Babushkin = f2Babushkin / normBabushkin * sqrt(AngularMomentum.twoJ(line.initialLevel.J) + 1) / 2.
-            f4Babushkin = f4Babushkin / normBabushkin * sqrt(AngularMomentum.twoJ(line.initialLevel.J) + 1) / 2.
+            f2Coulomb   = f2Coulomb   / normCoulomb   * sqrt(Basics.twice(line.initialLevel.J) + 1) / 2.
+            f4Coulomb   = f4Coulomb   / normCoulomb   * sqrt(Basics.twice(line.initialLevel.J) + 1) / 2.
+            f2Babushkin = f2Babushkin / normBabushkin * sqrt(Basics.twice(line.initialLevel.J) + 1) / 2.
+            f4Babushkin = f4Babushkin / normBabushkin * sqrt(Basics.twice(line.initialLevel.J) + 1) / 2.
             #
             sa = sa * TableStrings.flushleft( 17, TableStrings.multipoleList(mpList);  na=3)
             sa = sa * TableStrings.flushright(15, @sprintf("%.8e", f2Coulomb.re);    na=3) 
@@ -611,8 +611,8 @@ module PhotoEmission
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
                 sa = sa * TableStrings.center(9,  string(ch.multipole); na=4)
                 sa = sa * TableStrings.flushleft(11, string(ch.gauge);  na=2)
-                chRate =  8pi * Defaults.getDefaults("alpha") * line.omega / (AngularMomentum.twoJ(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) * 
-                                                                 (AngularMomentum.twoJ(line.finalLevel.J) + 1)
+                chRate =  8pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) * 
+                                                                 (Basics.twice(line.finalLevel.J) + 1)
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to g_f",         line, chRate)) * "    "

@@ -249,6 +249,7 @@ module Basics
         + plus, minus               ... with obvious meaning
     """
     @enum   Parity    plus   minus
+    export  Parity,   plus,  minus
 
 
     """

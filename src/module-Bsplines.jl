@@ -684,7 +684,7 @@ module Bsplines
                 wBasis = Basis(true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, previousOrbitals)
                 NoCsf  = length(wBasis.csfs)
                 wmc    = zeros( NoCsf );   wN = 0.
-                for i = 1:NoCsf   wmc[i] = AngularMomentum.twoJ(wBasis.csfs[i].J) + 1.0;   wN = wN + abs(wmc[i])^2    end
+                for i = 1:NoCsf   wmc[i] = Basics.twice(wBasis.csfs[i].J) + 1.0;   wN = wN + abs(wmc[i])^2    end
                 for i = 1:NoCsf   wmc[i] = wmc[i] / sqrt(wN)   end
                 wLevel = Level( AngularJ64(0), AngularM64(0), Basics.plus, 0, -1., 0., true, wBasis, wmc)
                 # (2) Re-compute the local potential

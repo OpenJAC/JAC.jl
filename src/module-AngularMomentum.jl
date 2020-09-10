@@ -96,7 +96,7 @@ module AngularMomentum
             A value::Int64 is returned.
     """
     function bracket(jList::Array{AngularJ64,1})
-        value = 1;    for  j in jList    value = value * (AngularMomentum.twoJ(j) + 1)    end
+        value = 1;    for  j in jList    value = value * (Basics.twice(j) + 1)    end
         return( value )         
     end
 
@@ -116,7 +116,7 @@ module AngularMomentum
         if  L.den != 1   error("stop a")                end 
         if  isodd( la + lb + L.num )    return( 0. )    end
         # 
-        wa = AngularMomentum.phaseFactor([jb, +1, L, -1, ja]) * sqrt( (twoJ(jb)+1)*(twoJ(JL)+1) / (4*pi*(twoJ(ja)+1) ) ) *
+        wa = AngularMomentum.phaseFactor([jb, +1, L, -1, ja]) * sqrt( (Basics.twice(jb)+1)*(Basics.twice(JL)+1) / (4*pi*(Basics.twiceJ(ja)+1) ) ) *
              AngularMomentum.ClebschGordan(jb, AngularM64(1//2), L, AngularM64(0), ja, AngularM64(1//2)) *
              AngularMomentum.ClebschGordan(jb, mb, L, M, ja, ma) 
         return( wa )
@@ -141,7 +141,7 @@ module AngularMomentum
         # ii) The phase (-1)^(ja + L - jb) is replaced by (-1)^L  to get a proper phase between 1/2 --> 3/2 ME (compared to 3/2 --> 3/2) ...
         #     but which already comes from the Clebsch-Gordan
         ## wa = AngularMomentum.phaseFactor([ja, +1, L, -1, jb]) * 
-        wa = (-1)^L.num  * sqrt( (twoJ(jb)+1)*(twoJ(L)+1) / (4*pi) ) / sqrt(twoJ(jb)+1) *  
+        wa = (-1)^L.num  * sqrt( (Basics.twice(jb)+1)*(Basics.twice(L)+1) / (4*pi) ) / sqrt(Basics.twice(jb)+1) *  
              AngularMomentum.ClebschGordan(jb, AngularM64(1//2), L, AngularM64(0), ja, AngularM64(1//2)) 
         return( wa )
     end
@@ -169,7 +169,7 @@ module AngularMomentum
     function ClebschGordan_old(ja::AngularJ64, ma::AngularM64, jb::AngularJ64, mb::AngularM64, Jab::AngularJ64, Mab::AngularM64)
         cg = 0.   ## ja-jb+Mab must be integer
         mab = AngularM64(-Mab.num, Mab.den)
-        cg = AngularMomentum.phaseFactor([ja, -1, jb, +1, Mab]) * sqrt( (twoJ(Jab)+1) ) * 
+        cg = AngularMomentum.phaseFactor([ja, -1, jb, +1, Mab]) * sqrt( (Basics.twice(Jab)+1) ) * 
              AngularMomentum.Wigner_3j(ja, jb, Jab, ma, mb, mab)
     end
 
@@ -399,6 +399,7 @@ module AngularMomentum
     end
 
 
+    #==
     """
     `AngularMomentum.twoJ(ja::AngularJ64)`  ... calculates 2*ja; an (positive) value::Int64 is returned.
     """
@@ -414,7 +415,7 @@ module AngularMomentum
     function  twoM(ma::AngularM64)  
         if  ma.den  == 1    ma2 = 2ma.num   else   ma2 = ma.num   end
         return( ma2 )
-    end
+    end  ==#
 
 
     """

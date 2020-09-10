@@ -227,13 +227,13 @@
             return( einsteinA )
 
         elseif   sa == "rate: radiative, to Einstein B"
-            einsteinB = (AngularMomentum.twoJ(line.initialLevel.J) + 1) / (AngularMomentum.twoJ(line.finalLevel.J) + 1) * pi^2 *
+            einsteinB = (Basics.twice(line.initialLevel.J) + 1) / (Basics.twice(line.finalLevel.J) + 1) * pi^2 *
                         Defaults.getDefaults("speed of light: c")^3 / line.omega^3  * wa
             einsteinB = Defaults.convertUnits("Einstein B: from atomic", einsteinB)
             return( einsteinB )
 
         elseif   sa == "rate: radiative, to g_f"
-            gf = (AngularMomentum.twoJ(line.initialLevel.J) + 1) / (AngularMomentum.twoJ(line.finalLevel.J) + 1) / 2. * 
+            gf = (Basics.twice(line.initialLevel.J) + 1) / (Basics.twice(line.finalLevel.J) + 1) / 2. * 
                 Defaults.getDefaults("speed of light: c")^3 / line.omega^2 * wa     
             return( gf )
 

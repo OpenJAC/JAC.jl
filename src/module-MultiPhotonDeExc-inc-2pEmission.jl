@@ -171,7 +171,7 @@
                 end
             end
         end
-        dcs = dcs * 2pi * Defaults.getDefaults("alpha")^2 / (AngularMomentum.twoJ(line.initialLevel.J) + 1) * omega1 * omega2
+        dcs = dcs * 2pi * Defaults.getDefaults("alpha")^2 / (Basics.twice(line.initialLevel.J) + 1) * omega1 * omega2
         
         return( dcs )
     end

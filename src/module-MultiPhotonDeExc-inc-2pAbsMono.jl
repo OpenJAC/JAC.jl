@@ -201,7 +201,7 @@
                                 symmetries  = AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
                                 for Jsym in symmetries
                                     wa = (1.0im)^(mp1.L - p1 + mp2.L - p2) * (-lambda1)^p1 * (-lambda2)^p2 
-                                    wb = sqrt( (2*mp1.L + 1)*(2*mp2.L + 1) ) * (2*AngularMomentum.twoJ(K) + 1)
+                                    wb = sqrt( (2*mp1.L + 1)*(2*mp2.L + 1) ) * (2*Basics.twice(K) + 1)
                                     wc = AngularMomentum.Wigner_3j(mp1.L, mp2.L, K, lambda1, lambda2, q)
                                     wd = MultiPhotonDeExcitation.getReducedAmplitudeAbsorption(K, line.finalLevel, mp2, Jsym, omega, mp1, 
                                                                                                line.initialLevel, gauge, line.channels) 
@@ -209,7 +209,7 @@
                                     ##x println("computeTotalCsLinear: wa, wb, wc, wd = $wa  $wb  $wc  $wd")
                                                                                                          
                                     amp = amp + (1.0im)^(mp1.L - p1 + mp2.L - p2) * (-lambda1)^p1 * (-lambda2)^p2           *
-                                                sqrt( (2*mp1.L + 1)*(2*mp2.L + 1) ) * (2*AngularMomentum.twoJ(K) + 1)       *
+                                                sqrt( (2*mp1.L + 1)*(2*mp2.L + 1) ) * (2*Basics.twice(K) + 1)       *
                                                 AngularMomentum.Wigner_3j(mp1.L, mp2.L, K, lambda1, lambda2, q)             *
                                                 MultiPhotonDeExcitation.getReducedAmplitudeAbsorption(K, line.finalLevel, mp2, Jsym, omega, mp1, 
                                                                                                          line.initialLevel, gauge, line.channels) 
@@ -223,7 +223,7 @@
         end
         
         println("computeTotalCsLinear: tcs = $tcs")
-        tcs = tcs * 8*pi^5 * Defaults.getDefaults("alpha")^2 / (AngularMomentum.twoJ(line.initialLevel.J) + 1) / omega^2
+        tcs = tcs * 8*pi^5 * Defaults.getDefaults("alpha")^2 / (Basics.twice(line.initialLevel.J) + 1) / omega^2
         
         return( tcs )
     end
@@ -241,7 +241,7 @@
         
         # Need to be filled
         
-        tcs = tcs * 8*pi^5 * Defaults.getDefaults("alpha")^2 / (AngularMomentum.twoJ(line.initialLevel.J) + 1) / omega^2
+        tcs = tcs * 8*pi^5 * Defaults.getDefaults("alpha")^2 / (Basics.twice(line.initialLevel.J) + 1) / omega^2
         
         return( tcs )
     end
@@ -270,7 +270,7 @@
                                 symmetries  = AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
                                 for Jsym in symmetries
                                     amp = amp + (1.0im)^(mp1.L - p1 + mp2.L - p2) * (-lambda1)^p1 * (-lambda2)^p2 *
-                                                sqrt( (2*mp1.L + 1)*(2*mp2.L + 1) ) * (2*AngularMomentum.twoJ(K) + 1)       *
+                                                sqrt( (2*mp1.L + 1)*(2*mp2.L + 1) ) * (2*Basics.twice(K) + 1)       *
                                                 AngularMomentum.Wigner_3j(mp1.L, mp2.L, K, lambda1, lambda2, q)             *
                                                 MultiPhotonDeExcitation.getReducedAmplitudeAbsorption(K, line.finalLevel, mp2, Jsym, omega, mp1, 
                                                                                                          line.initialLevel, gauge, line.channels) 
@@ -283,7 +283,7 @@
             end
         end
         
-        tcs = tcs * 8*pi^5 * Defaults.getDefaults("alpha")^2 / (AngularMomentum.twoJ(line.initialLevel.J) + 1) / omega^2
+        tcs = tcs * 8*pi^5 * Defaults.getDefaults("alpha")^2 / (Basics.twice(line.initialLevel.J) + 1) / omega^2
         
         return( tcs )
     end

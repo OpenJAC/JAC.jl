@@ -5,7 +5,7 @@
 """
 module StrongField
 
-    using    Printf, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..Radial, ..ManyElectron, 
+    using    GSL, Printf, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..Radial, ..ManyElectron, 
              ..Nuclear, ..Pulse, ..TableStrings
 
     export   aaaa
@@ -229,6 +229,132 @@ module StrongField
     ##################################################################################################################################################
     ##################################################################################################################################################
 
+    
+    ####################################################################################################################
+    ######The following four functions will be replaced later and serve only for comparison with previous results#######
+    ####################################################################################################################
+ 
+    """
+    `StrongField.HydrogenPnl(epsiloni::Float64, n::Int, l::Int, rGrid::Array{Float64,1})`  
+        ... returns the non-relativistic hydrogen-like radial wave function with modified binding energy epsiloni
+                at the radial grid points rGrid
+    """
+    function  HydrogenPnl(epsiloni::Float64, n::Int, l::Int, rGrid::Array{Float64,1})
+        Pnl = Float64[]
+        Z = n*sqrt(-2*epsiloni)
+        
+        for j = 1:length(rGrid)
+            r = rGrid[j]
+            p = r * sqrt( (2*Z/n)^3 * factorial(n-l-1)/(2*n*factorial(n+l)) ) * exp(-Z*r/n) * (2*Z*r/n)^l * GSL.sf_laguerre_n(n-l-1,2*l+1,2*Z*r/n)
+            push!( Pnl, p )
+        end
+        
+        return( Pnl )
+    end
+    
+    """
+    `StrongField.HydrogenDPnlDr(epsiloni::Float64, n::Int, l::Int, rGrid::Array{Float64,1})`  
+        ... returns the r-derivative of the non-relativistic hydrogen-like radial wave function with modified binding energy epsiloni
+                at the radial grid points rGrid
+    """
+    function  HydrogenDPnlDr(epsiloni::Float64, n::Int, l::Int, rGrid::Array{Float64,1})
+        DPnl = Float64[]
+        Z = n*sqrt(-2*epsiloni)
+        
+        for j = 1:length(rGrid)
+            r = rGrid[j]
+            if  n-l-2 >= 0
+                p = 1/n * 2^(l+1) * exp(-r*Z/n) * (r*Z/n)^l * sqrt( Z^3 * factorial(n-l-1) / (n^4*factorial(l+n)) ) * ( (n+l*n-r*Z) * GSL.sf_laguerre_n(n-l-1,2*l+1,2*r*Z/n) - 2*r*Z * GSL.sf_laguerre_n(n-l-2,2+2*l,2*r*Z/n) )
+            elseif  n == 1 && l == 0
+                p = -2 * exp(-r*Z) * sqrt(Z^3) * (r*Z - 1)
+            else #not implemented
+                p = 0
+            end
+            push!( DPnl, p )
+        end
+        
+        return( DPnl )
+    end
+    
+    """
+    `StrongField.VolkovP(epsilonp::Float64, lp::Int, rGrid::Array{Float64,1})`  
+        ... returns the (plane-wave) Volko radial wave function
+                at the radial grid points rGrid
+    """
+    function  VolkovP(epsilonp::Float64, lp::Int, rGrid::Array{Float64,1})
+        P = Float64[]
+        
+        for j = 1:length(rGrid)
+            r = rGrid[j]
+            p = r * GSL.sf_bessel_jl( lp, sqrt(2*epsilonp)*r )
+            push!( P, p )
+        end
+        
+        return( P )
+    end
+    
+    """
+    `StrongField.pReducedME(epsilonp::Float64, lp::Int, n::Int, l::Int, epsiloni::Float64)`  
+        ... computes the reduced matrix elements of the momentum operator <epsilonp lp ||p||n l> in the one-particle picture
+    """
+    function  pReducedME(epsilonp::Float64, lp::Int, n::Int, l::Int, epsiloni::Float64)
+        rmax = 100.
+        orderGL = 1000
+        gaussLegendre = Radial.GridGL("Finite",0.0,rmax,orderGL)
+        rgrid = gaussLegendre.t
+        weights = gaussLegendre.wt
+        
+        Pnl = HydrogenPnl( epsiloni, n, l, rgrid )
+        Pepsplp = VolkovP( epsilonp, lp, rgrid )
+        DPnl = HydrogenDPnlDr( epsiloni, n, l, rgrid )
+        
+        integral = 0. * im
+        
+        #Sum over grid and compute Gauss-Legendre sum
+        for    j = 1:orderGL
+            r = rgrid[j]
+            integrand = conj( Pepsplp[j] )/r * ( r*DPnl[j] - ((lp-l)*(lp+l+1))/2 * Pnl[j] )
+
+            #Gauss-Legendre sum
+            integral = integral + weights[j] * integrand
+        end
+
+        #Note that GSL.sf_coupling_3j takes takes the input (2*j1,2*j2,2*j3,2*m1,2*m2,2*m3)
+        integral = integral * (-im)^(lp+1) * (-1)^lp * GSL.sf_coupling_3j( 2*lp, 2*1, 2*l, 0, 0, 0 )
+        
+        return( integral )
+    end
+    
+    """
+    `StrongField.scalarProdBoundCont(epsilonp::Float64, n::Int, l::Int, epsiloni::Float64)`  
+        ... computes the scalar product of the bound (hydrogenic) and continuum (Volkov) states in the one-particle picture
+    """
+    function  scalarProdBoundCont(epsilonp::Float64, n::Int, l::Int, m::Int, epsiloni::Float64)
+        rmax = 1000.
+        orderGL = 10
+        gaussLegendre = Radial.GridGL("Finite",0.0,rmax,orderGL)
+        rgrid = gaussLegendre.t
+        weights = gaussLegendre.wt
+        
+        Pnl = HydrogenPnl( epsiloni, n, l, rgrid )
+        Pepsplp = VolkovP( epsilonp, l, rgrid )
+        DPnl = HydrogenDPnlDr( epsiloni, n, l, rgrid )
+        
+        integral = 0. * im
+        
+        #Sum over grid and compute Gauss-Legendre sum
+        for    j = 1:orderGL
+            r = rgrid[j]
+            integrand = conj( Pepsplp[j] ) * Pnl[j]
+
+            #Gauss-Legendre sum
+            integral = integral + weights[j] * integrand
+        end
+        
+        return((-im)^l * integral)
+    end
+    
+    ####################################################################################################################
 
     """
     `StrongField.computeEnvelopeIntegrals(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
@@ -239,6 +365,7 @@ module StrongField
     """
     function computeEnvelopeIntegrals(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
                                       thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        initialEn = convertUnits("energy: from eV to atomic", initialEn)
         fVolkovPlus    = Pulse.envelopeVolkovIntegral(true,  envelope, beam, polarization, thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
         fVolkovMinus   = Pulse.envelopeVolkovIntegral(false, envelope, beam, polarization, thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
         fVolkovSquared = Pulse.envelopeQuadVolkovIntegral(envelope, beam, polarization,    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
@@ -260,7 +387,7 @@ module StrongField
     """
     function  computeOutcome(obs::StrongField.SfaEnergyDistribution, amplitudes::Array{SphericalAmplitude,1})
         probabilities = Float64[]
-        for  amp  in  amplitudes   pp = sqrt(2*amp.energy);  push!(probabilities, pp * amp.value * conj(amp.value) )      end
+        for  amp  in  amplitudes   pp = sqrt(2*amp.energy);  push!(probabilities, pp * (amp.value * conj(amp.value)) )      end
         outcome = OutcomeEnergyDistribution(obs.theta, obs.phi, obs.energies, probabilities)
         return( outcome )
     end
@@ -277,7 +404,7 @@ module StrongField
         # First determine which spherical SFA amplitudes need to be computed before the actual computation starts
         sfaAmplitudes = StrongField.determineSphericalAmplitudes(comp.observable)
         # Determine quantum numbers of the initial and final state
-        nqn = 1;    lqn = 0;    m = 0;    initialEn = comp.initialLevel.energy
+        nqn = 1;    lqn = 0;    n = 1;      l = 0;      m = 0;    initialEn = comp.initialLevel.energy
         #
         # Compute the requested amplitudes
         for  amp in  sfaAmplitudes
@@ -288,21 +415,26 @@ module StrongField
             wminus = 0.0im;    wplus = 0.0im
             # Collect contributions from all l_p, q terms; this summation will change in a (nljm) representation
             for  lp = 0:2
+                reducedME = StrongField.pReducedME(energyp, lp, n, l, initialEn)
+                if  lp==1   println(reducedME)  end
                 for  q in [-1, 0, 1]
-                    reducedME = 1.0  ##  InteractionStrength.nrMomentum(amp.energy, lp, nqn, lqn)
                     wminus = wminus + AngularMomentum.sphericalYlm(lp, m-q, amp.theta, amp.phi) * (-1)^q  * 
-                             Basics.determinePolarizationVector(q, comp.polarization)                     *
-                             AngularMomentum.ClebschGordan(lp, m, 1, -q, lp, m-q) * reducedME
-                    wminus = wminus + AngularMomentum.sphericalYlm(lqn, m+q, amp.theta, amp.phi)          * 
+                             Basics.determinePolarizationVector(q, comp.polarization, star=false)         *
+                             AngularMomentum.ClebschGordan(l, m, 1, -q, lp, m-q) * reducedME
+                    wminus = wminus + AngularMomentum.sphericalYlm(lp, m+q, amp.theta, amp.phi)           * 
                              Basics.determinePolarizationVector(q, comp.polarization, star=true)          *
-                             AngularMomentum.ClebschGordan(lqn, m, 1, q, lp, m+q) * reducedME 
+                             AngularMomentum.ClebschGordan(l, m, 1, q, lp, m+q) * reducedME
                 end
             end
-            wa = -im * sqrt(2/pi) * (fVolkovMinus * wminus + fVolkovPlus * wplus) - im / sqrt(2*pi) * fVolkovSquared 
+            scalarProd = scalarProdBoundCont(energyp, n, l, m, initialEn)
+            wa = -im * sqrt(2/pi) * (fVolkovPlus * wminus + fVolkovMinus * wplus) - im / sqrt(2*pi) * fVolkovSquared * 
+                  AngularMomentum.sphericalYlm(l, m, amp.theta, amp.phi) * scalarProd
             push!(newAmplitudes, SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa))
-            
+        
             println(">> $(SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa))")
         end
+        
+        println("MISSING: l = $l, m = $m")
         
         return( newAmplitudes )
     end
@@ -312,13 +444,13 @@ module StrongField
     `StrongField.determineSphericalAmplitudes(observable::StrongField.SfaEnergyDistribution)`  
         ... determines which direct (and other) SFA amplitudes need to be computed; these amplitudes are not yet computed here but can be arranged
             so that only a minimum number of Volkov states and/or reduced many-electron matrix elements need to be computed.
-            An list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
+            A list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
     """
     function  determineSphericalAmplitudes(observable::StrongField.SfaEnergyDistribution)
         amplitudes = StrongField.SphericalAmplitude[]
         for  energy in observable.energies      push!(amplitudes, SphericalAmplitude(energy, observable.theta, observable.phi, 0.))     end
         
-        println("> A totel of $(length(amplitudes)) spherical amplitudes need to be calculated.")
+        println("> A total of $(length(amplitudes)) spherical amplitudes need to be calculated.")
         return( amplitudes )
     end
     
@@ -335,7 +467,7 @@ module StrongField
         if       typeof(comp.observable) == StrongField.SfaEnergyDistribution
             sfaAmplitudes = StrongField.computeSphericalAmplitudes(comp)
             sfaOutcome    = StrongField.computeOutcome(comp.observable, sfaAmplitudes)
-            if output    results = Base.merge( results, Dict("computation" => comp, "energy disribution" => sfaOutcome) )  end
+            if output    results = Base.merge( results, Dict("computation" => comp, "energy distribution" => sfaOutcome) )  end
         elseif   typeof(comp.observable) == StrongField.SfaMomentumDistribution
                  error("not yet implemented.")
         else     error("Undefined observable for strong-field computations.")

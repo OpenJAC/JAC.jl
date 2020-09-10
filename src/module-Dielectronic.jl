@@ -278,8 +278,8 @@ module Dielectronic
             end
         end
         captureRate     = 2pi* rate
-        wa              = 8.0pi * Defaults.getDefaults("alpha") * pathway.photonEnergy / (AngularMomentum.twoJ(pathway.intermediateLevel.J) + 1) * 
-                                                                                         (AngularMomentum.twoJ(pathway.finalLevel.J) + 1)
+        wa              = 8.0pi * Defaults.getDefaults("alpha") * pathway.photonEnergy / (Basics.twice(pathway.intermediateLevel.J) + 1) * 
+                                                                                         (Basics.twice(pathway.finalLevel.J) + 1)
         photonRate      = EmProperty(wa * rateC, wa * rateB)  
         angularBeta     = EmProperty(-9., -9.)
         wa              = Defaults.convertUnits("kinetic energy to wave number: atomic units", pathway.electronEnergy)

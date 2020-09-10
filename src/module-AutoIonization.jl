@@ -299,7 +299,7 @@ module AutoIonization
             end    
         end
         value = AngularMomentum.phaseFactor([Ji, +1, Jf, +1, AngularJ64(k), -1, AngularJ64(1//2)]) * 
-                sqrt(AngularMomentum.twoJ(Ji) + 1) * wa / wn
+                sqrt(Basics.twice(Ji) + 1) * wa / wn
 
         if  false
             # Calculate the value given by M.H. Chen, PRA 47 (1993) 3733; this does not agree exactly so far.

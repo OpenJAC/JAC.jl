@@ -198,7 +198,7 @@ module PhotoIonization
             elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
             end
         end
-        Ji2 = AngularMomentum.twoJ(line.initialLevel.J)
+        Ji2 = Basics.twice(line.initialLevel.J)
         csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.photonEnergy / (2*(Ji2 + 1))
         csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
         csFactor     = 4 * pi^2 / Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
@@ -236,7 +236,7 @@ module PhotoIonization
             elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
             end
         end
-        Ji2 = AngularMomentum.twoJ(line.initialLevel.J)
+        Ji2 = Basics.twice(line.initialLevel.J)
         csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.photonEnergy / (2*(Ji2 + 1))
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         println("plasma-photo cs = $crossSection")
@@ -393,7 +393,7 @@ module PhotoIonization
                 end
             end
         end
-        csFactor = 8 * pi^3 * Defaults.getDefaults("alpha") / (2*line.photonEnergy * (AngularMomentum.twoJ(Ji) + 1))
+        csFactor = 8 * pi^3 * Defaults.getDefaults("alpha") / (2*line.photonEnergy * (Basics.twice(Ji) + 1))
         wa       = csFactor * wa
 
         return( wa )
@@ -438,7 +438,7 @@ module PhotoIonization
             end
         end
         
-        wa = pi / (AngularMomentum.twoJ(Ji) + 1) * wa
+        wa = pi / (Basics.twice(Ji) + 1) * wa
         return( wa )
     end
 

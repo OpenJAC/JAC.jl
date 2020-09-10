@@ -202,8 +202,8 @@ module Einstein
             end
         end
         # Calculate the photonrate and angular beta if requested
-        wa = 8.0pi * Defaults.getDefaults("alpha") * line.omega / (AngularMomentum.twoJ(line.initialLevel.J) + 1) * 
-                                                      (AngularMomentum.twoJ(line.finalLevel.J) + 1)
+        wa = 8.0pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) * 
+                                                      (Basics.twice(line.finalLevel.J) + 1)
         photonrate  = EmProperty(wa * rateC, wa * rateB)    
         angularBeta = EmProperty(-9., -9.)
         line = Einstein.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, true, newChannels)
@@ -424,8 +424,8 @@ module Einstein
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
                 sa = sa * TableStrings.center(9,  string(ch.multipole); na=4)
                 sa = sa * TableStrings.flushleft(11, string(ch.gauge);  na=2)
-                chRate =  8pi * Defaults.getDefaults("alpha") * line.omega / (AngularMomentum.twoJ(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) * 
-                                                                 (AngularMomentum.twoJ(line.finalLevel.J) + 1)
+                chRate =  8pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) * 
+                                                                 (Basics.twice(line.finalLevel.J) + 1)
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to g_f",         line, chRate)) * "    "
