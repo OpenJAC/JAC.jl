@@ -4,7 +4,7 @@ println("Ai) Test of the jj-LS transformation of levels from a given multiplet."
 wa = Atomic.Computation(Atomic.Computation(), name="jj-LS level transformation", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
                         configs=[Configuration("[Ne] 3s 3p 3d")],  
                         asfSettings=AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), [1],     0, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
-                                                true, false, NoneQed(), "yyy", LSjjSettings(true),
+                                                true, false, NoneQed(), LSjjSettings(true),
                                                 false, [1,2,3,4], false, JAC.LevelSymmetry[] ) )
 
 wb = perform(wa)

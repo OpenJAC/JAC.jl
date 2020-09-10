@@ -64,9 +64,7 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel
                                  Configuration("1s^2 2p 3d")],
                         ## configs=[Configuration("1s^2 2s"), Configuration("1s^2 2p"), 
                         ##          Configuration("1s^2 7s"), Configuration("1s^2 7p"), Configuration("1s^2 7d"), Configuration("1s^2 7f")], 
-                        asfSettings=AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), [1],    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
-                                                true, true, QedPetersburg(), "yyy", LSjjSettings(false),
-                                                false, [1,2,3,4], false, JAC.LevelSymmetry[] )  ) ==#
+                        asfSettings=AsfSettings(AsfSettings(), scField=Basics.DFSField())  ) ==#
 
 grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 5.0e-2, NoPoints = 1500)
 wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(74.0), 

@@ -89,7 +89,7 @@
 
         # The asfSettings only define the CI part and are partly derived from the CiSettings
         asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    0, 0., Subshell[], Subshell[], 
-                                  repType.settings.eeInteractionCI, NoneQed(), FullCIeigen(), LSjjSettings(false), 
+                                  repType.settings.eeInteractionCI, NoneQed(), LSjjSettings(false), 
                                   repType.settings.levelSelectionCI) 
         
         basis      = Basics.generateBasis(rep.refConfigs, symmetries, repType.excitations)
@@ -133,7 +133,7 @@
 
         # The asfSettings only define the CI part of the RAS steps and partly derived from the RasSettings
         asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    0, 0., Subshell[], Subshell[], 
-                                  repType.settings.eeInteractionCI, NoneQed(), FullCIeigen(), LSjjSettings(true), repType.settings.levelSelectionCI ) 
+                                  repType.settings.eeInteractionCI, NoneQed(), LSjjSettings(true), repType.settings.levelSelectionCI ) 
         
         # Now, cycle over all steps of the RasExpansion
         for (istep, step)  in  enumerate(repType.steps)
@@ -196,7 +196,7 @@
 
         # The asfSettings only define the CI part of the Green channels and are partly derived from the GreenSettings
         asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    0, 0., Subshell[], Subshell[], 
-                                  CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), settings.levelSelection ) 
+                                  CoulombInteraction(), NoneQed(), LSjjSettings(false), settings.levelSelection ) 
         
         # Cycle over all selected level symmetries to generate the requested channels
         for  levelSymmetry  in  repType.levelSymmetries
@@ -758,7 +758,7 @@
 
     """
     `Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.NoExcitationScheme, 
-                                                    nMax::Int64, lValues::Array{Int64,1})`  
+                                                      nMax::Int64, lValues::Array{Int64,1})`  
         ... generates a list of non-relativistic configurations for the given (reference) confs and the excitation scheme. 
             All orbitals in standard order are considered up to maxShell = (n_max, l_max).
     """
@@ -816,6 +816,38 @@
         nafter      = length(newConfList)
         println(">> Number of generated configurations for $exScheme is: $nbefore (before) and $nafter (after).")
 
+        return( newConfList )
+    end
+
+
+
+    """
+    `Basics.generateConfigurationsWithElectronCapture(confs::Array{Configuration,1}, fromShells::Array{Shell,1}, toShells::Array{Shell,1}, noex::Int64)`  
+        ... generates a list of non-relativistic configurations for the given (reference) confs and with one additional (cpatured) 
+            electron. All (doubly) excited configurations with upto :NoExcitations displacements of electrons fromShells into toShells 
+            and 'one' additional electron in the toShells are taken into account. The may result in large configuration lists even for 
+            a moderate number of fromShell and/or toShells.
+    """
+    function Basics.generateConfigurationsWithElectronCapture(confs::Array{Configuration,1}, fromShells::Array{Shell,1}, toShells::Array{Shell,1},
+                                                              noex::Int64)
+        newConfList = Configuration[];     NoElectrons = confs[1].NoElectrons + 1
+        confList    = Basics.generateConfigurations(confs, fromShells, toShells, noex)
+        # Now add one (captured) electron from the toShells to all configurations in confList
+        for  conf in confList
+            # Take one electron toShells and `add' it to conf
+            for  toShell  in  toShells
+                newShells = deepcopy( conf.shells )
+                if      haskey(conf.shells, toShell )  &&  conf.shells[toShell]  + 1 > 2*(2*toShell.l + 1)     continue    
+                elseif  haskey(conf.shells, toShell )  newShells[toShell] = newShells[toShell] + 1
+                        push!( newConfList, Configuration( newShells, NoElectrons))
+                else    newShells = Base.merge( newShells, Dict( toShell => 1))
+                        push!( newConfList, Configuration( newShells, NoElectrons))
+                end
+                if  false  println(">> Generate $(Configuration( newShells, NoElectrons)) with electron capture.")   end
+            end
+        end
+        newConfList = unique(newConfList)
+        
         return( newConfList )
     end
 

@@ -63,7 +63,7 @@ module AutoIonization
         if  maxKappa        == nothing   maxKappax        = set.maxKappa          else  maxKappax        = maxKappa         end 
         if  operator        == nothing   operatorx        = set.operator          else  operatorx        = operator         end 
 
-        Settings( calcAnisotropyx, printBeforex, selectLinesx, selectedLinesx, minAugerEnergyx, maxAugerEnergyx, maxKappax, operatorx)
+        Settings( calcAnisotropyx, printBeforex, lineSelectionx, minAugerEnergyx, maxAugerEnergyx, maxKappax, operatorx)
     end
 
 

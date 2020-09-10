@@ -5,7 +5,8 @@
 """
 module Cascade
 
-    using Dates, JLD2, Printf, ..AutoIonization, ..Basics, ..Continuum, ..Defaults, ..DecayYield, ..Radial, ..ManyElectron, ..Nuclear, 
+    using Dates, JLD2, Printf, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..DecayYield, ..ElectronCapture,
+                               ..Radial, ..ManyElectron, ..Nuclear, 
                                ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..Semiempirical, ..TableStrings
 
     
@@ -19,6 +20,8 @@ module Cascade
             ... to represent a (prior) photoionization part of a cascade for a list of given photon energies.
         + struct PhotonExcitationScheme    
             ... to represent a (prior) photo-excitation part of a cascade for a specified set of excitations.
+        + struct DrRateCoefficientScheme  
+            ... to represent a (prior) electron-impact excitation part of a cascade for given electron energies (not yet).
         + struct ElectronExcitationScheme  
             ... to represent a (prior) electron-impact excitation part of a cascade for given electron energies (not yet).
     """
@@ -178,6 +181,76 @@ module Cascade
         println(io, "NoExcitations :             $(scheme.NoExcitations )  ")
         println(io, "excitationFromShells:       $(scheme.excitationFromShells)  ")
         println(io, "excitationToShells:         $(scheme.excitationToShells)  ")
+    end
+
+
+    """
+    `struct  Cascade.DrRateCoefficientScheme  <:  Cascade.AbstractCascadeScheme`  
+        ... a struct to define and describe a a DR rate coefficients (scheme) calculation for an atom in some initial state/configuration;
+            for such a scheme, the doubly-excited configurations due to the electron capture are generated automatically due to
+            given maximal numbers of the (to-) shells (nl) as well as the maximum displacement with regard to the initial configuration.
+            An additional maximum electron energy must be derived from the maximum temperatures for which DR plasma rate coefficients
+            need to be determined, cf. Basics.convert().
+
+        + processes             ::Array{Basics.AbstractProcess,1} 
+            ... List of the atomic processes that are supported and should be included into the DR capture and stabilization scheme.  
+        + multipoles            ::Array{EmMultipole}           
+            ... Multipoles of the radiation field that are to be included into the radiative stabilization processes.
+        + maxElectronEnergy      ::Float64                 
+            ... Maximum electron energy [in a.u.] that restrict the number of excited configurations to be taken into accout.
+                This maximum energy has to be derived from the maximum temperature for which DR coefficients need to be derived
+                and is typically set to 5x T_e,max.
+        + minPhotonEnergy        ::Float64                 
+            ... Minimum (mean) photon energy [in a.u.] in the radiative stabilization of the doubly-excited configurations; 
+                If cascade blocks are separated be less than this energy, the radiative stabilization is neglected.
+        + NoExcitations         ::Int64                 
+            ... (Maximum) Number of electron replacements in the doubly-excited with regard to the initial configurations/multiplets, 
+                apart from one additional electron due to the electron capture.
+        + nMax                  ::Int64                 
+            ... (Maximum) principal number n of electron (to-) shells that are considered for doubly-excited configuration.
+        + lMax                  ::Int64                 
+            ... (Maximum) orbital angular momentum number n of electron (to-) shells that are considered for doubly-excited configuration.
+        + excitationFromShells  ::Array{Shell,1}    
+            ... List of shells from which excitations are to be considered.
+    """
+    struct   DrRateCoefficientScheme  <:  Cascade.AbstractCascadeScheme
+        processes               ::Array{Basics.AbstractProcess,1}    
+        multipoles              ::Array{EmMultipole}  
+        maxElectronEnergy       ::Float64   
+        minPhotonEnergy         ::Float64                 
+        NoExcitations           ::Int64
+        nMax                    ::Int64
+        lMax                    ::Int64
+        excitationFromShells    ::Array{Shell,1}
+    end
+
+
+    """
+    `Cascade.DrRateCoefficientScheme()`  ... constructor for an 'default' instance of a Cascade.DrRateCoefficientScheme.
+    """
+    function DrRateCoefficientScheme()
+        DrRateCoefficientScheme([ElectronCapture(), Auger(), Radiative()], [E1], 1.0, 0., 1, 1, 0, Shell[], Shell[] )
+    end
+
+
+    # `Base.string(scheme::DrRateCoefficientScheme)`  ... provides a String notation for the variable scheme::DrRateCoefficientScheme.
+    function Base.string(scheme::DrRateCoefficientScheme)
+        sa = "DR plasma rate coefficient (scheme) due to processes:"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, scheme::DrRateCoefficientScheme)`  ... prepares a proper printout of the scheme::DrRateCoefficientScheme.
+    function Base.show(io::IO, scheme::DrRateCoefficientScheme)
+        sa = Base.string(scheme);                print(io, sa, "\n")
+        println(io, "processes:                  $(scheme.processes)  ")
+        println(io, "multipoles:                 $(scheme.multipoles)  ")
+        println(io, "maxElectronEnergy:          $(scheme.maxElectronEnergy)  ")
+        println(io, "minPhotonEnergy:            $(scheme.minPhotonEnergy)  ")
+        println(io, "NoExcitations:              $(scheme.NoExcitations)  ")
+        println(io, "nMax:                       $(scheme.nMax)  ")
+        println(io, "lMax:                       $(scheme.lMax)  ")
+        println(io, "excitationFromShells:       $(scheme.excitationFromShells)  ")
     end
 
 
@@ -402,9 +475,10 @@ module Cascade
 
     # `Base.string(comp::Cascade.Computation)`  ... provides a String notation for the variable comp::Cascade.Computation.
     function Base.string(comp::Cascade.Computation)
-        if        typeof(comp.scheme) == Cascade.StepwiseDecayScheme     sb = "stepwise decay scheme"
-        elseif    typeof(comp.scheme) == Cascade.PhotonIonizationScheme  sb = "(prior) photo-ionization scheme"
-        elseif    typeof(comp.scheme) == Cascade.PhotonExcitationScheme  sb = "photo-excitation scheme"
+        if        typeof(comp.scheme) == Cascade.StepwiseDecayScheme       sb = "stepwise decay scheme"
+        elseif    typeof(comp.scheme) == Cascade.PhotonIonizationScheme    sb = "(prior) photo-ionization scheme"
+        elseif    typeof(comp.scheme) == Cascade.PhotonExcitationScheme    sb = "photo-excitation scheme"
+        elseif    typeof(comp.scheme) == Cascade.DrRateCoefficientScheme   sb = "DR plasma rate coefficient scheme"
         else      error("unknown typeof(comp.scheme)")
         end
         
@@ -762,6 +836,11 @@ module Cascade
     
     
     include("module-Cascade-inc-computations.jl")
+    include("module-Cascade-inc-dr-plasma-rate.jl")
+    include("module-Cascade-inc-photoabsorption.jl")
+    include("module-Cascade-inc-photoexcitation.jl")
+    include("module-Cascade-inc-photoionization.jl")
+    include("module-Cascade-inc-stepwise-decay.jl")
     include("module-Cascade-inc-simulations.jl")
     
 

@@ -33,19 +33,23 @@ module Radial
         + rnt            ::Float64           ... smalles grid point > 0.
         + h              ::Float64           ... stepsize in the construction of the exponential grid.
         + hp             ::Float64           ... asymptotic stepsize of the log-lin grid.
-        + NoPoints       ::Int64             ... No. of grid points.
+        + NoPoints       ::Int64             ... No. of grid points so that r[NoPoints] coincides also with the largest break point of 
+                                                 the B-spline knot.
         ** B-spline grid parameters and break points **
-        + t              ::Array{Float64,1}  ... radial break points for the B-splines
-        + nt             ::Int64             ... number of break points in the t-grid.
-        + nth            ::Int64             ... take each nth-point from the 'physical grid' as break point.
-        + orderL         ::Int64             ... B-spline order of large components
+        + tL             ::Array{Float64,1}  ... radial break points for the B-splines of the large component.
+        + tS             ::Array{Float64,1}  ... radial break points for the B-splines of the small component.
+        + ntL            ::Int64             ... number of break points in the t-grid of the large component.
+        + ntS            ::Int64             ... number of break points in the t-grid of the small component.
+        ##x + nth            ::Int64             ... take each nth-point from the 'physical grid' as break point.
+        + orderL         ::Int64             ... B-spline order of large components of the large component
         + orderS         ::Int64             ... B-spline order of small components
         + nsL            ::Int64             ... number of B-splines for large components
         + nsS            ::Int64             ... number of B-splines for small components
-        + orderGL        ::Int64             ... order of the Gauss-Lengendre integration if mesh == Radial.MeshGL()
+        + orderGL        ::Int64             ... order of the Gauss-Lengendre integration if mesh == Radial.MeshGL(); this is also
+                                                 equal of how the break points are generated as nth-point from the physical grid points.
         ** Radial mesh points **
         + meshType       ::Radial.AbstractMesh
-        + nr             ::Int64             ... number of mesh points in the r-grid.
+        ##x + nr             ::Int64             ... number of mesh points in the r-grid.
         + r              ::Array{Float64,1}  ... radial grid points
         + rp             ::Array{Float64,1}  ... derivative of the radial grid at the grid points
         + rpor           ::Array{Float64,1}  ... rp over r
@@ -57,9 +61,11 @@ module Radial
         hp               ::Float64
         NoPoints         ::Int64
         #
-        t                ::Array{Float64,1}
-        nt               ::Int64 
-        nth              ::Int64 
+        tL               ::Array{Float64,1}
+        tS               ::Array{Float64,1}
+        ntL              ::Int64 
+        ntS              ::Int64 
+        ##x nth              ::Int64 
         orderL           ::Int64
         orderS           ::Int64
         nsL              ::Int64
@@ -67,7 +73,7 @@ module Radial
         orderGL          ::Int64
         #
         meshType         ::Radial.AbstractMesh
-        nr               ::Int64 
+        ##x nr               ::Int64 
         r                ::Array{Float64,1}
         rp               ::Array{Float64,1}
         rpor             ::Array{Float64,1}
@@ -79,7 +85,7 @@ module Radial
     `Radial.Grid()` ... constructor to define an 'empty' grid.  
     """
     function Grid()
-        Radial.Grid(0., 0., 0., 0,   Float64[], 0, 0, 0, 0, 0, 0, 0,   Radial.MeshNone(), 0, Float64[], Float64[], Float64[], Float64[] )
+        Radial.Grid(0., 0., 0., 0,   Float64[], Float64[], 0, 0, 0, 0, 0, 0, 0,   Radial.MeshNone(), Float64[], Float64[], Float64[], Float64[] )
     end
 
 
@@ -90,14 +96,16 @@ module Radial
     """
     function Grid(exponential::Bool; printout::Bool=false)
         # The standard mesh type is Radial.MeshGL() with some proper parameters
-        nth = 7;    orderL = 7;    orderS = 8;   orderGL = 7;    meshType = MeshGL()
+        nth = orderL = 7;    orderS = 8;   orderGL = 7;    meshType = MeshGL()
         
         if  exponential
-            grid = Radial.Grid(2.0e-6, 5.0e-2,     0., 390,   Float64[], 0, nth, orderL, orderS, 0, 0, orderGL, meshType,
-                               0, Float64[], Float64[], Float64[], Float64[] )
+            NoPoints = 392;    NoPoints = NoPoints - rem(NoPoints,orderGL)
+            grid = Radial.Grid(2.0e-6, 5.0e-2,     0., NoPoints,   Float64[], Float64[], 0, 0, orderL, orderS, 0, 0, orderGL, meshType,
+                               Float64[], Float64[], Float64[], Float64[] )
         else
-            grid = Radial.Grid(2.0e-6, 5.0e-2, 2.0e-2, 600,   Float64[], 0, nth, orderL, orderS, 0, 0, orderGL, meshType,
-                               0, Float64[], Float64[], Float64[], Float64[] )
+            NoPoints = 600;    NoPoints = NoPoints - rem(NoPoints,orderGL)
+            grid = Radial.Grid(2.0e-6, 5.0e-2, 2.0e-2, NoPoints,   Float64[], Float64[], 0, 0, orderL, orderS, 0, 0, orderGL, meshType,
+                               Float64[], Float64[], Float64[], Float64[] )
         end
         return( Radial.determineGrid(grid, printout=printout) )
     end
@@ -106,29 +114,33 @@ module Radial
     """
     `Radial.Grid(gr::Radial.Grid;`
     
-            rnt=..,     h=..,       hp=..,      NoPoints=..,    
-            nth=..,     orderL=..,  orderS=..,  orderGL=..,    meshType..,  printout=..)
+            rnt=..,     h=..,       hp=..,      rbox=..,    orderL=..,  orderS=..,  orderGL=..,    meshType..,  printout=..)
                         
         ... constructor for modifying the given Radial.Grid by 'overwriting' the previously selected parameters.
     """
     function Grid(gr::Radial.Grid;    
         rnt::Union{Nothing,Float64}=nothing,        h::Union{Nothing,Float64}=nothing,      hp::Union{Nothing,Float64}=nothing, 
-        NoPoints::Union{Nothing,Int64}=nothing,     nth::Union{Nothing,Int64}=nothing,      orderL::Union{Nothing,Int64}=nothing,
+        rbox::Union{Nothing,Float64}=nothing,       nth::Union{Nothing,Int64}=nothing,      orderL::Union{Nothing,Int64}=nothing,
         orderS::Union{Nothing,Int64}=nothing,       orderGL::Union{Nothing,Int64}=nothing,  meshType::Union{Nothing,Radial.AbstractMesh}=nothing, 
         printout::Bool=false)
         
         if  rnt      == nothing   rntx      = gr.rnt        else    rntx      = rnt       end 
         if  h        == nothing   hx        = gr.h          else    hx        = h         end 
         if  hp       == nothing   hpx       = gr.hp         else    hpx       = hp        end 
-        if  NoPoints == nothing   NoPointsx = gr.NoPoints   else    NoPointsx = NoPoints  end 
-        if  nth      == nothing   nthx      = gr.nth        else    nthx      = nth       end 
+        if  rbox     == nothing   rboxx     = nothing       else    rboxx     = rbox      end 
+        ##x if  nth      == nothing   nthx      = gr.nth        else    nthx      = nth       end 
         if  orderL   == nothing   orderLx   = gr.orderL     else    orderLx   = orderL    end 
         if  orderS   == nothing   orderSx   = gr.orderS     else    orderSx   = orderS    end 
         if  orderGL  == nothing   orderGLx  = gr.orderGL    else    orderGLx  = orderGL   end 
         if  meshType == nothing   meshTypex = gr.meshType   else    meshTypex = meshType  end 
         
-        grid = Radial.Grid(rntx, hx, hpx, NoPointsx, Float64[], 0, nthx, orderLx, orderSx, 0, 0, orderGLx, meshTypex,
-                           0, Float64[], Float64[], Float64[], Float64[] )
+        if      rboxx == nothing    NoPointsx = gr.NoPoints - rem(gr.NoPoints, orderGLx)
+        elseif  rboxx  > 0.         NoPointsx = Radial.determineNoPoints(rntx, hx, hpx, rboxx, orderGLx)
+        else    error("stop a")
+        end
+        
+        grid = Radial.Grid(rntx, hx, hpx, NoPointsx, Float64[], Float64[], 0, 0, orderLx, orderSx, 0, 0, orderGLx, meshTypex,
+                           Float64[], Float64[], Float64[], Float64[] )
         return( Radial.determineGrid(grid, printout=printout) )
     end
 
@@ -138,14 +150,15 @@ module Radial
     
         sa = Base.string(grid::Radial.Grid);    print(io, sa * "\n")
     
-        nr = grid.nr;    nt = length(grid.t);    if  nr < 6   return( nothing )    end
-        print(io, "r:    ", grid.r[1:3],    "  ...  ", grid.r[nr-2:nr],     "\n") 
+        nr = grid.NoPoints;    ntL = length(grid.tL);    ntS = length(grid.tS);    if  nr < 6   return( nothing )    end
+        print(io, "r:    ", grid.r[1:3],    "  ...  ", grid.r[nr-2:nr],         "\n") 
         if  grid.meshType == Radial.MeshGrasp()
             print(io, "rp:   ", grid.rp[1:3],   "  ...  ", grid.rp[nr-2:nr],    "\n") 
             print(io, "rpor: ", grid.rpor[1:3], "  ...  ", grid.rpor[nr-2:nr],  "\n") 
         end
-        print(io, "wr:   ", grid.wr[1:3],   "  ...  ", grid.wr[nr-2:nr],    "\n") 
-        print(io, "t:    ", grid.t[1:3],    "  ...  ", grid.t[nt-2:nt]          ) 
+        print(io, "wr:   ", grid.wr[1:3],   "  ...  ", grid.wr[nr-2:nr],        "\n") 
+        ## print(io, "tL:   ", grid.tL[1:3],   "  ...  ", grid.tL[ntL-2:ntL],   "\n") 
+        print(io, "tS:   ", grid.tS[1:3],   "  ...  ", grid.tS[ntS-2:ntS]           ) 
     end
 
 
@@ -154,7 +167,8 @@ module Radial
         if   grid.NoPoints == 0
             sa = "Radial grid not defined;  NoPoints = $(grid.NoPoints) ..."
         else
-            sa = "Radial grid:  rnt = $(grid.rnt),  h = $(grid.h),  hp = $(grid.hp),  NoPoints = $(grid.NoPoints), "
+            sa = "Radial grid:  rnt = $(grid.rnt),  h = $(grid.h),  hp = $(grid.hp),  NoPoints = $(grid.NoPoints),  "
+            sa = sa * "ntL = $(grid.ntL),  ntS = $(grid.ntS), "
             sa = sa * "orderL = $(grid.orderL),  orderS = $(grid.orderS),  nsL = $(grid.nsL),  nsS = $(grid.nsS),  mesh = $(grid.meshType), ...  "
         end 
     end
@@ -168,13 +182,17 @@ module Radial
         
         # Read the meshType and general parameters from the given grid
         meshType = grid.meshType
-        rnt = grid.rnt;    h      = grid.h;         hp     = grid.hp;       NoPoints = grid.NoPoints
-        nth = grid.nth;    orderL = grid.orderL;    orderS = grid.orderS;   orderGL  = grid.orderGL
-        nr  = NoPoints + 10;    r = zeros(nr);      rp     = zeros(nr);     rpor     = zeros(nr);    nsL = 0;   nsS = 0
+        rnt    = grid.rnt;       h      = grid.h;         hp      = grid.hp;        NoPoints = grid.NoPoints
+        nth    = grid.orderGL;   orderL = grid.orderL;    orderS  = grid.orderS;    orderGL  = grid.orderGL
+        nr     = grid.NoPoints;  r      = zeros(nr);      rp      = zeros(nr);      rpor     = zeros(nr);      nsL = 0;   nsS = 0
+        ##x @show nr, NoPoints
+        
+        # Ensure that the largest grid points is always consistent with the largest break point of the B-splines
+        if  NoPoints != NoPoints - rem(NoPoints,orderGL)    error("stop a")     end
 
         # Now define the physical grid due to the given parameters: either an exponential or exponential-linear grid
         if  hp == 0.
-            rp[1] = rnt;   eph = exp(h);    ett = 1.0
+            r[1] = rnt;   rp[1] = rnt;   eph = exp(h);    ett = 1.0
            
             for  i  in 2:nr
                 ett     = eph * ett
@@ -205,7 +223,7 @@ module Radial
             rn = 0.
         
             for i = 2:nr
-                rn += rnt
+                rn = rn + rnt
                 while ((abs((rc - rn)/rn) > 100 * eps(Float64))) 
                     rc = rn
                     rn = rc - f(rc, i) / fprime(rc)
@@ -219,41 +237,49 @@ module Radial
         end
         
         # Define the radial break points and the number of B-splines
-        nt = 0;    nrmax = 0;    t = zeros(orderL)
-        for  i = 1:nth:nr
-            nrmax = i;    nt = nt + 1;    push!( t, r[i])
+        ntL = orderL;    ntS = orderS;    tL = zeros( orderL );    tS = zeros( orderS )
+        for  i = nth:nth:NoPoints
+            ntL = ntL + 1;    push!( tL, r[i]);    ntS = ntS + 1;    push!( tS, r[i])
         end
-        ## nsL = nt + orderL - 1 - 8;    nsS = nt + orderS - 1 - 8;    nr = nrmax - 10
-        nsL = nt + orderL - 3;    nsS = nt + orderS - 3;    nr = nrmax - 2
-        for   ip = nt+1:nt+max(orderL, orderS)-1    push!( t, t[nt+orderL] )   end
+        for   i = ntL+1:ntL+orderL-1   push!( tL, tL[ntL] )   end;    nsL = ntL - 1;   ntL = length(tL)
+        for   i = ntS+1:ntS+orderS-1   push!( tS, tS[ntS] )   end;    nsS = ntS - 1;   ntS = length(tS)
+        ##x @show r
+        ##x @show " "
+        ##x @show t
+        ##x ## nsL = nt + orderL - 1 - 8;    nsS = nt + orderS - 1 - 8;    nr = nrmax - 10
+        ##x ## nsL = nt + orderL -3;    nsS = nt + orderS - 3;    nr = nrmax - 2
+        ##x nsL = nt - 3;    nsS = nt - 2
+        ##x for   ip = nt+1:nt+orderL    push!( t, t[nt] )   end
         ##x @show nsL, nsS, nt+orderL, t[nt+orderL]
         ##x @show t
         
         # Define the radial grid due to the definition
         wr = zeros(nr)
+        ##x @show nr, NoPoints
         if  meshType == Radial.MeshGL()
-            nr = 1;   r = Float64[ 0.];   rp = Float64[];   rpor = Float64[];   wr = Float64[0.];    rlow = 0.
+            nr = 0;   r = Float64[];   rp = Float64[];   rpor = Float64[];   wr = Float64[];    rlow = 0.
             wax = gauss(orderGL);   ra = wax[1];   wa = wax[2] 
-            for  i = 1:length(t)
-                rstep = t[i] - rlow
+            for  i = 1:length(tL)
+                rstep = tL[i] - rlow
                 if  rstep > 0
-                    bma = t[i] - rlow;   bpa = t[i] + rlow 
+                    bma = tL[i] - rlow;   bpa = tL[i] + rlow 
                     for  j = 1:orderGL
                        nr = nr + 1;    push!(r, ra[j] * bma/2. + bpa/2. );    push!(wr, wa[j] * bma/2. )
                     end
                 end
-                rlow = t[i]
+                rlow = tL[i]
             end
             #
             if  printout
                 println("Define a radial grid of type $meshType with $nr grid points")
                 println(" [rnt=" * @sprintf("%.3e",rnt) * ", h=" * @sprintf("%.3e",h) * 
                         ", hp=" * @sprintf("%.3e",hp) * ", NoPoints=$NoPoints, r_max=" * @sprintf("%.3e",r[nr]) * ";")
-                println("  B-splines with break points at every $(nth)th point, nsL=$nsL, nsS=$nsS, orderL=$orderL, orderS=$orderS, orderGL=$orderGL] ")
+                println("  B-splines with break points at every $(nth)th point, nsL=$nsL, nsS=$nsS, orderL=$orderL, orderS=$orderS, orderGL=$orderGL,  " *
+                        "ntL=$ntL, ntS=$ntS] ")
             end
         end
 
-        Grid(rnt, h, hp, NoPoints,  t, nt, nth, orderL, orderS, nsL, nsS, orderGL,   meshType, nr, r, rp, rpor, wr)
+        Grid(rnt, h, hp, NoPoints,  tL, tS, ntL, ntS, orderL, orderS, nsL, nsS, orderGL,   meshType, r, rp, rpor, wr)
     end
 
 
@@ -680,6 +706,51 @@ module Radial
                           " (Delta-Zbar=" * @sprintf("%.4e",stdZbar) * ") at r=" * @sprintf("%.4e",pot.grid.r[mtp]) * " a.u." )    end
         
         return( mZbar )
+    end
+
+
+
+    """
+    `Radial.determineNoPoints(rnt::Float64, h::Float64, hp::Float64, rbox::Float64, orderGL::Int64)`  
+        ... determines the number of points of the physical size if the grid parameters and the box-size is given; moreover,
+            it is ensured that this NoPoints is consistent with the largest break point for the B-spline grid.
+            An NoPoints::Int64 is returned.
+    """
+    function determineNoPoints(rnt::Float64, h::Float64, hp::Float64, rbox::Float64, orderGL::Int64) 
+
+        if  hp == 0.
+            NoPoints = 1;  eph = exp(h);    ett = 1.0
+            while true
+                NoPoints = NoPoints + 1
+                ett      = eph * ett
+                ettm1    = ett - 1.0
+                rmax     = rnt * ettm1
+                if  rmax > rbox  &&  rem(NoPoints, orderGL) == 0    break   end
+            end 
+
+        elseif  hp != 0.
+            NoPoints = 1;  rc = 0.;    rn = 0.
+
+            function f(r :: Float64, i :: Int)
+                return( log( r/rnt + 1) + h/hp * r - (i - 1) * h )
+            end
+        
+            function fprime(r :: Float64)
+                return( 1. / (r + rnt) + h/hp )
+            end
+            while true
+                NoPoints = NoPoints + 1
+                rn = rn + rnt
+                while ((abs((rc - rn)/rn) > 100 * eps(Float64))) 
+                    rc = rn
+                    rn = rc - f(rc, NoPoints) / fprime(rc)
+                end
+                rmax    = rn
+                if  rmax > rbox  &&  rem(NoPoints, orderGL) == 0    break   end
+            end
+        end
+        
+        return( NoPoints )
     end
 
 end # module

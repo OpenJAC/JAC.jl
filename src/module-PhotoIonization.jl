@@ -217,7 +217,7 @@ module PhotoIonization
             a line::PhotoIonization.Line is returned for which the amplitudes and properties are now evaluated.
     """
     function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, settings::PlasmaShift.PhotoSettings)
-        newChannels = PhotoIonization.Channel[];;   contSettings = Continuum.Settings(false, grid.nr-50);    csC = 0.;    csB = 0.
+        newChannels = PhotoIonization.Channel[];;   contSettings = Continuum.Settings(false, grid.NoPoints-50);    csC = 0.;    csB = 0.
         for channel in line.channels
             newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)

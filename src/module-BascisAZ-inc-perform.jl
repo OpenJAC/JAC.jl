@@ -346,7 +346,7 @@
         # Specify the AsfSettings for the given RAS step
         asfSettings = AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(),    
                                   settings.maxIterationsScf, settings.accuracyScf, Subshell[], frozenSubshells, 
-                                  CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), settings.levelSelectionCI ) 
+                                  CoulombInteraction(), NoneQed(), LSjjSettings(false), settings.levelSelectionCI ) 
 
         basis = Bsplines.solveSelfConsistentMeanField(wa, nuclearModel, basis, asfSettings; printout=printout) 
         
@@ -422,7 +422,7 @@
             matrix[r,r] = me
         end 
         #
-        eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+        eigen  = Basics.diagonalize("matrix: LinearAlgebra", matrix)
         levels = Level[]
         for  ev = 1:length(eigen.values)
             vector = eigen.vectors[ev];   ns = 0
@@ -485,7 +485,8 @@
             @show  sym, settings.levelSelectionCI,  Basics.selectSymmetry(sym, settings.levelSelectionCI)
             if  !Basics.selectSymmetry(sym, settings.levelSelectionCI)     continue    end
             matrix = compute("matrix: CI, J^P symmetry", sym, basis, nuclearModel, grid, settings; printout=printout)
-            eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+            eigen  = Basics.diagonalize("matrix: LinearAlgebra", matrix)
+            ##x eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
             levels = Level[]
             for  ev = 1:length(eigen.values)
                 # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)
@@ -555,7 +556,7 @@
         multiplets = Multiplet[]
         for  (sym,v) in  symmetries
             matrix = compute("matrix: CI for plasma, J^P symmetry", sym, basis, nuclearModel, grid, settings, plasmaSettings; printout=printout)
-            eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+            eigen  = Basics.diagonalize("matrix: LinearAlgebra", matrix)
             levels = Level[]
             for  ev = 1:length(eigen.values)
                 # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)

@@ -573,10 +573,10 @@ module InteractionStrength
             end
         end
         #
-        Sfunc = zeros( grid.nr );   na = 1
-        for  r = 2:grid.nr
+        Sfunc = zeros( grid.NoPoints );   na = 1
+        for  r = 2:grid.NoPoints
             # Determine integrant over s
-            ws = zeros( grid.nr )
+            ws = zeros( grid.NoPoints )
             for  coeff in  coeffs
                 a = orbitals[coeff.a];   b = orbitals[coeff.b];   c = orbitals[coeff.c];   d = orbitals[coeff.d];   L = coeff.nu
                 # Determine the weight xc of this coefficient
@@ -614,7 +614,7 @@ module InteractionStrength
                 end
             end
             #
-            for  s = 2:grid.nr   Sfunc[r] = Sfunc[r]  +  ws[s] * grid.wr[s]  end
+            for  s = 2:grid.NoPoints   Sfunc[r] = Sfunc[r]  +  ws[s] * grid.wr[s]  end
         end
         
         return( Sfunc )

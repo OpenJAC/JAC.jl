@@ -418,7 +418,7 @@ module Hfs
         end
         #
         # Diagonalize the matrix and set-up the representation
-        eigen    = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+        eigen    = Basics.diagonalize("matrix: LinearAlgebra", matrix)
         levelFs  = Hfs.IJF_Level[]
         for  ev = 1:length(eigen.values)
             # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)

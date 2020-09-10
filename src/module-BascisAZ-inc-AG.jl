@@ -167,6 +167,26 @@
 
 
     """
+    `Basics.determineMeanConfigurationEnergy(conf::Configuration, orbitals::Dict{Subshell, Orbital}, nm::Nuclear.Model, grid::Radial.Grid)`  
+        ... to determine the mean energy of a given non-relativistic configuration; this 'mean' energy is calculated as the mean
+            energy of all single-CSF levels and by using the the given set of orbitals. A value::Float64 is returned.
+    """
+    function Basics.determineMeanConfigurationEnergy(conf::Configuration, orbitals::Dict{Subshell, Orbital}, nm::Nuclear.Model, grid::Radial.Grid)
+        asfSettings = AsfSettings();    meanEnergy = 0.;    nlev = 0
+        multiplet   = Basics.performCI([conf], orbitals, nm, grid, asfSettings, printout=false)
+        for  level in multiplet.levels
+            nl = Basics.twice(level.J) + 1;     nlev = nlev + nl;     meanEnergy = meanEnergy + nl * level.energy
+        end  
+        meanEnergy = meanEnergy / nlev
+        
+        if true  println(">>> mean energy of $conf  is:  $meanEnergy  [a.u.]")   end
+        
+        return( meanEnergy )
+    end
+
+
+
+    """
     `Basics.determineParity(conf::Configuration)`  ... to determine the parity of a given non-relativistic configuration.
     """
     function Basics.determineParity(conf::Configuration)
@@ -184,6 +204,7 @@
     end
 
 
+    
     """
     `Basics.determineParity(conf::ConfigurationR)`  ... to determine the parity of a given relativistic configuration.
     """
@@ -277,31 +298,54 @@
     
     
     """
-    `Basics.diagonalize("matrix: Julia, eigfact", matrix::Array{Float64,2})`  
-        ... to apply the standard eigfact() method from Julia for a quadratic, full matrix; nothing about the symmetry of 
-            the matrix is assumed here; an eigen::Basics.Eigen is returned.
+    `Basics.diagonalize("matrix: LinearAlgebra", matrixA::Array{Float64,2}; range=(0:0)::UnitRange{Int64})`  
+        ... to apply the standard the standard LinearAlgebra.eigen() method from Julia for a symmetrc matrix; 
+            only the upper-triangular parts of matrixA is used by an explicit symmetrization; ; an eigen::Basics.Eigen is returned.
     """
-    function Basics.diagonalize(sa::String, matrix::Array{Float64,2})
-        if       sa == "matrix: Julia, eigfact" 
+    function Basics.diagonalize(sa::String, matrixA::Array{Float64,2}; range=(0:0)::UnitRange{Int64})
+        if       sa == "matrix: LinearAlgebra" 
+            # Use the LinearAlgebra.eigen method from Julia for one symmetric matrix  
+            mA = LinearAlgebra.Symmetric(matrixA)
+            if  range == 0:0    
+                wa = LinearAlgebra.eigen( mA )
+                vectors = Vector{Float64}[];    wb = wa.vectors;    d = size(wb)[1]
+                for  i = 0:d-1    push!(vectors, wb[i*d+1:i*d+d])    end
+            else                
+                wa = LinearAlgebra.eigen( mA, range )
+                vectors = Vector{Float64}[];    for  i = range   push!( vectors, wa.vectors[:,1] )   end
+            end
+            #
+            wc = Basics.Eigen( wa.values, vectors )
+            return( wc )
+        #== elseif       sa == "matrix: Julia, eigfact" 
             # Use the standard eigfact() method from Julia for a quadratic, full matrix   
             wa = eigen( matrix )
             vectors = Vector{Float64}[];    wb = wa.vectors;    d = size(wb)[1]
             for  i = 0:d-1    push!(vectors, wb[i*d+1:i*d+d])    end
             wc = Basics.Eigen( wa.values, vectors )
-            return( wc )
-        elseif   sa == "matrix: Julia method B"     error("Not yet implemented")
+            return( wc )  ==#
         else     error("Unsupported keystring = $sa")
         end
     end
 
 
     """
-    `Basics.diagonalize("generalized eigenvalues: Julia, eigfact", matrixA::Array{Float64,2}, matrixB::Array{Float64,2})`  
-        ... to apply the standard eigfact() method from Julia for a generalized eigenvalue problem with two quadratic   
-            (full) matrices; nothing about the symmetry of the matrix is assumed here; an eigen::Basics.Eigen is returned.
+    `Basics.diagonalize("generalized eigenvalues: LinearAlgebra", matrixA::Array{Float64,2}, matrixB::Array{Float64,2})`  
+        ... to apply the standard LinearAlgebra.eigen() method from Julia for a generalized eigenvalue problem with two symmetric
+            matrices; only the upper-triangular parts of matrixA and matrixB are used by an explicit symmetrization; 
+            an eigen::Basics.Eigen is returned.
     """
     function Basics.diagonalize(sa::String, matrixA::Array{Float64,2}, matrixB::Array{Float64,2})
-        if       sa == "generalized eigenvalues: Julia, eigfact" 
+        if       sa == "generalized eigenvalues: LinearAlgebra" 
+            # Use the LinearAlgebra.eigen method from Julia for two symmetric matrices   
+            mA = LinearAlgebra.Symmetric(matrixA)
+            mB = LinearAlgebra.Symmetric(matrixB)
+            wa = LinearAlgebra.eigen(mA,mB)
+            vectors = Vector{Float64}[];    wb = wa.vectors;    d = size(wb)[1]
+            for   i = 0:d-1    push!(vectors, wb[i*d+1:i*d+d] )    end
+            wc      = Basics.Eigen( wa.values, vectors )
+            return( wc )
+        #== elseif       sa == "generalized eigenvalues: Julia, eigfact" 
             # Use the standard eigfact() method from Julia for two quadratic, full matrices   
             wa = eigen( matrixA, matrixB )
             vectors = Vector{Float64}[];    wb = wa.vectors;    d = size(wb)[1]
@@ -309,7 +353,7 @@
             for  i = 0:d-1    push!(vectors, wb[i*d+1:i*d+d] )    end
             # wc = Basics.Eigen( real(wa.values), vectors )
             wc = Basics.Eigen( wa.values, vectors )
-            return( wc )
+            return( wc )  ==#
         else     error("Unsupported keystring = $sa")
         end
     end

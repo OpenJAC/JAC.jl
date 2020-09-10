@@ -411,7 +411,7 @@ module ManyElectron
         
     	+ eeInteractionCI      ::AbstractEeInteraction  ... Specify the e-e interaction to be included into the CI computations.
     	+ qedModel             ::AbstractQedModel       ... model for estimating QED corrections {NoneQed(), QedPetersburg(), QedSydney()}.
-    	+ methodCI             ::AbstractCImethod       ... method for diagonalizing the matrix.
+    	##x + methodCI             ::AbstractCImethod       ... method for diagonalizing the matrix.
     	+ jjLS                 ::LSjjSettings           ... settings to control a jj-LS transformation of atomic level, if requested.
         + levelSelectionCI     ::LevelSelection         ... Specifies the selected levels, if any.
     """
@@ -427,7 +427,7 @@ module ManyElectron
         #
     	eeInteractionCI        ::AbstractEeInteraction
     	qedModel               ::AbstractQedModel 	
-    	methodCI               ::AbstractCImethod
+    	##x methodCI               ::AbstractCImethod
     	jjLS                   ::LSjjSettings 
     	levelSelectionCI       ::LevelSelection
      end
@@ -438,7 +438,7 @@ module ManyElectron
     """
     function AsfSettings()
     	AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(), 24, 1.0e-6, Subshell[], Subshell[],  
-    	            CoulombInteraction(), NoneQed(), FullCIeigen(), LSjjSettings(false), LevelSelection() )
+    	            CoulombInteraction(), NoneQed(), LSjjSettings(false), LevelSelection() )
     end
 
 
@@ -447,7 +447,8 @@ module ManyElectron
         
                 generateScf=..,       eeInteraction=..,       scField=..,            startScfFrom=..,           maxIterationsScf=..,    
                 accuracyScf=..,       shellSequenceScf=..,    frozenSubshells=..,    eeInteractionCI=..,        qedModel=..,           
-                methodCI=..,          jjLS=..,                LevelSelection=..,     printout::Bool=false)
+                ##x methodCI=..,          
+                jjLS=..,                LevelSelection=..,     printout::Bool=false)
         ... constructor for re-defining a settings::AsfSettings.
     """
     function AsfSettings(settings::AsfSettings; 
@@ -456,7 +457,8 @@ module ManyElectron
         maxIterationsScf::Union{Nothing,Int64}=nothing,                 accuracyScf::Union{Nothing,Float64}=nothing,     
         shellSequenceScf::Union{Nothing,Array{Subshell,1}}=nothing,     frozenSubshells::Union{Nothing,Array{Subshell,1}}=nothing, 
         eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,  qedModel::Union{Nothing,AbstractQedModel}=nothing,              
-        methodCI::Union{Nothing,AbstractCImethod}=nothing,              jjLS::Union{Nothing,LSjjSettings}=nothing,  
+        ##x methodCI::Union{Nothing,AbstractCImethod}=nothing,              
+        jjLS::Union{Nothing,LSjjSettings}=nothing,  
         levelSelectionCI::Union{Nothing,LevelSelection}=nothing,        printout::Bool=false)
 
         if  generateScf         == nothing   generateScfx          = settings.generateScf           else   generateScfx          = generateScf          end 
@@ -469,12 +471,12 @@ module ManyElectron
         if  frozenSubshells     == nothing   frozenSubshellsx      = settings.frozenSubshells       else   frozenSubshellsx      = frozenSubshells      end 
         if  eeInteractionCI     == nothing   eeInteractionCIx      = settings.eeInteractionCI       else   eeInteractionCIx      = eeInteractionCI      end 
         if  qedModel            == nothing   qedModelx             = settings.qedModel              else   qedModelx             = qedModel             end 
-        if  methodCI            == nothing   methodCIx             = settings.methodCI              else   methodCI              = methodCI             end 
+        ##x if  methodCI            == nothing   methodCIx             = settings.methodCI              else   methodCI              = methodCI             end 
         if  jjLS                == nothing   jjLSx                 = settings.jjLS                  else   jjLSx                 = jjLS                 end 
         if  levelSelectionCI    == nothing   levelSelectionCIx     = settings.levelSelectionCI      else   levelSelectionCI      = levelSelectionCI     end 
         
     	AsfSettings(generateScfx, eeInteractionx, scFieldx, startScfFromx, maxIterationsScfx, accuracyScfx, 
-    	            shellSequenceScfx, frozenSubshellsx, eeInteractionCIx, qedModelx, methodCIx, jjLSx, levelSelectionCIx)
+    	            shellSequenceScfx, frozenSubshellsx, eeInteractionCIx, qedModelx, jjLSx, levelSelectionCIx)
     end
     
     
@@ -491,7 +493,7 @@ module ManyElectron
     	  #
     	  println(io, "eeInteractionCI:      $(settings.eeInteractionCI)  ")
     	  println(io, "qedModel :            $(settings.qedModel)  ")
-    	  println(io, "methodCI:             $(settings.methodCI)  ")
+    	  ##x println(io, "methodCI:             $(settings.methodCI)  ")
     	  println(io, "jjLS:                 $(settings.jjLS.makeIt)  ")
     	  println(io, "levelSelectionCI:     $(settings.levelSelectionCI)  ")
     end
@@ -523,7 +525,6 @@ module ManyElectron
     	if  seta.frozenSubshells  !=  setb.frozenSubshells            return( false )    end
     	if  seta.eeInteractionCI  !=  setb.eeInteractionCI            return( false )    end
     	#   qedModel
-    	#   methodCI
     	#   jjLS
     	
     	  return( true )

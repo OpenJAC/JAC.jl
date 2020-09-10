@@ -104,7 +104,7 @@ module FormFactor
          ... to compute the (real) Fourier transform of the (spherically-symmetric) charge distribution. A value::Float64 is returned.
     """
     function standardF(q::Float64, level::Level, grid::Radial.Grid)
-        wa = zeros( grid.nr )
+        wa = zeros( grid.NoPoints )
         # Compute the total density
         for  sh in level.basis.subshells
             occ  = Basics.computeMeanSubshellOccupation(sh, [level])
@@ -114,9 +114,9 @@ module FormFactor
         end
         # Compute the full integrant; the factor 4pi * r^2 is already in the density
         if     q == 0.   
-        else             for    i = 2:grid.nr   wa[i] = wa[i] / grid.r[i] * sin(q*grid.r[i]) / q    end
+        else             for    i = 2:grid.NoPoints   wa[i] = wa[i] / grid.r[i] * sin(q*grid.r[i]) / q    end
         end
-        sF = RadialIntegrals.V0(wa, grid.nr, grid::Radial.Grid)
+        sF = RadialIntegrals.V0(wa, grid.NoPoints, grid::Radial.Grid)
         
         return( sF )
     end
@@ -128,7 +128,7 @@ module FormFactor
             due to the local (DFS) potential, relative to the rest mass of the electron. A value::Float64 is returned.
     """
     function modifiedF(q::Float64, level::Level, grid::Radial.Grid)
-        wa  = zeros( grid.nr )
+        wa  = zeros( grid.NoPoints )
         wc  = Defaults.getDefaults("speed of light: c")
         pot = Basics.compute("radial potential: Dirac-Fock-Slater", grid, level)
         # Compute the total density
@@ -145,7 +145,7 @@ module FormFactor
                 end
             end
         end
-        mF = RadialIntegrals.V0(wa, grid.nr, grid::Radial.Grid)
+        mF = RadialIntegrals.V0(wa, grid.NoPoints, grid::Radial.Grid)
         
         return( mF )
     end

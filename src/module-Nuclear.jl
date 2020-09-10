@@ -186,7 +186,7 @@ module Nuclear
     """
     function fermiDistributedNucleus(Rrms::Float64, Z::Float64, grid::Radial.Grid)
     
-        zz = zeros(Float64, grid.nr);   zznew = zeros(Float64, grid.nr);   dx = zeros(Float64, grid.nr)
+        zz = zeros(Float64, grid.NoPoints);   zznew = zeros(Float64, grid.NoPoints);   dx = zeros(Float64, grid.NoPoints)
         ##x function  rho(r::Float64)  1.0 / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )   end
         function  r_rho(r::Float64)  r / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )   end
         function  rr_rho(r::Float64)  r^2 / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )  end
@@ -216,7 +216,7 @@ module Nuclear
     """
     function pointNucleus(Z::Float64, grid::Radial.Grid)
     
-        zz = Z * ones(Float64, grid.nr)
+        zz = Z * ones(Float64, grid.NoPoints)
     
         potential = Radial.Potential("nuclear-potential: point-like", zz, deepcopy(grid))
         return( potential )
@@ -231,10 +231,10 @@ module Nuclear
     """
     function uniformNucleus(R::Float64, Z::Float64, grid::Radial.Grid)
     
-        zz = zeros(Float64, grid.nr);   R_au = Defaults.convertUnits("length: from fm to atomic", R)
+        zz = zeros(Float64, grid.NoPoints);   R_au = Defaults.convertUnits("length: from fm to atomic", R)
         ##x println("uniformNucleus()::  R_au = $R_au")
     
-        for i = 1:grid.nr
+        for i = 1:grid.NoPoints
             if     grid.r[i] <= R_au    zz[i] = Z / (2 * R_au) * (grid.r[i]^2/R_au^2 - 3.) * grid.r[i] * grid.r[i]
             else   zz[i] = Z
             end
@@ -252,7 +252,7 @@ module Nuclear
             is returned.
     """
     function nuclearPotential(nm::Nuclear.Model, grid::Radial.Grid)
-        zz = zeros(Float64, grid.nr)
+        zz = zeros(Float64, grid.NoPoints)
     
         if      nm.model == "point"      potential = Nuclear.pointNucleus(nm.Z, grid)
         elseif  nm.model == "uniform"    potential = Nuclear.uniformNucleus(nm.radius, nm.Z, grid)

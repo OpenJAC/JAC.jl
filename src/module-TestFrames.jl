@@ -336,7 +336,7 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-AutoIonization-new.sum")
         printstyled("\n\nTest the module  AutoIonization  ... \n", color=:cyan)
         ### Make the tests
-        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, NoPoints = 900)
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, rbox = 9.5)
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),  
                                 initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = Auger(),
@@ -364,7 +364,7 @@ module TestFrames
         printstyled("\n\nTest the module  Cascade for the StepwiseDecayScheme ... \n", color=:cyan)
         ### Make the tests
         name = "Cascade after neon 1s --> 3p excitation"
-        grid = Radial.Grid(false)
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, rbox = 9.5)
         wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(10.), grid=grid, approach=Cascade.AverageSCA(),
                                    scheme=Cascade.StepwiseDecayScheme([Auger(), Radiative()], 1, Dict{Int64,Float64}(), 0, Shell[], Shell[]),
                                    initialConfigs=[Configuration("1s^1 2s^2 2p^6 3p")] )
@@ -390,7 +390,7 @@ module TestFrames
         printstyled("\n\nTest the module  Cascade for the PhotonIonizationScheme ... \n", color=:cyan)
         ### Make the tests
         name = "Photoionization of Si- "
-        grid = Radial.Grid(Radial.Grid(false); rnt = 3.0e-6, h = 2.0e-2, hp = 3.0e-2, NoPoints=1110)
+        grid = Radial.Grid(Radial.Grid(false); rnt = 3.0e-6, h = 2.0e-2, hp = 3.0e-2, rbox = 11.0)
         wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(10.), grid=grid, approach=Cascade.AverageSCA(),
                                    scheme=Cascade.PhotonIonizationScheme([Photo()], 1, [5.0]),
                                    initialConfigs=[Configuration("1s^2 2s^2 2p^5")] )
@@ -414,7 +414,7 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-Cascade-PhotonExcitation-new.sum")
         printstyled("\n\nTest the module  Cascade for the PhotonExcitationScheme ... \n", color=:cyan)
         ### Make the tests
-        grid = Radial.Grid(Radial.Grid(false); rnt = 3.0e-6, h = 2.0e-2, hp = 3.0e-2, NoPoints=1110)
+        grid = Radial.Grid(Radial.Grid(false); rnt = 3.0e-6, h = 2.0e-2, hp = 3.0e-2, rbox = 11.0)
         name = "Photoabsorption calculations for Ne^+ for energies = [1, 4] a.u."
         wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(10.), grid=grid, approach=Cascade.AverageSCA(),
                                    scheme=Cascade.PhotonExcitationScheme([PhotoExc()], [E1], 0.5, 4.0, 1, [Shell("2s"), Shell("2p")], 
@@ -484,7 +484,7 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-DecayYield-new.sum")
         printstyled("\n\nTest the module  DecayYield  ... \n", color=:cyan)
         ### Make the tests
-        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800)
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, rbox=10.0)
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.),  
                                 configs=[Configuration("1s 2s^2 2p^6")],
                                 properties=[Yields()], yieldSettings=DecayYield.Settings("SCA", true, LevelSelection() ) )
@@ -506,7 +506,7 @@ module TestFrames
     function testModule_Dielectronic(; short::Bool=true)     Defaults.setDefaults("print summary: open", "test-Dielectronic-new.sum")
         printstyled("\n\nTest the module  Dielectronic  ... \n", color=:cyan)
         ### Make the tests
-        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 600)
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, rbox = 7.0)
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid,
                                 nuclearModel=Nuclear.Model(26.), 
                                 initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
@@ -884,7 +884,7 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-PhotoIonization-new.sum")
         printstyled("\n\nTest the module  PhotoIonization  ... \n", color=:cyan)
         ### Make the tests
-        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, NoPoints = 800)
+        grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, rbox = 10.0)
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),
                                 initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                                 finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
@@ -910,7 +910,7 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-PhotoRecombination-new.sum")
         printstyled("\n\nTest the module  PhotoRecombination  ... \n", color=:cyan)
         ### Make the tests
-        grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 1.0e-2, NoPoints = 900)
+        grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 1.0e-2, rbox = 6.5)
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.), 
                                 initialConfigs=[Configuration("1s^2")],
                                 finalConfigs  =[Configuration("1s^2 2s"), Configuration("1s^2 3s"), Configuration("1s^2 3p"), Configuration("1s^2 3d")], 

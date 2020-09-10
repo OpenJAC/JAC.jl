@@ -311,7 +311,7 @@ module  RadialIntegrals
             return( Math.integrateFitTransform(f, mtp, grid) )
         elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
-            for  i = 1:grid.nr 
+            for  i = 1:grid.NoPoints 
                 if i > mtp   break   end
                 wa = wa + ( orbital1.P[i] * orbital2.P[i] + orbital1.Q[i] * orbital2.Q[i] ) * grid.wr[i]   
             end
@@ -341,7 +341,7 @@ module  RadialIntegrals
             return( Math.integrateTransform(f, n0, mtp, grid) )
         elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
-            for  i = 1:grid.nr   wa = wa + bspline1.bs[i] * bspline2.bs[i] * grid.wr[i]   end
+            for  i = 1:grid.NoPoints   wa = wa + bspline1.bs[i] * bspline2.bs[i] * grid.wr[i]   end
             return( wa )
         else
             error("stop a")
@@ -442,7 +442,7 @@ module  RadialIntegrals
         ##x    r = 0.1012e-0;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
         ##x end
         ##x println("\n")
-        ##x npoints = grid.nr;    rhot = zeros( npoints )
+        ##x npoints = grid.NoPoints;    rhot = zeros( npoints )
         ##x # Compute the charge density of the core orbitals for the given level
         ##x for  sh in basis.subshells
         ##x     orb  = basis.orbitals[sh]
@@ -775,7 +775,7 @@ module  RadialIntegrals
         function rLowUp()  
             rtuple = Tuple{Int64,Int64}[]
             for  n = 2:grid.orderGL:100000000
-               if   n > grid.nr   break   end
+               if   n > grid.NoPoints   break   end
                push!( rtuple, (n, n+grid.orderGL-1))
             end
             return( rtuple )

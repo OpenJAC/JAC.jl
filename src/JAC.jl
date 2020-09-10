@@ -58,7 +58,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        CartesianVector, CiSettings, CiExpansion, CloseCoupling, compute, convertUnits, Cascade, Compton, Configuration, ConfigurationR, 
        Continuum, CsfR, Coulex, CoulombExcitation, Coulion, CoulombIonization, CoulombBreit, CoulombInteraction,  
        diagonalize, Defaults, DecayYield, Details, Dielectronic, Dierec, Djpq, DoubleAuger,
-       Eimex, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate,
+       Eimex, ElectronCapture, ElecCapture, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate,
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, FullCIeigen,
        generate, GreenSettings, GreenChannel, GreenExpansion, getDefaults, Green, Gui,
@@ -138,6 +138,7 @@ include("module-PhotoExcitation.jl")
 include("module-PhotoIonization.jl")
 include("module-PhotoRecombination.jl")
 include("module-AutoIonization.jl")
+include("module-ElectronCapture.jl")
 include("module-Dielectronic.jl")
 include("module-PhotoExcitationFluores.jl")
 include("module-PhotoExcitationAutoion.jl")

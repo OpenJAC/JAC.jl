@@ -1317,6 +1317,7 @@ module Basics
     export  AbstractEeInteraction, CoulombInteraction, BreitInteraction, CoulombBreit
 
     
+    #==
     """
     `abstract type Basics.AbstractCImethod` 
         ... defines an abstract and a number of singleton types to determine CI matrix solutions.
@@ -1326,7 +1327,7 @@ module Basics
     abstract type  AbstractCImethod                          end
     struct     FullCIeigen          <:  AbstractCImethod     end
     
-    export  AbstractCImethod, FullCIeigen
+    export  AbstractCImethod, FullCIeigen  ==#
 
     
     """
@@ -1431,6 +1432,7 @@ module Basics
     struct    Coulex                <:  AbstractProcess     end
     struct    Coulion               <:  AbstractProcess     end
     struct    Dierec                <:  AbstractProcess     end
+    struct    ElecCapture           <:  AbstractProcess     end
     struct    ImpactExcAuto         <:  AbstractProcess     end
     struct    InternalConv          <:  AbstractProcess     end
     struct    MultiPhotonDE         <:  AbstractProcess     end
@@ -1449,15 +1451,16 @@ module Basics
     struct    RAuger                <:  AbstractProcess     end
     struct    PairA1P               <:  AbstractProcess     end
 
-    export  NoProcess, Auger, AugerInPlasma, Compton, Coulex, Coulion, Dierec, Eimex, ImpactExcAuto, InternalConv, MultiPhotonDE, MultiPI, MultiPDI,
-            Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoInPlasma, PhotoIonAuto, PhotoIonFluor, Radiative, RAuger, 
-            Rec, PairA1P, Coulion
+    export  NoProcess, Auger, AugerInPlasma, Compton, Coulex, Coulion, Dierec, Eimex, ElecCapture, ImpactExcAuto, InternalConv, 
+            MultiPhotonDE, MultiPI, MultiPDI, Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoInPlasma, PhotoIonAuto, 
+            PhotoIonFluor, Radiative, RAuger, Rec, PairA1P, Coulion
 
     function Base.string(propc::NoProcess)          return( "no process" )                         end
     function Base.string(propc::Auger)              return( "Auger" )                              end
     function Base.string(propc::AugerInPlasma)      return( "Auger in plasma" )                    end
     function Base.string(propc::Compton)            return( "Rayleigh-Compton" )                   end
     function Base.string(propc::Dierec)             return( "Dielectronic recombination" )         end
+    function Base.string(propc::ElecCapture)        return( "Electron capture" )                   end
     function Base.string(propc::ImpactExcAuto)      return( "ImpactExcAuto" )                      end
     function Base.string(propc::InternalConv)       return( "InternalConv" )                       end
     function Base.string(propc::MultiPhotonDE)      return( "multi-photon excitation & decay" )    end
@@ -1474,85 +1477,87 @@ module Basics
             
             
     # Functions/methods that are later added to the module Basics
-    function add                                            end
-    function addZerosToCsfR                                 end
-    function analyze                                        end
-    function analyzeConvergence                             end
-    function compute                                        end
-    function computeDiracEnergy                             end
-    function computeMeanSubshellOccupation                  end
-    function computeMultipletForGreenApproach               end
-    function computePotentialCoreHartree                    end
-    function computePotentialHartree                        end
-    function computePotentialHartreeSlater                  end
-    function computePotentialKohnSham                       end
-    function computePotentialDFS                            end
-    function computePotentialExtendedHartree                end
-    function computeScfCoefficients                         end
-    function determineEnergySharings                        end
-    function determineHoleShells                            end
-    function determineParity                                end
-    function determinePolarizationLambda                    end
-    function determinePolarizationVector                    end
-    function determineSelectedLines                         end
-    function determineSelectedPathways                      end
-    function diagonalize                                    end
-    function diracDelta                                     end
-    function display                                        end
-    function displayLevels                                  end
-    function excludeDoubles                                 end
-    function extractNoOpenShells                            end
-    function extractNonrelativisticShellList                end
-    function extractNonrelativisticConfigurations           end
-    function extractNonrelativisticConfigurationFromCsfR    end
-    function extractOpenShellQNfromCsfNR                    end
-    function extractOpenShellQNfromCsfR                     end
-    function extractRelativisticSubshellList                end
-    function extractShellOccupationFromCsfR                 end
-    function generate()                                     end
-    function generateBasis                                  end
-    function generateConfigurations                         end
-    function generateConfigurationsForExcitationScheme      end
-    function generateLevelWithExtraElectron                 end
-    function generateLevelWithExtraSubshell                 end
-    function generateLevelWithSymmetryReducedBasis          end
-    function generateOrbitalsForBasis                       end
-    function generateOrbitalsForPotential                   end
-    function generateOrbitalSuperposition                   end
-    function generateShellList                              end
-    function integrate                                      end
-    function integrateOnGridNewtonCotes                     end
-    function integrateOnGridSimpsonRule                     end
-    function integrateOnGridTrapezRule                      end
-    function interpolateOnGridGrasp92                       end
-    function interpolateOnGridTrapezRule                    end
-    function isSimilar                                      end
-    function isSymmetric                                    end
-    function isStandardSubshellList                         end
-    function isViolated                                     end
-    function isZero                                         end
-    function merge                                          end
-    function modifyLevelEnergies                            end
-    function perform                                        end
-    function performSCF                                     end
-    function performCI                                      end
-    function plot                                           end
-    function read                                           end
-    function readCslFileGrasp92                             end
-    function readOrbitalFileGrasp92                         end
-    function readMixFileRelci                               end
-    function readMixingFileGrasp92                          end
-    function recast                                         end
-    function selectLevel                                    end
-    function selectLevelPair                                end
-    function selectLevelTriple                              end
-    function selectSymmetry                                 end
-    function shiftTotalEnergies                             end
-    function sortByEnergy                                   end
-    function tabulate                                       end
-    function tabulateKappaSymmetryEnergiesDirac             end
-    function tools                                          end
-    function yesno                                          end
+    function add                                                    end
+    function addZerosToCsfR                                         end
+    function analyze                                                end
+    function analyzeConvergence                                     end
+    function compute                                                end
+    function computeDiracEnergy                                     end
+    function computeMeanSubshellOccupation                          end
+    function computeMultipletForGreenApproach                       end
+    function computePotentialCoreHartree                            end
+    function computePotentialHartree                                end
+    function computePotentialHartreeSlater                          end
+    function computePotentialKohnSham                               end
+    function computePotentialDFS                                    end
+    function computePotentialExtendedHartree                        end
+    function computeScfCoefficients                                 end
+    function determineEnergySharings                                end
+    function determineHoleShells                                    end
+    function determineMeanConfigurationEnergy                       end
+    function determineParity                                        end
+    function determinePolarizationLambda                            end
+    function determinePolarizationVector                            end
+    function determineSelectedLines                                 end
+    function determineSelectedPathways                              end
+    function diagonalize                                            end
+    function diracDelta                                             end
+    function display                                                end
+    function displayLevels                                          end
+    function excludeDoubles                                         end
+    function extractNoOpenShells                                    end
+    function extractNonrelativisticShellList                        end
+    function extractNonrelativisticConfigurations                   end
+    function extractNonrelativisticConfigurationFromCsfR            end
+    function extractOpenShellQNfromCsfNR                            end
+    function extractOpenShellQNfromCsfR                             end
+    function extractRelativisticSubshellList                        end
+    function extractShellOccupationFromCsfR                         end
+    function generate()                                             end
+    function generateBasis                                          end
+    function generateConfigurations                                 end
+    function generateConfigurationsForExcitationScheme              end
+    function generateConfigurationsWithElectronCapture              end
+    function generateLevelWithExtraElectron                         end
+    function generateLevelWithExtraSubshell                         end
+    function generateLevelWithSymmetryReducedBasis                  end
+    function generateOrbitalsForBasis                               end
+    function generateOrbitalsForPotential                           end
+    function generateOrbitalSuperposition                           end
+    function generateShellList                                      end
+    function integrate                                              end
+    function integrateOnGridNewtonCotes                             end
+    function integrateOnGridSimpsonRule                             end
+    function integrateOnGridTrapezRule                              end
+    function interpolateOnGridGrasp92                               end
+    function interpolateOnGridTrapezRule                            end
+    function isSimilar                                              end
+    function isSymmetric                                            end
+    function isStandardSubshellList                                 end
+    function isViolated                                             end
+    function isZero                                                 end
+    function merge                                                  end
+    function modifyLevelEnergies                                    end
+    function perform                                                end
+    function performSCF                                             end
+    function performCI                                              end
+    function plot                                                   end
+    function read                                                   end
+    function readCslFileGrasp92                                     end
+    function readOrbitalFileGrasp92                                 end
+    function readMixFileRelci                                       end
+    function readMixingFileGrasp92                                  end
+    function recast                                                 end
+    function selectLevel                                            end
+    function selectLevelPair                                        end
+    function selectLevelTriple                                      end
+    function selectSymmetry                                         end
+    function shiftTotalEnergies                                     end
+    function sortByEnergy                                           end
+    function tabulate                                               end
+    function tabulateKappaSymmetryEnergiesDirac                     end
+    function tools                                                  end
+    function yesno                                                  end
     
 end # module
 

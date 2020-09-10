@@ -69,7 +69,7 @@ using JAC, ..Defaults, ..TestFrames
         @test TestFrames.testModule_Cascade_StepwiseDecay()
         @test TestFrames.testModule_Cascade_PhotonIonization()
         @test TestFrames.testModule_Cascade_PhotonExcitation()
-        @test TestFrames.testModule_Cascade_Simulation()
+        ## @test TestFrames.testModule_Cascade_Simulation()
     end
 
     ## Defaults.setDefaults("print test: close", "")

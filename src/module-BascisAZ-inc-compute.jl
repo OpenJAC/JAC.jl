@@ -381,7 +381,7 @@
         end
         
         # (3) Diagonalize matrix with Julia;   assign a multiplet 
-        eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+        eigen  = Basics.diagonalize("matrix: LinearAlgebra", matrix)
         levels = Level[]
         for  ev = 1:length(eigen.values)
             level = Level( sym.J, AngularM64(sym.J.num//sym.J.den), sym.parity, 0, eigen.values[ev], 0., true, basis, eigen.vectors[ev] ) 
@@ -445,7 +445,7 @@
         end
         
         # (3) Diagonalize matrix with Julia;   assign a multiplet 
-        eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+        eigen  = Basics.diagonalize("matrix: LinearAlgebra", matrix)
         levels = Level[]
         for  ev = 1:length(eigen.values)
             level = Level( sym.J, AngularM64(sym.J.num//sym.J.den), sym.parity, 0, eigen.values[ev], 0., true, basis, eigen.vectors[ev] ) 
@@ -505,7 +505,7 @@
         end
         
         # (3) Diagonalize matrix with Julia;   assign a multiplet 
-        eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+        eigen  = Basics.diagonalize("matrix: LinearAlgebra", matrix)
         levels = Level[]
         for  ev = 1:length(eigen.values)
             level = Level( sym.J, AngularM64(sym.J.num//sym.J.den), sym.parity, 0, eigen.values[ev], 0., true, basis, eigen.vectors[ev] ) 
@@ -530,7 +530,7 @@
             An Radial.Potential with -r * V_CH(r)  is returned to be consistent with an effective charge Z(r).
     """
     function Basics.computePotentialCoreHartree(grid::Radial.Grid, level::Level)
-        basis = level.basis;    npoints = grid.nr
+        basis = level.basis;    npoints = grid.NoPoints
         println("coreSubshells = $(basis.coreSubshells);    subshells = $(basis.subshells)")
         rhoc = zeros( npoints );    wx = zeros( npoints );    wb = zeros( npoints )
         # Compute the charge density of the core orbitals for the given level
@@ -565,7 +565,7 @@
             An Radial.Potential with V_H(r)  is returned that is consistent with an effective charge Z(r).
     """
     function Basics.computePotentialHartree(grid::Radial.Grid, level::Level)
-        basis = level.basis;    npoints = grid.nr;    wx = zeros( npoints )
+        basis = level.basis;    npoints = grid.NoPoints;    wx = zeros( npoints )
         # Sum_a ...
         for  a in basis.subshells
             occa = Basics.computeMeanSubshellOccupation(a, [level])
@@ -594,7 +594,7 @@
             An Radial.Potential with V_HS(r)  is returned that is consistent with an effective charge Z(r).
     """
     function Basics.computePotentialHartreeSlater(grid::Radial.Grid, level::Level)
-        basis = level.basis;    npoints = grid.nr;    wx = zeros( npoints );    rho = zeros( npoints )
+        basis = level.basis;    npoints = grid.NoPoints;    wx = zeros( npoints );    rho = zeros( npoints )
         # Sum_a ...
         for  a in basis.subshells
             occa = Basics.computeMeanSubshellOccupation(a, [level])
@@ -627,7 +627,7 @@
             An Radial.Potential with -r * V_KS(r)  is returned to be consistent with an effective charge Z(r).
     """
     function Basics.computePotentialKohnSham(grid::Radial.Grid, level::Level)
-        basis = level.basis;       npoints = grid.nr
+        basis = level.basis;       npoints = grid.NoPoints
         rhot = zeros( npoints );   wb = zeros( npoints );   wx = zeros( npoints )
         # Compute the charge density of the core orbitals for the given level
         for  sh in basis.subshells
@@ -664,7 +664,7 @@
             An Radial.Potential with -r * V_DFS(r)  is returned to be consistent with an effective charge Z(r).
     """
     function Basics.computePotentialDFS(grid::Radial.Grid, level::Level)
-        basis = level.basis;    npoints = grid.nr
+        basis = level.basis;    npoints = grid.NoPoints
         rhot = zeros( npoints );    wb = zeros( npoints );    wx = zeros( npoints )
         # Compute the charge density of the core orbitals for the given level
         for  sh in basis.subshells
@@ -693,7 +693,7 @@
         ... to compute the same but for the mean occupation of the orbitals in the given basis.
     """
     function Basics.computePotentialDFS(grid::Radial.Grid, basis::Basis)
-        npoints = grid.nr
+        npoints = grid.NoPoints
         rhot = zeros( npoints );    wb = zeros( npoints );    wx = zeros( npoints )
         # Compute the charge density of the core orbitals for the given level
         for  sh in basis.subshells
@@ -724,7 +724,7 @@
             direct and exchange coefficients as the arise from average energy of the configuration.
     """
     function Basics.computePotentialExtendedHartree(grid::Radial.Grid, level::Level)
-        basis = level.basis;    npoints = grid.nr
+        basis = level.basis;    npoints = grid.NoPoints
         rhoab = zeros( npoints );    wx = zeros( npoints );    wg = zeros( npoints )
         # First term Sum_ab ...
         for  a in basis.subshells

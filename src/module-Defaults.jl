@@ -148,6 +148,12 @@ module Defaults
     + `("time: from predefined to atomic unit", value::Float64)`  or  `("time: to atomic", value::Float64)'  ... to convert a
                                                 time value from the predefined to the atomic time unit; a Float64 is returned.
 
+    + `("temperature: from Kelvin to (Hartree) units", value::Float64)`  ... to convert a temperature in Kelvin into atomic (Hartree) units; 
+                                                   a Float64 is returned.
+
+    + `("temperature: from atomic to Kelvin", value::Float64)`  ... to convert an atomic (energy) unit into Kelvin; 1 Hartree = 315774.64 K; 
+                                                   a Float64 is returned.
+
     + `("wave number to total electron energy: atomic units", value::Float64)`  ... to convert a wavenumber (a.u.) into the total electron
                                                 energy, including the rest energy; a Float64 is returned.
 
@@ -239,6 +245,9 @@ module Defaults
             elseif  Defaults.getDefaults("unit: time") == "a.u."            return( wa )
             else    error("stop h")
             end
+        
+        elseif   sa in ["temperature: from Kelvin to (Hartree) units"]      return( wa / 315774.64 )
+        elseif   sa in ["temperature: from atomic to Kelvin"]               return( wa * 315774.64 )
 
         elseif  sa in ["length: from fm to atomic"]                         return (wa / CONVERT_LENGTH_AU_TO_FEMTOMETER )
         elseif  sa in ["length: from atomic to fm"]                         return (wa * CONVERT_LENGTH_AU_TO_FEMTOMETER )
