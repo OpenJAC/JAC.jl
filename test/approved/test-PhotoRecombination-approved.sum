@@ -1,4 +1,4 @@
-Summary file opened at 2020-09-10T09:42: 
+Summary file opened at 2020-09-23T22:05: 
 ========================================   
 
 
@@ -52,7 +52,7 @@ Summary file opened at 2020-09-10T09:42:
   Photorecombination cross sections:
   
   ---------------------------------------------------------------------------------------------------------------------------------------------
-       i-level-f        i--J^P--f       i--Energy--f        omega        Energy e_p     beta^2*    Multipoles         Cou -- Cross section -- Bab    
+       i-level-f        i--J^P--f       i--Energy--f        omega        Energy e_r     beta^2*    Multipoles         Cou -- Cross section -- Bab    
                                              [eV]            [eV]            [eV]       gamma^2                         [barn]          [barn]       
   ---------------------------------------------------------------------------------------------------------------------------------------------
        1 --    1      0 + --> 1/2 +     3.674168e+02    3.774168e+02    1.000000e+01    3.91e-05   E1, M1            4.932977e+03    4.890499e+03    

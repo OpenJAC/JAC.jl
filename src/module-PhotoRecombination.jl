@@ -437,7 +437,7 @@ module PhotoRecombination
         sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
         sa = sa * TableStrings.center(12, "omega"     ; na=4)             
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
-        sa = sa * TableStrings.center(12, "Energy e_p"; na=3)             
+        sa = sa * TableStrings.center(12, "Energy e_r"; na=3)             
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=2)
         if  settings.useIonEnergies
             sa = sa * TableStrings.center(12, "Ion energies"; na=3)             
@@ -492,7 +492,7 @@ module PhotoRecombination
             sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
             sa = sa * TableStrings.center(12, "omega"     ; na=4)             
             sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
-            sa = sa * TableStrings.center(12, "Energy e_p"; na=3)             
+            sa = sa * TableStrings.center(12, "Energy e_r"; na=3)             
             sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
             sa = sa * TableStrings.center(10, "Multipoles"; na=5);                         sb = sb * TableStrings.hBlank(15)
             sa = sa * TableStrings.flushleft(57, "beta's"; na=4)  

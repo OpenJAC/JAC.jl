@@ -3,23 +3,57 @@ println("Dc) Test of the PhotoIonization module with ASF from an internally gene
 #
 setDefaults("print summary: open", "zzz-PhotoIonization.sum")
 setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
-setDefaults("method: normalization, pure Coulomb")   ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
+setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
 if  false
-    # For tutorial
-    defaultSettings = PhotoIonization.Settings()
-    setDefaults("unit: energy", "eV")
-    e1 = convertUnits("energy: to atomic",  600.)
-    e2 = convertUnits("energy: to atomic",  1000.)
+    # Neon subshell cross sections from 10..1000 eV photon energy
+    setDefaults("unit: energy", "eV") # then, give photonEnergies in eV
 
-    photoSettings = PhotoIonization.Settings(defaultSettings, gauges=[UseCoulomb, UseBabushkin], photonEnergies=[e1], 
-                                             calcAnisotropy=true, calcPartialCs=true, printBefore=true)
+    photoSettings = PhotoIonization.Settings(PhotoIonization.Settings(), gauges=[UseCoulomb, UseBabushkin], photonEnergies=[1000.], 
+                                             calcAnisotropy=false, calcPartialCs=false, printBefore=true)
                                          
-    grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 1.3e-2, NoPoints = 1000)
-    wa   = Atomic.Computation(Atomic.Computation(), name="Photoionization of Ar: cross sections + beta's", 
-                              grid=grid, nuclearModel=Nuclear.Model(18.),
-                              initialConfigs=[Configuration("[Ne] 3s^2 3p^6")],
-                              finalConfigs  =[Configuration("[Ne] 3s^2 3p^5")], 
+    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
+    wa   = Atomic.Computation(Atomic.Computation(), name="Photoionization of Ne: subshell cross sections", 
+                              grid=grid, nuclearModel=Nuclear.Model(10.),
+                              initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
+                              finalConfigs  =[Configuration("1s 2s^2 2p^6"), Configuration("1s^2 2s 2p^6"), Configuration("1s^2 2s^2 2p^5")], 
+                              process = Photo(),  processSettings=photoSettings)
+    @show wa
+    perform(wa)                                         
+
+elseif  false
+    # Aluminium subshell cross sections from 10..1000 eV photon energy
+    setDefaults("unit: energy", "eV") # then, give photonEnergies in eV
+
+    photoSettings = PhotoIonization.Settings(PhotoIonization.Settings(), gauges=[UseCoulomb, UseBabushkin], photonEnergies=[12., 20.],
+                                             lineSelection=LineSelection(true, [(1,0), (2,0)], Tuple{LevelSymmetry,LevelSymmetry}[]),
+                                             calcAnisotropy=false, calcPartialCs=false, printBefore=true)
+                                         
+    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
+    wa   = Atomic.Computation(Atomic.Computation(), name="Photoionization of Al: subshell cross sections", 
+                              grid=grid, nuclearModel=Nuclear.Model(13.),
+                              initialConfigs=[Configuration("1s^2 2s^2 2p^6 3s^2 3p")],
+                              finalConfigs  =[Configuration("1s^2 2s^2 2p^6 3s^2")],
+                              ## initialConfigs=[Configuration("1s^2 2s^2 2p^6 3s^2")],
+                              ## finalConfigs  =[Configuration("1s^2 2s 2p^6 3s^2"), Configuration("1s^2 2s^2 2p^5 3s^2"), 
+                              ##                 Configuration("1s^2 2s^2 2p^6 3s")], 
+                              process = Photo(),  processSettings=photoSettings)
+    @show wa
+    perform(wa)                                         
+
+elseif  true
+    # Xenon 4d subshell cross sections from 70..150 eV photon energy
+    setDefaults("unit: energy", "eV") # then, give photonEnergies in eV
+
+    photoSettings = PhotoIonization.Settings(PhotoIonization.Settings(), gauges=[UseCoulomb, UseBabushkin], photonEnergies=[70., 90., 110., 130., 150.],
+                                             ## lineSelection=LineSelection(true, [(1,0), (2,0)], Tuple{LevelSymmetry,LevelSymmetry}[]),
+                                             calcAnisotropy=false, calcPartialCs=false, printBefore=true)
+                                         
+    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 20.0)
+    wa   = Atomic.Computation(Atomic.Computation(), name="Photoionization of xenon: 4d subshell cross sections", 
+                              grid=grid, nuclearModel=Nuclear.Model(54.),
+                              initialConfigs=[Configuration("[Kr] 4d^10 5s^2 5p^6")],
+                              finalConfigs  =[Configuration("[Kr] 4d^9 5s^2 5p^6")],
                               process = Photo(),  processSettings=photoSettings)
     @show wa
     perform(wa)                                         
@@ -39,7 +73,7 @@ elseif false
     photoSettings = PhotoIonization.Settings(defaultSettings, gauges=[UseCoulomb, UseBabushkin], photonEnergies=[e1, e2, e3, e4, e5, e6], ### 
                                              calcAnisotropy=false, calcPartialCs=false, printBefore=true)
                                          
-    grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 0.3e-2, NoPoints = 1200)
+    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
     wa   = Atomic.Computation(Atomic.Computation(), name="Photoionization of Li-like iron", 
                               grid=grid, nuclearModel=Nuclear.Model(26.),
                               initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
@@ -48,7 +82,7 @@ elseif false
     @show wa
     perform(wa)                                         
 
-elseif true
+elseif false
     # Test case 
     defaultSettings = PhotoIonization.Settings()
     setDefaults("unit: energy", "eV")

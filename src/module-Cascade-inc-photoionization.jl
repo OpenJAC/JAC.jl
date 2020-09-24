@@ -113,7 +113,8 @@
         end
         
         # Exclude double configurations as well as those with too high average energy
-        confList = Basics.excludeDoubles(allnewconfList)
+        ##x confList = Basics.excludeDoubles(allnewconfList)
+        confList = unique(allnewconfList)
         newconfList = Configuration[]
         for  conf in confList  
             enconf = -Semiempirical.estimate("binding energy", round(Int64, nm.Z), conf)

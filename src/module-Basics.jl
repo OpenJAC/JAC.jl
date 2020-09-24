@@ -1495,7 +1495,7 @@ module Basics
     function computeScfCoefficients                                 end
     function determineEnergySharings                                end
     function determineHoleShells                                    end
-    function determineMeanConfigurationEnergy                       end
+    function determineMeanEnergy                                    end
     function determineParity                                        end
     function determinePolarizationLambda                            end
     function determinePolarizationVector                            end

@@ -250,7 +250,8 @@
                     wa = generateConfigurationsWith2OuterHoles(conf, holeShell);   append!(newConfList, wa)
                 end
             end
-            if  length(newConfList) > 0    newConfList = Basics.excludeDoubles(newConfList)    end
+            newConfList = unique(newConfList)
+            ##x if  length(newConfList) > 0    newConfList = Basics.excludeDoubles(newConfList)    end
             cList = newConfList
             append!(confList, newConfList)
         end
@@ -260,7 +261,8 @@
             if  conf.NoElectrons + further >= initialNoElectrons   push!(newConfList, conf)    end
         end
         # Add further shake-displacements if appropriate
-        newConfList = Basics.excludeDoubles(newConfList)
+        ##x newConfList = Basics.excludeDoubles(newConfList)
+        newConfList = unique(newConfList)
         return( newConfList )
     end
 

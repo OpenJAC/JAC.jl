@@ -65,8 +65,8 @@ module TableStrings
         elseif   sa == "rate"                 return( "[" * Defaults.GBL_RATE_UNIT   * "]" )
         elseif   sa == "time"                 return( "[" * Defaults.GBL_TIME_UNIT   * "]" )
         elseif   sa == "cross section"        return( "[" * Defaults.GBL_CROSS_SECTION_UNIT * "]" )
-        elseif   sa == "resonance strength"   return( "[" * Defaults.GBL_CROSS_SECTION_UNIT * " " * Defaults.GBL_ENERGY_UNIT * "]" )
-        elseif   sa == "reduced strength"     return( "[" * Defaults.GBL_CROSS_SECTION_UNIT * " " * Defaults.GBL_ENERGY_UNIT * "^2" * "]" )
+        elseif   sa == "strength"             return( "[" * Defaults.GBL_STRENGTH_UNIT * "]" )
+        elseif   sa == "reduced strength"     return( "[" * Defaults.GBL_STRENGTH_UNIT * "^2" * "]" )
         else     error("stop a")
         end
     end

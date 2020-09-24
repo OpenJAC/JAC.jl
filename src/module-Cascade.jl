@@ -363,7 +363,8 @@ module Cascade
             steps due to the considered processes and parallel decay pathes in a cascade.
 
         + process          ::JBasics.AbstractProcess   ... Atomic process that 'acts' in this step of the cascade.
-        + settings         ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings}        
+        + settings         ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings,
+                                   ElectronCapture.Settings}        
                                                        ... Settings for this step of the cascade.
         + initialConfigs   ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state multiplet.
         + finalConfigs     ::Array{Configuration,1}    ... List of one or several configurations that define the final-state multiplet.
@@ -372,7 +373,8 @@ module Cascade
     """
     struct  Step
         process            ::Basics.AbstractProcess
-        settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings}
+        settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings, 
+                                   ElectronCapture.Settings}
         initialConfigs     ::Array{Configuration,1}
         finalConfigs       ::Array{Configuration,1}
         initialMultiplet   ::Multiplet

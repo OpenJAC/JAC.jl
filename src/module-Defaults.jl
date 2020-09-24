@@ -52,6 +52,8 @@ module Defaults
     const CONVERT_TIME_AU_TO_SEC            = 2.418_884_254e-17
     const CONVERT_CROSS_SECTION_AU_TO_BARN  = BOHR_RADIUS_SI^2 * 1.0e28
     const CONVERT_RATE_AU_TO_PER_SEC        = (ELECTRON_MASS_IN_G/HBAR_IN_ERGS) * ((ELECTRON_CHARGE_IN_ESU^2/HBAR_IN_ERGS)^2)
+    const CONVERT_STRENGTH_AU_TO_BARN_EV    = CONVERT_CROSS_SECTION_AU_TO_BARN * HARTREE_ENERGY_EV
+    const CONVERT_STRENGTH_AU_TO_CM2_EV     = BOHR_RADIUS_SI^2 * 1.0e4 * HARTREE_ENERGY_EV
     const CONVERT_LENGTH_AU_TO_FEMTOMETER   = BOHR_RADIUS_SI * 1.0e15
 
     # Predefined coefficients for numerical integration
@@ -77,6 +79,7 @@ module Defaults
     GBL_ENERGY_UNIT             = "eV"
     GBL_CROSS_SECTION_UNIT      = "barn"
     GBL_RATE_UNIT               = "1/s"
+    GBL_STRENGTH_UNIT           = "cm^2 eV"
     GBL_TIME_UNIT               = "sec"
 
     GBL_PRINT_SUMMARY           = false
@@ -139,6 +142,10 @@ module Defaults
     + `("rate: from predefined to atomic unit", value::Float64)`  or  `("rate: to atomic", value::Float64)'... to convert a
                                                     rate value from the predefined to the atomic rate unit; a Float64 is returned.
 
+
+    + `("strength: from atomic to predefined unit", value::Float64)`  or  ("strength: from atomic", value::Float64)  ... to convert a (resonance) 
+                                                    strength value from atomic to the predefined rate unit; a Float64 is returned.
+                                                    
     + `("time: from atomic to predefined unit", value::Float64)`  or  ("time: from atomic", value::Float64)  ... to convert an time value 
                                                 from atomic to the predefined time unit; a Float64 is returned.
 
@@ -226,6 +233,13 @@ module Defaults
             else    error("stop f")
             end
 
+        elseif    sa in ["strength: from atomic to predefined unit", "strength: from atomic"]
+            if       Defaults.getDefaults("unit: strength") == "barn eV"    return( wa * CONVERT_STRENGTH_AU_TO_BARN_EV )
+            elseif   Defaults.getDefaults("unit: strength") == "cm^2 eV"    return( wa * CONVERT_STRENGTH_AU_TO_CM2_EV )
+            elseif   Defaults.getDefaults("unit: strength") == "a.u."       return( wa )
+            else     error("stop fx")
+            end
+            
         elseif  sa in ["time: from atomic to predefined unit", "time: from atomic"]
             if      Defaults.getDefaults("unit: time") == "sec"             return( wa * CONVERT_TIME_AU_TO_SEC )
             elseif  Defaults.getDefaults("unit: time") == "fs"              return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e15 )
@@ -309,6 +323,9 @@ module Defaults
 
     + `("unit: rate", "a.u.")`  or  `("unit: rate", "1/s")`  ... to (pre-) define the unit for the printout of rates.
 
+    + `("unit: resonance strength", "a.u.")`  or  `("unit: resonance strength", "barn eV")`  or  
+      `("unit: resonance strength", "cm^2 eV")`  ... to (pre-) define the unit for the printout of resonance strengths.
+
     + `("unit: time", "a.u.")`  or  `("unit: time", "sec")`  or  `("unit: time", "fs")`  or  `("unit: time", "as")`  
         ... to (pre-) define the unit for the printout and communications of times with the JAC module.
     """
@@ -347,6 +364,10 @@ module Defaults
             units = ["a.u.", "1/s"]
             !(sb in units)    &&    error("Currently supported rate units: $(units)")
             global GBL_RATE_UNIT = sb
+        elseif    sa == "unit: strength"
+            units = ["a.u.", "barn eV", "cm^2 eV"]
+            !(sb in units)    &&    error("Currently supported resonance strength units: $(units)")
+            global GBL_STRENGTH_UNIT = sb
         elseif    sa == "unit: time"
             units = ["a.u.", "sec", "fs", "as"]
             !(sb in units)    &&    error("Currently supported time units: $(units)")
@@ -454,7 +475,7 @@ module Defaults
 
     + `("electron g-factor")`  ... to give the electron g-factor g_s = 2.00232.
 
-    + `("unit: energy")`  or  `("unit: cross section")`  or  `("unit: rate")`  
+    + `("unit: energy")`  or  `("unit: cross section")`  or  `("unit: rate")`  or  `("unit: strength")`  or  `("unit: time")`  
         ... to get the corresponding (user-defined) unit::String for the current computations.
 
     + `("standard grid")`  
@@ -466,7 +487,7 @@ module Defaults
         ... to get the logical flag and stream for printing a summary file; a tupel (flag, iostream) is returned.
     """
     function getDefaults(sa::String)
-        global GBL_FRAMEWORK, GBL_CONTINUUM, GBL_ENERGY_UNIT, GBL_CROSS_SECTION_UNIT, GBL_RATE_UNIT
+        global GBL_FRAMEWORK, GBL_CONTINUUM, GBL_ENERGY_UNIT, GBL_CROSS_SECTION_UNIT, GBL_RATE_UNIT, GBL_STRENGTH_UNIT, GBL_TIME_UNIT
         global ELECTRON_MASS_SI, ELECTRON_MASS_U, FINE_STRUCTURE_CONSTANT, GBL_STANDARD_GRID, GBL_SUMMARY_IOSTREAM, GBL_PRINT_SUMMARY, 
                GBL_TEST_IOSTREAM, GBL_TEST_SUMMARY
 
@@ -480,6 +501,7 @@ module Defaults
         elseif    sa == "unit: energy"                                      return (GBL_ENERGY_UNIT)
         elseif    sa == "unit: cross section"                               return (GBL_CROSS_SECTION_UNIT)
         elseif    sa == "unit: rate"                                        return (GBL_RATE_UNIT)
+        elseif    sa == "unit: strength"                                    return (GBL_STRENGTH_UNIT)
         elseif    sa == "unit: time"                                        return (GBL_TIME_UNIT)
         elseif    sa == "standard grid"                                     return (GBL_STANDARD_GRID)
         elseif    sa == "speed of light: c"                                 return (1.0/FINE_STRUCTURE_CONSTANT)

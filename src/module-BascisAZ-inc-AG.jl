@@ -167,11 +167,11 @@
 
 
     """
-    `Basics.determineMeanConfigurationEnergy(conf::Configuration, orbitals::Dict{Subshell, Orbital}, nm::Nuclear.Model, grid::Radial.Grid)`  
+    `Basics.determineMeanEnergy(conf::Configuration, orbitals::Dict{Subshell, Orbital}, nm::Nuclear.Model, grid::Radial.Grid)`  
         ... to determine the mean energy of a given non-relativistic configuration; this 'mean' energy is calculated as the mean
             energy of all single-CSF levels and by using the the given set of orbitals. A value::Float64 is returned.
     """
-    function Basics.determineMeanConfigurationEnergy(conf::Configuration, orbitals::Dict{Subshell, Orbital}, nm::Nuclear.Model, grid::Radial.Grid)
+    function Basics.determineMeanEnergy(conf::Configuration, orbitals::Dict{Subshell, Orbital}, nm::Nuclear.Model, grid::Radial.Grid)
         asfSettings = AsfSettings();    meanEnergy = 0.;    nlev = 0
         multiplet   = Basics.performCI([conf], orbitals, nm, grid, asfSettings, printout=false)
         for  level in multiplet.levels
@@ -180,6 +180,24 @@
         meanEnergy = meanEnergy / nlev
         
         if true  println(">>> mean energy of $conf  is:  $meanEnergy  [a.u.]")   end
+        
+        return( meanEnergy )
+    end
+
+
+
+    """
+    `Basics.determineMeanEnergy(multiplet::Multiplet)`  
+        ... to determine the mean energy of a given multiplet. A value::Float64 is returned.
+    """
+    function Basics.determineMeanEnergy(multiplet::Multiplet)
+        meanEnergy = 0.;    nlev = 0
+        for  level in multiplet.levels
+            nl = Basics.twice(level.J) + 1;     nlev = nlev + nl;     meanEnergy = meanEnergy + nl * level.energy
+        end  
+        meanEnergy = meanEnergy / nlev
+        
+        if false  println(">>> mean energy of $(nlev)-level multiplet is:  $meanEnergy  [a.u.]")   end
         
         return( meanEnergy )
     end
@@ -540,6 +558,7 @@
     end
 
 
+    #=====
     """
     `Basics.excludeDoubles(confList::Array{Configuration,1})`  
         ... to exlude from the (non-relativistic) confList all 'doubles', ie. configurations that occured before in the list; 
@@ -577,6 +596,7 @@
         end    
         return( csfListNew )
     end
+    =====#
     
         
     """

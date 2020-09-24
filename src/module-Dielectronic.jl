@@ -102,7 +102,8 @@ module Dielectronic
         + captureRate       ::Float64                 ... rate for the electron capture (Auger rate)
         + photonRate        ::EmProperty              ... rate for the photon emission
         + angularBeta       ::EmProperty              ... beta parameter of the photon emission
-        + reducedStrength   ::EmProperty              ... partial resonance strength * Gamma_d of this pathway
+        + reducedStrength   ::EmProperty              ... reduced resonance strength S(i -> d -> f) * Gamma_d of this pathway;
+                                                          this reduced strength does not require the knowledge of Gamma_d for each pathway.
         + hasChannels       ::Bool                    ... Determines whether the individual channels are defined in terms of their possible
                                                           Auger and radiative channels, or not.
         + captureChannels   ::Array{AutoIonization.Channel,1}   ... List of |i> -->  |n>   dielectronic (Auger) capture channels.
@@ -234,14 +235,14 @@ module Dielectronic
     function  computeAmplitudesProperties(pathway::Dielectronic.Pathway, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                           settings::Dielectronic.Settings, hasCaptureChannels::Bool, 
                                           lastCaptureChannels::Array{AutoIonization.Channel,1})
-        rate = 0.
+        rateA = 0.
         println(">> pathway: $(pathway.initialLevel.index)--$(pathway.intermediateLevel.index)--$(pathway.finalLevel.index) ...")
         
         if hasCaptureChannels
             # Simply copy the results from previous computation of the same channels
             newcChannels = deepcopy(lastCaptureChannels)
             for cChannel in newcChannels
-                rate     = rate + conj(cChannel.amplitude) * cChannel.amplitude
+                rateA     = rateA + conj(cChannel.amplitude) * cChannel.amplitude
             end
         else
             newcChannels      = AutoIonization.Channel[];   contSettings = Continuum.Settings(false, nrContinuum)  
@@ -256,7 +257,7 @@ module Dielectronic
                 newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, cChannel.symmetry, newiLevel)
                 newcChannel = AutoIonization.Channel( cChannel.kappa, cChannel.symmetry, phase, Complex(0.))
                 amplitude   = AutoIonization.amplitude(settings.augerOperator, cChannel, newnLevel, newcLevel, grid)
-                rate        = rate + conj(amplitude) * amplitude
+                rateA       = rateA + conj(amplitude) * amplitude
                 newcChannel = AutoIonization.Channel( cChannel.kappa, cChannel.symmetry, phase, amplitude)
                 push!( newcChannels, newcChannel)
             end
@@ -277,13 +278,18 @@ module Dielectronic
             elseif   newpChannel.gauge == Basics.Magnetic    rateB = rateB + abs(amplitude)^2;   rateC = rateC + abs(amplitude)^2
             end
         end
-        captureRate     = 2pi* rate
+        captureRate     = 2pi * rateA
         wa              = 8.0pi * Defaults.getDefaults("alpha") * pathway.photonEnergy / (Basics.twice(pathway.intermediateLevel.J) + 1) * 
                                                                                          (Basics.twice(pathway.finalLevel.J) + 1)
         photonRate      = EmProperty(wa * rateC, wa * rateB)  
         angularBeta     = EmProperty(-9., -9.)
+        #  Factor due to UserGuide
         wa              = Defaults.convertUnits("kinetic energy to wave number: atomic units", pathway.electronEnergy)
-        wa              = 2pi*pi / (wa*wa) * captureRate
+        wa              = pi*pi / (wa*wa) * captureRate  *  # 2 *
+                          (Basics.twice(pathway.intermediateLevel.J) + 1) / (Basics.twice(pathway.initialLevel.J) + 1)
+        #  Factor due to Tu et al. (Plasma Phys., 2016)
+        ## wa              = pi*pi / 2. / pathway.electronEnergy * captureRate * 
+        ##                   (Basics.twice(pathway.intermediateLevel.J) + 1) / (Basics.twice(pathway.initialLevel.J) + 1)
         reducedStrength = EmProperty(wa * photonRate.Coulomb, wa * photonRate.Babushkin)
         pathway = Dielectronic.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, pathway.electronEnergy, 
                                         pathway.photonEnergy, captureRate, photonRate, angularBeta, reducedStrength, true, newcChannels, newpChannels)
@@ -360,7 +366,9 @@ module Dielectronic
                 end
             end
         end
+        #
         # Determine the resonances
+        electronEnergyShift = Defaults.convertUnits("energy: to atomic", settings.electronEnergyShift)
         for  idxTuple in idxTuples
             iLevel = Level();    nLevel = Level();    resonanceEnergy = 0.;    reducedStrength = EmProperty(0., 0.)
             captureRate = 0.;    augerRate = 0.;      photonRate =  EmProperty(0., 0.)
@@ -368,7 +376,7 @@ module Dielectronic
                 if  idxTuple == (pathway.initialLevel.index, pathway.intermediateLevel.index)
                     iLevel            = pathway.initialLevel
                     nLevel            = pathway.intermediateLevel
-                    resonanceEnergy   = pathway.intermediateLevel.energy - pathway.initialLevel.energy
+                    resonanceEnergy   = pathway.intermediateLevel.energy - pathway.initialLevel.energy + electronEnergyShift
                     captureRate       = pathway.captureRate 
                     photonRate        = photonRate + pathway.photonRate
                     reducedStrength   = reducedStrength + pathway.reducedStrength
@@ -432,21 +440,22 @@ module Dielectronic
 
     """
     `Dielectronic.determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
-                                        settings::Dielectronic.Settings)`  
+                                    settings::Dielectronic.Settings)`  
         ... to determine a list of dielectronic-recombination pathways between the levels from the given initial-, intermediate- and 
             final-state multiplets and by taking into account the particular selections and settings for this computation; 
             an Array{Dielectronic.Pathway,1} is returned. Apart from the level specification, all physical properties are set to zero 
             during the initialization process.  
     """
-    function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
-                                settings::Dielectronic.Settings)
+    function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, settings::Dielectronic.Settings)
         pathways = Dielectronic.Pathway[]
+        electronEnergyShift = Defaults.convertUnits("energy: to atomic", settings.electronEnergyShift)
+        photonEnergyShift   = Defaults.convertUnits("energy: to atomic", settings.photonEnergyShift)
         for  iLevel  in  initialMultiplet.levels
             for  nLevel  in  intermediateMultiplet.levels
                 for  fLevel  in  finalMultiplet.levels
                     if  Basics.selectLevelTriple(iLevel, nLevel, fLevel, settings.pathwaySelection)
-                        eEnergy = nLevel.energy - iLevel.energy
-                        pEnergy = nLevel.energy - fLevel.energy
+                        eEnergy = nLevel.energy - iLevel.energy + electronEnergyShift
+                        pEnergy = nLevel.energy - fLevel.energy + photonEnergyShift
                         if  pEnergy < 0.   ||   eEnergy < 0.    continue    end
                         cChannels = Dielectronic.determineCaptureChannels(nLevel, iLevel, settings) 
                         pChannels = Dielectronic.determinePhotonChannels( fLevel, nLevel, settings) 
@@ -553,7 +562,7 @@ module Dielectronic
         #
         #
         #
-        nx = 135
+        nx = 137
         println(stream, " ")
         println(stream, "  Partial resonance strength:")
         println(stream, " ")
@@ -585,7 +594,7 @@ module Dielectronic
             end
             multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles)                          * "                   "
             sa = sa * TableStrings.flushleft(16, mpString[1:15];  na=0)
-            wa = Defaults.convertUnits("cross section: from atomic", 1.0) * Defaults.convertUnits("energy: from atomic", 1.0)
+            wa = Defaults.convertUnits("strength: from atomic", 1.0) * Defaults.convertUnits("energy: from atomic", 1.0)
             sa = sa * @sprintf("%.4e", wa * pathway.reducedStrength.Coulomb)     * "     "
             sa = sa * @sprintf("%.4e", wa * pathway.reducedStrength.Babushkin)   * "     "
             println(stream, sa)
@@ -616,8 +625,8 @@ module Dielectronic
         sb = sb * TableStrings.center(12, TableStrings.inUnits("rate"); na=0)
         sb = sb * TableStrings.center(12, TableStrings.inUnits("rate"); na=6)
         sa = sa * TableStrings.center(30, "Cou -- res. strength -- Bab"; na=3);       
-        sb = sb * TableStrings.center(12, TableStrings.inUnits("resonance strength");  na=0)
-        sb = sb * TableStrings.center(12, TableStrings.inUnits("resonance strength");  na=2)
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("strength");  na=0)
+        sb = sb * TableStrings.center(12, TableStrings.inUnits("strength");  na=2)
         sa = sa * TableStrings.center(18, "Widths Gamma_m"; na=2);       
         sb = sb * TableStrings.center(16, TableStrings.inUnits("energy"); na=6)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
@@ -631,8 +640,8 @@ module Dielectronic
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", resonance.augerRate))                  * "      "
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", resonance.photonRate.Coulomb))         * "  "
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("rate: from atomic", resonance.photonRate.Babushkin))       * "        "
-            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", resonance.resonanceStrength.Coulomb))  * "  "
-            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", resonance.resonanceStrength.Coulomb))  * "     "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("strength: from atomic", resonance.resonanceStrength.Coulomb))    * "  "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("strength: from atomic", resonance.resonanceStrength.Babushkin))  * "     "
             wa = resonance.augerRate + resonance.photonRate.Coulomb 
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", wa))                                 * "   "
             wa = resonance.augerRate + resonance.photonRate.Babushkin 

@@ -2,11 +2,11 @@
 println("Db) Test of the PhotoExcitation module with ASF from an internally generated initial- and final-state multiplet.")
 #
 setDefaults("print summary: open", "zzz-PhotoExcitation.sum")
-wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(36.), 
-                        initialConfigs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
-                        finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
+wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(3.), 
+                        initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
+                        finalConfigs  =[Configuration("1s^2 2s"), Configuration("1s^2 2p")], 
                         process = PhotoExc(), 
-                        processSettings=PhotoExcitation.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, true, true, 
+                        processSettings=PhotoExcitation.Settings([E1, M1], [UseCoulomb, UseBabushkin], true, true, true, true, 
                                                                  LineSelection(), 0., 0., 1.0e6, JAC.ExpStokes(0., 0., 0.) ) )
 
 wb = perform(wa)

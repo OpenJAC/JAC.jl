@@ -107,6 +107,7 @@ module PhotoExcitation
         + initialLevel   ::Level                       ... initial-(state) level
         + finalLevel     ::Level                       ... final-(state) level
         + omega          ::Float64                     ... Transition frequency of this line; can be shifted w.r.t. the level energies.
+        + oscStrength    ::EmProperty                  ... Absorption oscillator strength
         + crossSection   ::EmProperty                  ... Total cross section of this line.
         + staTensor      ::Array{TensorComp,1}         ... Array of statistical tensor components rho_kq
         + hasSublines    ::Bool                        ... Determines whether the individual sublines are defined in terms of their 
@@ -117,6 +118,7 @@ module PhotoExcitation
         initialLevel     ::Level
         finalLevel       ::Level
         omega            ::Float64
+        oscStrength      ::EmProperty
         crossSection     ::EmProperty
         staTensor        ::Array{TensorComp,1}
         hasSublines      ::Bool
@@ -125,11 +127,11 @@ module PhotoExcitation
 
 
     """
-    `PhotoExcitation.Line(initialLevel::Level, finalLevel::Level, photonRate::Float64)`  
+    `PhotoExcitation.Line(initialLevel::Level, finalLevel::Level, omega::Float64, crossSection::EmProperty)`  
         ... constructor an photo-excitation line between a specified initial and final level.
     """
     function Line(initialLevel::Level, finalLevel::Level, omega::Float64, crossSection::EmProperty)
-       Line(initialLevel, finalLevel, omega, crossSection, EmProperty(0., 0.), false, PhotoEmission.Channel[])
+        Line(initialLevel, finalLevel, omega, EmProperty(0., 0.), crossSection, false, PhotoEmission.Channel[])
     end
 
 
@@ -138,6 +140,7 @@ module PhotoExcitation
         println(io, "initialLevel:         $(line.initialLevel)  ")
         println(io, "finalLevel:           $(line.finalLevel)  ")
         println(io, "omega:                $(line.omega)  ")
+        println(io, "oscStrength:          $(line.oscStrength)  ")
         println(io, "crossSection:         $(line.crossSection)  ")
         println(io, "staTensor:            $(line.staTensor)  ")
         println(io, "hasSublines:          $(line.hasSublines)  ")
@@ -151,30 +154,43 @@ module PhotoExcitation
             the amplitudes and properties have now been evaluated.
     """
     function  computeAmplitudesProperties(line::PhotoExcitation.Line, grid::Radial.Grid, settings::PhotoExcitation.Settings; printout::Bool=true)
-        newChannels = PhotoEmission.Channel[];    
+        newChannels = PhotoEmission.Channel[];    Ji2 = Basics.twice(line.initialLevel.J);    Jf2 = Basics.twice(line.finalLevel.J)
         for  channel  in  line.channels
             amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, line.omega, 
                                                 line.finalLevel, line.initialLevel, grid, printout=printout)
-            push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
+            push!( newChannels, PhotoEmission.Channel(channel.multipole, channel.gauge, amplitude) )
+        end
+        # Calculate the absorption oscillator strength
+        oscCoulomb = oscBabushkin = 0.;   omega = line.omega;   alpha = Defaults.getDefaults("alpha")
+        for  channel  in  newChannels
+            ##x wa = line.omega / (Basics.twice(channel.multipole.L) + 1) * (alpha * line.omega)^(2*channel.multipole.L - 2)
+            wa = 8pi * alpha * line.omega / (Ji2 + 1) * (Jf2 + 1)
+            if      channel.gauge == Basics.Coulomb     oscCoulomb   = oscCoulomb    +  channel.amplitude * conj(channel.amplitude) * wa
+            elseif  channel.gauge == Basics.Babushkin   oscBabushkin = oscBabushkin  +  channel.amplitude * conj(channel.amplitude) * wa
+            elseif  channel.gauge == Basics.Magnetic    oscBabushkin = oscBabushkin  +  channel.amplitude * conj(channel.amplitude) * wa
+                                                        oscCoulomb   = oscCoulomb    +  channel.amplitude * conj(channel.amplitude) * wa
+            else    error("stop a")
+            end
         end
         # Calculate the crossSection and stastistical tensors if requested
-        csCoulomb = csBabushkin = 0.
+        csCoulomb = csBabushkin = 0.;   
         for  channel  in  newChannels
             if      channel.gauge == Basics.Coulomb     csCoulomb   = csCoulomb    +  channel.amplitude * conj(channel.amplitude)
             elseif  channel.gauge == Basics.Babushkin   csBabushkin = csBabushkin  +  channel.amplitude * conj(channel.amplitude)
             elseif  channel.gauge == Basics.Magnetic    csBabushkin = csBabushkin  +  channel.amplitude * conj(channel.amplitude)
                                                         csCoulomb   = csCoulomb    +  channel.amplitude * conj(channel.amplitude)
-            else    error("stop a")
+            else    error("stop b")
             end
         end
-        Ji2 = Basics.twice(line.initialLevel.J)
-        csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.omega / (2*(Ji2 + 1))
+        oscFactor    = (Ji2 + 1) / (Jf2 + 1) / 2. * Defaults.getDefaults("speed of light: c")^3 / line.omega^2
+        csFactor     = 2 * pi^3 * Defaults.getDefaults("alpha") / (line.omega * (Ji2 + 1))
+        oscStrength  = EmProperty(oscFactor*oscCoulomb, oscFactor*oscBabushkin)
         crossSection = EmProperty(csFactor*csCoulomb, csFactor*csBabushkin)
         staTensor    = TensorComp[]
         if  settings.calcTensors    push!(staTensor, TensorComp(0, 0, 1.))      end
         
-        line = PhotoExcitation.Line( line.initialLevel, line.finalLevel, line.omega, crossSection, staTensor, true, newChannels)
-        return( line )
+        newLine = PhotoExcitation.Line( line.initialLevel, line.finalLevel, line.omega, oscStrength, crossSection, staTensor, true, newChannels)
+        return( newLine )
     end
 
 
@@ -202,7 +218,6 @@ module PhotoExcitation
         printstyled("PhotoExcitation.computeLines(): The computation of the excitation cross sections, etc. starts now ... \n", color=:light_green)
         printstyled("----------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        ##x Defaults.setDefaults("standard grid", grid)
         lines = PhotoExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
         if  settings.printBefore    PhotoExcitation.displayLines(lines)    end
@@ -213,9 +228,9 @@ module PhotoExcitation
             push!( newLines, newLine)
         end
         # Print all results to screen
-        PhotoExcitation.displayCrossSections(stdout, lines, settings)
+        PhotoExcitation.displayCrossSections(stdout, newLines, settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    PhotoExcitation.displayCrossSections(iostream, lines, settings)   end
+        if  printSummary    PhotoExcitation.displayCrossSections(iostream, newLines, settings)   end
         #
         if    output    return( lines )
         else            return( nothing )
@@ -311,11 +326,11 @@ module PhotoExcitation
         for  iLevel  in  initialMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
                 if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
-                    omega    = abs( fLevel.energy - iLevel.energy) + settings.photonEnergyShift
+                    omega    = fLevel.energy - iLevel.energy + settings.photonEnergyShift
                     if   omega == 0.  ||  omega < settings.mimimumPhotonEnergy  ||  omega > settings.maximumPhotonEnergy    continue   end  
                     channels = PhotoExcitation.determineChannels(fLevel, iLevel, settings)
                     if   length(channels) == 0   continue   end
-                    push!( lines, PhotoExcitation.Line(iLevel, fLevel, omega, EmProperty(0., 0.), TensorComp[], true, channels) )
+                    push!( lines, PhotoExcitation.Line(iLevel, fLevel, omega, EmProperty(0., 0.), EmProperty(0., 0.), TensorComp[], true, channels) )
                 end
             end
         end
@@ -335,7 +350,7 @@ module PhotoExcitation
         println(" ")
         println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
-        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
         sa = sa * TableStrings.center(14, "Energy"; na=4);              
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
@@ -343,8 +358,8 @@ module PhotoExcitation
         println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
-            sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
-                           fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+            sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
@@ -368,25 +383,28 @@ module PhotoExcitation
             is returned otherwise.
     """
     function  displayCrossSections(stream::IO, lines::Array{PhotoExcitation.Line,1}, settings::PhotoExcitation.Settings)
-        nx = 105
+        #
+        # Photoexcitation resonance strength as derived from oscillator strength
+        nx = 122
         println(stream, " ")
-        println(stream, "  Photo-excitation cross sections for (completely) linearly-polarized plane-wave photons:")
+        println(stream, "  Photoexcitation resonance strength as derived from oscillator strength:")
         println(stream, " ")
         println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
-        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
         sa = sa * TableStrings.center(14, "Energy"   ; na=3);               
         sb = sb * TableStrings.center(14,TableStrings.inUnits("energy"); na=3)
-        sa = sa * TableStrings.center(10, "Multipoles"; na=3);                        sb = sb * TableStrings.hBlank(14)
-        sa = sa * TableStrings.center(30, "Cou -- Cross section -- Bab"; na=2);       
-        sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section")*"          "*
-                                              TableStrings.inUnits("cross section"); na=2)
+        sa = sa * TableStrings.center(10, "Multipoles"; na=3);                        sb = sb * TableStrings.hBlank(13)
+        sa = sa * TableStrings.center(24, "Cou -- f_ik -- Bab"; na=1);                        
+        sb = sb * TableStrings.center(24, "     absorption   "; na=2)
+        sa = sa * TableStrings.center(24, "Cou -- S -- Bab"; na=3);                        
+        sb = sb * TableStrings.center(24, "   [Mb eV]     "; na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
-            sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
-                           fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+            sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
             sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
@@ -396,8 +414,46 @@ module PhotoExcitation
             end
             multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
             sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=3)
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Coulomb))     * "    "
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin))   * "    "
+            sa = sa * @sprintf("%.4e", line.oscStrength.Coulomb)   * "   "
+            sa = sa * @sprintf("%.4e", line.oscStrength.Babushkin) * "    "
+            sa = sa * @sprintf("%.4e", line.oscStrength.Coulomb   * 109.761)   * "   "
+            sa = sa * @sprintf("%.4e", line.oscStrength.Babushkin * 109.761)   * "    "
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        #
+        # Photoexcitation cross sections from line strength for (completely) linearly-polarized plane-wave photons
+        nx = 103
+        println(stream, " ")
+        println(stream, "  Photoexcitation cross sections for (completely) linearly-polarized plane-wave photons:  ... not yet correct !!")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(14, "Energy"   ; na=3);               
+        sb = sb * TableStrings.center(14,TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(10, "Multipoles"; na=2);                        sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(28, "Cou -- cross section -- Bab"; na=0);       
+        sb = sb * TableStrings.center(28, TableStrings.inUnits("cross section")*"       "*
+                                          TableStrings.inUnits("cross section"); na=1)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
+        for  line in lines
+            sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
+            multipoles = EmMultipole[]
+            for  ch in line.channels
+                multipoles = push!( multipoles, ch.multipole)
+            end
+            multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
+            sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=5)
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Coulomb))     * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin))   * "    "
             ##x sa = sa * @sprintf("%.6e", line.anisotropy.Coulomb)      * "    "
             ##x sa = sa * @sprintf("%.6e", line.anisotropy.Babushkin)    * "    "
             println(stream, sa)
@@ -408,11 +464,11 @@ module PhotoExcitation
         if  settings.calcForStokes
             stokes = settings.stokes
             println(stream, " ")
-            println(stream, "  Photo-excitation cross sections for incident plane-wave photons with given $stokes:")
+            println(stream, "  Photoexcitation cross sections for incident plane-wave photons with given $stokes:  ... not yet correct !!")
             println(stream, " ")
             println(stream, "  ", TableStrings.hLine(nx))
             sa = "  ";   sb = "  "
-            sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+            sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
             sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
             sa = sa * TableStrings.center(14, "Energy"   ; na=3);               
             sb = sb * TableStrings.center(14,TableStrings.inUnits("energy"); na=3)
@@ -422,8 +478,8 @@ module PhotoExcitation
                                                   TableStrings.inUnits("cross section"); na=2)
             println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
             for  line in lines
-                sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
-                               fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+                sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                             fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
                 sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
                 sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
                 sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
@@ -447,11 +503,11 @@ module PhotoExcitation
             stokes = settings.stokes
             println(stream, " ")
             println(stream, "  Statistical tensors rho_kq  and alignment parameters A_kq for the excitation by incident plane-wave photons")
-            println(stream, "  with given $stokes:")
+            println(stream, "  with given $stokes:  ... not yet correct !!")
             println(stream, " ")
             println(stream, "  ", TableStrings.hLine(nx))
             sa = "  ";   sb = "  "
-            sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+            sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
             sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
             sa = sa * TableStrings.center(14, "Energy"   ; na=3);               
             sb = sb * TableStrings.center(14,TableStrings.inUnits("energy"); na=3)
@@ -461,8 +517,8 @@ module PhotoExcitation
             sa = sa * TableStrings.center(26, "Cou --  A_kq  -- Bab"; na=2);              sb = sb * TableStrings.hBlank(14)   
             println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
             for  line in lines
-                sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
-                               fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+                sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                             fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
                 sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
                 sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
                 sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "

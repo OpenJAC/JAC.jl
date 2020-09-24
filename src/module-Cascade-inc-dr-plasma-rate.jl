@@ -1,6 +1,48 @@
 
     # Functions and methods for cheme::Cascade.DrRateCoefficientScheme computations
 
+
+    """
+    `Cascade.computeSteps(scheme::Cascade.DrRateCoefficientScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
+        ... computes in turn all the requested capture & transition amplitudes as well as ElectronCapture.Line's, AutoIonization.Line's, 
+            etc. for all pre-specified decay steps of the cascade. When compared with standard computations of these atomic 
+            processes, however, the amount of output is largely reduced and often just printed into the summary file. 
+            A set of  data::Cascade.DrRateData  is returned.
+    """
+    function computeSteps(scheme::Cascade.DrRateCoefficientScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
+        linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    linesC = ElectronCapture.Line[];    cOrbitals = Dict{Subshell, Orbital}()
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        nt = 0;   st = 0;   previousMeanEn = 0.
+        for  step  in  stepList
+            st = st + 1
+            nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels)
+            sa = "\n  $st) Perform $(string(step.process)) amplitude computations for up to $nc decay lines (without selection rules): "
+            println(sa);    if  printSummary   println(iostream, sa)   end 
+                                                 
+            if      step.process == Basics.ElecCapture() 
+                # Compute continuum orbitals independently for all transitions in the given block.
+                newLines = ElectronCapture.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
+                                                               step.settings, output=true, printout=false) 
+                append!(linesC, newLines);    nt = length(linesC)
+            elseif  step.process == Basics.Auger() 
+                # Compute continuum orbitals independently for all transitions in the given block.
+                newLines = AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
+                                                              step.settings, output=true, printout=false) 
+                append!(linesA, newLines);    nt = length(linesA)
+            elseif  step.process == Basics.Radiative()
+                newLines = PhotoEmission.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
+                                                             step.settings, output=true, printout=false) 
+                append!(linesR, newLines);    nt = length(linesR)
+            else   error("Unsupported atomic process for cascade computations.")
+            end
+            sa = "     Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, giving now rise " *
+                 "to a total of $nt $(string(step.process)) decay lines."
+            println(sa);    if  printSummary   println(iostream, sa)   end 
+        end
+        #
+        data = Cascade.DrData(linesR, linesA, linesC)
+    end
+
     """
     `Cascade.determineSteps(scheme::Cascade.DrRateCoefficientScheme, comp::Cascade.Computation, 
                             initialList::Array{Cascade.Block,1}, capturedList::Array{Cascade.Block,1})`  
@@ -20,39 +62,31 @@
                         if      process == Basics.ElecCapture()  
                             if  initialBlock.NoElectrons + 1 == capturedBlock.NoElectrons
                                 settings = ElectronCapture.Settings(ElectronCapture.Settings(), maxKappa=2)
-                                push!( stepList, Cascade.Step(process, settings, capturedBlock.confs, initialBlock.confs,
-                                                                                 capturedBlock.multiplet, initialBlock.multiplet) )
-                            end
-                        else    error("stop a")
-                        end
-                    end
-                end
-            end
-            #
-            for  capturedBlock in capturedList
-                for  initialBlock in initialList
-                    for  process  in  comp.scheme.processes
-                        if      process == Basics.Auger()  
-                            if  initialBlock.NoElectrons + 1 == capturedBlock.NoElectrons
-                                settings = AutoIonization.Settings(AutoIonization.Settings(), maxKappa=2)
                                 push!( stepList, Cascade.Step(process, settings, initialBlock.confs,     capturedBlock.confs,
                                                                                  initialBlock.multiplet, capturedBlock.multiplet) )
                             end
-                        else    error("stop b")
+                        elseif  process == Basics.Auger()  
+                            if  initialBlock.NoElectrons + 1 == capturedBlock.NoElectrons
+                                settings = AutoIonization.Settings(AutoIonization.Settings(), maxKappa=2)
+                                push!( stepList, Cascade.Step(process, settings, capturedBlock.confs,     initialBlock.confs,
+                                                                                 capturedBlock.multiplet, initialBlock.multiplet) )
+                            end
                         end
                     end
                 end
             end
             #
-            for  blocka in capturedList
-                for  blockb in capturedList
+            for  (ia, blocka) in enumerate(capturedList)
+                for  (ib, blockb) in enumerate(capturedList)
+                    if   ia == ib   continue     end
                     for  process  in  comp.scheme.processes
                         if      process == Basics.Radiative()  
-                            if  blocka.NoElectrons == blockb.NoElectrons
+                            if  blocka.NoElectrons == blockb.NoElectrons   &&
+                                Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet) > scheme.minPhotonEnergy
+                                @show  Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet)
                                 settings = PhotoEmission.Settings()
                                 push!( stepList, Cascade.Step(process, settings, blocka.confs, blockb.confs, blocka.multiplet, blockb.multiplet) )
                             end
-                        else    error("stop b")
                         end
                     end
                 end
@@ -87,6 +121,7 @@
             for  confa  in confs
                 print("  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")
                 if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")   end
+                    ##x @show confa, comp.asfSettings
                     basis     = Basics.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                     multiplet = Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", [confa],  basis.orbitals, 
                                                comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
@@ -132,7 +167,7 @@
         # Exclude configurations with too high mean energies
         en            = Float64[];   
         for conf in initialConfList
-            wen = Basics.determineMeanConfigurationEnergy(conf, orbitals, nm, grid)
+            wen = Basics.determineMeanEnergy(conf, orbitals, nm, grid)
             push!(en, wen)
         end
         initialMean = sum(en) / length(en)
@@ -140,7 +175,7 @@
         #
         newBlockConfList = Configuration[];  meanEnergies = Float64[]
         for  conf  in  blockConfList    
-            confMean = Basics.determineMeanConfigurationEnergy(conf, orbitals, nm, grid)
+            confMean = Basics.determineMeanEnergy(conf, orbitals, nm, grid)
             if  confMean - initialMean <= scheme.maxElectronEnergy     push!(newBlockConfList, conf)     end
         end
 
@@ -198,18 +233,16 @@
         if  printSummary   Cascade.displaySteps(iostream, we, sa="electron capture and stabilization ")    end      
         wf   = Cascade.modifySteps(we)
         #
-        @warn("check everything beyond this point")
-        #
         data = Cascade.computeSteps(scheme, comp, wf)
         if output    
-            results = Base.merge( results, Dict("name"                       => comp.name) ) 
-            results = Base.merge( results, Dict("cascade scheme"             => comp.scheme) ) 
-            results = Base.merge( results, Dict("initial multiplets:"        => multiplets) )    
-            results = Base.merge( results, Dict("generated multiplets:"      => gMultiplets) )    
-            results = Base.merge( results, Dict("photo-excited line data:"   => data) )
+            results = Base.merge( results, Dict("name"                                  => comp.name) ) 
+            results = Base.merge( results, Dict("cascade scheme"                        => comp.scheme) ) 
+            results = Base.merge( results, Dict("initial multiplets:"                   => multiplets) )    
+            results = Base.merge( results, Dict("generated multiplets:"                 => gMultiplets) )    
+            results = Base.merge( results, Dict("DR capture & stabilization line data:" => data) )
             #
             #  Write out the result to file to later continue with simulations on the cascade data
-            filename = "zzz-cascade-excitation-computations-" * string(Dates.now())[1:13] * ".jld"
+            filename = "zzz-cascade-dr-rate-computations-" * string(Dates.now())[1:13] * ".jld"
             println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
                     "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
             if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *

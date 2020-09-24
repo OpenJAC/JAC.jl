@@ -514,6 +514,8 @@ module Bsplines
                 end
             end
         end
+        
+        ##x Basics.display(stdout, newOrbitals, primitives.grid, longTable=true);   error("stop here")
 
         return( newOrbitals )
     end
@@ -549,11 +551,12 @@ module Bsplines
         exchange         = true
         
         # Start the SCF procedure for all symmetries
-        NoIteration = 0
+        NoIteration = 0;    accuracyScf = 0.
         while  true
             NoIteration = NoIteration + 1;   stopNowIteration = true
             if      NoIteration >  settings.maxIterationsScf
-                    println("Maximum number of SCF iterations = $(settings.maxIterationsScf) is reached ... computations proceed.")
+                    println(">> Maximum number of SCF iterations = $(settings.maxIterationsScf) is reached at accuracy " * 
+                            @sprintf("%.4e", accuracyScf) * " ... computations proceed.")
                     break
             elseif  printout    println("\nIteration $NoIteration for symmetries ... ")
             end
@@ -619,7 +622,7 @@ module Bsplines
                 ##x wx = abs(newOrbital.energy) / energy_1s / (sh.n^2);  @show sh, wx 
                 ##x if  NoIteration  > 2  newOrbital = Basics.generateOrbitalSuperposition(previousOrbitals[sh], newOrbital, 0.2, primitives.grid)   end
                 wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
-                if  wcOrbital > settings.accuracyScf   stopNowIteration = false   end
+                if  wcOrbital > settings.accuracyScf   accuracyScf = wcOrbital;     stopNowIteration = false   end
                 sa = "  $sh::  en [a.u.] = " * @sprintf("%.7e", newOrbital.energy) * ";   self-cons'cy = " * @sprintf("%.4e", wcOrbital) 
                 if  printout    println(sa)    end
                 # (7) Re-define the bsplineBlock as well as the previous orbitals and Bspline vectors
@@ -670,11 +673,12 @@ module Bsplines
         nuclearPotential  = Nuclear.nuclearPotential(nuclearModel, grid)
         
         # Start the SCF procedure for all symmetries
-        isNotSCF = true;   NoIteration = 0
+        isNotSCF = true;   NoIteration = 0;   accuracyScf = 0.
         while  isNotSCF
             NoIteration = NoIteration + 1;   go_on = false 
             if  NoIteration >  settings.maxIterationsScf
-                println("Maximum number of SCF iterations = $(settings.maxIterationsScf) is reached ... computations proceed.")
+                    println(">> Maximum number of SCF iterations = $(settings.maxIterationsScf) is reached at accuracy " * 
+                            @sprintf("%.4e", accuracyScf) * " ... computations proceed.")
                 break
             end
             if  printout    println("\nIteration $NoIteration for symmetries ... ")    end
@@ -705,7 +709,7 @@ module Bsplines
                     elseif  sh.kappa == kappa
                         newOrbital = generateOrbitalFromPrimitives(sh, wc, primitives, nsL, nsS)
                         wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
-                        if  wcOrbital > settings.accuracyScf   go_on = true   end
+                        if  wcOrbital > settings.accuracyScf   accuracyScf = wcOrbital;   go_on = true   end
                            sa = "  $sh::  en [a.u.] = " * @sprintf("%.7e", newOrbital.energy) * ";   self-cons'cy = "  
                            sa = sa * @sprintf("%.4e", wcOrbital)   * "  ["
                            sa = sa * @sprintf("%.4e", wcBlock)             * " for sym-block kappa = $kappa]"

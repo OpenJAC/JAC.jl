@@ -199,9 +199,10 @@ module PhotoIonization
             end
         end
         Ji2 = Basics.twice(line.initialLevel.J)
-        csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.photonEnergy / (2*(Ji2 + 1))
-        csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
-        csFactor     = 4 * pi^2 / Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
+        ##x csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.photonEnergy / (2*(Ji2 + 1))
+        ##x csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
+        ##x csFactor     = 4 * pi^2 / Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
+        csFactor     = 8 * pi^3 / Defaults.getDefaults("alpha") / line.photonEnergy
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         newLine = PhotoIonization.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, 
                                         crossSection, true, newChannels)
@@ -596,8 +597,8 @@ module PhotoIonization
             sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=2)
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Coulomb))     * "    "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin))   * "                 "
-            sa = sa * @sprintf("%.6e", line.crossSection.Coulomb)     * "    "
-            sa = sa * @sprintf("%.6e", line.crossSection.Babushkin)   * "    "
+            ##x sa = sa * @sprintf("%.6e", line.crossSection.Coulomb)     * "    "
+            ##x sa = sa * @sprintf("%.6e", line.crossSection.Babushkin)   * "    "
             println(stream, sa)
         end
         println(stream, "  ", TableStrings.hLine(nx))
