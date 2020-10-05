@@ -220,7 +220,7 @@ module AngularMomentum
 
 
     """
-    `AngularMomentum.isTriangle(ja::AngularJ64, jb::Int64, jc::AngularJ64)`  
+    `AngularMomentum.isTriangle(ja::AngularJ64, jb::AngularJ64, jc::AngularJ64)`  
         ... evaluates to true if Delta(ja,jb,jc) = 1, ie. if the angular momenta ja, jb and jc can couple to each other, 
             and false otherwise.
     """
@@ -231,6 +231,18 @@ module AngularMomentum
         isodd(ja2 + jb2 + jc2)   &&    error("Angular momenta do no fullfill proper coupling rules; 2ja = $ja2, 2jb = $jb2, 2jc = $jc2") 
         if  ja2 + jb2 >= jc2     &&    jc2 + ja2 >= jb2   &&   jb2 + jc2 >= ja2    return( true )
         else                                                                       return( false )
+        end
+    end
+
+
+    """
+    `AngularMomentum.isTriangle(ja::Int64, jb::Int64, jc::Int64)`  
+        ... evaluates to true if Delta(ja,jb,jc) = 1, ie. if the three integer (length) ja, jb and jc can form a triangle, 
+            and false otherwise.
+    """
+    function isTriangle(ja::Int64, jb::Int64, jc::Int64) 
+        if  ja + jb >= jc     &&    jc + ja >= jb   &&   jb + jc >= ja    return( true )
+        else                                                              return( false )
         end
     end
 
@@ -416,6 +428,41 @@ module AngularMomentum
         if  ma.den  == 1    ma2 = 2ma.num   else   ma2 = ma.num   end
         return( ma2 )
     end  ==#
+
+
+    """
+    `AngularMomentum.Wigner_DFunction(j, p, q, alpha::Float64, beta::Float64, gamma::Float64)`  
+        ... calculates the value of a Wigner D^j_pq (alpha, beta, gamma) for given quantum numbers and (Euler) angles 
+            (alpha, beta, gamma). It makes use of the small Wigner d(beta) matrix as the key part.
+            A value::Float64 is returned.
+    """
+    function Wigner_DFunction(j, p, q, alpha::Float64, beta::Float64, gamma::Float64)
+        wa = exp(-im*p*alpha -im*q*gamma) * AngularMomentum.Wigner_dmatrix(j, p, q, beta)
+    end
+
+
+    """
+    `AngularMomentum.Wigner_dmatrix(j, mp, m, beta::Float64)`  
+        ... calculates the value of the small Wigner d^j_m',m (beta) for given quantum numbers and the angle beta.
+            Wigner's formula is applied to evaluate the small Wigner matrix; a value::Float64 is returned.
+    """
+    function Wigner_dmatrix(jj, mmp, mm, beta::Float64)
+        j = Float64(jj);      mp = Float64(mmp);    m = Float64(mm)  
+        if     mod(j+j + mp+mp + m+m, 2.0) != 0.       error("Inappropriate quantum numbers j=$j, mp=$mp, m=$m")   
+        elseif abs(mp) > j    ||   abs(m) > j          return( 0. )
+        end
+        #
+        factor = sqrt( factorial(j+mp) * factorial(j-mp) * factorial(j+m) * factorial(j-m) )
+        wa = 0.
+        for  s = 0:100
+            if  j+m-s < 0  ||  j-mp-s < 0   break       end
+            if  mp - m + s < 0              continue    end
+            wa = wa + (-1)^(mp-m+s) * cos(beta/2.)^(2j+m-mp-2s) * sin(beta/2.)^(mp-m+2s) / 
+                      ( factorial(j+m-s) * factorial(s) * factorial(mp-m+s) * factorial(j-mp-s) )
+        end
+
+        return( factor*wa )
+    end
 
 
     """

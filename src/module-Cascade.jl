@@ -716,7 +716,7 @@ module Cascade
     """
     `Cascade.Simulation(sim::Cascade.Simulation;`
         
-                name=..,               properties=..,             method=..,              settings=..,     computationData=.. )
+                name=..,               property=..,             method=..,              settings=..,     computationData=.. )
                 
         ... constructor for re-defining the computation::Cascade.Simulation.
     """

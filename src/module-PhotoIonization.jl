@@ -267,6 +267,8 @@ module PhotoIonization
         # Calculate all amplitudes and requested properties
         newLines = PhotoIonization.Line[]
         for  line in lines
+            println("\n>> Calculate photoionization amplitudes and properties for line: $(line.initialLevel.index) - $(line.finalLevel.index) " *
+                    "for the photon energy $(Defaults.convertUnits("energy: from atomic", line.photonEnergy)) " * Defaults.GBL_ENERGY_UNIT)
             newLine = PhotoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings) 
             push!( newLines, newLine)
         end
@@ -527,6 +529,7 @@ module PhotoIonization
         sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
         println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
+        nchannels = 0
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                          fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -540,6 +543,7 @@ module PhotoIonization
             for  i in 1:length(line.channels)
                 push!( kappaMultipoleSymmetryList, (line.channels[i].kappa, line.channels[i].multipole, line.channels[i].gauge, 
                                                     line.channels[i].symmetry) )
+                nchannels = nchannels + 1
             end
             ##x println("PhotoIonization-diplayLines-ad: kappaMultipoleSymmetryList = ", kappaMultipoleSymmetryList)
             wa = TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
@@ -549,6 +553,7 @@ module PhotoIonization
             end
         end
         println("  ", TableStrings.hLine(nx), "\n")
+        println("  A total of $nchannels channels need to be calculated. \n")
         #
         return( nothing )
     end
@@ -623,7 +628,7 @@ module PhotoIonization
             sa = sa * TableStrings.center( 7, "M_f"; na=1);                                     sb = sb * TableStrings.hBlank(11)
             sa = sa * TableStrings.center(30, "Cou -- Partial cross section -- Bab"; na=3)      
             sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section") * "          " * 
-                                                  TableStrings.inUnits("cross section"); na=3)
+                                              TableStrings.inUnits("cross section"); na=3)
             println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
             #   
             for  line in lines

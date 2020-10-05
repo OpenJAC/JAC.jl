@@ -13,18 +13,30 @@ module PhotoExcitationAutoion
         ... defines a type for the details and parameters of computing photon-impact excitation-autoionization pathways 
             |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
-        + multipoles              ::Array{Basics.EmMultipole,1}    ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges                  ::Array{Basics.UseGauge,1}       ... Specifies the gauges to be included into the computations.
-        + printBefore             ::Bool                           ... True, if all energies and lines are printed before their evaluation.
-        + pathwaySelection        ::PathwaySelection               ... Specifies the selected levels/pathways, if any.
-        + maxKappa                ::Int64                          ... Maximum kappa value of partial waves to be included.
+        + multipoles              ::Array{Basics.EmMultipole,1} ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges                  ::Array{Basics.UseGauge,1}    ... Specifies the gauges to be included into the computations.
+        + calcPartialCs           ::Bool                        ... Calculate the partial excitation-autoionization cross sections
+                                                                    sigma(i-e-f), and where the direct photoionization is neglected.
+        + calcAngular             ::Bool                        ... Calculate the angular distribution of the resonantly emitted Auger electrons
+                                                                    at selected solid angles.
+        + calcFano                ::Bool                        ... Calculate the Fano parameters of individual cs resonances sigma(i-e-f).
+        + printBefore             ::Bool                        ... True, if all energies and lines are printed before their evaluation.
+        + solidAngles             ::Array{SolidAngle,1}         ... List of solid angles [(theta_1, pho_1), ...].  
+        + electronEnergyShift     ::Float64                     ... An overall energy shift for all electron energies.
+        + maxKappa                ::Int64                       ... Maximum kappa value of partial waves to be included for free electrons.
+        + pathwaySelection        ::PathwaySelection            ... Specifies the selected levels/pathways, if any.
     """
     struct Settings
         multipoles                ::Array{Basics.EmMultipole,1}
         gauges                    ::Array{Basics.UseGauge,1} 
-        printBefore               ::Bool 
-        pathwaySelection          ::PathwaySelection 
+        calcPartialCs             ::Bool
+        calcAngular               ::Bool
+        calcFano                  ::Bool
+        printBefore               ::Bool  
+        solidAngles               ::Array{SolidAngle,1}
+        electronEnergyShift       ::Float64 
         maxKappa                  ::Int64 
+        pathwaySelection          ::PathwaySelection  
     end 
 
 
@@ -33,7 +45,7 @@ module PhotoExcitationAutoion
         ... constructor for the default values of photon-impact excitation-autoionizaton settings.
     """
     function Settings()
-        Settings( Basics.EmMultipole[], UseGauge[], false,  PathwaySelection(), 0)
+        Settings( Basics.EmMultipole[], UseGauge[], false, false, false, false, SolidAngle[], 0., 0, PathwaySelection())
     end
 
 
@@ -42,9 +54,14 @@ module PhotoExcitationAutoion
     function Base.show(io::IO, settings::PhotoExcitationAutoion.Settings) 
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
+        println(io, "calcPartialCs:           $(settings.calcPartialCs)  ")
+        println(io, "calcAngular:             $(settings.calcAngular)  ")
+        println(io, "calcFano:                $(settings.calcFano)  ")
         println(io, "printBefore:             $(settings.printBefore)  ")
-        println(io, "pathwaySelection:        $(settings.pathwaySelection)  ")
+        println(io, "solidAngles:             $(settings.solidAngles)  ")
+        println(io, "electronEnergyShift:     $(settings.electronEnergyShift)  ")
         println(io, "maxKappa:                $(settings.maxKappa)  ")
+        println(io, "pathwaySelection:        $(settings.pathwaySelection)  ")
     end
 
 
@@ -58,12 +75,10 @@ module PhotoExcitationAutoion
         + finalLevel          ::Level           ... final-(state) level
         + excitEnergy         ::Float64         ... photon excitation energy of this pathway
         + electronEnergy      ::Float64         ... energy of the (finally outgoing, scattered) electron
-        + crossSection        ::EmProperty      ... total cross section of this pathway
-        + hasChannels         ::Bool            
-            ... Determines whether the individual excitation and autoionization channels are defined in terms of their multipole, 
-                gauge, free-electron kappa, phases and the total angular momentum/parity as well as the amplitude, or not.
-        + excitChannels       ::Array{PhotoEmission.Channel,1}  ... List of excitation channels of this pathway.
-        + augerChannels       ::Array{AutoIonization.Channel,1} ... List of Auger channels of this pathway.
+        + partialCs           ::EmProperty      ... partial cross section sigma(i-e-f) of this pathway
+        + qFano               ::EmProperty      ... Fano-q parameter of a resonance (i-e-f)
+        + excitChannels       ::Array{PhotoEmission.Channel,1}      ... List of excitation channels of this pathway.
+        + augerChannels       ::Array{AutoIonization.Channel,1}     ... List of Auger channels of this pathway.
     """
     struct  Pathway
         initialLevel          ::Level
@@ -71,8 +86,8 @@ module PhotoExcitationAutoion
         finalLevel            ::Level
         excitEnergy           ::Float64
         electronEnergy        ::Float64
-        crossSection          ::EmProperty
-        hasChannels           ::Bool
+        partialCs             ::EmProperty
+        qFano                 ::EmProperty 
         excitChannels         ::Array{PhotoEmission.Channel,1}  
         augerChannels         ::Array{AutoIonization.Channel,1}
     end 
@@ -84,7 +99,7 @@ module PhotoExcitationAutoion
             and final level.
     """
     function Pathway()
-        Pathway(Level(), Level(), Level(), 0., 0., EmProperty(0., 0.), false, PhotoEmission.Channel[], AutoIonization.Channel[] )
+        Pathway(Level(), Level(), Level(), 0., 0., EmProperty(0., 0.), EmProperty(0., 0.), PhotoEmission.Channel[], AutoIonization.Channel[] )
     end
 
 
@@ -96,10 +111,10 @@ module PhotoExcitationAutoion
         println(io, "finalLevel:                 $(pathway.finalLevel)  ")
         println(io, "excitEnergy                 $(pathway.excitEnergy)  ") 
         println(io, "electronEnergy              $(pathway.electronEnergy)  ")
-        println(io, "crossSection:               $(pathway.crossSection)  ")
-        println(io, "hasChannels:                $(pathway.hasChannels)  ")
-        println(io, "excitEnergy:                $(pathway.excitEnergy)  ")
-        println(io, "augerEnergy:                $(pathway.augerEnergy)  ")
+        println(io, "partialCs:                  $(pathway.partialCs)  ")
+        println(io, "qFano:                      $(pathway.qFano)  ")
+        println(io, "excitChannels:              $(pathway.excitChannels)  ")
+        println(io, "augerChannels:              $(pathway.augerChannels)  ")
     end
 
 
@@ -117,14 +132,14 @@ module PhotoExcitationAutoion
         for eChannel in pathway.excitChannels
             amplitude   = PhotoEmission.amplitude("absorption", eChannel.multipole, eChannel.gauge, pathway.excitEnergy, 
                                                   pathway.intermediateLevel, pathway.initialLevel, grid)
-             push!( neweChannels, PhotoEmission.Channel( eChannel.multipole, eChannel.gauge, amplitude))
+            push!( neweChannels, PhotoEmission.Channel( eChannel.multipole, eChannel.gauge, amplitude))
         end
         # Compute all AutoIonization decay channels
         newaChannels = AutoIonization.Channel[];   contSettings = Continuum.Settings(false, nrContinuum)
         for aChannel in pathway.augerChannels
-            newnLevel   = Basics.generateLevelWithSymmetryReducedBasis(pathway.intermediateLevel)
+            newnLevel   = Basics.generateLevelWithSymmetryReducedBasis(pathway.intermediateLevel, pathway.intermediateLevel.basis.subshells)
             newnLevel   = Basics.generateLevelWithExtraSubshell(Subshell(101, aChannel.kappa), newnLevel)
-            newfLevel   = Basics.generateLevelWithSymmetryReducedBasis(pathway.finalLevel)
+            newfLevel   = Basics.generateLevelWithSymmetryReducedBasis(pathway.finalLevel, pathway.finalLevel.basis.subshells)
             cOrbital, phase  = Continuum.generateOrbitalForLevel(pathway.electronEnergy, Subshell(101, aChannel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel   = Basics.generateLevelWithExtraElectron(cOrbital, aChannel.symmetry, newfLevel)
             newcChannel = AutoIonization.Channel( aChannel.kappa, aChannel.symmetry, phase, Complex(0.))
@@ -133,9 +148,10 @@ module PhotoExcitationAutoion
             push!( newaChannels, AutoIonization.Channel( aChannel.kappa, aChannel.symmetry, phase, amplitude))
         end
         #
-        crossSection = EmProperty(-1., -1.)
+        partialCs = EmProperty(-1., -1.)
+        qFano     = EmProperty(-2., -2.)
         pathway = PhotoExcitationAutoion.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, 
-                                                  pathway.excitEnergy, pathway.electronEnergy, crossSection, true, neweChannels, newaChannels)
+                                                  pathway.excitEnergy, pathway.electronEnergy, partialCs, qFano, neweChannels, newaChannels)
         return( pathway )
     end
 
@@ -156,7 +172,7 @@ module PhotoExcitationAutoion
         #
         pathways = PhotoExcitationAutoion.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
-        if  settings.printBefore    PhotoExcitationAutoion.displayPathways(pathways)    end
+        if  settings.printBefore    PhotoExcitationAutoion.displayPathways(stdout, pathways, settings)    end
         # Determine maximum (electron) energy and check for consistency of the grid
         maxEnergy = 0.;   for  pathway in pathways   maxEnergy = max(maxEnergy, pathway.electronEnergy)   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -166,9 +182,15 @@ module PhotoExcitationAutoion
             push!( newPathways, PhotoExcitationAutoion.computeAmplitudesProperties(pathway, nm, grid, nrContinuum, settings) )
         end
         # Print all results to screen
-        PhotoExcitationAutoion.displayResults(stdout, newPathways)
+        if  settings.calcPartialCs      PhotoExcitationAutoion.displayPartialCs(stdout, newPathways)         end
+        if  settings.calcAngular        PhotoExcitationAutoion.displayAngular(stdout, newPathways)           end
+        if  settings.calcFano           PhotoExcitationAutoion.displayFanoParameters(stdout, newPathways)    end
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    PhotoExcitationAutoion.displayResults(iostream, newPathways)   end
+        if  printSummary    
+            if  settings.calcPartialCs      PhotoExcitationAutoion.displayPartialCs(iostream, newPathways)         end
+            if  settings.calcAngular        PhotoExcitationAutoion.displayAngular(iostream, newPathways)           end
+            if  settings.calcFano           PhotoExcitationAutoion.displayFanoParameters(iostream, newPathways)    end
+        end
         #
         if    output    return( newPathways )
         else            return( nothing )
@@ -193,52 +215,54 @@ module PhotoExcitationAutoion
                     if  Basics.selectLevelTriple(iLevel, nLevel, fLevel, settings.pathwaySelection)
                         eEnergy = nLevel.energy - iLevel.energy
                         aEnergy = nLevel.energy - fLevel.energy
+                        ##x @show eEnergy, aEnergy
                         if  eEnergy < 0.   ||   aEnergy < 0    continue    end
                         rSettings = PhotoEmission.Settings( settings.multipoles, settings.gauges, false, false, LineSelection(), 0., 0., 0.)
                         eChannels = PhotoEmission.determineChannels(nLevel, iLevel, rSettings) 
+                        ##x @show length(eChannels)
                         aSettings = AutoIonization.Settings( false, false, LineSelection(), 0., 0., settings.maxKappa, CoulombInteraction())
                         aChannels = AutoIonization.determineChannels(fLevel, nLevel, aSettings) 
-                        push!( pathways, PhotoExcitationAutoion.Pathway(iLevel, nLevel, fLevel, eEnergy, aEnergy, EmProperty(0., 0.), 
-                                                                        true, eChannels, aChannels) )
+                        ##x @show length(aChannels), settings.maxKappa, fLevel.energy, nLevel.energy
+                        push!( pathways, PhotoExcitationAutoion.Pathway(iLevel, nLevel, fLevel, eEnergy, aEnergy, EmProperty(0., 0.), EmProperty(0., 0.), 
+                                                                        eChannels, aChannels) )
                     end
                 end
             end
         end
+        ##x @show length(pathways)
         return( pathways )
     end
 
 
     """
-    `PhotoExcitationAutoion.displayPathways(pathways::Array{PhotoExcitationAutoion.Line,1})`  
+    `PhotoExcitationAutoion.displayPathways(stream::IO, pathways::Array{PhotoExcitationAutoion.Line,1}, settings::PhotoExcitationAutoion.Settings)`  
         ... to display a list of pathways and channels that have been selected due to the prior settings. A neat table of 
             all selected transitions and energies is printed but nothing is returned otherwise.
     """
-    function  displayPathways(pathways::Array{PhotoExcitationAutoion.Pathway,1})
-        nx = 170
-        println(" ")
-        println("  Selected photo-excitation-autoionization pathways:")
-        println(" ")
-        println("  ", TableStrings.hLine(nx))
-        sa = "     ";   sb = "     "
-        sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);          
-        sa = sa * TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=3);
-        sa = sa * TableStrings.center(14, "Energy m-i"; na=4);              
-        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-        sa = sa * TableStrings.center(14, "Energy m-f"; na=3);              
-        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=3)
+    function  displayPathways(stream::IO, pathways::Array{PhotoExcitationAutoion.Pathway,1}, settings::PhotoExcitationAutoion.Settings)
+        nx = 158
+        println(stream, " ")
+        println(stream, "  Selected photo-excitation-autoionization pathways to be calculated:")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "    ";   sb = "    "
+        sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i   --   e   --   f"; na=1);          
+        sa = sa * TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * TableStrings.center(23, "i   --   e   --   f"; na=1);
+        sa = sa * TableStrings.center(30, " Energies  " * TableStrings.inUnits("energy"); na=0);              
+        sb = sb * TableStrings.center(30, "  e--i         e--f    "; na=0)
         sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
         sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
-            sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
-                           msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
-                           fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
+            sa  = " ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
+                          msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
+                          fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
             sa = sa * TableStrings.center(23, TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=2)
-            sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))   * "    "
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "   "
+            sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4) 
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))    * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "    "
             kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
             for  ech in pathway.excitChannels
                 for  ach in pathway.augerChannels
@@ -247,58 +271,156 @@ module PhotoExcitationAutoion
                 end
             end
             wa = TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
-            if  length(wa) > 0    sb = sa * wa[1];    println( sb )    end  
-            for  i = 2:length(wa)
-                sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
-            end
+            if      length(wa) == 0                       println(stream,  sa ) 
+            elseif  length(wa) > 0    sb = sa * wa[1];    println(stream,  sb )                                 end  
+            for  i = 2:length(wa)   sb = TableStrings.hBlank( length(sa) ) * wa[i];    println(stream,  sb )    end
         end
-        println("  ", TableStrings.hLine(nx))
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        println(stream, "\n  + Given solid angles:  $(settings.solidAngles) ")
+        if settings.calcPartialCs  println(stream, "  + Calculate the partial cross sections sigma(i-e-f) at the given solid angles.")           end
+        if settings.calcAngular    println(stream, "  + Calculate the angular distribution of the Auger electrons at the given solid angles.")   end
+        if settings.calcFano       println(stream, "  + Calculate the Fano parameters of the cross section resonance sigma(i-e-f).")             end
         #
         return( nothing )
     end
 
 
     """
-    `PhotoExcitationAutoion.displayResults(stream::IO, pathways::Array{PhotoExcitationAutoion.Line,1})`  
+    `PhotoExcitationAutoion.displayAngular(stream::IO, pathways::Array{PhotoExcitationAutoion.Pathway,1})`  
         ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but 
             nothing is returned otherwise.
     """
-    function  displayResults(stream::IO, pathways::Array{PhotoExcitationAutoion.Pathway,1})
+    function  displayAngular(stream::IO, pathways::Array{PhotoExcitationAutoion.Pathway,1})
         nx = 135
         println(stream, " ")
-        println(stream, "  Partial photo-excitation & autoionization cross sections:")
+        println(stream, "  Angular parameters of electrons following the photo-excitation & autoionizationof resonances: ... to be adapted !!")
         println(stream, " ")
         println(stream, "  ", TableStrings.hLine(nx))
-        sa = "     ";   sb = "     "
-        sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=2);          
-        sa = sa * TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=3);
-        sa = sa * TableStrings.center(14, "Energy m-i"; na=4);              
-        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-        sa = sa * TableStrings.center(14, "Energy m-f"; na=3);              
-        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=3)
+        sa = "    ";   sb = "    "
+        sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i   --   e   --   f"; na=1);          
+        sa = sa * TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * TableStrings.center(23, "i   --   e   --   f"; na=1);
+        sa = sa * TableStrings.center(30, " Energies  " * TableStrings.inUnits("energy"); na=0);              
+        sb = sb * TableStrings.center(30, "  e--i         e--f    "; na=0)
         sa = sa * TableStrings.center(10, "Multipoles"; na=3);                        sb = sb * TableStrings.hBlank(14)
         sa = sa * TableStrings.center(30, "Cou -- Cross sections -- Bab"; na=2);       
         sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section")*"          "*
                                               TableStrings.inUnits("cross section"); na=2)
-        println(stream, sa);    println(stream, sb);    println("  ", TableStrings.hLine(nx)) 
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
-            sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
+            sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                            msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
                            fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
             sa = sa * TableStrings.center(23, TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
                                                                               pathway.finalLevel.index); na=2)
             sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))    * "    "
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))    * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "    "
             multipoles = EmMultipole[]
             for  ech in pathway.excitChannels
                 multipoles = push!( multipoles, ech.multipole)
             end
             multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
             sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=3)
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection.Coulomb))     * "    "
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection.Babushkin))   * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", pathway.partialCs.Coulomb))     * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", pathway.partialCs.Babushkin))   * "    "
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        return( nothing )
+    end
+
+
+
+    """
+    `PhotoExcitationAutoion.displayFanoParameters(stream::IO, pathways::Array{PhotoExcitationAutoion.Pathway,1})`  
+        ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but 
+            nothing is returned otherwise.
+    """
+    function  displayFanoParameters(stream::IO, pathways::Array{PhotoExcitationAutoion.Pathway,1})
+        nx = 135
+        println(stream, " ")
+        println(stream, "  Fano parameters of photo-excited Auger resonances: ... to be adapted !!")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "    ";   sb = "    "
+        sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i   --   e   --   f"; na=1);          
+        sa = sa * TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * TableStrings.center(23, "i   --   e   --   f"; na=1);
+        sa = sa * TableStrings.center(30, " Energies  " * TableStrings.inUnits("energy"); na=0);              
+        sb = sb * TableStrings.center(30, "  e--i         e--f    "; na=0)
+        sa = sa * TableStrings.center(10, "Multipoles"; na=3);                        sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(30, "Cou -- Cross sections -- Bab"; na=2);       
+        sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section")*"          "*
+                                          TableStrings.inUnits("cross section"); na=2)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
+        for  pathway in pathways
+            sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
+                           msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
+                           fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
+            sa = sa * TableStrings.center(23, TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
+                                                                              pathway.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))    * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "    "
+            multipoles = EmMultipole[]
+            for  ech in pathway.excitChannels
+                multipoles = push!( multipoles, ech.multipole)
+            end
+            multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
+            sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=3)
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", pathway.partialCs.Coulomb))     * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", pathway.partialCs.Babushkin))   * "    "
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        return( nothing )
+    end
+
+
+
+    """
+    `PhotoExcitationAutoion.displayPartialCs(stream::IO, pathways::Array{PhotoExcitationAutoion.Pathway,1})`  
+        ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but 
+            nothing is returned otherwise.
+    """
+    function  displayPartialCs(stream::IO, pathways::Array{PhotoExcitationAutoion.Pathway,1})
+        nx = 135
+        println(stream, " ")
+        println(stream, "  Partial photo-excitation & autoionization cross sections: ... to be adapted !!")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "    ";   sb = "    "
+        sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i   --   e   --   f"; na=1);          
+        sa = sa * TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * TableStrings.center(23, "i   --   e   --   f"; na=1);
+        sa = sa * TableStrings.center(30, " Energies  " * TableStrings.inUnits("energy"); na=0);              
+        sb = sb * TableStrings.center(30, "  e--i         e--f    "; na=0)
+        sa = sa * TableStrings.center(10, "Multipoles"; na=3);                        sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(30, "Cou -- Cross sections -- Bab"; na=2);       
+        sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section")*"          "*
+                                          TableStrings.inUnits("cross section"); na=2)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
+        for  pathway in pathways
+            sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
+                           msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
+                           fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
+            sa = sa * TableStrings.center(23, TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
+                                                                              pathway.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))    * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.electronEnergy)) * "    "
+            multipoles = EmMultipole[]
+            for  ech in pathway.excitChannels
+                multipoles = push!( multipoles, ech.multipole)
+            end
+            multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
+            sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=3)
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", pathway.partialCs.Coulomb))     * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", pathway.partialCs.Babushkin))   * "    "
             println(stream, sa)
         end
         println(stream, "  ", TableStrings.hLine(nx))

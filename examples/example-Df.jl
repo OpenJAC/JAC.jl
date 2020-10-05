@@ -1,8 +1,5 @@
 
 #
-#=
-Example: Test of the Dielectronic module      
-=#
 println("Df) Test of the Dielectronic module with ASF from an internally generated initial-, intermediate and final-state multiplets.")
 #
 setDefaults("print summary: open", "zzz-Dielectronic.sum")
@@ -22,7 +19,7 @@ if  false
                             finalConfigs        = [Configuration("1s^2 2s"),  Configuration("1s^2 2p")],  
                             process = Dierec(), processSettings = drSettings )
 
-wb = perform(wa)
+    wb = perform(wa)
 
 elseif  false
     # K-LL DR into initially Be-like tungsten; comparison with Tu et al. (PP, 2016)
@@ -37,7 +34,7 @@ elseif  false
                             finalConfigs        = [Configuration("1s^2 2s^2 2p")],  
                             process = Dierec(), processSettings = drSettings )
 
-wb = perform(wa)
+    wb = perform(wa)
 
 elseif  false
     # K-LL DR into initially O-like tungsten; comparison with Tu et al. (PP, 2016)
@@ -53,7 +50,7 @@ elseif  false
                             finalConfigs        = [Configuration("1s^2 2s^2 2p^5")],  
                             process = Dierec(), processSettings = drSettings )
 
-wb = perform(wa)
+    wb = perform(wa)
 
 elseif  true
     # K-LL DR into initially He-like carbon; comparison with Xu et al. (PRA, 2016)
@@ -74,7 +71,7 @@ elseif  true
                             initialAsfSettings  = asfSettings, finalAsfSettings=asfSettings,
                             process = Dierec(), processSettings = drSettings)
 
-wb = perform(wa)
+    wb = perform(wa)
 
 elseif  false
     # DR if initially Li-like Beryllium; comparison with Mohamed et al. (PRA, 2002) ... however difficult and the identification of resonances and
@@ -92,7 +89,7 @@ elseif  false
                                                  Configuration("1s^2 2s 3s"), Configuration("1s^2 2s 3p"),  Configuration("1s^2 2s 3d")],  
                             process = Dierec(), processSettings = drSettings )
 
-wb = perform(wa)
+    wb = perform(wa)
 
 elseif  false
     # DR strength for sodium-like silicon: Comparison with Schmidt et al. (PRA, 2007) ... need to be  adapted
@@ -110,40 +107,37 @@ wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel
                         processSettings=Dielectronic.Settings([E1, M1, M2, E2], [JAC.UseCoulomb, JAC.UseBabushkin], true, 
                                                               false, Tuple{Int64,Int64,Int64}[(1,10,1), (1,10,7)], 0., 0., 0., CoulombInteraction())  )
 
-wb = perform(wa)
+    wb = perform(wa)
 
 elseif  false
+    # Need to be adapted !!!
+    refConfigs = [Configuration("[Ne] 3s")]
+    fromShells = [Shell("3s")]
+    toShells   = [Shell("3s"), Shell("3p"), Shell("3d"), Shell("4s"), Shell("4p"), Shell("4d"), Shell("4f"), Shell("5s")]
+    intermediateConfigs = Basics.generateConfigurations(refConfigs, fromShells, toShells)
+    grid=JAC.Radial.Grid(true)
+    #== grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 5.0e-2, NoPoints = 2000)
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(74.0, "Fermi"), 
+                            configs=[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p"), Configuration("1s^2 2p^2"), Configuration("1s^2 2s 3s"), 
+                                    Configuration("1s^2 2s 3p"), Configuration("1s^2 2s 3d"), Configuration("1s^2 2p 3s"), Configuration("1s^2 2p 3p"), 
+                                    Configuration("1s^2 2p 3d")],
+                            ## configs=[Configuration("1s^2 2s"), Configuration("1s^2 2p"), 
+                            ##          Configuration("1s^2 7s"), Configuration("1s^2 7p"), Configuration("1s^2 7d"), Configuration("1s^2 7f")], 
+                            asfSettings=AsfSettings(AsfSettings(), scField=Basics.DFSField())  ) ==#
 
-refConfigs = [Configuration("[Ne] 3s")]
-fromShells = [Shell("3s")]
-toShells   = [Shell("3s"), Shell("3p"), Shell("3d"), Shell("4s"), Shell("4p"), Shell("4d"), Shell("4f"), Shell("5s")]
-intermediateConfigs = Basics.generateConfigurations(refConfigs, fromShells, toShells)
-grid=JAC.Radial.Grid(true)
-#== grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 5.0e-2, NoPoints = 2000)
-wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(74.0, "Fermi"), 
-                        configs=[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p"), Configuration("1s^2 2p^2"), Configuration("1s^2 2s 3s"), 
-                                 Configuration("1s^2 2s 3p"), Configuration("1s^2 2s 3d"), Configuration("1s^2 2p 3s"), Configuration("1s^2 2p 3p"), 
-                                 Configuration("1s^2 2p 3d")],
-                        ## configs=[Configuration("1s^2 2s"), Configuration("1s^2 2p"), 
-                        ##          Configuration("1s^2 7s"), Configuration("1s^2 7p"), Configuration("1s^2 7d"), Configuration("1s^2 7f")], 
-                        asfSettings=AsfSettings(AsfSettings(), scField=Basics.DFSField())  ) ==#
+    grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 5.0e-2, NoPoints = 1500)
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(74.0), 
+                            initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p"), 
+                                            Configuration("1s^2 7s"), Configuration("1s^2 7p"), Configuration("1s^2 7d"), Configuration("1s^2 7f")],
+                            intermediateConfigs=[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p"), Configuration("1s^2 2p 7s"), Configuration("1s^2 2p 7p"),  
+                                                Configuration("1s^2 2p 7d"), Configuration("1s^2 2p 7f")],  
+                            finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p"), Configuration("1s^2 2s 7s"), Configuration("1s^2 2s 7p"),  
+                                            Configuration("1s^2 2s 7d"), Configuration("1s^2 2s 7f")],
+                            process = Dierec(), 
+                            processSettings=Dielectronic.Settings([E1], [JAC.UseCoulomb, JAC.UseBabushkin], true, 
+                                                                false, Tuple{Int64,Int64,Int64}[(1,10,1), (1,10,7)], 0., 0., 0., CoulombInteraction())  )
 
-grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 5.0e-2, NoPoints = 1500)
-wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(74.0), 
-                        initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p"), 
-                                        Configuration("1s^2 7s"), Configuration("1s^2 7p"), Configuration("1s^2 7d"), Configuration("1s^2 7f")],
-                        intermediateConfigs=[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p"), Configuration("1s^2 2p 7s"), Configuration("1s^2 2p 7p"),  
-                                             Configuration("1s^2 2p 7d"), Configuration("1s^2 2p 7f")],  
-                        finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p"), Configuration("1s^2 2s 7s"), Configuration("1s^2 2s 7p"),  
-                                        Configuration("1s^2 2s 7d"), Configuration("1s^2 2s 7f")],
-                        process = Dierec(), 
-                        processSettings=Dielectronic.Settings([E1], [JAC.UseCoulomb, JAC.UseBabushkin], true, 
-                                                              false, Tuple{Int64,Int64,Int64}[(1,10,1), (1,10,7)], 0., 0., 0., CoulombInteraction())  )
-
-wb = perform(wa)
-
-@show wa
-wb = perform(wa)
+    wb = perform(wa)
 
 end
 setDefaults("print summary: close", "")

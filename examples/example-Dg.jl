@@ -2,14 +2,23 @@
 println("Dg) Test of the PhotoExcitationFluores module with ASF from an internally generated initial-, intermediate and final-state multiplets.")
 #
 setDefaults("print summary: open", "zzz-PhotoExcitationFluores.sum")
-wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
-                        initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
-                        intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
-                        finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
-                        process = PhotoExcFluor(), 
-                        processSettings=PhotoExcitationFluores.Settings()  )
 
-wb = perform(wa)
+if  true
+    # 1s photoexcitation of Li-like carbon
+    asfSettings   = AsfSettings(AsfSettings(), scField=Basics.HSField())  # not used
+    excSettings   = PhotoExcitationFluores.Settings([E1], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, true, true, 
+                                                    [SolidAngle(1.0, 0.0)], 0., PathwaySelection())
+    grid          = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 5.0e-2, rbox = 10.0)
+    setDefaults("unit: rate", "1/s")  
+
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(6.), 
+                            initialConfigs      = [Configuration("1s^2 2s")],
+                            intermediateConfigs = [Configuration("1s 2s 2p")],
+                            finalConfigs        = [Configuration("1s^2 2s")], 
+                            process = PhotoExcFluor(),  processSettings = excSettings  )
+
+    wb = perform(wa)
+end
 setDefaults("print summary: close", "")
 
 

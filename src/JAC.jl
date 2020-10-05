@@ -3,7 +3,8 @@
 #  Use Jupyter notebooks:      using IJulia;   notebook()
 #  Activation:                 ];   pkg> up;   pkg> activate
 #  Working with JAC:           using Revise;   using JAC;   include("../src/jac.jl");   pkg> test
-#
+#  
+#  Copy to desktop             scp -r JAC.jl/ stephan@10.140.117.58:./fri/
 """
 `module JAC`  
     ... Jena Atomic Calculator (JAC) provides tools for performing atomic (structure) calculations at various degrees of complexity 
@@ -80,7 +81,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RAuger, RasSettings, RasStep, 
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation,
        RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
-       SchiffMoment, Semiempirical, setDefaults, Shell, Spectroscopy, SphericalTensor, 
+       SchiffMoment, Semiempirical, setDefaults, Shell, SolidAngle, Spectroscopy, SphericalTensor, 
        StartFromHydrogenic, StartFromPrevious, StrongField, Subshell,
        tabulate, TestFrames, Triangle, tools,
        UseCoulomb, UseBabushkin, UseGauge,

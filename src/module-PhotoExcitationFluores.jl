@@ -5,7 +5,7 @@
 """
 module PhotoExcitationFluores 
 
-    using Printf, ..AutoIonization, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
+    using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
 
     """
     `struct  PhotoExcitationFluores.Settings`  
@@ -14,13 +14,25 @@ module PhotoExcitationFluores
 
         + multipoles              ::Array{EmMultipole,1}   ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge,1}      ... Specifies the gauges to be included into the computations.
+        + calcPhotonDm            ::Bool                   ... Calculate the reduced density matrix of the fluorescence photon.
+        + calcAngular             ::Bool                   ... Calculate the angular distribution of the fluorescence photon.
+        + calcStokes              ::Bool                   ... Calculate the Stokes parameters of the fluorescence photon.
+                                                               In all these (three) cases, the atoms and incident plane-wave photons are
+                                                               assumed to be unpolarized initially.
         + printBefore             ::Bool                   ... True, if all energies and lines are printed before their evaluation.
+        + solidAngles             ::Array{SolidAngle,1}    ... List of solid angles [(theta_1, pho_1), ...].  
+        + photonEnergyShift       ::Float64                ... An overall energy shift for all photon energies.
         + pathwaySelection        ::PathwaySelection       ... Specifies the selected levels/pathways, if any.
     """
     struct Settings
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge,1} 
+        calcPhotonDm              ::Bool
+        calcAngular               ::Bool
+        calcStokes                ::Bool 
         printBefore               ::Bool  
+        solidAngles               ::Array{SolidAngle,1}
+        photonEnergyShift         ::Float64  
         pathwaySelection          ::PathwaySelection
      end 
 
@@ -30,7 +42,7 @@ module PhotoExcitationFluores
         ... constructor for the default values of photon-impact excitation-autoionizaton settings.
     """
     function Settings()
-        Settings( Basics.EmMultipole[], UseGauge[], false,  PathwaySelection() )
+        Settings( Basics.EmMultipole[], UseGauge[], false, false, false, false, SolidAngle[], 0., PathwaySelection() )
     end
 
 
@@ -39,7 +51,12 @@ module PhotoExcitationFluores
     function Base.show(io::IO, settings::PhotoExcitationFluores.Settings) 
         println(io, "multipoles:              $(settings.multipoles)  ")
         println(io, "gauges:                  $(settings.gauges)  ")
+        println(io, "calcPhotonDm:            $(settings.calcPhotonDm)  ")
+        println(io, "calcAngular:             $(settings.calcAngular)  ")
+        println(io, "calcStokes:              $(settings.calcStokes)  ")
         println(io, "printBefore:             $(settings.printBefore)  ")
+        println(io, "solidAngles:             $(settings.solidAngles)  ")
+        println(io, "photonEnergyShift:       $(settings.photonEnergyShift)  ")
         println(io, "pathwaySelection:        $(settings.pathwaySelection)  ")
     end
 
@@ -110,7 +127,7 @@ module PhotoExcitationFluores
         for eChannel in pathway.excitChannels
             amplitude   = PhotoEmission.amplitude("absorption", eChannel.multipole, eChannel.gauge, pathway.excitEnergy, 
                                                   pathway.intermediateLevel, pathway.initialLevel, grid)
-             push!( neweChannels, PhotoEmission.Channel( eChannel.multipole, eChannel.gauge, amplitude))
+            push!( neweChannels, PhotoEmission.Channel( eChannel.multipole, eChannel.gauge, amplitude))
         end
         # Compute all fluorescence channels
         newfChannels = PhotoEmission.Channel[]
@@ -118,6 +135,7 @@ module PhotoExcitationFluores
             amplitude   = PhotoEmission.amplitude("emission", fChannel.multipole, fChannel.gauge, pathway.fluorEnergy, 
                                                   pathway.finalLevel, pathway.intermediateLevel, grid)
             push!( newfChannels, PhotoEmission.Channel( fChannel.multipole, fChannel.gauge, amplitude))
+            ##x @show  "aa", amplitude
         end
         crossSection = EmProperty(-1., -1.)
         pathway = PhotoExcitationFluores.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, pathway.excitEnergy, 
@@ -126,12 +144,69 @@ module PhotoExcitationFluores
     end
 
 
+    """
+    `PhotoExcitationFluores.computePhotonDm(pathway::PhotoExcitationFluores.Pathway, settings::PhotoExcitationFluores.Settings)`  
+        ... to compute the photon density matrix of the fluorescence photon in Coulomb gauge for the given pathway as well as 
+            for all the selected solid angles. An Float64 array A(n_solidAngles, 6) is returned with the following meaning:
+                (theta_1, phi_1, rho(1,1),  rho(1,-1),  rho(-1,1),  rho(-1,-1),         for array elements (n, 1..6)
+                 theta_2, phi_2, rho(1,1),  rho(1,-1),  rho(-1,1),  rho(-1,-1), ... )
+    """
+    function  computePhotonDm(pathway::PhotoExcitationFluores.Pathway, settings::PhotoExcitationFluores.Settings)
+        # Calculate an individual element of the photon density matrix at a given angle
+        function computePhotonDmElement(pathway, rho_kq::Float64, solidAngle::SolidAngle, lambda::Int64, lambdap::Int64)
+            meCoulomb = 0.0+0.0im;      meBabushkin = 0.0+0.0im;    Je = pathway.intermediateLevel.J;    Jf = pathway.finalLevel.J
+            for  ch in pathway.fluorChannels
+                L = ch.multipole.L;   if  ch.multipole.electric  p = 1   else   p = 0   end
+                for  chp in pathway.fluorChannels
+                    Lp = chp.multipole.L;   if  chp.multipole.electric  pp = 1   else   pp = 0   end
+                    for  k = 0:10
+                        if  !AngularMomentum.isTriangle(L, Lp, k)  ||   !AngularMomentum.isTriangle(Je, Je, AngularJ64(k))    continue    end
+                        if  ch.gauge == Basics.Babushkin  ||    chp.gauge == Basics.Babushkin                                 continue    end 
+                        for  q = 0:10
+                            for  qp = 0:10
+                                if  lambda - lambdap  != -qp    continue    end
+                                meCoulomb = meCoulomb + AngularMomentum.Wigner_DFunction(k,-q,qp, solidAngle.phi, solidAngle.theta, 0.0) * rho_kq *
+                                                        im^(Lp + pp  - L - p) * lambda^p * lambdap^pp * sqrt((2L+1)*(2Lp+1))                      *
+                                                        (-1)^(Basics.twice(Jf)/2 + Basics.twice(Je)/2 + k+q+1)                                    *
+                                                        AngularMomentum.ClebschGordan(L, lambda, Lp, -lambdap, k, -qp)                            * 
+                                                        AngularMomentum.Wigner_6j(L, Lp, k, Je, Je, Jf)                                           *
+                                                        ch.amplitude * conj(chp.amplitude)
+                                ##x @show rho_kq, ch.amplitude, chp.amplitude
+                                ##x @show AngularMomentum.Wigner_DFunction(k,-q,qp, solidAngle.phi, solidAngle.theta, 0.0)
+                                ##x @show im^(Lp + pp  - L - p) * lambda^p * lambdap^pp * sqrt((2L+1)*(2Lp+1))
+                                ##x @show AngularMomentum.ClebschGordan(L, lambda, Lp, -lambdap, k, -qp)  
+                                ##x @show AngularMomentum.Wigner_6j(L, Lp, k, Je, Je, Jf)
+                            end
+                        end
+                    end
+                end
+            end
+            meCoulomb = 2*pi * meCoulomb
+            
+            return( meCoulomb, meBabushkin )
+        end
+        
+        dmArray = zeros(ComplexF64, length(settings.solidAngles), 6)
+        # Calculate rho_kq (alpha_e, J_e) of the excited level
+        rho_kq = 2.0
+        # Compute in turn all the corresponding photon density matrix elements
+        for  (s, solidAngle) in enumerate(settings.solidAngles)
+            dmArray[s,1] = solidAngle.theta;    dmArray[s,2] = solidAngle.phi    
+            dmArray[s,3] = computePhotonDmElement(pathway, rho_kq, solidAngle, 1, 1)[1]   
+            dmArray[s,4] = computePhotonDmElement(pathway, rho_kq, solidAngle, 1,-1)[1]   
+            dmArray[s,5] = computePhotonDmElement(pathway, rho_kq, solidAngle,-1, 1)[1]  
+            dmArray[s,6] = computePhotonDmElement(pathway, rho_kq, solidAngle,-1,-1)[1]   
+        end
+        
+        return( dmArray )
+    end
+
 
     """
     `PhotoExcitationFluores.computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                             grid::Radial.Grid, settings::PhotoExcitationFluores.Settings; output=true)`  
         ... to compute the photo-excitation-fluorescence amplitudes and all properties as requested by the given settings. A list of
-            lines::Array{PhotoExcitationFluores.Lines} is returned.
+            pathways::Array{PhotoExcitationFluores.Pathway,1} is returned.
     """
     function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
                               settings::PhotoExcitationFluores.Settings; output=true)
@@ -141,7 +216,7 @@ module PhotoExcitationFluores
         println("")
         pathways = PhotoExcitationFluores.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
         # Display all selected pathways before the computations start
-        if  settings.printBefore    PhotoExcitationFluores.displayPathways(pathways)    end
+        if  settings.printBefore    PhotoExcitationFluores.displayPathways(stdout, pathways, settings)    end
         # Calculate all amplitudes and requested properties
         newPathways = PhotoExcitationFluores.Pathway[]
         ##x println("computePathways: NO-pathwayS = $(length(pathways)) ")
@@ -151,10 +226,20 @@ module PhotoExcitationFluores
             push!( newPathways, newPathway)
         end
         # Print all results to screen
-        PhotoExcitationFluores.displayResults(stdout, pathways, settings)
+        PhotoExcitationFluores.displayResults(stdout, newPathways, settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   PhotoExcitationFluores.displayResults(iostream, pathways, settings)     end
+        if  printSummary   PhotoExcitationFluores.displayResults(iostream, newPathways, settings)     end
         #
+        # Calculate the photon density matrix of the fluorescence photon if needed and display all requested properties
+        # These calculations are done in turn for all selected pathways
+        if  settings.calcPhotonDm  ||  settings.calcAngular  ||  settings.calcStokes
+            for  pathway in newPathways
+                dmArray = PhotoExcitationFluores.computePhotonDm(pathway, settings) 
+                PhotoExcitationFluores.displayPhotonDm(stdout, pathway, dmArray, settings)
+                if  printSummary   PhotoExcitationFluores.displayPhotonDm(stdout, pathway, dmArray, settings)     end
+            end
+        end
+        
         if    output    return( pathways )
         else            return( nothing )
         end
@@ -176,8 +261,8 @@ module PhotoExcitationFluores
             for  nLevel  in  intermediateMultiplet.levels
                 for  fLevel  in  finalMultiplet.levels
                     if  Basics.selectLevelTriple(iLevel, nLevel, fLevel, settings.pathwaySelection)
-                        eEnergy = nLevel.energy - iLevel.energy
-                        fEnergy = nLevel.energy - fLevel.energy
+                        eEnergy = nLevel.energy - iLevel.energy + settings.photonEnergyShift
+                        fEnergy = nLevel.energy - fLevel.energy + settings.photonEnergyShift
                         if  eEnergy < 0.   ||   fEnergy < 0.    continue    end
                         rSettings = PhotoEmission.Settings( settings.multipoles, settings.gauges, false, false, LineSelection(), 0., 0., 0.)
                         eChannels = PhotoEmission.determineChannels(nLevel, iLevel, rSettings) 
@@ -191,29 +276,100 @@ module PhotoExcitationFluores
         return( pathways )
     end
 
+    
+    """
+    `PhotoExcitationFluores.displayPhotonDm(stream::IO, pathway::PhotoExcitationFluores.Pathway, dmArray::Array{ComplexF64,2}, 
+                                            settings::PhotoExcitationFluores.Settings)`  
+        ... to display all requested properties for the given pathway that are related to the photon density matrix of the fluorescence
+            photon. One or a few neat tables are printed but nothing is returned otherwise.
+    """
+    function  displayPhotonDm(stream::IO, pathway::PhotoExcitationFluores.Pathway, dmArray::Array{ComplexF64,2}, settings::PhotoExcitationFluores.Settings)
+        isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
+        msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
+        fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
+        #
+        println(stream, "\n\n  Properties of the fluorescence photon related to its density matrix for pathway:" * 
+                TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, pathway.finalLevel.index) *
+                          "\n  --------------------------------------------------------------------------------")
+        println(stream, " ")
+        println(stream, "  + Symmetries of pathway: " * TableStrings.symmetries_imf(isym, msym, fsym))
+        println(stream, "  + Excitation and fluorescence energies of pathway " * TableStrings.inUnits("energy") * ":  " *
+                @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))             * ",  " *
+                @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.fluorEnergy))  )
+        #
+        # Display the density matrix of the fluorescence photon if requested
+        if  settings.calcPhotonDm
+            nx = 119
+            println(stream, "\n  + Photon density matrix:")
+            println(stream, "  ", TableStrings.hLine(nx))
+            sa = "    theta       phi               rho(1,1)               rho(1,-1)              rho(-1,1)              rho(-1,-1) ";   
+            println(stream, sa)
+            println(stream, "  ", TableStrings.hLine(nx))
+            for  i = 1:size(dmArray, 1)
+                sa = "    " * @sprintf("%.4e", dmArray[i,1].re) * "  " * @sprintf("%.4e", dmArray[i,2].re) * "  " * 
+                              @sprintf("%.4e", dmArray[i,3].re) * " "  * @sprintf("%.4e", dmArray[i,3].im) * "  " * 
+                              @sprintf("%.4e", dmArray[i,4].re) * " "  * @sprintf("%.4e", dmArray[i,4].im) * "  " * 
+                              @sprintf("%.4e", dmArray[i,5].re) * " "  * @sprintf("%.4e", dmArray[i,5].im) * "  " * 
+                              @sprintf("%.4e", dmArray[i,6].re) * " "  * @sprintf("%.4e", dmArray[i,6].im)
+                println(stream, sa)
+            end
+            println(stream, "  ", TableStrings.hLine(nx))
+        end
+        #
+        # Display the angular distribution of the fluorescence photon if requested
+        if  settings.calcAngular
+            nx = 44
+            println(stream, "\n  + Angular distribution:")
+            println(stream, "  ", TableStrings.hLine(nx))
+            sa = "    theta       phi           W(theta, phi)   ";   println(stream, sa)
+            println(stream, "  ", TableStrings.hLine(nx))
+            for  i = 1:size(dmArray, 1)
+                sa = "    " * @sprintf("%.4e", dmArray[i,1].re) * "  " * @sprintf("%.4e", dmArray[i,2].re) * "    " * 
+                              @sprintf("%.4e", dmArray[i,3].re + dmArray[i,6].re)
+                println(stream, sa)
+            end
+            println(stream, "  ", TableStrings.hLine(nx))
+        end
+        #
+        # Display the Stokes parameters of the fluorescence photon if requested
+        if  settings.calcStokes
+            nx = 67
+            println(stream, "\n  + Stokes parameters:")
+            println(stream, "  ", TableStrings.hLine(nx))
+            sa = "    theta       phi                P_1         P_2         P_3";   println(stream, sa)
+            println(stream, "  ", TableStrings.hLine(nx))
+            for  i = 1:size(dmArray, 1)
+                p1 = -(dmArray[i,4] + dmArray[i,5]) / (dmArray[i,3] + dmArray[i,6])
+                p2 =  (dmArray[i,5] - dmArray[i,4]) / (dmArray[i,3] + dmArray[i,6]) * (0.0+1.0im)
+                p3 =  (dmArray[i,4] - dmArray[i,5]) / (dmArray[i,3] + dmArray[i,6])
+                sa = "    " * @sprintf("%.4e", dmArray[i,1].re) * "  " * @sprintf("%.4e", dmArray[i,2].re) * "    " * 
+                              @sprintf("%.4e", p1.re)           * "  " * @sprintf("%.4e", p2.re)           * "  "   *  @sprintf("%.4e", p3.re)
+                println(stream, sa)
+            end
+            println(stream, "  ", TableStrings.hLine(nx))
+        end
+        
+        return( nothing )
+    end
+    
 
     """
-    `PhotoExcitationFluores.displayResults(stream::IO, pathways::Array{PhotoExcitationFluores.Pathway,1}, 
-                                           settings::PhotoExcitationFluores.Settings)`  
-        ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing 
-            is returned otherwise.
+    `PhotoExcitationFluores.displayPathways(stream::IO, pathways::Array{PhotoExcitationFluores.Pathway,1}, settings::PhotoExcitationFluores.Settings)`  
+        ... to list the energies and multipoles of the selected pathways. A neat table is printed but nothing is returned otherwise.
     """
-    function  displayResults(stream::IO, pathways::Array{PhotoExcitationFluores.Pathway,1}, settings::PhotoExcitationFluores.Settings)
-        nx = 150
+    function  displayPathways(stream::IO, pathways::Array{PhotoExcitationFluores.Pathway,1}, settings::PhotoExcitationFluores.Settings)
+        nx = 110
         println(stream, " ")
-        println(stream, "  Partial excitation & fluorescence cross sections:")
+        println(stream, "  Partial excitation & fluorescence (emission) amplitudes to be calculated:")
         println(stream, " ")
         println(stream, "  ", TableStrings.hLine(nx))
         sa = "    ";   sb = "    "
         sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  e  --  f"; na=2);          
         sa = sa * TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * TableStrings.center(23, "i  --  e  --  f"; na=2);
-        sa = sa * TableStrings.center(30, "Energies  " * TableStrings.inUnits("energy"); na=4);              
-        sb = sb * TableStrings.center(30, "r--i        r--f  "; na=4)
-        sa = sa * TableStrings.center(30, "Multipoles"; na=4);        
-        sb = sb * TableStrings.center(38, "i--r        r--f  "; na=4)
-        sa = sa * TableStrings.center(36, "Cou -- cross sections -- Bab";        na=2)
-        sb = sb * TableStrings.center(36, TableStrings.inUnits("cross section") * "          " * 
-                                              TableStrings.inUnits("cross section"); na=3)
+        sa = sa * TableStrings.center(30, " Energies  " * TableStrings.inUnits("energy"); na=4);              
+        sb = sb * TableStrings.center(30, "  e--i         e--f  "; na=2)
+        sa = sa * TableStrings.flushleft(30, "Multipoles"; na=0);        
+        sb = sb * TableStrings.flushleft(30, "i--e           e--f  "; na=2)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  pathway in pathways
@@ -224,21 +380,81 @@ module PhotoExcitationFluores
                                                                               pathway.finalLevel.index); na=3)
             sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))      * "   "
-            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.fluorEnergy))      * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.fluorEnergy))      * "     "
             #
             multipoles = EmMultipole[]
             for  ech in pathway.excitChannels
                 multipoles = push!( multipoles, ech.multipole)
             end
             multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles)            * "                   "
-            sa = sa * TableStrings.flushleft(16, mpString[1:16];  na=2)
+            sa = sa * TableStrings.flushleft(14, mpString[1:14];  na=1)
             #
             multipoles = EmMultipole[]
             for  fch in pathway.fluorChannels
                 multipoles = push!( multipoles, fch.multipole)
             end  
             multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles)             * "                   "
-            sa = sa * TableStrings.flushleft(16, mpString[1:16];  na=2)
+            sa = sa * TableStrings.flushleft(14, mpString[1:14];  na=2)
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        println(stream, "\n  + Given solid angles:  $(settings.solidAngles) ")
+        if settings.calcPhotonDm  println(stream, "  + Calculate the photon density matrix of the fluorescence photon at the given solid angles.")    end
+        if settings.calcAngular   println(stream, "  + Calculate the angular distribution of the fluorescence photon at the given solid angles.")     end
+        if settings.calcStokes    println(stream, "  + Calculate the Stokes parameters of the fluorescence photon at the given solid angles.")        end
+        #
+        return( nothing )
+    end
+
+
+    """
+    `PhotoExcitationFluores.displayResults(stream::IO, pathways::Array{PhotoExcitationFluores.Pathway,1}, 
+                                           settings::PhotoExcitationFluores.Settings)`  
+        ... to list all results, energies, cross sections, etc. of the selected lines. A neat table is printed but nothing 
+            is returned otherwise.
+    """
+    function  displayResults(stream::IO, pathways::Array{PhotoExcitationFluores.Pathway,1}, settings::PhotoExcitationFluores.Settings)
+        nx = 146
+        println(stream, " ")
+        println(stream, "  Partial excitation & fluorescence cross sections:")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "    ";   sb = "    "
+        sa = sa * TableStrings.center(23, "Levels"; na=2);            sb = sb * TableStrings.center(23, "i  --  e  --  f"; na=2);          
+        sa = sa * TableStrings.center(23, "J^P symmetries"; na=0);    sb = sb * TableStrings.center(23, "i  --  e  --  f"; na=2);
+        sa = sa * TableStrings.center(30, " Energies  " * TableStrings.inUnits("energy"); na=4);              
+        sb = sb * TableStrings.center(30, "  e--i         e--f  "; na=2)
+        sa = sa * TableStrings.flushleft(30, "Multipoles"; na=0);        
+        sb = sb * TableStrings.flushleft(30, "i--e           e--f  "; na=2)
+        sa = sa * TableStrings.center(30, "Cou -- cross sections -- Bab";        na=2)
+        sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section") * "      " * 
+                                          TableStrings.inUnits("cross section"); na=2)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
+        for  pathway in pathways
+            sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
+                           msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
+                           fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
+            sa = sa * TableStrings.center(23, TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
+                                                                              pathway.finalLevel.index); na=3)
+            sa = sa * TableStrings.center(23, TableStrings.symmetries_imf(isym, msym, fsym);  na=4)
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.excitEnergy))      * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", pathway.fluorEnergy))      * "     "
+            #
+            multipoles = EmMultipole[]
+            for  ech in pathway.excitChannels
+                multipoles = push!( multipoles, ech.multipole)
+            end
+            multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles)            * "                   "
+            sa = sa * TableStrings.flushleft(14, mpString[1:14];  na=1)
+            #
+            multipoles = EmMultipole[]
+            for  fch in pathway.fluorChannels
+                multipoles = push!( multipoles, fch.multipole)
+            end  
+            multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles)             * "                   "
+            sa = sa * TableStrings.flushleft(14, mpString[1:14];  na=5)
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection.Coulomb))     * "  "
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", pathway.crossSection.Babushkin))   * "  "
             println(stream, sa)
