@@ -2,15 +2,21 @@
 println("Di) Test of the RayleighCompton module with ASF from an internally generated initial-, intermediate and final-state multiplets.")
 #
 setDefaults("print summary: open", "zzz-RayleighCompton.sum")
-wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
-                        initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
-                        intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
-                        finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
-                        process = Compton(), 
-                        processSettings=RayleighCompton.Settings()  )
 
-wb = perform(wa)
+if  true
+    # Rayleigh scattering on the ground-configuration levels of B-like neon
+    asfSettings      = AsfSettings(AsfSettings(), scField=Basics.HSField())  # not used
+    rayleighSettings = RayleighCompton.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10., 100.], 2., true, true, true, 
+                                                ExpStokes(), [SolidAngle(1.0, 0.0)], LineSelection())
+    grid             = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 5.0e-2, rbox = 10.0)
+    setDefaults("unit: rate", "1/s")  
+    
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(10.), 
+                            initialConfigs=[Configuration("1s^2 2s^2 2p")],
+                            finalConfigs  =[Configuration("1s^2 2s^2 2p")], 
+                            process = Compton(), processSettings = rayleighSettings )
+    @show wa
+    wb = perform(wa)
+end
+
 setDefaults("print summary: close", "")
-
-
-## [E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], false, false, false, true, true, Tuple{Int64,Int64,Int64}[(1,1,0), (1,2,0), (1,2,0)], 0., 0., 0., CoulombInteraction()
