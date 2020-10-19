@@ -516,10 +516,14 @@ module Details
     + Dielectronic.Settings             ... settings for computing dielectronic recombination lines.
     + DecayYield.Outcome                ... outcome of a decay yield computation.
     + DecayYield.Settings               ... settings for computing decay yields lines.
-    + DoubleAuger.Channel               ... DoubleAuger channel of two partial outgoing waves with well-defined energy.
-    + DoubleAuger.Line                  ... DoubleAuger line between (two) specified initial- and final-state levels and with (possible) 
+    + DoubleAutoIonization.Channel      ... DoubleAutoIonization channel of two partial outgoing waves with well-defined energy.
+    + DoubleAutoIonization.Line         ... DoubleAutoIonization line between (two) specified initial- and final-state levels and with (possible) 
                                             subchannels.
-    + DoubleAuger.Settings              ... settings for computing DoubleAuger lines.
+    + DoubleAutoIonization.Settings     ... settings for computing DoubleAutoIonization lines.
+    + DoublePhotoIonization.Channel     ... DoublePhotoIonization channel of two partial outgoing waves with well-defined energy.
+    + DoublePhotoIonization.Line        ... DoublePhotoIonization line between (two) specified initial- and final-state levels and with (possible) 
+                                            subchannels.
+    + DoublePhotoIonization.Settings    ... settings for computing DoublePhotoIonization lines.
     + ImpactExcitation.Channel          ... electron-impact excitation channel of well-defined energies. partial waves and phases of the 
                                             incoming and outgoing electrons.
     + ImpactExcitation.Line             ... electron-impact excitation line between (two) specified initial- and final-state levels and with 

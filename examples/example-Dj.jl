@@ -1,99 +1,68 @@
+println("Dj) Test of the MultiPhotonDeExcitation module with ASF from an internally generated initial- and final-state multiplet.")
+
 #
-#   Make double Auger example
-#   =========================
-#   =========================
-println("De) Test of the AutoIonization module with ASF from an internally generated initial- and final-state multiplet.")
-#
-setDefaults("print summary: open", "zzz-AutoIonization.sum")
-setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
-                                                     ## setDefaults("method: normalization, Ong-Russek") 
-setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
+setDefaults("print summary: open", "zzz-MultiPhotonDeExcitation.sum")
 
 if  false
-    # K-LL Auger spectrum of neon: Comparison with PhD and related work
-    augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(1,0)]), 0., 1.0e6, 4, CoulombInteraction())
-    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
-    setDefaults("unit: rate", "a.u.")   
-    
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(10.), 
-                            initialConfigs  =[Configuration("1s 2s^2 2p^6")],
-                            finalConfigs    =[Configuration("1s^2 2s^2 2p^4"), Configuration("1s^2 2s 2p^5"), Configuration("1s^2 2p^6")], 
-                            process = Auger(),  processSettings = augerSettings )
+    #
+    println("Calculate two-photon absorption cross sections by monochromatic and equally-polarized photons from the same beam")
+    name          = "Lithium 1s^2 2s ground configuration"
+    refConfigs    = [Configuration("[He] 2p")]
+    greenSettings = GreenSettings(5, [0, 1, 2], 0.01, true, false, Int64[])
 
-    wb = perform(wa)
-    
-elseif  false
-    # K-LL Auger spectrum of Be-like neon: Comparison with Bruch (PRA, 1991)
-    ## augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(1,0)]), 0., 1.0e6, 4, CoulombInteraction())
-    augerSettings = AutoIonization.Settings(false, true, LineSelection(), 0., 1.0e6, 4, CoulombInteraction())
-    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
-    setDefaults("unit: rate", "1/s")   
-    
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(10.), 
-                            initialConfigs  =[Configuration("1s 2s^2 2p")],
-                            finalConfigs    =[Configuration("1s^2 2s"), Configuration("1s^2 2p")], 
-                            process = Auger(),  processSettings = augerSettings )
-
-    wb = perform(wa)
-    
-elseif  false
-    # K-LL Auger spectrum of Ne-like aluminium: Comparison with Fan et al. (PRA, 2018)
-    ## augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(1,0)]), 0., 1.0e6, 4, CoulombInteraction())
-    augerSettings = AutoIonization.Settings(false, true, LineSelection(), 0., 1.0e6, 4, CoulombInteraction())
-    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
-    setDefaults("unit: rate", "1/s")   
-    
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(13.), 
-                            ## initialConfigs  =[Configuration("1s 2s^2 2p^6")],
-                            ## finalConfigs    =[Configuration("1s^2 2s^2 2p^4"), Configuration("1s^2 2s 2p^5"), Configuration("1s^2 2p^6")], 
-                            initialConfigs  = [Configuration("1s 2s 2p^6"), Configuration("2s^2 2p^6")],
-                            finalConfigs    = [Configuration("1s 2s^2 2p^4"), Configuration("1s 2s 2p^5"), Configuration("1s 2p^6")], 
-                            process = Auger(),  processSettings = augerSettings )
-
-    wb = perform(wa)
+    wa          = Representation(name, Nuclear.Model(54.), Radial.Grid(true), refConfigs, 
+                                 GreenExpansion( AtomicState.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(), 
+                                 ## GreenExpansion( AtomicState.CoreSpaceCI(), Basics.DeExciteSingleElectron(), 
+                                 ## GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), 
+                                                 [LevelSymmetry(1//2, Basics.minus), LevelSymmetry(3//2, Basics.minus),
+                                                  LevelSymmetry(1//2, Basics.plus),  LevelSymmetry(3//2, Basics.plus)], 
+3, greenSettings) )
+    println(wa)
+    wb            = generate(wa, output=true)
+    greenChannels = wb["Green channels"]
     
 elseif  true
-    # K-LL Auger spectrum of Be-like aluminium: Comparison with Fan et al. (PRA, 2018)
-    ## augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(1,0)]), 0., 1.0e6, 4, CoulombInteraction())
-    augerSettings = AutoIonization.Settings(false, true, LineSelection(), 0., 1.0e6, 4, CoulombInteraction())
-    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
-    setDefaults("unit: rate", "1/s")   
+    #
+    println("Calculate two-photon absorption cross sections by monochromatic and equally-polarized photons from the same beam ... continue")
     
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(13.), 
-                            initialConfigs  = [Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
-                            finalConfigs    = [Configuration("1s^2")], 
-                            process = Auger(),  processSettings = augerSettings )
-
-    wb = perform(wa)
+    wc = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(54.), 
+                            initialConfigs=[Configuration("1s^2 2s")],
+                            finalConfigs  =[Configuration("1s^2 3s")], 
+                            process = MultiPhotonDE(), 
+                            processSettings=MultiPhotonDeExcitation.Settings(MultiPhotonDeExcitation.TwoPhotonAbsorptionMonochromatic(), 
+                                                                    [E1,M1], [UseCoulomb], greenChannels, true, false, Tuple{Int64,Int64}[])  )
+    wd = perform(wc)
     
 elseif  false
-    # Resonant L_23 - M_23 M_23 Auger spectrum of argon: Comparison with Chen (PRA, 1991)
-    asfSettings   = AsfSettings(AsfSettings(), scField=Basics.HSField())
-    augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(2,0), (4,0)]), 0., 1.0e6, 4, CoulombInteraction())
-    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.8e-2, rbox = 10.0)
-    setDefaults("unit: rate", "1/s")   
-    
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(18.), 
-                            initialConfigs  =[Configuration("1s^2 2s^2 2p^5 3s^2 3p^6 4s")], initialAsfSettings=asfSettings,
-                            finalConfigs    =[Configuration("1s^2 2s^2 2p^6 3s^2 3p^4 4s")], finalAsfSettings=asfSettings, 
-                            process = Auger(),  processSettings = augerSettings )
+    #
+    println("Calculate two-photon emission cross sections: energy-differential + total cross sections")
+    name          = "Lithium 1s^2 2s ground configuration"
+    refConfigs    = [Configuration("[He] 2p")]
+    greenSettings = GreenSettings(5, [0, 1, 2], 0.01, true, false, Int64[])
 
-    wb = perform(wa)
+    wa          = Representation(name, Nuclear.Model(54.), Radial.Grid(true), refConfigs, 
+                                 GreenExpansion( AtomicState.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(), 
+                                 ## GreenExpansion( AtomicState.CoreSpaceCI(), Basics.DeExciteSingleElectron(), 
+                                 ## GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), 
+                                                 [LevelSymmetry(1//2, Basics.minus), LevelSymmetry(3//2, Basics.minus)], 3, greenSettings) )
+    println(wa)
+    wb            = generate(wa, output=true)
+    greenChannels = wb["Green channels"]
     
-elseif  false
-    # Resonant M_45 - N_23 N_23 Auger spectrum of krypton: Comparison with Chen (PRA, 1991)
-    augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(4,0), (9,0), (11,0)]), 0., 1.0e6, 4, CoulombInteraction())
-    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.2e-2, rbox = 15.0)
-    setDefaults("unit: rate", "1/s")   
+elseif  true
+    #
+    println("Calculate two-photon emission cross sections: energy-differential + total cross sections ... continued")
     
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.), 
-                            initialConfigs  =[Configuration("[Ar] 3d^9 4s^2 4p^6 5p")],
-                            finalConfigs    =[Configuration("[Ar] 3d^10 4s^2 4p^4 5p")], 
-                            process = Auger(),  processSettings = augerSettings )
-
-    wb = perform(wa)
+    wc = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(54.), 
+                            initialConfigs=[Configuration("1s^2 3s")],
+                            finalConfigs  =[Configuration("1s^2 2s")], 
+                            process = MultiPhotonDE(), 
+                            processSettings=MultiPhotonDeExcitation.Settings(MultiPhotonDeExcitation.TwoPhotonEmission(), 
+                                                                    [E1,M1], [UseCoulomb], greenChannels, true, false, Tuple{Int64,Int64}[])  )
+    wd = perform(wc)
     
 end
+
 setDefaults("print summary: close", "")
 
 

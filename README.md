@@ -25,7 +25,7 @@ and the handling of atomic data should appear within the code similar to how the
 language. Shortly speaking, JAC aims to provide a powerful **platform for daily use and to extent atomic theory 
 towards new applications** or, in short, a **community platform for Just Atomic Computations**.
 
-**Remark**: Although major efforts have been undertaken during the past two years, JAC is still in a very early state 
+**Remark**: Although major efforts have been undertaken during the past three years, JAC is still in a very early state 
 of its development and includes features that are only partly implemented or not yet tested in all detail. 
 Despite of possible failures and deficiencies of the present code, however, I here annouce JAC and kindly ask potential
 users and developers for response, support and encouragement.
@@ -150,21 +150,25 @@ A very **simple example** has been discussed in the [CPC reference](https://doi.
 above and just refers to the low-lying level structure and the Einstein A and B coefficients of the 
 3s 3p^6 + 3s^2 3p^4 3d -> 3s^2 3p^5  transition array for Fe^{9+} ions, also known as the spectrum Fe X. 
 To perform such a computation within the framework of JAC, one needs to specify the initial- and final-state 
-configurations by an instance of an `Atomic.Computation`, together with the specifier `process=Radiative`. 
+configurations by an instance of an `Atomic.Computation`, together with the specifier `process=Radiative()`. 
 We here also provide a title (line), the multipoles (default E1) and the gauge forms for the coupling of the 
 radiation field that are to be applied in these calculations:
 
 
 ```julia
-    comp = Atomic.Computation("Energies and Einstein coefficients for the spectrum Fe X",  Nuclear.Model(26.);
-                    initialConfigs = [Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],
-                    finalConfigs   = [Configuration("[Ne] 3s^2 3p^5")], 
-                    process = Radiative, 
-                    processSettings = Radiative.Settings([E1, M1, E2, M2], [UseCoulomb, UseBabushkin] )
+    grid = Radial.Grid(true);   setDefaults("standard grid", grid)
+    defaultsSettings = PhotoEmission.Settings()
+    photoSettings    = PhotoEmission.Settings(defaultsSettings, multipoles=[E1, M1], gauges=[UseCoulomb, UseBabushkin], printBefore=true)
+    
+    comp = Atomic.Computation(Atomic.Computation(), name="Energies and Einstein coefficients for the spectrum Fe X",  
+                              grid = grid, nuclearModel = Nuclear.Model(26.);
+                              initialConfigs = [Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],
+                              finalConfigs   = [Configuration("[Ne] 3s^2 3p^5")], 
+                              process = Radiative(), processSettings = photoSettings ); 
     perform(comp::Atomic.Computation)
 ```
 
-This example is discussed also in one of the [tutorials](tutorials/09-compute-Fe-X-spectrum.ipynb) below.
+This example is discussed also in one of the [tutorials](tutorials/51-compute-Fe-X-spectrum.ipynb) below.
     
     
 ## Tutorials
@@ -174,8 +178,8 @@ They can be explored statically at GitHub or can be run locally after the softwa
 In order to modify the cell-output of the notebooks and to better print *wide tables*, you can create or modify the file
 ~/.jupyter/custom/custom.css in your home directory and add the line:  div.output_area pre { font-size: 7pt;} .
 
-* [Getting started](tutorials/11-getting-started-with-Julia.ipynb)
-* [Getting started](tutorials/12-getting-started-with-JAC.ipynb)
+* [Getting started with Julia](tutorials/11-getting-started-with-Julia.ipynb)
+* [Getting started with JAC](tutorials/12-getting-started-with-JAC.ipynb)
 * [Simple estimates for hydrogenic atoms and ions](tutorials/13-compute-hydrogenic-orbitals.ipynb)
 * [Specifying nuclear models and potentials](tutorials/16-define-nuclear-model-parameters.ipynb)
 * [Selection and use of atomic potentials](tutorials/21-compare-radial-atomic-potentials.ipynb)
@@ -195,10 +199,13 @@ In order to modify the cell-output of the notebooks and to better print *wide ta
 
 ## Current limitations of JAC
 
-Although JAC has been designed for all atoms and ions across the periodic table, a number of limitations
-occur:
+Although JAC has been designed for all atoms and ions across the periodic table, a number of limitations occur:
 * All self-consistent-field computations are based on a local potential (e.g. core-Hartree, Kohn-Sham, 
   Dirac-Hartree-Slater, ...) that can be controlled by the user.
+* Until the present, no serious optimization has been done for the code; this restricts most computations
+  to CSF expansion with several hundred CSF.
+* All continuum orbitals are generated in a Dirac-Hartree-Slater potential of the ionic core, and without
+  the explicit treatment of the exchange interaction.
 
 
 
@@ -239,7 +246,11 @@ A few further suggestions for extending and improving JAC can be found in sectio
 
 ## Supporters:
 
+* Birger Böning (HI Jena, Germany)
+* Gediminas Gaigalas (U Vilnius, Lithuania)
 * Jiri Hofbrucker (U Jena, Germany)
 * Stefan Schippers (U Giessen, Germany)
+* Andrey Surzhykov (U Braunschweig, Germany)
 * Martino Trassinelli (U Sorbonne Paris, France)
+* Andrey Volotka (HI Jena, Germany)
 

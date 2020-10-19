@@ -4,7 +4,7 @@
 #  Activation:                 ];   pkg> up;   pkg> activate
 #  Working with JAC:           using Revise;   using JAC;   include("../src/jac.jl");   pkg> test
 #  
-#  Copy to desktop             scp -r JAC.jl/ stephan@10.140.117.58:./fri/
+#  Copy to desktop             scp -r JAC.jl/ fritzsch@10.140.119.236:~/fri/.
 """
 `module JAC`  
     ... Jena Atomic Calculator (JAC) provides tools for performing atomic (structure) calculations at various degrees of complexity 
@@ -58,7 +58,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        Basics, Basis, BreitInteraction, Bsplines,
        CartesianVector, CiSettings, CiExpansion, CloseCoupling, compute, convertUnits, Cascade, Compton, Configuration, ConfigurationR, 
        Continuum, CsfR, Coulex, CoulombExcitation, Coulion, CoulombIonization, CoulombBreit, CoulombInteraction,  
-       diagonalize, Defaults, DecayYield, Details, Dielectronic, Dierec, Djpq, DoubleAuger,
+       diagonalize, Defaults, DecayYield, Details, Dielectronic, Dierec, Djpq, DoubleAutoIonization, DoubleAuger,
        Eimex, ElectronCapture, ElecCapture, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate, ExpStokes,
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, FullCIeigen,
@@ -75,8 +75,8 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        PathwaySelection, perform, provide, PairA1P, PairAnnihilation1Photon, PairAnnihilation2Photon, 
        PairProduction, ParityNonConservation, PeriodicTable, Parity, plus,
        Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, 
-       PhotoIonAuto, PhotoIonFluor, PhotoIonization, PhotoIonizationFluores, PhotoIonizationAutoion, PhotoRecombination, 
-       PlasmaShift, Plasma, Polarity, Pulse,
+       PhotoIonAuto, PhotoIonFluor, PhotoDouble, PhotoIonization, PhotoDoubleIonization, PhotoIonizationFluores, PhotoIonizationAutoion, 
+       PhotoRecombination, PlasmaShift, Plasma, Polarity, Pulse,
        QedPetersburg, QedSydney,
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RAuger, RasSettings, RasStep, 
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation,
@@ -145,6 +145,8 @@ include("module-PhotoExcitationFluores.jl")
 include("module-PhotoExcitationAutoion.jl")
 include("module-RayleighCompton.jl")
 include("module-MultiPhotonDeExcitation.jl")
+include("module-DoubleAutoIonization.jl")
+include("module-PhotoDoubleIonization.jl")
 include("module-CoulombExcitation.jl")
 include("module-PhotoIonizationFluores.jl")
 include("module-PhotoIonizationAutoion.jl")
@@ -154,9 +156,8 @@ include("module-ImpactExcitationAutoion.jl")
 include("module-RadiativeAuger.jl")
 include("module-MultiPhotonIonization.jl")
 include("module-MultiPhotonDoubleIon.jl")
-include("module-InternalConversion.jl")      ## up to here + up to jac-tools
+include("module-InternalConversion.jl") 
 #= Further processes, not yet included into the code
-include("module-DoubleAuger.jl")
 include("module-REDA.jl")
 include("module-READI.jl")
 include("module-PairProduction.jl")

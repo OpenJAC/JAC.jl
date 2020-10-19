@@ -10,24 +10,25 @@ module RadiativeAuger
     """
     `struct  RadiativeAuger.Settings`  ... defines a type for the settings in estimating radiative-Auger and autoionization rates.
 
-        + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
-        + NoEnergySharings        ::Int64                        ... Number of energy sharings that are used in the computations for each line.
-        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
-        + minAugerEnergy          ::Float64                      ... Minimum energy of free (Auger) electrons to be included.
-        + maxAugerEnergy          ::Float64                      ... Maximum energy of free (Auger) electrons to be included.
-        + maxKappa                ::Int6464                      ... Maximum kappa value of partial waves to be included.
+        + multipoles              ::Array{EmMultipole}      ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges                  ::Array{UseGauge}         ... Specifies the gauges to be included into the computations.
+        + green                   ::Array{GreenChannel,1}   ... Precalculated and user-specified Green function of the ion.
+        + NoEnergySharings        ::Int64                   ... Number of energy sharings that are used in the computations for each line.
+        + maxKappa                ::Int64                   ... Maximum kappa value of partial waves to be included.
+        + printBefore             ::Bool                    ... True, if all energies and lines are printed before their evaluation.
+        + operator                ::AbstractEeInteraction   ... Auger operator that is to be used for evaluating the Auger amplitudes: 
+                                                                allowed values are: CoulombInteraction(), BreitInteraction(), ...
+        + lineSelection           ::LineSelection           ... Specifies the selected levels, if any.
     """
     struct Settings
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
-        NoEnergySharings          ::Int64
-        printBefore               ::Bool  
+        green                     ::Array{GreenChannel,1}
+        NoEnergySharings          ::Int64 
+        maxKappa                  ::Int64  
+        printBefore               ::Bool   
+        operator                  ::AbstractEeInteraction 
         lineSelection             ::LineSelection 
-        minAugerEnergy            ::Float64
-        maxAugerEnergy            ::Float64
-        maxKappa                  ::Int64
     end 
 
 
@@ -35,7 +36,7 @@ module RadiativeAuger
     `RadiativeAuger.Settings()`  ... constructor for the default values of RadiativeAuger line computations
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], 0, false, false, LineSelection(), 0., 10e5, 100)
+        Settings(EmMultipole[], UseGauge[], GreenChannel[], 0, 3, false, LineSelection())
     end
 
 
@@ -43,33 +44,37 @@ module RadiativeAuger
     function Base.show(io::IO, settings::RadiativeAuger.Settings) 
         println(io, "multipoles:                   $(settings.multipoles)  ")
         println(io, "gauges:                       $(settings.gauges)  ")
+        println(io, "green:                         (settings.green)  ")
         println(io, "NoEnergySharings:             $(settings.NoEnergySharings)  ")
-        println(io, "printBefore:                  $(settings.printBefore)  ")
-        println(io, "lineSelection:                $(settings.lineSelection)  ")
-        println(io, "minAugerEnergy:               $(settings.minAugerEnergy)  ")
-        println(io, "maxAugerEnergy:               $(settings.maxAugerEnergy)  ")
         println(io, "maxKappa:                     $(settings.maxKappa)  ")
+        println(io, "printBefore:                  $(settings.printBefore)  ")
+        println(io, "operator :                    $(settings.operator )  ")
+        println(io, "lineSelection:                $(settings.lineSelection)  ")
     end
 
 
     """
-    `struct  Channel`  
-        ... defines a type for a RadiativeAuger channel to help characterize a scattering (continuum) state of many electron-states with 
-            a single free electron.
+    `struct  RadiativeAuger.ReducedChannel`  
+        ... defines a type for a RadiativeAuger (reduced) channel to help characterize a scattering (continuum) state of many 
+            electron-states with a single free electron.
 
+        + symmetry       ::LevelSymmetry        ... total angular momentum and parity of the scattering state
         + multipole      ::EmMultipole          ... Multipole of the photon absorption.
         + gauge          ::EmGauge              ... Gauge for dealing with the (coupled) radiation field.
+        + omega          ::Float64              ... photon energy
+        + epsilon        ::Float64              ... (free) electron energy
         + kappa          ::Int64                ... partial-wave of the free electron
-        + symmetry       ::LevelSymmetry        ... total angular momentum and parity of the scattering state
         + phase          ::Float64              ... phase of the partial wave
         + amplitude      ::Complex{Float64}     ... Auger amplitude associated with the given channel.
     """
     struct  Channel
-        multipole        ::EmMultipole
-        gauge            ::EmGauge
-        kappa            ::Int64
         symmetry         ::LevelSymmetry
-        phase            ::Float64
+        multipole        ::EmMultipole  
+        gauge            ::EmGauge
+        omega            ::Float64 
+        epsilon          ::Float64   
+        kappa            ::Int64 
+        phase            ::Float64   
         amplitude        ::Complex{Float64}
     end
 
@@ -82,15 +87,12 @@ module RadiativeAuger
         + photonEnergy   ::Float64         ... Energy of the emitted photon.
         + electronEnergy ::Float64         ... Energy of the (outgoing free) electron.
         + differentialCs ::EmProperty      ... differential cross section of this energy sharing.
-        + hasChannels    ::Bool            ... Determines whether the individual scattering (sub-) channels are defined in terms of their free-
-                                               electron energies, kappas and the total angular momentum/parity as well as the amplitude, or not.
         + channels       ::Array{RadiativeAuger.Channel,1}  ... List of RadiativeAuger channels of this line.
     """
     struct  Sharing
         photonEnergy     ::Float64
         electronEnergy   ::Float64
         differentialCs   ::EmProperty
-        hasChannels      ::Bool
         channels         ::Array{RadiativeAuger.Channel,1}
     end
 
@@ -104,15 +106,12 @@ module RadiativeAuger
         + initialLevel   ::Level          ... initial-(state) level
         + finalLevel     ::Level          ... final-(state) level
         + totalRate      ::EmProperty     ... Total rate of this line.
-        + hasSharings    ::Bool           ... Determines whether the individual energy sharings are defined in terms of their photon
-                                              and electron energies as well as their channels , or not.
         + sharings       ::Array{RadiativeAuger.Sharing,1}  ... List of RadiativeAuger sharings of this line.
     """
     struct  Line
         initialLevel     ::Level
         finalLevel       ::Level
         totalRate        ::EmProperty
-        hasSharings      ::Bool
         sharings         ::Array{RadiativeAuger.Sharing,1}
     end 
 
@@ -122,7 +121,6 @@ module RadiativeAuger
         println(io, "initialLevel:           $(line.initialLevel)  ")
         println(io, "finalLevel:             $(line.finalLevel)  ")
         println(io, "totalRate:              $(line.totalRate)  ")
-        println(io, "hasSharings:            $(line.hasSharings)  ")
         println(io, "sharings:               $(line.sharings)  ")
     end
 

@@ -6,7 +6,7 @@
 module PhotoExcitationAutoion 
 
     using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..PhotoEmission, 
-                  ..Radial, ..TableStrings
+                  ..PhotoIonization, ..Radial, ..TableStrings
 
     """
     `struct  PhotoExcitationAutoion.Settings`  
@@ -21,6 +21,7 @@ module PhotoExcitationAutoion
                                                                     at selected solid angles.
         + calcFano                ::Bool                        ... Calculate the Fano parameters of individual cs resonances sigma(i-e-f).
         + printBefore             ::Bool                        ... True, if all energies and lines are printed before their evaluation.
+        + incidentStokes          ::ExpStokes                   ... Stokes parameters of the incident radiation.
         + solidAngles             ::Array{SolidAngle,1}         ... List of solid angles [(theta_1, pho_1), ...].  
         + electronEnergyShift     ::Float64                     ... An overall energy shift for all electron energies.
         + maxKappa                ::Int64                       ... Maximum kappa value of partial waves to be included for free electrons.
@@ -33,6 +34,7 @@ module PhotoExcitationAutoion
         calcAngular               ::Bool
         calcFano                  ::Bool
         printBefore               ::Bool  
+        incidentStokes            ::ExpStokes
         solidAngles               ::Array{SolidAngle,1}
         electronEnergyShift       ::Float64 
         maxKappa                  ::Int64 
@@ -45,7 +47,7 @@ module PhotoExcitationAutoion
         ... constructor for the default values of photon-impact excitation-autoionizaton settings.
     """
     function Settings()
-        Settings( Basics.EmMultipole[], UseGauge[], false, false, false, false, SolidAngle[], 0., 0, PathwaySelection())
+        Settings( Basics.EmMultipole[], UseGauge[], false, false, false, false, Basics.ExpStokes(), SolidAngle[], 0., 0, PathwaySelection())
     end
 
 
@@ -58,6 +60,7 @@ module PhotoExcitationAutoion
         println(io, "calcAngular:             $(settings.calcAngular)  ")
         println(io, "calcFano:                $(settings.calcFano)  ")
         println(io, "printBefore:             $(settings.printBefore)  ")
+        println(io, "incidentStokes:          $(settings.incidentStokes)  ")
         println(io, "solidAngles:             $(settings.solidAngles)  ")
         println(io, "electronEnergyShift:     $(settings.electronEnergyShift)  ")
         println(io, "maxKappa:                $(settings.maxKappa)  ")
@@ -79,6 +82,7 @@ module PhotoExcitationAutoion
         + qFano               ::EmProperty      ... Fano-q parameter of a resonance (i-e-f)
         + excitChannels       ::Array{PhotoEmission.Channel,1}      ... List of excitation channels of this pathway.
         + augerChannels       ::Array{AutoIonization.Channel,1}     ... List of Auger channels of this pathway.
+        + photoChannels       ::Array{PhotoIonization.Channel,1}    ... List of photoionization channels of this pathway.
     """
     struct  Pathway
         initialLevel          ::Level
@@ -90,6 +94,7 @@ module PhotoExcitationAutoion
         qFano                 ::EmProperty 
         excitChannels         ::Array{PhotoEmission.Channel,1}  
         augerChannels         ::Array{AutoIonization.Channel,1}
+        photoChannels         ::Array{PhotoIonization.Channel,1}
     end 
 
 
@@ -99,7 +104,8 @@ module PhotoExcitationAutoion
             and final level.
     """
     function Pathway()
-        Pathway(Level(), Level(), Level(), 0., 0., EmProperty(0., 0.), EmProperty(0., 0.), PhotoEmission.Channel[], AutoIonization.Channel[] )
+        Pathway(Level(), Level(), Level(), 0., 0., EmProperty(0., 0.), EmProperty(0., 0.), PhotoEmission.Channel[], 
+                AutoIonization.Channel[], PhotoIonization.Channel[] )
     end
 
 
@@ -115,6 +121,7 @@ module PhotoExcitationAutoion
         println(io, "qFano:                      $(pathway.qFano)  ")
         println(io, "excitChannels:              $(pathway.excitChannels)  ")
         println(io, "augerChannels:              $(pathway.augerChannels)  ")
+        println(io, "photoChannels:              $(pathway.photoChannels)  ")
     end
 
 
@@ -147,11 +154,19 @@ module PhotoExcitationAutoion
             ## amplitude   = AutoIonization.amplitude("Coulomb", aChannel, newnLevel, newcLevel, grid)
             push!( newaChannels, AutoIonization.Channel( aChannel.kappa, aChannel.symmetry, phase, amplitude))
         end
+        # Compute all photoionization channels
+        newpChannels = PhotoIonization.Channel[]
+        for pChannel in pathway.photoChannels
+            ## amplitude   = PhotoIonization.amplitude("absorption", eChannel.multipole, eChannel.gauge, pathway.excitEnergy, 
+            ##                                         pathway.intermediateLevel, pathway.initialLevel, grid)
+            amplitude = 1.0im
+            push!( newpChannels, PhotoIonization.Channel( pChannel.multipole, pChannel.gauge, pChannel.kappa, pChannel.symmetry, pChannel.phase, amplitude))
+        end
         #
         partialCs = EmProperty(-1., -1.)
         qFano     = EmProperty(-2., -2.)
-        pathway = PhotoExcitationAutoion.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, 
-                                                  pathway.excitEnergy, pathway.electronEnergy, partialCs, qFano, neweChannels, newaChannels)
+        pathway = PhotoExcitationAutoion.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, pathway.excitEnergy, 
+                                                  pathway.electronEnergy, partialCs, qFano, neweChannels, newaChannels, newpChannels)
         return( pathway )
     end
 
@@ -215,6 +230,7 @@ module PhotoExcitationAutoion
                     if  Basics.selectLevelTriple(iLevel, nLevel, fLevel, settings.pathwaySelection)
                         eEnergy = nLevel.energy - iLevel.energy
                         aEnergy = nLevel.energy - fLevel.energy
+                        pEnergy = fLevel.energy - iLevel.energy
                         ##x @show eEnergy, aEnergy
                         if  eEnergy < 0.   ||   aEnergy < 0    continue    end
                         rSettings = PhotoEmission.Settings( settings.multipoles, settings.gauges, false, false, LineSelection(), 0., 0., 0.)
@@ -223,8 +239,12 @@ module PhotoExcitationAutoion
                         aSettings = AutoIonization.Settings( false, false, LineSelection(), 0., 0., settings.maxKappa, CoulombInteraction())
                         aChannels = AutoIonization.determineChannels(fLevel, nLevel, aSettings) 
                         ##x @show length(aChannels), settings.maxKappa, fLevel.energy, nLevel.energy
+                        pSettings = PhotoIonization.Settings( settings.multipoles, settings.gauges, [pEnergy], false, false, false, false, 
+                                                              LineSelection(), ExpStokes())
+                        pChannels = PhotoIonization.determineChannels(fLevel, iLevel, pSettings) 
+                        ##x @show length(pChannels), settings.maxKappa, fLevel.energy, iLevel.energy
                         push!( pathways, PhotoExcitationAutoion.Pathway(iLevel, nLevel, fLevel, eEnergy, aEnergy, EmProperty(0., 0.), EmProperty(0., 0.), 
-                                                                        eChannels, aChannels) )
+                                                                        eChannels, aChannels, pChannels) )
                     end
                 end
             end

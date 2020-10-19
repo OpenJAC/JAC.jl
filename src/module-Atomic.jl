@@ -10,8 +10,8 @@ module Atomic
     using ..Basics, ..Radial, ..ManyElectron, ..Nuclear
     using ..Einstein, ..Hfs, ..IsotopeShift, ..PlasmaShift, ..LandeZeeman, ..AlphaVariation, ..FormFactor, ..DecayYield,
           ..MultipolePolarizibility, ..PhotoEmission, ..PhotoIonization, ..PhotoExcitation, ..PhotoRecombination, 
-          ..AutoIonization, ..Dielectronic, ..ImpactExcitation, ..CoulombExcitation, ..CoulombIonization,
-          ..PhotoExcitationFluores, ..PhotoExcitationAutoion, ..RayleighCompton, ..MultiPhotonDeExcitation,
+          ..AutoIonization, ..DoubleAutoIonization, ..Dielectronic, ..ImpactExcitation, ..CoulombExcitation, ..CoulombIonization,
+          ..PhotoDoubleIonization, ..PhotoExcitationFluores, ..PhotoExcitationAutoion, ..RayleighCompton, ..MultiPhotonDeExcitation,
           ..PhotoIonizationFluores, ..PhotoIonizationAutoion, ..ImpactExcitationAutoion, ..RadiativeAuger, 
           ..MultiPhotonIonization, ..MultiPhotonDoubleIon, ..InternalConversion
 
@@ -49,6 +49,7 @@ module Atomic
         + processSettings                ::Union{PhotoEmission.Settings, AutoIonization.Settings, PlasmaShift.AugerSettings, 
                                                  PhotoIonization.Settings, PlasmaShift.PhotoSettings, 
                                                  PhotoExcitation.Settings, PhotoExcitationAutoion.Settings, PhotoRecombination.Settings, 
+                                                 DoubleAutoIonization.Settings, PhotoDoubleIonization.Settings,
                                                  ImpactExcitation.Settings, Dielectronic.Settings, RadiativeAuger.Settings,
                                                  PairAnnihilation1Photon.Settings, ImpactExcitationAutoion.Settings, 
                                                  MultiPhotonDeExcitation.Settings, CoulombExcitation.Settings, 
@@ -84,6 +85,7 @@ module Atomic
                                                CoulombExcitation.Settings, CoulombIonization.Settings, 
                                                PhotoExcitation.Settings, PhotoExcitationFluores.Settings, 
                                                PhotoExcitationAutoion.Settings, RayleighCompton.Settings, 
+                                               DoubleAutoIonization.Settings, PhotoDoubleIonization.Settings,
                                                MultiPhotonDeExcitation.Settings, PhotoIonizationFluores.Settings, 
                                                PhotoIonizationAutoion.Settings, ImpactExcitationAutoion.Settings,
                                                RadiativeAuger.Settings, MultiPhotonIonization.Settings,

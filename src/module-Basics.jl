@@ -1409,11 +1409,13 @@ module Basics
         + struct Coulex           ... Coulomb-excitation of target or projeticle electrons by fast, heavy ions.
         + struct Coulion          ... Coulomb-ionization of target or projeticle electrons by fast, heavy ions.
         + struct Dierec           ... di-electronic recombination, i.e. the dielectronic capture of a free electron and the subsequent emission of a photon.
+        + struct DoubleAuger      ... Double Auger rates.
         + struct ImpactExcAuto    ... di-electronic recombination, i.e. the dielectronic capture of a free electron and the subsequent emission of a photon.
         + struct MultiPhotonDE    ... multi-photon excitation and decay rates, including 2-photon, etc. processes.
         + struct MultiPI          ... multi-photon (single-electron) ionization.
         + struct MultiPDI         ... multi-photon (single-electron) double ionization.
         + struct Photo            ... Photoionization processes, i.e. the emission of a single free electron into the continuum due to an external light field.
+        + struct PhotoDouble      ... Photo-double ionization rates.
         + struct PhotoExc         ... Photoexcitation rates.
         + struct PhotoExcFluor    ... photoexcitation fluorescence rates and cross sections.
         + struct PhotoExcAuto     ... photoexcitation autoionization cross sections and collision strengths.
@@ -1433,6 +1435,7 @@ module Basics
     struct    Coulex                <:  AbstractProcess     end
     struct    Coulion               <:  AbstractProcess     end
     struct    Dierec                <:  AbstractProcess     end
+    struct    DoubleAuger           <:  AbstractProcess     end
     struct    ElecCapture           <:  AbstractProcess     end
     struct    ImpactExcAuto         <:  AbstractProcess     end
     struct    InternalConv          <:  AbstractProcess     end
@@ -1440,6 +1443,7 @@ module Basics
     struct    MultiPI               <:  AbstractProcess     end
     struct    MultiPDI              <:  AbstractProcess     end
     struct    Photo                 <:  AbstractProcess     end
+    struct    PhotoDouble           <:  AbstractProcess     end
     struct    PhotoExc              <:  AbstractProcess     end
     struct    PhotoExcFluor         <:  AbstractProcess     end
     struct    PhotoExcAuto          <:  AbstractProcess     end
@@ -1452,8 +1456,8 @@ module Basics
     struct    RAuger                <:  AbstractProcess     end
     struct    PairA1P               <:  AbstractProcess     end
 
-    export  NoProcess, Auger, AugerInPlasma, Compton, Coulex, Coulion, Dierec, Eimex, ElecCapture, ImpactExcAuto, InternalConv, 
-            MultiPhotonDE, MultiPI, MultiPDI, Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoInPlasma, PhotoIonAuto, 
+    export  NoProcess, Auger, AugerInPlasma, Compton, Coulex, Coulion, Dierec, DoubleAuger, Eimex, ElecCapture, ImpactExcAuto, InternalConv, 
+            MultiPhotonDE, MultiPI, MultiPDI, Photo, PhotoDouble, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoInPlasma, PhotoIonAuto, 
             PhotoIonFluor, Radiative, RAuger, Rec, PairA1P, Coulion
 
     function Base.string(propc::NoProcess)          return( "no process" )                         end
@@ -1461,11 +1465,13 @@ module Basics
     function Base.string(propc::AugerInPlasma)      return( "Auger in plasma" )                    end
     function Base.string(propc::Compton)            return( "Rayleigh-Compton" )                   end
     function Base.string(propc::Dierec)             return( "Dielectronic recombination" )         end
+    function Base.string(propc::DoubleAuger)        return( "Double Auger" )                       end
     function Base.string(propc::ElecCapture)        return( "Electron capture" )                   end
     function Base.string(propc::ImpactExcAuto)      return( "ImpactExcAuto" )                      end
     function Base.string(propc::InternalConv)       return( "InternalConv" )                       end
     function Base.string(propc::MultiPhotonDE)      return( "multi-photon excitation & decay" )    end
     function Base.string(propc::Photo)              return( "Photo" )                              end
+    function Base.string(propc::PhotoDouble)        return( "single-photon double ionization" )    end
     function Base.string(propc::PhotoExcFluor)      return( "Photo-Excitation-Fluoresence" )       end
     function Base.string(propc::PhotoExcAuto)       return( "Photo-Excitation-Autoionization" )    end
     function Base.string(propc::PhotoInPlasma)      return( "Photo in plasma" )                    end

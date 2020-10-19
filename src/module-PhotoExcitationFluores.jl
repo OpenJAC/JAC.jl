@@ -20,6 +20,7 @@ module PhotoExcitationFluores
                                                                In all these (three) cases, the atoms and incident plane-wave photons are
                                                                assumed to be unpolarized initially.
         + printBefore             ::Bool                   ... True, if all energies and lines are printed before their evaluation.
+        + incidentStokes          ::ExpStokes              ... Stokes parameters of the incident radiation.
         + solidAngles             ::Array{SolidAngle,1}    ... List of solid angles [(theta_1, pho_1), ...].  
         + photonEnergyShift       ::Float64                ... An overall energy shift for all photon energies.
         + pathwaySelection        ::PathwaySelection       ... Specifies the selected levels/pathways, if any.
@@ -31,6 +32,7 @@ module PhotoExcitationFluores
         calcAngular               ::Bool
         calcStokes                ::Bool 
         printBefore               ::Bool  
+        incidentStokes            ::ExpStokes
         solidAngles               ::Array{SolidAngle,1}
         photonEnergyShift         ::Float64  
         pathwaySelection          ::PathwaySelection
@@ -42,7 +44,7 @@ module PhotoExcitationFluores
         ... constructor for the default values of photon-impact excitation-autoionizaton settings.
     """
     function Settings()
-        Settings( Basics.EmMultipole[], UseGauge[], false, false, false, false, SolidAngle[], 0., PathwaySelection() )
+        Settings( Basics.EmMultipole[], UseGauge[], false, false, false, false, ExpStokes(), SolidAngle[], 0., PathwaySelection() )
     end
 
 
@@ -55,6 +57,7 @@ module PhotoExcitationFluores
         println(io, "calcAngular:             $(settings.calcAngular)  ")
         println(io, "calcStokes:              $(settings.calcStokes)  ")
         println(io, "printBefore:             $(settings.printBefore)  ")
+        println(io, "incidentStokes:          $(settings.incidentStokes)  ")
         println(io, "solidAngles:             $(settings.solidAngles)  ")
         println(io, "photonEnergyShift:       $(settings.photonEnergyShift)  ")
         println(io, "pathwaySelection:        $(settings.pathwaySelection)  ")
@@ -188,6 +191,7 @@ module PhotoExcitationFluores
         
         dmArray = zeros(ComplexF64, length(settings.solidAngles), 6)
         # Calculate rho_kq (alpha_e, J_e) of the excited level
+        @warn("Statistical tensors of the excited atoms are not yet implemeneted here.")
         rho_kq = 2.0
         # Compute in turn all the corresponding photon density matrix elements
         for  (s, solidAngle) in enumerate(settings.solidAngles)
@@ -233,6 +237,7 @@ module PhotoExcitationFluores
         # Calculate the photon density matrix of the fluorescence photon if needed and display all requested properties
         # These calculations are done in turn for all selected pathways
         if  settings.calcPhotonDm  ||  settings.calcAngular  ||  settings.calcStokes
+            @warn("Statistical tensors of the excited atoms are not yet implemeneted here.")
             for  pathway in newPathways
                 dmArray = PhotoExcitationFluores.computePhotonDm(pathway, settings) 
                 PhotoExcitationFluores.displayPhotonDm(stdout, pathway, dmArray, settings)

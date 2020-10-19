@@ -11,20 +11,20 @@ module PhotoExcitation
     """
     `struct  PhotoExcitation.Settings`  ... defines a type for the details and parameters of computing photo-excitation  lines.
 
-        + multipoles              ::Array{EmMultipole,1}         ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges                  ::Array{UseGauge,1}            ... Specifies the gauges to be included into the computations.
-        + calcForStokes           ::Bool                         ... True, if the excitation cross sections are to be calculated (and false otherwise)
-                                                                     for given Stokes parameter of the incident plane-wave photons.
-        + calcPhotonDm            ::Bool                         ... True, if the photon density matrix of a subsequently emitted fluorescence photon is to be
-                                                                     calculated and false otherwise. 
-        + calcTensors             ::Bool                         ... True, if the statistical tensors of the excited atom are to be calculated and false otherwise. 
-        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
-        + photonEnergyShift       ::Float64                      ... An overall energy shift for all photon energies.
-        + mimimumPhotonEnergy     ::Float64                      ... minimum transition energy for which (photon) transitions are included into the
-                                                                     computation.
-        + maximumPhotonEnergy     ::Float64                      ... maximum transition energy for which (photon) transitions are included.
-        + stokes                  ::ExpStokes                    ... Stokes parameters of the incident radiation.
+        + multipoles              ::Array{EmMultipole,1}    ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges                  ::Array{UseGauge,1}       ... Specifies the gauges to be included into the computations.
+        + calcForStokes           ::Bool                    ... True, if the excitation cross sections are to be calculated (and false otherwise)
+                                                                for given Stokes parameter of the incident plane-wave photons.
+        + calcPhotonDm            ::Bool                    ... True, if the photon density matrix of a subsequently emitted fluorescence photon 
+                                                                is to be calculated and false otherwise. 
+        + calcTensors             ::Bool                    ... True, if statistical tensors of the excited atom are to be calculated, false otherwise. 
+        + printBefore             ::Bool                    ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection           ::LineSelection           ... Specifies the selected levels, if any.
+        + photonEnergyShift       ::Float64                 ... An overall energy shift for all photon energies.
+        + mimimumPhotonEnergy     ::Float64                 ... minimum transition energy for which (photon) transitions are included into the
+                                                                computation.
+        + maximumPhotonEnergy     ::Float64                 ... maximum transition energy for which (photon) transitions are included.
+        + stokes                  ::ExpStokes               ... Stokes parameters of the incident radiation.
     """
     struct Settings 
         multipoles                ::Array{EmMultipole,1}

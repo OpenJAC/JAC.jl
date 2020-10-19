@@ -6,7 +6,7 @@ setDefaults("print summary: open", "zzz-PhotoExcitationFluores.sum")
 if  true
     # 1s photoexcitation of Li-like carbon
     asfSettings   = AsfSettings(AsfSettings(), scField=Basics.HSField())  # not used
-    excSettings   = PhotoExcitationFluores.Settings([E1], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, true, true, 
+    excSettings   = PhotoExcitationFluores.Settings([E1], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, true, true, ExpStokes(), 
                                                     [SolidAngle(1.0, 0.0)], 0., PathwaySelection())
     grid          = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 5.0e-2, rbox = 10.0)
     setDefaults("unit: rate", "1/s")  

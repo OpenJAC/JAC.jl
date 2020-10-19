@@ -14,8 +14,9 @@ module PhotoIonizationAutoion
 
         + multipoles              ::Array{EmMultipole,1}               ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge,1}                  ... Specifies the gauges to be included into the computations.
-        + printBefore  ::Bool                               ... True, if all energies and lines are printed before their evaluation.
+        + printBefore             ::Bool                               ... True, if all energies and lines are printed before their evaluation.
         + selectPathways          ::Bool                               ... True if particular pathways are selected for the computations.
+        + incidentStokes          ::ExpStokes               ... Stokes parameters of the incident radiation.
         + selectedPathways        ::Array{Tuple{Int64,Int64,Int64},1}  ... List of list of pathways, given by tupels (inital, inmediate, final).
         + maxKappa                ::Int64                              ... Maximum kappa value of partial waves to be included.
     """

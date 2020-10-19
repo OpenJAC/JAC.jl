@@ -7,7 +7,7 @@ setDefaults("print summary: open", "zzz-PhotoExcitationAutoIon.sum")
 if  true
     # 1s photoexcitation and subsequent autoionization of Li-like carbon
     asfSettings   = AsfSettings(AsfSettings(), scField=Basics.HSField())  # not used
-    excSettings   = PhotoExcitationAutoion.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, true, true, 
+    excSettings   = PhotoExcitationAutoion.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], true, true, true, true, ExpStokes(), 
                                                     [SolidAngle(1.0, 0.0)], 0., 4, PathwaySelection())
     grid          = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
     setDefaults("unit: rate", "1/s")  

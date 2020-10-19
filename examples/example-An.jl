@@ -6,14 +6,13 @@ name        = "Oxygen 1s^2 2s^2 2p^4 ground configuration"
 refConfigs  = [Configuration("[He] 2s^2 2p^4")]
 mfSettings  = MeanFieldSettings()
 #
-wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
-                             MeanFieldBasis(mfSettings) )
+wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, MeanFieldBasis(mfSettings) )
 println("wa = $wa")
 
 wb = generate(wa, output=true)
 
 orbitals    = wb["mean-field basis"].orbitals
-ciSettings  = CiSettings(true, false, Int64[], false, LevelSymmetry[] )
+ciSettings  = CiSettings(CoulombInteraction(), LevelSelection())
 from        = [Shell("2s")]
 #
 frozen      = [Shell("1s")]
