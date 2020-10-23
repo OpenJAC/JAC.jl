@@ -9,6 +9,42 @@ module AngularMomentum
     using SpecialFunctions, ..Basics
     using GSL: sf_coupling_3j, sf_coupling_6j, sf_coupling_9j
 
+    
+    """
+    `AngularMomentum.allowedDoubleKappaCouplingSequence(syma::LevelSymmetry, symb::LevelSymmetry, maxKappa::Int64)`  
+        ... to determine all allowed coupling sequences that fulfill
+            syma + (kappa1, symx, kappa2) --> symb  ==  syma + kappa1 --> symx + kappa2 --> symb,
+            and where kappa1|, |kappa2| <= maxKappa. A list::Array{Tuple{Int64,LevelSymmetry,Int64},1}) of (kappa1, symx, kappa2)
+            is returned.
+    """
+    function  allowedDoubleKappaCouplingSequence(syma::LevelSymmetry, symb::LevelSymmetry, maxKappa::Int64)
+        couplings = Tuple{Int64,LevelSymmetry,Int64}[];     kx = abs(maxKappa)
+        for  kappa1 = -kx:kx
+            if  kappa1 == 0          continue    end
+            for  kappa2 = -kx:kx
+                if  kappa2 == 0      continue    end
+                symx = allowedDoubleKappaSymmetries(syma, kappa1, kappa2, symb)
+                for  sx in  symx    push!( couplings, (kappa1, sx, kappa2))      end
+            end
+        end
+
+        return( couplings )         
+    end
+
+
+    """
+    `AngularMomentum.allowedDoubleKappaSymmetries(syma::LevelSymmetry, kappa1::Int64, kappa2::Int64, symb::LevelSymmetry)`  
+        ... to determine all allowed level symmetries symx that can be coupled to the sequence 
+            syma + kappa1 --> {symx} + kappa2 --> symb. A list::Array{LevelSymmetry,1} of symx is returned.
+    """
+    function  allowedDoubleKappaSymmetries(syma::LevelSymmetry, kappa1::Int64, kappa2::Int64, symb::LevelSymmetry)
+        symx1 = AngularMomentum.allowedTotalSymmetries(syma, kappa1)
+        symx2 = AngularMomentum.allowedTotalSymmetries(symb, kappa2)
+        symx  = intersect(symx1, symx2)
+        return( symx )         
+    end
+
+
     """
     `AngularMomentum.allowedKappaSymmetries(syma::LevelSymmetry, symb::LevelSymmetry)`  
         ... to determine all allowed single-electron symmetries/partial waves kappa (l,j) that can be coupled to the given 

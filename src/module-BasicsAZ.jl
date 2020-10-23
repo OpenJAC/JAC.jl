@@ -5,7 +5,7 @@
 """
 module BasicsAZ
 
-    using Printf,  LinearAlgebra, JAC, ..AlphaVariation, ..AngularMomentum, ..Atomic, ..AtomicState, ..AutoIonization,
+    using Printf,  LinearAlgebra, GaussQuadrature, JAC, ..AlphaVariation, ..AngularMomentum, ..Atomic, ..AtomicState, ..AutoIonization,
                   ..Basics, ..Bsplines, ..Cascade, ..Continuum, ..DecayYield, ..Defaults, ..Dielectronic, 
                   ..Einstein, ..FormFactor, ..Hfs, ..HydrogenicIon,
                   ..InteractionStrength, ..IsotopeShift, ..LandeZeeman, ..LSjj, ..ManyElectron, ..MultipolePolarizibility, ..Nuclear, 

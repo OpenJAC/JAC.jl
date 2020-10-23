@@ -22,11 +22,12 @@ if  false
     
 elseif true
     # Radiative Auger decay of 1s photoionized neon
-    raSettings = RadiativeAuger.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], raGreen, 2, true, LineSelection(true, indexPairs=[(1,0)]), 0., 1.0e6, 2)
+    raSettings = RadiativeAuger.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], raGreen, 2, 3, true, CoulombInteraction(), 
+                                         LineSelection(true, indexPairs=[(1,1), (1,2)]))
 
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
-                            initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
-                            finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(10.), 
+                            initialConfigs=[Configuration("1s 2s^2 2p^6")],
+                            finalConfigs  =[Configuration("1s^2 2s^2 2p^4"), Configuration("1s^2 2s 2p^5"), Configuration("1s^2 2p^6") ], 
                             process = RAuger(), processSettings = raSettings )
 
     wb = perform(wa)

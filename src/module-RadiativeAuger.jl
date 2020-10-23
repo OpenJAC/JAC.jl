@@ -5,7 +5,8 @@
 """
 module RadiativeAuger
 
-    using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
+    using Printf, ..AngularMomentum, ..AtomicState, ..AutoIonization, ..Basics, ..Defaults, ..ManyElectron, 
+                  ..Radial, ..PhotoEmission, ..TableStrings
 
     """
     `struct  RadiativeAuger.Settings`  ... defines a type for the settings in estimating radiative-Auger and autoionization rates.
@@ -36,7 +37,7 @@ module RadiativeAuger
     `RadiativeAuger.Settings()`  ... constructor for the default values of RadiativeAuger line computations
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], GreenChannel[], 0, 3, false, LineSelection())
+        Settings(EmMultipole[], UseGauge[], GreenChannel[], 0, 3, false, CoulombInteraction(), LineSelection())
     end
 
 
@@ -58,23 +59,23 @@ module RadiativeAuger
         ... defines a type for a RadiativeAuger (reduced) channel to help characterize a scattering (continuum) state of many 
             electron-states with a single free electron.
 
-        + symmetry       ::LevelSymmetry        ... total angular momentum and parity of the scattering state
         + multipole      ::EmMultipole          ... Multipole of the photon absorption.
         + gauge          ::EmGauge              ... Gauge for dealing with the (coupled) radiation field.
         + omega          ::Float64              ... photon energy
         + epsilon        ::Float64              ... (free) electron energy
         + kappa          ::Int64                ... partial-wave of the free electron
         + phase          ::Float64              ... phase of the partial wave
+        + tSymmetry      ::LevelSymmetry        ... total angular momentum and parity of the scattering state
         + amplitude      ::Complex{Float64}     ... Auger amplitude associated with the given channel.
     """
-    struct  Channel
-        symmetry         ::LevelSymmetry
+    struct  ReducedChannel
         multipole        ::EmMultipole  
         gauge            ::EmGauge
         omega            ::Float64 
         epsilon          ::Float64   
         kappa            ::Int64 
         phase            ::Float64   
+        tSymmetry        ::LevelSymmetry
         amplitude        ::Complex{Float64}
     end
 
@@ -84,16 +85,18 @@ module RadiativeAuger
         ... defines a type for a RadiativeAuger sharing to help characterize energy sharing between the emitted photon and
             the scattering (continuum) state with a single free electron.
 
-        + photonEnergy   ::Float64         ... Energy of the emitted photon.
-        + electronEnergy ::Float64         ... Energy of the (outgoing free) electron.
-        + differentialCs ::EmProperty      ... differential cross section of this energy sharing.
-        + channels       ::Array{RadiativeAuger.Channel,1}  ... List of RadiativeAuger channels of this line.
+        + omega            ::Float64         ... Energy of the emitted photon.
+        + epsilon          ::Float64         ... Energy of the (outgoing free) electron.
+        + weight           ::Float64         ... Gauss-Lengendre weight of this sharing for energy-integrated quantities.
+        + differentialRate ::EmProperty      ... differential rate of this energy sharing.
+        + channels         ::Array{RadiativeAuger.ReducedChannel,1}  ... List of RadiativeAuger channels of this line.
     """
     struct  Sharing
-        photonEnergy     ::Float64
-        electronEnergy   ::Float64
-        differentialCs   ::EmProperty
-        channels         ::Array{RadiativeAuger.Channel,1}
+        omega              ::Float64
+        epsilon            ::Float64
+        weight             ::Float64
+        differentialRate   ::EmProperty
+        channels           ::Array{RadiativeAuger.ReducedChannel,1}
     end
 
 
@@ -133,17 +136,20 @@ module RadiativeAuger
     function  computeAmplitudesProperties(line::RadiativeAuger.Line, grid::Radial.Grid, settings::RadiativeAuger.Settings)
         newSharings = RadiativeAuger.Sharing[]
         for sharing in line.sharings
-            newChannels = RadiativeAuger.Channel[]
-            for channel in sharing.channels
+            newChannels = RadiativeAuger.ReducedChannel[]
+            for ch in sharing.channels
                 # Generate a continuum orbital
-                amplitude = 1.0 
-                push!( newChannels, RadiativeAuger.Channel( channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, amplitude) )
+                phase     = 1.3
+                amplitude = 1.0im 
+                push!( newChannels, ReducedChannel(ch.multipole, ch.gauge, ch.omega, ch.epsilon, ch.kappa, phase, ch.tSymmetry, amplitude) )
             end
-            push!( newSharings, RadiativeAuger.Sharing( sharing.photonEnergy, sharing.electronEnergy, EmProperty(-1., -1.), true, newChannels) )
+            # Calculate the differential rate 
+            diffRate = EmProperty(-1., -1.)
+            push!( newSharings, RadiativeAuger.Sharing( sharing.omega, sharing.epsilon, sharing.weight, diffRate, newChannels) )
         end
         # Calculate the totalRate 
         totalRate = EmProperty(-1., -1.)
-        line = RadiativeAuger.Line( line.initialLevel, line.finalLevel, totalRate, true, newSharings)
+        line = RadiativeAuger.Line( line.initialLevel, line.finalLevel, totalRate, newSharings)
         return( line )
     end
 
@@ -171,7 +177,11 @@ module RadiativeAuger
             push!( newLines, newLine)
         end
         # Print all results to screen
-        RadiativeAuger.displayResults(lines)
+        RadiativeAuger.displayTotalRates(stdout, lines, settings)
+        RadiativeAuger.displayDifferentialRates(stdout, lines, settings)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        if  printSummary   RadiativeAuger.displayTotalRates(iostream, lines, settings)
+                           RadiativeAuger.displayDifferentialRates(iostream, lines, settings)     end
         #
         if    output    return( lines )
         else            return( nothing )
@@ -190,10 +200,9 @@ module RadiativeAuger
         for  iLevel  in  initialMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
                 if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
-                    energy    = iLevel.energy - fLevel.energy
-                    if  energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
+                    energy   = iLevel.energy - fLevel.energy
                     channels = RadiativeAuger.determineSharingsAndChannels(fLevel, iLevel, energy, settings) 
-                    push!( lines, RadiativeAuger.Line(iLevel, fLevel, EmProperty(0., 0.,), true, channels) )
+                    push!( lines, RadiativeAuger.Line(iLevel, fLevel, EmProperty(0., 0.,), channels) )
                 end
             end
         end
@@ -207,10 +216,10 @@ module RadiativeAuger
             account the particular settings of for this computation; an Array{RadiativeAuger.Sharing,1} is returned.
     """
     function determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, energy::Float64, settings::RadiativeAuger.Settings)
-        sharings  = RadiativeAuger.Sharing[];    eSharings = Basics.determineEnergySharings(energy, settings.NoEnergySharings) 
+        sharings = RadiativeAuger.Sharing[];    eSharings = Basics.determineEnergySharings(energy, settings.NoEnergySharings) 
         for  es in eSharings
-            pEnergy   = es[1];    eEnergy = es[2] 
-            channels  = RadiativeAuger.Channel[];   
+            omega     = es[1];    epsilon = es[2];    weight = es[3] 
+            channels  = RadiativeAuger.ReducedChannel[];   
             symi      = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
             for  mp in settings.multipoles
                 for  gauge in settings.gauges
@@ -220,19 +229,66 @@ module RadiativeAuger
                         for  kappa in kappaList
                             # Include further restrictions if appropriate
                             if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
-                                push!(channels, RadiativeAuger.Channel(mp, Basics.Coulomb,   kappa, symt, 0., Complex(0.)) )
+                                push!(channels, ReducedChannel(mp, Basics.Coulomb,   omega, epsilon, kappa, 0., symt, Complex(0.)) )
                             elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
-                                push!(channels, RadiativeAuger.Channel(mp, Basics.Babushkin, kappa, symt, 0., Complex(0.)) )  
+                                push!(channels, ReducedChannel(mp, Basics.Babushkin, omega, epsilon, kappa, 0., symt, Complex(0.)) )  
                             elseif string(mp)[1] == 'M'                                
-                                push!(channels, RadiativeAuger.Channel(mp, Basics.Magnetic,  kappa, symt, 0., Complex(0.)) ) 
+                                push!(channels, ReducedChannel(mp, Basics.Magnetic,  omega, epsilon, kappa, 0., symt, Complex(0.)) ) 
                             end 
                         end
                     end
                 end
             end
-            push!(sharings, RadiativeAuger.Sharing(pEnergy, eEnergy, EmProperty(0., 0.), true, channels) )
+            push!(sharings, RadiativeAuger.Sharing(omega, epsilon, weight, EmProperty(0., 0.), channels) )
         end
         return( sharings )  
+    end
+
+
+    """
+    `RadiativeAuger.displayDifferentialRates(stream::IO, lines::Array{RadiativeAuger.Line,1}, settings::RadiativeAuger.Settings)`  
+        ... to display all differential rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
+    """
+    function  displayDifferentialRates(stream::IO, lines::Array{RadiativeAuger.Line,1}, settings::RadiativeAuger.Settings)
+        #
+        # First, print lines and sharings
+        nx = 130
+        println(stream, " ")
+        println(stream, "  Energy-differential rates of selected radiative-Auger lines:")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.flushleft(38, "Energies (all in " * TableStrings.inUnits("energy") * ")"; na=4);              
+        sb = sb * TableStrings.flushleft(38, "  i -- f          omega        epsilon"; na=4)
+        sa = sa * TableStrings.center(14, "Weight"; na=0);                            sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(34, "Cou -- diff. rate -- Bab"; na=3)      
+        sb = sb * TableStrings.center(34, TableStrings.inUnits("rate") * "        " * 
+                                          TableStrings.inUnits("rate"); na=3)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
+        for  line in lines
+            sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                           fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4) 
+            energy = line.finalLevel.energy - line.initialLevel.energy
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "    "
+            #
+            for  (is, sharing)  in  enumerate(line.sharings)
+                if  is == 1     sb = sa     else    sb = TableStrings.hBlank( length(sa) )    end
+                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.omega))                    * "    "
+                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon))                  * "    "
+                sb = sb * @sprintf("%.4e",                                              sharing.weight)                    * "       "
+                sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", sharing.differentialRate.Coulomb))   * "   "
+                sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", sharing.differentialRate.Babushkin)) * "   "
+                println(stream,  sb )
+            end
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        return( nothing )
     end
 
 
@@ -250,8 +306,8 @@ module RadiativeAuger
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
-        sa = sa * TableStrings.center(34, "Energy  " * TableStrings.inUnits("energy"); na=4);              
-        sb = sb * TableStrings.center(34, "i -- f        omega     e_Auger  "; na=4)
+        sa = sa * TableStrings.center(34, "Energy  " * TableStrings.inUnits("energy"); na=5);              
+        sb = sb * TableStrings.center(34, "i -- f        omega      e_Auger "; na=5)
         sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
         sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
         println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
@@ -265,12 +321,12 @@ module RadiativeAuger
             sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "  "
             #
             for  sharing  in  line.sharings
-                sb =      @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.photonEnergy))   * "  "
-                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.electronEnergy)) * "    "
+                sb =      @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.omega))   * "  "
+                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon)) * "    "
                 kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
                 for  i in 1:length(sharing.channels)
                     push!( kappaMultipoleSymmetryList, (sharing.channels[i].kappa, sharing.channels[i].multipole, sharing.channels[i].gauge, 
-                                                        sharing.channels[i].symmetry) )
+                                                        sharing.channels[i].tSymmetry) )
                 end
                 wa = TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
                 sc = sa * sb * wa[1];    println( sc )  
@@ -286,48 +342,40 @@ module RadiativeAuger
 
 
     """
-    `RadiativeAuger.displayResults(lines::Array{RadiativeAuger.Line,1})`  
-        ... to list all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
+    `RadiativeAuger.displayTotalRates(stream::IO, lines::Array{RadiativeAuger.Line,1}, settings::RadiativeAuger.Settings)`  
+        ... to display all total rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
     """
-    function  displayResults(lines::Array{RadiativeAuger.Line,1})
-        nx = 148
-        println(" ")
-        println("  Radiative-Auger rates:")
-        println(" ")
-        println("  ", TableStrings.hLine(nx))
+    function  displayTotalRates(stream::IO, lines::Array{RadiativeAuger.Line,1}, settings::RadiativeAuger.Settings)
+        #
+        # First, print lines and sharings
+        nx = 88
+        println(stream, " ")
+        println(stream, "  Total rates of selected radiative-Auger lines:")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
-        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
-        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
-        sa = sa * TableStrings.center(36, "Energy  " * TableStrings.inUnits("energy"); na=4);              
-        sb = sb * TableStrings.center(36, "i -- f        omega     e_Auger  "; na=4)
-        sa = sa * TableStrings.center(30, "Cou -- differ. rate -- Bab"; na=3)      
-        sb = sb * TableStrings.center(30, TableStrings.inUnits("rate") * "          " * TableStrings.inUnits("rate"); na=3)
-        sa = sa * TableStrings.center(30, "Cou -- total rate -- Bab"; na=3)      
-        sb = sb * TableStrings.center(30, TableStrings.inUnits("rate") * "          " * TableStrings.inUnits("rate"); na=3)
-        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
-        #  
+        sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=2);                         sb = sb * TableStrings.hBlank(21)
+        sa = sa * TableStrings.center(12, "i--Energy--f"; na=3)               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(30, "Cou --   total rate   -- Bab"; na=4)      
+        sb = sb * TableStrings.center(30, TableStrings.inUnits("rate") * "          " * 
+                                          TableStrings.inUnits("rate"); na=3)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
         for  line in lines
-            sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+            sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
-            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4) 
             energy = line.initialLevel.energy - line.finalLevel.energy
-            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", energy))                 * "      "
             #
-            first = true
-            for  sharing  in  line.sharings
-                sb =      @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.photonEnergy))   * "  "
-                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.electronEnergy)) * "    "
-                sb = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", sharing.differentialCs.Coulomb))     * "    "
-                sb = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", sharing.differentialCs.Babushkin))   * "    "
-                if  first                  first = false
-                sb = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.totalRate.Coulomb))     * "    "
-                sb = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.totalRate.Babushkin))   * "    "
-                end 
-                println(sa*sb)
-            end
+            sb = sa * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", line.totalRate.Coulomb))   * "     "
+            sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", line.totalRate.Babushkin)) * "   "
+            println(stream,  sb )
         end
-        println("  ", TableStrings.hLine(nx))
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

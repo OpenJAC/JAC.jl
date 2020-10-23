@@ -22,11 +22,11 @@ if  false
     
 elseif true
     # Double Auger decay of 1s photoionized neon
-    daSettings = DoubleAutoIonization.Settings(daGreen, 2, true, 1.0, 100., 3, CoulombInteraction(), LineSelection(true, indexPairs=[(1,0)]))
+    daSettings = DoubleAutoIonization.Settings(daGreen, 2, true, 1.0, 100., 2, CoulombInteraction(), LineSelection(true, indexPairs=[(1,0)]))
     
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(10.), 
-                            initialConfigs  =[Configuration("1s 2s^2 2p^6")],
-                            finalConfigs    =[Configuration("1s^2 2s^2 2p^3"), Configuration("1s^2 2s 2p^4"), Configuration("1s^2 2p^5")], 
+                            initialConfigs  = [Configuration("1s 2s^2 2p^6")],
+                            finalConfigs    = [Configuration("1s^2 2s^2 2p^3"), Configuration("1s^2 2s 2p^4"), Configuration("1s^2 2p^5")], 
                             process = DoubleAuger(),  processSettings = daSettings )
 
     wb = perform(wa)
