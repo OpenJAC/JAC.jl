@@ -7,6 +7,27 @@ The following features have been recently implemented and up-loaded into JAC's m
 
 ## 2020
 
+* **Extended and improved User Guide & Compendium:**  *(19.10.20)*
+* **Enlarged number of second-order processes** Several second-order processes are now partly supported,
+    including photoexcitation & fluorescence,  photoexcitation & autoionization, Rayleigh scattering 
+    of light, multi-photon excitation & decay, double-Auger decay, photo-double ionization, 
+    radiative-Auger decay. *(18.10.20)*
+* **Enlarged number of atomic processes** The presently supported atomic processes now include 
+    photoemission, photoexcitation, photoionization, photorecombination, Auger & autoionization,
+    dielectronic recombination. *(12.09.20)*
+* **Atomic cascades** The presently supported cascade computations include decay cascades as well as
+    their excitation by photoionization, photoexcitation or electron-capture. These excitation also
+    strongly affect the complexity of a cascade. *(2.09.20)*
+* **Autoionization & dielectronic recombination (DR)** See `? AutoIonization.Settings` or `Dielectronic.Settings`
+    for the calculation of Auger rates and DR resonance strength. *(20.08.20)*
+* **Photoionization cross sections** See `? PhotoIonization.Settings` for the calculation of photoionization
+    cross sections and angular parameters. *(15.07.20)*
+* **Generation & use of continuum orbitals** See `? setDefaults` how one can choose different methods
+    for the generation ("method: continuum, Galerkin", "method: continuum, asymptotic Coulomb", ...)
+    and normalization ("method: normalization, pure Coulomb", ...) of continuum orbitals. *(22.06.20)*
+* **New level & line selectors:** See `? LevelSelection`, `? LineSelection` and `PathwaySelection`; this
+    enables one to easily select individual levels, lines or pathways in the computation of properties
+    and processes. *(10.06.20)*
 * **New and extended tutorials:** A good number of new tutorials have been implemented and extended,
     inluding the symbolic evaluation of expressions from Racah's algebra. *(12.05.20)*
 * **Improved continuum orbitals:** Use of Galerkin method for generating continuum orbitals with 
