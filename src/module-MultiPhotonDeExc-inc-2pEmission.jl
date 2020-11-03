@@ -2,7 +2,7 @@
     # Two-photon emission of initially-unpolarized atoms.
     #
     """
-    `struct  MultiPhotonDeExcitation.Channel_2pEmission`  
+    `struct  MultiPhotonDeExcitation.ReducedChannel_2pEmission`  
         ... defines a type for a two-photon emission channel for the emission of photons with well-defined 
             multipolarities.
 
@@ -16,7 +16,7 @@
         + amplitude      ::Complex{Float64}       ... reduced two-photon emission amplitude U^(K, 2gamma, emission) (..)
                                                       associated with the given channel.
     """
-    struct  Channel_2pEmission
+    struct  ReducedChannel_2pEmission
         K                ::AngularJ64 
         omega1           ::Float64
         omega2           ::Float64 
@@ -29,32 +29,40 @@
 
 
     """
+    `struct  MultiPhotonDeExcitation.Sharing_2pEmission`  
+        ... defines a type for a 2pEmission sharing to help characterize energy sharing between the two emitted photons.
+
+        + omega1           ::Float64         ... Energy of the emitted photon 1.
+        + omega2           ::Float64         ... Energy of the emitted photon 2.
+        + weight           ::Float64         ... Gauss-Lengendre weight of this sharing for energy-integrated quantities.
+        + differentialRate ::EmProperty      ... differential rate of this energy sharing.
+        + channels         ::Array{MultiPhotonDeExcitation.ReducedChannel_2pEmission,1}  
+                                             ... List of 2pEmission channels of this sharing.
+    """
+    struct  Sharing_2pEmission
+        omega1             ::Float64
+        omega2             ::Float64
+        weight             ::Float64
+        differentialRate   ::EmProperty
+        channels           ::Array{MultiPhotonDeExcitation.ReducedChannel_2pEmission,1}
+    end
+
+
+    """
     `struct  MultiPhotonDeExcitation.Line_2pEmission`  
         ... defines a type for a two-photon absorption line by monochromatic light that may include the definition of channels.
 
         + initialLevel     ::Level                ... initial-(state) level
         + finalLevel       ::Level                ... final-(state) level
-        + energy           ::Float64              ... Total transition energy.
-        + omegas           ::Array{Float64,1}     ... Energy of the emitted photons.
-        + weights          ::Array{Float64,1}     ... Associated weights for the given photon energy in a Gauss-Legendre integration.
-        + energyDiffCs     ::Array{EmProperty,1}  ... energy-differential cross section for the selected omegas.
-        + totalCs          ::EmProperty           ... Total cross section for right-circularly polarized incident light.
-        + csUnpolarized    ::EmProperty           ... Total cross section.
-        + hasChannels      ::Bool                 
-            ... Determines whether the individual (sub-) channels are defined in terms of their multipolarities, etc., or not.
-        + channels         ::Array{MultiPhotonDeExcitation.Channel_2pEmission,1}  
-                                                  ... List of MultiPhotonDeExcitation.Channel_2pEmission's of this line.
+        + totalRate        ::EmProperty           ... Total rate for the two-photon transition. 
+        + sharings         ::Array{MultiPhotonDeExcitation.Sharing_2pEmission,1}  
+                                                  ... List of MultiPhotonDeExcitation.Sharing_2pEmission's of this line.
     """
     struct  Line_2pEmission
         initialLevel       ::Level
         finalLevel         ::Level
-        energy             ::Float64
-        omegas             ::Array{Float64,1} 
-        weights            ::Array{Float64,1}
-        energyDiffCs       ::Array{EmProperty,1} 
-        totalCs            ::EmProperty 
-        hasChannels        ::Bool
-        channels           ::Array{MultiPhotonDeExcitation.Channel_2pEmission,1}
+        totalRate          ::EmProperty
+        sharings           ::Array{MultiPhotonDeExcitation.Sharing_2pEmission,1} 
     end
 
 
@@ -63,13 +71,8 @@
     function Base.show(io::IO, line::MultiPhotonDeExcitation.Line_2pEmission) 
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")
-        println(io, "energy:            $(line.energy)  ")
-        println(io, "omegas:            $(line.omegas)  ")
-        println(io, "weights:           $(line.weights)  ")
-        println(io, "energyDiffCs:      $(line.energyDiffCs)  ")
-        println(io, "totalCs:           $(line.totalCs)  ")
-        println(io, "hasChannels:       $(line.hasChannels)  ")
-        println(io, "channels:          $(line.channels)  ")
+        println(io, "totalRate:         $(line.totalRate)  ")
+        println(io, "sharings:          $(line.sharings)  ")
     end
 
 
@@ -81,33 +84,23 @@
     """
     function  computeAmplitudesProperties_2pEmission(line::MultiPhotonDeExcitation.Line_2pEmission, 
                                                      grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)
-        newChannels = MultiPhotonDeExcitation.Channel_2pEmission[]
-        for channel in line.channels
-            amplitude = MultiPhotonDeExcitation.computeReducedAmplitudeEmission(channel.K, line.finalLevel, channel.omega2, channel.multipole2, 
-                                         channel.Jsym, channel.omega1, channel.multipole1, line.initialLevel, channel.gauge, grid, settings.greenChannels)
-            push!( newChannels, MultiPhotonDeExcitation.Channel_2pEmission(channel.K, channel.omega1, channel.omega2, 
-                                                        channel.multipole1, channel.multipole2, channel.gauge, channel.Jsym, amplitude) )
+        newSharings = MultiPhotonDeExcitation.Sharing_2pEmission[]
+        for sharing in line.sharings
+            newChannels = MultiPhotonDeExcitation.ReducedChannel_2pEmission[]
+            for ch in sharing.channels
+                amplitude = MultiPhotonDeExcitation.computeReducedAmplitudeEmission(ch.K, line.finalLevel, ch.omega2, ch.multipole2, 
+                                                                ch.Jsym, ch.omega1, ch.multipole1, line.initialLevel, ch.gauge, grid, settings.green)
+                push!( newChannels, MultiPhotonDeExcitation.ReducedChannel_2pEmission(ch.K, ch.omega1, ch.omega2, ch.multipole1, ch.multipole2, 
+                                                                                      ch.gauge, ch.Jsym, amplitude) )
+            end
+            # Calculate the differential rate 
+            diffRate = EmProperty(-1., -1.)
+            push!( newSharings, MultiPhotonDeExcitation.Sharing_2pEmission( sharing.omega1, sharing.omega2, sharing.weight, diffRate, newChannels) )
         end
-        # Take amplitudes into accout for the given line
-        newLine   = MultiPhotonDeExcitation.Line_2pEmission( line.initialLevel, line.finalLevel, line.energy, line.omegas, line.weights, 
-                                                             line.energyDiffCs, line.totalCs, true, newChannels)
-        # Calculate the requested cross sections, etc.
-        energyDiffCs = EmProperty[]
-        for  omega1  in  line.omegas
-             omega2      = line.energy - omega1
-            enDiffCs_Cou = MultiPhotonDeExcitation.computeEnergyDiffCs(omega1, omega2, newLine, EmGauge("Coulomb"), settings)
-            enDiffCs_Bab = MultiPhotonDeExcitation.computeEnergyDiffCs(omega1, omega2, newLine, EmGauge("Babushkin"), settings)
-            push!( energyDiffCs, EmProperty(enDiffCs_Cou, enDiffCs_Bab))
-        end
-        totalCs_Cou = 0.;   totalCs_Bab = 0.
-        for  i = 1:length(line.omegas)
-            totalCs_Cou = totalCs_Cou + energyDiffCs[i].Coulomb   * line.weights[i]
-            totalCs_Bab = totalCs_Bab + energyDiffCs[i].Babushkin * line.weights[i]
-        end
-        totalCs   = EmProperty(totalCs_Cou, totalCs_Bab)
-        newLine   = MultiPhotonDeExcitation.Line_2pEmission( line.initialLevel, line.finalLevel, line.energy, line.omegas, line.weights, energyDiffCs,
-                                                             totalCs, true, newChannels)
-        return( newLine )
+        # Calculate the totalRate 
+        totalRate = EmProperty(-1., -1.)
+        line = MultiPhotonDeExcitation.Line_2pEmission( line.initialLevel, line.finalLevel, totalRate, newSharings)
+        return( line )
     end
 
 
@@ -135,9 +128,11 @@
             push!( newLines, newLine)
         end
         # Print all results to screen
-        MultiPhotonDeExcitation.displayCrossSections_2pEmission(stdout, settings.process.properties, lines)
+        MultiPhotonDeExcitation.displayTotalRates_2pEmission(stdout, lines, settings)
+        MultiPhotonDeExcitation.displayDifferentialRates_2pEmission(stdout, lines, settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    MultiPhotonDeExcitation.displayCrossSections_2pEmission(iostream, settings.process.properties, lines)   end
+        if  printSummary   MultiPhotonDeExcitation.displayTotalRates_2pEmission(iostream, lines, settings)
+                           MultiPhotonDeExcitation.displayDifferentialRates_2pEmission(iostream, lines, settings)     end
         #
         if    output    return( lines )
         else            return( nothing )
@@ -212,13 +207,13 @@
     """
     `MultiPhotonDeExcitation.getReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega2::Float64, multipole2::EmMultipole, Jsym::LevelSymmetry, 
                                                                                            omega1::Float64, multipole1::EmMultipole, initialLevel::Level, 
-                                                                           gauge::EmGauge, channels::Array{MultiPhotonDeExcitation.Channel_2pEmission,1})`  
+                                                                           gauge::EmGauge, channels::Array{MultiPhotonDeExcitation.ReducedChannel_2pEmission,1})`  
         ... to get/return the reduced amplitude U^{K, 2gamma emission} (K, Jf, omega2, multipole2, Jsym, omega1, multipole1, Ji) from the calculated list
             of channels. An amplitude::Complex{Float64} is returned.
     """
     function getReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega2::Float64, multipole2::EmMultipole, Jsym::LevelSymmetry, 
                                                                            omega1::Float64, multipole1::EmMultipole, initialLevel::Level, 
-                                                                           gauge::EmGauge, channels::Array{MultiPhotonDeExcitation.Channel_2pEmission,1})
+                                                                           gauge::EmGauge, channels::Array{MultiPhotonDeExcitation.ReducedChannel_2pEmission,1})
         U = Complex(0.);    found = false
         for channel in channels
             if  K == channel.K  &&  omega1 == channel.omega1  &&  omega2 == channel.omega2  &&  Jsym == channel.Jsym  &&  
@@ -238,43 +233,6 @@
 
 
     """
-    `MultiPhotonDeExcitation.determineChannels_2pEmission(finalLevel::Level, initialLevel::Level, energy::Float64, omegas::Array{Float64,1},
-                                                          settings::MultiPhotonDeExcitation.Settings)`  
-        ... to determine a list of MultiPhotonDeExcitation.Channel_2pEmission for a transitions from the initial to final level and by taking 
-            into account the particular settings for this computation; an Array{MultiPhotonDeExcitation.Channel_2pEmission,1} is returned.
-    """
-    function determineChannels_2pEmission(finalLevel::Level, initialLevel::Level, energy::Float64, omegas::Array{Float64,1}, 
-                                          settings::MultiPhotonDeExcitation.Settings)
-        channels   = MultiPhotonDeExcitation.Channel_2pEmission[];   
-        symi       = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
-        for  om1 in omegas
-            om2 = energy - om1
-            for  mp1 in settings.multipoles
-                for  mp2 in settings.multipoles
-                    symmetries  = AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
-                    Klist       = oplus(symf.J, symi.J)
-                    for  symn in symmetries
-                        hasMagnetic = false
-                        for  gauge in settings.gauges
-                            # Include further restrictions if appropriate
-                            if     string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseCoulomb
-                                for K in Klist  push!(channels, MultiPhotonDeExcitation.Channel_2pEmission(K, om1, om2, mp1, mp2, Basics.Coulomb, symn, 0.) )     end 
-                            elseif string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
-                                for K in Klist  push!(channels, MultiPhotonDeExcitation.Channel_2pEmission(K, om1, om2, mp1, mp2, Basics.Babushkin, symn, 0.) )   end
-                            elseif string(mp1)[1] == 'M' && string(mp2)[1] == 'M'
-                                for K in Klist  push!(channels, MultiPhotonDeExcitation.Channel_2pEmission(K, om1, om2, mp1, mp2, Basics.Magnetic, symn, 0.) )    end
-                            end
-                        end
-                    end 
-                end
-            end
-        end
-
-        return( channels )  
-    end
-
-
-    """
     `MultiPhotonDeExcitation.determineLines_2pEmission(finalMultiplet::Multiplet, initialMultiplet::Multiplet, 
                                                        settings::MultiPhotonDeExcitation.Settings)`
         ... to determine a list of MultiPhotonDeExcitation.Line_2pEmission's for transitions between the levels from the given 
@@ -283,23 +241,13 @@
             properties are set to zero during this initialization process.  
     """
     function  determineLines_2pEmission(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::MultiPhotonDeExcitation.Settings)
-        # The number of energy sharings are provided by the settings
-        noSharings = settings.process.noSharings
-        sharings   = QuadGK.gauss(noSharings)
-    
         lines = MultiPhotonDeExcitation.Line_2pEmission[]
         for  iLevel  in  initialMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
                 if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
-                    energy   = abs( iLevel.energy - fLevel.energy)
-                    omegas   = Float64[];    weights = Float64[];    energyDiffCs = EmProperty[]
-                    for  j = 1:noSharings
-                        push!( omegas, sharings[1][j]*energy/2. + energy/2.);    push!( weights, sharings[1][j]*energy/2. )
-                        push!( energyDiffCs, EmProperty(0., 0.))    
-                    end
-                    channels     = MultiPhotonDeExcitation.determineChannels_2pEmission(fLevel, iLevel, energy, omegas, settings) 
-                    push!( lines, MultiPhotonDeExcitation.Line_2pEmission(iLevel, fLevel, energy, 
-                                                               omegas, weights, energyDiffCs, EmProperty(0., 0.), true, channels) )
+                    energy   = iLevel.energy - fLevel.energy
+                    sharings = MultiPhotonDeExcitation.determineSharingsAndChannels(fLevel, iLevel, energy, settings) 
+                    push!( lines, MultiPhotonDeExcitation.Line_2pEmission(iLevel, fLevel, EmProperty(0., 0.,), sharings) )
                 end
             end
         end
@@ -308,47 +256,130 @@
 
 
     """
+    `MultiPhotonDeExcitation.determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, energy::Float64, settings::MultiPhotonDeExcitation.Settings)`  
+        ... to determine a list of MultiPhotonDeExcitation 2pEmission Sharing's and Channel's for a transitions from the initial to 
+            final level and by taking into account the particular settings of for this computation; 
+            an Array{MultiPhotonDeExcitation.Sharing_2pEmission,1} is returned.
+    """
+    function determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, energy::Float64, settings::MultiPhotonDeExcitation.Settings)
+        sharings = MultiPhotonDeExcitation.Sharing_2pEmission[];    eSharings = Basics.determineEnergySharings(energy, settings.NoEnergySharings) 
+        for  es in eSharings
+            omega1    = es[1];    omega2 = es[2];    weight = es[3] 
+            channels  = MultiPhotonDeExcitation.ReducedChannel_2pEmission[];   
+            symi      = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
+            for  mp1 in settings.multipoles
+                for  mp2 in settings.multipoles
+                    symmetries  = AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
+                    Klist       = oplus(symf.J, symi.J)
+                    for  symx in symmetries
+                        for  gauge in settings.gauges
+                            # Include further restrictions if appropriate
+                            if     string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseCoulomb
+                                for K in Klist  push!(channels, ReducedChannel_2pEmission(K, omega1, omega2, mp1, mp2, Basics.Coulomb, symx, 0.) )    end 
+                            elseif string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
+                                for K in Klist  push!(channels, ReducedChannel_2pEmission(K, omega1, omega2, mp1, mp2, Basics.Babushkin, symx, 0.) )  end
+                            elseif string(mp1)[1] == 'M' && string(mp2)[1] == 'M'
+                                for K in Klist  push!(channels, ReducedChannel_2pEmission(K, omega1, omega2, mp1, mp2, Basics.Magnetic, symx, 0.) )   end
+                            end
+                        end
+                    end
+                end
+            end
+            push!(sharings, MultiPhotonDeExcitation.Sharing_2pEmission(omega1, omega2, weight, EmProperty(0., 0.), channels) )
+        end
+        return( sharings )  
+    end
+
+
+    """
+    `MultiPhotonDeExcitation.displayDifferentialRates_2pEmission(stream::IO, lines::Array{MultiPhotonDeExcitation.Line_2pEmission,1}, 
+                                                                 settings::MultiPhotonDeExcitation.Settings)`  
+        ... to display all differential rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
+    """
+    function  displayDifferentialRates_2pEmission(stream::IO, lines::Array{MultiPhotonDeExcitation.Line_2pEmission,1}, 
+                                                  settings::MultiPhotonDeExcitation.Settings)
+        #
+        # First, print lines and sharings
+        nx = 130
+        println(stream, " ")
+        println(stream, "  Energy-differential rates of selected two-photon emission lines:")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.flushleft(38, "Energies (all in " * TableStrings.inUnits("energy") * ")"; na=4);              
+        sb = sb * TableStrings.flushleft(38, "  i -- f          omega1        omega2"; na=4)
+        sa = sa * TableStrings.center(14, "Weight"; na=0);                            sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(34, "Cou -- diff. rate -- Bab"; na=3)      
+        sb = sb * TableStrings.center(34, TableStrings.inUnits("rate") * "        " * 
+                                          TableStrings.inUnits("rate"); na=3)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
+        for  line in lines
+            sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                           fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4) 
+            energy = line.finalLevel.energy - line.initialLevel.energy
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", energy)) * "    "
+            #
+            for  (is, sharing)  in  enumerate(line.sharings)
+                if  is == 1     sb = sa     else    sb = TableStrings.hBlank( length(sa) )    end
+                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.omega1))                   * "    "
+                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.omega2))                   * "    "
+                sb = sb * @sprintf("%.4e",                                              sharing.weight)                    * "       "
+                sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", sharing.differentialRate.Coulomb))   * "   "
+                sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", sharing.differentialRate.Babushkin)) * "   "
+                println(stream,  sb )
+            end
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        return( nothing )
+    end
+
+
+    """
     `MultiPhotonDeExcitation.displayLines_2pEmission(lines::Array{MultiPhotonDeExcitation.Line_2pEmission,1})`  
-        ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all selected 
-            transitions and energies is printed but nothing is returned otherwise.
+        ... to display a list of lines, sharings & (reduced) channels that have been selected due to the prior settings. 
+            A neat table of all selected transitions and energies is printed but nothing is returned otherwise.
     """
     function  displayLines_2pEmission(lines::Array{MultiPhotonDeExcitation.Line_2pEmission,1})
-        nx = 170
+        nx = 157
         println(" ")
         println("  Selected two-photon emission lines with given photon splitting:")
         println(" ")
         println("  ", TableStrings.hLine(nx))
-        sa = "  ";   sb = "  ";   sc = "  "
-        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
-        sa = sa * TableStrings.center(18, "i--J^P--f"; na=2);                         sb = sb * TableStrings.hBlank(20)
-        sa = sa * TableStrings.center(12, "Energy"; na=2);              
-        sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=2)
-        sa = sa * TableStrings.center(12, "No channels"; na=2);                       sb = sb * TableStrings.hBlank(14)           
-        sa = sa * TableStrings.flushleft(90, "Energy sharings/omega   " * TableStrings.inUnits("energy"); na=4)
-        sc = sb[1:end-35] * TableStrings.hBlank(35)
-        sb = sb * TableStrings.flushleft(90, "List of multipoles & intermediate level symmetries"; na=4)            
-        sc = sc * TableStrings.flushleft(90, "(K-rank, multipole_1, Jsym, multipole_2, gauge), ..."; na=4)
-        println(sa);    println(sb);    println(sc);    println("  ", TableStrings.hLine(nx)) 
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.flushleft(34, "Energies (all in " * TableStrings.inUnits("energy") *")"; na=5);              
+        sb = sb * TableStrings.flushleft(34, "  i -- f      omega1      omega2  "; na=5)
+        sa = sa * TableStrings.flushleft(77, "List of multipoles, gauges & intermediate level symmetries"; na=4)  
+        sb = sb * TableStrings.flushleft(77, "(K-rank, multipole_1, Jsym, multipole_2, gauge)           "; na=4)
+        println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
-                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+                           fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.energy)) * "   "
-            sc = "         " * string(length(line.channels)) * "       "
-            sa = sa * sc[end-12:end]
-            sb = sa;  noEnergies = min(12, length(line.omegas))
-            for  nn = 1:noEnergies    sb = sb * @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", line.omegas[nn]))  * ",  "    end
-            println( sb[1:end-3] )
-            mpGaugeList = Tuple{AngularJ64, Basics.EmMultipole, LevelSymmetry, Basics.EmMultipole, Basics.EmGauge}[]
-            for  channel in  line.channels
-                push!( mpGaugeList, (channel.K, channel.multipole1, channel.Jsym, channel.multipole2, channel.gauge) )
-            end
-            wa = TableStrings.twoPhotonGaugeTupels(105, mpGaugeList)
-            ##x if  length(wa) > 0    sb = sa * wa[1];    println( sb )    end  
-            for  i = 1:length(wa)
-                sb = TableStrings.hBlank( length(sa) );    sb = sb * wa[i];    println( sb )
+            energy = line.initialLevel.energy - line.finalLevel.energy
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", energy)) * "  "
+            #
+            for  sharing  in  line.sharings
+                sb =      @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.omega1))   * "  "
+                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.omega2))   * "     "
+                mpGaugeList = Tuple{AngularJ64, Basics.EmMultipole, LevelSymmetry, Basics.EmMultipole, Basics.EmGauge}[]
+                for  channel in  sharing.channels
+                    push!( mpGaugeList, (channel.K, channel.multipole1, channel.Jsym, channel.multipole2, channel.gauge) )
+                end
+                wa = TableStrings.twoPhotonGaugeTupels(75, mpGaugeList)
+                sc = sa * sb * wa[1];    println( sc )  
+                for  i = 2:length(wa)
+                    sc = TableStrings.hBlank( length(sa*sb) ) * wa[i];    println( sc )
+                end
             end
         end
         println("  ", TableStrings.hLine(nx))
@@ -358,43 +389,39 @@
 
 
     """
-    `MultiPhotonDeExcitation.displayCrossSections_2pEmission(stream::IO, 
-                                                  properties::Array{MultiPhotonDeExcitation.AbstractMultiPhotonProperty,1},
-                                                  lines::Array{MultiPhotonDeExcitation.Line_2pEmission,1})`  
-        ... to display all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is 
-            returned otherwise.
+    `MultiPhotonDeExcitation.displayTotalRates_2pEmission(stream::IO, lines::Array{MultiPhotonDeExcitation.Line_2pEmission,1}, 
+                                                          settings::MultiPhotonDeExcitation.Settings)`  
+        ... to display all total rates, etc. of the selected lines. A neat table is printed but nothing is returned otherwise.
     """
-    function  displayCrossSections_2pEmission(stream::IO, properties::Array{AbstractMultiPhotonProperty,1},
-                                              lines::Array{Line_2pEmission,1})
-        nx = 95
+    function  displayTotalRates_2pEmission(stream::IO, lines::Array{MultiPhotonDeExcitation.Line_2pEmission,1}, settings::MultiPhotonDeExcitation.Settings)
+        #
+        # First, print lines and sharings
+        nx = 88
         println(stream, " ")
-        println(stream, "  Two-photon emission with given splitting of photon energies:")
-        println(stream, " ")
-        println(stream, "  Energy-differential cross sections:")
+        println(stream, "  Total rates of selected two-photon emission lines:")
         println(stream, " ")
         println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
-        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
-        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
-        sa = sa * TableStrings.center(10, "Energy"; na=4);              
-        sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=4)
-        ##x sa = sa * TableStrings.center(10, "omega";  na=4);              
-        ##x sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=4)
-        sa = sa * TableStrings.center(28, "Cou -- cross section -- Bab"; na=4);              
-        sb = sb * TableStrings.center(28, TableStrings.inUnits("cross section") * "           " * TableStrings.inUnits("cross section"); na=4)
-
+        sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=2);                         sb = sb * TableStrings.hBlank(21)
+        sa = sa * TableStrings.center(12, "i--Energy--f"; na=3)               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(30, "Cou --   total rate   -- Bab"; na=4)      
+        sb = sb * TableStrings.center(30, TableStrings.inUnits("rate") * "          " * 
+                                          TableStrings.inUnits("rate"); na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
-            sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
-                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
-            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=4)
-            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.energy))        * "    "
-            ##x sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.omega))         * "      "
-            ##x sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Coulomb))          * "    "
-            ##x sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Babushkin))        * "        "
-            println(stream, sa )
+            sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                           fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4) 
+            energy = line.initialLevel.energy - line.finalLevel.energy
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", energy))                 * "      "
+            #
+            sb = sa * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", line.totalRate.Coulomb))   * "     "
+            sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", line.totalRate.Babushkin)) * "   "
+            println(stream,  sb )
         end
         println(stream, "  ", TableStrings.hLine(nx))
         #

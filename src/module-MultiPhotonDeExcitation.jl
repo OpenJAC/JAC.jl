@@ -204,22 +204,25 @@ module MultiPhotonDeExcitation
     """
     `struct  MultiPhotonDeExcitation.Settings`  ... defines a type for the settings in estimating multi-photon excitation and decay rates.
 
-        + process                 ::MultiPhotonDeExcitation.AbstractMultiPhotonProcess      ... considered multi-photon process.
-        + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
-        + greenChannels           ::Array{AtomicState.GreenChannel,1}    
-            ... Green function channels for these multi-photon calculations which need to be generated independently.
-        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
+        + process           ::MultiPhotonDeExcitation.AbstractMultiPhotonProcess      ... considered multi-photon process.
+        + multipoles        ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges            ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
+        + green             ::Array{AtomicState.GreenChannel,1}    
+                              ... Green function channels for these multi-photon calculations which need to be generated independently.
+        + NoEnergySharings  ::Int64                        ... Number of energy sharings that are used for all emission lines in the 
+                                                               computations for each line.
+        + printBefore       ::Bool                         ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection     ::LineSelection                ... Specifies the selected levels, if any.
 
     """
     struct Settings 
-        process                   ::MultiPhotonDeExcitation.AbstractMultiPhotonProcess
-        multipoles                ::Array{EmMultipole}
-        gauges                    ::Array{UseGauge}
-        greenChannels             ::Array{AtomicState.GreenChannel,1}
-        printBefore               ::Bool  
-        lineSelection             ::LineSelection   
+        process             ::MultiPhotonDeExcitation.AbstractMultiPhotonProcess
+        multipoles          ::Array{EmMultipole}
+        gauges              ::Array{UseGauge}
+        green               ::Array{AtomicState.GreenChannel,1}
+        NoEnergySharings    ::Int64
+        printBefore         ::Bool  
+        lineSelection       ::LineSelection   
     end 
 
 
@@ -237,8 +240,9 @@ module MultiPhotonDeExcitation
         println(io, "process:                  $(settings.process)  ")
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
-        print(io,   "greenChannels:             (settings.greenChannels)  ... with symmetries:   ")
-        for channel in settings.greenChannels  print(io, "   $(channel.symmetry)")  end;   println(io, " ")
+        print(io,   "green:                     (settings.green)  ... with symmetries:   ")
+        for channel in settings.green  print(io, "   $(channel.symmetry)")  end;   println(io, " ")
+        println(io, "NoEnergySharings:         $(settings.NoEnergySharings)  ")
         println(io, "printBefore:              $(settings.printBefore)  ")
         println(io, "lineSelection:            $(settings.lineSelection)  ")
     end

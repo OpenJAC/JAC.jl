@@ -7,7 +7,7 @@ The following features have been recently implemented and up-loaded into JAC's m
 
 ## 2020
 
-* **Extended and improved User Guide & Compendium:**  *(19.10.20)*
+* **Extended and improved User Guide & Compendium:**  *(October'20)*
 * **Enlarged number of second-order processes:** Several second-order processes are now partly supported,
     including photoexcitation & fluorescence,  photoexcitation & autoionization, Rayleigh scattering 
     of light, multi-photon excitation & decay, double-Auger decay, photo-double ionization, 
