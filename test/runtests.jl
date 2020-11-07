@@ -3,7 +3,7 @@ using JAC, ..Defaults, ..TestFrames
 
 @testset "Name" begin
     ##x global short = true
-    printstyled("\nPerform tests on the JAC program; this may take a while ... \n", color=:cyan)
+    printstyled("\nPerform tests on the JAC program; this may take a while .... \n", color=:cyan)
     ## Defaults.Constants.define("print test: open", pwd() * "/runtests.report")
 
     ##x include("inc-halfintegers.jl")
