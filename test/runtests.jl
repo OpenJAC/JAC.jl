@@ -35,7 +35,7 @@ using JAC, ..Defaults, ..TestFrames
 
     @testset "JAC amplitudes" begin
         @test TestFrames.testModule_MultipoleMoment() 
-        @test TestFrames.testModule_ParityNonConservation() 
+        ## @test TestFrames.testModule_ParityNonConservation() 
     end
     ##x close(streamDummy)
 
