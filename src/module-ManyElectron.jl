@@ -542,7 +542,7 @@ module ManyElectron
         + J                    ::AngularJ64           ... Total angular momentum J.
         + parity               ::Parity               ... Total parity.
         + occupation           ::Array{Int64,1}       ... occupation of the orbitals with regard to the specified orbital list.
-        + seniority            ::Array{Int64,1}       ... list of seniority values of the antisymmetric subshell states
+        + seniorityNr          ::Array{Int64,1}       ... list of seniority or Nr values of the antisymmetric subshell states
         + subshellJ            ::Array{AngularJ64,1}  ... list of J-values of the antisymmetric subshell states.
         + subshellX            ::Array{AngularJ64,1}  ... intermediate X-values in the coupling of the antisymmetric subshell states.
         + subshells            ::Array{Subshell,1}    ... Explicitly given subshell list if useStandardSubshells == false.
@@ -552,7 +552,7 @@ module ManyElectron
         J		               ::AngularJ64
         parity  	           ::Parity
         occupation	           ::Array{Int64,1}
-        seniority	           ::Array{Int64,1}
+        seniorityNr	           ::Array{Int64,1}
         subshellJ	           ::Array{AngularJ64,1}
         subshellX	           ::Array{AngularJ64,1}
         subshells	           ::Array{Subshell,1}
@@ -576,20 +576,20 @@ module ManyElectron
     	  wa = subshellsFromClosedShellConfiguration(sa)
     
     	  occupation = Int64[];	  subshellJ = AngularJ64[];	subshellX  = AngularJ64[]
-    	  subshells  = Subshell[];  seniority = Int64[]
+    	  subshells  = Subshell[];  seniorityNr = Int64[]
     	
         for  sb  in  wa
     	      #x wb = Basics.SubshellQuantumNumbers(string(sb));   kappa = wb[2];   occ = wb[4] + 1
     	      occ = Basics.subshell_2j(sb) + 1
-    	      occupation = push!(occupation, occ)
-    	      seniority  = push!(seniority,    0) 
-    	      subshellJ  = push!(subshellJ, AngularJ64(0) ) 
-    	      subshellX  = push!(subshellX, AngularJ64(0) ) 
-    	      subshells  = push!(subshells, sb ) 
+    	      occupation   = push!(occupation, occ)
+    	      seniorityNr  = push!(seniorityNr,    0) 
+    	      subshellJ    = push!(subshellJ, AngularJ64(0) ) 
+    	      subshellX    = push!(subshellX, AngularJ64(0) ) 
+    	      subshells    = push!(subshells, sb ) 
     	  end
     	  J = AngularJ64(0);    parity = plus
     
-    	  CsfR(false, J, parity, occupation, seniority, subshellJ, subshellX, subshells)
+    	  CsfR(false, J, parity, occupation, seniorityNr, subshellJ, subshellX, subshells)
     end
     
     
@@ -605,7 +605,7 @@ module ManyElectron
         if    csf.useStandardSubshells
 
     	      for  i in 1:length(csf.occupation)
-    		    sa = sa * Basics.subshellStateString(string(Defaults.GBL_STANDARD_SUBSHELL_LIST[i]), csf.occupation[i], csf.seniority[i], 
+    		    sa = sa * Basics.subshellStateString(string(Defaults.GBL_STANDARD_SUBSHELL_LIST[i]), csf.occupation[i], csf.seniorityNr[i], 
                                                   csf.subshellJ[i], csf.subshellX[i])
     		    sa = sa * ", "
     	      end
@@ -613,7 +613,7 @@ module ManyElectron
 
             else
     	      for  i in 1:length(csf.subshells)
-    		    sa = sa * Basics.subshellStateString(string(csf.subshells[i]), csf.occupation[i], csf.seniority[i], 
+    		    sa = sa * Basics.subshellStateString(string(csf.subshells[i]), csf.occupation[i], csf.seniorityNr[i], 
                                                   csf.subshellJ[i], csf.subshellX[i])
     		    sa = sa * ", "
     	      end
@@ -637,7 +637,7 @@ module ManyElectron
         if  length(csfa.occupation) != length(csfb.occupation)      return( false )    end
         if  csfa.J  !=  csfb.J  ||  csfa.parity  !=  csfb.parity	return( false )    end
     	if  csfa.occupation      !=  csfb.occupation			    return( false )    end
-        if  csfa.seniority       !=  csfb.seniority			        return( false )    end
+        if  csfa.seniorityNr       !=  csfb.seniorityNr			        return( false )    end
         if  csfa.subshellJ       !=  csfb.subshellJ			        return( false )    end
         if  csfa.subshellX       !=  csfb.subshellX			        return( false )    end
     	
@@ -650,12 +650,12 @@ module ManyElectron
         ... to construct a CsfR from 3 Grasp-Strings and the given list of subshells and core subshells.
     """
     function CsfRGrasp92(subshells::Array{Subshell,1}, coreSubshells::Array{Subshell,1}, sa::String, sb::String, sc::String)
-    	occupation = Int64[];	 seniority = Int64[];	 subshellJ = AngularJ64[];    subshellX = AngularJ64[];    subshellsx = Subshell[]
+    	occupation = Int64[];	 seniorityNr = Int64[];	 subshellJ = AngularJ64[];    subshellX = AngularJ64[];    subshellsx = Subshell[]
 
     	# Define the occupation and quantum numbers of the closed shells
     	for i in 1:length(coreSubshells)
     	    push!(occupation, Basics.subshell_2j( coreSubshells[i] ) +1);    
-    	    push!(seniority, 0);     push!(subshellJ, AngularJ64(0));	 push!(subshellX, AngularJ64(0)) 
+    	    push!(seniorityNr, 0);     push!(subshellJ, AngularJ64(0));	 push!(subshellX, AngularJ64(0)) 
     	end
     
     	scc = sc * "	  ";   scx = " "
@@ -664,7 +664,7 @@ module ManyElectron
     	    i = i + 1;    sax = sa[9i+1:9i+9];     sbx = sb[9i+1:9i+9];    scx = strip( scc[9i+6:9i+14] )
     
     	    sh = strip( sax[1:5] );    sh = Basics.subshellGrasp(sh);    occ = parse( sax[7:8] )
-    	    search(sbx, ',') > 0    &&    error("stop a: missing seniority; sb = $sb")   # Include seniority more properly if it occurs
+    	    search(sbx, ',') > 0    &&    error("stop a: missing seniorityNr; sb = $sb")   # Include seniorityNr more properly if it occurs
     	    subJx = parse( sbx )
     	    if      typeof(subJx) == Void     subJ = AngularJ64(0)
     	    elseif  typeof(subJx) == Int64    subJ = AngularJ64(subJx)
@@ -692,10 +692,10 @@ module ManyElectron
     			if   AngularJ64( a.Jsub2//2 ) == subJ	 nu = a.nu;    break   end
     		    end
     		    nu < 0    &&    error("stop d")
-    		    push!(occupation, occ);    push!(seniority, nu);	 push!(subshellJ, subJ);    push!(subshellX, subX) 
+    		    push!(occupation, occ);    push!(seniorityNr, nu);	 push!(subshellJ, subJ);    push!(subshellX, subX) 
     		    break
     		else
-    		    push!(occupation, 0);      push!(seniority, 0);	 push!(subshellJ, AngularJ64(0));    push!(subshellX, subshellX[ishell-1]) 
+    		    push!(occupation, 0);      push!(seniorityNr, 0);	 push!(subshellJ, AngularJ64(0));    push!(subshellX, subshellX[ishell-1]) 
     		end
     	    end
     
@@ -707,7 +707,7 @@ module ManyElectron
 
       while  ishell < length(subshells)
     	    ishell = ishell + 1
-          push!(occupation, 0);    push!(seniority, 0);	 push!(subshellJ, AngularJ64(0));    push!(subshellX, subshellX[ishell-1]) 
+          push!(occupation, 0);    push!(seniorityNr, 0);	 push!(subshellJ, AngularJ64(0));    push!(subshellX, subshellX[ishell-1]) 
       end
 
     	# Fill the remaining subshells
@@ -718,7 +718,7 @@ module ManyElectron
     	else	  error("stop f")
     	end
     
-    	wa = CsfR(true, J, parity, occupation, seniority, subshellJ, subshellX, subshellsx)
+    	wa = CsfR(true, J, parity, occupation, seniorityNr, subshellJ, subshellX, subshellsx)
     end
     
 
@@ -731,7 +731,7 @@ module ManyElectron
     """
     function CsfRTransformToStandardSubshells(csf::CsfR, subshells::Array{Subshell,1})
     	J = csf.J;    parity = csf.parity; 
-    	occupation = Int64[];	 seniority = Int64[];	  subshellJ = AngularJ64[];	subshellX = AngularJ64[]
+    	occupation = Int64[];	 seniorityNr = Int64[];	  subshellJ = AngularJ64[];	subshellX = AngularJ64[]
     	
     	ish = 0
     	for  subsh in subshells
@@ -743,17 +743,17 @@ module ManyElectron
     		end
     	    end
     	    if  found
-    		push!(occupation, csf.occupation[ish]);    push!(seniority, csf.seniority[ish])   
+    		push!(occupation, csf.occupation[ish]);    push!(seniorityNr, csf.seniorityNr[ish])   
     		push!(subshellJ,  csf.subshellJ[ish]);     push!(subshellX, csf.subshellX[ish])   
     	    else
-    		push!(occupation, 0);	 push!(seniority, 0);	 push!(subshellJ,  0)
+    		push!(occupation, 0);	 push!(seniorityNr, 0);	 push!(subshellJ,  0)
     		if    ish == 0    push!(subshellX, AngularJ64(0) )   
     		else		  push!(subshellX, subshellX[end])  
     		end 
     	    end
     	end
     
-    	CsfR(true, J, parity, occupation, seniority, subshellJ, subshellX, Subshell[] )
+    	CsfR(true, J, parity, occupation, seniorityNr, subshellJ, subshellX, Subshell[] )
     end
     
     

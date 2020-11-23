@@ -292,7 +292,7 @@ module AngularCoefficientsRatip2013
         nkappas = Fnkappa.(subshells)
         nwshells = length(nkappas)
         occ = reshape(Int8.(csf.occupation), nwshells, 1)
-        sen = reshape(Int8.(csf.seniority), nwshells, 1)
+        sen = reshape(Int8.(csf.seniorityNr), nwshells, 1)
         suJ = reshape(Int8.(twice.(csf.subshellJ)), nwshells, 1)
         suX = reshape(Int8.(twice.(csf.subshellX)), nwshells, 1)
         totalJs =  Int8[twice(csf.J)]
@@ -321,7 +321,7 @@ module AngularCoefficientsRatip2013
             subshells = getsubshells(csfa)
             nwshells = length(subshells)
             occ = Matrix{Int8}(hcat(csfa.occupation, csfb.occupation))
-            sen = Matrix{Int8}(hcat(csfa.seniority, csfb.seniority))
+            sen = Matrix{Int8}(hcat(csfa.seniorityNr, csfb.seniorityNr))
             suJ = Matrix{Int8}(twice.(hcat(csfa.subshellJ, csfb.subshellJ)))
             suX = Matrix{Int8}(twice.(hcat(csfa.subshellX, csfb.subshellX)))
         else
@@ -336,7 +336,7 @@ module AngularCoefficientsRatip2013
             for i in eachindex(subshells)
                 if ashells[aindex] == subshells[i]
                     occ[i,1] = csfa.occupation[aindex]
-                    sen[i,1] = csfa.seniority[aindex]
+                    sen[i,1] = csfa.seniorityNr[aindex]
                     suJ[i,1] = twice(csfa.subshellJ[aindex])
                     suX[i,1] = twice(csfa.subshellX[aindex])
                     endof(ashells)<aindex && (aindex+=1)
@@ -345,7 +345,7 @@ module AngularCoefficientsRatip2013
                 end
                 if bshells[bindex] == subshells[i]
                     occ[i,2] = csfb.occupation[bindex]
-                    sen[i,2] = csfb.seniority[bindex]
+                    sen[i,2] = csfb.seniorityNr[bindex]
                     suJ[i,2] = twice(csfb.subshellJ[bindex])
                     suX[i,2] = twice(csfb.subshellX[bindex])
                     endof(bshells)<bindex && (bindex+=1)

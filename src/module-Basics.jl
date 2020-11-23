@@ -822,11 +822,11 @@ module Basics
 
 
     """
-    `Basics.subshellStateString(subshell::String, occ::Int64, seniority::Int64, Jsub::AngularJ64, X::AngularJ64)`  
-        ... to provide a string of a given subshell state in the form '[2p_1/2^occ]_(seniority, J_sub), X=Xo' ... .
+    `Basics.subshellStateString(subshell::String, occ::Int64, seniorityNr::Int64, Jsub::AngularJ64, X::AngularJ64)`  
+        ... to provide a string of a given subshell state in the form '[2p_1/2^occ]_(seniorityNr, J_sub), X=Xo' ... .
     """
-    function subshellStateString(subshell::String, occ::Int64, seniority::Int64, Jsub::AngularJ64, X::AngularJ64)
-        sa = "[" * subshell * "^$occ]_($seniority, " * string(Jsub) * ") X=" * string(X)
+    function subshellStateString(subshell::String, occ::Int64, seniorityNr::Int64, Jsub::AngularJ64, X::AngularJ64)
+        sa = "[" * subshell * "^$occ]_($seniorityNr, " * string(Jsub) * ") X=" * string(X)
         return( sa )
     end
 

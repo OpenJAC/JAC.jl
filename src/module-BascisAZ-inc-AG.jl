@@ -23,18 +23,18 @@
 
     """
     `Basics.addZerosToCsfR(nz::Int64, csf::CsfR)`  
-        ... 'adds' a number of zeros to the occupation, seniority, etc. of a given CsfR.
+        ... 'adds' a number of zeros to the occupation, seniorityNr, etc. of a given CsfR.
     """
     function  Basics.addZerosToCsfR(nz::Int64, csf::CsfR)
         !csf.useStandardSubshells   &&   error("Zeros can only be added to CSF with standard subshell order.")
         
-        occupation = csf.occupation;   seniority = csf.seniority;    subshellJ = csf.subshellJ;    subshellX = csf.subshellX 
+        occupation = csf.occupation;   seniorityNr = csf.seniorityNr;    subshellJ = csf.subshellJ;    subshellX = csf.subshellX 
         
         for  i = 1:nz
-            push!(occupation, 0);    push!(seniority, 0);    push!(subshellJ, AngularJ64(0));    push!(subshellX, subshellJ[end])
+            push!(occupation, 0);    push!(seniorityNr, 0);    push!(subshellJ, AngularJ64(0));    push!(subshellX, subshellJ[end])
         end
         
-        newCsf = CsfR( csf.useStandardSubshells, csf.J, csf.parity, occupation, seniority, subshellJ, subshellX, Subshell[])
+        newCsf = CsfR( csf.useStandardSubshells, csf.J, csf.parity, occupation, seniorityNr, subshellJ, subshellX, Subshell[])
         return(newCsf)
     end
 
@@ -716,19 +716,19 @@
             end
             # Now collect the quantum numbers into tuples
             if  l == 0   &&   0 < occ < 2
-                ## wa = Base.merge( wa, Dict( shell => ( (s, csfR.occupation[s], csfR.seniority[s], 
+                ## wa = Base.merge( wa, Dict( shell => ( (s, csfR.occupation[s], csfR.seniorityNr[s], 
                 ##                                        Basics.twice(csfR.subshellJ[s]), Basics.twice(csfR.subshellX[s]) ), 
                 ##                                        (-9, 0, -9, 0, Basics.twice(csfR.subshellX[s]) ) ) ) )
                 wa = Base.merge( wa, Dict( shell => ( (-9, 0, -9, 0, 0 ),
-                                                    (s, csfR.occupation[s], csfR.seniority[s], 
+                                                    (s, csfR.occupation[s], csfR.seniorityNr[s], 
                                                     Basics.twice(csfR.subshellJ[s]), Basics.twice(csfR.subshellX[s]) ) ) ) )
             elseif  2l + 1 == j2    continue
             elseif  2l - 1 == j2    &&    (n != nx  ||  l != lx  ||  j2x != j2 + 2)
                     error("stop a")
             elseif  0 < occ + occx < 2* (2l + 1)
-                wa = Base.merge( wa, Dict(shell => ( (s, csfR.occupation[s], csfR.seniority[s], 
+                wa = Base.merge( wa, Dict(shell => ( (s, csfR.occupation[s], csfR.seniorityNr[s], 
                                                     Basics.twice(csfR.subshellJ[s]), Basics.twice(csfR.subshellX[s]) ), 
-                                                    (sx, csfR.occupation[sx], csfR.seniority[sx], 
+                                                    (sx, csfR.occupation[sx], csfR.seniorityNr[sx], 
                                                     Basics.twice(csfR.subshellJ[sx]), Basics.twice(csfR.subshellX[sx]) ) ) ) )
             end
         end

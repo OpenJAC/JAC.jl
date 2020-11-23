@@ -409,14 +409,14 @@
                 currentCsfs = CsfR[]
                 for  csf in  previousCsfs
                     for  state in stateList
-                        occupation = deepcopy(csf.occupation);    seniority = deepcopy(csf.seniority);    
+                        occupation = deepcopy(csf.occupation);    seniorityNr = deepcopy(csf.seniorityNr);    
                         subshellJ  = deepcopy(csf.subshellJ);     subshells = deepcopy(csf.subshells)
-                        push!(occupation, state.occ);   push!(seniority, state.nu);   push!(subshellJ, AngularJ64(state.Jsub2//2) ) 
+                        push!(occupation, state.occ);   push!(seniorityNr, state.nu);   push!(subshellJ, AngularJ64(state.Jsub2//2) ) 
                         push!(subshells, subsh)
                         newXList = oplus( csf.subshellX[end], AngularJ64(state.Jsub2//2) )
                         for  newX in newXList
                             subshellX = deepcopy(csf.subshellX);   push!(subshellX, newX) 
-                            push!( currentCsfs, CsfR( true, subshellX[end], parity, occupation, seniority, subshellJ, subshellX, Subshell[]) ) 
+                            push!( currentCsfs, CsfR( true, subshellX[end], parity, occupation, seniorityNr, subshellJ, subshellX, Subshell[]) ) 
                         end
                     end
                 end
@@ -876,10 +876,10 @@
                                                                             error("Improper coupling of (new) subshell & total J.")   end
             substate   = stateList[1]
             occupation = copy(basis.csfs[i].occupation);    push!(occupation, substate.occ)
-            seniority  = copy(basis.csfs[i].seniority);     push!(seniority,  substate.nu)
+            seniorityNr  = copy(basis.csfs[i].seniorityNr);     push!(seniorityNr,  substate.nu)
             subshellJ  = copy(basis.csfs[i].subshellJ);     push!(subshellJ,  AngularJ64(substate.Jsub2//2) )
             subshellX  = copy(basis.csfs[i].subshellX);     push!(subshellX,  symt.J)
-            push!(newCsfs, CsfR(true, symt.J, symt.parity, occupation, seniority, subshellJ, subshellX, Subshell[] ) )
+            push!(newCsfs, CsfR(true, symt.J, symt.parity, occupation, seniorityNr, subshellJ, subshellX, Subshell[] ) )
         end
 
         newBasis = Basis(true, basis.NoElectrons+1, newSubshells, newCsfs, copy(basis.coreSubshells), newOrbitals)
@@ -909,10 +909,10 @@
             if  length(stateList) != 1                                        error("Improper number of subshell states.")   end
             substate   = stateList[1]
             occupation = copy(basis.csfs[i].occupation);    push!(occupation, substate.occ)
-            seniority  = copy(basis.csfs[i].seniority);     push!(seniority,  substate.nu)
+            seniorityNr  = copy(basis.csfs[i].seniorityNr);     push!(seniorityNr,  substate.nu)
             subshellJ  = copy(basis.csfs[i].subshellJ);     push!(subshellJ,  AngularJ64(substate.Jsub2//2) )
             subshellX  = copy(basis.csfs[i].subshellX);     push!(subshellX,  subshellX[end])
-            push!(newCsfs, CsfR(true, basis.csfs[i].J, basis.csfs[i].parity, occupation, seniority, subshellJ, subshellX, Subshell[] ) )
+            push!(newCsfs, CsfR(true, basis.csfs[i].J, basis.csfs[i].parity, occupation, seniorityNr, subshellJ, subshellX, Subshell[] ) )
         end
 
         newBasis = Basis(true, basis.NoElectrons, newSubshells, newCsfs, copy(basis.coreSubshells), newOrbitals)

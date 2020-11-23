@@ -14,7 +14,7 @@
 """
 module SpinAngular
 
-    using  Printf, ..Basics,  ..Defaults, ..ManyElectron, ..Radial
+    using  Printf, ..AngularMomentum, ..Basics,  ..Defaults, ..ManyElectron, ..Radial
     
     export  Xronecker
 
@@ -141,6 +141,34 @@ module SpinAngular
     end
 
     
+    """
+    `struct  SpinAngular.QspaceTerm`  
+        ... a struct for defining a subshell term/state  |j (nu) alpha Q J> == |j (nu) Q J Nr> for a subshell with well-defined j.
+
+        + j          ::AngularJ64      ... subshell j
+        + Q          ::AngularJ64      ... quasi-spin
+        + J          ::AngularJ64      ... total J of subshell term
+        + Nr         ::Int64           ... Additional quantum number Nr = 0,1,2.
+        + index      ::Int64           ... Index in the QspaceTerm-list of given j
+    """
+    struct  QspaceTerm
+        j            ::AngularJ64
+        Q            ::AngularJ64
+        J            ::AngularJ64
+        Nr           ::Int64
+        index        ::Int64 
+    end
+
+    
+    # `Base.show(io::IO, term::QspaceTerm)`  ... prepares a proper printout of term::QspaceTerm.
+    function Base.show(io::IO, term::QspaceTerm)
+        if  term.Nr == 0   sa = "|$(term.j) $(term.Q) $(term.J); index=$(term.index)>"
+        else               sa = "|$(term.j) $(term.Q) $(term.J); Nr=$(term.Nr) index=$(term.index)>"
+        end
+        println(io, sa)
+    end
+
+    
     # `Base.show(io::IO, coeff::Coefficient2p)`  ... prepares a proper printout of the coeff::Coefficient2p.
     function Base.show(io::IO, coeff::Coefficient2p)
           sa = "\n V^($(coeff.L)) [$(coeff.a), $(coeff.b)| $(coeff.c), $(coeff.d)] = $(coeff.v)"
@@ -171,13 +199,13 @@ module SpinAngular
     struct  SchemeGamma03   end
 
     
-    
     """
     `struct  SpinAngular.SubshellTerm`  
-        ... a struct for defining a subshell term/state  |j (nu) alpha Q J> == |j (nu) Q J Nr> for a subshell with well-defined j.
+        ... a struct for defining a subshell term/state  |j^N (nu) alpha Q J> == |j^N (nu) Q J Nr> for a subshell with well-defined j.
 
         + j          ::AngularJ64      ... subshell j
         + Q          ::AngularJ64      ... quasi-spin
+        + occupation ::Int64           ... occupation N
         + seniority  ::Int64           ... seniority
         + J          ::AngularJ64      ... total J of subshell term
         + Nr         ::Int64           ... Additional quantum number Nr = 0,1,2.
@@ -185,6 +213,7 @@ module SpinAngular
     struct  SubshellTerm
         j            ::AngularJ64
         Q            ::AngularJ64
+        occupation   ::Int64
         seniority    ::Int64
         J            ::AngularJ64
         Nr           ::Int64
@@ -193,8 +222,8 @@ module SpinAngular
     
     # `Base.show(io::IO, term::SubshellTerm)`  ... prepares a proper printout of term::SubshellTerm.
     function Base.show(io::IO, term::SubshellTerm)
-        if  term.Nr == 0   sa = "|$(term.j) ($(term.seniority)) $(term.Q) $(term.J)>"
-        else               sa = "|$(term.j) ($(term.seniority)) $(term.Q) $(term.J); Nr=$(term.Nr)>"
+        if  term.Nr == 0   sa = "|$(term.j)^(term.occupation) ($(term.seniority)) $(term.Q) $(term.J)>"
+        else               sa = "|$(term.j)^(term.occupation) ($(term.seniority)) $(term.Q) $(term.J); Nr=$(term.Nr)>"
         end
         println(io, sa)
     end
@@ -299,7 +328,7 @@ module SpinAngular
                 Ni  = leftCsf.occupation[i];   Nj  = rightCsf.occupation[j]
                 ji  = Basics.subshell_j(shi);  jj  = Basics.subshell_j(shj)
                 Ji  = leftCsf.subshellJ[i];    Jj  = rightCsf.subshellJ[j]
-                si  = leftCsf.seniority[i];    sj  = rightCsf.seniority[j]
+                si  = leftCsf.seniorityNr[i];    sj  = rightCsf.seniorityNr[j]
                 Qi  = AngularJ64(1);           Qj  = AngularJ64(1)                          # !! This is yet not correct
                 Nri = 0;                       Nrj = 0                                      # !! This is yet not correct
                 iTerm     = SpinAngular.SubshellTerm(ji, Qi, si, Ji, Nri)
@@ -342,7 +371,7 @@ module SpinAngular
                         Ni  = leftCsf.occupation[i];   Nj  = leftCsf.occupation[j];   Nip = rightCsf.occupation[ip];  Njp  = rightCsf.occupation[jp]
                         ji  = Basics.subshell_j(shi);  jj  = Basics.subshell_j(shj);  jip = Basics.subshell_j(ship);  jjp  = Basics.subshell_j(shjp)
                         Ji  = leftCsf.subshellJ[i];    Jj  = leftCsf.subshellJ[j];    Jip = rightCsf.subshellJ[ip];   Jjp  = rightCsf.subshellJ[jp] 
-                        si  = leftCsf.seniority[i];    sj  = leftCsf.seniority[j];    sip = leftCsf.seniority[ip];    sjp  = leftCsf.seniority[jp]
+                        si  = leftCsf.seniorityNr[i];    sj  = leftCsf.seniorityNr[j];    sip = leftCsf.seniorityNr[ip];    sjp  = leftCsf.seniorityNr[jp]
                         Qi  = AngularJ64(1);           Qj  = AngularJ64(1);           Qip = AngularJ64(1);            Qjp  = AngularJ64(1)                          # !! This is yet not 
                         Nri = 0;                       Nrj = 0;                       Nrip= 0;                        Nrjp= 0                                        
                         # !! This is yet not correct

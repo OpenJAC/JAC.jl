@@ -96,12 +96,12 @@ include("module-Math.jl");              using ..Math
 include("module-Defaults.jl");          using ..Defaults
 include("module-ManyElectron.jl");      using ..ManyElectron
 include("module-Nuclear.jl");           using ..Nuclear
-include("module-SpinAngular.jl");       using ..SpinAngular
 include("module-BiOrthogonal.jl");      using ..BiOrthogonal
 
 # Specialized functions/methods to manipulate these data
 include("module-AngularMomentum.jl")
 include("module-AngularCoefficients-Ratip2013.jl")
+include("module-SpinAngular.jl");       using ..SpinAngular
 include("module-Bsplines.jl")
 include("module-Continuum.jl")
 ##x include("module-ConfigurationSpace.jl")

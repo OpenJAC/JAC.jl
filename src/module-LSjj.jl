@@ -54,11 +54,11 @@ module  LSjj
     """
     `LSjj.shellStateString(shell::String, occ::Int64, w::Int64, Q::AngularJ64, 
                            L::AngularJ64, S::AngularJ64, LX::AngularJ64, SX::AngularJ64)`  
-        ... to provide a string of a given shell state in the form !!To be worked out !! '[2p_1/2^occ]_(seniority, J_sub), X=Xo' ... .
+        ... to provide a string of a given shell state in the form !!To be worked out !! '[2p_1/2^occ]_(seniorityNr, J_sub), X=Xo' ... .
     """
     function shellStateString(shell::String, occ::Int64, w::Int64, Q::AngularJ64, L::AngularJ64, S::AngularJ64, LX::AngularJ64, SX::AngularJ64)
         error("stop a: To be adapted yet. ")
-        sa = "[" * subshell * "^$occ]_($seniority, " * string(Jsub) * ") X=" * string(X)
+        sa = "[" * subshell * "^$occ]_($seniorityNr, " * string(Jsub) * ") X=" * string(X)
         return( sa )
     end
 
