@@ -459,8 +459,17 @@
         subshells = Subshell[]   
 
         !(sa == "subshells: ordered list for relativistic configurations")  &&   error("Unsupported keystring = $sa")
+        
+        for  conf in confs
+            for  subsh in keys(conf.subshells)      push!(subshells, subsh)     end
+        end
+        subshells = Base.unique(subshells)
+        subshells = Base.sort( subshells, lt=Base.isless)
+        ## Do include 'empty' subshells into the subshell list if they are specified by the given configurations
+        ## if  a in ks   &&   confs[cf].subshells[a]  !=  0     push!(subshells, a);    break    end
+        
 
-        wa = Defaults.getDefaults("ordered subshell list: relativistic", 7)
+        #== wa = Defaults.getDefaults("ordered subshell list: relativistic", 7)
         for  a in wa
             for  cf in 1:length(confs)
                 ks = keys(confs[cf].subshells)
@@ -468,7 +477,7 @@
                 ## if  a in ks   &&   confs[cf].subshells[a]  !=  0     push!(subshells, a);    break    end
                 if  a in ks     push!(subshells, a);    break    end
             end 
-        end
+        end ==#
 
         return( subshells )
     end

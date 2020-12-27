@@ -153,7 +153,7 @@ module AngularCoefficientsRatip2013
 
     # `Base.show(io::IO, coeff::AngularVcoeff)`  ... prepares a proper printout of the variable coeff::AngularVcoeff.
     function Base.show(io::IO, coeff::AngularVcoeff) 
-        sa = " V^$(coeff.nu)[" * string(coeff.a) * "," * string(coeff.b) * ";" * string(coeff.c) * "," * string(coeff.d) * "] = $(coeff.V)"
+        sa = " \n V^($(coeff.nu)) [" * string(coeff.a) * ", " * string(coeff.b) * "| " * string(coeff.c) * ", " * string(coeff.d) * "] = $(coeff.V)"
         print(io, sa )
     end
 

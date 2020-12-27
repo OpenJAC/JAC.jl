@@ -243,14 +243,14 @@ module ManyElectron
     # `Base.string(conf::Configuration)`  ... provides a String notation for the variable conf::Configuration.
     function Base.string(conf::Configuration)
         wa = keys(conf.shells);   va = values(conf.shells)
-        wb = Defaults.getDefaults("ordered shell list: non-relativistic", 7)
+        ##x wb = Defaults.getDefaults("ordered shell list: non-relativistic", 7)
+        shells = Shell[];   for  k in wa    push!(shells, k)    end
+        sortedShells = Base.sort( shells , lt=Base.isless)
 
         sa = ""
-        for  k  in  wb
-            if   k  in  wa
-              occ = conf.shells[k]
-              sa = sa * string(k) * "^$occ "
-            end
+        for  k  in sortedShells 
+            occ = conf.shells[k]
+            sa  = sa * string(k) * "^$occ "
         end
 
         return( sa )
@@ -299,14 +299,14 @@ module ManyElectron
     # `Base.string(conf::ConfigurationR)`  ... provides a String notation for the variable conf::ConfigurationR.
     function Base.string(conf::ConfigurationR)
         wa = keys(conf.subshells);   va = values(conf.subshells)
-        wb = Defaults.getDefaults("ordered subshell list: relativistic", 7)
+        ##x wb = Defaults.getDefaults("ordered subshell list: relativistic", 7)
+        subshells = Subshell[];   for  k in wa    push!(subshells, k)    end
+        sortedSubshells = Base.sort( subshells , lt=Base.isless)
 
         sa = ""
-        for  k  in  wb
-           if   k  in  wa
-               occ = conf.subshells[k]
-               sa = sa * string(k) * "^$occ "
-           end
+        for  k  in sortedSubshells 
+            occ = conf.subshells[k]
+            sa  = sa * string(k) * "^$occ "
         end
 
         return( sa )

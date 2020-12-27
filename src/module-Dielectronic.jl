@@ -43,7 +43,7 @@ module Dielectronic
         ... constructor for the default values of dielectronic recombination pathway computations.
     """
     function Settings()
-        Settings([E1], UseGauge[], false, PathwaySelection(), 0., 0., 0., "Coulomb")
+        Settings([E1], UseGauge[], false, PathwaySelection(), 0., 0., 0., CoulombInteraction())
     end
 
 

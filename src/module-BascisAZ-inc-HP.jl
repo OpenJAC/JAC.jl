@@ -119,6 +119,21 @@
     end
 
 
+    function Base.isless(x::Basics.Shell, y::Basics.Shell)
+        if  x.n == y.n      return( x.l < y.l )
+        else                return( x.n < y.n )
+        end
+    end
+
+
+    function Base.isless(x::Basics.Subshell, y::Basics.Subshell)
+        if      x.n == y.n   &&  abs(x.kappa) == abs(y.kappa)     return( x.kappa < y.kappa )
+        elseif  x.n == y.n                                        return( abs(x.kappa) < abs(y.kappa) )
+        else                                                      return( x.n < y.n )
+        end
+    end
+
+
     function Base.isless(x::ManyElectron.Level, y::ManyElectron.Level)
         return x.energy < y.energy
     end
