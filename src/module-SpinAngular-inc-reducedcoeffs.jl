@@ -1,143 +1,156 @@
     #
     # This file has mainly been contributed by Gediminas Gaigalas (gediminas.gaigalas@tfai.vu.lt)
 
+
     """
-    `SpinAngular.completlyReducedCfpByIndices(aterm::Int64, bterm::Int64)`  
-        ... returns the (completely) reduced coefficient of fractional parentage (j alpha Q J||| a^(qj)||| j alpha' Q' J')
-            for j = 1/2, 3/2, 5/2 and 7/2, and where alpha == Nr refers to some additional quantum number for j=9/2 subshell
-            states. In all other cases Nr = Nrp = 0 is expected by this routine. A coeff::Float64 is returned.
+    `SpinAngular.completlyReducedCfpByIndices(aIndex::Int64, bIndex::Int64)`  
+        ... returns the (completely) reduced coefficient of fractional parentage 
+
+            (j alpha Q J||| a^(qj)||| j alpha' Q' J')
+            for j = 1/2, 3/2, 5/2, 7/2, and j=9/2 subshell states. A coeff::Float64 is returned.
+
+            aIndex - is the state number of the bra subshell in quasispin representation;
+            bIndex - is the state number of the ket subshell in quasispin representation.
     """
-    function completlyReducedCfpByIndices(aterm::Int64, bterm::Int64)
+    function completlyReducedCfpByIndices(aIndex::Int64, bIndex::Int64)
         #
         wa = [0, 1, 1]
-        if aterm <= bterm   atermN = aterm; btermN = bterm
-        else                atermN = bterm; btermN = aterm
+        if aIndex <= bIndex   aIndexN = aIndex;    bIndexN = bIndex
+        else                  aIndexN = bIndex;    bIndexN = aIndex
         end
         # Distinguish due to different j-values
-        if       atermN == 1  &&  btermN == 2   wa = reducedCfp1half[atermN,btermN-1]
-        elseif   atermN == 3  &&  btermN  > 3   &&  btermN  < 6
-            wa = reducedCfp3half[atermN-2,btermN-3]
-        elseif   atermN > 5   &&  atermN < 9   &&  btermN  > 8   &&  btermN  < 12
-            wa = reducedCfp5half[atermN-5,btermN-8]
-        elseif   atermN > 11  &&  atermN < 18  &&  btermN  > 17  &&  btermN  < 26
-            wa = reducedCfp7half[atermN-11,btermN-17]
-        elseif   atermN > 25  &&  atermN < 46  &&  btermN  > 45  &&  btermN  < 64
-            wa = reducedCfp9half[atermN-25,btermN-45]
+        if       aIndexN == 1  &&  bIndexN == 2   wa = reducedCfp1half[aIndexN,bIndexN-1]
+        elseif   aIndexN == 3  &&  bIndexN  > 3   &&  bIndexN  < 6
+            wa = reducedCfp3half[aIndexN-2,bIndexN-3]
+        elseif   aIndexN > 5   &&  aIndexN < 9   &&  bIndexN  > 8   &&  bIndexN  < 12
+            wa = reducedCfp5half[aIndexN-5,bIndexN-8]
+        elseif   aIndexN > 11  &&  aIndexN < 18  &&  bIndexN  > 17  &&  bIndexN  < 26
+            wa = reducedCfp7half[aIndexN-11,bIndexN-17]
+        elseif   aIndexN > 25  &&  aIndexN < 46  &&  bIndexN  > 45  &&  bIndexN  < 64
+            wa = reducedCfp9half[aIndexN-25,bIndexN-45]
         end
         wb = wa[1] * sqrt(wa[2]/wa[3])
-        if wa[1] != 0  &&  aterm >= bterm   
-            aT = qspaceTerms(aterm);  bT = qspaceTerms(bterm)
-            wb = (-1)^Int64((Basics.twice(aT.Q)-Basics.twice(bT.Q)+Basics.twice(aT.J)-Basics.twice(bT.J)+Basics.twice(bT.j)-1)/2) * wb
+        if wa[1] != 0  &&  aIndex >= bIndex
+            aT = qspaceTerms(aIndex);  bT = qspaceTerms(bIndex)
+            wb = (-1)^Int64((Basics.twice(aT.Q)-Basics.twice(bT.Q)+Basics.twice(aT.J)-Basics.twice(bT.J)+Basics.twice(bT.j)-1)/2) *
+                 wb
         end
         return( wb )
     end
-    
+   
+ 
     """
-    `SpinAngular.completelyReducedWkk(aterm::Int64, bterm::Int64, kq::Int64, kj::Int64)`
-        ... returns the (completely) reduced coefficient of fractional parentage (j alpha Q J||| a^(qj)||| j alpha' Q' J')
-            for j = 1/2, 3/2, 5/2, 7/2 and 9/2, and where alpha == Nr refers to some additional quantum number for j=9/2 subshell
-            states. In all other cases Nr = Nrp = 0 is expected by this routine. A coeff::Float64 is returned
+    `SpinAngular.completelyReducedWkk(aIndex::Int64, bIndex::Int64, kq::Int64, kj::Int64)`
+        ... returns the (completely) reduced coefficient of fractional parentage 
+
+            (j alpha Q J||| W^(kq kj)||| j alpha' Q' J')
+            for j = 1/2, 3/2, 5/2, 7/2, and 9/2 subshell states. A coeff::Float64 is returned
+
+            aIndex - is the state number of the bra subshell in quasispin representation;
+            bIndex - is the state number of the ket subshell in quasispin representation;
+            kq     - is the rank kq in quasispin space q.
+            kj     - is the rank kj in angular momentum j space.
     """
-    function completelyReducedWkk(aterm::Int64, bterm::Int64, kq::Int64, kj::Int64)
+    function completelyReducedWkk(aIndex::Int64, bIndex::Int64, kq::Int64, kj::Int64)
         #
         # Define a tuple for comparison in the subsequent lists; apply symmetries to reduced the list of coefficients
         #
         wa = [0, 1, 1]
-        aT = qspaceTerms(aterm);  bT = qspaceTerms(bterm)
+        aT = qspaceTerms(aIndex);  bT = qspaceTerms(bIndex)
         if aT.j ==  bT.j < AngularJ64(9//2)  &&   aT.min_even ==  bT.min_even 
             # Distinguish due to different j-values and different kq, kj
             if aT.j == bT.j == AngularJ64(7//2) && kj > 1
                 limits_1 = [0, 5, 9, 12, 14, 15]
                 limits_2 = [0, 7, 13, 18, 22, 25, 27, 28]
-                if aterm <= bterm   atermN = aterm; btermN = bterm
-                else                atermN = bterm; btermN = aterm
+                if aIndex <= bIndex   aIndexN = aIndex;    bIndexN = bIndex
+                else                  aIndexN = bIndex;    bIndexN = aIndex
                 end
             end
-            if (kq,kj) == (0,0)   &&   aterm == bterm
-                if aT.j == AngularJ64(1//2)       wa = W_00_one_half[aterm]
-                elseif aT.j == AngularJ64(3//2)   wa = W_00_three_half[aterm-2]
-                elseif aT.j == AngularJ64(5//2)   wa = W_00_five_half[aterm-5]
-                elseif aT.j == AngularJ64(7//2)   wa = W_00_seven_half[aterm-11]
+            if (kq,kj) == (0,0)   &&   aIndex == bIndex
+                if aT.j == AngularJ64(1//2)       wa = W_00_one_half[aIndex]
+                elseif aT.j == AngularJ64(3//2)   wa = W_00_three_half[aIndex-2]
+                elseif aT.j == AngularJ64(5//2)   wa = W_00_five_half[aIndex-5]
+                elseif aT.j == AngularJ64(7//2)   wa = W_00_seven_half[aIndex-11]
                 end
-            elseif (kq,kj) == (1,0)   &&   aterm == bterm
-                if aT.j == AngularJ64(1//2)       wa = W_10_one_half[aterm]
-                elseif aT.j == AngularJ64(3//2)   wa = W_10_three_half[aterm-2]
-                elseif aT.j == AngularJ64(5//2)   wa = W_10_five_half[aterm-5]
-                elseif aT.j == AngularJ64(7//2)   wa = W_10_seven_half[aterm-11]
+            elseif (kq,kj) == (1,0)   &&   aIndex == bIndex
+                if aT.j == AngularJ64(1//2)       wa = W_10_one_half[aIndex]
+                elseif aT.j == AngularJ64(3//2)   wa = W_10_three_half[aIndex-2]
+                elseif aT.j == AngularJ64(5//2)   wa = W_10_five_half[aIndex-5]
+                elseif aT.j == AngularJ64(7//2)   wa = W_10_seven_half[aIndex-11]
                 end
-            elseif (kq,kj) == (0,1)   &&   aterm == bterm
-                if aT.j == AngularJ64(1//2)       wa = W_01_one_half[aterm]
-                elseif aT.j == AngularJ64(3//2)   wa = W_01_three_half[aterm-2]
-                elseif aT.j == AngularJ64(5//2)   wa = W_01_five_half[aterm-5]
-                elseif aT.j == AngularJ64(7//2)   wa = W_01_seven_half[aterm-11]
+            elseif (kq,kj) == (0,1)   &&   aIndex == bIndex
+                if aT.j == AngularJ64(1//2)       wa = W_01_one_half[aIndex]
+                elseif aT.j == AngularJ64(3//2)   wa = W_01_three_half[aIndex-2]
+                elseif aT.j == AngularJ64(5//2)   wa = W_01_five_half[aIndex-5]
+                elseif aT.j == AngularJ64(7//2)   wa = W_01_seven_half[aIndex-11]
                 end
             elseif (kq,kj) == (1,2) 
                 if aT.j == AngularJ64(3//2) && aT.min_even == 3
-                    wa = W_12_three_half_odd[aterm-2,bterm-2]
+                    wa = W_12_three_half_odd[aIndex-2,bIndex-2]
                 elseif aT.j == AngularJ64(3//2) && aT.min_even == 4
-                    wa = W_12_three_half_even[aterm-3,bterm-3]
+                    wa = W_12_three_half_even[aIndex-3,bIndex-3]
                 elseif aT.j == AngularJ64(5//2) && aT.min_even == 6
-                    wa = W_12_five_half_odd[aterm-5,bterm-5]
+                    wa = W_12_five_half_odd[aIndex-5,bIndex-5]
                 elseif aT.j == AngularJ64(5//2) && aT.min_even == 9
-                    wa = W_12_five_half_even[aterm-8,bterm-8]
+                    wa = W_12_five_half_even[aIndex-8,bIndex-8]
                 elseif aT.j == AngularJ64(7//2) && aT.min_even == 12
-                    wa = W_12_seven_half_odd[limits_1[atermN-11]+btermN-11]
+                    wa = W_12_seven_half_odd[limits_1[aIndexN-11]+bIndexN-11]
                 elseif aT.j == AngularJ64(7//2) && aT.min_even == 18
-                    wa = W_12_seven_half_even[limits_2[atermN-17]+btermN-17]
+                    wa = W_12_seven_half_even[limits_2[aIndexN-17]+bIndexN-17]
                 end
             elseif (kq,kj) == (0,3) 
                 if aT.j == AngularJ64(3//2) && aT.min_even == 3
-                    wa = W_03_three_half_odd[aterm-2,bterm-2]
+                    wa = W_03_three_half_odd[aIndex-2,bIndex-2]
                 elseif aT.j == AngularJ64(3//2) && aT.min_even == 4
-                    wa = W_03_three_half_even[aterm-3,bterm-3]
+                    wa = W_03_three_half_even[aIndex-3,bIndex-3]
                 elseif aT.j == AngularJ64(5//2) && aT.min_even == 6
-                    wa = W_03_five_half_odd[aterm-5,bterm-5]
+                    wa = W_03_five_half_odd[aIndex-5,bIndex-5]
                 elseif aT.j == AngularJ64(5//2) && aT.min_even == 9
-                    wa = W_03_five_half_even[aterm-8,bterm-8]
+                    wa = W_03_five_half_even[aIndex-8,bIndex-8]
                 elseif aT.j == AngularJ64(7//2) && aT.min_even  == 12
-                    wa = W_03_seven_half_odd[limits_1[atermN-11]+btermN-11]
+                    wa = W_03_seven_half_odd[limits_1[aIndexN-11]+bIndexN-11]
                 elseif aT.j == AngularJ64(7//2) && aT.min_even == 18
-                    wa = W_03_seven_half_even[limits_2[atermN-17]+btermN-17]
+                    wa = W_03_seven_half_even[limits_2[aIndexN-17]+bIndexN-17]
                 end
             elseif (kq,kj) == (1,4) 
                 if aT.j == AngularJ64(5//2) && aT.min_even == 6
-                    wa = W_14_five_half_odd[aterm-5,bterm-5]
+                    wa = W_14_five_half_odd[aIndex-5,bIndex-5]
                 elseif aT.j == AngularJ64(5//2) && aT.min_even == 9
-                    wa = W_14_five_half_even[aterm-8,bterm-8]
+                    wa = W_14_five_half_even[aIndex-8,bIndex-8]
                 elseif aT.j == AngularJ64(7//2) && aT.min_even  == 12
-                    wa = W_14_seven_half_odd[limits_1[atermN-11]+btermN-11]
+                    wa = W_14_seven_half_odd[limits_1[aIndexN-11]+bIndexN-11]
                 elseif aT.j == AngularJ64(7//2) && aT.min_even == 18
-                    wa = W_14_seven_half_even[limits_2[atermN-17]+btermN-17]
+                    wa = W_14_seven_half_even[limits_2[aIndexN-17]+bIndexN-17]
                 end
             elseif (kq,kj) == (0,5) 
                 if aT.j == AngularJ64(5//2) && aT.min_even == 6
-                    wa = W_05_five_half_odd[aterm-5,bterm-5]
+                    wa = W_05_five_half_odd[aIndex-5,bIndex-5]
                 elseif aT.j == AngularJ64(5//2) && aT.min_even == 9
-                    wa = W_05_five_half_even[aterm-8,bterm-8]
+                    wa = W_05_five_half_even[aIndex-8,bIndex-8]
                 elseif aT.j == AngularJ64(7//2) && aT.min_even  == 12
-                    wa = W_05_seven_half_odd[limits_1[atermN-11]+btermN-11]
+                    wa = W_05_seven_half_odd[limits_1[aIndexN-11]+bIndexN-11]
                 elseif aT.j == AngularJ64(7//2) && aT.min_even == 18
-                    wa = W_05_seven_half_even[limits_2[atermN-17]+btermN-17]
+                    wa = W_05_seven_half_even[limits_2[aIndexN-17]+bIndexN-17]
                 end
             elseif (kq,kj) == (1,6) 
                 if aT.j == AngularJ64(7//2) && aT.min_even  == 12
-                    wa = W_16_seven_half_odd[limits_1[atermN-11]+btermN-11]
+                    wa = W_16_seven_half_odd[limits_1[aIndexN-11]+bIndexN-11]
                 elseif aT.j == AngularJ64(7//2) && aT.min_even == 18
-                    wa = W_16_seven_half_even[limits_2[atermN-17]+btermN-17]
+                    wa = W_16_seven_half_even[limits_2[aIndexN-17]+bIndexN-17]
                 end
             elseif (kq,kj) == (0,7) 
                 if aT.j == AngularJ64(7//2) && aT.min_even  == 12
-                    wa = W_07_seven_half_odd[limits_1[atermN-11]+btermN-11]
+                    wa = W_07_seven_half_odd[limits_1[aIndexN-11]+bIndexN-11]
                 elseif aT.j == AngularJ64(7//2) && aT.min_even == 18
-                    wa = W_07_seven_half_even[limits_2[atermN-17]+btermN-17]
+                    wa = W_07_seven_half_even[limits_2[aIndexN-17]+bIndexN-17]
                 end
             end
             wb = wa[1] * sqrt(wa[2]/wa[3])
-            if aT.j == AngularJ64(7//2) && wa[1] != 0  &&  aterm >= bterm && kj > 1
+            if aT.j == AngularJ64(7//2) && wa[1] != 0  &&  aIndex >= bIndex && kj > 1
                 wb = (-1)^Int64((Basics.twice(aT.Q)-Basics.twice(bT.Q)+Basics.twice(aT.J)-Basics.twice(bT.J))/2) * wb
             end
         elseif aT.j ==  bT.j == AngularJ64(9//2)  &&   aT.min_even ==  bT.min_even 
-            wb  = completelyReducedWkk_calculate(aterm, bterm, kq, kj)
+            wb  = completelyReducedWkk_calculate(aIndex, bIndex, kq, kj)
         else
             wb = 0.0
         end
@@ -146,17 +159,23 @@
     
 
     """
-    `SpinAngular.completelyReducedWkk_calculate(aterm::Int64, bterm::Int64, kq::Int64, kj::Int64)`
-        ... returns the (completely) reduced coefficient of fractional parentage (j alpha Q J||| a^(qj)||| j alpha' Q' J')
-            for j = 9/2, and where alpha == Nr refers to some additional quantum number for j=9/2 subshell
-            states. In all other cases Nr = Nrp = 0 is expected by this routine. A coeff::Float64 is returned.
+    `SpinAngular.completelyReducedWkk_calculate(aIndex::Int64, bIndex::Int64, kq::Int64, kj::Int64)`
+        ... calculate the (completely) reduced coefficient of fractional parentage 
+
+            (j alpha Q J||| W^(kq kj)||| j alpha' Q' J')
+            for j = 9/2 subshell states. A coeff::Float64 is returned.
+
+            aIndex - is the state number of the bra subshell in quasispin representation;
+            bIndex - is the state number of the ket subshell in quasispin representation.
+            kq     - is the rank kq in quasispin space q.
+            kj     - is the rank kj in angular momentum j space.
     """
-    function completelyReducedWkk_calculate(aterm::Int64, bterm::Int64, kq::Int64, kj::Int64)
+    function completelyReducedWkk_calculate(aIndex::Int64, bIndex::Int64, kq::Int64, kj::Int64)
         #
         # Define a tuple for comparison in the subsequent lists; apply symmetries to reduced the list of coefficients
         #
         wb = 0.0
-        aT = qspaceTerms(aterm);      bT = qspaceTerms(bterm)
+        aT = qspaceTerms(aIndex);      bT = qspaceTerms(bIndex)
         if aT.min_even ==  bT.min_even
             coeff = 0.0
             for rterm = aT.min_odd:aT.max_odd
@@ -165,8 +184,8 @@
                 if coeffJ != 0.0
                     coeffQ = AngularMomentum.Wigner_6j(AngularJ64(1//2), AngularJ64(1//2), kq, bT.Q, aT.Q, rT.Q)
                     if coeffQ != 0.0
-                        coeff = coeff + completlyReducedCfpByIndices(aterm, rterm) * 
-                                        completlyReducedCfpByIndices(rterm, bterm) * coeffJ * coeffQ
+                        coeff = coeff + completlyReducedCfpByIndices(aIndex, rterm) * 
+                                        completlyReducedCfpByIndices(rterm, bIndex) * coeffJ * coeffQ
                     end
                 end
             end
@@ -178,11 +197,16 @@
 
     
     """
-    `SpinAngular.get_term_number(j::AngularJ64,Q::AngularJ64,J::AngularJ64,Nr::Int64)`  
+    `SpinAngular.getTermNumber(j::AngularJ64, N::Int64, Q::AngularJ64, J::AngularJ64)`  
         ... returns the internal index for a subshell term which is given by its angular momentum j, the quasispin quantum 
             number Q as well as the total subshell angular momentum J.
+
+            j - is angular momentum j for the subshell;
+            N - is number of electrons in the subshell;
+            Q - is the subshell total quasispin Q;
+            J - is the subshell total angular momentum J.
     """
-    function  get_term_number(j::AngularJ64,Q::AngularJ64,J::AngularJ64,Nr::Int64)
+    function  getTermNumber(j::AngularJ64, N::Int64, Q::AngularJ64, J::AngularJ64)
         no_min = [1, 0, 3, 0, 6, 0,12, 0,26]
         no_max = [2, 0, 5, 0,11, 0,25, 0,63]
         I = 0
@@ -192,21 +216,44 @@
         if j < AngularJ64(9//2)
             for run = p_min:p_max
                 if Q == qspaceTerms(run).Q 
-                    if J == qspaceTerms(run).J   I = run;  return (I);  end
+                        if J == qspaceTerms(run).J   I = run;  return (I);  end
                 end
             end
         elseif j == AngularJ64(9//2)
+            if N == 0 || N == 1 || N == 2 
+                for run = p_min:p_max
+                    if Q == qspaceTerms(run).Q 
+                        if J == qspaceTerms(run).J   I = run;  return (I);  end
+                    end
+                end
+            end
         else
+            if N == 0 || N == 1 || N == 2   I = ((Basics.twice(j)*1000) + Basics.twice(Q))*1000 + Basics.twice(J)
+            else    error("SpinAngular.getTermNumber: please, contact with G. Gaigalas")
+            end
         end
         return( I )
     end
 
     
     """
-    `SpinAngular.qspaceTerms(I_Number::Int64)`  
-        ... returns a list of Q-space term for the given Term number; a term::SpinAngular.QspaceTerm,1 is returned.
+    `SpinAngular.qspaceTerms(iIndex::Int64)`  
+        ... returns a list of Q-space term for the given state number; a term::SpinAngular.QspaceTerm,1 is returned.
+
+            iIndex - is the state number of the subshell in quasispin representation.
     """
-    function  qspaceTerms(I_Number::Int64)
+    function  qspaceTerms(iIndex::Int64)
+        wa = QTerm[iIndex] 
+        return( wa )
+    end
+
+    #######################################################################################################################
+    #######################################################################################################################
+    
+    """
+    `SpinAngular.QTerm[]`
+        ... set-up the list of Q-space term for the given Term number.
+    """
         # First define some short-cuts to simplify the subsequent input
         h0  = AngularJ64(0//2);   h1  = AngularJ64(1//2);   h2  = AngularJ64(2//2);   h3  = AngularJ64(3//2);   h4  = AngularJ64(4//2)    
         h5  = AngularJ64(5//2);   h6  = AngularJ64(6//2);   h7  = AngularJ64(7//2);   h8  = AngularJ64(8//2);   h9  = AngularJ64(9//2)    
@@ -243,101 +290,8 @@
                    QspaceTerm(h9, h1,h12, 1,26,45,46,63), QspaceTerm(h9, h1,h12, 2,26,45,46,63), QspaceTerm(h9, h1,h14, 0,26,45,46,63),
                    QspaceTerm(h9, h3,h16, 0,26,45,46,63), QspaceTerm(h9, h1,h16, 0,26,45,46,63), QspaceTerm(h9, h1,h18, 0,26,45,46,63),
                    QspaceTerm(h9, h1,h20, 0,26,45,46,63), QspaceTerm(h9, h1,h24, 0,26,45,46,63) ]
-        wa = QTerm[I_Number] 
-        return( wa )
-    end
 
-    
-    """
-    `SpinAngular.subshellTerms(j::AngularJ64, N::Int64)`  
-        ... returns a list of subshell terms for the given j^N; a termList::Array{SpinAngular.SubshellTerm,1} is returned.
-    """
-    function  subshellTerms(j::AngularJ64, N::Int64)
-        # First define some short-cuts to simplify the subsequent input
-        h0  = AngularJ64(0//2);   h1  = AngularJ64(1//2);   h2  = AngularJ64(2//2);   h3  = AngularJ64(3//2);   h4  = AngularJ64(4//2)    
-        h5  = AngularJ64(5//2);   h6  = AngularJ64(6//2);   h7  = AngularJ64(7//2);   h8  = AngularJ64(8//2);   h9  = AngularJ64(9//2)    
-        h10 = AngularJ64(10//2);  h11 = AngularJ64(11//2);  h12 = AngularJ64(12//2);  h13 = AngularJ64(13//2);  h14 = AngularJ64(14//2)
-        h15 = AngularJ64(15//2);  h16 = AngularJ64(16//2);  h17 = AngularJ64(17//2);  h18 = AngularJ64(18//2);  h19 = AngularJ64(19//2)
-        h20 = AngularJ64(20//2);  h21 = AngularJ64(21//2);  h22 = AngularJ64(22//2);  h23 = AngularJ64(23//2);  h24 = AngularJ64(24//2)
-        h25 = AngularJ64(25//2);  h26 = AngularJ64(26//2);  h27 = AngularJ64(27//2)
-        #
-        # Distinguish due to different j-values
-        if       j == AngularJ64(1//2)        &&  N in [0, 2]
-            wa = [ SubshellTerm(h1, h1, N, 0, h0, 0) ]
-        elseif   j == AngularJ64(1//2)        &&  N in [1]
-            wa = [ SubshellTerm(h1, h0, N, 1, h1, 0) ]
-            #
-            #
-        elseif   j == AngularJ64(3//2)        &&  N in [0, 4]
-            wa = [ SubshellTerm(h3, h2, N, 0, h0, 0) ]
-        elseif   j == AngularJ64(3//2)        &&  N in [1, 3]
-            wa = [ SubshellTerm(h3, h1, N, 1, h3, 0) ]
-        elseif   j == AngularJ64(3//2)        &&  N in [2]
-            wa = [ SubshellTerm(h3, h2, N, 0, h0, 0), SubshellTerm(h3, h0, N, 2, h4, 0) ]
-            #
-            #
-        elseif   j == AngularJ64(5//2)        &&  N in [0, 6]
-            wa = [ SubshellTerm(h5, h3, N, 0, h0, 0) ]
-        elseif   j == AngularJ64(5//2)        &&  N in [1, 5]
-            wa = [ SubshellTerm(h5, h2, N, 1, h5, 0) ]
-        elseif   j == AngularJ64(5//2)        &&  N in [2, 4]
-            wa = [ SubshellTerm(h5, h3, N, 0, h0, 0), SubshellTerm(h5, h1, N, 2, h4, 0), SubshellTerm(h5, h1, N, 2, h8, 0) ]
-        elseif   j == AngularJ64(5//2)        &&  N in [3]
-            wa = [ SubshellTerm(h5, h2, N, 1, h5, 0), SubshellTerm(h5, h0, N, 3, h3, 0), SubshellTerm(h5, h0, N, 3, h9, 0) ]
-            #
-            #
-        elseif   j == AngularJ64(7//2)        &&  N in [0, 8]
-            wa = [ SubshellTerm(h7, h4, N, 0, h0, 0) ]
-        elseif   j == AngularJ64(7//2)        &&  N in [1, 7]
-            wa = [ SubshellTerm(h7, h3, N, 1, h7, 0) ]
-        elseif   j == AngularJ64(7//2)        &&  N in [2, 6]
-            wa = [ SubshellTerm(h7, h3, N, 1, h7, 0), SubshellTerm(h7, h2, N, 2, h4, 0), SubshellTerm(h7, h2, N, 2, h8, 0), 
-                   SubshellTerm(h7, h2, N, 2,h12, 0) ]
-        elseif   j == AngularJ64(7//2)        &&  N in [3, 5]
-            wa = [ SubshellTerm(h7, h3, N, 1, h7, 0), SubshellTerm(h7, h1, N, 3, h3, 0), SubshellTerm(h7, h1, N, 3, h5, 0), 
-                   SubshellTerm(h7, h3, N, 1, h9, 0), SubshellTerm(h7, h1, N, 3,h11, 0), SubshellTerm(h7, h1, N, 3,h15, 0) ]
-        elseif   j == AngularJ64(7//2)        &&  N in [4]
-            wa = [ SubshellTerm(h7, h4, N, 0, h0, 0), SubshellTerm(h7, h2, N, 2, h4, 0), SubshellTerm(h7, h0, N, 4, h8, 0),
-                   SubshellTerm(h7, h2, N, 2,h12, 0), SubshellTerm(h7, h0, N, 4, h4, 0), SubshellTerm(h7, h0, N, 4, h8, 0),
-                   SubshellTerm(h7, h0, N, 4,h10, 0), SubshellTerm(h7, h0, N, 4,h16, 0) ]
-            #
-            #
-        elseif   j == AngularJ64(9//2)        &&  N in [0, 10]
-            wa = [ SubshellTerm(h9, h5, N, 0, h0, 0) ]
-        elseif   j == AngularJ64(9//2)        &&  N in [1, 9]
-            wa = [ SubshellTerm(h9, h4, N, 1, h9, 0) ]
-        elseif   j == AngularJ64(9//2)        &&  N in [2, 8]
-            wa = [ SubshellTerm(h9, h5, N, 0, h0, 0), SubshellTerm(h9, h3, N, 2, h4, 0), SubshellTerm(h9, h3, N, 2, h8, 0), 
-                   SubshellTerm(h9, h3, N, 2,h12, 0), SubshellTerm(h9, h3, N, 2,h16, 0) ]
-        elseif   j == AngularJ64(9//2)        &&  N in [3, 7]
-            wa = [ SubshellTerm(h9, h4, 1, N, h9, 0), SubshellTerm(h9, h2, N, 3, h3, 0), SubshellTerm(h9, h2, N, 3, h5, 0), 
-                   SubshellTerm(h9, h2, N, 3, h7, 0), SubshellTerm(h9, h2, N, 3, h9, 0), SubshellTerm(h9, h2, 3, N,h11, 0), 
-                   SubshellTerm(h9, h2, N, 3,h13, 0), SubshellTerm(h9, h2, N, 3,h15, 0), SubshellTerm(h9, h2, 3, N,h17, 0), 
-                   SubshellTerm(h9, h2, 3, N,h21, 0) ]
-        elseif   j == AngularJ64(9//2)        &&  N in [4, 6]
-            wa = [ SubshellTerm(h9, h5, N, 0, h0, 0), SubshellTerm(h9, h3, N, 2, h4, 0), SubshellTerm(h9, h3, N, 2, h8, 0), 
-                   SubshellTerm(h9, h3, N, 2,h12, 0), SubshellTerm(h9, h3, N, 2,h16, 0), SubshellTerm(h9, h1, 4, N, h0, 0), 
-                   SubshellTerm(h9, h1, N, 4, h4, 0), SubshellTerm(h9, h1, 4, N, h6, 0), SubshellTerm(h9, h1, N, 4, h8, 1), 
-                   SubshellTerm(h9, h1, 4, N, h8, 2), SubshellTerm(h9, h1, N, 4,h10, 0), SubshellTerm(h9, h1, 4, N,h12, 1), 
-                   SubshellTerm(h9, h1, N, 4,h12, 2), SubshellTerm(h9, h1, N, 4,h14, 0), SubshellTerm(h9, h1, N, 4,h16, 0), 
-                   SubshellTerm(h9, h1, N, 4,h18, 0), SubshellTerm(h9, h1, 4, N,h20, 0), SubshellTerm(h9, h1, N, 4,h24, 0) ]
-        elseif   j == AngularJ64(9//2)        &&  N in [5]
-            wa = [ SubshellTerm(h9, h4, 1, N, h9, 0), SubshellTerm(h9, h2, N, 3, h3, 0), SubshellTerm(h9, h2, N, 3, h5, 0), 
-                   SubshellTerm(h9, h2, N, 3, h7, 0), SubshellTerm(h9, h2, N, 3, h9, 0), SubshellTerm(h9, h2, 3, N,h11, 0), 
-                   SubshellTerm(h9, h2, N, 3,h13, 0), SubshellTerm(h9, h2, N, 3,h15, 0), SubshellTerm(h9, h2, 3, N,h17, 0), 
-                   SubshellTerm(h9, h2, 3, N,h21, 0), SubshellTerm(h9, h0, 5, N, h1, 0), SubshellTerm(h9, h0, 5, N, h5, 0), 
-                   SubshellTerm(h9, h0, N, 5, h7, 0), SubshellTerm(h9, h0, N, 5, h9, 0), SubshellTerm(h9, h0, N, 5,h11, 0), 
-                   SubshellTerm(h9, h0, 5, N,h13, 0), SubshellTerm(h9, h0, N, 5,h15, 0), SubshellTerm(h9, h0, N, 5,h17, 0), 
-                   SubshellTerm(h9, h0, N, 5,h19, 0), SubshellTerm(h9, h0, N, 5,h25, 0) ]
-        else     error("stop a")    end
-        
-        return(wa)
-    end
-    
-    
-    #######################################################################################################################
-    #######################################################################################################################
-    
+
     """
     `SpinAngular.reducedCfp1half[]`
         ... set-up the reduced coefficients of fractional parentage (rcfp) for j=1/2
@@ -625,6 +579,7 @@
       reducedCfp9half[15,18] = ( 1,    280,    17); reducedCfp9half[16,18] = (-1,   1170,    17)
       reducedCfp9half[17,18] = (-1,  48750,  3553); reducedCfp9half[18,18] = (-1,  15600,   437)
       reducedCfp9half[19,18] = ( 1,   3510,    19); reducedCfp9half[20,18] = (-1,  33930,   253) 
+
  
     """
     `SpinAngular.W_00_one_half[]`
@@ -819,6 +774,7 @@
       W_01_seven_half[ 9] = (-1,    10,     7); W_01_seven_half[10] = (-1,     180,     7)
       W_01_seven_half[11] = (-1,    60,     7); W_01_seven_half[12] = (-1,     110,     7)
       W_01_seven_half[13] = (-1,   546,     7); W_01_seven_half[14] = (-1,     408,     7)
+
 
     """
     `SpinAngular.W_12_three_half_odd[]`
@@ -1059,6 +1015,7 @@
       W_03_seven_half_even[33]   = (-1,  2040,    77); W_03_seven_half_even[34]   = (-1,     364,   121)
       W_03_seven_half_even[35]   = ( 0,     1,     1); W_03_seven_half_even[36]   = ( 1,    1292,    77)
 
+
     """
     `SpinAngular.W_14_five_half_odd[]`
         ... set-up the ivalue of reduced matrix elements
@@ -1148,6 +1105,7 @@
       W_14_seven_half_even[31] = ( 0,     1,     1); W_14_seven_half_even[32] = (-1,     858,     7)
       W_14_seven_half_even[33] = ( 0,     1,     1); W_14_seven_half_even[34] = (-1,    5304,   121)
       W_14_seven_half_even[35] = (-1, 69768,   847); W_14_seven_half_even[36] = ( 0,       1,     1)
+
 
     """
     `SpinAngular.W_05_five_half_odd[]`
@@ -1305,6 +1263,8 @@
             Please, contact Gediminas Gaigalas if you have problems/questions.
     """
     W_07_seven_half_odd = Array{Tuple{Int64,Int64,Int64}}(undef,21);    for i=1:21  W_07_seven_half_odd[i] = (0,0,0)   end
+
+
     """
     `SpinAngular.W_07_seven_half_even[]`
         ... set-up the ivalue of reduced matrix elements
@@ -1346,6 +1306,3 @@
       W_07_seven_half_even[31] = ( 1,    34,     5); W_07_seven_half_even[32] = ( 0,       1,     1)
       W_07_seven_half_even[33] = ( 1,  7752,   143); W_07_seven_half_even[34] = ( 1,    9690,   121)
       W_07_seven_half_even[35] = ( 0,     1,     1); W_07_seven_half_even[36] = ( 1,  222870,  1859) 
-
-      
-      

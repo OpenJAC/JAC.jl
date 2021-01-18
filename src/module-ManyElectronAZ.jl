@@ -65,6 +65,12 @@ module ManyElectronAZ
         elseif   Basics.subshell_2j(sh) in [ 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43]
             if       occ == 0                   push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) );                 return(wb)
             elseif   occ == 1                   push!( wb, Basics.SubshellStateR( sh, occ, 1, subshell_2j(sh)) );   return(wb)
+            elseif   occ == 2
+                                                push!( wb, Basics.SubshellStateR( sh, occ, 0, 0) )
+                for N = 2:Basics.subshell_2j(sh)-1
+                    if iseven(N) == true        push!( wb, Basics.SubshellStateR( sh, occ, 2, 2*N ) )  end
+                end
+                return(wb)
             else     error("stop b")
             end
 

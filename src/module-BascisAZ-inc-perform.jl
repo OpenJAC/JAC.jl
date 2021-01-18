@@ -412,7 +412,27 @@
         #
         n = length(csfList);    matrix = zeros(Float64, n, n)
         for  r = 1:n
-            wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[r])
+            ##x wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[r])
+            # Calculate the spin-angular coefficients
+            if  Defaults.saRatip()
+                waR = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[r])
+                wa  = waR       
+            end
+            if  Defaults.saGG()
+                subshellList = continuumLevel.basis.subshells
+                opa  = SpinAngular.OneParticleOperator(0, plus, true)
+                waG1 = SpinAngular.computeCoefficients(opa, basis.csfs[r], basis.csfs[r], subshellList) 
+                opa  = SpinAngular.TwoParticleOperator(0, plus, true)
+                waG2 = SpinAngular.computeCoefficients(opa, basis.csfs[r], basis.csfs[r], subshellList)
+                wa   = [waG1, waG2]
+            end
+            if  Defaults.saRatip() && Defaults.saGG() && true
+                if  length(waR[1]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[1]) ")    end
+                if  length(waG1)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG1 ")        end
+                if  length(waR[2]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[2]) ")    end
+                if  length(waG2)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG2 ")        end
+            end
+            #
             me = 0.
             for  coeff in wa[1]
                 jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)

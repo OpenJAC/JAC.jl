@@ -3,7 +3,7 @@
 
 The following instructions guide you *stepwise* through the installation of all JAC dependencies.
 These instructions have been contributed by Martino Trassinelli (2020) and written for and tested on
-**Mac XX.yy**. In particular, you should be able to run JAC after the following three steps:
+**11.0.1 macOS Big Sur**. In particular, you should be able to run JAC after the following three steps:
 
 
 **1)** First, we need to install the **julia (version 1.0 or later) programming language**.
@@ -99,6 +99,10 @@ To do it
 > make
 ```
 - For using JAC as stand alone you do the same in the directory 'JAC/deps/ratip2013-angular-coefficients/'
+
+If there occur problems with the examples, please, try the different make files **Makefile-for-mac, 
+Makefile-for-mac-2** in JAC.jl/deps/ratip2013-angular-coefficients. There might be a problem with the optimization
+of the code.
 
 
 **3)** Install **jupyter environment** by executing the following command in the terminal

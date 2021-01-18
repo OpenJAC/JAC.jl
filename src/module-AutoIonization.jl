@@ -164,7 +164,27 @@ module AutoIonization
             for  r = 1:nt
                 for  s = 1:ni
                     if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity      continue    end 
-                    wa = compute("angular coefficients: e-e, Ratip2013", continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    ##x wa = compute("angular coefficients: e-e, Ratip2013", continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    # Calculate the spin-angular coefficients
+                    if  Defaults.saRatip()
+                        waR = compute("angular coefficients: e-e, Ratip2013", continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                        wa  = waR       
+                    end
+                    if  Defaults.saGG()
+                        subshellList = continuumLevel.basis.subshells
+                        opa  = SpinAngular.OneParticleOperator(0, plus, true)
+                        waG1 = SpinAngular.computeCoefficients(opa, continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList) 
+                        opa  = SpinAngular.TwoParticleOperator(0, plus, true)
+                        waG2 = SpinAngular.computeCoefficients(opa, continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList)
+                        wa   = [waG1, waG2]
+                    end
+                    if  Defaults.saRatip() && Defaults.saGG() && true
+                        if  length(waR[1]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[1]) ")    end
+                        if  length(waG1)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG1 ")        end
+                        if  length(waR[2]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[2]) ")    end
+                        if  length(waG2)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG2 ")        end
+                    end
+                    #
                     me = 0.
                     for  coeff in wa[2]
                         if   kind in [ CoulombInteraction(), CoulombBreit()]    
