@@ -2342,6 +2342,7 @@ contains
       integer, dimension(9), parameter :: no_max = (/2,0,5,0,11,0,25,0,63/)
       integer                          :: p_min, p_max, run
       !
+      fail = .false.
       if (j <= 9) then
          p_min = no_min(j);   p_max = no_max(j)
          if (rabs_use_stop         .and.  &
