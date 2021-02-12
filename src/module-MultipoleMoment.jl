@@ -54,7 +54,23 @@ module MultipoleMoment
             #
             for  r = 1:nf
                 for  s = 1:ni
-                    wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    ##x wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    # Calculate the spin-angular coefficients
+                    if  Defaults.saRatip()
+                        waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                        wa  = waR       
+                    end
+                    if  Defaults.saGG()
+                        subshellList = initialLevel.basis.subshells
+                        opa = SpinAngular.OneParticleOperator(1, plus, true)
+                        waG = SpinAngular.computeCoefficients(opa, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList) 
+                        wa  = waG
+                    end
+                    if  Defaults.saRatip() && Defaults.saGG() && true
+                        if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
+                        if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
+                    end
+                    #
                     for  coeff in wa
                         ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)

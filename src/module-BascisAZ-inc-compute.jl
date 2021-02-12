@@ -420,6 +420,7 @@
                 if  length(waR[2]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[2]) ")    end
                 if  length(waG2)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG2 ")        end
             end
+            #
             me = 0.
             for  coeff in wa[1]
                 jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)

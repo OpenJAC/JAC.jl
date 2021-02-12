@@ -49,7 +49,8 @@
 """
 module JAC
 
-using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, QuadGK, GSL, JLD2, SymEngine  ## , Interact, GaussQuadrature
+using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, QuadGK, GSL, JLD2, SymEngine, 
+       HypergeometricFunctions  ## , Interact, GaussQuadrature
 
 export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod, AbstractPotential, AbstractQedModel, AbstractStartOrbitals,
        add, analyze, AlphaX, AlphaVariation, AnapoleMoment, 
@@ -201,7 +202,7 @@ function __init__()
 end
 
 println("\nWelcome to JAC:  A community approach to the computation of atomic structures, cascades and time evolutions " * 
-        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2020)].")
+        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2021)].")
 
 end
 

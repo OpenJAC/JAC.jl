@@ -5,7 +5,7 @@
 """
 module StrongField
 
-    using    GSL, Printf, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..Radial, ..ManyElectron, 
+    using    GSL, HypergeometricFunctions, Plots, Printf, SpecialFunctions, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..Radial, ..ManyElectron, 
              ..Nuclear, ..Pulse, ..TableStrings
 
     export   aaaa
@@ -17,7 +17,7 @@ module StrongField
 
         + struct SfaNoObservable            ... an empty instance of an observable that does not help compute anything.
         + struct SfaEnergyDistribution      ... to compute the energy distribution of the photoelectrons.
-        + struct SfaMomentumDistribution    ... to compute the momentum distribution of the photoelectrons (not yet).
+        + struct SfaMomentumDistribution    ... to compute the momentum distribution of the photoelectrons.
     """
     abstract type  AbstractSFAObservable                                 end
     struct   SfaNoObservable     <: StrongField.AbstractSFAObservable    end
@@ -27,16 +27,15 @@ module StrongField
     `struct  StrongField.SfaEnergyDistribution  <: StrongField.AbstractSFAObservable`   
         ... to compute in SFA the energy distribution of photoelectrons at given energies and angles.
 
-        + theta         ::Float64             ... polar angles of the energy distribution
-        + phi           ::Float64
-        + energies      ::Array{Float64,1}    ... specifies the photon energy in the current units. 
+        + theta         ::Float64             ... polar angle of the energy distribution
+        + phi           ::Float64             ... azimuthal angle of the energy distribution
+        + energies      ::Array{Float64,1}    ... specifies the photoelectron energy in the current units. 
     """
     struct   SfaEnergyDistribution  <: StrongField.AbstractSFAObservable
         theta           ::Float64
         phi             ::Float64
         energies        ::Array{Float64,1}
     end
-    
 
     """
     `StrongField.SfaEnergyDistribution(theta::Float64, phi::Float64, NoEnergies::Int64, maxEnergy::Float64)`  
@@ -48,7 +47,6 @@ module StrongField
         SfaEnergyDistribution(theta, phi, energies)
     end
 
-
     function Base.string(obs::SfaEnergyDistribution)
         sa = "Compute photo-electron energy distribution at angles (theta,phi) = ($(obs.theta), $(obs.phi)) for the energies [a.u.]:" 
         return( sa )
@@ -57,7 +55,41 @@ module StrongField
     function Base.show(io::IO, obs::SfaEnergyDistribution)
         sa = string(obs);       print(io, sa, "\n");     print(io, "   ", obs.energies)
     end
+    
+    """
+    `struct  StrongField.SfaMomentumDistribution  <: StrongField.AbstractSFAObservable`   
+        ... to compute in SFA the momentum distribution of photoelectrons for given polar angle theta and at given energies and azimuthal angles.
 
+        + theta         ::Float64             ... polar angle of the energy distribution
+        + phi           ::Array{Float64,1}    ... specifies the azimuthal angles
+        + energies      ::Array{Float64,1}    ... specifies the photoelectron energy in the current units. 
+    """
+    struct   SfaMomentumDistribution  <: StrongField.AbstractSFAObservable
+        theta           ::Float64
+        phis            ::Array{Float64,1}
+        energies        ::Array{Float64,1}
+    end
+    
+    """
+    `StrongField.SfaMomentumDistribution(theta::Float64, NoPhi::Int64, NoEnergies::Int64, maxEnergy::Float64)`  
+        ... defines a momentum distribution for given theta and for NoEnergies between 0 < energy <= maxEnergy and NoPhi between 0 <= phi < 2pi;
+            a dist::SfaMomentumDistribution is returned.
+    """
+    function SfaMomentumDistribution(theta::Float64, NoPhi::Int64, NoEnergies::Int64, maxEnergy::Float64)
+        energies = Float64[];      for  i=1:NoEnergies   push!(energies, i*maxEnergy / NoEnergies)   end
+        phis = Float64[];          for  i=1:NoPhi        push!(phis, i*2pi / NoPhi)                  end
+        SfaMomentumDistribution(theta, phis, energies)
+    end
+
+    function Base.string(obs::SfaMomentumDistribution)
+        sa = "Compute photo-electron momentum distribution at polar angle theta = $(obs.theta) for (energy [a.u.], phi):" 
+        return( sa )
+    end
+
+    function Base.show(io::IO, obs::SfaMomentumDistribution)
+        sa = string(obs);       print(io, sa, "\n");     print(io, "   ", obs.energies);    print(io, "   ", obs.phi)
+    end
+    
     
     """
     `abstract type StrongField.AbstractVolkovState` 
@@ -69,13 +101,25 @@ module StrongField
     """
     abstract type  AbstractVolkovState                         end
     struct         FreeVolkov        <:  AbstractVolkovState   end
-    struct         CoulombVolkov     <:  AbstractVolkovState   end
+    
+    
+    """
+    `struct StrongField.CoulombVolkov     <:  StrongField.AbstractVolkovState`
+    
+        + Z ::Float64   ... Charge that generates the Coulomb potential
+    """
+    struct  CoulombVolkov   <: StrongField.AbstractVolkovState
+        Z   ::Float64
+    end
+    
     struct         DistortedVolkov   <:  AbstractVolkovState   end
-
+    
+    
+    
     function Base.string(volkov::FreeVolkov)         return( "free-Volkov states" )         end
-    function Base.string(volkov::CoulombVolkov)      return( "Coulomb-Volkov states" )      end
+    function Base.string(volkov::CoulombVolkov)      return( "Coulomb-Volkov states in potential of charge Z = $(volkov.Z)" )      end
     function Base.string(volkov::DistortedVolkov)    return( "distorted-Volkov states" )    end
-
+    
     
     """
     `struct  StrongField.Settings`  
@@ -202,8 +246,8 @@ module StrongField
         ... to comprise the energy distribution of photoelectrons at given energies and angles, for instance,
             for later graphical representation.
 
-        + theta         ::Float64             ... polar angles of the energy distribution
-        + phi           ::Float64
+        + theta         ::Float64             ... polar angle of the energy distribution
+        + phi           ::Float64             ... azimuthal angle of the energy distribution
         + energies      ::Array{Float64,1}    ... selected energies of the distribution.
         + probabilities ::Array{Float64,1}    ... calculated probabilities of the energy distribution.
     """
@@ -223,6 +267,29 @@ module StrongField
         println(io, "probabilities:     $(outcome.probabilities)  ")
     end
     
+    
+    """
+    `struct  StrongField.OutcomeMomentumDistribution`   
+        ... to comprise the momentum distribution of photoelectrons at given energies and angles, for instance,
+            for later graphical representation.
+
+        + theta         ::Float64             ... polar angle of the momentum distribution
+        + momenta       ::Array{Float64}      ... pairs [px py] of momenta of the momentum distribution
+        + probabilities ::Array{Float64,1}    ... calculated probabilities of the energy distribution.
+    """
+    struct   OutcomeMomentumDistribution
+        theta           ::Float64
+        momenta         ::Array{Float64}
+        probabilities   ::Array{Float64,1}
+    end
+
+
+    # `Base.show(io::IO, outcome::StrongField.OutcomeMomentumDistribution)`  ... prepares a proper printout of the variable outcome::StrongField.OutcomeMomentumDistribution.
+    function Base.show(io::IO, outcome::StrongField.OutcomeMomentumDistribution) 
+        println(io, "theta:             $(outcome.theta)  ")
+        println(io, "momenta:           $(outcome.momenta)  ")
+        println(io, "probabilities:     $(outcome.probabilities)  ")
+    end
     
     
     ##################################################################################################################################################
@@ -278,7 +345,7 @@ module StrongField
     
     """
     `StrongField.VolkovP(epsilonp::Float64, lp::Int, rGrid::Array{Float64,1})`  
-        ... returns the (plane-wave) Volko radial wave function
+        ... returns the (plane-wave) Volkov radial wave function
                 at the radial grid points rGrid
     """
     function  VolkovP(epsilonp::Float64, lp::Int, rGrid::Array{Float64,1})
@@ -294,10 +361,38 @@ module StrongField
     end
     
     """
-    `StrongField.pReducedME(epsilonp::Float64, lp::Int, n::Int, l::Int, epsiloni::Float64)`  
+    `StrongField.CoulombVolkovP(epsilonp::Float64, lp::Int, ZContinuum::Float64, rGrid::Array{Float64,1})`  
+        ... returns the Coulomb-Volkov radial wave function
+                at the radial grid points rGrid
+    """
+    function  CoulombVolkovP(epsilonp::Float64, lp::Int, ZContinuum::Float64, rGrid::Array{Float64,1})
+        sqrtTwoEps = sqrt(2*epsilonp)
+    
+        P = ComplexF64[]
+        
+        for j = 1:length(rGrid)
+            r = rGrid[j]
+            rho = sqrtTwoEps*r
+            eta = -ZContinuum/sqrtTwoEps
+            GammaValue = gamma( lp + 1 + eta * im )
+            sigma = angle( GammaValue )
+            Fl = 2.0^lp * exp(-0.5*pi*eta) * abs( GammaValue ) / factorial(2*lp+1) * rho^(lp+1) * exp( rho * im ) * HypergeometricFunctions.drummond1F1(lp+1+eta*im,2*lp+2,-2*rho*im)
+        
+        
+            p = Fl * exp( sigma * im ) / sqrtTwoEps
+            
+            push!( P, p )
+        end
+        
+        return( P )
+    end
+    
+    
+    """
+    `StrongField.pReducedME(epsilonp::Float64, lp::Int, n::Int, l::Int, epsiloni::Float64, volkov::AbstractVolkovState)`  
         ... computes the reduced matrix elements of the momentum operator <epsilonp lp ||p||n l> in the one-particle picture
     """
-    function  pReducedME(epsilonp::Float64, lp::Int, n::Int, l::Int, epsiloni::Float64)
+    function  pReducedME(epsilonp::Float64, lp::Int, n::Int, l::Int, epsiloni::Float64, volkov::AbstractVolkovState)
         rmax = 100.
         orderGL = 1000
         gaussLegendre = Radial.GridGL("Finite",0.0,rmax,orderGL)
@@ -305,7 +400,12 @@ module StrongField
         weights = gaussLegendre.wt
         
         Pnl = HydrogenPnl( epsiloni, n, l, rgrid )
-        Pepsplp = VolkovP( epsilonp, lp, rgrid )
+        if  typeof(volkov) == FreeVolkov
+            Pepsplp = VolkovP( epsilonp, lp, rgrid )
+        elseif  typeof(volkov) == CoulombVolkov
+            Pepsplp = CoulombVolkovP( epsilonp, lp, volkov.Z, rgrid )
+        end
+        
         DPnl = HydrogenDPnlDr( epsiloni, n, l, rgrid )
         
         integral = 0. * im
@@ -326,18 +426,24 @@ module StrongField
     end
     
     """
-    `StrongField.scalarProdBoundCont(epsilonp::Float64, n::Int, l::Int, epsiloni::Float64)`  
+    `StrongField.scalarProdBoundCont(epsilonp::Float64, lp::Int, n::Int, l::Int, epsiloni::Float64, volkov::AbstractVolkovState)`  
         ... computes the scalar product of the bound (hydrogenic) and continuum (Volkov) states in the one-particle picture
     """
-    function  scalarProdBoundCont(epsilonp::Float64, n::Int, l::Int, m::Int, epsiloni::Float64)
+    function  scalarProdBoundCont(epsilonp::Float64, lp::Int, n::Int, l::Int, m::Int, epsiloni::Float64, volkov::AbstractVolkovState)
         rmax = 1000.
-        orderGL = 10
+        orderGL = 1000
         gaussLegendre = Radial.GridGL("Finite",0.0,rmax,orderGL)
         rgrid = gaussLegendre.t
         weights = gaussLegendre.wt
         
         Pnl = HydrogenPnl( epsiloni, n, l, rgrid )
-        Pepsplp = VolkovP( epsilonp, l, rgrid )
+        
+        if  typeof(volkov) == FreeVolkov
+            Pepsplp = VolkovP( epsilonp, lp, rgrid )
+        elseif  typeof(volkov) == CoulombVolkov
+            Pepsplp = CoulombVolkovP( epsilonp, lp, volkov.Z, rgrid )
+        end
+        
         DPnl = HydrogenDPnlDr( epsiloni, n, l, rgrid )
         
         integral = 0. * im
@@ -365,16 +471,15 @@ module StrongField
     """
     function computeEnvelopeIntegrals(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
                                       thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        initialEn = convertUnits("energy: from eV to atomic", initialEn)
         fVolkovPlus    = Pulse.envelopeVolkovIntegral(true,  envelope, beam, polarization, thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
         fVolkovMinus   = Pulse.envelopeVolkovIntegral(false, envelope, beam, polarization, thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
         fVolkovSquared = Pulse.envelopeQuadVolkovIntegral(envelope, beam, polarization,    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
         
-        println("> Envelope integrals for an $(string(envelope)) with A0=$(beam.A0), omega=$(beam.omega) [a.u.], cep=$(beam.cep)" * 
-                " and for $(string(polarization)) light are:" )
-        println("    F^(Volkov) [+; omega; f^(env); A]   = $fVolkovPlus" )
-        println("    F^(Volkov) [-; omega; f^(env); A]   = $fVolkovMinus" )
-        println("    F^(quad, Volkov) [f^(env); A]       = $fVolkovSquared" )
+        #println("> Envelope integrals for an $(string(envelope)) with A0=$(beam.A0), omega=$(beam.omega) [a.u.], cep=$(beam.cep)" * 
+        #        " and for $(string(polarization)) light are:" )
+        #println("    F^(Volkov) [+; omega; f^(env); A]   = $fVolkovPlus" )
+        #println("    F^(Volkov) [-; omega; f^(env); A]   = $fVolkovMinus" )
+        #println("    F^(quad, Volkov) [f^(env); A]       = $fVolkovSquared" )
         
         return( (fVolkovPlus, fVolkovMinus, fVolkovSquared) )
     end
@@ -392,6 +497,24 @@ module StrongField
         return( outcome )
     end
 
+    """
+    `StrongField.computeOutcome(observable::StrongField.SfaMomentumDistribution, amplitudes::Array{SphericalAmplitude,1})`  
+        ... computes the requested photoelectron momentum distribution and returns the results in the variable
+            outcome::StrongField.OutcomeMomentumDistribution
+    """
+    function  computeOutcome(obs::StrongField.SfaMomentumDistribution, amplitudes::Array{SphericalAmplitude,1})
+        probabilities = Float64[]
+        momenta       = Array{Float64}(undef,0,2)
+        for  amp  in  amplitudes   
+            pp = sqrt(2*amp.energy)
+            px = pp*sin(amp.theta)*cos(amp.phi)
+            py = pp*sin(amp.theta)*sin(amp.phi)
+            momenta = [momenta ; [px py]]
+            push!( probabilities, pp * (amp.value * conj(amp.value)) )
+        end
+        outcome = OutcomeMomentumDistribution(obs.theta, momenta, probabilities)
+        return( outcome )
+    end
 
     """
     `StrongField.computeSphericalAmplitudes(comp::StrongField.Computation)`  
@@ -404,21 +527,30 @@ module StrongField
         # First determine which spherical SFA amplitudes need to be computed before the actual computation starts
         sfaAmplitudes = StrongField.determineSphericalAmplitudes(comp.observable)
         # Determine quantum numbers of the initial and final state
-        nqn = 1;    lqn = 0;    n = 1;      l = 0;      m = 0;    initialEn = comp.initialLevel.energy
+        nqn = 1;    lqn = 0;    n = 1;      l = 0;      m = 0;    initialEn = convertUnits("energy: from eV to atomic", comp.initialLevel.energy)
         #
+        
+        lpMin = abs(l-1)
+        lpMax = l+1
+        
         # Compute the requested amplitudes
         for  amp in  sfaAmplitudes
             thetap        = amp.theta;   phip = amp.phi;     energyp = amp.energy
             envIntegrals  = StrongField.computeEnvelopeIntegrals(comp.envelope, comp.beam, comp.polarization, thetap, phip, energyp, initialEn)
             fVolkovPlus, fVolkovMinus, fVolkovSquared = envIntegrals
             #
+            reducedMEArray = ComplexF64[]
+            for lp = lpMin:lpMax
+                push!( reducedMEArray, pReducedME(energyp, lp, n, l, initialEn, comp.volkov) )
+            end
+            #
+                
             wminus = 0.0im;    wplus = 0.0im
             # Collect contributions from all l_p, q terms; this summation will change in a (nljm) representation
-            for  lp = 0:2
-                reducedME = StrongField.pReducedME(energyp, lp, n, l, initialEn)
-                if  lp==1   println(reducedME)  end
+            for  lp = lpMin:lpMax
+                reducedME = reducedMEArray[lp-lpMin+1]
                 for  q in [-1, 0, 1]
-                    wminus = wminus + AngularMomentum.sphericalYlm(lp, m-q, amp.theta, amp.phi) * (-1)^q  * 
+                    wplus = wplus + AngularMomentum.sphericalYlm(lp, m-q, amp.theta, amp.phi) * (-1)^q  * 
                              Basics.determinePolarizationVector(q, comp.polarization, star=false)         *
                              AngularMomentum.ClebschGordan(l, m, 1, -q, lp, m-q) * reducedME
                     wminus = wminus + AngularMomentum.sphericalYlm(lp, m+q, amp.theta, amp.phi)           * 
@@ -426,16 +558,13 @@ module StrongField
                              AngularMomentum.ClebschGordan(l, m, 1, q, lp, m+q) * reducedME
                 end
             end
-            scalarProd = scalarProdBoundCont(energyp, n, l, m, initialEn)
-            wa = -im * sqrt(2/pi) * (fVolkovPlus * wminus + fVolkovMinus * wplus) - im / sqrt(2*pi) * fVolkovSquared * 
-                  AngularMomentum.sphericalYlm(l, m, amp.theta, amp.phi) * scalarProd
+            scalarProd = scalarProdBoundCont(energyp, l, n, l, m, initialEn, comp.volkov)
+            wa = -im * sqrt(2/pi) * (fVolkovPlus * wminus + fVolkovMinus * wplus) - im / sqrt(2*pi) * fVolkovSquared * AngularMomentum.sphericalYlm(l, m, amp.theta, amp.phi) * scalarProd
             push!(newAmplitudes, SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa))
         
             println(">> $(SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa))")
         end
-        
-        println("MISSING: l = $l, m = $m")
-        
+                
         return( newAmplitudes )
     end
 
@@ -454,6 +583,120 @@ module StrongField
         return( amplitudes )
     end
     
+    
+    """
+    `StrongField.determineSphericalAmplitudes(observable::StrongField.SfaMomentumDistribution)`  
+        ... determines which direct (and other) SFA amplitudes need to be computed; these amplitudes are not yet computed here but can be arranged
+            so that only a minimum number of Volkov states and/or reduced many-electron matrix elements need to be computed.
+            A list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
+    """
+    function  determineSphericalAmplitudes(observable::StrongField.SfaMomentumDistribution)
+        amplitudes = StrongField.SphericalAmplitude[]
+        for  energy in observable.energies
+            for  phi in observable.phis
+                push!(amplitudes, SphericalAmplitude(energy, observable.theta, phi, 0.))
+            end
+        end
+        
+        println("> A total of $(length(amplitudes)) spherical amplitudes need to be calculated.")
+        return( amplitudes )
+    end
+    
+    
+    """
+    `StrongField.plot( comp::StrongField.Computation, results::Dict{String,Any}, energyScale::String = "atomic", probabilityScaling::String = "linear" )`  
+        ... generates a graphical representation of the observable (either StrongField.SfaEnergyDistribution or StrongField.SfaMomentumDistribution).
+        energyScale determines the scaling of the energy axis either in atomic units (energyScale = "atomic") or in units of hbar*omega (energyScale = "omega").
+        The y-axis is scaled either linearly (probabilityScaling = "linear") or logarithmically (probabilityScaling = "log")
+    """
+    function plot( comp::StrongField.Computation, results::Dict{String,Any}, energyScale::String = "atomic", probabilityScaling::String = "linear" )
+    
+        #---Photoelectron energy spectrum---
+        if  typeof(comp.observable) == StrongField.SfaEnergyDistribution
+                #prepare data and rescale the x-axis if neccessary
+                if  energyScale == "atomic"
+                    energyLabel = "E (a.u.)"
+                    energies = results["energy distribution"].energies
+                elseif  energyScale == "omega"
+                    energyLabel = "E/omega"
+                    energies = results["energy distribution"].energies / comp.beam.omega
+                end
+                probabilities = results["energy distribution"].probabilities
+                gr() #sets the plotting backend to the package "GR"
+                
+                #set scaling of the y-axis
+                scaling = :identity
+                if  probabilityScaling == "log"
+                            scaling = :log10
+                end
+                
+                #generate the plot
+                p = Plots.plot(energies, probabilities, 
+                                title = "Photoelectron energy spectrum",
+                                xlabel = energyLabel,
+                                ylabel = "P(E)",
+                                xscale = :identity,
+                                yscale = scaling,
+                                framestyle = :box,
+                                legend = :none,
+                                #markershape = :circle,
+                                #markershape = :none,
+                                line = 2,
+                                linecolor = :black,
+                                gridlinewidth = 2,
+                                tickfontsize = 10,
+                                labelfontsize = 10,
+                                labelfontfamily = "Latin Modern Roman",
+                                titlefontfamily = "Latin Modern Roman"
+                                
+                              )
+                              
+                #export the plot as png-file
+                png("energy_spectrum")
+        #-----------------------------------
+        
+        #---Photoelectron momentum distribution---
+        elseif  typeof(comp.observable) == StrongField.SfaMomentumDistribution
+                #prepare data
+                pList = results["momentum distribution"].momenta
+                probList = results["momentum distribution"].probabilities
+
+                #generate the plot
+                #pyplot()
+                #r = range(0,stop=10,length=11)
+                #theta = range(0,stop=360,length=361)
+                #f(r,theta) = r^2
+                #println("$(f.(r,theta'))")
+                #Plots.plot( heatmap( f.(r,theta'), proj=:polar ) )
+                #println("$(transpose(probList))")
+                #Plots.plot( heatmap( pList, transpose(probList), proj=:polar ) )
+                #imshow(pList,transpose(probList))
+                #probList = probList[2:-1]
+                #matplotlib.pyplot.pcolormesh(pList[:,1], pList[:,2], transpose(probList))
+                contourf( pList[:,1], pList[:,2], probList )
+                #matplotlib.pyplot.imshow(pList)
+                #heatmap( pList[:,1], pList[:,2], probList, proj=:polar, legend=true
+                                #heatmap( probList
+                #                )
+
+                #p = Plots.plot( #heatmap( pList[:,1], pList[:,2], probList
+                #               Plots.GR.polarheatmap( probList 
+                            ##heatmap( probList
+                #                 )
+                #              )
+                
+                
+                #export the plot as png-file
+                png("momentum_distribution")
+        #-----------------------------------------
+                
+        #---Not a valid obserable---
+        else     
+                error("Undefined observable for strong-field computations.")
+        end
+        #---------------------------
+    
+    end
 
     """
     `StrongField.perform(comp::StrongField.Computation; output::Bool=false)` 
@@ -469,11 +712,13 @@ module StrongField
             sfaOutcome    = StrongField.computeOutcome(comp.observable, sfaAmplitudes)
             if output    results = Base.merge( results, Dict("computation" => comp, "energy distribution" => sfaOutcome) )  end
         elseif   typeof(comp.observable) == StrongField.SfaMomentumDistribution
-                 error("not yet implemented.")
+            sfaAmplitudes = StrongField.computeSphericalAmplitudes(comp)
+            sfaOutcome    = StrongField.computeOutcome(comp.observable, sfaAmplitudes)
+            if output    results = Base.merge( results, Dict("computation" => comp, "momentum distribution" => sfaOutcome) )  end
         else     error("Undefined observable for strong-field computations.")
         end
         
-        if  output   return( results)   else    return( nothing )   end
+        if  output   return( results )   else    return( nothing )   end
     end
 
 end # module

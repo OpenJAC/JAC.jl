@@ -419,7 +419,7 @@
                 wa  = waR       
             end
             if  Defaults.saGG()
-                subshellList = continuumLevel.basis.subshells
+                subshellList = basis.subshells
                 opa  = SpinAngular.OneParticleOperator(0, plus, true)
                 waG1 = SpinAngular.computeCoefficients(opa, basis.csfs[r], basis.csfs[r], subshellList) 
                 opa  = SpinAngular.TwoParticleOperator(0, plus, true)

@@ -7,7 +7,7 @@ println("Hb) Tests of the StrongField module to calculate energy and momentum di
 
 using DelimitedFiles
 
-if  false
+if  true
     asfSettings  = AsfSettings(AsfSettings(), generateScf=true)                           
     grid         = Radial.Grid(Radial.Grid(false), hp=5.0e-2)
     nuclearModel = Nuclear.Model(3.)
@@ -25,12 +25,17 @@ if  false
     intensity    = convertUnits("intensity: from W/cm^2 to atomic", 1.0e14)
     #A0           = Pulse.computeFieldAmplitude(intensity, omega)
     A0           = 0.4015398801828808927893987856805324554443359375 #Since we use different conversion factors (precision!) in Mathematica and JAC
-    observable   = StrongField.SfaEnergyDistribution(pi/2, 0., 10, 10*omega)  
+    
+    observable   = StrongField.SfaEnergyDistribution(pi/2, pi/2, 10, 6*omega) #Arguments are: theta, phi, number of energies, maximum energy
+    #observable    = StrongField.SfaMomentumDistribution(pi/2, 360, 5, 10*omega) #Arguments are: theta, number of azimuthal angles, number of energies, masimum energy
+    
     beam         = Pulse.PlaneWaveBeam(A0, omega, 0.)  # (A0, omega, cep)
     #envelope     = Pulse.InfiniteEnvelope()
-    envelope     = Pulse.SinSquaredEnvelope(4)
-    polarization = Basics.RightCircular()
-    volkov       = StrongField.FreeVolkov()  ## CoulombVolkov(), DistortedVolkov()
+    envelope     = Pulse.SinSquaredEnvelope(14)
+    #polarization = Basics.RightCircular()
+    polarization = Basics.RightElliptical(0.5)
+    volkov       = StrongField.CoulombVolkov(1)  ## FreeVolkov(), CoulombVolkov(Z) with the charge of the ion Z, DistortedVolkov()
+
     sfaSettings  = StrongField.Settings()
 end
 #elseif true
@@ -44,6 +49,10 @@ if true
     writedlm("Probabilities.csv",distribution.probabilities)
     
     nothing
+end
+
+if true
+    StrongField.plot(wa,wb,"omega","linear")
 end
 
 #Convergence test for pulse shape integrals

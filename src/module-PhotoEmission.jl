@@ -6,7 +6,8 @@
 """
 module PhotoEmission
 
-    using Printf, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Radial, ..TableStrings
+    using Printf, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Radial, 
+                  ..SpinAngular, ..TableStrings
 
 
     """
@@ -174,7 +175,23 @@ module PhotoEmission
                 if  finalLevel.basis.csfs[r].J != finalLevel.J          ||  finalLevel.basis.csfs[r].parity   != finalLevel.parity    continue    end 
                 for  s = 1:ni
                     if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity  continue    end 
-                    wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    ##x wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    # Calculate the spin-angular coefficients
+                    if  Defaults.saRatip()
+                        waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                        wa  = waR       
+                    end
+                    if  Defaults.saGG()
+                        subshellList = finalLevel.basis.subshells
+                        opa = SpinAngular.OneParticleOperator(Mp.L, plus, true)
+                        waG = SpinAngular.computeCoefficients(opa, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList) 
+                        wa  = waG
+                    end
+                    if  Defaults.saRatip() && Defaults.saGG() && true
+                        if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
+                        if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
+                    end
+                    #
                     ##x @show finalLevel.basis  ## .csfs[r]
                     ##x @show initialLevel.basis  ## .csfs[s]
                     me = 0.

@@ -17,6 +17,8 @@ println("Ai) Test of the jj-LS transformation of levels from a given multiplet."
 println("An) Test of a mean-field basis and configuration-interaction (CI) expansion.")
 println("Ap) Test of restricted-active-space (RAS) expansion.")
 println("Aq) Test of the Green(function) expansion.")
+println("As) Test of spin-angular coefficients.")
+println("At) Test of parallel computating with Julia.")
 println("")
 println("B)  Tests & development of atomic amplitudes")
 println("--------------------------------------------")

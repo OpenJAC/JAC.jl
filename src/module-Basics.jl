@@ -1073,8 +1073,6 @@ module Basics
 
     
     
-    
-    
     """
     `abstract type Basics.AbstractPolarization` 
         ... defines an abstract type to comprise various polarizations of light and electron beams.
@@ -1082,23 +1080,49 @@ module Basics
         + LinearPolarization        ... to specify a linearly-polarized pulse/beam.
         + LeftCircular              ... to specify a left-circularly polarized pulse/beam.
         + RightCircular             ... to specify a right-circularly polarized pulse/beam.
-        + EllipticalPolarization    ... to specify a elliptically polarized pulse/beam (not yet).
+        + LeftElliptical            ... to specify an elliptically polarized pulse/beam.
+        + RightElliptical           ... to specify an elliptically polarized pulse/beam.
         + NonePolarization          ... to specify an upolarized pulse/beam.
         + DensityMatrixPolarization ... to specify the polarization of a pulse/beam by its (2x2) 
                                         density matrix (not yet).
     """
     abstract type  AbstractPolarization  end
+    
     struct         LinearPolarization      <:  AbstractPolarization   end
     struct         LeftCircular            <:  AbstractPolarization   end
     struct         RightCircular           <:  AbstractPolarization   end
+    
+    
+    """
+    `struct     Basics.LeftElliptical          <:  Basics.AbstractPolarization`   
+    
+            + ellipticity      ::Float64     ... Ellipticity of the beam in the range 0...1.
+    """
+    struct         LeftElliptical          <:  AbstractPolarization
+            ellipticity      ::Float64
+    end
+    
+    
+    """
+    `struct     Basics.RightElliptical          <:  Basics.AbstractPolarization`   
+    
+            + ellipticity      ::Float64     ... Ellipticity of the beam in the range 0...1.
+    """
+    struct         RightElliptical          <:  AbstractPolarization
+            ellipticity      ::Float64
+    end
+    
+    
     struct         NonePolarization        <:  AbstractPolarization   end
 
     function Base.string(pol::LinearPolarization)   return( "linearly-polarized" )            end
     function Base.string(pol::LeftCircular)         return( "left-circularly polarized" )     end
     function Base.string(pol::RightCircular)        return( "right-circularly polarized" )    end
+    function Base.string(pol::LeftElliptical)       return( "left-elliptically polarized with ellipticity $(pol.ellipticity)" )   end
+    function Base.string(pol::RightElliptical)      return( "right-elliptically polarized with ellipticity $(pol.ellipticity)" )  end
     function Base.string(pol::NonePolarization)     return( "unpolarized" )                   end
 
-
+    
     """
     `struct  Basics.TensorComp`  ... defines a type for a component of the statistical tensor as associated with an atomic or ionic level.
 

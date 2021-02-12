@@ -243,22 +243,74 @@
 
 
     """
-    `Basics.determinePolarizationVector(q::Int64, kind::Basics.AbstractPolarization; star::Bool=false)`  
+    `Basics.determinePolarizationVector(q::Int64, kind::Basics.AbstractPolarization; star::Bool)`  
         ... determines the q-th component of the (complex and unit) polarization vector u for the given kind of polarization;
             for star = true, the complex-conjugate component is returned.  a comp::Float64 is returned.
     """
-    function Basics.determinePolarizationVector(q::Int64, kind::Basics.LinearPolarization; star::Bool=false)
-        if  q == 0   return( 0. )   else   return( 1/sqrt(2.) )        end
+    #---OLD VERSIONS:---
+    #function Basics.determinePolarizationVector(q::Int64, kind::Basics.LinearPolarization; star::Bool=false)
+    #    if      q == 1   return( -1/sqrt(2.) )
+    #    elseif  q == -1  return( 1/sqrt(2.) )
+    #    else   return( 0 )
+    #    end
+    #end
+    #
+    #function Basics.determinePolarizationVector(q::Int64, kind::Basics.LeftCircular; star::Bool=false)
+    #    if  q == 1   return( -1. )   else   return( 0. )                end
+    #end
+    
+    #function Basics.determinePolarizationVector(q::Int64, kind::Basics.RightCircular; star::Bool=false)
+    #    if  q == -1  return( 1. )   else   return( 0. )                end
+    #end
+    
+    #---NEW VERSIONS:---
+    function Basics.determinePolarizationVector(q::Int64, kind::Basics.LinearPolarization; star::Bool)
+        if  star == false
+            if      q == 1   return( -1/sqrt(2.) )
+            elseif  q == -1  return( 1/sqrt(2.) )
+            else   return( 0 )
+            end
+        else
+            if      q == -1   return( 1/sqrt(2.) )
+            elseif  q == 1  return( -1/sqrt(2.) )
+            else   return( 0 )
+            end
+        end
     end
     #
-    function Basics.determinePolarizationVector(q::Int64, kind::Basics.LeftCircular; star::Bool=false)
-        if  q == 1   return( 1. )   else   return( 0. )                end
+    function Basics.determinePolarizationVector(q::Int64, kind::Basics.LeftCircular; star::Bool)
+        if  star == false
+            if  q == 1   return( -1. )   else   return( 0. )                end
+        else
+            if  q == -1   return( 1. )   else   return( 0. )                end
+        end
     end
     #
-    function Basics.determinePolarizationVector(q::Int64, kind::Basics.RightCircular; star::Bool=false)
-        if  q == -1  return( 1. )   else   return( 0. )                end
+    function Basics.determinePolarizationVector(q::Int64, kind::Basics.RightCircular; star::Bool)
+        if  star == false
+            if  q == -1  return( 1. )   else   return( 0. )                end
+        else
+            if  q == 1  return( -1. )   else   return( 0. )                end
+        end
     end
-
+    #
+    function Basics.determinePolarizationVector(q::Int64, kind::Basics.LeftElliptical; star::Bool)
+        epsilon = kind.ellipticity
+        if  star == false
+            if  q == 1   return( -1/sqrt(2*(1. + epsilon^2)) * (1. - epsilon) )   else   return( 1/sqrt(2*(1. + epsilon^2)) * (1. + epsilon) )                end
+        else
+            if  q == -1   return( 1/sqrt(2*(1. + epsilon^2)) * (1. - epsilon) )   else   return( -1/sqrt(2*(1. + epsilon^2)) * (1. + epsilon) )               end
+        end
+    end
+    #
+    function Basics.determinePolarizationVector(q::Int64, kind::Basics.RightElliptical; star::Bool)
+        epsilon = kind.ellipticity
+        if  star == false
+            if  q == -1  return( 1/sqrt(2*(1. + epsilon^2)) * (1. - epsilon) )   else   return( -1/sqrt(2*(1. + epsilon^2)) * (1. + epsilon) )               end
+        else
+            if  q == 1  return( -1/sqrt(2*(1. + epsilon^2)) * (1. - epsilon) )   else   return( 1/sqrt(2*(1. + epsilon^2)) * (1. + epsilon) )                end
+        end
+    end
 
     """
     `Basics.determinePolarizationLambda(kind::Basics.AbstractPolarization)`  
@@ -266,6 +318,8 @@
     """
     function Basics.determinePolarizationLambda(kind::Basics.LeftCircular)   return(  1 )    end
     function Basics.determinePolarizationLambda(kind::Basics.RightCircular)  return( -1 )    end
+    function Basics.determinePolarizationLambda(kind::Basics.LeftElliptical)   return(  1 )    end
+    function Basics.determinePolarizationLambda(kind::Basics.RightElliptical)  return( -1 )    end
 
 
     """

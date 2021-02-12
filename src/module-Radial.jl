@@ -320,6 +320,27 @@ module Radial
            
         GridGL(nt, t, wt)
     end
+    
+    """
+    `Radial.GridGL("Finite", tmin::Float64, tmax::Float64, orderGL::Int64; printout::Bool=false)`  
+        ... constructor to define Gauss-Legendre grid in the interval [tmin, tmax].
+    """
+    function GridGL(sa::String, tmin::Float64, tmax::Float64, orderGL::Int64; printout::Bool=false)
+        !(sa == "Finite")  && error("Unrecognized keystring; sa = $sa")
+        t = Float64[];    wt = Float64[]
+        
+        wax = QuadGK.gauss(orderGL);    t = wax[1];     wt = wax[2]        
+        fac1 = 0.5 * ( tmax - tmin );   fac2 = 0.5 * ( tmax + tmin )
+        
+        for  j = 1:orderGL
+                t[j]    = fac1 * t[j] + fac2
+                wt[j]   = fac1 * wt[j]
+        end
+        
+        if  printout   println("Gauss-Legendre grid with $orderGL mesh points from t = $tmin ... $tmax.")   end
+           
+        GridGL(orderGL, t, wt)
+    end
 
 
     # `Base.show(io::IO, grid::GridGL)`  ... prepares a proper printout of the variable grid::GridGL.

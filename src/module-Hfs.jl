@@ -5,7 +5,8 @@
 """
 module Hfs
 
-    using Printf, ..AngularMomentum, ..Basics,  ..Defaults, ..InteractionStrength, ..ManyElectron, ..Radial, ..Nuclear, ..TableStrings
+    using Printf, ..AngularMomentum, ..Basics,  ..Defaults, ..InteractionStrength, ..ManyElectron, ..Radial, ..Nuclear, 
+                  ..SpinAngular, ..TableStrings
     
 
     """
@@ -292,7 +293,23 @@ module Hfs
                 #
                 if      kind == "T^(1) amplitude"
                 #--------------------------------
-                    wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
+                    ##x wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
+                    # Calculate the spin-angular coefficients
+                    if  Defaults.saRatip()
+                        waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 1, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
+                        wa  = waR       
+                    end
+                    if  Defaults.saGG()
+                        subshellList = sLevel.basis.subshells
+                        opa = SpinAngular.OneParticleOperator(1, plus, true)
+                        waG = SpinAngular.computeCoefficients(opa, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList) 
+                        wa  = waG
+                    end
+                    if  Defaults.saRatip() && Defaults.saGG() && true
+                        if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
+                        if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
+                    end
+                    #
                     for  coeff in wa
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
@@ -304,7 +321,23 @@ module Hfs
                 #
                 elseif  kind == "T^(2) amplitude"
                 #--------------------------------
-                    wa = compute("angular coefficients: 1-p, Grasp92", 0, 2, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
+                    ##x wa = compute("angular coefficients: 1-p, Grasp92", 0, 2, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
+                    # Calculate the spin-angular coefficients
+                    if  Defaults.saRatip()
+                        waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 2, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
+                        wa  = waR       
+                    end
+                    if  Defaults.saGG()
+                        subshellList = sLevel.basis.subshells
+                        opa = SpinAngular.OneParticleOperator(2, plus, true)
+                        waG = SpinAngular.computeCoefficients(opa, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList) 
+                        wa  = waG
+                    end
+                    if  Defaults.saRatip() && Defaults.saGG() && true
+                        if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
+                        if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
+                    end
+                    #
                     for  coeff in wa
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
@@ -453,7 +486,23 @@ module Hfs
                 for  s = 1:ncsf
                     if  basis.csfs[r].parity  != basis.csfs[s].parity   continue    end 
                     #
-                    wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, basis.csfs[r], basis.csfs[s])
+                    ##x wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, basis.csfs[r], basis.csfs[s])
+                    # Calculate the spin-angular coefficients
+                    if  Defaults.saRatip()
+                        waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 1, basis.csfs[r], basis.csfs[s])
+                        wa  = waR       
+                    end
+                    if  Defaults.saGG()
+                        subshellList = basis.subshells
+                        opa = SpinAngular.OneParticleOperator(1, plus, true)
+                        waG = SpinAngular.computeCoefficients(opa, basis.csfs[r], basis.csfs[s], subshellList) 
+                        wa  = waG
+                    end
+                    if  Defaults.saRatip() && Defaults.saGG() && true
+                        if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
+                        if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
+                    end
+                    #
                     for  coeff in wa
                         ja   = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                         jb   = Basics.subshell_2j(basis.orbitals[coeff.b].subshell)
@@ -472,7 +521,23 @@ module Hfs
                 for  s = 1:ncsf
                     if  basis.csfs[r].parity  != basis.csfs[s].parity   continue    end 
                     #
-                    wa = compute("angular coefficients: 1-p, Grasp92", 0, 2, basis.csfs[r], basis.csfs[s])
+                    ##x wa = compute("angular coefficients: 1-p, Grasp92", 0, 2, basis.csfs[r], basis.csfs[s])
+                    # Calculate the spin-angular coefficients
+                    if  Defaults.saRatip()
+                        waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 2, basis.csfs[r], basis.csfs[s])
+                        wa  = waR       
+                    end
+                    if  Defaults.saGG()
+                        subshellList = basis.subshells
+                        opa = SpinAngular.OneParticleOperator(2, plus, true)
+                        waG = SpinAngular.computeCoefficients(opa, basis.csfs[r], basis.csfs[s], subshellList) 
+                        wa  = waG
+                    end
+                    if  Defaults.saRatip() && Defaults.saGG() && true
+                        if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
+                        if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
+                    end
+                    #
                     for  coeff in wa
                         ja   = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                         jb   = Basics.subshell_2j(basis.orbitals[coeff.b].subshell)

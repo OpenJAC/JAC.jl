@@ -264,9 +264,14 @@ module ManyElectron
     """
     function  Base.:(==)(confa::Configuration, confb::Configuration)
         if   confa.NoElectrons  != confb.NoElectrons    return( false )    end
-        wk = keys(confa.shells)
+        allShells = merge(confa.shells, confb.shells)
+        wk        = keys(allShells)
+        ##x @show confa, confb, wk
         for  k in wk
-            if  !haskey(confb.shells, k)  ||   confa.shells[k] != confb.shells[k]    return( false )    end
+            if  haskey(confa.shells, k)   &&   haskey(confb.shells, k)  &&   
+                                               confa.shells[k] != confb.shells[k]     return( false )    end
+            if  !haskey(confa.shells, k)  &&   confb.shells[k] != 0                   return( false )    end
+            if  !haskey(confb.shells, k)  &&   confa.shells[k] != 0                   return( false )    end
         end
         return( true )
     end
@@ -447,8 +452,7 @@ module ManyElectron
         
                 generateScf=..,       eeInteraction=..,       scField=..,            startScfFrom=..,           maxIterationsScf=..,    
                 accuracyScf=..,       shellSequenceScf=..,    frozenSubshells=..,    eeInteractionCI=..,        qedModel=..,           
-                ##x methodCI=..,          
-                jjLS=..,                LevelSelection=..,     printout::Bool=false)
+                jjLS=..,              levelSelection=..,     printout::Bool=false)
         ... constructor for re-defining a settings::AsfSettings.
     """
     function AsfSettings(settings::AsfSettings; 
@@ -457,7 +461,6 @@ module ManyElectron
         maxIterationsScf::Union{Nothing,Int64}=nothing,                 accuracyScf::Union{Nothing,Float64}=nothing,     
         shellSequenceScf::Union{Nothing,Array{Subshell,1}}=nothing,     frozenSubshells::Union{Nothing,Array{Subshell,1}}=nothing, 
         eeInteractionCI::Union{Nothing,AbstractEeInteraction}=nothing,  qedModel::Union{Nothing,AbstractQedModel}=nothing,              
-        ##x methodCI::Union{Nothing,AbstractCImethod}=nothing,              
         jjLS::Union{Nothing,LSjjSettings}=nothing,  
         levelSelectionCI::Union{Nothing,LevelSelection}=nothing,        printout::Bool=false)
 
@@ -471,9 +474,8 @@ module ManyElectron
         if  frozenSubshells     == nothing   frozenSubshellsx      = settings.frozenSubshells       else   frozenSubshellsx      = frozenSubshells      end 
         if  eeInteractionCI     == nothing   eeInteractionCIx      = settings.eeInteractionCI       else   eeInteractionCIx      = eeInteractionCI      end 
         if  qedModel            == nothing   qedModelx             = settings.qedModel              else   qedModelx             = qedModel             end 
-        ##x if  methodCI            == nothing   methodCIx             = settings.methodCI              else   methodCI              = methodCI             end 
         if  jjLS                == nothing   jjLSx                 = settings.jjLS                  else   jjLSx                 = jjLS                 end 
-        if  levelSelectionCI    == nothing   levelSelectionCIx     = settings.levelSelectionCI      else   levelSelectionCI      = levelSelectionCI     end 
+        if  levelSelectionCI    == nothing   levelSelectionCIx     = settings.levelSelectionCI      else   levelSelectionCIx     = levelSelectionCI     end 
         
     	AsfSettings(generateScfx, eeInteractionx, scFieldx, startScfFromx, maxIterationsScfx, accuracyScfx, 
     	            shellSequenceScfx, frozenSubshellsx, eeInteractionCIx, qedModelx, jjLSx, levelSelectionCIx)

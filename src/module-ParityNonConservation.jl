@@ -22,7 +22,23 @@ module ParityNonConservation
         #
         for  r = 1:nf
             for  s = 1:ni
-                wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                ##x wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                # Calculate the spin-angular coefficients
+                if  Defaults.saRatip()
+                    waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    wa  = waR       
+                end
+                if  Defaults.saGG()
+                    subshellList = initialLevel.basis.subshells
+                    opa = SpinAngular.OneParticleOperator(1, plus, true)
+                    waG = SpinAngular.computeCoefficients(opa, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList) 
+                    wa  = waG
+                end
+                if  Defaults.saRatip() && Defaults.saGG() && true
+                    if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
+                    if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
+                end
+                #
                 for  coeff in wa
                     tamp  = InteractionStrength.schiffMoment(finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], nm, grid)
                     matrix[r,s] = matrix[r,s] + coeff.T * tamp  
@@ -96,7 +112,23 @@ module ParityNonConservation
         #
         for  r = 1:nf
             for  s = 1:ni
-                wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                ##x wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                # Calculate the spin-angular coefficients
+                if  Defaults.saRatip()
+                    waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 1, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    wa  = waR       
+                end
+                if  Defaults.saGG()
+                    subshellList = initialLevel.basis.subshells
+                    opa = SpinAngular.OneParticleOperator(1, plus, true)
+                    waG = SpinAngular.computeCoefficients(opa, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList) 
+                    wa  = waG
+                end
+                if  Defaults.saRatip() && Defaults.saGG() && true
+                    if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
+                    if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
+                end
+                #
                 for  coeff in wa
                     tamp  = InteractionStrength.weakCharge(finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], nm, grid)
                     matrix[r,s] = matrix[r,s] + coeff.T * tamp  

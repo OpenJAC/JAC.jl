@@ -7,7 +7,7 @@
 module AutoIonization
 
     using  Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, 
-                   ..PlasmaShift, ..Radial, ..TableStrings
+                   ..PlasmaShift, ..Radial, ..SpinAngular, ..TableStrings
     
     """
     `struct  Settings`  ... defines a type for the details and parameters of computing Auger lines.
@@ -172,17 +172,13 @@ module AutoIonization
                     end
                     if  Defaults.saGG()
                         subshellList = continuumLevel.basis.subshells
-                        opa  = SpinAngular.OneParticleOperator(0, plus, true)
-                        waG1 = SpinAngular.computeCoefficients(opa, continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList) 
                         opa  = SpinAngular.TwoParticleOperator(0, plus, true)
                         waG2 = SpinAngular.computeCoefficients(opa, continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList)
-                        wa   = [waG1, waG2]
+                        wa   = [1.0, waG2]
                     end
                     if  Defaults.saRatip() && Defaults.saGG() && true
-                        if  length(waR[1]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[1]) ")    end
-                        if  length(waG1)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG1 ")        end
-                        if  length(waR[2]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[2]) ")    end
-                        if  length(waG2)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG2 ")        end
+                        if  length(waR[2]) != 0     println("\n>> Angular coeffients from Ratip2013   = $(waR[2]) ")    end
+                        if  length(waG2)   != 0     println(  ">> Angular coeffients from SpinAngular = $waG2 ")        end
                     end
                     #
                     me = 0.

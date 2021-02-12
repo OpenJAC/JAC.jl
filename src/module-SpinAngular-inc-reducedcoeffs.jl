@@ -237,6 +237,54 @@
 
     
     """
+    `SpinAngular.getTermNumber(j::AngularJ64, Q::AngularJ64, J::AngularJ64, Nr::Int64)`  
+        ... returns the internal index for a subshell term which is given by its angular momentum j, the quasispin quantum 
+            number Q as well as the total subshell angular momentum J.
+    
+            j  - is angular momentum j for the subshell;
+            Q  - is the subshell total quasispin Q;
+            J  - is the subshell total angular momentum J;
+            Nr - is additional parameter for j = 9/2 for one by one indentification. It can be any integere for j = 1/2, 3/2, 5/2, 7/2.
+    """
+    function  getTermNumber(j::AngularJ64, Q::AngularJ64, J::AngularJ64, Nr::Int64)
+        no_min = [1, 0, 3, 0, 6, 0,12, 0,26]
+        no_max = [2, 0, 5, 0,11, 0,25, 0,63]
+        I = 0
+        if j <= AngularJ64(9//2)
+            p_min = no_min[Basics.twice(j)];   p_max = no_max[Basics.twice(j)]
+        end
+        if j < AngularJ64(9//2)
+            for run = p_min:p_max
+                if Q == qspaceTerms(run).Q 
+                        if J == qspaceTerms(run).J   I = run;  return (I);  end
+                end
+            end
+        elseif j == AngularJ64(9//2)
+            for run = p_min:p_max
+                if Q == qspaceTerms(run).Q 
+                    if J == qspaceTerms(run).J
+                        if Nr == qspaceTerms(run).Nr   I = run;  return (I);  end
+                    end
+                end
+            end
+        else    error("SpinAngular.getTermNumber supporte j= 1/2, 3/2, 5/2, 7/2, 9/2 subshells")
+        end
+        return( I )
+    end
+ 
+   
+    """
+    ` + (jx, Qx, Jx, Nr::Int64)` ... to returns the same but without type binding apart from N.
+    """
+    function  getTermNumber(jx, Qx, Jx, Nr::Int64)
+        if  typeof(jx) == AngularJ64      j = jx   else  jz = convert(Int64, 2 * jx);   j  = AngularJ64(jz//2)   end
+        if  typeof(Qx) == AngularJ64      Q = Qx   else  Qz = convert(Int64, 2 * Qx);   Q  = AngularJ64(Qz//2)   end
+        if  typeof(Jx) == AngularJ64      J = Jx   else  Jz = convert(Int64, 2 * Jx);   J  = AngularJ64(Jz//2)   end
+        return( getTermNumber(j::AngularJ64, Q::AngularJ64, J::AngularJ64, Nr::Int64) )
+    end
+
+     
+    """
     `SpinAngular.qspaceTerms(iIndex::Int64)`  
         ... returns a list of Q-space term for the given state number; a term::SpinAngular.QspaceTerm,1 is returned.
 
