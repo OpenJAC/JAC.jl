@@ -581,7 +581,7 @@ module InteractionStrength
         return( wm )
     end
 
-
+    #==
     """
     `InteractionStrength.XS_Coulomb(large::Bool, largep::Bool, coeffs::Array{JAC.AngularCoefficientsRatip2013.AngularVcoeff,1}, 
                                     orbitals::Dict{Subshell, Orbital}, grid::Radial.Grid; exchange::Bool=false)`  
@@ -647,7 +647,7 @@ module InteractionStrength
         end
         
         return( Sfunc )
-    end
+    end  ==#
 
 
     """

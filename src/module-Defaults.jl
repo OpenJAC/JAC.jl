@@ -598,8 +598,8 @@ module Defaults
     `Defaults.saRatip()`  
         ... returns true or false if the spin-angular coefficients should be calculated by Fortran codes from RATIP/Grasp.
     """
-    saRatip() = true
-    saGG()    = false
+    saRatip() = false
+    saGG()    = true
 
 
 end # module

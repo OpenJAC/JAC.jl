@@ -5,6 +5,21 @@ The following features have been recently implemented and up-loaded into JAC's m
 
 
 
+## 2021
+
+* **Extended dielectronic recombination (DR) calculations:** Apart from the DR resonance strength, the
+    DR (plasma) rate coefficients can be calculated as well.*(March'21)*
+* **Write-up of atomic cascade computations:** Cf. S. Fritzsche, P. Palmeri & S. Schippers,
+    Symmetry 2021, 13(3), 520; https://doi.org/10.3390/sym13030520   *(March'21)*
+* **Julia implementation of the spin-angular integration (together with Gediminas Gaigalas)** The former 
+    dependence of JAC upon the (Fortran) ANCO module for the spin-angular coefficients has now been removed
+    and replaced by the (Julia) SpinAngular module. This simplifies significantly the installation of the 
+    JAC toolbox and will support further developments on cascades, reduced density matrices, etc.
+    *(March'21)*
+* **Isotope-shift calculations:** Set-up of a first module for isotope-shift calculations *(February'21)*
+
+
+
 ## 2020
 
 * **Extended and improved User Guide & Compendium:**  *(October'20)*
