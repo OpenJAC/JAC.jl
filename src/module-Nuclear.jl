@@ -50,6 +50,23 @@ module Nuclear
 
 
     """
+    `Nuclear.Model(Z::Real, M::Float64)`  
+        ... to specify a Fermi-type nucleus with charge Z and mass M, and where the nuclear spin and nuclear moments are all set to zero.
+    """
+    function Model(Z::Real, M::Float64)
+        Z < 0.1  &&  error("Z must be >= 0.1")
+        model    = "Fermi"
+        mass     = M
+        radius   = Nuclear.Rrms(mass)
+        spinI    = AngularJ64(0)
+        mu       = 0.
+        Q        = 0.
+
+        Model(Z, model, mass, radius, spinI, mu, Q) 
+    end
+
+
+    """
     `Nuclear.Model(Z::Real, model::String)`  
         ... to specify a nucleus with charge Z, model = {"Fermi", "point", "uniform"}, and where the nuclear spin and 
             nuclear moments are all set to zero.

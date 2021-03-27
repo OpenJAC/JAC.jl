@@ -250,6 +250,7 @@
     function Basics.selectLevel(level::Level, levelSelection::LevelSelection)
         if  levelSelection.active
             # Test for level index
+            ##x @show level.index, levelSelection.indices
             if  level.index  in  levelSelection.indices                                 return( true )   end
             if  LevelSymmetry(level.J, level.parity)  in  levelSelection.symmetries     return( true )   end
         else                                                                            return( true ) 

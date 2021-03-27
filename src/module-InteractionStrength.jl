@@ -43,14 +43,43 @@ module InteractionStrength
 
 
     """
+    `InteractionStrength.bosonShift(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid::Radial.Grid)`  
+        ... computes the  <a|| h^(boson-field) ||b>  reduced matrix element of the boson-field shift Hamiltonian for orbital 
+            functions a, b. This boson-field shift Hamiltonian just refers to the effective potential of the given 
+            isotope due to the (assumed) boson mass. A value::Float64 is returned.  
+    """
+    function bosonShift(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid::Radial.Grid)
+        wa = RadialIntegrals.isotope_boson(a, b, potential, grid) 
+        ### wa = RadialIntegrals.isotope_boson(a, b, potential, grid) 
+        ##x println("**  <$(a.subshell) || h^(boson-field shift) || $(b.subshell)>  = $wa" )
+        return( wa )
+    end
+
+
+    """
+    `InteractionStrength.fieldShift(a::Orbital, b::Orbital, deltaPotential::Array{Float64,1}, grid::Radial.Grid)`  
+        ... computes the  <a|| h^(field-shift) ||b>  reduced matrix element of the field-shift Hamiltonian for orbital 
+            functions a, b. This field-shift Hamiltonian just refers to the difference of the nuclear potential 
+            deltaPotential of two isotopes, and which is already divided by the difference of the mean-square radii. 
+            A value::Float64 is returned.  
+    """
+    function fieldShift(a::Orbital, b::Orbital, deltaPotential::Array{Float64,1}, grid::Radial.Grid)
+        wa = RadialIntegrals.isotope_field(a, b, deltaPotential, grid) 
+        ### wa = RadialIntegrals.isotope_field(a, b, deltaPotential, grid) 
+        ##x println("**  <$(a.subshell) || h^(field-shift) || $(b.subshell)>  = $wa" )
+        return( wa )
+    end
+
+
+    """
     `InteractionStrength.hamiltonian_nms(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
         ... computes the  <a|| h_nms ||b>  reduced matrix element of the normal-mass-shift Hamiltonian for orbital 
             functions a, b. A value::Float64 is returned.  For details, see Naze et al., CPC 184 (2013) 2187, Eq. (37).
     """
     function hamiltonian_nms(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
         if  a.subshell.kappa != b.subshell.kappa   return( 0. )   end
-        wa = RadialIntegrals.isotope_nms(a, b, nm.Z, grid) / (2 * nm.mass)
-        println("**  <$(a.subshell) || h^nms || $(b.subshell)>  = $wa" )
+        wa = RadialIntegrals.isotope_nms(a, b, nm.Z, grid) / 2
+        ##x println("**  <$(a.subshell) || h^nms || $(b.subshell)>  = $wa" )
         return( wa )
     end
 
@@ -762,13 +791,14 @@ module InteractionStrength
 
 
     """
-    `InteractionStrength.X1_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
+    `InteractionStrength.X_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
         ... computes the the effective interaction strengths X^1_sms,A (abcd) for fixed rank 1 and orbital functions 
             a, b, c and d at the given grid. A value::Float64 is returned.
     """
-    function X1_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
-        wa = AngularMomentum.CL_reduced_me(a.subshell, 1, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) *
-             RadialIntegrals.Vinti(a, c, grid) * RadialIntegrals.Vinti(b, d, grid) / (2 * nm.mass)
+    function X_smsA(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
+        wa = AngularMomentum.CL_reduced_me_sms(a.subshell, 1, c.subshell) * 
+             AngularMomentum.CL_reduced_me_sms(b.subshell, 1, d.subshell) *
+             RadialIntegrals.Vinti(a, c, grid) * RadialIntegrals.Vinti(b, d, grid) / 2
         ## println("**  <$(a.subshell) || Vinti || $(c.subshell)>  = $(RadialIntegrals.Vinti(a, c, grid)) " )
         ## println("**  <$(b.subshell) || Vinti || $(d.subshell)>  = $(RadialIntegrals.Vinti(b, d, grid)) " )
         return( wa )
@@ -776,25 +806,26 @@ module InteractionStrength
 
 
     """
-    `InteractionStrength.X1_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
+    `InteractionStrength.X_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)`  
         ... computes the the effective interaction strengths X^1_sms,B (abcd) for fixed rank 1 and orbital functions 
             a, b, c and d at the given grid. A value::Float64 is returned.
     """
-    function X1_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
-        wa = - AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) * RadialIntegrals.Vinti(b, d, grid) *
-               RadialIntegrals.isotope_smsB(a, c, nm.Z, grid) / (2 * nm.mass) 
+    function X_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
+        wa = - AngularMomentum.CL_reduced_me_sms(b.subshell, 1, d.subshell) * RadialIntegrals.Vinti(b, d, grid) *
+               RadialIntegrals.isotope_smsB(a, c, nm.Z, grid) / 2
         return( wa )
     end
 
 
     """
-    `InteractionStrength.X1_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)` 
+    `InteractionStrength.X_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)` 
         ... computes the the effective interaction strengths X^1_sms,C (abcd) for fixed rank 1 and orbital functions 
             a, b, c and d at the given grid. A value::Float64 is returned.
     """
-    function X1_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
-        wa = - AngularMomentum.CL_reduced_me(b.subshell, 1, d.subshell) * AngularMomentum.CL_reduced_me(a.subshell, 1, c.subshell) * 
-               RadialIntegrals.Vinti(b, d, grid) * RadialIntegrals.isotope_smsC(a, c, nm.Z, grid) / (2 * nm.mass) 
+    function X_smsC(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
+        wa = - AngularMomentum.CL_reduced_me_sms(b.subshell, 1, d.subshell) * 
+               AngularMomentum.CL_reduced_me_sms(a.subshell, 1, c.subshell) * 
+               RadialIntegrals.Vinti(b, d, grid) * RadialIntegrals.isotope_smsC(a, c, nm.Z, grid) / 2
         return( wa )
     end
 

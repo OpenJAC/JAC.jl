@@ -15,25 +15,29 @@ module Dielectronic
 
         + multipoles            ::Array{EmMultipoles}  ... Multipoles of the radiation field that are to be included.
         + gauges                ::Array{UseGauge}      ... Specifies the gauges to be included into the computations.
+        + calcRateAlpha         ::Bool                 ... True, if the DR rate coefficients are to be calculated, and false o/w.
         + printBefore           ::Bool                 ... True, if all energies and pathways are printed before their eval.
         + pathwaySelection      ::PathwaySelection     ... Specifies the selected levels/pathways, if any.
         + electronEnergyShift   ::Float64              ... An overall energy shift for all electron energies (i.e. from the 
-                                                           initial to the resonance levels.
+                                                           initial to the resonance levels [Hartree].
         + photonEnergyShift     ::Float64              ... An overall energy shift for all photon energies (i.e. from the 
                                                            resonance to the final levels.
         + mimimumPhotonEnergy   ::Float64              ... minimum transition energy for which photon transitions are 
                                                            included into the evaluation.
-        + augerOperator         ::AbstractEeInteraction               ... Auger operator that is to be used for evaluating the Auger ampl's: 
+        + temperatures          ::Array{Float64,1}
+        + augerOperator         ::AbstractEeInteraction .. Auger operator that is to be used for evaluating the Auger ampl's: 
                                                            allowed values are: CoulombInteraction(), BreitInteration(), CoulombBreit()
     """
     struct Settings 
         multipoles              ::Array{EmMultipole,1}
         gauges                  ::Array{UseGauge}
+        calcRateAlpha           ::Bool
         printBefore             ::Bool 
         pathwaySelection        ::PathwaySelection
         electronEnergyShift     ::Float64
         photonEnergyShift       ::Float64
         mimimumPhotonEnergy     ::Float64
+        temperatures            ::Array{Float64,1}
         augerOperator           ::AbstractEeInteraction
     end 
 
@@ -43,36 +47,39 @@ module Dielectronic
         ... constructor for the default values of dielectronic recombination pathway computations.
     """
     function Settings()
-        Settings([E1], UseGauge[], false, PathwaySelection(), 0., 0., 0., CoulombInteraction())
+        Settings([E1], UseGauge[], false, false, PathwaySelection(), 0., 0., 0., Float64[], CoulombInteraction())
     end
 
 
     """
     ` (set::Dielectronic.Settings;`
     
-            multipoles=..,           gauges=..,                  printBefore=..,             pathwaySelection=..,             
-            electronEnergyShift=..,  photonEnergyShift=..,       mimimumPhotonEnergy=..,     augerOperator=..)
+            multipoles=..,           gauges=..,                  calcRateAlpha=..,           printBefore=..,
+            pathwaySelection=..,     electronEnergyShift=..,     photonEnergyShift=..,       mimimumPhotonEnergy=..,     
+            temperatures=..,         augerOperator=..)
                         
         ... constructor for modifying the given Dielectronic.Settings by 'overwriting' the previously selected parameters.
     """
     function Settings(set::Dielectronic.Settings;    
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                        gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
-        printBefore::Union{Nothing,Bool}=nothing,                                       pathwaySelection::Union{Nothing,PathwaySelection}=nothing, 
-        electronEnergyShift::Union{Nothing,Float64}=nothing,
+        calcRateAlpha::Union{Nothing,Bool}=nothing,                                     printBefore::Union{Nothing,Bool}=nothing, 
+        pathwaySelection::Union{Nothing,PathwaySelection}=nothing,                      electronEnergyShift::Union{Nothing,Float64}=nothing,
         photonEnergyShift::Union{Nothing,Float64}=nothing,                              mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,
-        augerOperator::Union{Nothing,AbstractEeInteraction}=nothing)
+        temperatures::Union{Nothing,Array{Float64,1}}=nothing,           augerOperator::Union{Nothing,AbstractEeInteraction}=nothing)
         
         if  multipoles          == nothing   multipolesx          = set.multipoles            else  multipolesx          = multipoles           end 
         if  gauges              == nothing   gaugesx              = set.gauges                else  gaugesx              = gauges               end 
+        if  calcRateAlpha       == nothing   calcRateAlphax       = set.calcRateAlpha         else  calcRateAlphax       = calcRateAlpha        end 
         if  printBefore         == nothing   printBeforex         = set.printBefore           else  printBeforex         = printBefore          end 
         if  pathwaySelection    == nothing   pathwaySelectionx    = set.pathwaySelection      else  pathwaySelectionx    = pathwaySelection     end 
         if  electronEnergyShift == nothing   electronEnergyShiftx = set.electronEnergyShift   else  electronEnergyShiftx = electronEnergyShift  end 
         if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift     else  photonEnergyShiftx   = photonEnergyShift    end 
         if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy   else  mimimumPhotonEnergyx = mimimumPhotonEnergy  end 
+        if  temperatures        == nothing   temperaturesx        = set.temperatures          else  temperaturesx        = temperatures         end 
         if  augerOperator       == nothing   augerOperatorx       = set.augerOperator         else  augerOperatorx       = augerOperator        end 
 
-        Settings( multipolesx, gaugesx, printBeforex, pathwaySelectionx, electronEnergyShiftx, photonEnergyShiftx, 
-                  mimimumPhotonEnergyx, augerOperatorx )
+        Settings( multipolesx, gaugesx, calcRateAlphax, printBeforex, pathwaySelectionx, electronEnergyShiftx, 
+                  photonEnergyShiftx, mimimumPhotonEnergyx, temperaturesx, augerOperatorx )
     end
 
 
@@ -80,11 +87,13 @@ module Dielectronic
     function Base.show(io::IO, settings::Dielectronic.Settings) 
         println(io, "multipoles:                 $(settings.multipoles)  ")
         println(io, "use-gauges:                 $(settings.gauges)  ")
+        println(io, "calcRateAlpha:              $(settings.calcRateAlpha)  ")
         println(io, "printBefore:                $(settings.printBefore)  ")
         println(io, "pathwaySelection:           $(settings.pathwaySelection)  ")
         println(io, "electronEnergyShift:        $(settings.electronEnergyShift)  ")
         println(io, "photonEnergyShift:          $(settings.photonEnergyShift)  ")
         println(io, "mimimumPhotonEnergy:        $(settings.mimimumPhotonEnergy)  ")
+        println(io, "temperatures:               $(settings.temperatures)  ")
         println(io, "augerOperator:              $(settings.augerOperator)  ")
     end
 
@@ -104,8 +113,8 @@ module Dielectronic
         + angularBeta       ::EmProperty              ... beta parameter of the photon emission
         + reducedStrength   ::EmProperty              ... reduced resonance strength S(i -> d -> f) * Gamma_d of this pathway;
                                                           this reduced strength does not require the knowledge of Gamma_d for each pathway.
-        + hasChannels       ::Bool                    ... Determines whether the individual channels are defined in terms of their possible
-                                                          Auger and radiative channels, or not.
+        ##x + hasChannels       ::Bool                    ... Determines whether the individual channels are defined in terms of their possible
+        ##x                                                   Auger and radiative channels, or not.
         + captureChannels   ::Array{AutoIonization.Channel,1}   ... List of |i> -->  |n>   dielectronic (Auger) capture channels.
         + photonChannels    ::Array{PhotoEmission.Channel,1}    ... List of |n> -->  |f>   radiative stabilization channels.
     """
@@ -119,7 +128,7 @@ module Dielectronic
         photonRate          ::EmProperty
         angularBeta         ::EmProperty
         reducedStrength     ::EmProperty
-        hasChannels         ::Bool
+        ##x hasChannels         ::Bool
         captureChannels     ::Array{AutoIonization.Channel,1} 
         photonChannels      ::Array{PhotoEmission.Channel,1} 
     end 
@@ -132,7 +141,7 @@ module Dielectronic
     """
     function Pathway()
         em = EmProperty(0., 0.)
-        Pathway(initialLevel, intermediateLevel, finalLevel, 0., 0., 0., em, em, em, false, AutoIonization.Channel[], PhotoEmission.Channel[])
+        Pathway(initialLevel, intermediateLevel, finalLevel, 0., 0., 0., em, em, em, AutoIonization.Channel[], PhotoEmission.Channel[])
     end
 
 
@@ -147,7 +156,7 @@ module Dielectronic
         println(io, "photonRate:                 $(pathway.photonRate)  ")
         println(io, "angularBeta:                $(pathway.angularBeta)  ")
         println(io, "reducedStrength:            $(pathway.reducedStrength)  ")
-        println(io, "hasChannels:                $(pathway.hasChannels)  ")
+        ##x println(io, "hasChannels:                $(pathway.hasChannels)  ")
         println(io, "captureChannels:            $(pathway.captureChannels)  ")
         println(io, "photonChannels:             $(pathway.photonChannels)  ")
     end
@@ -224,6 +233,38 @@ module Dielectronic
         return( nothing )
     end
 
+
+    """
+    `Dielectronic.checkOrbitalRepresentation(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet)`  
+        ... to check (and analyze) that all high nl orbitals in these multiplets are properly represented on the given grid.
+            The function prints for each symmetry block kappa the high-nl orbitals and checks that they are all bound.
+            An error message is issued if this is not the case, and nothing is returned otherwise.
+    """
+    function  checkOrbitalRepresentation(finalMultiplet::Multiplet, intermediateMultiplet::Multiplet, initialMultiplet::Multiplet)
+        
+        println("\n  Check the energies and orbital representation:")
+        println("\n  ----------------------------------------------")
+        subshells = initialMultiplet.levels[1].basis.subshells;     basis = initialMultiplet.levels[1].basis
+        for sub in subshells   
+            if  basis.orbitals[sub].energy >= 0.    error("$sub orbital not bound; enlarge the box size !")     end
+        end
+        println("  > Initial occupied subshells:      $(subshells)")
+        
+        subshells = intermediateMultiplet.levels[1].basis.subshells;     basis = intermediateMultiplet.levels[1].basis
+        for sub in subshells   
+            if  basis.orbitals[sub].energy >= 0.    error("$sub orbital not bound; enlarge the box size !")     end
+        end
+        println("  > Intermediate occupied subshells: $(subshells)")
+        
+        subshells = finalMultiplet.levels[1].basis.subshells;     basis = finalMultiplet.levels[1].basis
+        for sub in subshells   
+            if  basis.orbitals[sub].energy >= 0.    error("$sub orbital not bound; enlarge the box size !")     end
+        end
+        println("  > Final occupied subshells:        $(subshells)")
+            
+        return( nothing )
+    end
+
     
 
     """
@@ -292,7 +333,7 @@ module Dielectronic
         ##                   (Basics.twice(pathway.intermediateLevel.J) + 1) / (Basics.twice(pathway.initialLevel.J) + 1)
         reducedStrength = EmProperty(wa * photonRate.Coulomb, wa * photonRate.Babushkin)
         pathway = Dielectronic.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, pathway.electronEnergy, 
-                                        pathway.photonEnergy, captureRate, photonRate, angularBeta, reducedStrength, true, newcChannels, newpChannels)
+                                        pathway.photonEnergy, captureRate, photonRate, angularBeta, reducedStrength, newcChannels, newpChannels)
         return( pathway )
     end
 
@@ -311,6 +352,8 @@ module Dielectronic
         println("")
         # First check that the initial, intermediate and final-state multiplets are consistent with each other to allow all requested computations
         Dielectronic.checkConsistentMultiplets(finalMultiplet, intermediateMultiplet, initialMultiplet)
+        # Second, analyze that the high nl orbitals are properly represented with the given grid
+        Dielectronic.checkOrbitalRepresentation(finalMultiplet, intermediateMultiplet, initialMultiplet)
         #
         pathways = Dielectronic.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
         # Display all selected pathways before the computations start
@@ -338,15 +381,36 @@ module Dielectronic
         # Print all results to screen
         Dielectronic.displayResults(stdout, newPathways, settings)
         Dielectronic.displayResults(stdout, resonances,  settings)
+        Dielectronic.displayRateCoefficients(stdout, resonances,  settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   Dielectronic.displayResults(iostream, newPathways, settings)
-                           Dielectronic.displayResults(iostream, resonances,  settings)    end
+                           Dielectronic.displayResults(iostream, resonances,  settings)
+                           Dielectronic.displayRateCoefficients(iostream, resonances,  settings)    end
         #
         if    output    return( newPathways )
         else            return( nothing )
         end
     end
 
+   
+    """
+    `Dielectronic.computeRateCoefficient(resonance::Dielectronic.Resonance, temp::Float64)`  
+        ... computes for a delta-like resonance the DR rate coefficient alpha_d (i, Te) from the given resonance strength
+            and temperature [K], and for both, Coulomb and Babushkin gauge. All values are directly returned in [cm^3/s].
+            An alphaDR::EmProperty is returned.
+    """
+    function computeRateCoefficient(resonance::Dielectronic.Resonance, temp::Float64)
+        temp_au = Defaults.convertUnits("temperature: from Kelvin to (Hartree) units", temp)
+        factor  = 4 / sqrt(2pi) * temp_au^(-3/2) * resonance.resonanceEnergy * exp(- resonance.resonanceEnergy/temp_au)
+        alphaDR = factor * resonance.resonanceStrength 
+        # Convert units into cm^3 / s
+        factor  = Defaults.convertUnits("length: from atomic to fm", 1.0)^3 * 1.0e-39 * 
+                  Defaults.convertUnits("rate: from atomic to 1/s", 1.0) 
+        alphaDR = factor * alphaDR
+                  
+        return( alphaDR )
+    end
+    
 
     """
     `Dielectronic.computeResonances(pathways::Array{Dielectronic.Pathway,1}, settings::Dielectronic.Settings)`  
@@ -450,6 +514,7 @@ module Dielectronic
         pathways = Dielectronic.Pathway[]
         electronEnergyShift = Defaults.convertUnits("energy: to atomic", settings.electronEnergyShift)
         photonEnergyShift   = Defaults.convertUnits("energy: to atomic", settings.photonEnergyShift)
+        #
         for  iLevel  in  initialMultiplet.levels
             for  nLevel  in  intermediateMultiplet.levels
                 for  fLevel  in  finalMultiplet.levels
@@ -460,7 +525,7 @@ module Dielectronic
                         cChannels = Dielectronic.determineCaptureChannels(nLevel, iLevel, settings) 
                         pChannels = Dielectronic.determinePhotonChannels( fLevel, nLevel, settings) 
                         push!( pathways, Dielectronic.Pathway(iLevel, nLevel, fLevel, eEnergy, pEnergy, 0., EmProperty(0., 0.), 
-                                                              EmProperty(0., 0.), EmProperty(0., 0.), true, cChannels, pChannels) )
+                                                              EmProperty(0., 0.), EmProperty(0., 0.), cChannels, pChannels) )
                     end
                 end
             end
@@ -648,6 +713,63 @@ module Dielectronic
             sa = sa * "(" * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", wa)) * ")"                     * "   "
             println(stream, sa)
         end
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        return( nothing )
+    end
+
+
+    """
+    `Dielectronic.displayRateCoefficients(stream::IO, resonances::Array{Dielectronic.Resonance,1}, settings::Dielectronic.Settings)`  
+        ... to list, if settings.calcRateAlpha, all rate coefficients for the selected temperatures. Both, the individual as well as
+            the total DR plasma rate coefficients are printed in neat tables, though nothing is returned otherwise.
+    """
+    function  displayRateCoefficients(stream::IO, resonances::Array{Dielectronic.Resonance,1}, settings::Dielectronic.Settings)
+        ntemps = length(settings.temperatures)
+        if  !settings.calcRateAlpha  ||  ntemps == 0     return(nothing)     end
+        #
+        nx = 54 + 17 * min(ntemps, 7)
+        println(stream, " ")
+        println(stream, "  Rate coefficients for delta-like resonances [cm^3/s]:        ... all results in Babushkin gauge")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(18, "i-level-m"; na=2);                         sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i--J^P--m"; na=2);                         sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(14, "Energy"   ; na=2);               
+        sb = sb * TableStrings.center(14,TableStrings.inUnits("energy"); na=2)
+        for  nt = 1:min(ntemps, 7)
+            sa = sa * TableStrings.center(14, "T = " * @sprintf("%.2e", settings.temperatures[nt]); na=3);       
+            sb = sb * TableStrings.center(14, "[K]"; na=3)
+        end
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
+        for  resonance in resonances
+            sa  = "";      isym = LevelSymmetry( resonance.initialLevel.J,      resonance.initialLevel.parity)
+                           msym = LevelSymmetry( resonance.intermediateLevel.J, resonance.intermediateLevel.parity)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(resonance.initialLevel.index, resonance.intermediateLevel.index); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, msym);  na=4)
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", resonance.resonanceEnergy))    * "      "
+            for  nt = 1:min(ntemps, 7)
+                alphaDR      = Dielectronic.computeRateCoefficient(resonance, settings.temperatures[nt])
+                sa = sa * @sprintf("%.4e", alphaDR.Babushkin)  * "       "
+            end
+            println(stream, sa)
+        end
+        #
+        println(stream, "  ")
+        sa = "       alpha^DR (T, i; Coulomb gauge):                      " 
+        sb = "       alpha^DR (T, i; Babushkin gauge):                    " 
+        for  nt = 1:min(ntemps, 7) 
+            alphaDRtotal = EmProperty(0.)
+            for  resonance in resonances
+                alphaDR      = Dielectronic.computeRateCoefficient(resonance, settings.temperatures[nt])
+                alphaDRtotal = alphaDRtotal + alphaDR
+            end
+            sa = sa * @sprintf("%.4e", alphaDRtotal.Coulomb)    * "       "
+            sb = sb * @sprintf("%.4e", alphaDRtotal.Babushkin)  * "       "
+        end
+        println(stream, sa);    println(stream, sb)
         println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )

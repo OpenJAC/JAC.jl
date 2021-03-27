@@ -1298,12 +1298,18 @@ module Basics
       + struct AddSingleElectron             
         ... generates configurations by just adding a single electrons to a given list of bound
             electron configurations. The number of electrons of the generated configurations is N+1.
+            
+      + struct ExciteByCapture             
+        ... generates all excitations and de-excitations of one or more electron from a given list of bound
+            electron configurations, together with an capture of an additional electron. 
+            The number of electrons of the generated configurations is N+1.
     """
     abstract type  AbstractExcitationScheme                               end
     struct         NoExcitationScheme      <:  AbstractExcitationScheme   end
     struct         DeExciteSingleElectron  <:  AbstractExcitationScheme   end
     struct         DeExciteTwoElectrons    <:  AbstractExcitationScheme   end
     struct         AddSingleElectron       <:  AbstractExcitationScheme   end
+    struct         ExciteByCapture         <:  AbstractExcitationScheme   end
 
     
     """
@@ -1513,6 +1519,7 @@ module Basics
     function analyze                                                end
     function analyzeConvergence                                     end
     function compute                                                end
+    function computeDensity                                         end
     function computeDiracEnergy                                     end
     function computeMeanSubshellOccupation                          end
     function computeMultipletForGreenApproach                       end
@@ -1567,6 +1574,7 @@ module Basics
     function isStandardSubshellList                                 end
     function isViolated                                             end
     function isZero                                                 end
+    function lastPoint                                              end
     function merge                                                  end
     function modifyLevelEnergies                                    end
     function perform                                                end

@@ -513,8 +513,8 @@ module TestFrames
                                 intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
                                 process = Dierec(), 
-                                processSettings=Dielectronic.Settings([E1, M1], [UseCoulomb, UseBabushkin], false, 
-                                                                      PathwaySelection(true, indexTriples=[(1,1,0)]), 0., 0., 0., CoulombInteraction() )  
+                                processSettings=Dielectronic.Settings([E1, M1], [UseCoulomb, UseBabushkin], false, false, 
+                                                                      PathwaySelection(true, indexTriples=[(1,1,0)]), 0., 0., 0., Float64[], CoulombInteraction() )  
 )
         wb = perform(wa)
         ###
@@ -613,7 +613,7 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
                                 nuclearModel=Nuclear.Model(26.), properties=[Isotope()], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                isotopeSettings=IsotopeShift.Settings(true, false, false, true, false, Int64[], "method-1") )
+                                isotopeSettings=IsotopeShift.Settings(true, true, true, false, true, 0.0, LevelSelection()) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -1049,7 +1049,7 @@ module TestFrames
         step3       = RasStep(step2, seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
         #
         wa          = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs, 
-                                     RasExpansion(LevelSymmetry(0, Basics.plus), 4, [step1, step2, step3], rasSettings) )
+                                     RasExpansion([LevelSymmetry(0, Basics.plus)], 4, [step1, step2, step3], rasSettings) )
         wb = generate(wa, output=true)
         if  abs(wb["step3"].levels[1].energy + 14.61679117)  > 1.0e-3
             success = false

@@ -47,6 +47,49 @@
 
 
     """
+    `Basics.generate(repType::AtomicState.OneElectronSpectrum, representation::AtomicState.Representation)`  
+        ... to generate a one-electron spectrum for the atomic potential from the (given) levels, based on a set of reference 
+            configurations as well as for given settings. Relevant intermediate and final results are printed to screen (stdout). 
+            Nothing is returned in this case.
+
+        + `(repType::AtomicState.OneElectronSpectrum, representation::AtomicState.Representation; output=true)`  
+        ... to generate the same but to return the complete output in a orbitals::Dict{Subshell, Orbital}.
+    """
+    function Basics.generate(repType::AtomicState.OneElectronSpectrum, rep::AtomicState.Representation; output::Bool=true)
+        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        nModel    = rep.nuclearModel
+        settings  = repType.settings
+        # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
+        asfSettings   = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
+                                       ## all further details are specified for each step
+        refBasis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+        refMultiplet  = Basics.performCI(refBasis, nModel, rep.grid, asfSettings; printout=true)
+        nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
+        @warn("The potential is generated for the mean-field basis but not (yetc hosen for the selected levels.")
+        electronicPot = Basics.compute("radial potential: Dirac-Fock-Slater", rep.grid, refBasis)
+        meanPot       = Basics.add(nuclearPot, electronicPot)
+        
+        println("")
+        printstyled("Compute an one-electron spectrum for the selected partial waves ... \n", color=:light_green)
+        printstyled("------------------------------------------------------------------- \n", color=:light_green)
+        
+        # Generate all non-relativistic and relativistic subshells and the associated single-electron spectrum for this potential
+        shellList = Basics.generateShellList(1, settings.nMax, settings.lValues)
+        subshellList = Subshell[]
+        for  shell in shellList     append!(subshellList, Basics.shellSplitIntoSubshells(shell))    end
+        orbitals = Basics.generateOrbitalsForPotential(rep.grid, meanPot, subshellList)  ## generate a spectrum of sufficient size
+        
+        # Print all results to screen
+        Basics.display(stdout, orbitals, rep.grid; longTable=false)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        if  printSummary    Basics.display(iostream, orbitals, rep.grid; longTable=false)         end
+        
+        if output   return( orbitals )      else     nothing    end
+    end
+
+
+
+    """
     `Basics.generate(repType::AtomicState.CiExpansion, representation::AtomicState.Representation)`  
         ... to generate a configuration-interaction expansion for a single level symmetry and based on a set of reference configurations
             and a number of pre-specified steps. All relevant intermediate and final results are printed to screen (stdout). 
@@ -140,7 +183,7 @@
             println("")
             printstyled("++ Compute the orbitals, orbitals and multiplet for step $istep ... \n", color=:light_green)
             printstyled("--------------------------------------------------------------      \n", color=:light_green)
-            basis      = Basics.generateBasis(rep.refConfigs, [repType.symmetry], step)
+            basis      = Basics.generateBasis(rep.refConfigs, repType.symmetries, step)
             orbitals   = Basics.generateOrbitalsForBasis(basis, step.frozenShells, priorMultiplet.levels[1].basis, startOrbitals)
             basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )  
             basis      = Basics.performSCF(basis, nModel, rep.grid, step.frozenShells, repType.settings; printout=true)
@@ -831,6 +874,45 @@
 
 
     """
+    `Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.ExciteByCapture, 
+            fromShells::Array{Shell,1}, toShells::Array{Shell,1}, intoShells::Array{Shell,1}, noex::Int64)`  
+        ... generates a list of non-relativistic configurations for the given (reference) confs with the excitation
+            of upto noex electrons fromShell --> toShells and the additional capture of one electron --> intoShells.
+            All configuration will therefore contain N+1 electrons.
+    """
+    function Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.ExciteByCapture, 
+                    fromShells::Array{Shell,1}, toShells::Array{Shell,1}, intoShells::Array{Shell,1}, noex::Int64)
+        NoElectrons = confs[1].NoElectrons
+        confList    = Basics.generateConfigurations(confs, fromShells, toShells, noex)
+        shellList   = Basics.extractNonrelativisticShellList(confList)
+        #
+        # Now add one electron to the intoShells
+        newConfList = Configuration[]
+        for  conf in confList
+            for intoShell in intoShells
+                newShells = deepcopy( conf.shells )
+                if   haskey(conf.shells, intoShell )   occ = conf.shells[intoShell]
+                    if  occ   + 1 > 2*(2*intoShell.l + 1)      println("..");    continue    end
+                    newShells[intoShell] = newShells[intoShell] + 1
+                else  
+                    newShells = Base.merge( newShells, Dict( intoShell => 1))
+                end
+                # Add a new configuration
+                push!( newConfList, Configuration( newShells, NoElectrons+1))
+                if  true  println(">> Generate $(Configuration( newShells, NoElectrons+1))")   end
+            end
+        end
+        
+        nbefore     = length(confList)
+        nafter      = length(newConfList)
+        println(">> Number of generated configurations for $exScheme is: $nbefore (before) and $nafter (after).")
+
+        return( newConfList )
+    end
+
+
+
+    """
     `Basics.generateConfigurationsWithElectronCapture(confs::Array{Configuration,1}, fromShells::Array{Shell,1}, toShells::Array{Shell,1}, noex::Int64)`  
         ... generates a list of non-relativistic configurations for the given (reference) confs and with one additional (cpatured) 
             electron. All (doubly) excited configurations with upto :NoExcitations displacements of electrons fromShells into toShells 
@@ -1050,7 +1132,6 @@
         return( newOrbital )
     end
 
-    
 
     """
     `Basics.generateShellList(confs::Array{Configuration,1}, nMax::Int64, lValues::Array{Int64,1})`  
@@ -1079,6 +1160,89 @@
             end
         end
         println(">> From configurations generated shell list $newShellList ")
+        
+        return( newShellList )
+    end
+
+
+    """
+    `Basics.generateShellList(nMin::Int64, nMax::Int64, lValues::Array{Int64,1})`  
+        ... generates a list of (non-relativistic) shells in standard order that contains all shells with principal quantum
+            numbers from nMin .. nMaxthe and orbital angular momenta from lValues. A shellList::Array{Shell,1} is returned.
+    """
+    function Basics.generateShellList(nMin::Int64, nMax::Int64, lValues::Array{Int64,1})
+        shellList = Shell[]
+        # Add all shells for the given quantum numbers
+        for  n = nMin:nMax
+            for  ll in  lValues  
+                if  n >= ll + 1     push!( shellList, Shell(n,ll))      end    
+            end
+        end
+        
+        # Now bring the shells in standard order
+        newShellList = Shell[]
+        for  n = 1:nMax
+            for  l = 0:30  
+                if  n >= l + 1  && Shell(n,l) in shellList    push!( newShellList, Shell(n,l))     end    
+            end
+        end
+        println(">> Generated shell list $newShellList ")
+        
+        return( newShellList )
+    end
+
+
+    """
+    `Basics.generateShellList(nMin::Int64, nMax::Int64, lMax::Int64)`  
+        ... generates a list of (non-relativistic) shells in standard order that contains all shells with principal quantum
+            numbers from nMin .. nMaxthe and orbital angular momenta l <= lMax. A shellList::Array{Shell,1} is returned.
+    """
+    function Basics.generateShellList(nMin::Int64, nMax::Int64, lMax::Int64)
+        shellList = Shell[]
+        # Add all shells for the given quantum numbers
+        for  n = nMin:nMax
+            for  ll = 0:lMax 
+                if  n >= ll + 1     push!( shellList, Shell(n,ll))      end    
+            end
+        end
+        
+        # Now bring the shells in standard order
+        newShellList = Shell[]
+        for  n = 1:nMax
+            for  l = 0:30  
+                if  n >= l + 1  && Shell(n,l) in shellList    push!( newShellList, Shell(n,l))     end    
+            end
+        end
+        println(">> Generated shell list $newShellList ")
+        
+        return( newShellList )
+    end
+
+
+    """
+    `Basics.generateShellList(nMin::Int64, nMax::Int64, symMax::String)`  
+        ... generates a list of (non-relativistic) shells in standard order that contains all shells with principal quantum
+            numbers from nMin .. nMaxthe and orbital angular momenta l <= l(symMax), and where symMax is the symmetry character
+            string ("s", "p", ...,"z") of the corresponding orbital angular momentum. A shellList::Array{Shell,1} is returned.
+    """
+    function Basics.generateShellList(nMin::Int64, nMax::Int64, symMax::String)
+        lMax = Basics.shellNotation(symMax)
+        shellList = Shell[]
+        # Add all shells for the given quantum numbers
+        for  n = nMin:nMax
+            for  ll = 0:lMax 
+                if  n >= ll + 1     push!( shellList, Shell(n,ll))      end    
+            end
+        end
+        
+        # Now bring the shells in standard order
+        newShellList = Shell[]
+        for  n = 1:nMax
+            for  l = 0:30  
+                if  n >= l + 1  && Shell(n,l) in shellList    push!( newShellList, Shell(n,l))     end    
+            end
+        end
+        println(">> Generated shell list $newShellList ")
         
         return( newShellList )
     end

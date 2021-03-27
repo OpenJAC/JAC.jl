@@ -693,6 +693,25 @@
 
 
     """
+    `Basics.extractNonrelativisticShellList(confs::Array{Configuration,1})  
+        ... extract a nonrelativistic shell list from the given configuration list; the shells are not ordered. 
+            A shellList::Array{Subshell,1} is returned.
+    """
+    function Basics.extractNonrelativisticShellList(confs::Array{Configuration,1}) 
+        shellList = Shell[]
+        
+        for conf in confs
+            for (k,v) in conf.shells
+                if  k in shellList      else    push!(shellList, k)     end
+            end
+        end
+        @show shellList
+        
+        return( shellList )
+    end
+
+
+    """
     `Basics.extractNonrelativisticConfigurations(basis::Basis)  
         ... extract all nonrelativistic configurations that contribute to the given set of CSF in basis.csfs. 
             A confList::Array{Configuration,1} is returned.

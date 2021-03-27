@@ -323,6 +323,25 @@
 
 
     """
+    `Basics.computeDensity(level::Level, grid::Radial.Grid)`  
+        ... computes the electronic density of level; a rho::Array{Float64,1} is returned.
+    """
+    function Basics.computeDensity(level::Level, grid::Radial.Grid)
+        basis = level.basis;    npoints = grid.NoPoints;    wx = zeros( npoints );    rho = zeros( npoints )
+        # Sum_a ...
+        for  a in basis.subshells
+            occa = Basics.computeMeanSubshellOccupation(a, [level])
+            orba = basis.orbitals[a];   nrho = length(orba.P);      rhoaa  = zeros(nrho)
+            for  i = 1:nrho    rhoaa[i] = orba.P[i]^2 + orba.Q[i]^2    end
+            for  i = 1:nrho    rho[i]   = rho[i] + occa * rhoaa[i]     end
+        end
+        
+        return( rho )
+    end
+
+
+
+    """
     `Basics.computeDiracEnergy(sh::Subshell, Z::Float64)`  
         ... computes the Dirac energy for the hydrogenic subshell sh and for a point-like nucleus with nuclear charge Z; 
             a energy::Float64 in atomic units and without the rest energy of the electron is returned. That is the binding 

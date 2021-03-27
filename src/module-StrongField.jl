@@ -5,7 +5,8 @@
 """
 module StrongField
 
-    using    GSL, HypergeometricFunctions, Plots, Printf, SpecialFunctions, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..Radial, ..ManyElectron, 
+    using    GSL, ## HypergeometricFunctions, Plots, 
+             Printf, SpecialFunctions, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..Radial, ..ManyElectron, 
              ..Nuclear, ..Pulse, ..TableStrings
 
     export   aaaa

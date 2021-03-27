@@ -41,6 +41,7 @@
                 if output    results = Base.merge( results, Dict("Zeeman parameter outcomes:" => outcome) )       end
             end
             if  Isotope()          in computation.properties   
+                ##x @show computation.isotopeSettings
                 outcome = IsotopeShift.computeOutcomes(multiplet, nModel, computation.grid, computation.isotopeSettings)         
                 if output    results = Base.merge( results, Dict("Isotope parameter outcomes:" => outcome) )      end
             end

@@ -178,6 +178,50 @@ module  RadialIntegrals
 
 
     """
+    `RadialIntegrals.isotope_boson(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid::Radial.Grid)`  
+        ... computes the boson-field shift radial integral int_o^infty ... A value::Float64 is returned.
+    """
+    function isotope_boson(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid::Radial.Grid)
+        mtp = min(size(a.P, 1), size(b.P, 1), size(potential, 1));   
+        
+        # Distinguish the radial integration for different grid definitions
+        if  grid.meshType == Radial.MeshGrasp()
+            error("stop a")
+        elseif  grid.meshType == Radial.MeshGL()
+            wa = 0.
+            for  i = 2:mtp   
+                wa = wa + (a.P[i] * b.P[i]  +  a.Q[i] * b.Q[i]) * potential[i] * grid.wr[i]
+            end
+            return( wa )
+        else
+            error("stop b")
+        end
+    end
+
+
+    """
+    `RadialIntegrals.isotope_field(a::Orbital, b::Orbital, deltaPotential::Array{Float64,1}, grid::Radial.Grid)`  
+        ... computes the field-shift radial integral int_o^infty ... A value::Float64 is returned.
+    """
+    function isotope_field(a::Orbital, b::Orbital, deltaPotential::Array{Float64,1}, grid::Radial.Grid)
+        mtp = min(size(a.P, 1), size(b.P, 1), size(deltaPotential, 1));   
+        
+        # Distinguish the radial integration for different grid definitions
+        if  grid.meshType == Radial.MeshGrasp()
+            error("stop a")
+        elseif  grid.meshType == Radial.MeshGL()
+            wa = 0.
+            for  i = 2:mtp   
+                wa = wa - (a.P[i] * b.P[i]  +  a.Q[i] * b.Q[i]) * deltaPotential[i] / grid.r[i] * grid.wr[i]
+            end
+            return( wa )
+        else
+            error("stop b")
+        end
+    end
+
+
+    """
     `RadialIntegrals.isotope_nms(a::Orbital, b::Orbital, Z::Float64, grid::Radial.Grid)`  
         ... computes the normal mass shift radial integral int_o^infty ... A value::Float64 is returned.
     """

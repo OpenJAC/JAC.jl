@@ -72,7 +72,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        ManyElectron, MeanFieldSettings, MeanFieldBasis, minus, Model, modify, MultiPhotonDE, MultiPhotonDeExcitation, MultiPhotonDoubleIon, 
        MultiPI, MultiPDI, MultiPhotonIonization, MultipoleMoment, MultipolePolarizibility, Multiplet, 
        NoAmplitude, NoProcess, Nuclear, NoneQed, NoProperty, 
-       Orbital, 
+       OneElectronSettings, OneElectronSpectrum, Orbital, 
        PathwaySelection, perform, provide, PairA1P, PairAnnihilation1Photon, PairAnnihilation2Photon, 
        PairProduction, ParityNonConservation, PeriodicTable, Parity, plus,
        Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, 

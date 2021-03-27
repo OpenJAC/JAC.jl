@@ -8,8 +8,8 @@ module AtomicState
     ## using Interact
     using ..Basics, ..Radial, ..ManyElectron, ..Nuclear
 
-    export  MeanFieldSettings, MeanFieldBasis, CiSettings, CiExpansion, RasSettings, RasStep, RasExpansion, 
-            GreenSettings, GreenChannel, GreenExpansion, Representation
+    export  MeanFieldSettings, MeanFieldBasis, OneElectronSettings, OneElectronSpectrum, CiSettings, CiExpansion, 
+            RasSettings, RasStep, RasExpansion, GreenSettings, GreenChannel, GreenExpansion, Representation
 
     
     """
@@ -17,13 +17,15 @@ module AtomicState
         ... defines an abstract type and a number of data types to work with and distinguish different atomic representations; see also:
         
         + struct MeanFieldBasis       ... to represent (and generate) a mean-field basis and, especially, a set of (mean-field) orbitals.
+        + struct OneElectronSpectrum  ... to represent (and generate) a one-electron spectrum for the mean-field potential of refConfigs.
         + struct CiExpansion          ... to represent (and generate) a configuration-interaction representation.
         + struct RasExpansion         ... to represent (and generate) a restricted active-space representation.
-        + struct GreenFunction        ... to represent (and generate) an approximate (many-electron) Green functions.
+        + struct GreenExpansion       ... to represent (and generate) an approximate (many-electron) Green functions.
     """
     abstract type  AbstractRepresentationType                           end
 
     
+    ### Mean-field basis ############################################################################################
     """
     `struct  AtomicState.MeanFieldSettings`  
         ... a struct for defining the settings for a mean-field basis (orbital) representation.
@@ -75,6 +77,86 @@ module AtomicState
     # `Base.show(io::IO, basis::MeanFieldBasis)`  ... prepares a proper printout of the basis::MeanFieldBasis.
     function Base.show(io::IO, basis::MeanFieldBasis)
         sa = Base.string(basis);       print(io, sa, "\n")
+    end
+
+    
+    
+    ### Spectrum: One-electron spectrum for given (reference) configurations ####################################################
+    """
+    `struct  AtomicState.OneElectronSettings`  
+        ... a struct for defining the settings for a one-electron spectrum.
+
+    	+ nMax                 ::Int64            ... maximum principal quantum number.
+        + lValues              ::Array{Int64,1}   ... l-values (partial waves) for which orbitals are to be generated.
+        + levelSelectionMean   ::LevelSelection   ... Level(s) of the mean-field to generate the underlying atomic potential
+    """
+    struct  OneElectronSettings
+    	nMax                   ::Int64
+    	lValues                ::Array{Int64,1}
+    	levelSelectionMean     ::LevelSelection
+    end
+
+    """
+    `AtomicState.OneElectronSettings()`  ... constructor for setting the default values.
+    """
+    function OneElectronSettings()
+    	OneElectronSettings(10, [0, 1], LevelSelection(true, indices=[1]))
+    end
+
+
+    """
+    `AtomicState.OneElectronSettings(settings::AtomicState.OneElectronSettings;`
+    
+            nMax::Union{Nothing,Int64}=nothing,                             lValues::Union{Nothing,Array{Int64,1}}=nothing,
+            levelSelectionMean::Union{Nothing,LevelSelection}=nothing)
+                        
+        ... constructor for modifying the given OneElectronSettings by 'overwriting' the explicitly selected parameters.
+    """
+    function OneElectronSettings(settings::AtomicState.OneElectronSettings;
+        nMax::Union{Nothing,Int64}=nothing,                             lValues::Union{Nothing,Array{Int64,1}}=nothing,
+        levelSelectionMean::Union{Nothing,LevelSelection}=nothing)
+        
+        if  nMax               == nothing   nMaxx               = settings.nMax                else   nMaxx               = nMax               end 
+        if  lValues            == nothing   lValuesx            = settings.lValues             else   lValuesx            = lValues            end 
+        if  levelSelectionMean == nothing   levelSelectionMeanx = settings.levelSelectionMean  else   levelSelectionMeanx = levelSelectionMean end 
+        
+        OneElectronSettings( nMaxx, lValuesx, levelSelectionMeanx)
+    end
+    
+    
+    # `Base.show(io::IO, settings::OneElectronSettings)`  ... prepares a proper printout of the settings::OneElectronSettings.
+    function Base.show(io::IO, settings::OneElectronSettings)
+    	  println(io, "nMax:                 $(settings.nMax)  ")
+    	  println(io, "lValues:              $(settings.lValues)  ")
+    	  println(io, "levelSelectionMean:   $(settings.levelSelectionMean)  ")
+    end
+
+
+    """
+    `struct  AtomicState.OneElectronSpectrum  <:  AbstractRepresentationType`  
+        ... a struct to represent (and generate) a one-electron spectrum for the mean-field potential of given levels 
+            from a set of reference configurations.
+
+        + settings         ::AtomicState.OneElectronSettings         ... Settings for the given OneElectronSpectrum
+    """
+    struct  OneElectronSpectrum     <:  AbstractRepresentationType
+        settings           ::AtomicState.OneElectronSettings
+    end
+
+
+    # `Base.string(spectrum::OneElectronSpectrum)`  ... provides a String notation for the variable spectrum::OneElectronSpectrum.
+    function Base.string(spectrum::OneElectronSpectrum)
+        sa = "One-electron spectrum for given atomic potential:"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, spectrum::OneElectronSpectrum)`  
+    #       ... prepares a proper printout of the (individual step of computations) spectrum::OneElectronSpectrum.
+    function Base.show(io::IO, spectrum::OneElectronSpectrum)
+        sa = Base.string(spectrum);       print(io, sa, "\n")
+        println(io, "... and the current settings:")
+        println(io, "$(spectrum.settings)  ")
     end
 
     
@@ -224,13 +306,13 @@ module AtomicState
     `struct  AtomicState.RasExpansion    <:  AbstractRepresentationType`  
         ... a struct to represent (and generate) a restricted active-space representation.
 
-        + symmetry         ::LevelSymmetry                  ... Symmetry of the levels/CSF in the many-electron basis.
+        + symmetries       ::Array{LevelSymmetry,1}         ... Symmetries of the levels/CSF in the many-electron basis.
         + NoElectrons      ::Int64                          ... Number of electrons.
         + steps            ::Array{AtomicState.RasStep,1}   ... List of SCF steps that are to be done in this model computation.
         + settings         ::AtomicState.RasSettings        ... Settings for the given RAS computation
     """
     struct         RasExpansion    <:  AbstractRepresentationType
-        symmetry           ::LevelSymmetry
+        symmetries         ::Array{LevelSymmetry,1}
         NoElectrons        ::Int64
         steps              ::Array{AtomicState.RasStep,1}
         settings           ::AtomicState.RasSettings 
@@ -241,13 +323,13 @@ module AtomicState
     `AtomicState.RasExpansion()`  ... constructor for an 'empty' instance of the a variable::AtomicState.RasExpansion
     """
     function RasExpansion()
-        RasExpansion(Basics.LevelSymmetry(0, Basics.plus), 0, 0, AtomicState.RasStep[], AtomicState.RasSettings())
+        RasExpansion([Basics.LevelSymmetry(0, Basics.plus)], 0, 0, AtomicState.RasStep[], AtomicState.RasSettings())
     end
 
 
     # `Base.string(expansion::RasExpansion)`  ... provides a String notation for the variable expansion::RasExpansion.
     function Base.string(expansion::RasExpansion)
-        sa = "RAS expansion for symmétry $(expansion.symmetry) and with $(length(expansion.steps)) steps:"
+        sa = "RAS expansion for symmétry $(expansion.symmetries) and with $(length(expansion.steps)) steps:"
         return( sa )
     end
 

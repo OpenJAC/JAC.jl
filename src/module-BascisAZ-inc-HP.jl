@@ -276,9 +276,29 @@
         return( true )
     end
 
-
-
         
+    """
+    `Basics.lastPoint(wa::Array{Float64,1}, eps::Float64)`  
+        ... returns the last point p of wa[1:end]  for which |wa[p]| >= eps; an index p::Int64 is returned.
+    """
+    function Basics.lastPoint(wa::Array{Float64,1}, eps::Float64)
+        if  eps < 0.    error("Improper eps = $eps")    end
+        for  p = length(wa):-1:1
+            if  abs(wa[p]) >= eps       return(p)       end
+        end
+        error("No array element abs(wa[p]) > eps = $eps")
+    end
+
+
+    """
+    `Basics.LevelSymmetry(subsh::Subshell)`  ... constructor for a given (Subshell).
+    """
+    function  Basics.LevelSymmetry(subsh::Subshell)
+        if  rem(Basics.subshell_l(subsh), 2) == 0   sa = "+"    else    sa = "-"    end
+        LevelSymmetry( Basics.subshell_j(subsh), Parity(sa) )    
+    end
+
+
     """
     Basics.merge(bases::Array{Basis,1})`  
         ... to merge two (or more) atomic bases into a single basis::Basis. This method assumes the same number of electrons in all basis and 
@@ -316,6 +336,21 @@
             #
         else    error("stop a")
         end
+    end
+
+
+    """
+    `Basics.merge(aList::Array{Configuration,1}, bList::Array{Configuration,1}, ...)`  
+        ... to merge two (or more) configuration list into a single list and to unify them. 
+            A cList::Array{Configuration,1} is returned
+    """
+    function Basics.merge(aList::Array{Configuration,1}, bList::Array{Configuration,1})
+        cList = copy(aList);      append!(cList, bList);      cList = Base.unique(cList)
+        return( cList )
+    end
+    function Basics.merge(aList::Array{Configuration,1}, bList::Array{Configuration,1}, cList::Array{Configuration,1})
+        dList = Basics.merge(aList, bList);     dList = Basics.merge(dList, cList)
+        return( dList )
     end
 
 

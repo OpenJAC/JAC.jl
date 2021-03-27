@@ -244,6 +244,23 @@ module AngularMomentum
 
 
     """
+    `AngularMomentum.CL_reduced_me_sms(suba::Subshell, L::Int64, subb::Subshell)`  
+        ... calculates the reduced matrix element of the C^L spherical tensor <suba || C^(L) || subb> for the 
+        specific MS (SMS); a value::Float64 is returned.
+    """
+    function  CL_reduced_me_sms(suba::Subshell, L::Int64, subb::Subshell)   
+        la = Basics.subshell_l(suba);    ja2 = Basics.subshell_2j(suba);    
+        lb = Basics.subshell_l(subb);    jb2 = Basics.subshell_2j(subb)
+        if rem(la + lb + L, 2) != 0   return 0.     end
+        
+        redme = ((-1)^((ja2+1)/2)) * sqrt( (ja2+1)*(jb2+1) ) * 
+                Wigner_3j(AngularJ64(ja2//2), AngularJ64(L), AngularJ64(jb2//2), AngularM64(1//2), AngularM64(0), AngularM64(-1//2) )
+                
+        return( redme )
+    end
+
+
+    """
     `AngularMomentum.isAllowedMultipole(syma::LevelSymmetry, multipole::EmMultipole, symb::LevelSymmetry)`  
         ... evaluates to true if the given multipole may connect the two level symmetries, and false otherwise.
     """

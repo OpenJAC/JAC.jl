@@ -30,7 +30,7 @@ elseif false
     wb = perform(wa; output=true)
     setDefaults("print summary: close", "")
     
-else
+elseif false
     # Simulation of the Ne^+  2s^2 2p^5; photo-ionization cross sections
     setDefaults("print summary: open", "Ne-plus-photoabsorption-simulation.sum")
 
@@ -48,5 +48,40 @@ else
     println(wc)
     wd = perform(wc; output=true)
     setDefaults("print summary: close", "")
+#
+elseif false
+    # Example for Atomic cascade computation (symmetry, 2021)
+    # Calculation of the Mg  1s 2s^2 2p^6 3s^2 decay cascade after 1s photoionization
+    setDefaults("print summary: open", "Mg-1s-decay.sum")
+    
+    decayScheme = Cascade.StepwiseDecayScheme([Auger(), Radiative()], 3, Dict{Int64,Float64}(), 0., Shell[], Shell[])
+    
+    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
+    name = "Computation of Mg  1s 2s^2 2p^6 3s^2 decay cascade after 1s photoionization"
+    wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(12.), grid=grid, 
+                               approach=Cascade.AverageSCA(), scheme=decayScheme,
+                               ## initialConfigs=[Configuration("1s 2s^2 2p^6 3s^2")] )
+                               initialConfigs=[Configuration("1s 2s^2 2p^6 3s^2 3p")] )
+    @show wa
+    wb = perform(wa; output=true)
+    setDefaults("print summary: close", "")
+#
+elseif true
+    # Simulation of the Mg  1s 2s^2 2p^6 3s^2 decay cascade after 1s photoionization
+    setDefaults("print summary: open", "zzz-Cascade-simulation.sum")
+    
+    ## simulationSettings = Cascade.SimulationSettings(0., 0., 0., 0., 0., [(1, 1.0)])
+    ## simulationSettings = Cascade.SimulationSettings(0., 0., 0., 0., 0., [(4, 1.0)])
+    simulationSettings = Cascade.SimulationSettings(0., 0., 0., 0., 0., [(1, 0.25), (2, 0.25), (3, 0.25), (4, 0.25)])
+
+    data = [JLD.load("zzz-cascade-decay-computations-2021-03-14T19.jld")]
+    name = "Simulation of Mg  1s 2s^2 2p^6 3s^2 decay cascade after 1s photoionization"
+
+    wc   = Cascade.Simulation(Cascade.Simulation(), name=name, property=Cascade.IonDistribution(), 
+                              settings=simulationSettings, computationData=data )
+    @show wc
+    wd = perform(wc; output=true)
+    setDefaults("print summary: close", "")
+    #
 
 end

@@ -5,7 +5,7 @@
 """
 module MultiPhotonIonization
 
-    using ..Basics, ..ManyElectron, ..Radial
+    using  ..AngularMomentum, ..Basics, ..InteractionStrength, ..ManyElectron, ..Radial
 
     """
     `struct  MultiPhotonIonization.Settings`  
@@ -123,5 +123,8 @@ module MultiPhotonIonization
         else            return( nothing )
         end
     end
+    
+    # Inlcude one-electron code
+    include("module-MultiPhotonIonization-inc-one-electron.jl")
 
 end # module

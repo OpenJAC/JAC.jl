@@ -5,7 +5,7 @@ println("Da) Test of the PhotoEmission module with ASF from an internally genera
 setDefaults("unit: rate", "1/s")
 setDefaults("print summary: open", "zzz-radiative.sum")
 
-if  true
+if  false
 
     grid = Radial.Grid(true)
     setDefaults("standard grid", grid)
@@ -36,7 +36,7 @@ elseif false
                             processSettings = PhotoEmission.Settings([E1, M1, E2, M2], [JAC.UseCoulomb, JAC.UseBabushkin], 
                                               false, true, false, Tuple{Int64,Int64}[], 0., 0., 10000. ) );
     wb = @time( perform(wa) )
-elseif true  
+elseif false 
     # Test for dielectronic computations
     wa = Atomic.Computation(Atomic.Computation(), name="Energies and Einstein rates for DR configurations", 
                             grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
@@ -46,6 +46,18 @@ elseif true
                             processSettings = PhotoEmission.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], 
                                               false, true, true, Tuple{Int64,Int64}[(2,0)], 0., 0., 10000. ) );
     wb = @time( perform(wa) )
+    #
+elseif true 
+    # Test for Christophe Hoffmeister
+    defaultsSettings = PhotoEmission.Settings()
+    photoSettings    = PhotoEmission.Settings(defaultsSettings, multipoles=[E1], gauges=[UseCoulomb, UseBabushkin], printBefore=true)
+    wa = Atomic.Computation(Atomic.Computation(), name="Energies and Einstein coefficients for neon 2s^-1 3p --> 2p^6 ^1S_0", 
+                            grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(10.1), 
+                            initialConfigs = [Configuration("1s^2 2s 2p^6 3p")],
+                            finalConfigs   = [Configuration("1s^2 2s^2 2p^6")], 
+                            process = Radiative(), processSettings = photoSettings );
+    wb = @time( perform(wa) )
+    #
 end
 setDefaults("print summary: close", "")
 

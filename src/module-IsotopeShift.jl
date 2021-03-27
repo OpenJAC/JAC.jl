@@ -5,7 +5,8 @@
 """
 module IsotopeShift
 
-    using Printf, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
+    using Printf, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals,
+                  ..SpinAngular, ..TableStrings
 
     """
     `struct  IsotopeShift.Settings`  
@@ -14,28 +15,30 @@ module IsotopeShift
         + calcNMS                  ::Bool             ... True if mass-shift parameters M_nmn need to be calculated, and false otherwise.
         + calcSMS                  ::Bool             ... True if mass-shift parameters M_sms need to be calculated, and false otherwise.
         + calcF                    ::Bool             ... True if the field-shift parameter need to be calculated, and false otherwise.
-        + printBefore   ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
-        + selectLevels             ::Bool             ... True if individual levels are selected for the computation.
-        + selectedLevels           ::Array{Level,1}   ... List of selected levels.
-        + methodF                  ::String           ... Method to calculate the field-shift parameter F.
+        + calcBoson                ::Bool             ... True if the boson-field shift parameter need to be calculated, and false otherwise.
+        + printBefore              ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
+        + bosonMass                ::Float64          ... mass of the scalar boson [e_electron].
+        + levelSelection           ::LevelSelection   ... Specifies the selected levels, if any.
     """
     struct Settings 
         calcNMS                    ::Bool
         calcSMS                    ::Bool
         calcF                      ::Bool
-        printBefore     ::Bool
-        selectLevels               ::Bool
-        selectedLevels             ::Array{Level,1}
-        methodF                    ::String
+        calcBoson                  ::Bool
+        printBefore                ::Bool
+        bosonMass                  ::Float64
+        levelSelection             ::LevelSelection
     end 
 
 
     """
-    `IsotopeShift.Settings()`  
-        ... constructor for an `empty` instance of IsotopeSettings for the computation of isotope M and F parameters.
+    `IsotopeShift.Settings(; calcNMS::Bool=true,` calcSMS::Bool=false, calcF::Bool=false, calcBoson::Bool=false, 
+                             printBefore::Bool=true, bosonMass::Float64=0., levelSelection::LevelSelection=LevelSelection()) 
+        ... keyword constructor to overwrite selected value of isoshift computations.
     """
-    function Settings()
-        Settings(false, false, false, false, false, Level[], "")
+    function Settings(; calcNMS::Bool=true, calcSMS::Bool=false, calcF::Bool=false, calcBoson::Bool=false, 
+                             printBefore::Bool=true, bosonMass::Float64=0., levelSelection::LevelSelection=LevelSelection())
+        Settings(calcNMS, calcSMS, calcF, calcBoson, printBefore, bosonMass, levelSelection)
     end
 
 
@@ -44,10 +47,10 @@ module IsotopeShift
         println(io, "calcNMS:                  $(settings.calcNMS)  ")
         println(io, "calcSMS:                  $(settings.calcSMS)  ")
         println(io, "calcF:                    $(settings.calcF)  ")
-        println(io, "printBefore:   $(settings.printBefore)  ")
-        println(io, "selectLevels:             $(settings.selectLevels)  ")
-        println(io, "selectedLevels:           $(settings.selectedLevels)  ")
-        println(io, "methodF:                  $(settings.methodF)  ")
+        println(io, "calcBoson:                $(settings.calcBoson)  ")
+        println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "bosonMass:                $(settings.bosonMass)  ")
+        println(io, "levelSelection:           $(settings.levelSelection)  ")
     end
 
 
@@ -60,7 +63,9 @@ module IsotopeShift
         + level                     ::Level              ... Atomic level to which the outcome refers to.
         + Knms                      ::Float64            ... K_nms parameter
         + Ksms                      ::Float64            ... K_sms parameter
-        + F                         ::Float64            ... F parameter
+        + Fme                       ::Float64            ... F parameter from matrix element.
+        + Fdensity                  ::Float64            ... F parameter from density.
+        + Xboson                    ::Float64            ... X boson-field shift constant.
         + amplitudeKnms             ::Complex{Float64}   ... K_nms amplitude
         + amplitudeKsmsA            ::Complex{Float64}   ... K_sms,A amplitude
         + amplitudeKsmsB            ::Complex{Float64}   ... K_sms,B amplitude
@@ -70,7 +75,9 @@ module IsotopeShift
         level                       ::Level 
         Knms                        ::Float64
         Ksms                        ::Float64
-        F                           ::Float64
+        Fme                         ::Float64
+        Fdensity                    ::Float64
+        Xboson                      ::Float64
         amplitudeKnms               ::Complex{Float64}
         amplitudeKsmsA              ::Complex{Float64}
         amplitudeKsmsB              ::Complex{Float64}
@@ -82,7 +89,7 @@ module IsotopeShift
     `IsotopeShift.Outcome()`  ... constructor for an `empty` instance of Hfs.Outcome for the computation of isotope-shift properties.
     """
     function Outcome()
-        Outcome(Level(), 0., 0., 0.,   0., 0., 0., 0.)
+        Outcome(Level(), 0., 0., 0., 0., 0.,   0., 0., 0., 0.)
     end
 
 
@@ -91,7 +98,9 @@ module IsotopeShift
         println(io, "level:                   $(outcome.level)  ")
         println(io, "Knms:                    $(outcome.Knms)  ")
         println(io, "Ksms:                    $(outcome.Ksms)  ")
-        println(io, "F:                       $(outcome.F)  ")
+        println(io, "Fme:                     $(outcome.Fme)  ")
+        println(io, "Fdensity:                $(outcome.Fdensity)  ")
+        println(io, "Xboson:                  $(outcome.Xboson)  ")
         println(io, "amplitudeKnms:           $(outcome.amplitudeKnms)  ")
         println(io, "amplitudeKsmsA:          $(outcome.amplitudeKsmsA)  ")
         println(io, "amplitudeKsmsB:          $(outcome.amplitudeKsmsB)  ")
@@ -118,9 +127,12 @@ module IsotopeShift
                 end 
                 #
                 if      kind == "H^(NMS)   amplitude"
-                #----------------------------------
-                    wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
-                    for  coeff in wa[1]
+                #------------------------------------
+                    ##x wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
+                    subshellList = rLevel.basis.subshells
+                    op = SpinAngular.OneParticleOperator(0, plus, true)
+                    wa = SpinAngular.computeCoefficients(op, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList)
+                    for  coeff in wa
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = InteractionStrength.hamiltonian_nms(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], nm, grid)
@@ -129,37 +141,46 @@ module IsotopeShift
                 #
                 elseif  kind == "H^(SMS,A) amplitude"
                 #------------------------------------
-                    wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
-                    for  coeff in wa[2]
+                    ##x wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
+                    subshellList = rLevel.basis.subshells
+                    op = SpinAngular.TwoParticleOperator(0, plus, true)
+                    wa = SpinAngular.computeCoefficients(op, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList)
+                    for  coeff in wa
                         if  coeff.nu != 1  continue   end
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                        tamp  = InteractionStrength.X1_smsA(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
-                                                            sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
+                        tamp  = InteractionStrength.X_smsA(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
+                                                           sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
                         me = me + coeff.V * sqrt( ja + 1) * tamp  
                     end
                 #
                 elseif  kind == "H^(SMS,B) amplitude"
                 #------------------------------------
-                    wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
-                    for  coeff in wa[2]
+                    ##x wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
+                    subshellList = rLevel.basis.subshells
+                    op = SpinAngular.TwoParticleOperator(0, plus, true)
+                    wa = SpinAngular.computeCoefficients(op, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList)
+                    for  coeff in wa
                         if  coeff.nu != 1  continue   end
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                        tamp  = InteractionStrength.X1_smsB(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
-                                                            sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
+                        tamp  = InteractionStrength.X_smsB(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
+                                                           sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
                         me = me + coeff.V * sqrt( ja + 1) * tamp  
                     end
                 #
                 elseif  kind == "H^(SMS,C) amplitude"
                 #------------------------------------
-                    wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
-                    for  coeff in wa[2]
+                    ##x wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
+                    subshellList = rLevel.basis.subshells
+                    op = SpinAngular.TwoParticleOperator(0, plus, true)
+                    wa = SpinAngular.computeCoefficients(op, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList)
+                    for  coeff in wa
                         if  coeff.nu != 1  continue   end
                         ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                         jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                        tamp  = InteractionStrength.X1_smsC(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
-                                                            sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
+                        tamp  = InteractionStrength.X_smsC(rLevel.basis.orbitals[coeff.a], rLevel.basis.orbitals[coeff.b],
+                                                           sLevel.basis.orbitals[coeff.c], sLevel.basis.orbitals[coeff.d], nm, grid)
                         me = me + coeff.V * sqrt( ja + 1) * tamp  
                     end
                 #
@@ -176,16 +197,73 @@ module IsotopeShift
     end
 
 
+    """
+    `IsotopeShift.amplitude(kind::String, rLevel::Level, sLevel::Level, potential::Array{Float64,1}, grid::Radial.Grid)` 
+        ... to compute the H^(field-shift) field-shift amplitude  <alpha_r J_r || H^(field-shift) || alpha_s J_s> or the
+            H^(boson-field) shift amplitude  <alpha_r J_r || H^(boson-field) || alpha_s J_s>  for a given pair of levels.
+            The potential has to provide delta V^(nuc) for the field-shift amplitudes and the effective potential for the
+            boson-field shift. A value::ComplexF64 is returned.
+    """
+    function  amplitude(kind::String, rLevel::Level, sLevel::Level, potential::Array{Float64,1}, grid::Radial.Grid)
+        nr = length(rLevel.basis.csfs);    ns = length(sLevel.basis.csfs);    matrix = zeros(ComplexF64, nr, ns)
+        printstyled("Compute field-shift $kind matrix of dimension $nr x $ns ... ", color=:light_green)
+        #
+        if  rLevel.parity != sLevel.parity   return( ComplexF64(0.) )   end
+        #
+        for  r = 1:nr
+            for  s = 1:ns
+                me = 0.
+                if  rLevel.basis.csfs[r].parity  != rLevel.parity    ||  sLevel.basis.csfs[s].parity  != sLevel.parity  ||
+                    rLevel.parity != sLevel.parity    continue    
+                end 
+                #
+                if      kind == "H^(field-shift) amplitude"
+                #------------------------------------------
+                    subshellList = rLevel.basis.subshells
+                    op = SpinAngular.OneParticleOperator(0, plus, true)
+                    wa = SpinAngular.computeCoefficients(op, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList)
+                    for  coeff in wa
+                        ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
+                        jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
+                        tamp  = InteractionStrength.fieldShift(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], potential, grid)
+                        me = me + coeff.T  * sqrt( ja + 1) * tamp  
+                    end
+                #
+                elseif  kind == "H^(boson-field) amplitude"
+                #------------------------------------------
+                    subshellList = rLevel.basis.subshells
+                    op = SpinAngular.OneParticleOperator(0, plus, true)
+                    wa = SpinAngular.computeCoefficients(op, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList)
+                    for  coeff in wa
+                        ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
+                        jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
+                        tamp  = InteractionStrength.bosonShift(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], potential, grid)
+                        me = me + coeff.T  * sqrt( ja + 1) * tamp  
+                    end
+                #
+                else    error("stop b")
+                end
+                #
+                matrix[r,s] = me
+            end
+        end
+        printstyled("done.\n", color=:light_green)
+        amplitude = transpose(rLevel.mc) * matrix * sLevel.mc 
+        #
+        return( amplitude )
+    end
+
+
 
     """
     `IsotopeShift.computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::Nuclear.Model, grid::Radial.Grid, 
-                                                  settings::IsotopeShift.Settings) 
+                                              settings::IsotopeShift.Settings) 
         ... to compute all amplitudes and properties for a given level; an outcome::IsotopeShift.Outcome is returned for 
             which the amplitudes and properties are now evaluated explicitly.
     """
     function  computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings)
-        Knms  = 0.0;    Ksms  = 0.0;    F  = 0.0;    
-        amplitudeKnms  = 0.0;    amplitudeKsmsA  = 0.0;   amplitudeKsmsB  = 0.0;  amplitudeKsmsC  = 0.0;
+        amplitudeKnms   = 0.0;   Ksms  = 0.0;    F  = 0.0;    Xboson = 0.0;
+        amplitudeKsmsA  = 0.0;   amplitudeKsmsB  = 0.0;  amplitudeKsmsC  = 0.0;  amplitudeF  = 0.0;
         if  settings.calcNMS
             amplitudeKnms  = IsotopeShift.amplitude("H^(NMS)   amplitude", outcome.level, outcome.level, nm, grid)
         end
@@ -194,15 +272,30 @@ module IsotopeShift
             amplitudeKsmsA = IsotopeShift.amplitude("H^(SMS,A) amplitude", outcome.level, outcome.level, nm, grid)
             amplitudeKsmsB = IsotopeShift.amplitude("H^(SMS,B) amplitude", outcome.level, outcome.level, nm, grid)
             amplitudeKsmsC = IsotopeShift.amplitude("H^(SMS,C) amplitude", outcome.level, outcome.level, nm, grid)
-            Knms = amplitudeKnms / nm.mass
-            Ksms = (amplitudeKsmsA + amplitudeKsmsB + amplitudeKsmsC) / nm.mass
+            Ksms = (amplitudeKsmsA + amplitudeKsmsB + amplitudeKsmsC)
         end
         
         if  settings.calcF
-            ##x F = Radial.amplitude("Delta V^nuc amplitude/(R-R')", nm, outcome.level, outcome.level, grid)
-            F = 1.0
+            nmp       = Nuclear.Model(nm.Z, nm.mass+1.0)
+            deltaPot  = Nuclear.nuclearPotential(nm, grid).Zr - Nuclear.nuclearPotential(nmp, grid).Zr
+            deltaPot  = deltaPot / (nm.radius^2 - nmp.radius^2)
+            lastPoint = Basics.lastPoint(deltaPot, 1.0e-9);   @show lastPoint
+            #
+            Fme       = IsotopeShift.amplitude("H^(field-shift) amplitude", outcome.level, outcome.level, deltaPot, grid)
+            #
+            density   = Basics.computeDensity(outcome.level, grid)
+            wb        = zeros( lastPoint )
+            wb[1:lastPoint] = - density[1:lastPoint] .* deltaPot[1:lastPoint] ./ grid.r[1:lastPoint]
+            Fdensity  = RadialIntegrals.V0(wb, lastPoint, grid)
         end
-        newOutcome = IsotopeShift.Outcome( outcome.level, Knms, Ksms, F, 
+        
+        if  settings.calcBoson
+            potential = zeros( grid.NoPoints );   malpha = settings.bosonMass / Defaults.getDefaults("alpha")
+            for     i = 1:length(potential)    potential[i] = exp( -malpha*grid.r[i] ) / grid.r[i]    end
+            Xboson    = IsotopeShift.amplitude("H^(boson-field) amplitude", outcome.level, outcome.level, potential, grid)
+        end
+        
+        newOutcome = IsotopeShift.Outcome( outcome.level, amplitudeKnms, Ksms, Fme, Fdensity, Xboson,
                                            amplitudeKnms, amplitudeKsmsA, amplitudeKsmsB, amplitudeKsmsC )
         return( newOutcome )
     end
@@ -218,6 +311,7 @@ module IsotopeShift
         printstyled("IsotopeShift.computeOutcomes(): The computation of the isotope-shift parameters starts now ... \n", color=:light_green)
         printstyled("-------------------------------------------------------------------------------------------------- \n", color=:light_green)
         #
+        ##x @show settings
         outcomes = IsotopeShift.determineOutcomes(multiplet, settings)
         # Display all selected levels before the computations start
         if  settings.printBefore    IsotopeShift.displayOutcomes(outcomes)    end
@@ -228,9 +322,9 @@ module IsotopeShift
             push!( newOutcomes, newOutcome)
         end
         # Print all results to screen
-        IsotopeShift.displayResults(stdout, newOutcomes)
+        IsotopeShift.displayResults(stdout, newOutcomes, settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    IsotopeShift.displayResults(iostream, newOutcomes)   end
+        if  printSummary    IsotopeShift.displayResults(iostream, newOutcomes, settings)   end
         #
         if    output    return( newOutcomes )
         else            return( nothing )
@@ -245,14 +339,12 @@ module IsotopeShift
             the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineOutcomes(multiplet::Multiplet, settings::IsotopeShift.Settings) 
-        if    settings.selectLevels   selectLevels   = true;   selectedLevels = copy(settings.selectedLevels)
-        else                          selectLevels   = false
-        end
-    
         outcomes = IsotopeShift.Outcome[]
-        for  i = 1:length(multiplet.levels)
-            if  selectLevels  &&  !(haskey(selectedLevels, i))    continue   end
-            push!( outcomes, IsotopeShift.Outcome(multiplet.levels[i], 0., 0., 0.,   0., 0., 0., 0.) )
+        @show settings.levelSelection
+        for  level  in  multiplet.levels
+            if  Basics.selectLevel(level, settings.levelSelection)
+                push!( outcomes, IsotopeShift.Outcome(level, 0., 0., 0., 0., 0.,   0., 0., 0., 0.) )
+            end
         end
         return( outcomes )
     end
@@ -290,14 +382,16 @@ module IsotopeShift
 
 
     """
-    `IsotopeShift.displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1})`  
+    `IsotopeShift.displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1}, settings::IsotopeShift.Settings)`  
         ... to display the energies, M_ms and F-parameters, etc. for the selected levels. A neat table is printed but nothing 
             is returned otherwise.
     """
-    function  displayResults(stream::IO, outcomes::Array{IsotopeShift.Outcome,1})
-        nx = 102
+    function  displayResults(stream::IO, outcomes::Array{IsotopeShift.Outcome,1}, settings::IsotopeShift.Settings)
+        nx = 133
         println(stream, " ")
-        println(stream, "  IsotopeShift parameters and amplitudes:")
+        println(stream, "  IsotopeShift parameters and amplitudes:  Just take the difference K_i - K_f for transition lines.")
+        println(stream, " ")
+        println(stream, "  Boson mass = $(settings.bosonMass)")
         println(stream, " ")
         println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  ";   sc = "  "
@@ -306,36 +400,39 @@ module IsotopeShift
         sa = sa * TableStrings.center(14, "Energy"; na=5)
         sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=5);  sc = sc * TableStrings.hBlank(45)
         sa = sa * TableStrings.center(11, "K_nms"; na=4)              
-        sb = sb * TableStrings.center(11, "[Hz]" ; na=4)
+        sb = sb * TableStrings.center(11, "[GHz u]" ; na=4)
         sc = sc * TableStrings.center(11, "[a.u.]" ; na=4)
         sa = sa * TableStrings.center(11, "K_sms"; na=4)             
-        sb = sb * TableStrings.center(11, "[Hz]" ; na=4)
+        sb = sb * TableStrings.center(11, "[GHz u]" ; na=4)
         sc = sc * TableStrings.center(11, "[a.u.]" ; na=4)
         sa = sa * TableStrings.center(11, "K_ms "; na=4)              
-        sb = sb * TableStrings.center(11, "[Hz]" ; na=4)
+        sb = sb * TableStrings.center(11, "[GHz u]" ; na=4)
         sc = sc * TableStrings.center(11, "[a.u.]" ; na=4)
-        sa = sa * TableStrings.center(11, " F ";   na=4)              
-        sb = sb * TableStrings.center(11, "[..]" ; na=4)
-        println(stream, sa);    println(stream, sb);    println(stream, sc);    println(stream, "  ", TableStrings.hLine(nx)) 
+        sa = sa * TableStrings.center(11, " F [ME]";   na=4)              
+        sb = sb * TableStrings.center(11, "[MHz/fm^2]" ; na=4)
+        sa = sa * TableStrings.center(11, " F [dens]";   na=5)              
+        sb = sb * TableStrings.center(11, "[MHz/fm^2]" ; na=5)
+        sa = sa * TableStrings.center(11, "X^(boson)";   na=4)              
+        sb = sb * TableStrings.center(11, "a.u."; na=4)
+        println(stream, sa);    println(stream, sb);    ## println(stream, sc);    
+        println(stream, "  ", TableStrings.hLine(nx)) 
         #  
         for  outcome in outcomes
             sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
             sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
             sa = sa * TableStrings.center(10, string(sym); na=4)
-            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy))               * "    "
-            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Knms))                 * "    "
-            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Ksms))                 * "    "
-            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Knms + outcome.Ksms))  * "    "
-            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.F))                    * "    "
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy))            * "    "
+            sa = sa * @sprintf("%.5e", outcome.Knms * 3609.4824)                                                      * "    "
+            sa = sa * @sprintf("%.5e", outcome.Ksms * 3609.4824)                                                      * "    "
+            sa = sa * @sprintf("%.5e", (outcome.Knms + outcome.Ksms) * 3609.4824)                                     * "    "
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Fme)      * 1.0e-6) * "    " 
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Fdensity) * 1.0e-6) * "    "
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", outcome.Xboson) )      
             println(stream, sa )
-            sb = TableStrings.hBlank(47)
-            sb = sb * @sprintf("%.5e", outcome.Knms * 1822.888 * 2)                                            * "    "
-            sb = sb * @sprintf("%.5e", outcome.Ksms * 1822.888 * 2)                                            * "    "
-            sb = sb * @sprintf("%.5e", (outcome.Knms + outcome.Ksms) * 1822.888 * 2)                           * "    "
-            sb = sb * @sprintf("%.5e", outcome.F)                                                              * "    "
-            println(stream, sb )
+            ## sb = TableStrings.hBlank(47)
         end
         println(stream, "  ", TableStrings.hLine(nx), "\n\n")
+        #
         #
         # Now printout the individual amplitudes in an extra table
         nx = 158
@@ -363,6 +460,57 @@ module IsotopeShift
             println(stream, sa )
         end
         println(stream, "  ", TableStrings.hLine(nx))
+        #
+        #
+        # Now printout the transition isotope parameters
+        nx = 144
+        println(stream, " ")
+        println(stream, "  IsotopeShift parameters for individual transitions:")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  ";   sb = "  ";   sc = "  "
+        sa = sa * TableStrings.center(14, "Transition";    na=2);                        sb = sb * TableStrings.hBlank(16)
+        sa = sa * TableStrings.center(14, "I -- J^P -- F"; na=4);                        sb = sb * TableStrings.hBlank(18)
+        sa = sa * TableStrings.center(14, "Energy"; na=5)
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=5);  sc = sc * TableStrings.hBlank(45)
+        sa = sa * TableStrings.center(11, "K_nms"; na=5)              
+        sb = sb * TableStrings.center(11, "[GHz u]" ; na=5)
+        sc = sc * TableStrings.center(11, "[a.u.]" ; na=5)
+        sa = sa * TableStrings.center(11, "K_sms"; na=5)             
+        sb = sb * TableStrings.center(11, "[GHz u]" ; na=5)
+        sc = sc * TableStrings.center(11, "[a.u.]" ; na=5)
+        sa = sa * TableStrings.center(11, "K_ms "; na=5)              
+        sb = sb * TableStrings.center(11, "[GHz u]" ; na=5)
+        sc = sc * TableStrings.center(11, "[a.u.]" ; na=5)
+        sa = sa * TableStrings.center(11, " F [ME]";   na=4)              
+        sb = sb * TableStrings.center(11, "[MHz/fm^2]" ; na=4)
+        sa = sa * TableStrings.center(11, " F [dens]";   na=4)              
+        sb = sb * TableStrings.center(11, "[MHz/fm^2]" ; na=4)
+        sa = sa * TableStrings.center(11, "X^(boson)";   na=4)              
+        sb = sb * TableStrings.center(11, "a.u."; na=4)
+        println(stream, sa);    println(stream, sb);    ## println(stream, sc);    
+        println(stream, "  ", TableStrings.hLine(nx)) 
+        #  
+        for  ioutcome in outcomes
+            for  foutcome in outcomes
+            if ioutcome.level.index >= foutcome.level.index     continue    end
+            sa  = "";    isym = LevelSymmetry( ioutcome.level.J, ioutcome.level.parity) 
+                         fsym = LevelSymmetry( foutcome.level.J, foutcome.level.parity)
+            sa = sa * TableStrings.center(14, TableStrings.levels_if(ioutcome.level.index, foutcome.level.index); na=2)
+            sa = sa * TableStrings.center(18, string(isym) * "  --   " * string(fsym); na=2)
+            en = abs(ioutcome.level.energy - foutcome.level.energy)
+            sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", en))                              * "     "
+            sa = sa * @sprintf("%.5e", (ioutcome.Knms-foutcome.Knms) * 3609.4824)                                     * "    "
+            sa = sa * @sprintf("%.5e", (ioutcome.Ksms-foutcome.Ksms) * 3609.4824)                                     * "     "
+            sa = sa * @sprintf("%.5e", (ioutcome.Knms + ioutcome.Ksms - foutcome.Knms - foutcome.Ksms) * 3609.4824)   * "     "
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", ioutcome.Fme-foutcome.Fme)  * 1.0e-6) * "    "      
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", ioutcome.Fdensity-foutcome.Fdensity)  * 1.0e-6) * "    "      
+            sa = sa * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic to Hz", ioutcome.Xboson-foutcome.Xboson))      
+            println(stream, sa )
+            ## sb = TableStrings.hBlank(47)
+            end
+        end
+        println(stream, "  ", TableStrings.hLine(nx), "\n\n")
 
         return( nothing )
     end
