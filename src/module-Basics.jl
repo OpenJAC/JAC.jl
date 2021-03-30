@@ -694,6 +694,36 @@ module Basics
     end
 
 
+    """
+    `Basics.Subshell(sa::String)`  ... constructor for a given principal quantum number n and (level) symmetry.
+    """
+    function Subshell(n::Int64, symmetry::LevelSymmetry) 
+        if  symmetry.parity == Basics.plus
+            if      symmetry.J == AngularJ64(1//2)   kappa = -1
+            elseif  symmetry.J == AngularJ64(3//2)   kappa =  2
+            elseif  symmetry.J == AngularJ64(5//2)   kappa = -3
+            elseif  symmetry.J == AngularJ64(7//2)   kappa =  4
+            elseif  symmetry.J == AngularJ64(9//2)   kappa = -5
+            elseif  symmetry.J == AngularJ64(11//2)  kappa =  6
+            elseif  symmetry.J == AngularJ64(13//2)  kappa = -7
+            else    error("stop a")
+            end
+        else
+            if      symmetry.J == AngularJ64(1//2)   kappa =  1
+            elseif  symmetry.J == AngularJ64(3//2)   kappa = -2
+            elseif  symmetry.J == AngularJ64(5//2)   kappa =  3
+            elseif  symmetry.J == AngularJ64(7//2)   kappa = -4
+            elseif  symmetry.J == AngularJ64(9//2)   kappa =  5
+            elseif  symmetry.J == AngularJ64(11//2)  kappa = -6
+            elseif  symmetry.J == AngularJ64(13//2)  kappa =  7
+            else    error("stop b")
+            end
+        end
+        
+        return( Subshell(n,kappa) )
+    end
+
+
     # `Base.show(io::IO, sh::Subshell)`  ... prepares a proper printout of the variable sh::Subshell.
     function Base.show(io::IO, sh::Subshell) 
         print(io, string(sh) )

@@ -5,7 +5,7 @@
 """
 module MultiPhotonIonization
 
-    using  ..AngularMomentum, ..Basics, ..InteractionStrength, ..ManyElectron, ..Radial
+    using  ..AngularMomentum, ..Basics, ..Continuum, ..InteractionStrength, ..ManyElectron, ..Radial
 
     """
     `struct  MultiPhotonIonization.Settings`  

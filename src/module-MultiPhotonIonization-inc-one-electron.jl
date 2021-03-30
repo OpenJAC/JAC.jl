@@ -30,13 +30,13 @@
     """
     `MultiPhotonIonization.oneElectronComputeTwoPhotonLine(iState::Subshell, multipoles::Array{EmMultipole}, gauges::Array{UseGauge}, 
                                                            omega1::Float64, omega2::Float64, pqnMax::Int64, 
-                                                           orbitals::Dict{Subshell, Orbital}, grid::Radial.Grid; output=true)` 
+                                                           orbitals::Dict{Subshell, Orbital}, meanPot::Radial.Potential; output=true)` 
         ... to compute the multiphoton transition amplitudes and all properties as requested by the given settings. 
             A list of lines::Array{MultiPhotonIonization.Lines} is returned.
     """
     function  oneElectronComputeTwoPhotonLine(iState::Subshell, multipoles::Array{EmMultipole}, gauges::Array{UseGauge},
                                               omega1::Float64, omega2::Float64, pqnMax::Int64, 
-                                              orbitals::Dict{Subshell, Orbital}, grid::Radial.Grid; output=false)
+                                              orbitals::Dict{Subshell, Orbital}, meanPot::Radial.Potential; output=false)
         println("")
         printstyled("MultiPhotonIonization.oneElectronComputeTwoPhotonLine(): The computation starts now ... \n", color=:light_green)
         printstyled("---------------------------------------------------- ---------------------------------- \n", color=:light_green)
@@ -59,10 +59,14 @@
                     for symf in symfList
                         for gauge in gauges
                             iOrbital = orbitals[iState]
-                            # Generate a proper continuum orbital with symmetry symf and energy epsilon
-                            fOrbital = orbitals[iState]
+                            # Generate a proper continuum orbital with symmetry symf and energy  epsilon
+                            nrContinuum = Continuum.gridConsistency(epsilon, meanPot.grid)
+                            settings    = Continuum.Settings(false, nrContinuum)
+                            fOrbitalPhs = Continuum.generateOrbitalLocalPotential(epsilon, Subshell(1001, symf), meanPot, settings)
+                            fOrbital    = fOrbitalPhs[1]
+                            @show fOrbital
                             amp = MultiPhotonIonization.oneElectronAmplitude(fOrbital, omega2, mp2, symx, omega1, mp1, 
-                                                                             iOrbital, gauge, orbitals, grid)
+                                                                             iOrbital, gauge, orbitals, meanPot.grid)
                             println("$mp1  $mp2  $symi  $symx  $symf  $gauge  $amp")
                         end
                     end

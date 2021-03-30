@@ -63,6 +63,7 @@
         asfSettings   = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
                                        ## all further details are specified for each step
         refBasis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+        Basics.display(stdout, refBasis.orbitals, rep.grid; longTable=false)
         refMultiplet  = Basics.performCI(refBasis, nModel, rep.grid, asfSettings; printout=true)
         nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
         @warn("The potential is generated for the mean-field basis but not (yetc hosen for the selected levels.")
@@ -77,14 +78,19 @@
         shellList = Basics.generateShellList(1, settings.nMax, settings.lValues)
         subshellList = Subshell[]
         for  shell in shellList     append!(subshellList, Basics.shellSplitIntoSubshells(shell))    end
-        orbitals = Basics.generateOrbitalsForPotential(rep.grid, meanPot, subshellList)  ## generate a spectrum of sufficient size
+        orbitals  = Basics.generateOrbitalsForPotential(rep.grid, meanPot, subshellList)  ## generate a spectrum of sufficient size
         
         # Print all results to screen
-        Basics.display(stdout, orbitals, rep.grid; longTable=false)
+        Basics.display(stdout, orbitals, rep.grid; longTable=true)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary    Basics.display(iostream, orbitals, rep.grid; longTable=false)         end
         
-        if output   return( orbitals )      else     nothing    end
+        if output    
+            results = Base.merge( results, Dict("mean potential" => meanPot) )              
+            results = Base.merge( results, Dict("orbitals" => orbitals) )              
+        end
+        
+        return( results )
     end
 
 
