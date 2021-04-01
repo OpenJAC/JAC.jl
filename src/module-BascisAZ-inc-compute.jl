@@ -101,9 +101,9 @@
         matrix = zeros(Float64, n, n)
         keep = true
         InteractionStrength.XL_Coulomb_reset_storage(keep, printout=false)
-        InteractionStrength.XL_Breit_reset_storage(keep)
-        print(">> performCI() ... ")
-        @time   for  r = 1:n
+        InteractionStrength.XL_Breit_reset_storage(keep, printout=false)
+        ##x print(">> performCI() ... ")
+        for  r = 1:n
             for  s = 1:n
                 # Calculate the spin-angular coefficients
                 if  Defaults.saRatip()

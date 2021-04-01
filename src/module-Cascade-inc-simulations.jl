@@ -38,6 +38,26 @@
         return( newlevels )
     end
     
+
+    """
+    `Cascade.assignOccupation!(levels::Array{Cascade.Level,1}, property::AbstractSimulationProperty)` 
+        ... assigns the occupation due to the given property
+    """
+    function assignOccupation!(levels::Array{Cascade.Level,1}, property::AbstractSimulationProperty)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        
+        if  typeof(property) in [Cascade.IonDistribution, Cascade.PhotonIntensities]
+            # Assign the relative occupation of the levels in this list due to the given initial occupation
+            for  pair  in  property.initialOccupations
+                levels[pair[1]].relativeOcc = pair[2]
+            end
+            println("> Assign an initial occupation for given level numbers.")
+            if printSummary  println(iostream, "> Assign an initial occupation for given level numbers.")   end
+        end
+
+        return( nothing )
+    end
+    
     
     """
     `Cascade.displayIonDistribution(stream::IO, sc::String, levels::Array{Cascade.Level,1})` 
@@ -130,7 +150,7 @@
         enIndices = sortperm(energies, rev=true)
         # Now printout the results
         println(stream, " ")
-        println(stream, "* Level tree of this cascade:  **name ?? **")
+        println(stream, "* Level tree of this cascade:")
         println(stream, " ")
         if  extended    println(stream, "  ", TableStrings.hLine(nx))  else    println(stream, "  ", TableStrings.hLine(ny))  end
         sa = " "
@@ -190,6 +210,36 @@
             end
         end
         if  extended    println(stream, "  ", TableStrings.hLine(nx))  else    println(stream, "  ", TableStrings.hLine(ny))  end
+
+        return( nothing )
+    end
+    
+
+    """
+    `Cascade.displayIntensities(stream::IO, property::PhotonIntensities, energiesIntensities::Array{Tuple{Float64,Float64},1})` 
+        ... displays the (tuples of) energiesIntensities in a neat table. Nothing is returned.
+    """
+    function displayIntensities(stream::IO, property::PhotonIntensities, energiesIntensities::Array{Tuple{Float64,Float64},1})
+        nx = 40
+        sMinEn = @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", property.minPhotonEnergy))
+        sMaxEn = @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", property.maxPhotonEnergy))
+        println(stream, " ")
+        println(stream, "* Energies & (relative) photon intensities " * sMinEn * " and "  * sMaxEn * 
+                           TableStrings.inUnits("energy") * ":  ")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  "
+        sa = sa * TableStrings.center(16, "Energy "        * TableStrings.inUnits("energy"); na=5)
+        sa = sa * TableStrings.center(10, "Rel. Intensity"; na=2)
+        println(stream, sa)
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        for  enInt in  energiesIntensities
+            sa = "     "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", enInt[1])) * "     " * enInt[2]
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
 
         return( nothing )
     end
@@ -569,15 +619,21 @@
         
         # First review and display the computation data for this simulation; this enables the reader to check the consistency of data.
         # It also returns the level tree to be used in the simulations
-        if      simulation.property == Cascade.PhotoAbsorption()
+        if      typeof(simulation.property) == Cascade.PhotoAbsorption
             levels = Cascade.reviewData(simulation, ascendingOrder=false)
             wa     = Cascade.simulatePhotoAbsorptionSpectrum(levels, simulation) 
-        elseif  simulation.property == Cascade.IonDistribution()         &&   simulation.method == Cascade.ProbPropagation()
+        elseif  typeof(simulation.property) == Cascade.IonDistribution         &&   simulation.method == Cascade.ProbPropagation()
             levels = Cascade.reviewData(simulation, ascendingOrder=true)
             wa     = Cascade.simulateLevelDistribution(levels, simulation) 
-        elseif  simulation.property == Cascade.FinalLevelDistribution()  &&   simulation.method == Cascade.ProbPropagation()
+        elseif  typeof(simulation.property) == Cascade.FinalLevelDistribution  &&   simulation.method == Cascade.ProbPropagation()
             levels = Cascade.reviewData(simulation, ascendingOrder=true)
             wa     = Cascade.simulateLevelDistribution(levels, simulation) 
+        elseif  typeof(simulation.property) == Cascade.PhotonIntensities       &&   simulation.method == Cascade.ProbPropagation()
+            levels = Cascade.reviewData(simulation, ascendingOrder=true)
+            wa     = Cascade.simulatePhotonIntensities(levels, simulation) 
+        elseif  typeof(simulation.property) == Cascade.DrRateCoefficients
+            levels = Cascade.reviewData(simulation, ascendingOrder=true)
+            wa     = Cascade.simulateDrRateCoefficients(levels, simulation) 
         else         error("stop b")
         end
 
@@ -595,11 +651,19 @@
 
 
     """
-    `Cascade.propagateProbability!(levels::Array{Cascade.Level,1})` 
+    `Cascade.propagateProbability!(levels::Array{Cascade.Level,1}; 
+                                   collectPhotonIntensities::Bool=false, collectElectronIntensities::Bool=false)` 
         ... propagates the relative level occupation through the levels of the cascade until no further change occur in the 
             relative level occupation. The argument levels is modified during the propagation, but nothing is returned otherwise.
     """
-    function propagateProbability!(levels::Array{Cascade.Level,1})
+    function propagateProbability!(levels::Array{Cascade.Level,1}; 
+                                   collectPhotonIntensities::Bool=false, collectElectronIntensities::Bool=false)
+        # Inititalize arrays to be returned
+        if      collectPhotonIntensities  && collectElectronIntensities      error("stop a")
+        elseif  collectPhotonIntensities  || collectElectronIntensities
+                energiesIntensities = Tuple{Float64,Float64}[]
+        end
+        
         n = 0
         println("\n*  Probability propagation through $(length(levels)) levels of the cascade:")
         while true
@@ -635,6 +699,11 @@
                                                       line.finalLevel.basis.NoElectrons, 0., Cascade.LineIndex[], Cascade.LineIndex[] )
                             kk    = Cascade.findLevelIndex(newLevel, levels)
                             levels[kk].relativeOcc = levels[kk].relativeOcc + prob * rates[i] / totalRate
+                            #
+                            if  collectPhotonIntensities   && daugther.process == Basics.Radiative()
+                                push!(energiesIntensities, (level.energy - levels[kk].energy, prob * rates[i] / totalRate))     end
+                            if  collectElectronIntensities && daugther.process == Basics.Auger()
+                                push!(energiesIntensities, (level.energy - levels[kk].energy, prob * rates[i] / totalRate))     end
                         end
                         level.relativeOcc = 0.;   totalProbability = totalProbability + prob
                     end
@@ -645,7 +714,9 @@
             if  totalProbability == 0.    break    end
         end
 
-        return( nothing )
+        if  collectPhotonIntensities   ||   collectElectronIntensities   return(energiesIntensities)
+        else                                                             return( nothing )
+        end
     end
 
 
@@ -698,17 +769,20 @@
                 Cascade.displayLevels(iostream, gMultiplets, sa="generated ")        
             end
             #
-            if      haskey(results,"decay line data:")                lineData = results["decay line data:"]
-            elseif  haskey(results,"photo-ionizing line data:")       lineData = results["photo-ionizing line data:"]
-            elseif  haskey(results,"photo-excited line data:")        lineData = results["photo-excited line data:"]
+            if      haskey(results,"decay line data:")                          lineData = results["decay line data:"]
+            elseif  haskey(results,"photo-ionizing line data:")                 lineData = results["photo-ionizing line data:"]
+            elseif  haskey(results,"photo-excited line data:")                  lineData = results["photo-excited line data:"]
+            elseif  haskey(results,"hollow-ion line data:")                     lineData = results["hollow-ion line data:"]
             else    error("stop a")
             end
             levels = Cascade.extractLevels(lineData, settings)
             allLevels = Cascade.addLevels(allLevels, levels)
         end
         
-        allLevels = Cascade.sortByEnergy(allLevels, simulation.settings, ascendingOrder=ascendingOrder)
-        ## Cascade.displayLevelTree(stdout, allLevels, extended=false)
+        allLevels = Cascade.sortByEnergy(allLevels, ascendingOrder=ascendingOrder)
+        Cascade.assignOccupation!(allLevels, simulation.property)
+        if  simulation.settings.printTree      Cascade.displayLevelTree(stdout, allLevels, extended=false)     end
+        if  simulation.settings.printLongTree  Cascade.displayLevelTree(stdout, allLevels, extended=true)      end
         
         return( allLevels )
     end
@@ -723,9 +797,6 @@
     function simulateLevelDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
-        ## Cascade.displayLevelTree(stdout, levels, simulation.cascadeData, extended=false)
-        ## if  printSummary   Cascade.displayLevelTree(iostream, levels, simulation.cascadeData, extended=false)
-        ##                    Cascade.displayLevelTree(iostream, levels, simulation.cascadeData, extended=true)         end
         Cascade.propagateProbability!(levels)   ##x , simulation.cascadeData)
         #
         if  typeof(simulation.property) == Cascade.IonDistribution   
@@ -736,6 +807,68 @@
             Cascade.displayLevelDistribution(stdout, simulation.name, levels)   
             if  printSummary   Cascade.displayLevelDistribution(iostream, simulation.name, levels)    end
         end
+
+        return( nothing )
+    end
+    
+
+    """
+    `Cascade.simulatePhotonIntensities(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
+        ... sorts all levels as given by data and propagates their (occupation) probability until no further changes occur. For this 
+            propagation, it runs through all levels and propagates the probabilty until no level probability changes anymore. The final 
+            level distribution is then used to derive the ion distribution or the level distribution, if appropriate. Nothing is returned.
+    """
+    function simulatePhotonIntensities(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        #
+        energiesIntensities = Cascade.propagateProbability!(levels, collectPhotonIntensities=true)  
+        #
+        if  typeof(simulation.property) == Cascade.PhotonIntensities   
+            Cascade.displayIntensities(stdout, simulation.property, energiesIntensities)
+            if  printSummary   Cascade.displayIntensities(iostream, simulation.property, energiesIntensities)      end
+        else    error("stop a")
+        end
+
+        return( nothing )
+    end
+    
+
+    """
+    `Cascade.simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
+        ... Determines and prints the DR resonance strength and (plasma) rate coefficients for all resonance levels.
+            Nothing is returned.
+    """
+    function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        resonances = Dielectronic.Resonance[]
+        #
+        # Collect the information about all resonances
+        for  level in levels
+            for daugther in level.daugthers
+                if  daugther.process != Basics.Auger();      break   end
+                aLine   = daugther.lineSet.linesA[daugther.index]
+                dJ      = aLine.initialLevel.J;         iJ      = aLine.finalLevel.J
+                dM      = aLine.initialLevel.M;         iM      = aLine.finalLevel.M
+                dParity = aLine.initialLevel.parity;    iParity = aLine.finalLevel.parity
+                dIndex  = aLine.initialLevel.index;     iIndex  = aLine.finalLevel.index
+                dEnergy = aLine.initialLevel.energy;    iEnergy = aLine.finalLevel.energy
+                captureRate = aLine.totalRate
+                augerRate   = Cascade.computeTotalAugerRate(level)
+                photonRate  = Cascade.computeTotalPhotonRate(level)
+                strength    = Basics.EmProperty(0.)
+                #
+                iLevel      = ManyElectron.Level(iJ, iM, iParity, iIndex, iEnergy, 0., false, ManyElectron.Basis(), Float64[])
+                dLevel      = ManyElectron.Level(dJ, dM, dParity, dIndex, dEnergy, 0., false, ManyElectron.Basis(), Float64[])
+                en          = dLevel.energy-iLevel.energy
+                newResonance = Dielectronic.Resonance(iLevel, dLevel, en, strength, captureRate, augerRate, photonRate)
+                push!(resonances, newResonance)
+            end
+        end 
+        
+        # Printout the resonance strength
+        settings = Dielectronic.Settings(Dielectronic.Settings(), calcRateAlpha=true, temperatures=[1.0e3, 1.0e4])
+        Dielectronic.displayResults(stdout, resonances, settings)
+        Dielectronic.displayRateCoefficients(stdout, resonances, settings)
 
         return( nothing )
     end
@@ -765,10 +898,10 @@
     
 
     """
-    `Cascade.sortByEnergy(levels::Array{Cascade.Level,1}, settings::Cascade.SimulationSettings; ascendingOrder::Bool=false)` 
+    `Cascade.sortByEnergy(levels::Array{Cascade.Level,1}; ascendingOrder::Bool=false)` 
         ... sorts all levels by energy and assigns the occupation as given by the simulation
     """
-    function sortByEnergy(levels::Array{Cascade.Level,1}, settings::Cascade.SimulationSettings; ascendingOrder::Bool=false)
+    function sortByEnergy(levels::Array{Cascade.Level,1}; ascendingOrder::Bool=false)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         newlevels = Cascade.Level[]
         #
@@ -782,16 +915,16 @@
         newlevels = Cascade.Level[]
         for i = 1:length(enIndices)   ix = enIndices[i];    push!(newlevels, levels[ix])    end
         
-        # Assign the relative occupation of the levels in this list due to the given settings
-        for  pair  in  settings.initialOccupations
-            newlevels[pair[1]].relativeOcc = pair[2]
-        end
+        ##x # Assign the relative occupation of the levels in this list due to the given settings
+        ##x for  pair  in  settings.initialOccupations
+        ##x     newlevels[pair[1]].relativeOcc = pair[2]
+        ##x end
 
-        println("> Sort and assign occupation to a total of $(length(newlevels)) levels, and to which all level numbers refer below.")
-        println("   Here all charged states are considered together in the overall cascade.")
+        println("> Sort a total of $(length(newlevels)) levels, and to which all level numbers refer below. " *
+                "Here all charged states are considered together in the overall cascade.")
         if printSummary     
-            println(iostream, "> Sort and assign occupation to a total of $(length(newlevels)) levels, and to which all level numbers refer below.")
-            println(iostream, "   Here all charged states are considered together in the overall cascade.")
+            println(iostream, "> Sort a total of $(length(newlevels)) levels, and to which all level numbers refer below. " *
+                              "Here all charged states are considered together in the overall cascade.")
         end
 
         return( newlevels )

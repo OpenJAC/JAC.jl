@@ -511,7 +511,7 @@
         multiplets = Multiplet[]
         for  (sym,v) in  symmetries
             # Skip the symmetry block if it not selected
-            @show  sym, settings.levelSelectionCI,  Basics.selectSymmetry(sym, settings.levelSelectionCI)
+            ##x @show  sym, settings.levelSelectionCI,  Basics.selectSymmetry(sym, settings.levelSelectionCI)
             if  !Basics.selectSymmetry(sym, settings.levelSelectionCI)     continue    end
             matrix = compute("matrix: CI, J^P symmetry", sym, basis, nuclearModel, grid, settings; printout=printout)
             eigen  = Basics.diagonalize("matrix: LinearAlgebra", matrix)

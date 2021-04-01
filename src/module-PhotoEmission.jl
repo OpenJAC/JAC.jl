@@ -165,42 +165,49 @@ module PhotoEmission
         
         if      kind == "emission"
         #-------------------------
-            nf = length(finalLevel.basis.csfs);    ni = length(initialLevel.basis.csfs)
+            if  initialLevel.basis.subshells == finalLevel.basis.subshells
+                iLevel = initialLevel;   fLevel = finalLevel
+            else
+                subshells = Basics.merge(initialLevel.basis.subshells, finalLevel.basis.subshells)
+                iLevel    = Level(initialLevel, subshells)
+                fLevel    = Level(finalLevel, subshells)
+            end
+            
+            nf = length(fLevel.basis.csfs);    ni = length(iLevel.basis.csfs)
             if  printout   printstyled("Compute radiative $(Mp) matrix of dimension $nf x $ni in the initial- and final-state bases " *
-                                       "for the transition [$(initialLevel.index)-$(finalLevel.index)] ... ", color=:light_green)    end
+                                       "for the transition [$(iLevel.index)-$(fLevel.index)] ... ", color=:light_green)    end
             matrix = zeros(ComplexF64, nf, ni)
             #
             for  r = 1:nf
-                ##x @show r, finalLevel.basis.csfs[r].J, finalLevel.J, finalLevel.basis.csfs[r].parity, finalLevel.parity
-                if  finalLevel.basis.csfs[r].J != finalLevel.J          ||  finalLevel.basis.csfs[r].parity   != finalLevel.parity    continue    end 
+                if  fLevel.basis.csfs[r].J != fLevel.J      ||  fLevel.basis.csfs[r].parity  != fLevel.parity    continue    end 
                 for  s = 1:ni
-                    if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity  continue    end 
-                    ##x wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
-                    # Calculate the spin-angular coefficients
-                    if  Defaults.saRatip()
-                        waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
-                        wa  = waR       
-                    end
-                    if  Defaults.saGG()
-                        subshellList = finalLevel.basis.subshells
-                        opa = SpinAngular.OneParticleOperator(Mp.L, plus, true)
-                        waG = SpinAngular.computeCoefficients(opa, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList) 
-                        wa  = waG
-                    end
-                    if  Defaults.saRatip() && Defaults.saGG() && true
-                        if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
-                        if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
-                    end
+                    if  iLevel.basis.csfs[s].J != iLevel.J  ||  iLevel.basis.csfs[s].parity  != iLevel.parity    continue    end 
+                    ##x wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, fLevel.basis.csfs[r], iLevel.basis.csfs[s])
+                    ##x # Calculate the spin-angular coefficients
+                    ##x if  Defaults.saRatip()
+                    ##x     waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
+                    ##xx    wa  = waR       
+                    ##x end
+                    ##x if  Defaults.saGG()
+                    subshellList = fLevel.basis.subshells
+                    opa = SpinAngular.OneParticleOperator(Mp.L, plus, true)
+                    wa  = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList) 
+                    ##x     wa  = waG
+                    ##x end
+                    ##x if  Defaults.saRatip() && Defaults.saGG() && true
+                    ##x     if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
+                    ##x     if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
+                    ##x end
                     #
                     ##x @show finalLevel.basis  ## .csfs[r]
                     ##x @show initialLevel.basis  ## .csfs[s]
                     me = 0.
                     ##x println("Enter loop ... r=$r   s=$s  length(wa) = $(length(wa))")
                     for  coeff in wa
-                        ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
-                        jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
-                        MbaCheng  = InteractionStrength.MbaEmissionCheng(Mp, gauge, omega, finalLevel.basis.orbitals[coeff.a],  
-                                                                                                 initialLevel.basis.orbitals[coeff.b], grid)
+                        ##x ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
+                        ##x jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
+                        MbaCheng  = InteractionStrength.MbaEmissionCheng(Mp, gauge, omega, fLevel.basis.orbitals[coeff.a],  
+                                                                                           iLevel.basis.orbitals[coeff.b], grid)
                         me = me + coeff.T * MbaCheng  ## sqrt( (ja + 1)/(jb + 1) ) * ##   0.707106781186548 *
                     end
                     ##x println("r = $r, s = $s, me = $me")
@@ -208,7 +215,7 @@ module PhotoEmission
                 end
             end 
             if  printout   printstyled("done. \n", color=:light_green)    end
-            amplitude = transpose(finalLevel.mc) * matrix * initialLevel.mc 
+            amplitude = transpose(fLevel.mc) * matrix * iLevel.mc 
             #
             #
         elseif  kind == "absorption"

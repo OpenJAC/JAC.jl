@@ -295,12 +295,12 @@ module InteractionStrength
     
     
     """
-    `InteractionStrength.XL_Breit_reset_storage(keep::Bool)`  
+    `InteractionStrength.XL_Breit_reset_storage(keep::Bool; printout::Bool=false)`  
         ... resets the global storage of XL_Breit interaction strength; nothing is returned.
     """
-    function XL_Breit_reset_storage(keep::Bool)
+    function XL_Breit_reset_storage(keep::Bool; printout::Bool=false)
         if  keep
-            println("  reset GBL_Storage_XL_Breit storage ...")
+            if  printout   println("  reset GBL_Storage_XL_Breit storage ...")    end
             global GBL_Storage_XL_Breit = Dict{String, Float64}()
         else
         end

@@ -712,6 +712,42 @@
 
 
     """
+    `Basics.extractNonrelativisticShellList(multiplet::Multiplet)  
+        ... extract a nonrelativistic shell list from the given multiplet; however, the shells are not ordered. 
+            A shellList::Array{Shell,1} is returned.
+    """
+    function Basics.extractNonrelativisticShellList(multiplet::Multiplet) 
+        shellList = Shell[]
+        confs     = Basics.extractNonrelativisticConfigurations(multiplet.levels[1].basis)
+        
+        for conf in confs
+            for (k,v) in conf.shells
+                if  k in shellList      else    push!(shellList, k)     end
+            end
+        end
+        @show shellList
+        
+        return( shellList )
+    end
+
+
+    """
+    `Basics.extractNonrelativisticShellList(multiplets::Array{Multiplet,1})  
+        ... extract a nonrelativistic shell list from the given list of multiplets; however, the shells are not ordered. 
+            A shellList::Array{Shell,1} is returned.
+    """
+    function Basics.extractNonrelativisticShellList(multiplets::Array{Multiplet,1}) 
+        shellList = Shell[]
+        for  mp in multiplets
+            shellList = Basics.merge(shellList, Basics.extractNonrelativisticShellList(mp))
+        end
+        @show shellList
+        
+        return( shellList )
+    end
+
+
+    """
     `Basics.extractNonrelativisticConfigurations(basis::Basis)  
         ... extract all nonrelativistic configurations that contribute to the given set of CSF in basis.csfs. 
             A confList::Array{Configuration,1} is returned.
@@ -824,14 +860,14 @@
         end
         
         shellList = unique(shellList)
-         subshellList = Subshell[]
+        subshellList = Subshell[]
         
         for  sh in shellList    
             if  sh.l == 0    push!( subshellList, Subshell(sh.n, -1))
             else             push!( subshellList, Subshell(sh.n, sh.l));    push!( subshellList, Subshell(sh.n, -sh.l -1))
             end
         end
-        
+        subshellList = Base.sort(subshellList)
         println(">> Generated subshell list:  $subshellList ")
         return( subshellList )
     end

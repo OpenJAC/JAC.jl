@@ -380,6 +380,40 @@
         end
     end
 
+
+    """
+    `Basics.merge(aList::Array{Shell,1}, bList::Array{Shell,1}, ...)`  
+        ... to merge two (or more) shell lists into a single list, to unify and to order them. 
+            A cList::Array{Shell,1} is returned
+    """
+    function Basics.merge(aList::Array{Shell,1}, bList::Array{Shell,1})
+        cList = copy(aList);      append!(cList, bList);      cList = Base.unique(cList)
+        cList = Basics.sort(cList)
+        return( cList )
+    end
+    function Basics.merge(aList::Array{Shell,1}, bList::Array{Shell,1}, cList::Array{Shell,1})
+        dList = Basics.merge(aList, bList);     dList = Basics.merge(dList, cList)
+        dList = Basics.sort(dList)
+        return( dList )
+    end
+
+
+    """
+    `Basics.merge(aList::Array{Subshell,1}, bList::Array{Subshell,1}, ...)`  
+        ... to merge two (or more) subshell lists into a single list, to unify and to order them. 
+            A cList::Array{Subshell,1} is returned
+    """
+    function Basics.merge(aList::Array{Subshell,1}, bList::Array{Subshell,1})
+        cList = copy(aList);      append!(cList, bList);      cList = Base.unique(cList)
+        cList = Basics.sort(cList)
+        return( cList )
+    end
+    function Basics.merge(aList::Array{Subshell,1}, bList::Array{Subshell,1}, cList::Array{Subshell,1})
+        dList = Basics.merge(aList, bList);     dList = Basics.merge(dList, cList)
+        dList = Basics.sort(dList)
+        return( dList )
+    end
+
     
     """
     `Basics.modifyLevelEnergies(multiplet::Multiplet)`  

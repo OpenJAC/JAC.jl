@@ -5,8 +5,8 @@
 """
 module Cascade
 
-    using Dates, JLD2, Printf, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..DecayYield, ..ElectronCapture,
-                               ..Radial, ..ManyElectron, ..Nuclear, 
+    using Dates, JLD2, Printf, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..DecayYield, ..Dielectronic,
+                               ..ElectronCapture, ..Radial, ..ManyElectron, ..Nuclear, 
                                ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..Semiempirical, ..TableStrings
 
     
@@ -20,8 +20,14 @@ module Cascade
             ... to represent a (prior) photoionization part of a cascade for a list of given photon energies.
         + struct PhotonExcitationScheme    
             ... to represent a (prior) photo-excitation part of a cascade for a specified set of excitations.
-        + struct DrRateCoefficientScheme  
-            ... to represent a (prior) electron-impact excitation part of a cascade for given electron energies (not yet).
+        + struct DielectronicCaptureScheme  
+            ... to represent the (dielectronic) capture of an electron for a maximum excitation energy and a given list of
+                subshells; the excitation energy refers to the levels of the reference configurations, and cascade blocks are built
+                only with the given subshells.
+        + struct HollowIonScheme    
+            ... to represent the capture of one or several electrons into a list of subshells; various distributions of the
+                electron among these shells are supported. For the subsequent decay, the list of decay shells need to be specified
+                as well.
         + struct ElectronExcitationScheme  
             ... to represent a (prior) electron-impact excitation part of a cascade for given electron energies (not yet).
     """
@@ -185,72 +191,125 @@ module Cascade
 
 
     """
-    `struct  Cascade.DrRateCoefficientScheme  <:  Cascade.AbstractCascadeScheme`  
-        ... a struct to define and describe a a DR rate coefficients (scheme) calculation for an atom in some initial state/configuration;
+    `struct  Cascade.DielectronicCaptureScheme  <:  Cascade.AbstractCascadeScheme`  
+        ... a struct to define and describe the (dielectronic) capture of electrons for an atom in some initial state/configuration;
             for such a scheme, the doubly-excited configurations due to the electron capture are generated automatically due to
-            given maximal numbers of the (to-) shells (nl) as well as the maximum displacement with regard to the initial configuration.
-            An additional maximum electron energy must be derived from the maximum temperatures for which DR plasma rate coefficients
-            need to be determined, cf. Basics.convert().
+            given maximal numbers of the (into-) shells (nl) as well as the maximum displacement with regard to the initial configuration.
+            An additional maximum excitation energy need to be provided due to the maximum temperatures for which DR plasma rate coefficients
+            are to be determined, cf. Basics.convert().
 
-        + processes             ::Array{Basics.AbstractProcess,1} 
-            ... List of the atomic processes that are supported and should be included into the DR capture and stabilization scheme.  
         + multipoles            ::Array{EmMultipole}           
             ... Multipoles of the radiation field that are to be included into the radiative stabilization processes.
-        + maxElectronEnergy      ::Float64                 
-            ... Maximum electron energy [in a.u.] that restrict the number of excited configurations to be taken into accout.
-                This maximum energy has to be derived from the maximum temperature for which DR coefficients need to be derived
-                and is typically set to 5x T_e,max.
+        + maxExcitationEnergy   ::Float64                 
+            ... Maximum excitation energy [in a.u.] with regard to the reference configurations/levels that restrict the number 
+                of excited configurations to be taken into accout. This maximum excitation energy has to be derived from the maximum 
+                temperature for which DR coefficients need to be derived and is typically set to 5x T_e,max.
         + minPhotonEnergy        ::Float64                 
             ... Minimum (mean) photon energy [in a.u.] in the radiative stabilization of the doubly-excited configurations; 
                 If cascade blocks are separated be less than this energy, the radiative stabilization is neglected.
         + NoExcitations         ::Int64                 
-            ... (Maximum) Number of electron replacements in the doubly-excited with regard to the initial configurations/multiplets, 
-                apart from one additional electron due to the electron capture.
-        + nMax                  ::Int64                 
-            ... (Maximum) principal number n of electron (to-) shells that are considered for doubly-excited configuration.
-        + lMax                  ::Int64                 
-            ... (Maximum) orbital angular momentum number n of electron (to-) shells that are considered for doubly-excited configuration.
+            ... (Maximum) Number of electron replacements in the doubly-excited configuration with regard to the initial 
+                configurations/multiplets, apart from one additional electron due to the electron capture itself.
         + excitationFromShells  ::Array{Shell,1}    
             ... List of shells from which excitations are to be considered.
+        + excitationToShells  ::Array{Shell,1}    
+            ... List of shells to which (core-shell) excitations are to be considered.
+        + intoShells            ::Array{Shell,1}
+            ... List of shells into which electrons are initially placed (captured).
+        + decayShells           ::Array{Shell,1}
+            ... List of shells into which electrons the electrons can decay (apart from the core shells).
     """
-    struct   DrRateCoefficientScheme  <:  Cascade.AbstractCascadeScheme
-        processes               ::Array{Basics.AbstractProcess,1}    
+    struct   DielectronicCaptureScheme  <:  Cascade.AbstractCascadeScheme
         multipoles              ::Array{EmMultipole}  
-        maxElectronEnergy       ::Float64   
+        maxExcitationEnergy     ::Float64   
         minPhotonEnergy         ::Float64                 
         NoExcitations           ::Int64
-        nMax                    ::Int64
-        lMax                    ::Int64
         excitationFromShells    ::Array{Shell,1}
+        excitationToShells      ::Array{Shell,1}
+        intoShells              ::Array{Shell,1}
+        decayShells             ::Array{Shell,1}
     end
 
 
     """
-    `Cascade.DrRateCoefficientScheme()`  ... constructor for an 'default' instance of a Cascade.DrRateCoefficientScheme.
+    `Cascade.DielectronicCaptureScheme()`  ... constructor for an 'default' instance of a Cascade.DielectronicCaptureScheme.
     """
-    function DrRateCoefficientScheme()
-        DrRateCoefficientScheme([ElectronCapture(), Auger(), Radiative()], [E1], 1.0, 0., 1, 1, 0, Shell[], Shell[] )
+    function DielectronicCaptureScheme()
+        DielectronicCaptureScheme([E1], 1.0, 0., 1, Shell[], Shell[], Shell[], Shell[] )
     end
 
 
-    # `Base.string(scheme::DrRateCoefficientScheme)`  ... provides a String notation for the variable scheme::DrRateCoefficientScheme.
-    function Base.string(scheme::DrRateCoefficientScheme)
-        sa = "DR plasma rate coefficient (scheme) due to processes:"
+    # `Base.string(scheme::DielectronicCaptureScheme)`  ... provides a String notation for the variable scheme::DielectronicCaptureScheme.
+    function Base.string(scheme::DielectronicCaptureScheme)
+        sa = "Dielectronic capture & stabilization (scheme):"
         return( sa )
     end
 
 
-    # `Base.show(io::IO, scheme::DrRateCoefficientScheme)`  ... prepares a proper printout of the scheme::DrRateCoefficientScheme.
-    function Base.show(io::IO, scheme::DrRateCoefficientScheme)
+    # `Base.show(io::IO, scheme::DielectronicCaptureScheme)`  ... prepares a proper printout of the scheme::DielectronicCaptureScheme.
+    function Base.show(io::IO, scheme::DielectronicCaptureScheme)
+        sa = Base.string(scheme);                print(io, sa, "\n")
+        println(io, "multipoles:                 $(scheme.multipoles)  ")
+        println(io, "maxExcitationEnergy:        $(scheme.maxExcitationEnergy)  ")
+        println(io, "minPhotonEnergy:            $(scheme.minPhotonEnergy)  ")
+        println(io, "NoExcitations:              $(scheme.NoExcitations)  ")
+        println(io, "excitationFromShells:       $(scheme.excitationFromShells)  ")
+        println(io, "excitationToShells:         $(scheme.excitationToShells)  ")
+        println(io, "intoShells:                 $(scheme.intoShells)  ")
+        println(io, "decayShells:                $(scheme.decayShells)  ")
+    end
+
+
+    """
+    `struct  Cascade.HollowIonScheme  <:  Cascade.AbstractCascadeScheme`  
+        ... a struct to define and describe the formation and decay of a hollow ion, e.g. an electronic core configuration 
+            into which one or several additional electrons are captured into (high) nl shells. Both the shell (lists) for 
+            the initial capture (intoShells) and the subsequent decay (decayShells) need to be specified explicitly to 
+            readily control the size of the computations.
+
+        + processes             ::Array{Basics.AbstractProcess,1} 
+            ... List of the atomic processes that are supported and should be included into the decay scheme.  
+        + multipoles            ::Array{EmMultipole,1}           
+            ... Multipoles of the radiation field that are to be included into the radiative stabilization processes.
+        + NoCapturedElectrons   ::Int64   
+            ... Number of captured electrons, e.g. placed in the intoShells.
+        + intoShells            ::Array{Shell,1}
+            ... List of shells into which electrons are initially placed (captured).
+        + decayShells           ::Array{Shell,1}
+            ... List of shells into which electrons the electrons can decay (apart from the core shells).
+    """
+    struct   HollowIonScheme  <:  Cascade.AbstractCascadeScheme
+        processes               ::Array{Basics.AbstractProcess,1}    
+        multipoles              ::Array{EmMultipole}  
+        NoCapturedElectrons     ::Int64
+        intoShells              ::Array{Shell,1}
+        decayShells             ::Array{Shell,1}
+    end
+
+
+    """
+    `Cascade.HollowIonScheme()`  ... constructor for an 'default' instance of a Cascade.HollowIonScheme.
+    """
+    function HollowIonScheme()
+        HollowIonScheme([Auger(), Radiative()], [E1], 0, Shell[], Shell[] )
+    end
+
+
+    # `Base.string(scheme::HollowIonScheme)`  ... provides a String notation for the variable scheme::HollowIonScheme.
+    function Base.string(scheme::HollowIonScheme)
+        sa = "Hollow ion (scheme) due to processes:"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, scheme::HollowIonScheme)`  ... prepares a proper printout of the scheme::HollowIonScheme.
+    function Base.show(io::IO, scheme::HollowIonScheme)
         sa = Base.string(scheme);                print(io, sa, "\n")
         println(io, "processes:                  $(scheme.processes)  ")
         println(io, "multipoles:                 $(scheme.multipoles)  ")
-        println(io, "maxElectronEnergy:          $(scheme.maxElectronEnergy)  ")
-        println(io, "minPhotonEnergy:            $(scheme.minPhotonEnergy)  ")
-        println(io, "NoExcitations:              $(scheme.NoExcitations)  ")
-        println(io, "nMax:                       $(scheme.nMax)  ")
-        println(io, "lMax:                       $(scheme.lMax)  ")
-        println(io, "excitationFromShells:       $(scheme.excitationFromShells)  ")
+        println(io, "NoCapturedElectrons:        $(scheme.NoCapturedElectrons)  ")
+        println(io, "intoShells:                 $(scheme.intoShells)  ")
+        println(io, "decayShells:                $(scheme.decayShells)  ")
     end
 
 
@@ -364,7 +423,7 @@ module Cascade
 
         + process          ::JBasics.AbstractProcess   ... Atomic process that 'acts' in this step of the cascade.
         + settings         ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings,
-                                   ElectronCapture.Settings}        
+                                   DielectronicCapture.Settings}        
                                                        ... Settings for this step of the cascade.
         + initialConfigs   ::Array{Configuration,1}    ... List of one or several configurations that define the initial-state multiplet.
         + finalConfigs     ::Array{Configuration,1}    ... List of one or several configurations that define the final-state multiplet.
@@ -373,8 +432,7 @@ module Cascade
     """
     struct  Step
         process            ::Basics.AbstractProcess
-        settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings, 
-                                   ElectronCapture.Settings}
+        settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings}
         initialConfigs     ::Array{Configuration,1}
         finalConfigs       ::Array{Configuration,1}
         initialMultiplet   ::Multiplet
@@ -480,7 +538,8 @@ module Cascade
         if        typeof(comp.scheme) == Cascade.StepwiseDecayScheme       sb = "stepwise decay scheme"
         elseif    typeof(comp.scheme) == Cascade.PhotonIonizationScheme    sb = "(prior) photo-ionization scheme"
         elseif    typeof(comp.scheme) == Cascade.PhotonExcitationScheme    sb = "photo-excitation scheme"
-        elseif    typeof(comp.scheme) == Cascade.DrRateCoefficientScheme   sb = "DR plasma rate coefficient scheme"
+        elseif    typeof(comp.scheme) == Cascade.DielectronicCaptureScheme     sb = "(di-) electronic capture scheme"
+        elseif    typeof(comp.scheme) == Cascade.HollowIonScheme           sb = "hollow ion scheme"
         else      error("unknown typeof(comp.scheme)")
         end
         
@@ -515,6 +574,7 @@ module Cascade
         + struct DecayData       ... to comprise the amplitudes/rates from a stepswise decay cascade.
         + struct PhotoIonData    ... to comprise the amplitudes/rates from a photo-ionization part of a cascade.
         + struct ExcitationData  ... to comprise the amplitudes/rates from a photo-excitation part of a cascade.
+        + struct CaptureData     ... to comprise the amplitudes/rates from a electron-capture part of a cascade.
     """
     abstract type  AbstractData      end
 
@@ -522,7 +582,6 @@ module Cascade
     """
     `struct  Cascade.DecayData  <:  Cascade.AbstractData`  ... defines a type for an atomic cascade, i.e. lists of radiative and Auger lines.
 
-        + name           ::String                               ... A name for the cascade.
         + linesR         ::Array{PhotoEmission.Line,1}          ... List of radiative lines.
         + linesA         ::Array{AutoIonization.Line,1}         ... List of Auger lines.
     """  
@@ -617,15 +676,176 @@ module Cascade
         + struct DecayPathes             ... determine the major 'decay pathes' of the cascade.
         + struct ElectronIntensities     ... simulate the electron-line intensities as function of electron energy.
         + struct PhotonIntensities       ... simulate  the photon-line intensities as function of electron energy. 
+        + struct DrRateCoefficients      ... simulate  the DR (plasma) rate coefficients for given plasma temperatures. 
         + struct ElectronCoincidence     ... simulate electron-coincidence spectra.
     """
     abstract type  AbstractSimulationProperty                              end
-    struct   IonDistribution              <:  AbstractSimulationProperty   end
-    struct   FinalLevelDistribution       <:  AbstractSimulationProperty   end
+
+
+    """
+    `struct  Cascade.IonDistribution   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the 'ion distribution' as it is found after all cascade processes are completed.
+
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+    """  
+    struct  IonDistribution   <:  Cascade.AbstractSimulationProperty
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+    end 
+
+
+    """
+    `Cascade.IonDistribution()`  ... (simple) constructor for cascade IonDistribution data.
+    """
+    function IonDistribution()
+        IonDistribution([(1, 1.0)])
+    end
+
+
+    # `Base.show(io::IO, data::Cascade.IonDistribution)`  ... prepares a proper printout of the variable data::Cascade.IonDistribution.
+    function Base.show(io::IO, dist::Cascade.IonDistribution) 
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+    end
+
+
+    """
+    `struct  Cascade.FinalLevelDistribution   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the 'final-level distribution' as it is found after all cascade processes are completed.
+
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+    """  
+    struct  FinalLevelDistribution   <:  Cascade.AbstractSimulationProperty
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+    end 
+
+
+    """
+    `Cascade.FinalLevelDistribution()`  ... (simple) constructor for cascade FinalLevelDistribution.
+    """
+    function FinalLevelDistribution()
+        FinalLevelDistribution([(1, 1.0)])
+    end
+
+
+    # `Base.show(io::IO, data::Cascade.FinalLevelDistribution)`  
+    #       ... prepares a proper printout of the variable data::Cascade.FinalLevelDistribution.
+    function Base.show(io::IO, dist::Cascade.FinalLevelDistribution) 
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+    end
+
+
+    """
+    `struct  Cascade.ElectronIntensities   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the electron-line intensities as function of electron energy.
+
+        + minElectronEnergy   ::Float64     ... Minimum electron energy for the simulation of electron spectra.
+        + maxElectronEnergy   ::Float64     ... Maximum electron energy for the simulation of electron spectra.
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+    """  
+    struct  ElectronIntensities   <:  Cascade.AbstractSimulationProperty
+        minElectronEnergy     ::Float64
+        maxElectronEnergy     ::Float64
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+    end 
+
+
+    """
+    `Cascade.ElectronIntensities()`  ... (simple) constructor for cascade ElectronIntensities.
+    """
+    function ElectronIntensities()
+        ElectronIntensities(0., 1.0e6,  [(1, 1.0)])
+    end
+
+
+    # `Base.show(io::IO, data::Cascade.ElectronIntensities)`  ... prepares a proper printout of the variable data::Cascade.ElectronIntensities.
+    function Base.show(io::IO, dist::Cascade.ElectronIntensities) 
+        println(io, "minElectronEnergy:        $(dist.minElectronEnergy)  ")
+        println(io, "maxElectronEnergy:        $(dist.maxElectronEnergy)  ")
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+    end
+
+
+    """
+    `struct  Cascade.PhotonIntensities   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the photon-line intensities as function of photon energy.
+
+        + minPhotonEnergy     ::Float64     ... Minimum photon energy for the simulation of photon spectra.
+        + maxPhotonEnergy     ::Float64     ... Maximum photon energy for the simulation of photon spectra.
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+        + leadingConfigs      ::Array{Configuration,1}   
+            ... List of leading configurations whose levels are equally populated, either initially or ....
+    """  
+    struct  PhotonIntensities   <:  Cascade.AbstractSimulationProperty
+        minPhotonEnergy       ::Float64
+        maxPhotonEnergy       ::Float64
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+        leadingConfigs        ::Array{Configuration,1}
+    end 
+
+
+    """
+    `Cascade.PhotonIntensities()`  ... (simple) constructor for cascade PhotonIntensities.
+    """
+    function PhotonIntensities()
+        PhotonIntensities(0., 1.0e6,  [(1, 1.0)], Configuration[])
+    end
+
+
+    # `Base.show(io::IO, dist::Cascade.PhotonIntensities)`  ... prepares a proper printout of the variable data::Cascade.PhotonIntensities.
+    function Base.show(io::IO, dist::Cascade.PhotonIntensities) 
+        println(io, "minPhotonEnergy:          $(dist.minPhotonEnergy)  ")
+        println(io, "maxPhotonEnergy:          $(dist.maxPhotonEnergy)  ")
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+        println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
+    end
+
+
+    """
+    `struct  Cascade.DrRateCoefficients   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the DR plasma rate coefficients as function of the (free) electron energy and
+            plasma temperature.
+
+        + minPhotonEnergy     ::Float64     ... Minimum photon energy to be included in the radiative stabilization.
+        + maxPhotonEnergy     ::Float64     ... Maximum photon energy to be included in the radiative stabilization.
+        + temperatures        ::Array{Float64,1}
+            ... temperatures [K] for which the DR plasma rate coefficieints to be calculated.
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+        + leadingConfigs      ::Array{Configuration,1}   
+            ... List of leading configurations whose levels are equally populated, either initially or ....
+    """  
+    struct  DrRateCoefficients   <:  Cascade.AbstractSimulationProperty
+        minPhotonEnergy       ::Float64
+        maxPhotonEnergy       ::Float64
+        temperatures          ::Array{Float64,1}
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+        leadingConfigs        ::Array{Configuration,1}
+    end 
+
+
+    """
+    `Cascade.DrRateCoefficients()`  ... (simple) constructor for cascade DrRateCoefficients.
+    """
+    function DrRateCoefficients()
+        DrRateCoefficients(0., 1.0e6,  Float64[], [(1, 1.0)], Configuration[])
+    end
+
+
+    # `Base.show(io::IO, dist::Cascade.DrRateCoefficients)`  ... prepares a proper printout of the variable data::Cascade.DrRateCoefficients.
+    function Base.show(io::IO, dist::Cascade.DrRateCoefficients) 
+        println(io, "minPhotonEnergy:          $(dist.minPhotonEnergy)  ")
+        println(io, "maxPhotonEnergy:          $(dist.maxPhotonEnergy)  ")
+        println(io, "temperatures:             $(dist.temperatures)  ")
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+        println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
+    end
+    
+    
     struct   PhotoAbsorption              <:  AbstractSimulationProperty   end
     struct   DecayPathes                  <:  AbstractSimulationProperty   end
-    struct   ElectronIntensities          <:  AbstractSimulationProperty   end
-    struct   PhotonIntensities            <:  AbstractSimulationProperty   end
     struct   ElectronCoincidence          <:  AbstractSimulationProperty   end
 
 
@@ -647,21 +867,14 @@ module Cascade
     """
     `struct  Cascade.SimulationSettings`  ... defines settings for performing the simulation of some cascade (data).
 
-        + minElectronEnergy   ::Float64     ... Minimum electron energy for the simulation of electron spectra.
-        + maxElectronEnergy   ::Float64     ... Maximum electron energy for the simulation of electron spectra.
-        + minPhotonEnergy     ::Float64     ... Minimum photon energy for the simulation of photon/absorption spectra.
-        + maxPhotonEnergy     ::Float64     ... Maximum photon energy for the simulation of photon/absorption spectra.
+        + printTree           ::Bool        ... Print the cascade tree in a short form
+        + printLongTree       ::Bool        ... Print the cascade tree in a long form
         + initialPhotonEnergy ::Float64     ... Photon energy for which photoionization data are considered. 
-        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
-            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
     """
     struct  SimulationSettings
-        minElectronEnergy     ::Float64
-        maxElectronEnergy     ::Float64
-        minPhotonEnergy       ::Float64
-        maxPhotonEnergy       ::Float64
+        printTree             ::Bool
+        printLongTree         ::Bool 
         initialPhotonEnergy   ::Float64
-        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
     end 
 
 
@@ -669,18 +882,15 @@ module Cascade
     `Cascade.SimulationSettings()`  ... constructor for an 'empty' instance of a Cascade.Block.
     """
     function SimulationSettings()
-        SimulationSettings(0., 1.0e6,  0., 1.0e6, 0., [(1, 1.0)] )
+        SimulationSettings(false, false, 0.)
     end
 
 
     # `Base.show(io::IO, settings::SimulationSettings)`  ... prepares a proper printout of the variable settings::SimulationSettings.
     function Base.show(io::IO, settings::SimulationSettings) 
-        println(io, "minElectronEnergy:        $(settings.minElectronEnergy)  ")
-        println(io, "maxElectronEnergy:        $(settings.maxElectronEnergy)  ")
-        println(io, "minPhotonEnergy:          $(settings.minPhotonEnergy)  ")
-        println(io, "maxPhotonEnergy:          $(settings.maxPhotonEnergy)  ")
+        println(io, "printTree:                $(settings.printTree)  ")
+        println(io, "printLongTree:            $(settings.printLongTree)  ")
         println(io, "initialPhotonEnergy:      $(settings.initialPhotonEnergy)  ")
-        println(io, "initialOccupations:       $(settings.initialOccupations)  ")
     end
 
 
@@ -838,7 +1048,8 @@ module Cascade
     
     
     include("module-Cascade-inc-computations.jl")
-    include("module-Cascade-inc-dr-plasma-rate.jl")
+    include("module-Cascade-inc-dielectronic-capture.jl")
+    include("module-Cascade-inc-hollow-ion.jl")
     include("module-Cascade-inc-photoabsorption.jl")
     include("module-Cascade-inc-photoexcitation.jl")
     include("module-Cascade-inc-photoionization.jl")

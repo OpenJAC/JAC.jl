@@ -791,7 +791,9 @@
     """
     function Basics.generateConfigurations(refConfigs::Array{Configuration,1}, fromShells::Array{Shell,1}, toShells::Array{Shell,1}, 
                                            noex::Int64; restrictions::Array{AbstractConfigurationRestriction,1}=AbstractConfigurationRestriction[])
-        if  noex > 0
+        if     noex == 0
+            newConfigs = refConfigs
+        elseif noex > 0
             newConfigs = Basics.generateConfigurations(refConfigs, fromShells, toShells)
             newConfigs = Base.unique(newConfigs)
             for ne = 2:noex    

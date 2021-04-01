@@ -36,6 +36,37 @@
     end
 
 
+    """
+    `Cascade.computeTotalAugerRate(level::Cascade.Level)` 
+        ... computes the total Auger rate of level as given by its daugther levels; a rate::Float64 is returned.
+    """
+    function computeTotalAugerRate(level::Cascade.Level)
+        rate = 0.
+        for daugther in level.daugthers
+            if  daugther.process != Basics.Auger();      continue   end
+            aLine   = daugther.lineSet.linesA[daugther.index]
+            rate    = rate + aLine.totalRate
+        end
+        return( rate )
+    end
+
+
+    """
+    `Cascade.computeTotalPhotonRate(level::Cascade.Level)` 
+        ... computes the total photon (radiative) rate of level as given by its daugther levels; a rate::EmProperty is returned.
+    """
+    function computeTotalPhotonRate(level::Cascade.Level)
+        rate = Basics.EmProperty(0.)
+        for daugther in level.daugthers
+            if  daugther.process != Basics.Radiative();      continue   end
+            rLine   = daugther.lineSet.linesR[daugther.index]
+            rate    = rate + rLine.photonRate
+        end
+        
+        return( rate )
+    end
+
+
 
     """
     `Cascade.displayBlocks(stream::IO, blockList::Array{Cascade.Block,1}; sa::String="")` 
@@ -46,7 +77,7 @@
     function displayBlocks(stream::IO, blockList::Array{Cascade.Block,1}; sa::String="")
         #
         nx = 150
-        println(stream, "\n* Configuration 'blocks' (multiplets) " * sa * "in the given cascade model: \n")
+        println(stream, "\n* Configuration 'blocks' (multiplets): " * sa * "\n")
         println(stream, "  ", TableStrings.hLine(nx))
         println(stream, "      No.   Configurations                                                                       " *
                         "      No. CSF  ",
@@ -346,9 +377,9 @@
         #
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
-        println("\n* Electron configuration used in the " * sa * "cascade:")
+        println("\n* Electron configuration(s) used:    " * sa)
         ## @warn "*** Limit to just 4 configurations for each No. of electrons. ***"                       ## delete nxx
-        if  printSummary   println(iostream, "\n* Electron configuration used in the cascade:")    end
+        if  printSummary   println(iostream, "\n* Electron configuration(s) used:    " * sa)    end
         confList = Configuration[];   nc = 0
         for  n = maxNoElectrons:-1:minNoElectrons
             nxx = 0                                                                                        ## delete nxx

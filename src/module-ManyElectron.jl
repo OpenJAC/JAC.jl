@@ -791,6 +791,58 @@ module ManyElectron
     
     
     """
+    `ManyElectron.Basis(basis::Basis, subshells::Array{Subshell,1})`  
+        ... constructor to re-expand a given basis with regard to an extended subshell list; this expansion does not change
+            the CSF basis but makes sure that the occupation and other quantum numbers are properly expanded. 
+            An error message is issued if the sequence of the subshells does not allow such a simple re-expansion.
+            A newBasis::Basis is returned.
+    """
+    function Basis(basis::Basis, subshells::Array{Subshell,1})
+        if basis.subshells == subshells   return( basis )   end
+        # Check that the subshells allow such an re-expansion
+        oldSubshells = basis.subshells
+        newSubshells = Subshell[]
+        for  subsh in subshells
+            if subsh in oldSubshells   push!(newSubshells, subsh)   end
+        end
+        if  oldSubshells != newSubshells         error("Improper subshell order: $oldSubshells != $newSubshells")        end
+        if  !basis.csfs[1].useStandardSubshells  error("Re-expansion of basis only if useStandardSubshells == true.")    end
+        
+        # Define the newCoreSubshells
+        nx = length(basis.coreSubshells);   newCoreSubshells = Subshell[];   ny = 0
+        for  ny = nx:-1:1
+            if basis.coreSubshells[1:ny] == subshells[1:ny]     newCoreSubshells = copy(subshells[1:ny]);   break   end
+        end
+        ## x@show basis.coreSubshells, newCoreSubshells
+        # Define the new CSF basis
+        newCsfs = CsfR[]
+        for  csf in basis.csfs
+            noccupation = Int64[];   nseniorityNr = Int64[];   nsubshellJ = AngularJ64[];   nsubshellX = AngularJ64[]
+            for  subsh  in  subshells
+                if  subsh in oldSubshells  
+                    # Determine the index in oldSubshells
+                    ii = 0;     for i = 1:length(oldSubshells)   if  subsh == oldSubshells[i]   ii = i; break   end     end
+                    push!(noccupation,  csf.occupation[ii])
+                    push!(nseniorityNr, csf.seniorityNr[ii])
+                    push!(nsubshellJ,   csf.subshellJ[ii]) 
+                    push!(nsubshellX,   csf.subshellX[ii])
+                else
+                    # Extend quantum numbers properly
+                    push!(noccupation,  0)
+                    push!(nseniorityNr, 0)
+                    push!(nsubshellJ,   AngularJ64(0)) 
+                    push!(nsubshellX,   nsubshellX[end])
+                end
+            end
+            newcsf = CsfR(csf.useStandardSubshells, csf.J, csf.parity, noccupation, nseniorityNr, nsubshellJ, nsubshellX, csf.subshells)
+            push!(newCsfs, newcsf)
+        end
+        
+        Basis(basis.isDefined, basis.NoElectrons, subshells, newCsfs, newCoreSubshells, basis.orbitals)
+    end
+    
+    
+    """
     `ManyElectron.Basis("from Grasp2013", cslFilename::String, rwfFilename::String)`  
         ... to construct an instance::Basis from the Grasp92/Grasp2013 .csl and .rwf files.
     """
@@ -852,15 +904,15 @@ module ManyElectron
         + mc           ::Vector{Float64}  ... Vector of mixing coefficients w.r.t basis.
     """
     struct  Level
-        J		     ::AngularJ64
-        M		     ::AngularM64
-    	  parity  	     ::Parity
-    	  index  	     ::Int64
-    	  energy  	     ::Float64
-    	  relativeOcc    ::Float64
-    	  hasStateRep    ::Bool
-    	  basis	     ::Basis
-    	  mc		     ::Vector{Float64}
+        J		       ::AngularJ64
+        M		       ::AngularM64
+        parity  	   ::Parity
+        index  	       ::Int64
+        energy  	   ::Float64
+        relativeOcc    ::Float64
+        hasStateRep    ::Bool
+        basis	       ::Basis
+        mc		       ::Vector{Float64}
     end 
     
     
@@ -878,6 +930,19 @@ module ManyElectron
     """
     function Level(J::AngularJ64, parity::Parity, energy::Float64, relativeOcc::Float64)
         Level(J, J, parity, 0, energy, relativeOcc, false, Basis(), Vector{Float64}[] )
+    end
+    
+    
+    """
+    `ManyElectron.Level(level::Level, subshells::Array{Subshell,1})`  
+        ... constructor to re-expand a given level with regard to an extended subshell list; this expansion does not change
+            the CSF basis nor the mixing coeffients but makes sure that the occupation and other quantum numbers are properly
+            expanded. An error message is issued if the sequence of the subshells does not allow such a simple re-expansion.
+            A newLevel::Level is returned.
+    """
+    function Level(level::Level, subshells::Array{Subshell,1})
+        basis = Basis(level.basis, subshells)
+        Level(level.J, level.M, level.parity, level.index, level.energy, level.relativeOcc, level.hasStateRep, basis, level.mc)
     end
     
     
