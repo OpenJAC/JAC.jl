@@ -20,14 +20,22 @@ elseif true
     # Test example for MS "Approximate atomic Green functions" in molecules (2021)
     name            = "Approximate Green function for neon-like ions."
     refConfigs      = [Configuration("1s^2 2s^2 2p^6")]
-    levelSymmetries = [LevelSymmetry(1, Basics.minus), LevelSymmetry(2, Basics.minus)]
-    greenSettings   = GreenSettings(15, [0, 1, 2, 3], 0.01, true, LevelSelection())
+    levelSymmetries = [LevelSymmetry(1, Basics.minus)]  ## , LevelSymmetry(2, Basics.minus)]
+    greenSettings   = GreenSettings( 50, [0, 1, 2], 0.01, true, LevelSelection())
     greenExpansion  = GreenExpansion(AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), 
-                                 levelSymmetries, 10, greenSettings)
+    # greenExpansion  = GreenExpansion(AtomicState.DampedSpaceCI(), Basics.DeExciteTwoElectrons(), 
+    # greenExpansion  = GreenExpansion(AtomicState.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(), 
+                                     levelSymmetries, 10, greenSettings)
     #
     rep = Representation(name, Nuclear.Model(18.), Radial.Grid(true), refConfigs, greenExpansion)
     #
-    generate(rep)
+    gExp = generate(rep, output=true)
+    gChannels = gExp["Green channels"]
+    cha1      = gChannels[1]
+    @show cha1.gMultiplet.levels[1].J, cha1.gMultiplet.levels[1].energy
+    @show cha1.gMultiplet.levels[2].J, cha1.gMultiplet.levels[2].energy
+    @show cha1.gMultiplet.levels[3].J, cha1.gMultiplet.levels[3].energy
+    Basics.displayLevels(stdout, gChannels)
     #
 end
 

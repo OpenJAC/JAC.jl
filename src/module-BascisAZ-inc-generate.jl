@@ -882,6 +882,22 @@
 
 
     """
+    `Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.DeExciteTwoElectrons, 
+                                                      nMax::Int64, lValues::Array{Int64,1})`  
+        ... generates a list of non-relativistic configurations for the given (reference) confs and the excitation scheme. 
+            All orbitals in standard order are considered up to maxShell = (n_max, l_max).
+    """
+    function Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.DeExciteTwoElectrons, 
+                                                              nMax::Int64, lValues::Array{Int64,1})
+        newConfList = Basics.generateConfigurationsForExcitationScheme(confs, Basics.DeExciteSingleElectron(), nMax, lValues)
+        newConfList = Basics.generateConfigurationsForExcitationScheme(newConfList, Basics.DeExciteSingleElectron(), nMax, lValues)
+        
+        return( newConfList )
+    end
+
+
+
+    """
     `Basics.generateConfigurationsForExcitationScheme(confs::Array{Configuration,1}, exScheme::Basics.ExciteByCapture, 
             fromShells::Array{Shell,1}, toShells::Array{Shell,1}, intoShells::Array{Shell,1}, noex::Int64)`  
         ... generates a list of non-relativistic configurations for the given (reference) confs with the excitation
@@ -1253,6 +1269,40 @@
         println(">> Generated shell list $newShellList ")
         
         return( newShellList )
+    end
+
+
+    """
+    `Basics.generateSpectrumLorentzian(xIntensities::Array{Tuple{Float64,Float64},1}, widths::Float64; 
+                                       energyShift::Float64=0., resolution::Int64=500)`  
+        ... to generate the Lorentzian spectrum for the given intensities (x-position, y-intensity) and the (constant) width.
+            A tuple of an xList::Array{Float64,1} (positions) and yList::Array{Float64,1} (valiues) is returned that can immediately
+            be plotted. The energy shift is provided already in 'current' units and is simply added to all energies.
+    """
+    function Basics.generateSpectrumLorentzian(xIntensities::Array{Tuple{Float64,Float64},1}, widths::Float64; 
+                                               energyShift::Float64=0., resolution::Int64=500)
+        function normalLorentzian(en::Float64, ga::Float64)
+            gaover2 = ga /2.0;  wa = gaover2 / (en^2 + gaover2^2);      wa = wa / pi
+        end
+        #
+        # Convert energies and determine their range 
+        wc = Defaults.convertUnits("energy: from atomic", 1.0);  xwidths = widths * wc
+        energies = Float64[];     intensities = Float64[]
+        for xInt in xIntensities    push!(energies, xInt[1]*wc + energyShift);    push!(intensities, xInt[2])   end
+        xMin = minimum(energies) - 20.0xwidths
+        xMax = maximum(energies) + 20.0xwidths
+        @show xMin, xMax
+        res = 1 / resolution;   nn = resolution * Int64( floor(xMax-xMin) + 1.0 )
+        x = zeros(nn);    y = zeros(nn)
+        for  n = 1:nn     x[n] = xMin +n*res    end
+        for  n = 1:nn 
+            for ie = 1:length(energies)
+                en = energies[ie];   int = intensities[ie]
+                y[n] = y[n] + int * normalLorentzian(x[n] - en, xwidths)
+            end
+        end
+        
+        return(x,y)
     end
 
     

@@ -7,8 +7,8 @@ module BasicsAZ
 
     using Printf,  LinearAlgebra, GaussQuadrature, JAC, ..AlphaVariation, ..AngularMomentum, ..Atomic, ..AtomicState, ..AutoIonization,
                   ..Basics, ..Bsplines, ..Cascade, ..Continuum, ..DecayYield, ..Defaults, ..Dielectronic, 
-                  ..Einstein, ..FormFactor, ..Hfs, ..HydrogenicIon,
-                  ..InteractionStrength, ..IsotopeShift, ..LandeZeeman, ..LSjj, ..ManyElectron, ..MultipolePolarizibility, ..Nuclear, 
+                  ..Einstein, ..FormFactor, ..Hfs, ..HydrogenicIon, ..InteractionStrength, ..InteractionStrengthQED, 
+                  ..IsotopeShift, ..LandeZeeman, ..LSjj, ..ManyElectron, ..MultipolePolarizibility, ..Nuclear, 
                   ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..PlasmaShift, 
                   ..Radial, ..RadialIntegrals, ..TableStrings
     

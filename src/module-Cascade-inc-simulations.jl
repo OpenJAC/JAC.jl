@@ -58,6 +58,21 @@
         return( nothing )
     end
     
+
+    """
+    `Cascade.combineEnergiesIntensities(w1::Float64, w1enInts::Array{Tuple{Float64,Float64},1}, 
+                                        w2::Float64, w2enInts::Array{Tuple{Float64,Float64},1})` 
+        ... combines w1 * w1enInts + w2 * w2enInts; a newEnergiesInts::Array{Tuple{Float64,Float64},1} is returned.
+    """
+    function combineEnergiesIntensities(w1::Float64, w1enInts::Array{Tuple{Float64,Float64},1}, 
+                                        w2::Float64, w2enInts::Array{Tuple{Float64,Float64},1})
+        newEnergiesInts = Tuple{Float64,Float64}[]
+        for  enInt in w1enInts   push!(newEnergiesInts, (enInt[1], w1*enInt[2]))    end
+        for  enInt in w2enInts   push!(newEnergiesInts, (enInt[1], w2*enInt[2]))    end
+        
+        return( newEnergiesInts )
+    end
+    
     
     """
     `Cascade.displayIonDistribution(stream::IO, sc::String, levels::Array{Cascade.Level,1})` 
@@ -234,12 +249,15 @@
         println(stream, sa)
         println(stream, "  ", TableStrings.hLine(nx))
         #
+        totalIntensity = 0.
         for  enInt in  energiesIntensities
             sa = "     "
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", enInt[1])) * "     " * enInt[2]
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", enInt[1])) * "         " * @sprintf("%.3e", enInt[2])
+            totalIntensity = totalIntensity + enInt[2]
             println(stream, sa)
         end
         println(stream, "  ", TableStrings.hLine(nx))
+        println(stream, "  Total (relative) intensity:  " * @sprintf("%.3e", totalIntensity))
 
         return( nothing )
     end
@@ -288,7 +306,6 @@
         return( nothing )
     end
     
-    
 
     """
     `Cascade.displayRelativeOccupation(stream::IO, levels::Array{Cascade.Level,1}, settings::Cascade.SimulationSettings)` 
@@ -323,6 +340,57 @@
         println(stream, "  ", TableStrings.hLine(nx))
 
         return( nothing )
+    end
+    
+
+    """
+    `Cascade.displayRelativeOccupation(stream::IO, levels::Array{Cascade.Level,1})` 
+        ... displays the (initial) relative occupation of the levels in a neat table. Nothing is returned.
+    """
+    function displayRelativeOccupation(stream::IO, levels::Array{Cascade.Level,1})
+       nx = 69
+        println(stream, " ")
+        println(stream, "* Initial level occupation:  ")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  "
+        sa = sa * TableStrings.center(14, "No. electrons"; na=2)        
+        sa = sa * TableStrings.center( 8, "Lev-No"; na=2)        
+        sa = sa * TableStrings.center( 6, "J^P"          ; na=3);               
+        sa = sa * TableStrings.center(16, "Energy " * TableStrings.inUnits("energy"); na=5)
+        sa = sa * TableStrings.center(10, "Rel. occ.";                                    na=2)
+        println(stream, sa)
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        for  (levi, level) in enumerate(levels)
+            sa = "            " * string(level.NoElectrons);                                  sa  = sa[end-10:end]
+            sb = "            " * string(levi);                                               sb  = sb[end-12:end]
+            sc = "    " * string( LevelSymmetry(level.J, level.parity) )  * "           ";    sc  = sc[1:15]
+            sd = sa * sb * sc  * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", level.energy))
+            sd = sd * "      " * @sprintf("%.5e", level.relativeOcc) 
+            println(stream, sd)
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+
+        return( nothing )
+    end
+    
+
+    """
+    `Cascade.extractOccupation(levels::Array{Cascade.Level,1}, groundConfigs::Array{Configuration,1})` 
+        ... determines the total occupation of the levels in (one of) the groundConfigs. A occ::Float64 is returned.
+    """
+    function extractOccupation(levels::Array{Cascade.Level,1}, groundConfigs::Array{Configuration,1})
+        #
+        wocc = 0.
+        for level in levels
+            ##x @show level
+            ##x conf = Basics.extractLeadingConfiguration(level)
+            ##x @show conf, groundConfigs
+            if  Basics.extractLeadingConfiguration(level) in groundConfigs   wocc = wocc + level.relativeOcc     end
+        end
+
+        return( wocc )
     end
     
 
@@ -615,38 +683,88 @@
             specifications of the cascade but can easily accessed by the keys of this dictionary.
     """
     function perform(simulation::Cascade.Simulation; output::Bool=false)
-        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        if  output    results = Dict{String, Any}()    
+            results = Base.merge( results, Dict("name:"         => simulation.name) ) 
+            results = Base.merge( results, Dict("property:"     => simulation.property) )
+        
+        else    results = nothing    end
         
         # First review and display the computation data for this simulation; this enables the reader to check the consistency of data.
         # It also returns the level tree to be used in the simulations
         if      typeof(simulation.property) == Cascade.PhotoAbsorption
+                                             # -----------------------
             levels = Cascade.reviewData(simulation, ascendingOrder=false)
             wa     = Cascade.simulatePhotoAbsorptionSpectrum(levels, simulation) 
+            #
         elseif  typeof(simulation.property) == Cascade.IonDistribution         &&   simulation.method == Cascade.ProbPropagation()
+                                             # -----------------------
             levels = Cascade.reviewData(simulation, ascendingOrder=true)
-            wa     = Cascade.simulateLevelDistribution(levels, simulation) 
+            wa     = Cascade.simulateIonDistribution(levels, simulation) 
+            #
         elseif  typeof(simulation.property) == Cascade.FinalLevelDistribution  &&   simulation.method == Cascade.ProbPropagation()
+                                             # ------------------------------
             levels = Cascade.reviewData(simulation, ascendingOrder=true)
             wa     = Cascade.simulateLevelDistribution(levels, simulation) 
+            #
         elseif  typeof(simulation.property) == Cascade.PhotonIntensities       &&   simulation.method == Cascade.ProbPropagation()
+                                             # -------------------------
             levels = Cascade.reviewData(simulation, ascendingOrder=true)
             wa     = Cascade.simulatePhotonIntensities(levels, simulation) 
+            if output   results = Base.merge( results, Dict("energies/intensities:"  => wa) )   end
+            #
         elseif  typeof(simulation.property) == Cascade.DrRateCoefficients
+                                             # --------------------------
             levels = Cascade.reviewData(simulation, ascendingOrder=true)
             wa     = Cascade.simulateDrRateCoefficients(levels, simulation) 
+            #
+        elseif  typeof(simulation.property) == Cascade.MeanRelaxationTime
+                                             # --------------------------
+            levels = Cascade.reviewData(simulation, ascendingOrder=true)
+            wa     = Cascade.simulateMeanRelaxationTime(levels, simulation) 
+            if output   results = Base.merge( results, Dict("relaxPercentage:"  => wa[1]) )   
+                        results = Base.merge( results, Dict("relaxTimes:"       => wa[2]) )   end
+            #
         else         error("stop b")
         end
 
-        if output 
-            wx = 0.   
-            results = Base.merge( results, Dict("ion distribution:" => wx) )
-            #  Write out the result to file to later continue with simulations on the cascade data
-            filename = "zzz-Cascade-simulation-" * string(now())[1:13] * ".jld"
-            println("\nWrite all results to disk; use:\n   save($filename, results) \n   using JLD " *
-                    "\n   results = load($filename)    ... to load the results back from file ... CURRENTLY NOT.")
-            ## save(filename, results)
-        end
         return( results )
+    end
+    
+
+    """
+    `Cascade.propagateOccupationInTime!(levels::Array{Cascade.Level,1}, dt::Float64)` 
+        ... propagates the occupation of the levels by dt in time. 
+    """
+    function propagateOccupationInTime!(levels::Array{Cascade.Level,1}, dt::Float64)
+        #
+        relativeOcc = zeros(length(levels));    relativeLoss = zeros(length(levels));    down = 0.0;    loss = 0.0
+        for (i, level) in  enumerate(levels)
+            # Cycle through all daugthers of level and 'shift' the part of occupation down the daugther levels
+            lossFactor = 0.;    occ = level.relativeOcc
+            for  daugther in level.daugthers
+                idx = daugther.index
+                if      daugther.process == Basics.Radiative()     line = daugther.lineSet.linesR[idx];  rate = line.photonRate.Coulomb
+                elseif  daugther.process == Basics.Auger()         line = daugther.lineSet.linesA[idx];  rate = line.totalRate
+                else    error("stop b; process = $(daugther.process) ")
+                end
+                downFactor = (1.0 - exp(-rate*dt));         
+                ##x @show downFactor, occ
+                newLevel   = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, 
+                                            line.finalLevel.basis.NoElectrons, 0., Cascade.LineIndex[], Cascade.LineIndex[] )
+                kk         = Cascade.findLevelIndex(newLevel, levels)
+                if lossFactor + downFactor < 1.0    lossFactor = lossFactor + downFactor
+                else                                downFactor = 1.0 - lossFactor;      lossFactor = 1.0
+                end
+                relativeOcc[kk] = relativeOcc[kk] + downFactor * occ;   down = down + downFactor * occ
+            end
+            ##x @show lossFactor
+            levels[i].relativeOcc = levels[i].relativeOcc - lossFactor * occ;   loss = loss + lossFactor * occ
+        end
+        for i = 1:length(levels)  levels[i].relativeOcc = levels[i].relativeOcc + relativeOcc[i]    end
+        ##x @show down, loss
+        ##x @show relativeOcc
+        
+        return( nothing )
     end
 
 
@@ -669,7 +787,9 @@
         while true
             n = n + 1;    totalProbability = 0.
             print("    $n-th round ... ")
+            relativeOcc = zeros(length(levels));    relativeLoss = zeros(length(levels))
             for  level in levels
+                ##x @show level.relativeOcc, length(level.daugthers)
                 if   level.relativeOcc > 0.   && length(level.daugthers) > 0
                     # A level with relative occupation > 0 has still 'daugther' levels; collect all excitation/decay rates for this level
                     # Here, an excitation cross section is formally treated as a rate as it is assumed that the initial levels of
@@ -682,9 +802,10 @@
                         elseif  daugther.process == Basics.Photo()         rates[i] = daugther.lineSet.linesP[idx].crossSection.Coulomb
                         else    error("stop a; process = $(daugther.process) ")
                         end
+                        ##x @show daugther.process, rates[i]
                     end
                     totalRate = sum(rates)
-                    if      totalRate <  0.    error("stop b")
+                    if      totalRate <= 0.    error("stop b")
                     elseif  totalRate == 0.    # do nothing
                     else
                         # Shift the relative occupation to the 'daugther' levels due to the different ionization and decay pathes
@@ -698,7 +819,7 @@
                             newLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, 
                                                       line.finalLevel.basis.NoElectrons, 0., Cascade.LineIndex[], Cascade.LineIndex[] )
                             kk    = Cascade.findLevelIndex(newLevel, levels)
-                            levels[kk].relativeOcc = levels[kk].relativeOcc + prob * rates[i] / totalRate
+                            relativeOcc[kk] = relativeOcc[kk] + prob * rates[i] / totalRate
                             #
                             if  collectPhotonIntensities   && daugther.process == Basics.Radiative()
                                 push!(energiesIntensities, (level.energy - levels[kk].energy, prob * rates[i] / totalRate))     end
@@ -709,6 +830,7 @@
                     end
                 end
             end
+            for i = 1:length(levels)  levels[i].relativeOcc = levels[i].relativeOcc + relativeOcc[i]    end
             println("has propagated a total of $totalProbability level occupation.")
             # Cycle once more if the relative occupation has still changed
             if  totalProbability == 0.    break    end
@@ -789,51 +911,6 @@
     
 
     """
-    `Cascade.simulateLevelDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
-        ... sorts all levels as given by data and propagates their (occupation) probability until no further changes occur. For this 
-            propagation, it runs through all levels and propagates the probabilty until no level probability changes anymore. The final 
-            level distribution is then used to derive the ion distribution or the level distribution, if appropriate. Nothing is returned.
-    """
-    function simulateLevelDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
-        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        #
-        Cascade.propagateProbability!(levels)   ##x , simulation.cascadeData)
-        #
-        if  typeof(simulation.property) == Cascade.IonDistribution   
-            Cascade.displayIonDistribution(stdout, simulation.name, levels)     
-            if  printSummary   Cascade.displayIonDistribution(iostream, simulation.name, levels)      end
-        end
-        if  typeof(simulation.property) == Cascade.FinalLevelDistribution    
-            Cascade.displayLevelDistribution(stdout, simulation.name, levels)   
-            if  printSummary   Cascade.displayLevelDistribution(iostream, simulation.name, levels)    end
-        end
-
-        return( nothing )
-    end
-    
-
-    """
-    `Cascade.simulatePhotonIntensities(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
-        ... sorts all levels as given by data and propagates their (occupation) probability until no further changes occur. For this 
-            propagation, it runs through all levels and propagates the probabilty until no level probability changes anymore. The final 
-            level distribution is then used to derive the ion distribution or the level distribution, if appropriate. Nothing is returned.
-    """
-    function simulatePhotonIntensities(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
-        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        #
-        energiesIntensities = Cascade.propagateProbability!(levels, collectPhotonIntensities=true)  
-        #
-        if  typeof(simulation.property) == Cascade.PhotonIntensities   
-            Cascade.displayIntensities(stdout, simulation.property, energiesIntensities)
-            if  printSummary   Cascade.displayIntensities(iostream, simulation.property, energiesIntensities)      end
-        else    error("stop a")
-        end
-
-        return( nothing )
-    end
-    
-
-    """
     `Cascade.simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
         ... Determines and prints the DR resonance strength and (plasma) rate coefficients for all resonance levels.
             Nothing is returned.
@@ -875,6 +952,110 @@
     
 
     """
+    `Cascade.simulateIonDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
+        ... sorts all levels as given by data and propagates their (occupation) probability until no further changes occur. For this 
+            propagation, it runs through all levels and propagates the probabilty until no level probability changes anymore. The final 
+            level distribution is then used to derive the ion distribution or the level distribution, if appropriate. Nothing is returned.
+    """
+    function simulateIonDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        # Specify and display the initial (relative) occupation
+        if length(simulation.property.initialOccupations) > 0
+                Cascade.specifyInitialOccupation!(levels, simulation.property.initialOccupations) 
+        else    Cascade.specifyInitialOccupation!(levels, simulation.property.leadingConfigs) 
+        end
+        Cascade.displayRelativeOccupation(stdout, levels)
+        #
+        Cascade.propagateProbability!(levels, collectPhotonIntensities=false)  
+        #
+        ionDist = Cascade.displayIonDistribution(stdout, simulation.name, levels)     
+        if  printSummary   Cascade.displayIonDistribution(iostream, simulation.name, levels)      end
+
+        return( ionDist )
+    end
+    
+
+    """
+    `Cascade.simulateLevelDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
+        ... sorts all levels as given by data and propagates their (occupation) probability until no further changes occur. For this 
+            propagation, it runs through all levels and propagates the probabilty until no level probability changes anymore. The final 
+            level distribution is then used to derive the ion distribution or the level distribution, if appropriate. Nothing is returned.
+    """
+    function simulateLevelDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        #
+        Cascade.propagateProbability!(levels)   ##x , simulation.cascadeData)
+        #
+        if  typeof(simulation.property) == Cascade.IonDistribution   
+            Cascade.displayIonDistribution(stdout, simulation.name, levels)     
+            if  printSummary   Cascade.displayIonDistribution(iostream, simulation.name, levels)      end
+        end
+        if  typeof(simulation.property) == Cascade.FinalLevelDistribution    
+            Cascade.displayLevelDistribution(stdout, simulation.name, levels)   
+            if  printSummary   Cascade.displayLevelDistribution(iostream, simulation.name, levels)    end
+        end
+
+        return( nothing )
+    end
+    
+
+    """
+    `Cascade.simulateMeanRelaxationTime(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
+        ... determine the mean relaxation time until 70%, 80%, 90%  of the initially occupied levels decay down to
+            the ground configurations. An relaxTimes::Array{Float64,1} is returned that contains the
+            mean relaxation times for 70%, 80%, 90%, ...
+    """
+    function simulateMeanRelaxationTime(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        relaxTimes = zeros(3);     relaxPercentage = [0.7, 0.8, 0.9];
+        time = 0.0;     dt = simulation.property.timeStep;   nx = 0
+        # Specify and display the initial (relative) occupation
+        if length(simulation.property.initialOccupations) > 0
+                Cascade.specifyInitialOccupation!(levels, simulation.property.initialOccupations) 
+        else    Cascade.specifyInitialOccupation!(levels, simulation.property.leadingConfigs) 
+        end
+        Cascade.displayRelativeOccupation(stdout, levels)
+        # Determine the smallest and largest rate for the given cascade tree
+        minRate = 1.0e100;    maxRate = 0.0
+        for  level in levels
+            for daugther in level.daugthers
+                if      daugther.process == Basics.Auger()
+                    aLine  = daugther.lineSet.linesA[daugther.index]
+                    @show aLine.totalRate
+                    if  minRate > aLine.totalRate       minRate = aLine.totalRate   end
+                    if  maxRate < aLine.totalRate       maxRate = aLine.totalRate   end
+                elseif  daugther.process == Basics.Radiative()
+                    rLine  = daugther.lineSet.linesR[daugther.index]
+                    @show rLine.photonRate.Coulomb
+                    if  minRate > rLine.photonRate.Coulomb      minRate = rLine.photonRate.Coulomb   end
+                    if  maxRate < rLine.photonRate.Coulomb      maxRate = rLine.photonRate.Coulomb   end
+                else    error("stop a")
+                end
+            end
+        end
+        println(">> Simulate cascade with time step $(dt) for minRate = $minRate and  maxRate = $maxRate; " *
+                "minRate*timeStep = $(minRate*dt) ")
+        wocc = Cascade.extractOccupation(levels, simulation.property.groundConfigs)
+        @show wocc
+        #
+        # Now propagate the occupation in time
+        goon = true
+        while  goon
+            time = time + dt;   nx = nx + 1
+            Cascade.propagateOccupationInTime!(levels, dt)
+            wocc = Cascade.extractOccupation(levels, simulation.property.groundConfigs)
+            if  rem(nx,10000) == 0     println(">>> $nx) time = $time [a.u.]   ground conf. occupation = $wocc")   end
+            for  i = 1:length(relaxPercentage) 
+                if wocc < relaxPercentage[i]    relaxTimes[i] = time    end
+            end
+            if  wocc > 0.91     goon = false    end
+        end
+
+        return( relaxPercentage, relaxTimes )
+    end
+    
+
+    """
     `Cascade.simulatePhotoAbsorptionSpectrum(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
         ... cycle through all levels and (incident photon) energies to derive the overall photo-absorption spectrum.
             All absorption cross sections are displayed in a neat table but nothing is returned otherwise.
@@ -894,6 +1075,32 @@
         if  printSummary   Cascade.displayPhotoAbsorptionSpectrum(iostream, crossSections, simulation.settings)    end
 
         return( nothing )
+    end
+    
+
+    """
+    `Cascade.simulatePhotonIntensities(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
+        ... sorts all levels as given by data and propagates their (occupation) probability until no further changes occur. For this 
+            propagation, it runs through all levels and propagates the probabilty until no level probability changes anymore. The final 
+            level distribution is then used to derive the ion distribution or the level distribution, if appropriate. Nothing is returned.
+    """
+    function simulatePhotonIntensities(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        # Specify and display the initial (relative) occupation
+        if length(simulation.property.initialOccupations) > 0
+                Cascade.specifyInitialOccupation!(levels, simulation.property.initialOccupations) 
+        else    Cascade.specifyInitialOccupation!(levels, simulation.property.leadingConfigs) 
+        end
+        Cascade.displayRelativeOccupation(stdout, levels)
+        #
+        prop = simulation.property
+        energiesInts = Cascade.propagateProbability!(levels, collectPhotonIntensities=true)  
+        energiesInts = Cascade.truncateEnergiesIntensities(energiesInts, prop.minPhotonEnergy, prop.maxPhotonEnergy)
+        #
+        Cascade.displayIntensities(stdout, simulation.property, energiesInts)
+        if  printSummary   Cascade.displayIntensities(iostream, simulation.property, energiesInts)      end
+
+        return( energiesInts )
     end
     
 
@@ -928,4 +1135,81 @@
         end
 
         return( newlevels )
+    end
+    
+
+    """
+    `Cascade.specifyInitialOccupation!(levels::Array{Cascade.Level,1}, initialOccupations::Array{Tuple{Int64,Float64},1})` 
+        ... specifies the initial occupation of levels for the given relOccupation; it modifies the occupation 
+            but returns nothing otherwise.
+    """
+    function specifyInitialOccupation!(levels::Array{Cascade.Level,1}, initialOccupations::Array{Tuple{Int64,Float64},1})
+        #
+        for  initialOcc in  initialOccupations
+            idx = initialOcc[1];   occ = initialOcc[2]
+            if   idx < 1   ||   idx > length(levels)       error("In appropriate choice of initial occupation; idx = $idx")    end
+            levels[idx].relativeOcc = occ
+        end
+
+        return( nothing )
+    end
+    
+
+    """
+    `Cascade.specifyInitialOccupation!(levels::Array{Cascade.Level,1}, leadingConfigs::Array{Configuration,1})` 
+        ... specifies the initial occupation of levels for the given leadingConfigs; it modifies the occupation 
+            but returns nothing otherwise.
+    """
+    function specifyInitialOccupation!(levels::Array{Cascade.Level,1}, leadingConfigs::Array{Configuration,1})
+        #
+        nx = 0
+        for  lev = 1:length(levels)
+            if  Basics.extractLeadingConfiguration(levels[lev])  in  leadingConfigs   nx = nx + 1    end
+        end
+        if  nx == 0     error("Inappropriate selection of leading configurations for the given set of cascade levels.")     end
+        #
+        # Now distribute the occupation
+        for  lev = 1:length(levels)
+            if  Basics.extractLeadingConfiguration(levels[lev]) in leadingConfigs   levels[lev].relativeOcc = 1/nx    end
+        end
+
+        return( nothing )
+    end
+    
+
+    """
+    `Cascade.truncateEnergiesIntensities(energiesInts::Array{Tuple{Float64,Float64},1}, minPhotonEnergy::Float64, maxPhotonEnergy::Float64)` 
+        ... reduces and truncates the energies & intensities  energiesInts; 'reduce' hereby refer to omit all intensity < 1.0e-8,
+            while 'truncate' omits all energies outside of the interval [minPhotonEnergy, miaxPhotonEnergy]. An 
+            newEnergiesInts::Array{Tuple{Float64,Float64},1} is returned.
+    """
+    function truncateEnergiesIntensities(energiesInts::Array{Tuple{Float64,Float64},1}, minPhotonEnergy::Float64, maxPhotonEnergy::Float64)
+        # Firt, truncate contributions to given energy range
+        @show minPhotonEnergy, maxPhotonEnergy
+        w1EnergiesInts = Tuple{Float64,Float64}[];   we = Float64[]
+        for  enInt in energiesInts
+            if  minPhotonEnergy <= enInt[1] <= maxPhotonEnergy    push!(w1EnergiesInts, enInt);     push!(we, enInt[1])   end
+        end
+        @show we
+        # Add contributions with equal energies contributions
+        w2EnergiesInts = Tuple{Float64,Float64}[];  wasConsidered = falses(length(we))
+        for  (en, enInt) in  enumerate(w1EnergiesInts)
+            if      wasConsidered[en]   continue
+            else    
+                wa = findall(isequal(enInt[1]), we);    tInt = 0. 
+                ##x @show en, wa
+                for  a in wa
+                    tInt = tInt + w1EnergiesInts[a][2];     wasConsidered[a] = true
+                end
+                push!(w2EnergiesInts, (enInt[1], tInt))
+            end
+        end
+        ##x @show wasConsidered
+        # Finally, omit all small contributions
+        newEnergiesInts = Tuple{Float64,Float64}[]
+        for  enInt in w2EnergiesInts
+            if enInt[2] > 1.0e-8    push!(newEnergiesInts, enInt)   end
+        end
+        
+        return( newEnergiesInts )
     end

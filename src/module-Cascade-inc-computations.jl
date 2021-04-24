@@ -392,7 +392,10 @@
                     ## nxx = nxx + 1;    if nxx > 4   break    end                                         ## delete nxx
                     nc = nc + 1
                     push!(confList, conf ) 
-                    wa = Semiempirical.estimate("binding energy", round(Int64, Z), conf);    wa = Defaults.convertUnits("energy: from atomic", wa)
+                    if  Z > 36.0    wa = 0.
+                    else            wa = Semiempirical.estimate("binding energy", round(Int64, Z), conf);    
+                                    wa = Defaults.convertUnits("energy: from atomic", wa)
+                    end
                     sb = "   av. BE = "  * string( round(-wa) ) * "  " * TableStrings.inUnits("energy")
                     sd = "      " * string(conf) * "                                "
                     println(sd[1:nd+3] * sb * "      ($nc)" )

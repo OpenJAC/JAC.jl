@@ -610,6 +610,20 @@
         
         return( nothing )
     end
+   
+
+    """
+    `   + (stream::IO, channels::Array{AtomicState.GreenChannel,1}; N::Int64=10)`  
+        ... display on stream the lowest N level energies of all levels from the (Green) channles in ascending order, and together with the 
+            configuration of most leading term in the level expansion. A neat table is printed but nothing is returned otherwise.
+    """
+    function Basics.displayLevels(stream::IO, channels::Array{AtomicState.GreenChannel,1}; N::Int64=10)
+        multiplets = Multiplet[]
+        for  channel in channels    push!(multiplets, channel.gMultiplet)   end
+        Basics.displayLevels(stream, multiplets)
+        
+        return( nothing )
+    end
 
 
     #=====
@@ -651,6 +665,67 @@
         return( csfListNew )
     end
     =====#
+    
+        
+    """
+    `Basics.extractLeadingConfiguration(level::ManyElectron.Level)`  
+        ... extract the leading configuration of the given level; a conf::Configuration is returned.
+    """
+    function Basics.extractLeadingConfiguration(level::ManyElectron.Level)
+        allConfs = Basics.extractNonrelativisticConfigurations(level.basis)
+        weights  = zeros(length(allConfs))
+        for  (ia, allConf) in  enumerate(allConfs)
+            for (ic, csf) in enumerate(level.basis.csfs)
+                if  allConf == Basics.extractNonrelativisticConfigurationFromCsfR(csf, level.basis)     
+                    weights[ia] = weights[ia] + level.mc[ic]
+                end
+            end
+        end
+        # Determine index of maximum and return the corresponding configuration
+        wx   = findmax(weights)
+        conf = allConfs[ wx[2] ]
+        
+        return( conf )
+    end
+    
+        
+    """
+    `Basics.extractLeadingConfiguration(cLevel::Cascade.Level)`  
+        ... extract the leading configuration of the given level; a conf::Configuration is returned.
+    """
+    function Basics.extractLeadingConfiguration(cLevel::Cascade.Level)
+        # First extract the right ManyElectron.Level that is to be analyzed
+        level = Level()
+        if length(cLevel.parents) > 0   
+            parent = cLevel.parents[1]
+            if      parent.process == Basics.Auger()       level = parent.lineSet.linesA[parent.index].finalLevel
+            elseif  parent.process == Basics.Radiative()   level = parent.lineSet.linesR[parent.index].finalLevel
+            else    error("stop a")
+            end
+        elseif length(cLevel.daugthers) > 0   
+            daugth = cLevel.daugthers[1]
+            if      daugth.process == Basics.Auger()       level = daugth.lineSet.linesA[daugth.index].initialLevel
+            elseif  daugth.process == Basics.Radiative()   level = daugth.lineSet.linesR[daugth.index].initialLevel
+            else    error("stop b")
+            end
+        else        error("stop c")
+        end
+    
+        allConfs = Basics.extractNonrelativisticConfigurations(level.basis)
+        weights  = zeros(length(allConfs))
+        for  (ia, allConf) in  enumerate(allConfs)
+            for (ic, csf) in enumerate(level.basis.csfs)
+                if  allConf == Basics.extractNonrelativisticConfigurationFromCsfR(csf, level.basis)     
+                    weights[ia] = weights[ia] + level.mc[ic]
+                end
+            end
+        end
+        # Determine index of maximum and return the corresponding configuration
+        wx   = findmax(weights)
+        conf = allConfs[ wx[2] ]
+        
+        return( conf )
+    end
     
         
     """

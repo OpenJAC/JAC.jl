@@ -89,8 +89,10 @@
         else
             initialBasis     = Basics.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
             initialMultiplet = Basics.performCI( initialBasis, nModel, computation.grid, computation.initialAsfSettings)
+            LSjj.expandLevelsIntoLS(initialMultiplet, computation.initialAsfSettings.jjLS)
             finalBasis       = Basics.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
             finalMultiplet   = Basics.performCI(   finalBasis, nModel, computation.grid, computation.finalAsfSettings)
+            LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
             #
             if computation.process in [PhotoExcFluor(), PhotoExcAuto(), PhotoIonFluor(), PhotoIonAuto(), ImpactExcAuto(), Dierec()]
                 intermediateBasis     = Basics.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)

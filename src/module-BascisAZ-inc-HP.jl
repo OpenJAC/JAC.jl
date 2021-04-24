@@ -539,4 +539,3 @@
     function Basics.plot(sa::String, lines::Array{PhotoEmission.Line,1}, widths::Float64)
         error("call instead:  using Plots; pyplot()    ... to access this method simply by plot(...) ... not yet implemented !")
     end
-

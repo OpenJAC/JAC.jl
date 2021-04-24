@@ -667,140 +667,23 @@ module Cascade
         ... defines an abstract and various singleton types for the different properties that can be obtained from the simulation of 
             cascade data.
 
-        + struct IonDistribution         
-            ... simulate the 'ion distribution' as it is found after all cascade processes are completed.
-        + struct FinalLevelDistribution  
-            ... simulate the 'final-level distribution' as it is found after all cascade processes are completed.
-        + struct PhotoAbsorption  
-            ... simulate the photoabsorption cross sections for a given set of photo-excitation and ionization processes.
-        + struct DecayPathes             ... determine the major 'decay pathes' of the cascade.
-        + struct ElectronIntensities     ... simulate the electron-line intensities as function of electron energy.
-        + struct PhotonIntensities       ... simulate  the photon-line intensities as function of electron energy. 
-        + struct DrRateCoefficients      ... simulate  the DR (plasma) rate coefficients for given plasma temperatures. 
-        + struct ElectronCoincidence     ... simulate electron-coincidence spectra.
+        + struct DecayPathes                ... determine the major 'decay pathes' of the cascade.
+        + struct DrRateCoefficients         ... simulate the DR (plasma) rate coefficients for given plasma temperatures. 
+        + struct ElectronCoincidence        ... simulate electron-coincidence spectra (not yet).
+        + struct FinalLevelDistribution     ... simulate the 'final-level distribution' as it is found after all cascade 
+                                                processes are completed.
+        + struct IonDistribution            ... simulate the 'ion distribution' as it is found after all cascade processes are completed.
+        + struct MeanLineWidths             ... simulate the mean line widths of a line near to a given energy (not yet). 
+        + struct MeanRelaxationTime         ... simulate the mean relaxation times in which 70%, 80%, of the occupied levels
+                                                decay to the ground configuration.        
+        + struct ElectronIntensities        ... simulate the electron-line intensities as function of electron energy.
+        + struct PhotoAbsorption            ... simulate the photoabsorption cross sections for a given set of photo-excitation 
+                                                and ionization processes.
+        + struct PhotonIntensities          ... simulate the photon-line intensities as function of electron energy. 
+        + struct TimeBinnedPhotonIntensity  ... simulate the photon-line intensities as function of electron energy 
+                                                in a given time interval (not yet).
     """
     abstract type  AbstractSimulationProperty                              end
-
-
-    """
-    `struct  Cascade.IonDistribution   <:  Cascade.AbstractSimulationProperty`  
-        ... defines a type for simulating the 'ion distribution' as it is found after all cascade processes are completed.
-
-        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
-            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
-    """  
-    struct  IonDistribution   <:  Cascade.AbstractSimulationProperty
-        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
-    end 
-
-
-    """
-    `Cascade.IonDistribution()`  ... (simple) constructor for cascade IonDistribution data.
-    """
-    function IonDistribution()
-        IonDistribution([(1, 1.0)])
-    end
-
-
-    # `Base.show(io::IO, data::Cascade.IonDistribution)`  ... prepares a proper printout of the variable data::Cascade.IonDistribution.
-    function Base.show(io::IO, dist::Cascade.IonDistribution) 
-        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
-    end
-
-
-    """
-    `struct  Cascade.FinalLevelDistribution   <:  Cascade.AbstractSimulationProperty`  
-        ... defines a type for simulating the 'final-level distribution' as it is found after all cascade processes are completed.
-
-        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
-            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
-    """  
-    struct  FinalLevelDistribution   <:  Cascade.AbstractSimulationProperty
-        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
-    end 
-
-
-    """
-    `Cascade.FinalLevelDistribution()`  ... (simple) constructor for cascade FinalLevelDistribution.
-    """
-    function FinalLevelDistribution()
-        FinalLevelDistribution([(1, 1.0)])
-    end
-
-
-    # `Base.show(io::IO, data::Cascade.FinalLevelDistribution)`  
-    #       ... prepares a proper printout of the variable data::Cascade.FinalLevelDistribution.
-    function Base.show(io::IO, dist::Cascade.FinalLevelDistribution) 
-        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
-    end
-
-
-    """
-    `struct  Cascade.ElectronIntensities   <:  Cascade.AbstractSimulationProperty`  
-        ... defines a type for simulating the electron-line intensities as function of electron energy.
-
-        + minElectronEnergy   ::Float64     ... Minimum electron energy for the simulation of electron spectra.
-        + maxElectronEnergy   ::Float64     ... Maximum electron energy for the simulation of electron spectra.
-        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
-            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
-    """  
-    struct  ElectronIntensities   <:  Cascade.AbstractSimulationProperty
-        minElectronEnergy     ::Float64
-        maxElectronEnergy     ::Float64
-        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
-    end 
-
-
-    """
-    `Cascade.ElectronIntensities()`  ... (simple) constructor for cascade ElectronIntensities.
-    """
-    function ElectronIntensities()
-        ElectronIntensities(0., 1.0e6,  [(1, 1.0)])
-    end
-
-
-    # `Base.show(io::IO, data::Cascade.ElectronIntensities)`  ... prepares a proper printout of the variable data::Cascade.ElectronIntensities.
-    function Base.show(io::IO, dist::Cascade.ElectronIntensities) 
-        println(io, "minElectronEnergy:        $(dist.minElectronEnergy)  ")
-        println(io, "maxElectronEnergy:        $(dist.maxElectronEnergy)  ")
-        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
-    end
-
-
-    """
-    `struct  Cascade.PhotonIntensities   <:  Cascade.AbstractSimulationProperty`  
-        ... defines a type for simulating the photon-line intensities as function of photon energy.
-
-        + minPhotonEnergy     ::Float64     ... Minimum photon energy for the simulation of photon spectra.
-        + maxPhotonEnergy     ::Float64     ... Maximum photon energy for the simulation of photon spectra.
-        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
-            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
-        + leadingConfigs      ::Array{Configuration,1}   
-            ... List of leading configurations whose levels are equally populated, either initially or ....
-    """  
-    struct  PhotonIntensities   <:  Cascade.AbstractSimulationProperty
-        minPhotonEnergy       ::Float64
-        maxPhotonEnergy       ::Float64
-        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
-        leadingConfigs        ::Array{Configuration,1}
-    end 
-
-
-    """
-    `Cascade.PhotonIntensities()`  ... (simple) constructor for cascade PhotonIntensities.
-    """
-    function PhotonIntensities()
-        PhotonIntensities(0., 1.0e6,  [(1, 1.0)], Configuration[])
-    end
-
-
-    # `Base.show(io::IO, dist::Cascade.PhotonIntensities)`  ... prepares a proper printout of the variable data::Cascade.PhotonIntensities.
-    function Base.show(io::IO, dist::Cascade.PhotonIntensities) 
-        println(io, "minPhotonEnergy:          $(dist.minPhotonEnergy)  ")
-        println(io, "maxPhotonEnergy:          $(dist.maxPhotonEnergy)  ")
-        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
-        println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
-    end
 
 
     """
@@ -842,13 +725,179 @@ module Cascade
         println(io, "initialOccupations:       $(dist.initialOccupations)  ")
         println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
     end
+
+
+    """
+    `struct  Cascade.FinalLevelDistribution   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the 'final-level distribution' as it is found after all cascade processes are completed.
+
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+    """  
+    struct  FinalLevelDistribution   <:  Cascade.AbstractSimulationProperty
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+    end 
+
+
+    """
+    `struct  Cascade.ElectronIntensities   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the electron-line intensities as function of electron energy.
+
+        + minElectronEnergy   ::Float64     ... Minimum electron energy for the simulation of electron spectra.
+        + maxElectronEnergy   ::Float64     ... Maximum electron energy for the simulation of electron spectra.
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+    """  
+    struct  ElectronIntensities   <:  Cascade.AbstractSimulationProperty
+        minElectronEnergy     ::Float64
+        maxElectronEnergy     ::Float64
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+    end 
+
+
+    """
+    `Cascade.ElectronIntensities()`  ... (simple) constructor for cascade ElectronIntensities.
+    """
+    function ElectronIntensities()
+        ElectronIntensities(0., 1.0e6,  [(1, 1.0)])
+    end
+
+
+    # `Base.show(io::IO, data::Cascade.ElectronIntensities)`  ... prepares a proper printout of the variable data::Cascade.ElectronIntensities.
+    function Base.show(io::IO, dist::Cascade.ElectronIntensities) 
+        println(io, "minElectronEnergy:        $(dist.minElectronEnergy)  ")
+        println(io, "maxElectronEnergy:        $(dist.maxElectronEnergy)  ")
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+    end
+
+
+    """
+    `Cascade.FinalLevelDistribution()`  ... (simple) constructor for cascade FinalLevelDistribution.
+    """
+    function FinalLevelDistribution()
+        FinalLevelDistribution([(1, 1.0)])
+    end
+
+
+    # `Base.show(io::IO, data::Cascade.FinalLevelDistribution)`  
+    #       ... prepares a proper printout of the variable data::Cascade.FinalLevelDistribution.
+    function Base.show(io::IO, dist::Cascade.FinalLevelDistribution) 
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+    end
+
+
+    """
+    `struct  Cascade.IonDistribution   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the 'ion distribution' as it is found after all cascade processes are completed.
+
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+        + leadingConfigs      ::Array{Configuration,1}   
+            ... List of leading configurations whose levels are equally populated, either initially or ....
+    """  
+    struct  IonDistribution   <:  Cascade.AbstractSimulationProperty
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+        leadingConfigs        ::Array{Configuration,1}
+    end 
+
+
+    """
+    `Cascade.IonDistribution()`  ... (simple) constructor for cascade IonDistribution data.
+    """
+    function IonDistribution()
+        IonDistribution([(1, 1.0)], Configuration[])
+    end
+
+
+    # `Base.show(io::IO, data::Cascade.IonDistribution)`  ... prepares a proper printout of the variable data::Cascade.IonDistribution.
+    function Base.show(io::IO, dist::Cascade.IonDistribution) 
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+        println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
+    end
+
+
+    """
+    `struct  Cascade.MeanRelaxationTime   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the mean relaxation times in which 70%, 80%, of the occupied levels decay to the 
+            ground configuration.
+
+        + timeStep            ::Float64     ... Time-step for following the decay of levels [a.u.]
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+        + leadingConfigs      ::Array{Configuration,1}   
+            ... List of leading configurations whose levels are equally populated, either initially or ....
+        + groundConfigs       ::Array{Configuration,1}   
+            ... List of ground configurations into which the decay is considered.
+    """  
+    struct  MeanRelaxationTime   <:  Cascade.AbstractSimulationProperty
+        timeStep              ::Float64
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+        leadingConfigs        ::Array{Configuration,1}
+        groundConfigs         ::Array{Configuration,1}
+    end 
+
+
+    """
+    `Cascade.MeanRelaxationTime()`  ... (simple) constructor for cascade MeanRelaxationTime.
+    """
+    function MeanRelaxationTime()
+        MeanRelaxationTime(10., [(1, 1.0)], Configuration[], Configuration[])
+    end
+
+
+    # `Base.show(io::IO, dist::Cascade.MeanRelaxationTime)`  ... prepares a proper printout of the variable data::Cascade.MeanRelaxationTime.
+    function Base.show(io::IO, dist::Cascade.MeanRelaxationTime) 
+        println(io, "timeStep:                 $(dist.timeStep)  ")
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+        println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
+        println(io, "groundConfigs:            $(dist.groundConfigs)  ")
+    end
+
+
+    """
+    `struct  Cascade.PhotonIntensities   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the photon-line intensities as function of photon energy.
+
+        + minPhotonEnergy     ::Float64     ... Minimum photon energy for the simulation of photon spectra.
+        + maxPhotonEnergy     ::Float64     ... Maximum photon energy for the simulation of photon spectra.
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+        + leadingConfigs      ::Array{Configuration,1}   
+            ... List of leading configurations whose levels are equally populated, either initially or ....
+    """  
+    struct  PhotonIntensities   <:  Cascade.AbstractSimulationProperty
+        minPhotonEnergy       ::Float64
+        maxPhotonEnergy       ::Float64
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+        leadingConfigs        ::Array{Configuration,1}
+    end 
+
+
+    """
+    `Cascade.PhotonIntensities()`  ... (simple) constructor for cascade PhotonIntensities.
+    """
+    function PhotonIntensities()
+        PhotonIntensities(0., 1.0e6,  [(1, 1.0)], Configuration[])
+    end
+
+
+    # `Base.show(io::IO, dist::Cascade.PhotonIntensities)`  ... prepares a proper printout of the variable data::Cascade.PhotonIntensities.
+    function Base.show(io::IO, dist::Cascade.PhotonIntensities) 
+        println(io, "minPhotonEnergy:          $(dist.minPhotonEnergy)  ")
+        println(io, "maxPhotonEnergy:          $(dist.maxPhotonEnergy)  ")
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+        println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
+    end
     
     
     struct   PhotoAbsorption              <:  AbstractSimulationProperty   end
     struct   DecayPathes                  <:  AbstractSimulationProperty   end
     struct   ElectronCoincidence          <:  AbstractSimulationProperty   end
+    struct   TimeBinnedPhotonIntensity    <:  AbstractSimulationProperty   end
+    struct   MeanLineWidth                <:  AbstractSimulationProperty   end
 
-
+    
+    
     """
     abstract type  Cascade.AbstractSimulationMethod`  
         ... defines a abstract and a list of singleton data types for the properties that can be 'simulated' from a given

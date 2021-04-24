@@ -1541,6 +1541,31 @@ module Basics
     function Base.string(propc::RAuger)             return( "Radiative Auger" )                    end
     function Base.string(propc::Rec)                return( "Rec" )                                end
 
+    
+    """
+    `abstract type Basics.AbstractSpectrumKind` 
+        ... defines an abstract and a number of singleton types for specifying different kinds of spectra that need to be displayed
+
+        + struct BarIntensities                         
+            ... to display just intensity-bars at given x-positions.  
+        + struct DiscreteLines                         
+            ... to display lines (for guiding the eyes) but which are only defined at discrete x-points.
+        + struct DiscretePoints                         
+            ... to display discrete points that are defined at discrete x-points.
+        + struct LorentzianIntensitiesConstantWidths    
+            ... to display the superposition of Lorentzians with given position and intensity but constant widths.        
+        + struct LorentzianIntensities  
+            ... to display the superposition of Lorentzians with given position, intensity and individual widths.     
+    """
+    abstract type  AbstractSpectrumKind                                          end
+    struct     BarIntensities                       <:  AbstractSpectrumKind     end
+    struct     DiscreteLines                        <:  AbstractSpectrumKind     end
+    struct     DiscretePoints                       <:  AbstractSpectrumKind     end
+    struct     LorentzianIntensitiesConstantWidths  <:  AbstractSpectrumKind     end
+    struct     LorentzianIntensities                <:  AbstractSpectrumKind     end
+    
+    export  AbstractSpectrumKind, BarIntensities, DiscreteLines, DiscretePoints, LorentzianIntensitiesConstantWidths, LorentzianIntensities
+
             
             
     # Functions/methods that are later added to the module Basics
@@ -1573,6 +1598,7 @@ module Basics
     function display                                                end
     function displayLevels                                          end
     function excludeDoubles                                         end
+    function extractLeadingConfiguration                            end
     function extractNoOpenShells                                    end
     function extractNonrelativisticShellList                        end
     function extractNonrelativisticConfigurations                   end
@@ -1593,6 +1619,8 @@ module Basics
     function generateOrbitalsForPotential                           end
     function generateOrbitalSuperposition                           end
     function generateShellList                                      end
+    function generateSpectrumLorentzian                             end
+    function generateSpectrumGaussian                               end
     function integrate                                              end
     function integrateOnGridNewtonCotes                             end
     function integrateOnGridSimpsonRule                             end
