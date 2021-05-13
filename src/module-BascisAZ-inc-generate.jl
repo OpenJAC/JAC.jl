@@ -869,10 +869,11 @@
         end
 
         nbefore     = length(confList)
-        newConfList = Configuration[]
-        for  conf  in  confList
-            if  conf in newConfList    continue;    else    push!( newConfList,  conf)    end
-        end
+        newConfList = unique(newConfList)
+        ## newConfList = Configuration[]
+        ## for  conf  in  confList
+        ##     if  conf in newConfList    continue;    else    push!( newConfList,  conf)    end
+        ## end
         nafter      = length(newConfList)
         println(">> Number of generated configurations for $exScheme is: $nbefore (before) and $nafter (after).")
 
@@ -891,7 +892,7 @@
                                                               nMax::Int64, lValues::Array{Int64,1})
         newConfList = Basics.generateConfigurationsForExcitationScheme(confs, Basics.DeExciteSingleElectron(), nMax, lValues)
         newConfList = Basics.generateConfigurationsForExcitationScheme(newConfList, Basics.DeExciteSingleElectron(), nMax, lValues)
-        
+        newConfList = unique(newConfList)
         return( newConfList )
     end
 
@@ -926,6 +927,7 @@
                 if  true  println(">> Generate $(Configuration( newShells, NoElectrons+1))")   end
             end
         end
+        newConfList = unique(newConfList)
         
         nbefore     = length(confList)
         nafter      = length(newConfList)
@@ -1289,8 +1291,8 @@
         wc = Defaults.convertUnits("energy: from atomic", 1.0);  xwidths = widths * wc
         energies = Float64[];     intensities = Float64[]
         for xInt in xIntensities    push!(energies, xInt[1]*wc + energyShift);    push!(intensities, xInt[2])   end
-        xMin = minimum(energies) - 20.0xwidths
-        xMax = maximum(energies) + 20.0xwidths
+        xMin = minimum(energies) - 3.0xwidths
+        xMax = maximum(energies) + 3.0xwidths
         @show xMin, xMax
         res = 1 / resolution;   nn = resolution * Int64( floor(xMax-xMin) + 1.0 )
         x = zeros(nn);    y = zeros(nn)

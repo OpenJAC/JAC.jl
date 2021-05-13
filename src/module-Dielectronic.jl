@@ -277,7 +277,7 @@ module Dielectronic
                                           settings::Dielectronic.Settings, hasCaptureChannels::Bool, 
                                           lastCaptureChannels::Array{AutoIonization.Channel,1})
         rateA = 0.
-        println(">> pathway: $(pathway.initialLevel.index)--$(pathway.intermediateLevel.index)--$(pathway.finalLevel.index) ...")
+        # println(">> pathway: $(pathway.initialLevel.index)--$(pathway.intermediateLevel.index)--$(pathway.finalLevel.index) ...")
         
         if hasCaptureChannels
             # Simply copy the results from previous computation of the same channels
@@ -294,14 +294,16 @@ module Dielectronic
                 newnLevel = Basics.generateLevelWithSymmetryReducedBasis(intermediateLevel, intermediateLevel.basis.subshells)
                 newiLevel = Basics.generateLevelWithSymmetryReducedBasis(initialLevel, newnLevel.basis.subshells)
                 newnLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, cChannel.kappa), newnLevel)
-                cOrbital, phase  = Continuum.generateOrbitalForLevel(pathway.electronEnergy, Subshell(101, cChannel.kappa), newiLevel, nm, grid, contSettings)
+                cOrbital, phase  = Continuum.generateOrbitalForLevel(pathway.electronEnergy, Subshell(101, cChannel.kappa), 
+                                                                     newiLevel, nm, grid, contSettings)
                 newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, cChannel.symmetry, newiLevel)
                 newcChannel = AutoIonization.Channel( cChannel.kappa, cChannel.symmetry, phase, Complex(0.))
-                amplitude   = AutoIonization.amplitude(settings.augerOperator, cChannel, newnLevel, newcLevel, grid)
+                amplitude   = AutoIonization.amplitude(settings.augerOperator, cChannel, newcLevel, newnLevel, grid)
                 rateA       = rateA + conj(amplitude) * amplitude
                 newcChannel = AutoIonization.Channel( cChannel.kappa, cChannel.symmetry, phase, amplitude)
                 push!( newcChannels, newcChannel)
             end
+            println(">> pathway: $(pathway.initialLevel.index)--$(pathway.intermediateLevel.index)--$(pathway.finalLevel.index) ...")
         end
         #
         finalLevel        = deepcopy(pathway.finalLevel)
@@ -326,8 +328,8 @@ module Dielectronic
         angularBeta     = EmProperty(-9., -9.)
         #  Factor due to UserGuide
         wa              = Defaults.convertUnits("kinetic energy to wave number: atomic units", pathway.electronEnergy)
-        wa              = pi*pi / (wa*wa) * captureRate  *  # 2 *
-                          (Basics.twice(pathway.intermediateLevel.J) + 1) / (Basics.twice(pathway.initialLevel.J) + 1)
+        wa              = pi*pi / (wa*wa) * captureRate  *  2 * # factor 2 is not really clear.
+                          ((Basics.twice(pathway.intermediateLevel.J) + 1) / (Basics.twice(pathway.initialLevel.J) + 1))
         #  Factor due to Tu et al. (Plasma Phys., 2016)
         ## wa              = pi*pi / 2. / pathway.electronEnergy * captureRate * 
         ##                   (Basics.twice(pathway.intermediateLevel.J) + 1) / (Basics.twice(pathway.initialLevel.J) + 1)

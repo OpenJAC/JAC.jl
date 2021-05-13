@@ -204,7 +204,10 @@ module Cascade
             ... Maximum excitation energy [in a.u.] with regard to the reference configurations/levels that restrict the number 
                 of excited configurations to be taken into accout. This maximum excitation energy has to be derived from the maximum 
                 temperature for which DR coefficients need to be derived and is typically set to 5x T_e,max.
-        + minPhotonEnergy        ::Float64                 
+        + electronEnergyShift   ::Float64                 
+            ... Energy shift for all resonance energies; this is realized by shifting the initial level energies by the negative amount.
+                The shift is taken in the user-defined units.
+        + minPhotonEnergy       ::Float64                 
             ... Minimum (mean) photon energy [in a.u.] in the radiative stabilization of the doubly-excited configurations; 
                 If cascade blocks are separated be less than this energy, the radiative stabilization is neglected.
         + NoExcitations         ::Int64                 
@@ -222,6 +225,7 @@ module Cascade
     struct   DielectronicCaptureScheme  <:  Cascade.AbstractCascadeScheme
         multipoles              ::Array{EmMultipole}  
         maxExcitationEnergy     ::Float64   
+        electronEnergyShift     ::Float64 
         minPhotonEnergy         ::Float64                 
         NoExcitations           ::Int64
         excitationFromShells    ::Array{Shell,1}
@@ -235,7 +239,7 @@ module Cascade
     `Cascade.DielectronicCaptureScheme()`  ... constructor for an 'default' instance of a Cascade.DielectronicCaptureScheme.
     """
     function DielectronicCaptureScheme()
-        DielectronicCaptureScheme([E1], 1.0, 0., 1, Shell[], Shell[], Shell[], Shell[] )
+        DielectronicCaptureScheme([E1], 1.0, 0., 0., 1, Shell[], Shell[], Shell[], Shell[] )
     end
 
 
@@ -251,6 +255,7 @@ module Cascade
         sa = Base.string(scheme);                print(io, sa, "\n")
         println(io, "multipoles:                 $(scheme.multipoles)  ")
         println(io, "maxExcitationEnergy:        $(scheme.maxExcitationEnergy)  ")
+        println(io, "electronEnergyShift:        $(scheme.electronEnergyShift)  ")
         println(io, "minPhotonEnergy:            $(scheme.minPhotonEnergy)  ")
         println(io, "NoExcitations:              $(scheme.NoExcitations)  ")
         println(io, "excitationFromShells:       $(scheme.excitationFromShells)  ")
@@ -691,21 +696,16 @@ module Cascade
         ... defines a type for simulating the DR plasma rate coefficients as function of the (free) electron energy and
             plasma temperature.
 
-        + minPhotonEnergy     ::Float64     ... Minimum photon energy to be included in the radiative stabilization.
-        + maxPhotonEnergy     ::Float64     ... Maximum photon energy to be included in the radiative stabilization.
+        + initialLevelNo      ::Int64       ... Level No of initial level for which rate coefficients are to be computed.
+        + electronEnergyShift ::Float64     
+            ... (total) energy shifts that apply to all resonances when alpha^(DR) is computed.
         + temperatures        ::Array{Float64,1}
             ... temperatures [K] for which the DR plasma rate coefficieints to be calculated.
-        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
-            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
-        + leadingConfigs      ::Array{Configuration,1}   
-            ... List of leading configurations whose levels are equally populated, either initially or ....
     """  
     struct  DrRateCoefficients   <:  Cascade.AbstractSimulationProperty
-        minPhotonEnergy       ::Float64
-        maxPhotonEnergy       ::Float64
+        initialLevelNo        ::Int64 
+        electronEnergyShift   ::Float64 
         temperatures          ::Array{Float64,1}
-        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
-        leadingConfigs        ::Array{Configuration,1}
     end 
 
 
@@ -713,17 +713,15 @@ module Cascade
     `Cascade.DrRateCoefficients()`  ... (simple) constructor for cascade DrRateCoefficients.
     """
     function DrRateCoefficients()
-        DrRateCoefficients(0., 1.0e6,  Float64[], [(1, 1.0)], Configuration[])
+        DrRateCoefficients(1, 0.,  Float64[])
     end
 
 
     # `Base.show(io::IO, dist::Cascade.DrRateCoefficients)`  ... prepares a proper printout of the variable data::Cascade.DrRateCoefficients.
     function Base.show(io::IO, dist::Cascade.DrRateCoefficients) 
-        println(io, "minPhotonEnergy:          $(dist.minPhotonEnergy)  ")
-        println(io, "maxPhotonEnergy:          $(dist.maxPhotonEnergy)  ")
+        println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
+        println(io, "electronEnergyShift:      $(dist.electronEnergyShift)  ")
         println(io, "temperatures:             $(dist.temperatures)  ")
-        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
-        println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
     end
 
 

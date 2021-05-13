@@ -425,7 +425,7 @@ module AutoIonization
         # Calculate all amplitudes and requested properties
         newLines = AutoIonization.Line[]
         for  (i,line)  in  enumerate(lines)
-            if  rem(i,50) == 0    println("> Auger line $i:  ... calculated ")    end
+            if  rem(i,500) == 0    println("> Auger line $i:  ... calculated ")    end
             # Calculate the individual channels with the given orbitals
             newChannels = AutoIonization.Channel[];   rate = 0.
             for channel in line.channels
@@ -524,7 +524,9 @@ module AutoIonization
         for  iLevel  in  initialMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
                 if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
-                    energy = iLevel.energy - fLevel.energy
+                    energy = iLevel.energy - fLevel.energy     - 0.08
+                    @warn("modified electron energy in AutoIonization.determineLines")
+                    if   energy < 0.01                                                             continue   end
                     if   energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
                     channels = AutoIonization.determineChannels(fLevel, iLevel, settings) 
                     push!( lines, AutoIonization.Line(iLevel, fLevel, energy, 0., 0., true, channels) )

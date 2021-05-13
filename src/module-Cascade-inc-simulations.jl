@@ -918,12 +918,15 @@
     function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         resonances = Dielectronic.Resonance[]
+        @show length(levels)
         #
         # Collect the information about all resonances
         for  level in levels
             for daugther in level.daugthers
-                if  daugther.process != Basics.Auger();      break   end
+                if  daugther.process != Basics.Auger();                            continue   end
                 aLine   = daugther.lineSet.linesA[daugther.index]
+                if  aLine.finalLevel.index != simulation.property.initialLevelNo   continue   end
+                #
                 dJ      = aLine.initialLevel.J;         iJ      = aLine.finalLevel.J
                 dM      = aLine.initialLevel.M;         iM      = aLine.finalLevel.M
                 dParity = aLine.initialLevel.parity;    iParity = aLine.finalLevel.parity
@@ -931,19 +934,29 @@
                 dEnergy = aLine.initialLevel.energy;    iEnergy = aLine.finalLevel.energy
                 captureRate = aLine.totalRate
                 augerRate   = Cascade.computeTotalAugerRate(level)
+                ##x @show level.energy, captureRate, augerRate
                 photonRate  = Cascade.computeTotalPhotonRate(level)
                 strength    = Basics.EmProperty(0.)
                 #
                 iLevel      = ManyElectron.Level(iJ, iM, iParity, iIndex, iEnergy, 0., false, ManyElectron.Basis(), Float64[])
                 dLevel      = ManyElectron.Level(dJ, dM, dParity, dIndex, dEnergy, 0., false, ManyElectron.Basis(), Float64[])
-                en          = dLevel.energy-iLevel.energy
-                newResonance = Dielectronic.Resonance(iLevel, dLevel, en, strength, captureRate, augerRate, photonRate)
+                es          = Defaults.convertUnits("energy: to atomic", simulation.property.electronEnergyShift)
+                en          = dLevel.energy-iLevel.energy + es;    if  en < 0.  continue   end
+                #
+                wa          = Defaults.convertUnits("kinetic energy to wave number: atomic units", en)
+                wa          = pi*pi / (wa*wa) * captureRate  * 2 * # factor 2 is not really clear.
+                              ((Basics.twice(dJ) + 1) / (Basics.twice(iJ) + 1)) /
+                              (augerRate + photonRate.Babushkin)
+                strength     = EmProperty(wa * photonRate.Coulomb, wa * photonRate.Babushkin)
+                newResonance = Dielectronic.Resonance(iLevel, dLevel, en, strength, 0., augerRate, photonRate)
+                ## newResonance = Dielectronic.Resonance(iLevel, dLevel, en, strength, captureRate, augerRate, photonRate)
                 push!(resonances, newResonance)
+                @show augerRate, photonRate, strength
             end
         end 
         
         # Printout the resonance strength
-        settings = Dielectronic.Settings(Dielectronic.Settings(), calcRateAlpha=true, temperatures=[1.0e3, 1.0e4])
+        settings = Dielectronic.Settings(Dielectronic.Settings(), calcRateAlpha=true, temperatures=simulation.property.temperatures)
         Dielectronic.displayResults(stdout, resonances, settings)
         Dielectronic.displayRateCoefficients(stdout, resonances, settings)
 

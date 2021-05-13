@@ -149,10 +149,16 @@
             confList = Basics.extractNonrelativisticConfigurations(mp.levels[1].basis)
             for  conf in confList   if  conf in initialConfList   nothing   else   push!(initialConfList, conf)      end      end
         end
-        captureConfList = Basics.generateConfigurationsWithElectronCapture(initialConfList, Shell[], scheme.intoShells, 0);   @show captureConfList
+        captureConfList = copy(initialConfList)
+        for nc = 1:scheme.NoCapturedElectrons
+            captureConfList = Basics.generateConfigurationsWithElectronCapture(captureConfList, Shell[], scheme.intoShells, 0);   @show nc, captureConfList
+        end
         shellList       = Basics.extractNonrelativisticShellList(multiplets)
         shellList       = Basics.merge(scheme.intoShells, scheme.decayShells);  @show shellList
-        blockConfList   = Basics.generateConfigurationsWithElectronCapture(initialConfList, Shell[], shellList, 0)
+        blockConfList   = copy(initialConfList)
+        for nc = 1:scheme.NoCapturedElectrons
+            blockConfList   = Basics.generateConfigurationsWithElectronCapture(blockConfList, Shell[], shellList, 0);   @show nc, blockConfList
+        end
         @show initialConfList
         @show blockConfList
         @warn("blockConfList does not yet support the autoionization of the high-n electrons.")

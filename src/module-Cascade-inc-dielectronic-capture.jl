@@ -55,7 +55,7 @@
                 for  initialBlock in initialList
                     if  initialBlock.NoElectrons + 1 != capturedBlock.NoElectrons   error("stop a")     end
                     # Check that at least one energy supports autoionization
-                    settings = AutoIonization.Settings(AutoIonization.Settings(), maxKappa=2)
+                    settings = AutoIonization.Settings(AutoIonization.Settings(), maxKappa=7)
                     push!( stepList, Cascade.Step(Basics.Auger(), settings, capturedBlock.confs,     initialBlock.confs,
                                                                             capturedBlock.multiplet, initialBlock.multiplet) )
                 end
@@ -66,7 +66,7 @@
                     if  decayBlock.NoElectrons != capturedBlock.NoElectrons   error("stop b")     end
                     # Check that at least one energy supports radiative stabilization
                     if   Basics.determineMeanEnergy(capturedBlock.multiplet) - Basics.determineMeanEnergy(decayBlock.multiplet) > scheme.minPhotonEnergy
-                        settings = PhotoEmission.Settings()
+                        settings = PhotoEmission.Settings(PhotoEmission.Settings(), gauges=[UseCoulomb, UseBabushkin])
                         push!( stepList, Cascade.Step(Basics.Radiative(), settings, capturedBlock.confs,     decayBlock.confs,
                                                                                     capturedBlock.multiplet, decayBlock.multiplet) )
                     end
@@ -209,6 +209,9 @@
         if  comp.initialConfigs != Configuration[]
             basis      = Basics.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
             multiplet  = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            # Shift the initial level energy by -electronEnergyShift
+            if  scheme.electronEnergyShift != 0.  
+            end
             multiplets = [Multiplet("initial states", multiplet.levels)]
         else
             multiplets = comp.initialMultiplets

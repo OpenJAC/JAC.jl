@@ -293,7 +293,11 @@
         if     pathwaySelection.active
             # Test for level indexTriples
             for ip in  pathwaySelection.indexTriples
-                if      ip[1] == 0  &&  ip[2] == nLevel.index  &&  ip[3] == fLevel.index    return( true ) 
+                if      ip[1] == 0  &&  ip[2] == 0             &&  ip[3] == 0               return( true ) 
+                elseif  ip[1] == 0  &&  ip[2] == 0             &&  ip[3] == fLevel.index    return( true ) 
+                elseif  ip[1] == 0  &&  ip[2] == nLevel.index  &&  ip[3] == 0               return( true ) 
+                elseif  ip[2] == 0  &&  ip[3] == 0             &&  ip[1] == iLevel.index    return( true ) 
+                elseif  ip[1] == 0  &&  ip[2] == nLevel.index  &&  ip[3] == fLevel.index    return( true ) 
                 elseif  ip[2] == 0  &&  ip[1] == iLevel.index  &&  ip[3] == fLevel.index    return( true ) 
                 elseif  ip[3] == 0  &&  ip[1] == iLevel.index  &&  ip[2] == nLevel.index    return( true ) 
                 elseif  ip == (iLevel.index, nLevel.index, fLevel.index)                    return( true ) 

@@ -296,7 +296,7 @@ module PhotoEmission
         # Calculate all amplitudes and requested properties
         newLines = PhotoEmission.Line[]
         for  (i,line)  in  enumerate(lines)
-            if  rem(i,50) == 0    println("> Radiative line $i:")   end
+            if  rem(i,500) == 0    println("> Radiative line $i:")   end
             newLine = PhotoEmission.computeAmplitudesProperties(line, grid, settings, printout=printout) 
             #
             # Don't add this line if it does not contribute to the decay
