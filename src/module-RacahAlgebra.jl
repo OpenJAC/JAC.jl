@@ -8,7 +8,7 @@ module  RacahAlgebra
   
     using   SymEngine,  ..AngularMomentum, ..Basics,  ..Defaults
     
-    export  Integral, Kronecker, Triangle, W3j, W6j, W9j, Ylm, Djpq, RacahExpression
+    export  ClebschGordan, Kronecker, Triangle, W3j, W6j, W9j, Ylm, Djpq, RacahExpression
 
     
     """
@@ -597,7 +597,7 @@ module  RacahAlgebra
         wja = AngMomentum(ja);    wjb = AngMomentum(jb);    wjc = AngMomentum(jc)    
         wma = AngMomentum(ma);    wmb = AngMomentum(mb);    wmc = AngMomentum(mc)    
         w3j = W3j(wja, wjb, wjc, wma, wmb, -wmc)
-        rex = RacahExpression( Basic[], Integral[], wja - wjb - wmc, 1/sqrt(2*wjc+1), Kronecker[], Triangle[], [w3j], W6j[], W9j[], Ylm[], Djpq[] )
+        rex = RacahExpression( Basic[], Integral[], wja - wjb + wmc, sqrt(2*wjc+1), Kronecker[], Triangle[], [w3j], W6j[], W9j[], Ylm[], Djpq[] )
         return( rex )
     end
 
@@ -612,7 +612,7 @@ module  RacahAlgebra
         wja = AngMomentum(ja);    wjb = AngMomentum(jb);    wjc = AngMomentum(jc)    
         wma = AngMomentum(ma);    wmb = AngMomentum(mb);    wmc = AngMomentum(mc)    
         w3j = W3j(wja, wjb, wjc, wma, wmb, -wmc)
-        rex = RacahExpression( [wma, wmb], Integral[], wja - wjb - wmc, 1/sqrt(2*wjc+1), Kronecker[], Triangle[], [w3j], W6j[], W9j[], Ylm[], Djpq[] )
+        rex = RacahExpression( [wma, wmb], Integral[], wja - wjb + wmc, sqrt(2*wjc+1), Kronecker[], Triangle[], [w3j], W6j[], W9j[], Ylm[], Djpq[] )
         return( rex )
     end
 
@@ -1076,6 +1076,33 @@ module  RacahAlgebra
 
 
     """
+    `RacahAlgebra.obsoletePhaseVars(rex::RacahExpression)`  
+        ... determines those angular-momentum variables in the phase that should be removed by proper zero-phase terms.
+            A list of vars::Array{Basic,1} is returned.
+    """
+    function obsoletePhaseVars(rex::RacahExpression)
+        vars  = Basic[]
+        sList = SymEngine.free_symbols(rex.phase)
+        for  s in sList
+            if  !(s in SymEngine.free_symbols(rex.summations))                &&
+                !(s in SymEngine.free_symbols(rex.weight))                    &&
+                RacahAlgebra.hasNoVars([s], rex.integrals)                    &&
+                RacahAlgebra.hasNoVars([s], rex.deltas)                       &&
+                RacahAlgebra.hasNoVars([s], rex.triangles)                    &&
+                RacahAlgebra.hasNoVars([s], rex.w3js)                         &&
+                RacahAlgebra.hasNoVars([s], rex.w6js)                         &&
+                RacahAlgebra.hasNoVars([s], rex.w9js)                         &&
+                RacahAlgebra.hasNoVars([s], rex.ylms)                         &&
+                RacahAlgebra.hasNoVars([s], rex.djpqs)                        
+                push!(vars, s)
+            end
+        end
+        
+        return( vars )    
+    end
+
+
+    """
     `RacahAlgebra.purifyPhase(phase::SymEngine.Basic)`  
         ... purifies the phase so that all contributions of 'a' are in the range -a, a, 2a ,3a
             An equivalent newphase::SymEngine.Basic is returned.
@@ -1313,18 +1340,94 @@ module  RacahAlgebra
                           printout::Bool=false, from::String="Unspecified source")
         # Return the phase if this is OK
         if  RacahAlgebra.hasNoVars(woIndex, phase)    return( phase )   end
-        
+        if  printout    println("$from  phase = $phase   without = $woIndex   \n    zeroTerms = $zeroTerms")   end
         # First simply try to add/substract multiples of each zeroTerm and see whether this solves the issue
-        for  zTerm  in  zeroTerms
-            for  k in [-2, -1, 1, 2]    
-                newPhase = SymEngine.expand( phase + k * zTerm )
-                if  printout
-                    println("$from:  without = $woIndex   zeroTerms = $zeroTerms   >> newPhase = $newPhase ")
+        purePhase = RacahAlgebra.purifyPhase(phase)
+        for  z1Term  in  zeroTerms
+            for  k1 in [-2, -1, 0, 1, 2]  
+                for  z2Term  in  zeroTerms
+                    for  k2 in [-2, -1, 1, 2]  
+                        newPhase = SymEngine.expand( purePhase + k1 * z1Term + k2 * z2Term )
+                        newPhase = RacahAlgebra.purifyPhase(newPhase)
+                        if  RacahAlgebra.hasNoVars(woIndex, newPhase)   
+                            if  printout    println("$from  newPhase = $newPhase  done !!!!")   end
+                            return( RacahAlgebra.purifyPhase(newPhase) )   
+                        end
+                    end
                 end
-                if  RacahAlgebra.hasNoVars(woIndex, newPhase)    return( newPhase )   end
             end
         end
         return( phase )
+    end
+
+
+    """
+    `RacahAlgebra.rewritePhase(rex::RacahExpression, zeroTerms::Array{SymEngine.Basic,1}; printout::Bool=false, from::String="Unspecified source")`  
+        ... attempts to rewrite (and shorten) the phase by adding one or several 'zero' terms so that 
+            (i) no obsolete indices appear;
+            (ii) the number of phase indices becomes smaller
+            A modified Racah expression is returned if the re-writing was successful, and nothing is changed otherwise.
+    """
+    function rewritePhase(rex::RacahExpression, zeroTerms::Array{SymEngine.Basic,1}; printout::Bool=false, from::String="Unspecified source")
+        #
+        function rewritePhaseObsolete(phase::Basic)
+            if  vars != Basic[]
+                purePhase = RacahAlgebra.purifyPhase(phase)
+                for  z1Term  in  zeroTerms
+                    # Only consider potential zeros with m quantum numbers
+                    if  length(SymEngine.free_symbols(z1Term)) > 2     continue     end
+                    for  k1 in [-2, -1, 0, 1, 2]  
+                        for  z2Term  in  zeroTerms
+                            if  length(SymEngine.free_symbols(z2Term)) > 2     continue     end
+                            for  k2 in [-2, -1, 1, 2]  
+                                newPhase = SymEngine.expand( purePhase + k1 * z1Term + k2 * z2Term )
+                                if  RacahAlgebra.hasNoVars(vars, newPhase)   
+                                    if  printout    println("$from  newPhase = $newPhase  done !!!!")   end
+                                    return( true, RacahAlgebra.purifyPhase(newPhase) )   
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            return( false, phase )
+        end
+        #
+        function rewritePhaseShorter(phase::Basic)
+            Nofs = length(SymEngine.free_symbols(phase))
+            if  Nofs > 0
+                for  z1Term  in  zeroTerms
+                    for  k1 in [-2, -1, 0, 1, 2]  
+                        for  z2Term  in  zeroTerms
+                            for  k2 in [-2, -1, 1, 2]  
+                                newPhase = SymEngine.expand( phase + k1 * z1Term + k2 * z2Term )
+                                if  length(SymEngine.free_symbols(newPhase)) < Nofs  
+                                    if  printout    println("$from  newPhase = $newPhase  now shorter !!!!")   end
+                                    return( true, RacahAlgebra.purifyPhase(newPhase) )   
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            return( false, phase )
+        end
+        #
+        hasChanged1 = false;    hasChanged2 = false
+        #
+        # (i)  Try to remove obsolete indices; simply try to add/substract multiples of each zeroTerm and see whether this solves the issue
+        # (ii) Try to shorten/reduce the number of phase variables
+        vars = RacahAlgebra.obsoletePhaseVars(rex)
+        if  printout    println("$from:::  phase = $(rex.phase)   without = $vars   \n    zeroTerms = $zeroTerms")   end
+        hasChanged1, phase = rewritePhaseObsolete(rex.phase)
+        hasChanged2, phase = rewritePhaseShorter(phase)
+        if  hasChanged1   ||    hasChanged2
+            rey = RacahExpression(rex.summations, rex.integrals, phase, rex.weight, rex.deltas, rex.triangles, rex.w3js, rex.w6js, rex.w9js, rex.ylms, rex.djpqs)
+        else 
+            rey = rex
+        end
+        #
+        return( rey )
     end
 
 
@@ -1643,7 +1746,8 @@ module  RacahAlgebra
             if  delta.i == delta.k  &&  (delta.i in newSummations  ||   -delta.i in newSummations)
                 newDeltas = Kronecker[]
                 for dt in nrex.deltas   if  dt == delta   else   push!(newDeltas, RacahAlgebra.subs(dt, delta.i, delta.k))   end    end
-                newSummations = RacahAlgebra.removeIndex([delta.i], newSummations)
+                ##x newSummations = RacahAlgebra.removeIndex([delta.i], newSummations)
+                ##x newWeight     = newWeight * (2delta.i + 1)
             elseif  delta.i == delta.k 
                 newDeltas = Kronecker[]
                 for dt in nrex.deltas   
@@ -2406,6 +2510,32 @@ module  RacahAlgebra
         end
         
         return( success )
+    end
+
+
+    """
+    `RacahAlgebra.zeroPhases(rex::RacahAlgebra.RacahExpression)`  
+        ... determines a number of phase terms that do not modify the overall phase of the given Racah expression but may
+            allow to elimate certain variables as required for sum-rule evaluation; a phaseList::Basic[] is returned.
+    """
+    function zeroPhases(rex::RacahAlgebra.RacahExpression)
+        phaseList = Basic[]
+        #
+        # Add such 'zero' phase in turn for the triangular deltas, the Wigner 3-j and 6-j symbols and, perhaps,
+        # later for others
+        for  triangle in rex.triangles    push!(phaseList, 2triangle.ja + 2triangle.jb + 2triangle.jc)        end
+        for  w3j      in rex.w3js         push!(phaseList, 2w3j.ja + 2w3j.jb + 2w3j.jc)    
+                                          push!(phaseList,  w3j.ma +  w3j.mb +  w3j.mc)     
+                                          push!(phaseList, 2w3j.ja + 2w3j.ma) 
+                                          push!(phaseList, 2w3j.jb + 2w3j.mb) 
+                                          push!(phaseList, 2w3j.jc + 2w3j.mc)                                 end
+        for  w6j      in rex.w6js         push!(phaseList, 2w6j.a  + 2w6j.b + 2w6j.c) 
+                                          push!(phaseList, 2w6j.a  + 2w6j.e + 2w6j.f) 
+                                          push!(phaseList, 2w6j.d  + 2w6j.b + 2w6j.f) 
+                                          push!(phaseList, 2w6j.d  + 2w6j.e + 2w6j.c)                         end
+        phaseList = unique(phaseList)
+        
+        return( phaseList )
     end
     
     include("module-RacahAlgebra-inc-special.jl")

@@ -524,8 +524,7 @@ module AutoIonization
         for  iLevel  in  initialMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
                 if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
-                    energy = iLevel.energy - fLevel.energy     - 0.08
-                    @warn("modified electron energy in AutoIonization.determineLines")
+                    energy = iLevel.energy - fLevel.energy
                     if   energy < 0.01                                                             continue   end
                     if   energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
                     channels = AutoIonization.determineChannels(fLevel, iLevel, settings) 

@@ -5,8 +5,8 @@
 """
 module Cascade
 
-    using Dates, JLD2, Printf, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..DecayYield, ..Dielectronic,
-                               ..ElectronCapture, ..Radial, ..ManyElectron, ..Nuclear, 
+    using Dates, JLD2, Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
+                               ..DecayYield, ..Dielectronic, ..ElectronCapture, ..Radial, ..ManyElectron, ..Nuclear, 
                                ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..Semiempirical, ..TableStrings
 
     

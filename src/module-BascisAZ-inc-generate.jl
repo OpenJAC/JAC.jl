@@ -869,15 +869,15 @@
         end
 
         nbefore     = length(confList)
-        newConfList = unique(newConfList)
+        confList = unique(confList)
         ## newConfList = Configuration[]
         ## for  conf  in  confList
         ##     if  conf in newConfList    continue;    else    push!( newConfList,  conf)    end
         ## end
-        nafter      = length(newConfList)
+        nafter      = length(confList)
         println(">> Number of generated configurations for $exScheme is: $nbefore (before) and $nafter (after).")
 
-        return( newConfList )
+        return( confList )
     end
 
 
