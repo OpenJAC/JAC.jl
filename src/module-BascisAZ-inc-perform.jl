@@ -300,7 +300,7 @@
             ##x orbitals  = Bsplines.generateOrbitalsHydrogenic(waL, nsL, waS, nsS, nuclearModel, subshellList)
             orbitals  = Bsplines.generateOrbitalsHydrogenic(wa, nuclearModel, subshellList; printout=printout)
         elseif  typeof(settings.startScfFrom) == StartFromPrevious
-            if  printout   println("Start SCF process from given list of orbitals.")    end
+            if  printout   println("Start SCF process from given list of orbitals.energy")    end
             # Taking starting orbitals for the given dictionary; non-relativistic orbitals with a proper nuclear charge
             # are adapted if no orbital is found
             orbitals = Dict{Subshell, Orbital}()
@@ -311,6 +311,7 @@
                 else
                     println("Start orbitals do not contain an Orbital for subshell $subsh ")
                     orb      = HydrogenicIon.radialOrbital(subsh, nuclearModel.Z, grid)
+                    orb      = Orbital(orb.subshell, orb.isBound, true, orb.energy, orb.P, orb.Q, orb.Pprime, orb.Qprime, Radial.Grid())
                     orbitals = Base.merge( orbitals, Dict( subsh => orb) ) 
                 end
             end
@@ -516,8 +517,11 @@
             ##x @show  sym, settings.levelSelectionCI,  Basics.selectSymmetry(sym, settings.levelSelectionCI)
             if  !Basics.selectSymmetry(sym, settings.levelSelectionCI)     continue    end
             matrix = compute("matrix: CI, J^P symmetry", sym, basis, nuclearModel, grid, settings; printout=printout)
+            #
+            ##x if  size(matrix,1) == 2   matrix[1,2] = matrix[2,1] = -1.0 * matrix[2,1]     end
             eigen  = Basics.diagonalize("matrix: LinearAlgebra", matrix)
             ##x eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
+            ##x @show matrix, eigen
             levels = Level[]
             for  ev = 1:length(eigen.values)
                 # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)

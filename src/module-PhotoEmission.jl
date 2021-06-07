@@ -192,6 +192,7 @@ module PhotoEmission
                     subshellList = fLevel.basis.subshells
                     opa = SpinAngular.OneParticleOperator(Mp.L, plus, true)
                     wa  = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList) 
+                    ##x @show wa
                     ##x     wa  = waG
                     ##x end
                     ##x if  Defaults.saRatip() && Defaults.saGG() && true
@@ -209,13 +210,15 @@ module PhotoEmission
                         MbaCheng  = InteractionStrength.MbaEmissionCheng(Mp, gauge, omega, fLevel.basis.orbitals[coeff.a],  
                                                                                            iLevel.basis.orbitals[coeff.b], grid)
                         me = me + coeff.T * MbaCheng  ## sqrt( (ja + 1)/(jb + 1) ) * ##   0.707106781186548 *
+                        ##x @show coeff.T, MbaCheng, coeff.T * MbaCheng
                     end
-                    ##x println("r = $r, s = $s, me = $me")
+                    ##x @show r, s, me
                     matrix[r,s] = me
                 end
             end 
             if  printout   printstyled("done. \n", color=:light_green)    end
             amplitude = transpose(fLevel.mc) * matrix * iLevel.mc 
+            ##x @show iLevel.index, amplitude
             #
             #
         elseif  kind == "absorption"

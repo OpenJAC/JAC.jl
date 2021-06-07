@@ -152,7 +152,7 @@ module AngularMomentum
         if  L.den != 1   error("stop a")                end 
         if  isodd( la + lb + L.num )    return( 0. )    end
         # 
-        wa = AngularMomentum.phaseFactor([jb, +1, L, -1, ja]) * sqrt( (Basics.twice(jb)+1)*(Basics.twice(JL)+1) / (4*pi*(Basics.twiceJ(ja)+1) ) ) *
+        wa = AngularMomentum.phaseFactor([jb, +1, L, -1, ja]) * sqrt( (Basics.twice(jb)+1)*(Basics.twice(L)+1) / (4*pi*(Basics.twice(ja)+1) ) ) *
              AngularMomentum.ClebschGordan(jb, AngularM64(1//2), L, AngularM64(0), ja, AngularM64(1//2)) *
              AngularMomentum.ClebschGordan(jb, mb, L, M, ja, ma) 
         return( wa )
@@ -179,6 +179,9 @@ module AngularMomentum
         ## wa = AngularMomentum.phaseFactor([ja, +1, L, -1, jb]) * 
         wa = (-1)^L.num  * sqrt( (Basics.twice(jb)+1)*(Basics.twice(L)+1) / (4*pi) ) / sqrt(Basics.twice(jb)+1) *  
              AngularMomentum.ClebschGordan(jb, AngularM64(1//2), L, AngularM64(0), ja, AngularM64(1//2)) 
+        ##x @show "ChengI", wa, ChengI(kapa, AngularM64(ja), kapb, AngularM64(jb), L, AngularM64(L))
+        ##x xa = (Basics.twice(ja) - Basics.twice(jb))/2.
+        ##x wa = wa * (-1)^xa
         return( wa )
     end
 
@@ -223,6 +226,7 @@ module AngularMomentum
         redme = ((-1)^((ja2+1)/2)) * sqrt( (ja2+1)*(jb2+1) ) * 
                 Wigner_3j(AngularJ64(ja2//2), AngularJ64(L), AngularJ64(jb2//2),  AngularM64(1//2), AngularM64(0), AngularM64(-1//2) )
 
+        ##x redme = redme * ((-1)^((jb2+ja2)/2))  ## This factor is not clear ... but help get the intercombination lines correctly
         return( redme )
     end
 

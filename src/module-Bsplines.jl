@@ -723,8 +723,11 @@ module Bsplines
             end
             if  go_on   nothing   else   break   end
         end
-
-        newBasis = Basis(true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, previousOrbitals)
+        
+        analyzedOrbitals = Basics.analyze(previousOrbitals, printout=true)
+        ##x analyzedOrbitals = previousOrbitals
+        
+        newBasis = Basis(true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, analyzedOrbitals)
         return( newBasis )
     end
 

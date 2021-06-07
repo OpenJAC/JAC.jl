@@ -73,7 +73,6 @@
                     newPhase  = rex.phase  + xaRex.phase;     
                     testPhase = newPhase + 2*ww.f 
                     testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [ww.c]; printout=false, from=">>> one W6j -- Sum(X):")
-                    ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                     newWeight = rex.weight * xaRex.weight;    testWeight = newWeight / (2*ww.c+1)
                     newW6js    = W6j[];       for (ibW6j, bW6j) in enumerate(rex.w6js)  if  iaW6j != ibW6j   push!(newW6js, bW6j)   end   end
                     #
@@ -148,10 +147,8 @@
                 #
                 specialW9j = W9j(ww.a, ww.b, ww.c, ww.d, ww.e, ww.f, ww.c, ww.f, ww.i)
                 if  ww == specialW9j
-                    ##x println("+++ rex.phase = $(rex.phase)   xaRex.phase = $(xaRex.phase)")
                     newPhase  = rex.phase  + xaRex.phase
                     testPhase = RacahAlgebra.rewritePhase(newPhase, zPhases, [ww.i]; printout=false, from=">>> one W9j -- Sum(X):")
-                    ##x testPhase = rewritePhase(newPhase, Basic[2*ww.a + 2*ww.b + 2*ww.c + 2*ww.d + 2*ww.e + 2*ww.f + 2*ww.g + 2*ww.h + 2*ww.i], [ww.i] )
                     newWeight = rex.weight * xaRex.weight;   testWeight = newWeight  / (2*ww.i+1) / (2*ww.b+1)
                     newW9js   = W9j[];    for (ibW9j, bW9j) in enumerate(rex.w9js)  if  iaW9j != ibW9j   push!(newW9js, bW9j)   end   end
                     #
@@ -219,7 +216,6 @@
         # Make sure that the sum rule could apply at all
         if  length(rex.summations) < 2  ||  length(rex.w3js) < 2     return( (false, RacahExpression()) )    end
         zPhases = RacahAlgebra.zeroPhases(rex)
-        ##x @show zPhases
         
         # Loop through all Wigner 3j symbols
         for  (ibW3j, bW3j) in enumerate(rex.w3js)
@@ -240,8 +236,6 @@
                         if  wwa == specialaW3j  &&  wwb == specialbW3j 
                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase;       
                             testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.jc, wwa.mc]; printout=true, from=">>> two W3j -- Sum(j3,m3):")
-                            ##x testPhase  = rewritePhase(newPhase, [2*wwa.ja + 2*wwa.jb + 2*wwa.jc], [wwa.jc, wwa.mc] )
-                            ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
                             newWeight  = rex.weight * xaRex.weight * xbRex.weight
                             testWeight = newWeight / (2*wwa.jc + 1) 
                             newW3js    = W3j[];       
@@ -372,8 +366,6 @@
                         if  wwa == specialaW6j  &&  wwb == specialbW6j 
                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase;      
                             testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.a, wwa.b, wwa.c]; printout=false, from=">>> two W6j -- Sum(X,Y,Z) [X,Y,Z]:")
-                            ##x testPhase  = newPhase
-                            ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
                             newWeight  = rex.weight * xaRex.weight * xbRex.weight;     
                             testWeight = newWeight / ((2*wwa.a+1)*(2*wwa.b+1)*(2*wwa.c+1)) *  ((2*wwa.d+1)*(2*wwa.e+1)*(2*wwa.f+1))
                             newW6js   = W6j[];       
@@ -404,7 +396,6 @@
                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase;     
                             testPhase  = newPhase - wwa.c - wwa.f - wwb.f
                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c]; printout=false, from=">>> two W6j -- Sum(X) (-1)^X [X] (1)^X:")
-                            ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
                             newWeight  = rex.weight * xaRex.weight * xbRex.weight;    testWeight = newWeight / (2*wwa.c+1)
                             newW6js    = W6j[];       
                             for (icW6j, cW6j) in enumerate(rex.w6js)  if  icW6j != iaW6j &&  icW6j != ibW6j   push!(newW6js, cW6j)   end   end
@@ -434,8 +425,6 @@
                         if  wwa == specialaW6j  &&  wwb == specialbW6j 
                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase;      
                             testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.c]; printout=false, from=">>> two W6j -- Sum(X) [X]:")
-                            ##x testPhase  = newPhase
-                            ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
                             newWeight  = rex.weight * xaRex.weight * xbRex.weight;     testWeight = newWeight / (2*wwa.c+1) / (2*wwa.f+1)
                             newW6js    = W6j[];       
                             for (icW6j, cW6j) in enumerate(rex.w6js)  if  icW6j != iaW6j &&  icW6j != ibW6j   push!(newW6js, cW6j)   end   end
@@ -494,7 +483,6 @@
                         if  wwa == specialaW6j  &&  wwb == specialbW9j
                             newPhase  = rex.phase  + xaRex.phase  + xbRex.phase;      
                             testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.a, wwa.b, wwa.c]; printout=false, from=">>> one W6j & one W9j -- Sum(X,Y,Z) [X,Y,Z]:")
-                            ##x testPhase  = newPhase
                             newWeight = rex.weight * xaRex.weight * xbRex.weight;     testWeight = newWeight / ( (2*wwa.a+1)*(2*wwa.b+1)*(2*wwa.c+1))
                             newW6js    = W6j[];    newW9js    = W9j[];      
                             for (icW6j, cW6j) in enumerate(rex.w6js)  if  icW6j != ibW6j   push!(newW6js, cW6j)   end   end
@@ -527,7 +515,6 @@
                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase;     
                             testPhase  = newPhase + 2*wwa.f
                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c]; printout=false, from=">>> one W6j & one W9j -- Sum(X) [X]:")
-                            ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
                             newWeight  = rex.weight * xaRex.weight * xbRex.weight;    testWeight = newWeight / (2*wwa.c+1)
                             newW6js    = W6j[];    newW9js    = W9j[];      
                             for (icW6j, cW6j) in enumerate(rex.w6js)  if  icW6j != ibW6j   push!(newW6js, cW6j)   end   end
@@ -564,12 +551,6 @@
                             R          = wwa.a + wwa.d + wwb.h + wwb.d + wwa.e + wwa.b + wwb.g + wwb.e
                             testPhase  = expand(newPhase - wwa.c + 2*wwa.f - R)
                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c]; printout=false, from=">>> one W6j & one W9j -- Sum(X) [X] (-1)^X:")
-                            ##x if      RacahAlgebra.hasNoVars([wwa.c], testPhase)
-                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c], expand(testPhase - 2*(wwb.a + wwb.b + wwb.c + wwb.d + wwb.e + wwb.f + wwb.g + wwb.h + wwb.i)) )
-                            ##x         testPhase = expand(testPhase - 2*(wwb.a + wwb.b + wwb.c + wwb.d + wwb.e + wwb.f + wwb.g + wwb.h + wwb.i))
-                            ##x else    # use testPhase as before
-                            ##x end   
-                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                             newWeight  = rex.weight * xaRex.weight * xbRex.weight;    testWeight = newWeight / (2*wwa.c+1)
                             newW6js    = W6j[];    newW9js    = W9j[];      
                             for (icW6j, cW6j) in enumerate(rex.w6js)  if  icW6j != ibW6j   push!(newW6js, cW6j)   end   end
@@ -627,13 +608,6 @@
                         if  wwa == specialaW9j  &&  wwb == specialaW9j 
                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase;     
                             testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.a, wwa.b, wwa.c]; printout=false, from=">>> two W9j -- Sum(X,Y,Z) [X,Y,Z]:")
-                            ##x testPhase  = newPhase
-                            ##x if      RacahAlgebra.hasNoVars([wwa.a, wwa.b, wwa.c], testPhase)
-                            ##x elseif  RacahAlgebra.hasNoVars([wwa.a, wwa.b, wwa.c], expand(testPhase - 2*(wwb.a + wwb.b + wwb.c + wwb.d + wwb.e + wwb.f + wwb.g + wwb.h + wwb.i)) )
-                            ##x         testPhase = expand(testPhase - 2*(wwb.a + wwb.b + wwb.c + wwb.d + wwb.e + wwb.f + wwb.g + wwb.h + wwb.i))
-                            ##x else    # use testPhase as before
-                            ##x end   
-                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                             newWeight  = rex.weight * xaRex.weight * xbRex.weight;    testWeight = newWeight / ( (2*wwa.a+1)*(2*wwa.b+1)*(2*wwa.c+1))
                             newW9js    = W9j[];       
                             for (icW9j, cW9j) in enumerate(rex.w9js)  if  icW9j != iaW9j &&  icW9j != ibW9j   push!(newW9js, cW9j)   end   end
@@ -665,13 +639,6 @@
                         if  wwa == specialaW9j  &&  wwb == specialbW9j 
                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase;    
                             testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.c, wwa.f]; printout=false, from=">>> two W9j -- Sum(X,Y) [X,Y]:")
-                            ##x testPhase  = newPhase
-                            ##x if      RacahAlgebra.hasNoVars([wwa.c, wwa.f], testPhase)
-                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwa.f], expand(testPhase - 2*(wwb.a + wwb.b + wwb.c + wwb.d + wwb.e + wwb.f + wwb.g + wwb.h + wwb.i)) )
-                            ##x         testPhase = expand(testPhase - 2*(wwb.a + wwb.b + wwb.c + wwb.d + wwb.e + wwb.f + wwb.g + wwb.h + wwb.i))
-                            ##x else    # use testPhase as before
-                            ##x end
-                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                             newWeight  = rex.weight * xaRex.weight * xbRex.weight;   
                             testWeight = newWeight / ((2*wwa.c+1)*(2*wwa.f+1)) / ((2*wwa.g+1)*(2*wwa.h+1))
                             newW9js    = W9j[];       
@@ -707,16 +674,6 @@
                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase;     
                             testPhase  = newPhase - wwa.f  + 2*wwa.b + wwa.h + wwb.h
                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c, wwa.f]; printout=false, from=">>> two W9j -- Sum(X,Y) (-1)^Y [X,Y]:")
-                            ##x if      RacahAlgebra.hasNoVars([wwa.c, wwa.f], testPhase)
-                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwa.f], expand(testPhase - 2*(wwb.a + wwb.b + wwb.c + wwb.d + wwb.e + wwb.f + wwb.g + wwb.h + wwb.i)) )
-                            ##x         testPhase = expand(testPhase - 2*(wwb.a + wwb.b + wwb.c + wwb.d + wwb.e + wwb.f + wwb.g + wwb.h + wwb.i))
-                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwa.f], expand(testPhase - 2*(wwa.a + wwa.b + wwa.c)) )
-                            ##x         testPhase = expand(testPhase - 2*(wwa.a + wwa.b + wwa.c))
-                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwa.f], expand(testPhase - 2*(wwa.c + wwa.f + wwa.i)) )
-                            ##x         testPhase = expand(testPhase - 2*(wwa.c + wwa.f + wwa.i))
-                            ##x else    # use testPhase as before
-                            ##x end  
-                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                             newWeight  = rex.weight * xaRex.weight * xbRex.weight;    testWeight = newWeight / ( (2*wwa.c+1)*(2*wwa.f+1))
                             newW9js    = W9j[];       
                             for (icW9j, cW9j) in enumerate(rex.w9js)  if  icW9j != iaW9j &&  icW9j != ibW9j   push!(newW9js, cW9j)   end   end
@@ -854,12 +811,6 @@
                                     newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase;   
                                     testPhase  = newPhase - wwa.jc - wwc.c - wwb.ma - wwa.ma  
                                     testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.jc, wwa.mc]; printout=false, from=">>> two W3j & one W6j -- Sum(l3, n3):")
-                                    ##x if      RacahAlgebra.hasNoVars([wwa.jc, wwa.mc], testPhase)
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.jc, wwa.mc], testPhase - 2*wwb.jc + wwa.ma + wwa.mb - wwb.ma - wwb.mb)
-                                    ##x         testPhase = testPhase - 2*wwb.jc + wwa.ma + wwa.mb - wwb.ma - wwb.mb
-                                    ##x else    # use testPhase as before
-                                    ##x end   
-                                    ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight;  testWeight = newWeight / (2*wwb.jc+1)
                                     newW3js    = W3j[];    newW6js    = W6j[];    m3 = Basic(:m3)
                                     for (idW3j, dW3j) in enumerate(rex.w3js)  if  idW3j != iaW3j &&  idW3j != ibW3j   push!(newW3js, dW3j)   end   end
@@ -931,7 +882,6 @@
                                     newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase
                                     testPhase  = newPhase - wwa.a - wwa.b - wwa.d - wwa.e - wwb.d - wwb.e - wwa.f - wwb.f - wwc.f - wwa.c 
                                     testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c]; printout=false, from=">>> three W6j -- Sum(X) (-1)^R+X:")
-                                    ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight;    testWeight = newWeight / (2*wwa.c + 1)
                                     newW6js    = W6j[];       
                                     for (idW6j, dW6j) in enumerate(rex.w6js)  
@@ -966,12 +916,6 @@
                                     newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase;    
                                     testPhase  = newPhase - 2*wwa.c 
                                     testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c]; printout=false, from=">>> three W6j -- Sum(X) (-1)^2X [X]:")
-                                    ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
-                                    ##x if      RacahAlgebra.hasNoVars([wwa.c], testPhase)
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.c], RacahAlgebra.purifyPhase(testPhase + 2*wwa.a + 2*wwa.b + 2*wwa.c))
-                                    ##x         testPhase = RacahAlgebra.purifyPhase(testPhase + 2*wwa.a + 2*wwa.b + 2*wwa.c)
-                                    ##x else    # use testPhase as before
-                                    ##x end   
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight;   testWeight = newWeight / (2*wwa.c + 1)
                                     newW6js    = W6j[];       
                                     for (idW6j, dW6j) in enumerate(rex.w6js)  
@@ -1009,7 +953,6 @@
                                 if  wwa == specialaW6j  &&  wwb == specialbW6j  &&  wwc == specialcW6j 
                                     newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase;    
                                     testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.c, wwb.f]; printout=false, from=">>> three W6j -- Sum(X,Y) [X,Y]:")
-                                    ##x testPhase  = newPhase
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight
                                     testWeight = newWeight / ((2*wwa.c + 1) * (2*wwb.f + 1))
                                     newW6js    = W6j[];       
@@ -1115,12 +1058,6 @@
                                     testPhase  = newPhase + 2*wwa.e 
                                     testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.b, wwb.b, wwa.c]; printout=false, 
                                                                            from=">>> two W6j & one W9j -- Sum(X,Y,Z)  [X,Y,Z]:")
-                                    ##x if      RacahAlgebra.hasNoVars([wwa.b, wwb.b, wwa.c], testPhase)
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.b, wwb.b, wwa.c], testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c - 2*wwb.d - 2*wwb.b - 2*wwb.f )
-                                    ##x         testPhase = testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c - 2*wwb.d - 2*wwb.b - 2*wwb.f
-                                    ##x else    # use testPhase as before
-                                    ##x end   
-                                    ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight
                                     testWeight = newWeight / ((2*wwa.b + 1)*(2*wwb.b + 1)*(2*wwa.c + 1)) / (2*wwa.d + 1)
                                     newW6js    = W6j[];     newW9js    = W9j[];     
@@ -1156,12 +1093,6 @@
                                     testPhase  = newPhase - wwa.c  - wwb.c + wwa.f + wwb.f + 2*wwc.a
                                     testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c, wwb.c]; printout=false, 
                                                                            from=">>> two W6j & one W9j -- Sum(X,Y) (-1)X+Y   [X,Y]:")
-                                    ##x if      RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase)
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c - 2*wwb.a - 2*wwb.b - 2*wwb.c )
-                                    ##x         testPhase = testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c - 2*wwb.a - 2*wwb.b - 2*wwb.c
-                                    ##x else    # use testPhase as before
-                                    ##x end   
-                                    ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight
                                     testWeight = newWeight / ((2*wwa.c + 1)*(2*wwb.c + 1))
                                     newW6js    = W6j[];     newW9js    = W9j[];     
@@ -1197,12 +1128,6 @@
                                     testPhase  = newPhase + 2*wwa.f
                                     testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c, wwb.c]; printout=false, 
                                                                            from=">>> two W6j & one W9j -- Sum(X,Y)  [X,Y] ... (1st):")
-                                    ##x if      RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase)
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c - 2*wwb.a - 2*wwb.b - 2*wwb.c )
-                                    ##x         testPhase = testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c - 2*wwb.a - 2*wwb.b - 2*wwb.c
-                                    ##x else    # use testPhase as before
-                                    ##x end   
-                                    ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight
                                     testWeight = newWeight / ((2*wwa.c + 1)*(2*wwb.c + 1)) / (2*wwa.f + 1)
                                     newW6js    = W6j[];     newW9js    = W9j[];     
@@ -1240,12 +1165,6 @@
                                     testPhase  = newPhase + 2*wwa.f
                                     testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c, wwb.c]; printout=false, 
                                                                            from=">>> two W6j & one W9j -- Sum(X,Y)  [X,Y] ... (2nd):")
-                                    ##x if      RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase)
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c - 2*wwb.a - 2*wwb.b - 2*wwb.c )
-                                    ##x         testPhase = testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c - 2*wwb.a - 2*wwb.b - 2*wwb.c
-                                    ##x else    # use testPhase as before
-                                    ##x end   
-                                    ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight
                                     testWeight = newWeight / ((2*wwa.c + 1)*(2*wwb.c + 1)) / (2*wwc.h + 1)
                                     newW6js    = W6j[];     newW9js    = W9j[];     
@@ -1315,14 +1234,6 @@
                                     newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase;    
                                     testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.c, wwb.c]; printout=false, 
                                                                            from=">>> one W6j & two W9j -- Sum(X,Y)  [X,Y]:")
-                                    ##x testPhase  = newPhase
-                                    ##x if      RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase)
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase - 2*wwb.a - 2*wwb.b - 2*wwb.c )
-                                    ##x         testPhase = testPhase - 2*wwb.a - 2*wwb.b - 2*wwb.c
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c - 2*wwb.a - 2*wwb.b - 2*wwb.c )
-                                    ##x         testPhase = testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c - 2*wwb.a - 2*wwb.b - 2*wwb.c
-                                    ##x else    # use testPhase as before
-                                    ##x end   
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight;
                                     testWeight = newWeight / ((2*wwb.c + 1)*(2*wwa.c + 1))
                                     newW6js    = W6j[];     newW9js    = W9j[];     
@@ -1360,13 +1271,6 @@
                                     testPhase  = newPhase - wwa.c - wwa.f + wwb.g + wwc.g
                                     testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c, wwa.f, wwa.e]; printout=false, 
                                                                            from=">>> one W6j & two W9j -- Sum(X,Y,Z) (-1)^X+Y  [X,Y,Z]:")
-                                    ##x if      RacahAlgebra.hasNoVars([wwa.c, wwa.f, wwa.e], testPhase)
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwa.f, wwa.e], testPhase - 2*wwb.c - 2*wwb.f - 2*wwb.i )
-                                    ##x         testPhase = testPhase - 2*wwb.c - 2*wwb.f - 2*wwb.i
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwa.f, wwa.e], testPhase - 2*wwc.c - 2*wwc.f - 2*wwc.i )
-                                    ##x         testPhase = testPhase - 2*wwc.c - 2*wwc.f - 2*wwc.i
-                                    ##x else    # use testPhase as before
-                                    ##x end   
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight;
                                     testWeight = newWeight / ((2*wwa.c + 1)*(2*wwa.f + 1)*(2*wwa.e + 1)) / (2*wwb.h + 1)
                                     newW6js    = W6j[];     newW9js    = W9j[];     
@@ -1474,41 +1378,12 @@
                                 if  wwa == specialaW9j  &&  wwb == specialbW9j  &&  wwc == specialcW9j
                                     newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase;   
                                     testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.f, wwa.h, wwa.i]; printout=false, from=">>> three W9j -- Sum(X,Y,Z) [X,Y,Z]:")
-                                    ##x testPhase  = newPhase
-                                    ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
-                                    ##x if      RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase)
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase - 2*wwb.c - 2*wwb.f - 2*wwb.i )
-                                    ##x         testPhase = testPhase - 2*wwb.c - 2*wwb.f - 2*wwb.i
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase - 2*wwb.c - 2*wwb.f - 2*wwb.i - 2*wwc.a - 2*wwc.b - 2*wwc.c )
-                                    ##x         testPhase = testPhase - 2*wwb.c - 2*wwb.f - 2*wwb.i - 2*wwc.a - 2*wwc.b - 2*wwc.c
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase - 2*wwb.a - 2*wwb.b - 2*wwb.c )
-                                    ##x         testPhase = testPhase - 2*wwb.a - 2*wwb.b - 2*wwb.c
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase - 2*wwb.a - 2*wwb.b - 2*wwb.c - 2*wwc.a - 2*wwc.b - 2*wwc.c )
-                                    ##x         testPhase = testPhase - 2*wwb.a - 2*wwb.b - 2*wwb.c - 2*wwc.a - 2*wwc.b - 2*wwc.c
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase - 2*wwb.a - 2*wwb.b - 2*wwb.c - 2*wwc.a - 2*wwc.b - 2*wwc.c
-                                    ##x                                                                 +   wwb.d +   wwb.e +   wwb.f)
-                                    ##x         testPhase = testPhase - 2*wwb.a - 2*wwb.b - 2*wwb.c - 2*wwc.a - 2*wwc.b - 2*wwc.c +   wwb.d +   wwb.e +   wwb.f
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase - 2*wwc.a - 2*wwc.b - 2*wwc.c )
-                                    ##x         testPhase = testPhase - 2*wwc.a - 2*wwc.b - 2*wwc.c
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase - 2*wwc.a - 2*wwc.b - 2*wwc.c )
-                                    ##x         testPhase = testPhase - 2*wwc.a - 2*wwc.b - 2*wwc.c
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase - 2*wwc.d - 2*wwc.e - 2*wwc.f )
-                                    ##x         testPhase = testPhase - 2*wwc.d - 2*wwc.e - 2*wwc.f
-                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase - 2*wwa.g - 2*wwa.h - 2*wwa.i )
-                                    ##x         testPhase = testPhase - 2*wwa.g - 2*wwa.h - 2*wwa.i
-                                    ##x else    # use testPhase as before
-                                    ##x end  
-                                    ##x @info "testPhase = $testPhase"
-                                    ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                     newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight;
                                     testWeight = newWeight / ((2*wwa.f + 1)*(2*wwa.h + 1)*(2*wwa.i + 1)) / (2*wwb.h + 1)
                                     newW9js    = W9j[];     
                                     for (idW9j, dW9j) in enumerate(rex.w9js)   if  idW9j != iaW9j &&  idW9j != ibW9j &&  idW9j != icW9j   push!(newW9js, dW9j)   end   
                                     end
                                     #
-                                    ## Here, the phase need to be purified first; it unclear how this can be done efficiently.
-                                    ## @info "sumRulesForThreeW9j: Proper set of Wnjs found; NOT ($(wwa.f), $(wwa.h), $(wwa.i))  testPhase  = $testPhase."
-                                    ## @info "                                               HAS ($(wwa.f), $(wwa.h), $(wwa.i))  summations = $(rex.summations)."
                                     if  RacahAlgebra.hasAllVars([wwa.f, wwa.h, wwa.i], rex.summations) &&  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testPhase)   &&  
                                         RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], testWeight)      &&  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.deltas)  &&  
                                         RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.triangles)   &&  RacahAlgebra.hasNoVars([wwa.f, wwa.h, wwa.i], rex.w3js)    &&  
@@ -1571,10 +1446,6 @@
                                         wwa = xaRex.w3js[1];     wwb = xbRex.w3js[1];     wwc = xcRex.w3js[1];     wwd = xdRex.w3js[1]
                                         if  xaRex.w3js[1].jc != xbRex.w3js[1].ja    continue    end
                                         if -xaRex.w3js[1].mc != xbRex.w3js[1].ma    continue    end
-                                        ##x if  xbRex.w3js[1].jc != xcRex.w3js[1].ja    continue    end
-                                        ##x if -xbRex.w3js[1].mc != xcRex.w3js[1].ma    continue    end
-                                        ##x if  xcRex.w3js[1].jc != xdRex.w3js[1].ja    continue    end
-                                        ##x if -xcRex.w3js[1].mc != xdRex.w3js[1].ma    continue    end
                                         if  xdRex.w3js[1].jc != xaRex.w3js[1].ja    continue    end
                                         if -xdRex.w3js[1].mc != xaRex.w3js[1].ma    continue    end
                                         #
@@ -1596,8 +1467,6 @@
                                             j9 = Basic(:j9);   m9 = Basic(:m9)
                                             newPhase  = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase
                                             testPhase = newPhase + wwa.ma + wwb.ma + wwc.ma + wwd.ma - wwa.ja - 2*wwa.jc - wwb.jc - wwa.jb - wwd.jb + j9 - m9  
-                                            ##x zzPhases  = copy(zPhases)
-                                            ##x push!(zzPhases, wwa.ma + wwa.mb + wwa.mc + wwc.ma + wwc.mb + wwc.mc + 2*wwa.ma + 2*wwa.ja + 2*wwc.ma + 2*wwc.ja)
                                             testPhase = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.ma, wwb.ma, wwc.ma, wwd.ma]; printout=false, 
                                                                                   from=">>> four W3j -- Sum(m1,m2,m3,m4) (-1)^-m1-m2-m3-m4:")
                                             newWeight = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    testWeight = newWeight * (2*j9 + 1)
@@ -1605,20 +1474,7 @@
                                             for (ieW3j, eW3j) in enumerate(rex.w3js)  
                                                 if  ieW3j != iaW3j &&  ieW3j != ibW3j &&  ieW3j != icW3j &&  ieW3j != idW3j   push!(newW3js, eW3j)   end   
                                             end
-                                            ##x # Modify testPhase if necessary
-                                            ##x if      RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], testPhase)
-                                            ##x     testPhase = RacahAlgebra.purifyPhase(testPhase)
-                                            ##x elseif  RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], RacahAlgebra.purifyPhase(testPhase + 
-                                            ##x                                 wwa.ma + wwa.mb + wwa.mc + wwc.ma + wwc.mb + wwc.mc + 2*wwa.ma + 2*wwa.ja + 2*wwc.ma + 2*wwc.ja ))
-                                            ##x             testPhase = testPhase + wwa.ma + wwa.mb + wwa.mc + wwc.ma + wwc.mb + wwc.mc
-                                            ##x             testPhase = testPhase + 2*wwa.ma + 2*wwa.ja + 2*wwc.ma + 2*wwc.ja
-                                            ##x             testPhase = RacahAlgebra.purifyPhase(testPhase)
-                                            ##x else
-                                            ##x      @info "sumRulesForFourW3j: Proper set of four W3js found."
-                                            ##x     ## @show wwa.ma, wwb.ma, wwc.ma, wwd.ma
-                                            ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], testPhase), testPhase
-                                            ##x     ## @show RacahAlgebra.hasAllVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], rex.summations), rex.summations
-                                            ##x end
+                                            @info "sumRulesForFourW3j: Proper set of four W3js found."
                                             #
                                             if  RacahAlgebra.hasAllVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], rex.summations)   &&  
                                                 RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma], testPhase)         &&  
@@ -1706,7 +1562,6 @@
                                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase
                                             testPhase  = expand(newPhase + wwa.c - wwa.d - wwa.e - wwc.d - wwc.e - wwa.f - wwb.f - wwc.f - wwd.f + 2*Y)
                                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c]; printout=true, from=">>> four W6j -- Sum(X) [X]  (-1)^R-X:")
-                                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
                                             testWeight = newWeight / (2*wwa.c + 1) * (2*Y + 1)
                                             newW6js    = W6j[];    newW9js    = W9j[];    
@@ -1744,8 +1599,6 @@
                                         if  wwa == specialaW6j  &&  wwb == specialbW6j  &&  wwc == specialcW6j  &&  wwd == specialdW6j 
                                             X = Basic(:X)
                                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase;     
-                                            ##x testPhase  = newPhase
-                                            ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
                                             testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.c]; printout=false, from=">>> four W6j -- Sum(X) [X]:")
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    testWeight = newWeight / (2*wwa.c + 1)
                                             newW6js    = W6j[];    newW9js    = W9j[];    
@@ -1786,7 +1639,6 @@
                                             testPhase  = expand(newPhase - wwa.e - wwa.f - wwa.d - wwa.a - wwa.b - wwa.c - wwc.c - wwb.b - wwb.c - wwb.d)
                                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.e, wwa.f, wwa.d]; printout=false, 
                                                                                    from=">>> four W6j -- Sum(X,Y,Z) [X,Y,Z]  (-1)^X+Y+Z:")
-                                            ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
                                             testWeight = newWeight / ((2*wwa.e + 1)*(2*wwa.f + 1)*(2*wwa.d + 1)) * (2*wwb.d + 1)
                                             newW6js    = W6j[]  
@@ -1828,7 +1680,6 @@
                                             testPhase  = newPhase + 2*wwa.c + 2*wwb.b
                                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.e, wwa.f]; printout=false, 
                                                                                    from=">>> four W6j -- Sum(X,Y) [X,Y]:")
-                                            ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
                                             testWeight = newWeight / ((2*wwa.e + 1)*(2*wwa.f + 1))
                                             newW6js    = W6j[];    
@@ -1869,7 +1720,6 @@
                                             testPhase  = newPhase - wwa.e - wwa.f  - wwa.a + wwa.b + wwa.c - wwa.d + wwb.b + wwb.c - wwb.d - wwc.c
                                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.e, wwa.f]; printout=false, 
                                                                                    from=">>> four W6j -- Sum(X,Y) [X,Y]  (-1)^X+Y:")
-                                            ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
                                             testWeight = newWeight / ((2*wwa.e + 1)*(2*wwa.f + 1)) / (2*wwc.c + 1)
                                             newW6js    = W6j[];    
@@ -1973,12 +1823,6 @@
                                             testPhase  = newPhase - wwa.b + wwb.a  - wwb.b + wwc.b + wwb.f - wwa.d - wwd.g + wwa.c
                                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.a, wwa.b]; printout=false, 
                                                                                    from=">>> three W6j & one W9j -- Sum(X,Y) [X,Y]  (-1)^Y:")
-                                            ##x if      RacahAlgebra.hasNoVars([wwa.a, wwa.b], testPhase)
-                                            ##x elseif  RacahAlgebra.hasNoVars([wwa.a, wwa.b], testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c )
-                                            ##x         testPhase = testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c
-                                            ##x else    # use testPhase as before
-                                            ##x end   
-                                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
                                             testWeight = newWeight / ((2*wwa.a + 1)*(2*wwa.b + 1))
                                             newW6js    = W6j[];    newW9js    = W9j[];    
@@ -2065,14 +1909,6 @@
                                             testPhase  = newPhase - wwb.f + 2*wwd.h  + wwc.d - wwa.b + wwb.c + wwd.g
                                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c, wwb.b, wwa.e]; printout=false, 
                                                                                    from=">>> two W6j & two W9j -- Sum(X,Y,Z) [X,Y,Z]  (-1)^Z:")
-                                            ##x if      RacahAlgebra.hasNoVars([wwa.c, wwb.b, wwa.e], testPhase)
-                                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.b, wwa.e], testPhase - 2*wwb.a - 2*wwb.b - 2*wwb.c )
-                                            ##x         testPhase = testPhase - 2*wwb.a - 2*wwb.b - 2*wwb.c
-                                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.b, wwa.e], testPhase - 2*wwd.c - 2*wwd.f - 2*wwd.i )
-                                            ##x         testPhase = testPhase - 2*wwd.c - 2*wwd.f - 2*wwd.i
-                                            ##x else    # use testPhase as before
-                                            ##x end   
-                                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
                                             testWeight = newWeight / ((2*wwa.c + 1)*(2*wwb.b + 1)*(2*wwa.e + 1)) / (2*wwd.h + 1)
                                             newW6js    = W6j[];    newW9js    = W9j[]
@@ -2119,14 +1955,6 @@
                                             testPhase  = newPhase - 2*wwb.c + wwc.i  - wwa.b + wwb.a - wwa.e + wwb.d
                                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c, wwb.c, wwc.i]; printout=false, 
                                                                                    from=">>> two W6j & two W9j -- Sum(X,Y,Z) [X,Y,Z]  (-1)^2Y-Z:")
-                                            ##x testPhase  = RacahAlgebra.purifyPhase(testPhase)
-                                            ##x if      RacahAlgebra.hasNoVars([wwa.c, wwb.c, wwc.i], testPhase)
-                                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.c, wwc.i], testPhase - 2*wwc.c - 2*wwc.f - 2*wwc.i )
-                                            ##x         testPhase = testPhase - 2*wwc.c - 2*wwc.f - 2*wwc.i 
-                                            ##x else    # use testPhase as before
-                                            ##x end 
-                                            ##x @info "testPhase = $testPhase"
-                                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
                                             testWeight = newWeight / ((2*wwa.c + 1)*(2*wwb.c + 1)*(2*wwc.i + 1)) / (2*wwa.f + 1)
                                             newW6js    = W6j[];    newW9js    = W9j[]
@@ -2171,18 +1999,6 @@
                                             testPhase  = newPhase - wwb.c + 2*wwd.f  + wwa.a + wwa.b + wwc.e + wwa.f + wwb.b + wwc.g - wwb.d
                                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c, wwb.c, wwc.h]; printout=false, 
                                                                                    from=">>> two W6j & two W9j -- Sum(X,Y,Z) [X,Y,Z]  (-1)^Y:")
-                                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
-                                            ##x if      RacahAlgebra.hasNoVars([wwa.c, wwb.c, wwc.h], testPhase)
-                                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.c, wwc.h], testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c )
-                                            ##x         testPhase = testPhase - 2*wwa.a - 2*wwa.b - 2*wwa.c 
-                                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.c, wwc.h], testPhase - 2*wwc.c - 2*wwc.h - 2*wwc.i )
-                                            ##x         testPhase = testPhase - 2*wwc.c - 2*wwc.h - 2*wwc.i 
-                                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.c, wwc.h], testPhase - 2*wwc.g - 2*wwc.h - 2*wwc.i )
-                                            ##x         testPhase = testPhase - 2*wwc.g - 2*wwc.h - 2*wwc.i 
-                                            ##x else    # use testPhase as before
-                                            ##x end   
-                                            ##x @info "testPhase = $testPhase"
-                                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
                                             testWeight = newWeight / ((2*wwa.c + 1)*(2*wwb.c + 1)*(2*wwc.h + 1)) / (2*wwa.f + 1)
                                             newW6js    = W6j[];    newW9js    = W9j[]
@@ -2230,12 +2046,6 @@
                                             testPhase  = newPhase - wwa.c - wwb.c + wwa.f  + wwb.f + wwa.a + wwb.a + wwc.g - wwc.i - wwb.d - wwd.h + Z
                                             testPhase  = RacahAlgebra.rewritePhase(testPhase, zPhases, [wwa.c, wwb.c]; printout=false, 
                                                                                    from=">>> two W6j & two W9j -- Sum(X,Y) [X,Y]  (-1)^X+Y:")
-                                            ##x if      RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase)
-                                            ##x elseif  RacahAlgebra.hasNoVars([wwa.c, wwb.c], testPhase - 2*wwc.c - 2*wwc.f - 2*wwc.i )
-                                            ##x         testPhase = testPhase - 2*wwc.c - 2*wwc.f - 2*wwc.i 
-                                            ##x else    # use testPhase as before
-                                            ##x end   
-                                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
                                             testWeight = newWeight / ((2*wwa.c + 1)*(2*wwb.c + 1)) * (2*Z + 1)
                                             newW6js    = W6j[];    newW9js    = W9j[]
@@ -2316,13 +2126,6 @@
                                             newPhase   = rex.phase  + xaRex.phase  + xbRex.phase  + xcRex.phase  + xdRex.phase;     
                                             testPhase  = RacahAlgebra.rewritePhase(newPhase, zPhases, [wwa.d, wwa.e, wwa.f]; printout=false, 
                                                                                    from=">>> one W6j & three W9j -- Sum(X,Y,Z) [X,Y,Z]:")
-                                            ##x testPhase  = newPhase
-                                            ##x if      RacahAlgebra.hasNoVars([wwa.d, wwa.e, wwa.f], testPhase)
-                                            ##x elseif  RacahAlgebra.hasNoVars([wwa.d, wwa.e, wwa.f], testPhase - 2*wwa.d - 2*wwa.e - 2*wwa.f )
-                                            ##x         testPhase = testPhase - 2*wwa.d - 2*wwa.e - 2*wwa.f 
-                                            ##x else    # use testPhase as before
-                                            ##x end   
-                                            ##x testPhase = RacahAlgebra.purifyPhase(testPhase)
                                             newWeight  = rex.weight * xaRex.weight * xbRex.weight * xcRex.weight * xdRex.weight;    
                                             testWeight = newWeight / ((2*wwa.d + 1)*(2*wwa.e + 1)*(2*wwa.f + 1))
                                             newW6js    = W6j[];    newW9js    = W9j[]
@@ -2403,12 +2206,6 @@
                                                 wwa = xaRex.w3js[1];   wwb = xbRex.w3js[1];   wwc = xcRex.w3js[1];   wwd = xdRex.w3js[1];   wwe = xeRex.w3js[1]
                                                 if  xaRex.w3js[1].jc != xbRex.w3js[1].ja    continue    end
                                                 if -xaRex.w3js[1].mc != xbRex.w3js[1].ma    continue    end
-                                                ##x if  xbRex.w3js[1].jc != xcRex.w3js[1].ja    continue    end
-                                                ##x if -xbRex.w3js[1].mc != xcRex.w3js[1].ma    continue    end
-                                                ##x if  xcRex.w3js[1].jc != xdRex.w3js[1].ja    continue    end
-                                                ##x if -xcRex.w3js[1].mc != xdRex.w3js[1].ma    continue    end
-                                                ##x if  xdRex.w3js[1].jc != xeRex.w3js[1].ja    continue    end
-                                                ##x if -xdRex.w3js[1].mc != xeRex.w3js[1].ma    continue    end
                                                 if  xeRex.w3js[1].jc != xaRex.w3js[1].ja    continue    end
                                                 if -xeRex.w3js[1].mc != xaRex.w3js[1].ma    continue    end
                                                 #
@@ -2444,25 +2241,6 @@
                                                         if  ifW3j != iaW3j &&  ifW3j != ibW3j &&  ifW3j != icW3j &&  ifW3j != idW3j &&  ifW3j != ieW3j   
                                                             push!(newW3js, fW3j)   end   
                                                     end
-                                                    #
-                                                    ##x # Modify testPhase if necessary
-                                                    ##x if  RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], testPhase) 
-                                                    ##x elseif  RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], 
-                                                    ##x                 RacahAlgebra.purifyPhase(testPhase + 2*wwa.ja + 2*wwa.ma + 2*wwd.ja + 2*wwd.ma + 2*wwe.ja + 2*wwe.ma) ) 
-                                                    ##x     testPhase = RacahAlgebra.purifyPhase(testPhase + 2*wwa.ja + 2*wwa.ma + 2*wwd.ja + 2*wwd.ma + 2*wwe.ja + 2*wwe.ma)
-                                                    ##x     println("aaa")
-                                                    ##x else
-                                                    ##x     @info "sumRulesForFiveW3j: Proper set of five W3js found."
-                                                    ##x     ## @show wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma
-                                                    ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwd.ma], testPhase), testPhase
-                                                    ##x     ## @show RacahAlgebra.hasAllVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.summations), rex.summations
-                                                    ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], testWeight), testWeight 
-                                                    ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.deltas), rex.deltas  
-                                                    ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.triangles), rex.triangles
-                                                    ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], newW3js), newW3js 
-                                                    ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.w6js), rex.w6js
-                                                    ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.w9js), rex.w9js
-                                                    ##x end
                                                     #
                                                     if  RacahAlgebra.hasAllVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], rex.summations)   &&  
                                                         RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma], testPhase)         &&  
@@ -2592,25 +2370,7 @@
                                                                     push!(newW3js, gW3j)   end   
                                                             end
                                                             #
-                                                            # Modify testPhase if necessary
-                                                            ##x if  RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], testPhase) 
-                                                            ##x ## elseif  RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], 
-                                                            ##x ##         RacahAlgebra.purifyPhase(testPhase + ...) ) 
-                                                            ##x ##  testPhase = RacahAlgebra.purifyPhase(testPhase + ...)
-                                                            ##x ##  println("aaa")
-                                                            ##x else
-                                                            ##x     @info "sumRulesForSixW3j: Proper set of six W3js found."
-                                                            ##x     ## @show wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma
-                                                            ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], testPhase), testPhase
-                                                            ##x     ## @show RacahAlgebra.hasAllVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.summations), rex.summations
-                                                            ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], testWeight), testWeight 
-                                                            ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.deltas), rex.deltas  
-                                                            ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.triangles), rex.triangles
-                                                            ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], newW3js), newW3js 
-                                                            ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.w6js), rex.w6js
-                                                            ##x     ## @show RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.w9js), rex.w9js
-                                                            ##x end
-                                                            #
+                                                            @info "sumRulesForSixW3j: Proper set of six W3js found."
                                                             if  RacahAlgebra.hasAllVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], rex.summations)   &&  
                                                                 RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], testPhase)         &&  
                                                                 RacahAlgebra.hasNoVars([wwa.ma, wwb.ma, wwc.ma, wwd.ma, wwe.ma, wwf.ma], testWeight)        &&  

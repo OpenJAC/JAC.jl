@@ -129,7 +129,8 @@ module InteractionStrength
         wa = conj(wa)
         return( wa )
     end
-
+    
+    
 
     """
     `InteractionStrength.MbaEmissionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`
@@ -145,6 +146,7 @@ module InteractionStrength
             wa     = -1.0im / sqrt(mp.L*(mp.L+1)) * ChengI * (kapb + kapa) * RadialIntegrals.GrantILplus(mp.L, q, a, b, grid::Radial.Grid)
         #
         elseif   gauge == Basics.Babushkin
+        ##x elseif   gauge in [Basics.Babushkin, Basics.Coulomb ]
             ChengI = AngularMomentum.ChengI(kapa, kapb, AngularJ64(mp.L))
             wr     = (mp.L+1) * RadialIntegrals.GrantJL(mp.L, q, a, b, grid::Radial.Grid)
             wr     = wr +  (kapb-kapa-mp.L-1) * RadialIntegrals.GrantIL0(mp.L+1, q, a, b, grid::Radial.Grid)
@@ -724,6 +726,8 @@ module InteractionStrength
             xc = AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
             if   rem(L,2) == 1    xc = - xc    end 
             XL_Coulomb = xc * RadialIntegrals.SlaterRk_2dim(L, a, b, c, d, grid)
+            
+            ##x XL_Coulomb = XL_Coulomb* (-1)^( (ja2+jb2+jc2+jd2)/2 )
         end
         
         return( XL_Coulomb )

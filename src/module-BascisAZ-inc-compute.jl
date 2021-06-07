@@ -97,7 +97,6 @@
             ## meanPot = Basics.add(potential, meanPot)   
         end   
 
-        
         matrix = zeros(Float64, n, n)
         keep = true
         InteractionStrength.XL_Coulomb_reset_storage(keep, printout=false)
@@ -129,6 +128,8 @@
                 for  coeff in wa[1]
                     jj = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                     me = me + coeff.T * sqrt( jj + 1) * RadialIntegrals.GrantIab(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid, potential)
+                    ##x @show " "
+                    ##x @show r, s, coeff.a, coeff.b, coeff.T, me
                     if  settings.qedModel != NoneQed()  
                         me = me + InteractionStrengthQED.qedLocal(basis.orbitals[coeff.a], basis.orbitals[coeff.b], nuclearModel, 
                                                                   settings.qedModel, meanPot, grid)  
@@ -139,6 +140,8 @@
                     if  settings.eeInteractionCI in [CoulombInteraction(), CoulombBreit()]
                         me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                      basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)
+                        ##x @show " "
+                        ##x @show r, s, coeff.a, coeff.b, coeff.c, coeff.d, coeff.V, me
                     elseif  false
                         xl1 = InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                                 basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=false)
@@ -164,6 +167,7 @@
                                                                                       basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)
                     end
                 end
+                ##x if  r != s  me = -me   end  ### This phase improves a number of intercombination rates ... but often destroys the energies.
                 matrix[r,s] = me
             end
         end 

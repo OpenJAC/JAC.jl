@@ -95,6 +95,35 @@
     end
 
 
+
+    """
+    `Basics.analyze(orbitals::Dict{Subshell, Orbital}; printout::Bool=false)`  
+        ... to anaylze the phase of the orbitals and to ensure that all orbitals start `positve' near r --> 0; 
+            a set of newOrbitals::Dict{Subshell, Orbital} is returned.
+    """
+    function Basics.analyze(orbitals::Dict{Subshell, Orbital}; printout::Bool=false)
+        newOrbitals = Dict{Subshell, Orbital}();    mOrbital = Orbital(Subshell("1s_1/2"), -1.0)
+        # Analyze and modify the orbital if necessary
+        for (k,v) in orbitals
+            found = false
+            for  P in v.P   
+                if      abs(P) > 1.0e-5  &&  abs(P) == P
+                    mOrbital = v;   found = true;   break
+                elseif  abs(P) > 1.0e-5  &&  abs(P) == -P
+                    mOrbital = Orbital( v.subshell, v.isBound, v.useStandardGrid, v.energy, -1.0 .* v.P,  -1.0 .* v.Q,  
+                                        -1.0 .* v.Pprime,  -1.0 .* v.Qprime, v.grid)
+                    if  printout    println(">>> Sign changed for orbital $k")   end                    
+                    found = true;   break
+                end
+            end
+            if  !found  error("stop a")     end
+            newOrbitals[k] = mOrbital
+        end
+
+        return( newOrbitals )
+    end
+
+
         
     """
     `Basics.analyzeConvergence(blocka::Basics.Eigen, blockb::Basics.Eigen)`  
@@ -120,7 +149,7 @@
     """
     function Basics.analyzeConvergence(a::Radial.Orbital, b::Radial.Orbital)
         if       a.subshell !=  b.subshell                                             error("stop a")   
-        elseif   a.useStandardGrid !=  b.useStandardGrid   ||  !(a.useStandardGrid)    error("stop b")   
+        elseif   a.useStandardGrid !=  b.useStandardGrid   ||  !(a.useStandardGrid)    @show a.useStandardGrid, b.useStandardGrid;   error("stop b")   
         else     wa = 0.;   wa = max(wa, abs( (a.energy-b.energy) / (a.energy+b.energy) ));   nx = min(length(a.P), length(b.P))
                 #=== for  i = 1:nx 
                     wp = abs(a.P[i])+abs(b.P[i]);    if  wp > 1.0e-10   wa = max(wa, abs( (a.P[i]-b.P[i]) / wp ))   end 
