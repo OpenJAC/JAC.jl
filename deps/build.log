@@ -1,4 +1,0 @@
-gfortran -O3 -shared -fPIC -o jac_anco.so jac_anco.f90  rabs_anco.f90  rabs_angular.f90  rabs_constant.f90  rabs_csl.f90  \
-	rabs_determinant.f90  rabs_dirac_orbital.f90  rabs_file_handling.f90  rabs_functions_math.f90  \
-	rabs_functions_string.f90  rabs_grasp92.f90  rabs_io_dialog.f90  rabs_mcp_adaptation.f90  rabs_mcp_grasp92.f  \
-	rabs_mcp_mct.f90  rabs_naglib.f90  rabs_njgraf.f  rabs_nucleus.f90  rabs_rcfp.f90  rabs_recoupling.f90 -o ../bin/libanco-ratip2013.so
