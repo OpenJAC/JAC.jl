@@ -1,6 +1,6 @@
 
 
-## [![Build Status](https://travis-ci.com/OpenJAC/JAC.jl.svg?branch=master)](https://travis-ci.com/OpenJAC/JAC.jl)
+[![CI](https://github.com/OpenJAC/JAC.jl/workflows/CI/badge.svg)](https://github.com/OpenJAC/JAC.jl/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)
 
 
