@@ -226,7 +226,7 @@ module AngularMomentum
         redme = ((-1)^((ja2+1)/2)) * sqrt( (ja2+1)*(jb2+1) ) * 
                 Wigner_3j(AngularJ64(ja2//2), AngularJ64(L), AngularJ64(jb2//2),  AngularM64(1//2), AngularM64(0), AngularM64(-1//2) )
 
-        ##x redme = redme * ((-1)^((jb2+ja2)/2))  ## This factor is not clear ... but help get the intercombination lines correctly
+        redme = redme * ((-1)^((jb2+ja2)/2))  ## This factor is not clear ... but help get the intercombination lines correctly
         return( redme )
     end
 

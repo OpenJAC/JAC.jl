@@ -805,7 +805,7 @@
                         ##x @show daugther.process, rates[i]
                     end
                     totalRate = sum(rates)
-                    if      totalRate <= 0.    error("stop b")
+                    if      totalRate <  0.    error("stop b")
                     elseif  totalRate == 0.    # do nothing
                     else
                         # Shift the relative occupation to the 'daugther' levels due to the different ionization and decay pathes
