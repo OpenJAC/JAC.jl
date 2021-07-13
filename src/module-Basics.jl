@@ -1390,7 +1390,6 @@ module Basics
     
     export  AbstractCImethod, FullCIeigen  ==#
 
-    
     """
     `abstract type Basics.AbstractPotential` 
         ... defines an abstract and a number of singleton types to distinguish between different (electronic) atomic potentials.
@@ -1409,6 +1408,23 @@ module Basics
     export  AbstractPotential, DFSpotential, CoreHartree, KohnSham, HartreeSlater
 
     
+    """
+    `abstract type Basics.AbstractPropertySettings` 
+        ... defines an abstract type to distinguish between different settings of atomic level properties.
+    """
+    abstract type  AbstractPropertySettings                 end
+
+    
+    """
+    `abstract type Basics.AbstractProcessSettings` 
+        ... defines an abstract type to distinguish between different settings of atomic processes.
+    """
+    abstract type  AbstractProcessSettings                  end
+    
+    export  AbstractPropertySettings, AbstractProcessSettings
+
+    
+    #======================================     Remove abstract idenitfier and only use settings to specify properties and processes
     """
     `abstract type Basics.AbstractLevelProperty` 
         ... defines an abstract and a number of singleton types to distinguish between different (electronic) atomic potentials.
@@ -1457,6 +1473,7 @@ module Basics
     function Base.string(prop::Polarizibility)  return( "multipole polarizibility" )                        end
     function Base.string(prop::Yields)          return( "fluorescence & Auger yields" )                     end
     function Base.string(prop::Zeeman)          return( "Zeeman splitting in an external magnetic field" )  end 
+    ================================================#    
 
     
     """
@@ -1540,7 +1557,6 @@ module Basics
     function Base.string(propc::Radiative)          return( "Radiative" )                          end
     function Base.string(propc::RAuger)             return( "Radiative Auger" )                    end
     function Base.string(propc::Rec)                return( "Rec" )                                end
-
     
     """
     `abstract type Basics.AbstractSpectrumKind` 

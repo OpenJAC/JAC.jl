@@ -6,7 +6,7 @@ setDefaults("method: continuum, Galerkin")           ## setDefaults("method: con
                                                      ## setDefaults("method: normalization, Ong-Russek") 
 setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
-if  false
+if  true
     # K-LL Auger spectrum of neon: Comparison with PhD and related work
     augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(1,0)]), 0., 1.0e6, 4, CoulombInteraction())
     grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
@@ -15,7 +15,7 @@ if  false
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(10.), 
                             initialConfigs  =[Configuration("1s 2s^2 2p^6")],
                             finalConfigs    =[Configuration("1s^2 2s^2 2p^4"), Configuration("1s^2 2s 2p^5"), Configuration("1s^2 2p^6")], 
-                            process = Auger(),  processSettings = augerSettings )
+                            processSettings = augerSettings )
 
     wb = perform(wa)
     

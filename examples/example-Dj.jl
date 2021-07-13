@@ -32,7 +32,7 @@ elseif  false
     wa = Atomic.Computation(Atomic.Computation(), name=name, grid=grid, nuclearModel=Nuclear.Model(54.), 
                             initialConfigs= [Configuration("1s^2 2s")],
                             finalConfigs  = [Configuration("1s^2 3s")], 
-                            process = MultiPhotonDE(), processSettings= mpSettings  )
+                            processSettings= mpSettings  )
     wb = perform(wa)
     
 elseif  true
@@ -44,7 +44,7 @@ elseif  true
     wc = Atomic.Computation(Atomic.Computation(), name=name, grid=grid, nuclearModel=Nuclear.Model(54.), 
                             initialConfigs= [Configuration("1s^2 3s")],
                             finalConfigs  = [Configuration("1s^2 2s")], 
-                            process = MultiPhotonDE(), processSettings= mpSettings    )
+                            processSettings= mpSettings    )
     wd = perform(wc)
     
 end

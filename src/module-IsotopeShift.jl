@@ -9,7 +9,7 @@ module IsotopeShift
                   ..SpinAngular, ..TableStrings
 
     """
-    `struct  IsotopeShift.Settings`  
+    `struct  IsotopeShift.Settings  <:  AbstractPropertySettings`  
         ... defines a type for the details and parameters of computing isotope-shift M and F parameters.
 
         + calcNMS                  ::Bool             ... True if mass-shift parameters M_nmn need to be calculated, and false otherwise.
@@ -20,7 +20,7 @@ module IsotopeShift
         + bosonMass                ::Float64          ... mass of the scalar boson [e_electron].
         + levelSelection           ::LevelSelection   ... Specifies the selected levels, if any.
     """
-    struct Settings 
+    struct Settings  <:  AbstractPropertySettings 
         calcNMS                    ::Bool
         calcSMS                    ::Bool
         calcF                      ::Bool

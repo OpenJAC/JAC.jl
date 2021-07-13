@@ -24,51 +24,52 @@
                          results = Base.merge( results, Dict("grid:"      => computation.grid) )  end
             
             # Now compute all requested properties
-            if  EinsteinX()        in computation.properties   
-                outcome = Einstein.computeLines(multiplet,        computation.grid, computation.einsteinSettings)    
-                if output    results = Base.merge( results, Dict("Einstein lines:" => outcome) )                  end
-            end
-            if  HFS()              in computation.properties       && computation.hfsSettings.calcIJFexpansion  
-                outcome = Hfs.computeHyperfineMultiplet(multiplet, nModel, computation.grid, computation.hfsSettings)         
-                if output    results = Base.merge( results, Dict("IJF multiplet:" => outcome) )                   end
-            end
-            if  HFS()              in computation.properties
-                outcome = Hfs.computeOutcomes(multiplet, nModel,  computation.grid, computation.hfsSettings)         
-                if output    results = Base.merge( results, Dict("HFS outcomes:" => outcome) )                    end
-            end
-            if  LandeJ()           in computation.properties   
-                outcome = LandeZeeman.computeOutcomes(multiplet, nModel,  computation.grid, computation.zeemanSettings)      
-                if output    results = Base.merge( results, Dict("Zeeman parameter outcomes:" => outcome) )       end
-            end
-            if  Isotope()          in computation.properties   
-                ##x @show computation.isotopeSettings
-                outcome = IsotopeShift.computeOutcomes(multiplet, nModel, computation.grid, computation.isotopeSettings)         
-                if output    results = Base.merge( results, Dict("Isotope parameter outcomes:" => outcome) )      end
-            end
-            if  AlphaX()           in computation.properties   
-                outcome = AlphaVariation.computeOutcomes(multiplet, nModel, computation.grid, computation.alphaSettings)         
-                if output    results = Base.merge( results, Dict("alpha variation parameter outcomes:" => outcome) )      end
-            end
-            if  FormF()            in computation.properties   
-                outcome = FormFactor.computeOutcomes(multiplet, nModel, computation.grid, computation.formSettings)         
-                if output    results = Base.merge( results, Dict("Form factor outcomes:" => outcome) )            end
-            end
-            if  Yields()           in computation.properties   
-                outcome = DecayYield.computeOutcomes(computation.configs, computation.asfSettings, 
-                                                        multiplet, nModel, computation.grid, computation.yieldSettings)     
-                if output    results = Base.merge( results, Dict("Fluorescence and AutoIonization yield outcomes:" => outcome) )   end
-            end
-            if  Polarizibility()   in computation.properties   
-                outcome = MultipolePolarizibility.computeOutcomes(multiplet, nModel, computation.grid, computation.polaritySettings)         
-                if output    results = Base.merge( results, Dict("Polarizibility outcomes:" => outcome) )         end
-            end
-            if  Plasma()           in computation.properties   
-                outcome = PlasmaShift.computeOutcomes(multiplet, nModel, computation.grid, computation.asfSettings, computation.plasmaSettings)         
-                if output    results = Base.merge( results, Dict("Plasma shift outcomes:" => outcome) )            end
+            for settings  in computation.propertySettings
+                if      typeof(settings) == Einstein.Settings
+                    outcome = Einstein.computeLines(multiplet,        computation.grid, settings)    
+                    if output    results = Base.merge( results, Dict("Einstein lines:" => outcome) )                  end
+                    #
+                elseif  typeof(settings) == Hfs.Settings    && settings.calcIJFexpansion  
+                    outcome = Hfs.computeHyperfineMultiplet(multiplet, nModel, computation.grid, settings)         
+                    if output    results = Base.merge( results, Dict("IJF multiplet:" => outcome) )                   end
+                    #
+                elseif  typeof(settings) == Hfs.Settings
+                    outcome = Hfs.computeOutcomes(multiplet, nModel,  computation.grid, settings)         
+                    if output    results = Base.merge( results, Dict("HFS outcomes:" => outcome) )                    end
+                    #
+                elseif  typeof(settings) == LandeZeeman.Settings 
+                    outcome = LandeZeeman.computeOutcomes(multiplet, nModel,  computation.grid, settings)      
+                    if output    results = Base.merge( results, Dict("Zeeman parameter outcomes:" => outcome) )       end
+                    #
+                elseif  typeof(settings) == IsotopeShift.Settings 
+                    outcome = IsotopeShift.computeOutcomes(multiplet, nModel, computation.grid, settings)         
+                    if output    results = Base.merge( results, Dict("Isotope parameter outcomes:" => outcome) )      end
+                    #
+                elseif  typeof(settings) == AlphaVariation.Settings 
+                    outcome = AlphaVariation.computeOutcomes(multiplet, nModel, computation.grid, settings)         
+                    if output    results = Base.merge( results, Dict("alpha variation parameter outcomes:" => outcome) )      end
+                    #
+                elseif  typeof(settings) == FormFactor.Settings 
+                    outcome = FormFactor.computeOutcomes(multiplet, nModel, computation.grid, settings)         
+                    if output    results = Base.merge( results, Dict("Form factor outcomes:" => outcome) )            end
+                    #
+                elseif  typeof(settings) == DecayYield.Settings 
+                    outcome = DecayYield.computeOutcomes(computation.configs, computation.asfSettings, 
+                                                            multiplet, nModel, computation.grid, settings)     
+                    if output    results = Base.merge( results, Dict("Fluorescence and AutoIonization yield outcomes:" => outcome) )   end
+                    #
+                elseif  typeof(settings) == MultipolePolarizibility.Settings 
+                    outcome = MultipolePolarizibility.computeOutcomes(multiplet, nModel, computation.grid, settings)         
+                    if output    results = Base.merge( results, Dict("Polarizibility outcomes:" => outcome) )         end
+                    #
+                elseif  typeof(settings) == PlasmaShift.Settings 
+                    outcome = PlasmaShift.computeOutcomes(multiplet, nModel, computation.grid, computation.asfSettings, settings)         
+                    if output    results = Base.merge( results, Dict("Plasma shift outcomes:" => outcome) )            end
+                end
             end
         
         # Evaluate processes that need special SCF and CI procedures
-        elseif  computation.process in [AugerInPlasma(), PhotoInPlasma()]
+        elseif  typeof(computation.processSettings)  in [PlasmaShift.AugerSettings, PlasmaShift.PhotoSettings]
             pSettings        = computation.processSettings
             plasmaSettings   = PlasmaShift.Settings(pSettings.plasmaModel, pSettings.lambdaDebye, pSettings.ionSphereR0, pSettings.NoBoundElectrons)
             initialBasis     = Basics.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
@@ -76,10 +77,10 @@
             finalBasis       = Basics.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
             finalMultiplet   = perform("computation: CI for plasma",  finalBasis, nModel, computation.grid, computation.finalAsfSettings, plasmaSettings)
             #
-            if      computation.process == AugerInPlasma()   
+            if      typeof(computation.processSettings)  == PlasmaShift.AugerSettings
                 outcome = AutoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("AutoIonization lines in plasma:" => outcome) )         end
-            elseif  computation.process == PhotoInPlasma()  
+            elseif  typeof(computation.processSettings)  == PlasmaShift.PhotoSettings
                 outcome = PhotoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Photo lines in plasma:" => outcome) )                  end
             else
@@ -94,87 +95,88 @@
             finalMultiplet   = Basics.performCI(   finalBasis, nModel, computation.grid, computation.finalAsfSettings)
             LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
             #
-            if computation.process in [PhotoExcFluor(), PhotoExcAuto(), PhotoIonFluor(), PhotoIonAuto(), ImpactExcAuto(), Dierec()]
+            if typeof(computation.processSettings) in [PhotoExcitationFluores.Settings, PhotoExcitationAutoion.Settings, PhotoIonizationFluores.Settings, 
+                                                       PhotoIonizationAutoion.Settings, ImpactExcitationAutoion.Settings, Dielectronic.Settings]
                 intermediateBasis     = Basics.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
                 intermediateMultiplet = Basics.performCI( intermediateBasis, nModel, computation.grid, computation.intermediateAsfSettings)
             end
             #
-            if      computation.process == Auger()   
+            if      typeof(computation.processSettings) == AutoIonization.Settings 
                 outcome = AutoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("AutoIonization lines:" => outcome) )                  end
-            elseif  computation.process == Compton()   
+            elseif  typeof(computation.processSettings) == RayleighCompton.Settings 
                 outcome = RayleighCompton.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Rayleigh-Compton lines:" => outcome) )                end
-            elseif  computation.process == DoubleAuger()   
+            elseif  typeof(computation.processSettings) == DoubleAutoIonization.Settings   
                 outcome = DoubleAutoIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Double-Auger lines:" => outcome) )                    end
-            elseif  computation.process == Dierec()  
+            elseif  typeof(computation.processSettings) == Dielectronic.Settings 
                 outcome = Dielectronic.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("dielectronic recombination pathways:" => outcome) )   end
-            elseif  computation.process == MultiPhotonDE()
+            elseif  typeof(computation.processSettings) == MultiPhotonIonization.Settings
                 outcome = MultiPhotonDeExcitation.computeLines(computation.processSettings.process,
                                                                finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("multi-photon-de-excitation lines:" => outcome) )      end
-            elseif  computation.process == Photo()   
+            elseif  typeof(computation.processSettings) == PhotoIonization.Settings   
                 outcome = PhotoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photoionization lines:" => outcome) )                 end
-            elseif  computation.process == PhotoDouble()   
+            elseif  typeof(computation.processSettings) == PhotoDoubleIonization.Settings   
                 outcome = PhotoDoubleIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Single-photon double-ionization lines:" => outcome) ) end
-            elseif  computation.process == PhotoExc()
+            elseif  typeof(computation.processSettings) == PhotoExcitation.Settings
                 outcome = PhotoExcitation.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo-excitation lines:" => outcome) )                end
-            elseif  computation.process == PhotoExcAuto()  
+            elseif  typeof(computation.processSettings) == PhotoExcitationAutoion.Settings  
                 outcome = PhotoExcitationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 
                                                                  computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo-excitation-autoionization pathways:" => outcome) )      end
-            elseif  computation.process == PhotoExcFluor()
+            elseif  typeof(computation.processSettings) == PhotoExcitationFluores.Settings
                 outcome = PhotoExcitationFluores.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
                                                                  computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo-excitation-fluorescence pathways:" => outcome) )        end
-            elseif  computation.process == Radiative() 
+            elseif  typeof(computation.processSettings) == PhotoEmission.Settings
                 outcome = PhotoEmission.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("radiative lines:" => outcome) )                       end
-            elseif  computation.process == RAuger()
+            elseif  typeof(computation.processSettings) == RadiativeAuger.Settings
                 outcome = RadiativeAuger.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("radiative Auger sharings:" => outcome) )              end
-            elseif  computation.process == Rec()  
+            elseif  typeof(computation.processSettings) == PhotoRecombination.Settings 
                 outcome = PhotoRecombination.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo recombination lines:" => outcome) )             end
-                #
-                #
-            elseif  computation.process == Eimex()  
+            elseif  typeof(computation.processSettings) == ImpactExcitation.Settings 
                 outcome = ImpactExcitation.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("impact-excitation lines:" => outcome) )               end
-            elseif  computation.process == PairA1P()  
+                #
+                #
+            elseif  typeof(computation.processSettings) == PairA1P()  
                 outcome = PairAnnihilation1Photon.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("pair-annihilation-1-photon lines:" => outcome) )       end
-            elseif  computation.process == Coulex()
+            elseif  typeof(computation.processSettings) == Coulex()
                 outcome = CoulombExcitation.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Coulomb excitation lines:" => outcome) )               end
-            elseif  computation.process == Coulion()
+            elseif  typeof(computation.processSettings) == Coulion()
                 outcome = CoulombIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Coulomb ionization lines:" => outcome) )               end
-            elseif  computation.process == PhotoIonAuto()   
+            elseif  typeof(computation.processSettings) == PhotoIonAuto()   
                 outcome = PhotoIonizationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo-ionization-autoionization pathways:" => outcome) )      end
-            elseif  computation.process == PhotoIonFluor()  
+            elseif  typeof(computation.processSettings) == PhotoIonFluor()  
                 outcome = PhotoIonizationFluores.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photo-ionizatiton-fluorescence pathways:" => outcome) )        end
-            elseif  computation.process == ImpactExcAuto()  
+            elseif  typeof(computation.processSettings) == ImpactExcAuto()  
                 outcome = ImpactExcitationAutoion.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("impact-excitation-autoionization pathways:" => outcome) )     end
-            elseif  computation.process == MultiPI()   
+            elseif  typeof(computation.processSettings) == MultiPI()   
                 outcome = MultiPhotonIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("multi-photon single ionization:" => outcome) )        end
-            elseif  computation.process == MultiPDI()   
+            elseif  typeof(computation.processSettings) == MultiPDI()   
                 outcome = MultiPhotonDoubleIon.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("multi-photon double ionization:" => outcome) )        end
-            elseif  computation.process == InternalConv()   
+            elseif  typeof(computation.processSettings) == InternalConv()   
                 outcome = InternalConversion.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("internal conversion lines:" => outcome) )        end
             else

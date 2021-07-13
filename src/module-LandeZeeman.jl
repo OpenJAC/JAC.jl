@@ -102,7 +102,7 @@ module LandeZeeman
 
 
     """
-    `struct  LandeZeeman.Settings`  
+    `struct  LandeZeeman.Settings  <:  AbstractPropertySettings`  
         ... defines a type for the details and parameters of computing the Lande Factors and Zeeman spittling 
             of fine-structure levels.
 
@@ -115,7 +115,7 @@ module LandeZeeman
         + printBefore            ::Bool              ... True if a list of selected levels is printed before the actual computations start. 
         + levelSelection         ::LevelSelection    ... Specifies the selected levels, if any.
     """
-    struct Settings 
+    struct Settings  <:  AbstractPropertySettings 
         calcLandeJ               ::Bool
         calcLandeF               ::Bool
         calcZeeman               ::Bool

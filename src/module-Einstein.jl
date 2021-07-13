@@ -10,7 +10,7 @@ module Einstein
 
 
     """
-    `struct  Einstein.Settings`  ... defines a type for the details and parameters of computing Einstein lines and coefficients
+    `struct  Einstein.Settings  <:  AbstractPropertySettings`  ... defines a type for the details and parameters of computing Einstein lines and coefficients
 
         + multipoles              ::Array{EmMultipoles}          ... Specifies the multipoles of the radiation field that are to be included.
         + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
@@ -20,7 +20,7 @@ module Einstein
                                                                      computation.
         + maximumPhotonEnergy     ::Float64                      ... maximum transition energy for which (photon) transitions are included.
     """
-    struct Settings 
+    struct Settings  <:  AbstractPropertySettings 
         multipoles                ::Array{EmMultipole,1}
         printBefore               ::Bool 
         lineSelection             ::LineSelection

@@ -10,7 +10,7 @@ module PhotoIonization
                   ..PlasmaShift, ..TableStrings
 
     """
-    `struct  PhotoIonization.Settings`  ... defines a type for the details and parameters of computing photoionization lines.
+    `struct  PhotoIonization.Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing photoionization lines.
 
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
@@ -22,7 +22,7 @@ module PhotoIonization
         + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
         + stokes                  ::ExpStokes                    ... Stokes parameters of the incident radiation.
     """
-    struct Settings 
+    struct Settings  <:  AbstractProcessSettings 
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         photonEnergies            ::Array{Float64,1} 

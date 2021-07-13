@@ -10,13 +10,13 @@ module AlphaVariation
 
 
     """
-    `struct  AlphaVariation.Settings`  ... defines a type for the details and parameters of computing alpha-variation parameters.
+    `struct  AlphaVariation.Settings  <:  AbstractPropertySettings`  ... defines a type for the details and parameters of computing alpha-variation parameters.
 
         + calcK                    ::Bool             ... True if the enhancement factor need to be calculated, and false otherwise.
         + printBefore              ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
         + levelSelection           ::LevelSelection   ... Specifies the selected levels, if any.
     """
-    struct Settings 
+    struct Settings  <:  AbstractPropertySettings 
         calcK                      ::Bool
         printBefore                ::Bool 
         levelSelection             ::LevelSelection

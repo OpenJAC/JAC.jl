@@ -26,7 +26,7 @@ elseif true
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(10.), 
                             initialConfigs=[Configuration("1s^2 2s^2 2p")],
                             finalConfigs  =[Configuration("1s^2 2s^2 2p")], 
-                            process = Compton(), processSettings = rayleighSettings )
+                            processSettings = rayleighSettings )
     @show wa
     wb = perform(wa)
 end

@@ -71,7 +71,7 @@ module MultipolePolarizibility
 
 
     """
-    `struct  MultipolePolarizibility.Settings`  
+    `struct  MultipolePolarizibility.Settings  <:  AbstractPropertySettings`  
         ... defines a type for the details and parameters of computing multipolar polarizibilities.
 
         + multipoles                ::Array{EmMultipole,1}  ... Multipoles to be considered for the polarity.
@@ -82,7 +82,7 @@ module MultipolePolarizibility
                                                                 actual computations start. 
         + levelSelection            ::LevelSelection        ... Specifies the selected levels, if any.
     """
-    struct Settings
+    struct Settings  <:  AbstractPropertySettings
         multipoles                  ::Array{EmMultipole,1}
         nLower                      ::Int64  
         nUpper                      ::Int64

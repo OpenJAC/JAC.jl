@@ -8,13 +8,13 @@ module FormFactor
     using Printf, ..Basics, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals, ..TableStrings
 
     """
-    `struct  FormFactor.Settings`  ... defines a type for the details and parameters of computing alpha-variation parameters.
+    `struct  FormFactor.Settings  <:  AbstractPropertySettings`  ... defines a type for the details and parameters of computing alpha-variation parameters.
 
         + qList                    ::Array{Float64,1} ... List of q-values in [a.u.]
         + printBefore              ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
         + levelSelection           ::LevelSelection   ... Specifies the selected levels, if any.
     """
-    struct Settings 
+    struct Settings  <:  AbstractPropertySettings 
         qList                      ::Array{Float64,1} 
         printBefore                ::Bool  
         levelSelection             ::LevelSelection

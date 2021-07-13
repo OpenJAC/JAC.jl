@@ -11,7 +11,7 @@ module PhotoEmission
 
 
     """
-    `struct  PhotoEmission.Settings`  ... defines a type for the details and parameters of computing radiative lines.
+    `struct  PhotoEmission.Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing radiative lines.
 
         + multipoles              ::Array{EmMultipoles}     ... Specifies the (radiat. field) multipoles to be included.
         + gauges                  ::Array{UseGauge}         ... Gauges to be included into the computations.
@@ -25,7 +25,7 @@ module PhotoEmission
         + maximumPhotonEnergy     ::Float64                 ... maximum transition energy for which (photon) transitions 
                                                                 are included.
     """
-    struct Settings 
+    struct Settings  <:  AbstractProcessSettings 
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge}
         calcAnisotropy            ::Bool         

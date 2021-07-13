@@ -6,15 +6,13 @@ setDefaults("print summary: open", "zzz-PhotoRecombination.sum")
 setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
 setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
-if  false
-    grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 5.0e-2, hp = 1.0e-2, NoPoints = 900)
-
+if  true
+    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.), 
                             initialConfigs=[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ],
                             finalConfigs  =[Configuration("1s^2 2s^2 2p^6")], 
-                            process = Rec(), 
                             processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10., 30., 50.], [0.], 
-                                                                        false, true, true, true, true, Tuple{Int64,Int64}[(1,1)]) )
+                                                                        false, true, true, true, LineSelection(true, indexPairs=[(1,1)]) ) )
 
     wb = perform(wa)
     
@@ -33,7 +31,7 @@ elseif  false
                             ##                   Configuration("1s^2 3s"), Configuration("1s^2 3p"), Configuration("1s^2 3d")], 
                             initialConfigs = [Configuration("1s")],
                             finalConfigs   = [Configuration("1s^2")], 
-                            process = Rec(), processSettings=recSettings )
+                            processSettings=recSettings )
 
     wb = perform(wa)
 
