@@ -10,7 +10,7 @@ module Dielectronic
                   ..PhotoEmission, ..Radial, ..TableStrings
 
     """
-    `struct  Dielectronic.Settings`  
+    `struct  Dielectronic.Settings  <:  AbstractProcessSettings`  
         ... defines a type for the details and parameters of computing dielectronic recombination pathways.
 
         + multipoles            ::Array{EmMultipoles}  ... Multipoles of the radiation field that are to be included.
@@ -28,7 +28,7 @@ module Dielectronic
         + augerOperator         ::AbstractEeInteraction .. Auger operator that is to be used for evaluating the Auger ampl's: 
                                                            allowed values are: CoulombInteraction(), BreitInteration(), CoulombBreit()
     """
-    struct Settings 
+    struct Settings  <:  AbstractProcessSettings 
         multipoles              ::Array{EmMultipole,1}
         gauges                  ::Array{UseGauge}
         calcRateAlpha           ::Bool

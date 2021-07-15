@@ -5,7 +5,7 @@ setDefaults("print summary: open", "zzz-PhotoIonization.sum")
 setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
 setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
-if  false
+if  true
     # Neon subshell cross sections from 10..1000 eV photon energy
     setDefaults("unit: energy", "eV") # then, give photonEnergies in eV
 
@@ -17,7 +17,7 @@ if  false
                               grid=grid, nuclearModel=Nuclear.Model(10.),
                               initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                               finalConfigs  =[Configuration("1s 2s^2 2p^6"), Configuration("1s^2 2s 2p^6"), Configuration("1s^2 2s^2 2p^5")], 
-                              process = Photo(),  processSettings=photoSettings)
+                              processSettings=photoSettings)
     @show wa
     perform(wa)                                         
 

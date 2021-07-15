@@ -9,7 +9,7 @@ module RayleighCompton
 
 
     """
-    `struct  RayleighCompton.Settings`  ... defines a type for the settings in estimating lastic Rayleigh and inelastic Compton 
+    `struct  RayleighCompton.Settings  <:  AbstractProcessSettings`  ... defines a type for the settings in estimating lastic Rayleigh and inelastic Compton 
                                             photon scattering cross sections
 
         + multipoles              ::Array{EmMultipole}      ... Specifies the multipoles of the radiation field that are to be included.
@@ -24,7 +24,7 @@ module RayleighCompton
         + lineSelection           ::LineSelection           ... Specifies the selected levels, if any.
 
     """
-    struct Settings 
+    struct Settings  <:  AbstractProcessSettings 
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         photonEnergies            ::Array{Float64,1} 

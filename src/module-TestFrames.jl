@@ -314,9 +314,9 @@ module TestFrames
         printstyled("\n\nTest the module  AlphaVariation  ... \n", color=:cyan)
         ### Make the tests
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
-                                nuclearModel=Nuclear.Model(26.), properties=[AlphaX()], 
+                                nuclearModel=Nuclear.Model(26.), 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                alphaSettings=AlphaVariation.Settings(true, true, LevelSelection() ) )
+                                propertySettings = [ AlphaVariation.Settings(true, true, LevelSelection() )] )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -339,7 +339,7 @@ module TestFrames
         grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, rbox = 9.5)
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),  
                                 initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
-                                finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], process = Auger(),
+                                finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], 
                                 processSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(3,1), (4,1), (5,1), (6,1)]), 
                                                                           0., 1.0e6, 2, CoulombInteraction()) )
         wb = perform(wa)
@@ -487,7 +487,7 @@ module TestFrames
         grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, rbox=10.0)
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.),  
                                 configs=[Configuration("1s 2s^2 2p^6")],
-                                properties=[Yields()], yieldSettings=DecayYield.Settings("SCA", true, LevelSelection() ) )
+                                propertySettings = [ DecayYield.Settings("SCA", true, LevelSelection() )] )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -512,7 +512,6 @@ module TestFrames
                                 initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                                 intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
-                                process = Dierec(), 
                                 processSettings=Dielectronic.Settings([E1, M1], [UseCoulomb, UseBabushkin], false, false, 
                                                                       PathwaySelection(true, indexTriples=[(1,1,0)]), 0., 0., 0., Float64[], CoulombInteraction() )  
 )
@@ -537,10 +536,9 @@ module TestFrames
         printstyled("\n\nTest the module  Einstein  ... \n", color=:cyan)
         ### Make the tests
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true), nuclearModel=Nuclear.Model(36.), 
-                                properties=[EinsteinX()], 
                                 configs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
-                                einsteinSettings=Einstein.Settings([E1, M1, E2, M2], true, 
-                                LineSelection(true, indexPairs=[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0)]), 0., 0., 10000. ) )
+                                propertySettings = [ Einstein.Settings([E1, M1, E2, M2], true, 
+                                                     LineSelection(true, indexPairs=[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0)]), 0., 0., 10000. )] )
 
         wb = perform(wa)
         ###
@@ -561,10 +559,9 @@ module TestFrames
         Defaults.setDefaults("print summary: open", "test-FormFactor-new.sum")
         printstyled("\n\nTest the module  FormFactor  ... \n", color=:cyan)
         ### Make the tests
-        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
-                                nuclearModel=Nuclear.Model(26.); properties=[FormF()], 
+        wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                formSettings=FormFactor.Settings([0.1], true, LevelSelection() ) )
+                                propertySettings = [ FormFactor.Settings([0.1], true, LevelSelection() )] )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -585,9 +582,9 @@ module TestFrames
         printstyled("\n\nTest the module  Hfs  ... \n", color=:cyan)
         ### Make the tests
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
-                                nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0); properties=[HFS()],
+                                nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0),
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                hfsSettings=Hfs.Settings(true, true, true, true, true, true, LevelSelection() ) )
+                                propertySettings = [ Hfs.Settings(true, true, true, true, true, true, LevelSelection() )] )
 
         wb = perform(wa)
         ###
@@ -611,9 +608,9 @@ module TestFrames
         printstyled("\n\nTest the module  IsotopeShift  ... \n", color=:cyan)
         ### Make the tests
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
-                                nuclearModel=Nuclear.Model(26.), properties=[Isotope()], 
+                                nuclearModel=Nuclear.Model(26.),
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                isotopeSettings=IsotopeShift.Settings(true, true, true, false, true, 0.0, LevelSelection()) )
+                                propertySettings = [ IsotopeShift.Settings(true, true, true, false, true, 0.0, LevelSelection())] )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -635,9 +632,8 @@ module TestFrames
         ### Make the tests
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
                                 nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.75, AngularJ64(5//2), 1.0, 2.0),
-                                properties=[LandeJ()], 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                zeemanSettings=LandeZeeman.Settings(true, true, true, true, 0., true, LevelSelection() ) )
+                                propertySettings = [ LandeZeeman.Settings(true, true, true, true, 0., true, LevelSelection() )] )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -714,9 +710,9 @@ module TestFrames
         printstyled("\n\nTest the module  MultipolePolarizibility  ... \n", color=:cyan)
         ### Make the tests
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
-                                nuclearModel=Nuclear.Model(26.); properties=[Polarizibility()], 
+                                nuclearModel=Nuclear.Model(26.), 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                polaritySettings=MultipolePolarizibility.Settings(EmMultipole[], 0, 0, Float64[], false, LevelSelection() ) )
+                                propertySettings = [ MultipolePolarizibility.Settings(EmMultipole[], 0, 0, Float64[], false, LevelSelection() )] )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -775,9 +771,9 @@ module TestFrames
         printstyled("\n\nTest the module  PlasmaShift  ... \n", color=:cyan)
         ### Make the tests
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
-                                nuclearModel=Nuclear.Model(26.); properties=[Plasma()], 
+                                nuclearModel=Nuclear.Model(26.), 
                                 configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                                plasmaSettings=PlasmaShift.Settings() )
+                                propertySettings = [ PlasmaShift.Settings()] )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -801,7 +797,6 @@ module TestFrames
                                 nuclearModel=Nuclear.Model(36.),
                                 initialConfigs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                                 finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
-                                process = PhotoExc(), 
                                 processSettings=PhotoExcitation.Settings([E1, M1], [UseCoulomb, UseBabushkin], true, true, true, true, 
                                                                          LineSelection(), 0., 0., 1.0e6, Basics.ExpStokes(0., 0., 0.) ) )
         wb = perform(wa)
@@ -829,7 +824,6 @@ module TestFrames
                                 initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                                 intermediateConfigs=[Configuration("1s 2s^2"), Configuration("1s 2p^2")],
                                 finalConfigs=[Configuration("1s^2")], 
-                                process = PhotoExcAuto(), 
                                 processSettings=PhotoExcitationAutoion.Settings([E1, M1], [UseCoulomb, UseBabushkin], true, 
                                                                                 PathwaySelection(true, indexTriples=[(1,1,1)]), 2 ) )
 
@@ -859,7 +853,6 @@ module TestFrames
                                 initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                                 intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
-                                process = PhotoExcFluor(), 
                                 processSettings=PhotoExcitationFluores.Settings([E1, M1], [UseCoulomb, UseBabushkin], true, 
                                                      PathwaySelection(true, indexTriples=[(1,1,1)]) )  )
         wb = perform(wa)
@@ -888,7 +881,6 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),
                                 initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                                 finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
-                                process = Photo(), 
                                 processSettings=PhotoIonization.Settings([E1, M1], [UseCoulomb, UseBabushkin], [3000., 4000.], false, true, true, true, 
                                                                          LineSelection(true, indexPairs=[(1,1), (1,2)]), ExpStokes(1., 0., 0.)) )
         wb = perform(wa)
@@ -914,7 +906,6 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.), 
                                 initialConfigs=[Configuration("1s^2")],
                                 finalConfigs  =[Configuration("1s^2 2s"), Configuration("1s^2 3s"), Configuration("1s^2 3p"), Configuration("1s^2 3d")], 
-                                process = Rec(), 
                                 processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10.], 
                                                      [2.18, 21.8, 218.0], false, false, false, true, LineSelection() ) )
         wb = perform(wa)
@@ -939,7 +930,6 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true), nuclearModel=Nuclear.Model(36.),
                                 initialConfigs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                                 finalConfigs  =[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")], 
-                                process = Radiative(), 
                                 processSettings=PhotoEmission.Settings([E1, M1, E2, M2], [UseCoulomb, UseBabushkin], true, true, 
                                     LineSelection(true, indexPairs=[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)]), 0., 0., 10000. ) )
         ##x streamDummy = open(pwd() * "/runtests.dummy", "w")

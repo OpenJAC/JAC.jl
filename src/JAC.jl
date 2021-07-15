@@ -53,6 +53,7 @@ using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, Qu
        HypergeometricFunctions  ## , Interact, GaussQuadrature
 
 export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod, AbstractPotential, AbstractQedModel, AbstractStartOrbitals,
+       AbstractProcessSettings, AbstractPropertySettings, 
        add, analyze, AlphaX, AlphaVariation, AnapoleMoment, 
        AngularJ64, AngularM64, AngularJ, AngularMomentum, 
        AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AugerInPlasma, AutoIonization, 
@@ -80,7 +81,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        PhotoRecombination, PlasmaShift, Plasma, Polarity, Pulse,
        QedPetersburg, QedSydney,
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RAuger, RasSettings, RasStep, 
-       RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation,
+       RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix,
        RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
        SchiffMoment, Semiempirical, setDefaults, Shell, SolidAngle, Spectroscopy, SpinAngular, SphericalTensor, 
        StartFromHydrogenic, StartFromPrevious, StrongField, Subshell,
@@ -127,12 +128,13 @@ include("module-Einstein.jl")
 include("module-Hfs.jl")
 include("module-IsotopeShift.jl")
 include("module-LandeZeeman.jl")
-include("module-AlphaVariation.jl")
 include("module-FormFactor.jl")
+include("module-ReducedDensityMatrix.jl")
+include("module-PlasmaShift.jl")
+include("module-AlphaVariation.jl")
 include("module-DecayYield.jl")
 ##x include("module-CloseCoupling.jl")
 include("module-MultipolePolarizibility.jl")
-include("module-PlasmaShift.jl")
 
 # Functions/methods for atomic processes
 include("module-PhotoExcitation.jl")

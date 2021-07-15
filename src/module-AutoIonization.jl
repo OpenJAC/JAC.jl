@@ -10,7 +10,7 @@ module AutoIonization
                    ..PlasmaShift, ..Radial, ..SpinAngular, ..TableStrings
     
     """
-    `struct  Settings`  ... defines a type for the details and parameters of computing Auger lines.
+    `struct  Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing Auger lines.
 
         + calcAnisotropy          ::Bool                         ... True, if the intrinsic alpha_2,4 angular parameters are to be calculated, 
                                                                      and false otherwise.
@@ -22,7 +22,7 @@ module AutoIonization
         + operator                ::AbstractEeInteraction        ... Auger operator that is to be used for evaluating the Auger amplitudes: 
                                                                      allowed values are: CoulombInteraction(), BreitInteraction(), ...
     """
-    struct Settings
+    struct Settings  <:  AbstractProcessSettings
         calcAnisotropy            ::Bool         
         printBefore               ::Bool 
         lineSelection             ::LineSelection 

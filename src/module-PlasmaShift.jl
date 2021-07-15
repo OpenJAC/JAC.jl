@@ -41,14 +41,14 @@ module PlasmaShift
 
     
     """
-    `struct  PlasmaShift.Settings`  ... defines a type for the details and parameters of computing level energies with plasma interactions.
+    `struct  PlasmaShift.Settings  <:  AbstractPropertySettings`  ... defines a type for the details and parameters of computing level energies with plasma interactions.
 
         + plasmaModel      ::AbstractPlasmaModel        ... Specify a particular plasma model, e.g. ion-sphere, debye.
         + lambdaDebye      ::Float64                    ... The lambda parameter of different plasma models.
         + ionSphereR0      ::Float64                    ... The effective radius of the ion-sphere model.
         + NoBoundElectrons ::Int64                      ... Effective number of bound electrons.
     """
-    struct Settings 
+    struct Settings  <:  AbstractPropertySettings 
         plasmaModel        ::AbstractPlasmaModel
         lambdaDebye        ::Float64 
         ionSphereR0        ::Float64
@@ -74,7 +74,7 @@ module PlasmaShift
 
 
     """
-    `struct  PlasmaShift.AugerSettings`  
+    `struct  PlasmaShift.AugerSettings  <:  AbstractProcessSettings`  
         ... defines a type for the details and parameters of computing Auger rates with plasma interactions.
 
         + plasmaModel            ::AbstractPlasmaModel           ... Specify a particular plasma model, e.g. ion-sphere, debye.
@@ -84,7 +84,7 @@ module PlasmaShift
         + printBefore            ::Bool                          ... True, if all energies and lines are printed before their evaluation.
         + lineSelection          ::LineSelection                 ... Specifies the selected levels, if any.
     """
-    struct AugerSettings 
+    struct AugerSettings  <:  AbstractProcessSettings 
         plasmaModel              ::AbstractPlasmaModel
         lambdaDebye              ::Float64 
         ionSphereR0              ::Float64
@@ -114,7 +114,7 @@ module PlasmaShift
 
 
     """
-    `struct  PlasmaShift.PhotoSettings`  
+    `struct  PlasmaShift.PhotoSettings  <:  AbstractProcessSettings`  
         ... defines a type for the details and parameters of computing photoionization rates with plasma interactions.
 
         + plasmaModel            ::AbstractPlasmaModel           ... Specify a particular plasma model, e.g. ion-sphere, debye.
@@ -127,7 +127,7 @@ module PlasmaShift
         + printBefore            ::Bool                          ... True, if all energies and lines are printed before their evaluation.
         + lineSelection          ::LineSelection                 ... Specifies the selected levels, if any.
     """
-    struct PhotoSettings 
+    struct PhotoSettings  <:  AbstractProcessSettings 
         plasmaModel              ::AbstractPlasmaModel
         lambdaDebye              ::Float64 
         ionSphereR0              ::Float64

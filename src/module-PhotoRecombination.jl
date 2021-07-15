@@ -9,7 +9,7 @@ module PhotoRecombination
     using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..PhotoEmission, ..Radial, ..Nuclear, ..TableStrings
 
     """
-    `struct  Settings`  ... defines a type for the details and parameters of computing photo recombination lines.
+    `struct  Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing photo recombination lines.
 
         + multipoles              ::Array{EmMultipole}           ... Multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Gauges to be included into the computations.
@@ -21,7 +21,7 @@ module PhotoRecombination
         + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
     """
-    struct Settings
+    struct Settings  <:  AbstractProcessSettings
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         electronEnergies          ::Array{Float64,1} 

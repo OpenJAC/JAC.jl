@@ -24,7 +24,7 @@ module Atomic
         + name                           ::String                          ... A name associated to the computation.
         + nuclearModel                   ::Nuclear.Model                   ... Model, charge and parameters of the nucleus.
         + grid                           ::Radial.Grid                     ... The radial grid to be used for the computation.
-        + properties                     ::Array{AbstractLevelProperty,1}  ... List of atomic properties to be calculated.
+        + propertySettings               ::Array{Basics.AbstractPropertySettings,1}  ... List of atomic properties to be calculated.
         + configs                        ::Array{Configuration,1}          ... A list of non-relativistic configurations.
         + asfSettings                    ::AsfSettings                     
             ... Provides the settings for the SCF process and for the CI and QED calculations.
@@ -35,32 +35,24 @@ module Atomic
         + intermediateAsfSettings        ::AsfSettings                     ... Provides the SCF settings for the intermediate-state multiplet.
         + finalConfigs                   ::Array{Configuration,1}          ... A list of final-state configurations.
         + finalAsfSettings               ::AsfSettings                     ... Provides the SCF and CI settings for the final-state multiplet.
-        + alphaSettings                  ::AlphaVariation.Settings         ... Settings for alpha-variation parameter calculations.
-        + einsteinSettings               ::Einstein.Settings               ... Settings for Einstein coefficient calculations.
-        + formSettings                   ::FormFactor.Settings             ... Settings for atomic form factor calculations.
-        + hfsSettings                    ::Hfs.Settings                    ... Settings for hyperfine parameter calculations.
-        + isotopeSettings                ::IsotopeShift.Settings           ... Settings for isotope shift parameter calculations.
-        + plasmaSettings                 ::PlasmaShift.Settings            ... Settings for plasma-shift calculations.
-        + polaritySettings               ::MultipolePolarizibility.Settings .. Settings for polarizibility calculations.
-        + yieldSettings                  ::DecayYield.Settings             ... Settings for fluoresence and Auger yield calculations.
-        + zeemanSettings                 ::LandeZeeman.Settings            ... Settings for Lande-Zeeman coefficient calculations.
-        + process                        ::Basic.AbstractProcess           
-            ... An (additional) process for which the properties are to be evaluated for the given initial- and final-state configurations.
-        + processSettings                ::Union{PhotoEmission.Settings, AutoIonization.Settings, PlasmaShift.AugerSettings, 
-                                                 PhotoIonization.Settings, PlasmaShift.PhotoSettings, 
-                                                 PhotoExcitation.Settings, PhotoExcitationAutoion.Settings, PhotoRecombination.Settings, 
-                                                 DoubleAutoIonization.Settings, PhotoDoubleIonization.Settings,
-                                                 ImpactExcitation.Settings, Dielectronic.Settings, RadiativeAuger.Settings,
-                                                 PairAnnihilation1Photon.Settings, ImpactExcitationAutoion.Settings, 
-                                                 MultiPhotonDeExcitation.Settings, CoulombExcitation.Settings, 
-                                                 CoulombIonization.Settings} 
-            ... Provides the settings for the selected process.
+        ##x + alphaSettings                  ::AlphaVariation.Settings         ... Settings for alpha-variation parameter calculations.
+        ##x + einsteinSettings               ::Einstein.Settings               ... Settings for Einstein coefficient calculations.
+        ##x + formSettings                   ::FormFactor.Settings             ... Settings for atomic form factor calculations.
+        ##x + hfsSettings                    ::Hfs.Settings                    ... Settings for hyperfine parameter calculations.
+        ##x + isotopeSettings                ::IsotopeShift.Settings           ... Settings for isotope shift parameter calculations.
+        ##x + plasmaSettings                 ::PlasmaShift.Settings            ... Settings for plasma-shift calculations.
+        ##x + polaritySettings               ::MultipolePolarizibility.Settings .. Settings for polarizibility calculations.
+        ##x + yieldSettings                  ::DecayYield.Settings             ... Settings for fluoresence and Auger yield calculations.
+        ##x + zeemanSettings                 ::LandeZeeman.Settings            ... Settings for Lande-Zeeman coefficient calculations.
+        ##x + process                        ::Basic.AbstractProcess           
+        ##x     ... An (additional) process for which the properties are to be evaluated for the given initial- and final-state configurations.
+        + processSettings                ::Basics.AbstracProcessSettings   ... Provides the settings for the selected process.
     """
     struct  Computation
         name                           ::String
         nuclearModel                   ::Nuclear.Model
         grid                           ::Radial.Grid
-        properties                     ::Array{AbstractLevelProperty,1}
+        propertySettings               ::Array{Basics.AbstractPropertySettings,1}
         configs                        ::Array{Configuration,1}
         asfSettings                    ::AsfSettings
         initialConfigs                 ::Array{Configuration,1} 
@@ -69,29 +61,7 @@ module Atomic
         intermediateAsfSettings        ::AsfSettings
         finalConfigs                   ::Array{Configuration,1}
         finalAsfSettings               ::AsfSettings
-        alphaSettings                  ::AlphaVariation.Settings
-        einsteinSettings               ::Einstein.Settings
-        formSettings                   ::FormFactor.Settings
-        hfsSettings                    ::Hfs.Settings
-        isotopeSettings                ::IsotopeShift.Settings
-        plasmaSettings                 ::PlasmaShift.Settings
-        polaritySettings               ::MultipolePolarizibility.Settings
-        yieldSettings                  ::DecayYield.Settings
-        zeemanSettings                 ::LandeZeeman.Settings
-        process                        ::AbstractProcess
-        processSettings                ::Union{PhotoEmission.Settings, AutoIonization.Settings, PlasmaShift.AugerSettings, 
-                                               PhotoIonization.Settings, PlasmaShift.PhotoSettings,
-                                               PhotoRecombination.Settings, Dielectronic.Settings, ImpactExcitation.Settings,
-                                               CoulombExcitation.Settings, CoulombIonization.Settings, 
-                                               PhotoExcitation.Settings, PhotoExcitationFluores.Settings, 
-                                               PhotoExcitationAutoion.Settings, RayleighCompton.Settings, 
-                                               DoubleAutoIonization.Settings, PhotoDoubleIonization.Settings,
-                                               MultiPhotonDeExcitation.Settings, PhotoIonizationFluores.Settings, 
-                                               PhotoIonizationAutoion.Settings, ImpactExcitationAutoion.Settings,
-                                               RadiativeAuger.Settings, MultiPhotonIonization.Settings,
-                                               MultiPhotonDoubleIon.Settings, InternalConversion.Settings} #= , 
-                                               #
-                                               PairAnnihilation1Photon.Settings } =#
+        processSettings                ::Basics.AbstractProcessSettings
     end 
 
 
@@ -99,14 +69,11 @@ module Atomic
     `Atomic.Computation()`  ... constructor for an 'empty' instance::Atomic.Computation.
     """
     function Computation()
-        Computation("", Nuclear.Model(1.), Radial.Grid(), AbstractLevelProperty[], 
+        Computation("", Nuclear.Model(1.), Radial.Grid(), Basics.AbstractPropertySettings[], 
                     Configuration[], AsfSettings(),
                     Configuration[], AsfSettings(),
                     Configuration[], AsfSettings(),
-                    Configuration[], AsfSettings(),
-                    AlphaVariation.Settings(), Einstein.Settings(), FormFactor.Settings(), Hfs.Settings(), IsotopeShift.Settings(), 
-                    PlasmaShift.Settings(), MultipolePolarizibility.Settings(), DecayYield.Settings(),  LandeZeeman.Settings(), 
-                    Basics.NoProcess(), PhotoEmission.Settings() )
+                    Configuration[], AsfSettings(), PhotoEmission.Settings() )
     end
 
     
@@ -124,23 +91,24 @@ module Atomic
     """
     function Computation(comp::Atomic.Computation;
         name::Union{Nothing,String}=nothing,                                        nuclearModel::Union{Nothing,Nuclear.Model}=nothing,
-        grid::Union{Nothing,Radial.Grid}=nothing,                                   properties::Union{Nothing,Array{AbstractLevelProperty,1},Any}=nothing,   
+        grid::Union{Nothing,Radial.Grid}=nothing,                                   propertySettings::Union{Nothing,Array{Basics.AbstractPropertySettings,1},Any}=nothing,   
         configs::Union{Nothing,Array{Configuration,1}}=nothing,                     asfSettings::Union{Nothing,AsfSettings}=nothing, 
         initialConfigs::Union{Nothing,Array{Configuration,1}}=nothing,              initialAsfSettings::Union{Nothing,AsfSettings}=nothing, 
         intermediateConfigs::Union{Nothing,Array{Configuration,1}}=nothing,         intermediateAsfSettings::Union{Nothing,AsfSettings}=nothing, 
         finalConfigs::Union{Nothing,Array{Configuration,1}}=nothing,                finalAsfSettings::Union{Nothing,AsfSettings}=nothing, 
-        alphaSettings::Union{Nothing,AlphaVariation.Settings}=nothing,              einsteinSettings::Union{Nothing,Einstein.Settings}=nothing, 
-        formSettings::Union{Nothing,FormFactor.Settings}=nothing,                   hfsSettings::Union{Nothing,Hfs.Settings}=nothing,
-        isotopeSettings::Union{Nothing,IsotopeShift.Settings}=nothing,              plasmaSettings::Union{Nothing,PlasmaShift.Settings}=nothing, 
-        polaritySettings::Union{Nothing,MultipolePolarizibility.Settings}=nothing,  yieldSettings::Union{Nothing,DecayYield.Settings}=nothing, 
-        zeemanSettings::Union{Nothing,LandeZeeman.Settings}=nothing, 
-        process::Union{Nothing,Basics.AbstractProcess}=nothing,                     processSettings::Union{Nothing,Any}=nothing,            
+        ##x alphaSettings::Union{Nothing,AlphaVariation.Settings}=nothing,              einsteinSettings::Union{Nothing,Einstein.Settings}=nothing, 
+        ##x formSettings::Union{Nothing,FormFactor.Settings}=nothing,                   hfsSettings::Union{Nothing,Hfs.Settings}=nothing,
+        ##x isotopeSettings::Union{Nothing,IsotopeShift.Settings}=nothing,              plasmaSettings::Union{Nothing,PlasmaShift.Settings}=nothing, 
+        ##x polaritySettings::Union{Nothing,MultipolePolarizibility.Settings}=nothing,  yieldSettings::Union{Nothing,DecayYield.Settings}=nothing, 
+        ##x zeemanSettings::Union{Nothing,LandeZeeman.Settings}=nothing, 
+        ##x process::Union{Nothing,Basics.AbstractProcess}=nothing,                     
+        processSettings::Union{Nothing,Any}=nothing,            
         printout::Bool=false)
         
         if  name                    == nothing  namex                    = comp.name                    else  namex                    = name                     end 
         if  nuclearModel            == nothing  nuclearModelx            = comp.nuclearModel            else  nuclearModelx            = nuclearModel             end 
         if  grid                    == nothing  gridx                    = comp.grid                    else  gridx                    = grid                     end 
-        if  properties              == nothing  propertiesx              = comp.properties              else  propertiesx              = properties               end 
+        if  propertySettings        == nothing  propertySettingsx        = comp.propertySettings        else  propertySettingsx        = propertySettings         end 
         if  configs                 == nothing  configsx                 = comp.configs                 else  configsx                 = configs                  end 
         if  asfSettings             == nothing  asfSettingsx             = comp.asfSettings             else  asfSettingsx             = asfSettings              end 
         if  initialConfigs          == nothing  initialConfigsx          = comp.initialConfigs          else  initialConfigsx          = initialConfigs           end 
@@ -149,18 +117,19 @@ module Atomic
         if  intermediateAsfSettings == nothing  intermediateAsfSettingsx = comp.intermediateAsfSettings else  intermediateAsfSettingsx = intermediateAsfSettings  end 
         if  finalConfigs            == nothing  finalConfigsx            = comp.finalConfigs            else  finalConfigsx            = finalConfigs             end 
         if  finalAsfSettings        == nothing  finalAsfSettingsx        = comp.finalAsfSettings        else  finalAsfSettingsx        = finalAsfSettings         end 
-        if  alphaSettings           == nothing  alphaSettingsx           = comp.alphaSettings           else  alphaSettingsx           = alphaSettings            end 
-        if  einsteinSettings        == nothing  einsteinSettingsx        = comp.einsteinSettings        else  einsteinSettingsx        = einsteinSettings         end 
-        if  formSettings            == nothing  formSettingsx            = comp.formSettings            else  formSettingsx            = formSettings             end 
-        if  hfsSettings             == nothing  hfsSettingsx             = comp.hfsSettings             else  hfsSettingsx             = hfsSettings              end 
-        if  isotopeSettings         == nothing  isotopeSettingsx         = comp.isotopeSettings         else  isotopeSettingsx         = isotopeSettings          end 
-        if  plasmaSettings          == nothing  plasmaSettingsx          = comp.plasmaSettings          else  plasmaSettingsx          = plasmaSettings           end 
-        if  polaritySettings        == nothing  polaritySettingsx        = comp.polaritySettings        else  polaritySettingsx        = polaritySettings         end 
-        if  yieldSettings           == nothing  yieldSettingsx           = comp.yieldSettings           else  yieldSettingsx           = yieldSettings            end 
-        if  zeemanSettings          == nothing  zeemanSettingsx          = comp.zeemanSettings          else  zeemanSettingsx          = zeemanSettings           end 
-        if  process                 == nothing  processx                 = comp.process                 else  processx                 = process                  end 
+        ##x if  alphaSettings           == nothing  alphaSettingsx           = comp.alphaSettings           else  alphaSettingsx           = alphaSettings            end 
+        ##x if  einsteinSettings        == nothing  einsteinSettingsx        = comp.einsteinSettings        else  einsteinSettingsx        = einsteinSettings         end 
+        ##x if  formSettings            == nothing  formSettingsx            = comp.formSettings            else  formSettingsx            = formSettings             end 
+        ##x if  hfsSettings             == nothing  hfsSettingsx             = comp.hfsSettings             else  hfsSettingsx             = hfsSettings              end 
+        ##x if  isotopeSettings         == nothing  isotopeSettingsx         = comp.isotopeSettings         else  isotopeSettingsx         = isotopeSettings          end 
+        ##x if  plasmaSettings          == nothing  plasmaSettingsx          = comp.plasmaSettings          else  plasmaSettingsx          = plasmaSettings           end 
+        ##x if  polaritySettings        == nothing  polaritySettingsx        = comp.polaritySettings        else  polaritySettingsx        = polaritySettings         end 
+        ##x if  yieldSettings           == nothing  yieldSettingsx           = comp.yieldSettings           else  yieldSettingsx           = yieldSettings            end 
+        ##x if  zeemanSettings          == nothing  zeemanSettingsx          = comp.zeemanSettings          else  zeemanSettingsx          = zeemanSettings           end 
+        ##x if  process                 == nothing  processx                 = comp.process                 else  processx                 = process                  end 
         if  processSettings         == nothing  prsx                     = comp.processSettings         else  prsx                     = processSettings          end 
         
+        #==
         if      processx == Basics.NoProcess                                                              prsx = PhotoEmission.Settings()
         elseif  processx == Basics.Auger            && typeof(prsx) != AutoIonization.Settings            prsx = AutoIonization.Settings()
         elseif  processx == Basics.AugerInPlasma    && typeof(prsx) != PlasmaShift.AugerSettings          prsx = PlasmaShift.AugerSettings()
@@ -184,12 +153,13 @@ module Atomic
         elseif  process == Basics.InternalConv      && typeof(prsx) != InternalConversion.Settings        prsx = InternalConversion.Settings()
         elseif  process == Basics.Coulex            && typeof(prsx) != CoulombExcitation.Settings         prsx = CoulombExcitation.Settings()
         elseif  process == Basics.Coulion           && typeof(prsx) != CoulombIonization.Settings         prsx = CoulombIonization.Settings()
-        end
+        end  ==#
         
-        cp = Computation(namex, nuclearModelx, gridx, propertiesx, configsx, asfSettingsx, initialConfigsx, initialAsfSettingsx,     
+        cp = Computation(namex, nuclearModelx, gridx, propertySettingsx, configsx, asfSettingsx, initialConfigsx, initialAsfSettingsx,     
                          intermediateConfigsx,  intermediateAsfSettingsx, finalConfigsx, finalAsfSettingsx,        
-                         alphaSettingsx, einsteinSettingsx , formSettingsx, hfsSettingsx, isotopeSettingsx, plasmaSettingsx,
-                         polaritySettingsx, yieldSettingsx, zeemanSettingsx,  processx, prsx) 
+                         ##x alphaSettingsx, einsteinSettingsx , formSettingsx, hfsSettingsx, isotopeSettingsx, plasmaSettingsx,
+                         ##x polaritySettingsx, yieldSettingsx, zeemanSettingsx,  processx, 
+                         prsx) 
                          
         if printout  Base.show(cp)      end
         return( cp )
@@ -234,7 +204,7 @@ module Atomic
     # `Base.string(comp::Atomic.Computation)`  ... provides a String notation for the variable comp::Atomic.Computation.
     function Base.string(comp::Atomic.Computation)
         sa = "Atomic computation:    $(comp.name) for Z = $(comp.nuclearModel.Z), "
-        if  comp.process != NoProcess   sa = sa * "for the process $(comp.process) and with the \ninitial configurations:    "
+        if  comp.processSettings != Nothing   sa = sa * "for the process (comp.process) and with the \ninitial configurations:    "
             for  config  in  comp.initialConfigs   sa = sa * string(config) * ",  "         end
             if  length(comp.intermediateConfigs) > 0
                 sa = sa * "\nintermediate configurations:"
@@ -256,7 +226,7 @@ module Atomic
         println(io, "grid:                  $(comp.grid)  ")
         #
         # For the computation of some given atomic process
-        if  comp.process != NoProcess  
+        if  comp.processSettings != Nothing
         println(io, "processSettings:              \n$(comp.processSettings)  ")
         if  comp.initialAsfSettings != AsfSettings()     
         println(io, "initialAsfSettings:           \n$(comp.initialAsfSettings)  ")         end

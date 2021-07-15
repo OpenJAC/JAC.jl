@@ -15,7 +15,7 @@ if  true
                             initialConfigs      = [Configuration("1s^2 2s")],
                             intermediateConfigs = [Configuration("1s 2s 2p")],
                             finalConfigs        = [Configuration("1s^2 2s")], 
-                            process = PhotoExcFluor(),  processSettings = excSettings  )
+                            processSettings = excSettings  )
 
     wb = perform(wa)
 end

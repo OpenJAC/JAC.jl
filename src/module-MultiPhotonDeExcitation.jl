@@ -202,7 +202,7 @@ module MultiPhotonDeExcitation
     
     
     """
-    `struct  MultiPhotonDeExcitation.Settings`  ... defines a type for the settings in estimating multi-photon excitation and decay rates.
+    `struct  MultiPhotonDeExcitation.Settings  <:  AbstractProcessSettings`  ... defines a type for the settings in estimating multi-photon excitation and decay rates.
 
         + process           ::MultiPhotonDeExcitation.AbstractMultiPhotonProcess      ... considered multi-photon process.
         + multipoles        ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
@@ -215,7 +215,7 @@ module MultiPhotonDeExcitation
         + lineSelection     ::LineSelection                ... Specifies the selected levels, if any.
 
     """
-    struct Settings 
+    struct Settings  <:  AbstractProcessSettings 
         process             ::MultiPhotonDeExcitation.AbstractMultiPhotonProcess
         multipoles          ::Array{EmMultipole}
         gauges              ::Array{UseGauge}

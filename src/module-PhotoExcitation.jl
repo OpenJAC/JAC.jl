@@ -9,7 +9,7 @@ module PhotoExcitation
     using Printf, ..AngularMomentum, ..Basics,  ..Basics,  ..Defaults, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
 
     """
-    `struct  PhotoExcitation.Settings`  ... defines a type for the details and parameters of computing photo-excitation  lines.
+    `struct  PhotoExcitation.Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing photo-excitation  lines.
 
         + multipoles              ::Array{EmMultipole,1}    ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge,1}       ... Specifies the gauges to be included into the computations.
@@ -26,7 +26,7 @@ module PhotoExcitation
         + maximumPhotonEnergy     ::Float64                 ... maximum transition energy for which (photon) transitions are included.
         + stokes                  ::ExpStokes               ... Stokes parameters of the incident radiation.
     """
-    struct Settings 
+    struct Settings  <:  AbstractProcessSettings 
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge,1}
         calcForStokes             ::Bool

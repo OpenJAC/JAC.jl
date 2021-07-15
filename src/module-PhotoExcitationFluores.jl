@@ -8,7 +8,7 @@ module PhotoExcitationFluores
     using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..PhotoEmission, ..TableStrings
 
     """
-    `struct  PhotoExcitationFluores.Settings`  
+    `struct  PhotoExcitationFluores.Settings  <:  AbstractProcessSettings`  
         ... defines a type for the details and parameters of computing photon-impact excitation-autoionization 
             pathways |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
@@ -25,7 +25,7 @@ module PhotoExcitationFluores
         + photonEnergyShift       ::Float64                ... An overall energy shift for all photon energies.
         + pathwaySelection        ::PathwaySelection       ... Specifies the selected levels/pathways, if any.
     """
-    struct Settings
+    struct Settings  <:  AbstractProcessSettings
         multipoles                ::Array{EmMultipole,1}
         gauges                    ::Array{UseGauge,1} 
         calcPhotonDm              ::Bool

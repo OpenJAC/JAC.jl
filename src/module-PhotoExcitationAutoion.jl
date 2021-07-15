@@ -9,7 +9,7 @@ module PhotoExcitationAutoion
                   ..PhotoIonization, ..Radial, ..TableStrings
 
     """
-    `struct  PhotoExcitationAutoion.Settings`  
+    `struct  PhotoExcitationAutoion.Settings  <:  AbstractProcessSettings`  
         ... defines a type for the details and parameters of computing photon-impact excitation-autoionization pathways 
             |i(N)>  --> |m(N)>  --> |f(N-1)>.
 
@@ -27,7 +27,7 @@ module PhotoExcitationAutoion
         + maxKappa                ::Int64                       ... Maximum kappa value of partial waves to be included for free electrons.
         + pathwaySelection        ::PathwaySelection            ... Specifies the selected levels/pathways, if any.
     """
-    struct Settings
+    struct Settings  <:  AbstractProcessSettings
         multipoles                ::Array{Basics.EmMultipole,1}
         gauges                    ::Array{Basics.UseGauge,1} 
         calcPartialCs             ::Bool

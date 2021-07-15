@@ -225,7 +225,7 @@ module Hfs
 
 
     """
-    `struct  Settings`  ... defines a type for the details and parameters of computing HFS A and B coefficients.
+    `struct  Settings  <:  AbstractPropertySettings`  ... defines a type for the details and parameters of computing HFS A and B coefficients.
 
         + calcT1                    ::Bool             ... True if T1-amplitudes (HFS A values) need to be calculated, and false otherwise.
         + calcT2                    ::Bool             ... True if T2-amplitudes (HFS B values) need to be calculated, and false otherwise.
@@ -237,7 +237,7 @@ module Hfs
         + printDeltaEF              ::Bool             ... True if the energy shift of E_F (with regard to E_J) is to be printed, and false otherwise.
         + levelSelection            ::LevelSelection   ... Specifies the selected levels, if any.
     """
-    struct Settings
+    struct Settings  <:  AbstractPropertySettings
         calcT1                      ::Bool
         calcT2                      ::Bool
         calcNondiagonal             ::Bool 
