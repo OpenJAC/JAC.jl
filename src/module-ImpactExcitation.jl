@@ -8,18 +8,20 @@ module ImpactExcitation
     using Printf, ..AngularMomentum, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear, ..TableStrings
 
     """
-    `struct  ImpactExcitationSettings`  ... defines a type for the details and parameters of computing electron-impact excitation lines.
+    `struct  ImpactExcitationSettings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing electron-impact excitation lines.
 
         + electronEnergies        ::Array{Float64,1}             ... List of impact-energies of the incoming elecgtrons.
         + includeBreit            ::Bool                         ... True if the Breit interaction is to be included, and false otherwise.
+        + calcCollisionStrength   ::Bool                         ... True, if collision strength need to be calculated, and false otherwise.
         + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
         + maxKappa                ::Int64                        ... Maximum kappa value of partial waves to be included.
         + energyShift             ::Float64                      ... An overall energy shift for all transitions |i> --> |f>.
     """
-    struct Settings
+    struct Settings  <:  AbstractProcessSettings
         electronEnergies          ::Array{Float64,1}
-        includeBreit              ::Bool
+        includeBreit              ::Bool 
+        calcCollisionStrength     ::Bool
         printBefore               ::Bool 
         lineSelection             ::LineSelection  
         maxKappa                  ::Int64
@@ -31,7 +33,7 @@ module ImpactExcitation
     `ImpactExcitation.Settings()`  ... constructor for the default values of electron-impact excitation line computations.
     """
     function Settings()
-       Settings( Float64[], false, false, LineSelection(), 0, 0.)
+       Settings( Float64[], false, false, false, LineSelection(), 0, 0.)
     end
 
 
@@ -39,6 +41,7 @@ module ImpactExcitation
     function Base.show(io::IO, settings::ImpactExcitation.Settings) 
         println(io, "electronEnergies:           $(settings.electronEnergies)  ")
         println(io, "includeBreit:               $(settings.includeBreit)  ")
+        println(io, "calcCollisionStrength:      $(settings.calcCollisionStrength)  ")
         println(io, "printBefore:                $(settings.printBefore)  ")
         println(io, "lineSelection:              $(settings.lineSelection)  ")
         println(io, "maxKappa:                   $(settings.maxKappa)  ")

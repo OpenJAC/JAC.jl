@@ -137,8 +137,10 @@ module InteractionStrength
         ... to compute the (single-electron reduced matrix element) interaction strength <b || O^(Mp,emission) || a> 
             for the interaction with the Mp multipole component of the radiation field and the transition frequency omega, and 
             within the given gauge. A value::Float64 is returned.  
+            This procedure has been first worked out with Andrey; in this case, however, the phases are not under good control,
+            and this gives rise to wrong amplitudes and rates. The procedure is currently not in use.
     """
-    function MbaEmissionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
+    function MbaEmissionChengOld(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
         kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
         #
         if       gauge == Basics.Magnetic
@@ -168,6 +170,88 @@ module InteractionStrength
  
         return( wa )
     end
+    
+    
+
+    """
+    `InteractionStrength.MbaEmissionJohnsonx(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`
+        ... to compute the (single-electron reduced matrix element) interaction strength <b || O^(Mp,emission) || a> 
+            for the interaction with the Mp multipole component of the radiation field and the transition frequency omega, and 
+            within the given gauge. A value::Float64 is returned.  
+            This procedure has been adapted from Jiri's work but modified for the Coulomb gauge which was apparently wrong following
+            some former implementation with RATIP.
+    """
+    function MbaEmissionJohnsonx(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
+        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
+        #
+        if       gauge == Basics.Magnetic
+            JohnsonI = AngularMomentum.JohnsonI(-kapb, kapa, AngularJ64(mp.L))
+            wa     = JohnsonI * (kapa + kapb)/(mp.L+1) * RadialIntegrals.GrantILplus(mp.L, q, a, b, grid::Radial.Grid)
+        #
+        elseif   gauge == Basics.Babushkin
+            JohnsonI = AngularMomentum.JohnsonI(kapb, kapa, AngularJ64(mp.L))
+            wr     = - RadialIntegrals.GrantJL(mp.L, q, a, b, grid::Radial.Grid)
+            wr     = wr +  (kapb-kapa)/(mp.L+1) * RadialIntegrals.GrantILplus(mp.L+1, q, a, b, grid::Radial.Grid)
+            wr     = wr +  RadialIntegrals.GrantILminus(mp.L+1, q, a, b, grid::Radial.Grid)
+            wa     = JohnsonI * wr
+        #
+        elseif   gauge == Basics.Coulomb
+            # This reduced matrix element still follows RATIP apart from JohnsonI
+            ChengI = AngularMomentum.JohnsonI(kapb, kapa, AngularJ64(mp.L))
+            wr     = (mp.L+1) * (kapb-kapa+mp.L) / (2mp.L+1) * RadialIntegrals.GrantIL0(mp.L-1, q, a, b, grid::Radial.Grid)
+            wr     = wr +  ((mp.L+1) * (kapb-kapa+mp.L) - (2mp.L+1) * (kapb-kapa)) / (2mp.L+1) * 
+                                                               RadialIntegrals.GrantIL0(mp.L+1, q, a, b, grid::Radial.Grid)
+            wr     = wr + (mp.L+1) * (kapb-kapa-mp.L) / (2mp.L+1) * RadialIntegrals.GrantIL0(mp.L-1, q, b, a, grid::Radial.Grid)
+            wr     = wr +  ((mp.L+1) * (kapb-kapa-mp.L) - (2mp.L+1) * (kapb-kapa)) / (2mp.L+1) * 
+                                                               RadialIntegrals.GrantIL0(mp.L+1, q, b, a, grid::Radial.Grid) 
+            wa     = 1.0 / (mp.L+1) * ChengI * wr
+        else     error("stop a")
+        end
+        ##x Multiply with the multipolarity factors to keep different multipoles on the same footings
+        ##x wa = wa * sqrt( (2mp.L+1)*(mp.L+1)/mp.L )
+        ##x wa = conj(wa)
+ 
+        return( wa )
+    end
+    
+    
+
+    """
+    `InteractionStrength.MabEmissionJohnsony(mp::EmMultipole, gauge::EmGauge, omega::Float64, a::Orbital, b::Orbital, grid::Radial.Grid)`
+        ... to compute the (single-electron reduced matrix element) interaction strength <a || O^(Mp,emission) || b> 
+            for the interaction with the Mp multipole component of the radiation field and the transition frequency omega, and 
+            within the given gauge. A value::Float64 is returned. This procedure has been re-worked due to the book by Johnson (2007). 
+    """
+    function MabEmissionJohnsony(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
+        kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
+        #
+        if       gauge == Basics.Magnetic
+            JohnsonI = AngularMomentum.JohnsonI(-kapa, kapb, AngularJ64(mp.L))
+            wa     = JohnsonI * (kapa + kapb)/(mp.L+1) * RadialIntegrals.GrantILplus(mp.L, q, a, b, grid::Radial.Grid)
+            #
+        elseif   gauge == Basics.Babushkin
+            JohnsonI = AngularMomentum.JohnsonI(kapa, kapb, AngularJ64(mp.L))
+            wr     = RadialIntegrals.GrantJL(mp.L, q, a, b, grid::Radial.Grid)
+            wr     = wr +  (kapa-kapb)/(mp.L+1) * RadialIntegrals.GrantILplus(mp.L+1, q, a, b, grid::Radial.Grid)
+            wr     = wr +  RadialIntegrals.GrantILminus(mp.L+1, q, a, b, grid::Radial.Grid)
+            wa     = JohnsonI * wr
+            #
+        elseif   gauge == Basics.Coulomb
+            # This reduced matrix element has been re-worked due to Johnson (2007)
+            JohnsonI = AngularMomentum.JohnsonI(kapa, kapb, AngularJ64(mp.L))
+            wr       = (1 - mp.L/(2mp.L+1)) * RadialIntegrals.GrantILplus(mp.L-1, q, a, b, grid::Radial.Grid)  -
+                       mp.L/(2mp.L+1) * RadialIntegrals.GrantILplus(mp.L+1, q, a, b, grid::Radial.Grid) 
+            wr       = -(kapa-kapb) / (mp.L+1) * wr 
+            wr       = wr  +  mp.L/(2mp.L+1) * RadialIntegrals.GrantILminus(mp.L-1, q, a, b, grid::Radial.Grid) 
+            wr       = wr  +  mp.L/(2mp.L+1) * RadialIntegrals.GrantILminus(mp.L+1, q, a, b, grid::Radial.Grid) 
+            wa       = JohnsonI * wr
+        else     error("stop a")
+        end
+        ##x wa = wa * sqrt( (2mp.L+1)*(mp.L+1)/mp.L )
+        ##x wa = conj(wa)
+ 
+        return( wa )
+    end
 
 
     """
@@ -176,8 +260,9 @@ module InteractionStrength
             for the interaction with the Mp multipole component of the radiation field and the transition frequency omega,
             and within the given gauge. A value::Float64 is returned. At present, only the magnetic matrix elements are 
             implemented. 
+            This procedure has been worked out with Andrey but is currently not in use.
     """
-    function MbaEmissionAndrey(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
+    function MbaEmissionAndreyOld(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
         kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
         ja   = Basics.subshell_j(a.subshell);   jb   = Basics.subshell_j(b.subshell);   
         #

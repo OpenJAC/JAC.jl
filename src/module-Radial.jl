@@ -393,6 +393,50 @@ module Radial
 
 
     """
+    `struct  Radial.Density`  ... defines a struct for a radial density distribution.
+
+        + name           ::String            ... A name for the radial density.
+        + Dr             ::Array{Float64,1}  ... radial density function D(r).
+        + grid           ::RadialGrid        ... radial grid on which the density is defined.
+    """
+    struct  Density
+        name             ::String
+        Dr               ::Array{Float64,1}
+        grid             ::Radial.Grid
+    end
+
+
+    """
+    `Radial.Density()`  ... constructor to define an 'empty' instance of the radial density.
+    """
+    function Density()
+        Density("", Float64[], Radial.Grid())
+    end
+
+
+    # `Base.show(io::IO, density::Radial.Density)`  ... prepares a proper printout of the variable density::Radial.Density.
+    function Base.show(io::IO, density::Radial.Density) 
+    
+        sa = Base.string(density);    print(io, sa * "\n")
+    
+        n = length(density.Dr);                    if  n < 6   return( nothing )    end
+        print(io, "Dr:    ", density.Dr[1:23],    "  ...  ", density.Zr[n-22:n],    "\n") 
+        print(io, density.grid)
+    end
+
+
+    # `Base.string(density::Radial.Density)`  ... provides a String notation for the variable density::Radial.Density.
+    function Base.string(density::Radial.Density) 
+        if  length(density.Dr)  == 0
+            sa = "Radial density not yet defined; kind = $(density.name) ..."
+        else
+            sa = "$(density.name) (radial) density ... defined on $(length(density.Zr)) grid points ..."
+        end 
+    end
+    
+
+
+    """
     `struct  Radial.Potential`  ... defines a struct for a local radial potential.
 
         + name           ::String            ... A name for the potential.

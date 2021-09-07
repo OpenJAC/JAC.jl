@@ -176,8 +176,8 @@ module AngularMomentum
         # i)  We now divide by sqrt(twoJ(jb)+1) instead of sqrt(twoJ(ja)+1) ... which is likely related to change emission - absorption
         # ii) The phase (-1)^(ja + L - jb) is replaced by (-1)^L  to get a proper phase between 1/2 --> 3/2 ME (compared to 3/2 --> 3/2) ...
         #     but which already comes from the Clebsch-Gordan
-        ## wa = AngularMomentum.phaseFactor([ja, +1, L, -1, jb]) * 
-        wa = (-1)^L.num  * sqrt( (Basics.twice(jb)+1)*(Basics.twice(L)+1) / (4*pi) ) / sqrt(Basics.twice(jb)+1) *  
+        wa = AngularMomentum.phaseFactor([ja, +1, L, -1, jb]) *  (-1)^L.num  * 
+        ## wa = (-1)^L.num  * sqrt( (Basics.twice(jb)+1)*(Basics.twice(L)+1) / (4*pi) ) / sqrt(Basics.twice(jb)+1) *  
              AngularMomentum.ClebschGordan(jb, AngularM64(1//2), L, AngularM64(0), ja, AngularM64(1//2)) 
         ##x @show "ChengI", wa, ChengI(kapa, AngularM64(ja), kapb, AngularM64(jb), L, AngularM64(L))
         ##x xa = (Basics.twice(ja) - Basics.twice(jb))/2.
@@ -301,6 +301,23 @@ module AngularMomentum
         if  ja + jb >= jc     &&    jc + ja >= jb   &&   jb + jc >= ja    return( true )
         else                                                              return( false )
         end
+    end
+    
+    
+    """
+    `AngularMomentum.JohnsonI(kapa::Int64, ma::AngularM64, kapb::Int64, mb::AngularM64, L::AngularJ64, M::AngularM64)` 
+        ... evaluates the angular CL (kappa m, kappa' m', L M) integral as defined in his book. A value::Float64 is returned.
+    """
+    function JohnsonI(kapa::Int64, kapb::Int64, L::AngularJ64)
+        ja = Basics.subshell_j( Subshell(9, kapa) );    jb = Basics.subshell_j( Subshell(9, kapb) )   # Use principal QN n=9 arbitrarely here 
+        la = Basics.subshell_l( Subshell(9, kapa) );    lb = Basics.subshell_l( Subshell(9, kapb) ) 
+        #
+        # Test for parity
+        if  L.den != 1   error("stop a")                end 
+        if  isodd( la + lb + L.num )    return( 0. )    end
+        wa =  (-1+0im)^(jb.num+1/2)*sqrt((Basics.twice(jb)+1)*(Basics.twice(L)+1)*(Basics.twice(ja)+1)*(L.num+1) / 
+              (4*pi*L.num ) ) *AngularMomentum.Wigner_3j(ja, L, jb, AngularM64(1//2), AngularM64(0),  AngularM64(-1//2))
+        return( wa )
     end
 
 

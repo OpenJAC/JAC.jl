@@ -2,6 +2,8 @@
 
 [![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master)
+
 
 
 # Jena Atomic Calculator (JAC) for the computation of atomic representations, processes and cascades
