@@ -1038,7 +1038,7 @@ module StrongField
     
     include("module-StrongField-inc-hydrogenic.jl") #StrongField routines for hydrogenic initial states
     include("module-StrongField-inc-uncoupled.jl")  #StrongField routines for computations in the basis of "uncoupled" angular momentum l,ml instead of j,l,mj
-    include("module-StrongField-inc-postProcessing.jl")       #StrongField.plot(...) routine to plot results of StrongField computations
+    ## include("module-StrongField-inc-postProcessing.jl")       #StrongField.plot(...) routine to plot results of StrongField computations
 
 end # module
 

@@ -7,4 +7,4 @@ tput sgr0
 sudo apt-get install jupyter
 tput bold && tput setaf 6; echo 'Installing JAC and its dependencies'
 tput sgr0   
-julia JuliaSetup.jl
+julia -e 'using Pkg; Pkg.add("PyPlot"); Pkg.add("IJulia"); Pkg.add(url="https://github.com/OpenJAC/JAC.jl");'
