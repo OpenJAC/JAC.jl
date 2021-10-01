@@ -900,6 +900,10 @@ module InteractionStrength
             a, b, c and d at the given grid. A value::Float64 is returned.
     """
     function X_smsB(a::Orbital, b::Orbital, c::Orbital, d::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
+        ##x println("")
+        ##x @show AngularMomentum.CL_reduced_me_sms(b.subshell, 1, d.subshell) 
+        ##x @show RadialIntegrals.Vinti(b, d, grid)
+        ##x @show RadialIntegrals.isotope_smsB(a, c, nm.Z, grid)
         wa = - AngularMomentum.CL_reduced_me_sms(b.subshell, 1, d.subshell) * RadialIntegrals.Vinti(b, d, grid) *
                RadialIntegrals.isotope_smsB(a, c, nm.Z, grid) / 2
         return( wa )

@@ -415,11 +415,37 @@ module AngularMomentum
         lb = Basics.subshell_l(subb);    jb2 = Basics.subshell_2j(subb)
         if rem(la + lb, 2) != 0   return 0.     end
         
-        ## redme = ((-1)^((jb2-2L-1)/2)) * sqrt( (jb2+1) ) * 
-        ##         Wigner_3j(AngularJ64(ja2//2), AngularJ64(jb2//2), AngularJ64(L), AngularM64(1//2), AngularM64(-1//2), AngularM64(0) )
         redme = 0.
+        ##    redme = ((-1)^((jb2-2L-1)/2)) * sqrt( (jb2+1) ) * 
+        ##         Wigner_3j(AngularJ64(ja2//2), AngularJ64(jb2//2), AngularJ64(L), AngularM64(1//2), AngularM64(-1//2), AngularM64(0) )
                 
         return( redme )
+    end
+
+    function  sigma_reduced_me_ma(mkapa::Int64, kapb::Int64) 
+        suba = Subshell(9,-mkapa);   ja2 = Basics.subshell_2j(suba);   ja = Basics.subshell_j(suba);   la = Basics.subshell_l(suba)
+        subb = Subshell(9,  kapb);   jb2 = Basics.subshell_2j(subb);   jb = Basics.subshell_j(subb);   lb = Basics.subshell_l(subb)
+        
+        redme = 0.
+        if  ja2-1 == lb
+            redme = AngularMomentum.phaseFactor([AngularJ64(1//2), -1, ja]) * sqrt(6*(ja2+1)*(jb2+1)) *
+                    AngularMomentum.Wigner_6j(AngularJ64(1//2), ja, AngularJ64(ja2-1), jb, AngularJ64(1//2), AngularJ64(1))
+        end
+    
+        return (redme)
+    end
+
+    function  sigma_reduced_me_mb(kapa::Int64, mkapb::Int64) 
+        suba = Subshell(9,  kapa);   ja2 = Basics.subshell_2j(suba);   ja = Basics.subshell_j(suba);   la = Basics.subshell_l(suba)
+        subb = Subshell(9,-mkapb);   jb2 = Basics.subshell_2j(subb);   jb = Basics.subshell_j(subb);   lb = Basics.subshell_l(subb)
+        
+        redme = 0.
+        if  jb2-1 == la
+            redme = AngularMomentum.phaseFactor([AngularJ64(3//2+la), +1, ja]) * sqrt(6*(ja2+1)*(jb2+1)) *
+                    AngularMomentum.Wigner_6j(AngularJ64(1//2), ja, AngularJ64(la), jb, AngularJ64(1//2), AngularJ64(1))
+        end
+    
+        return (redme)
     end
 
 

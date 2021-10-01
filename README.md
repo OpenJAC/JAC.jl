@@ -1,8 +1,8 @@
 
 
-[![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)
+[![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl) ... check for code coverage.
 
-[![Use JAC with Binder in the cloud](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master)  ... use JAC immediately with Binder in the cloud.
 
 
 

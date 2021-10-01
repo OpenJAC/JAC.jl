@@ -16,8 +16,10 @@ module AtomicState
     `abstract type AtomicState.AbstractRepresentationType` 
         ... defines an abstract type and a number of data types to work with and distinguish different atomic representations; see also:
         
-        + struct MeanFieldBasis       ... to represent (and generate) a mean-field basis and, especially, a set of (mean-field) orbitals.
-        + struct OneElectronSpectrum  ... to represent (and generate) a one-electron spectrum for the mean-field potential of refConfigs.
+        + struct MeanFieldBasis       ... to represent (and generate) a mean-field basis and, especially, a set of 
+                                          (mean-field) orbitals.
+        + struct OneElectronSpectrum  ... to represent (and generate) a one-electron spectrum for the mean-field 
+                                          potential of refConfigs.
         + struct CiExpansion          ... to represent (and generate) a configuration-interaction representation.
         + struct RasExpansion         ... to represent (and generate) a restricted active-space representation.
         + struct GreenExpansion       ... to represent (and generate) an approximate (many-electron) Green functions.
@@ -349,7 +351,7 @@ module AtomicState
     `struct  AtomicState.CiSettings`  
         ... a struct for defining the settings for a configuration-interaction (CI) expansion.
 
-    	+ eeInteractionCI      ::AbstractEeInteraction   ... logical flag to include Breit interactions.
+    	+ eeInteractionCI      ::AbstractEeInteraction   ... Specifies the treatment of the e-e interaction.
         + levelSelectionCI     ::LevelSelection          ... Specifies the selected levels, if any.
     """
     struct  CiSettings
@@ -622,7 +624,8 @@ module AtomicState
             
             frozen      = [Shell("1s")]
             to          = [Shell("2s"), Shell("2p")]
-            step1       = RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
+            step1       = RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), 
+                                  frozen=deepcopy(frozen))
 
             append!(frozen, [Shell("2s"), Shell("2p")])
             append!(to,     [Shell("3s"), Shell("3p"), Shell("3d")])
@@ -642,7 +645,8 @@ module AtomicState
             levelSymmetries = [LevelSymmetry(1//2, Basics.plus), LevelSymmetry(3//2, Basics.plus)]
             greenSettings   = GreenSettings(5, [0, 1, 2], 0.01, true, false, Int64[])
             Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
-                           GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 3, greenSettings) ) 
+                           GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), 
+                           levelSymmetries, 3, greenSettings) ) 
                            
         ... These simple examples can be further improved by overwriting the corresponding parameters.
     """

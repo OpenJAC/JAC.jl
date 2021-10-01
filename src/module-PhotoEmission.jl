@@ -50,7 +50,7 @@ module PhotoEmission
     `PhotoEmission.Settings(set::PhotoEmission.Settings;`
     
             multipoles::=..,        gauges=..,          calcAnisotropy=..,          printBefore=..,
-            line=..,         selectedLines=..,   photonEnergyShift=..,       mimimumPhotonEnergy=.., 
+            line=..,                selectedLines=..,   photonEnergyShift=..,       mimimumPhotonEnergy=.., 
             maximumPhotonEnergy=..) 
                         
         ... constructor for modifying the given PhotoEmission.Settings by 'overwriting' the previously selected parameters.

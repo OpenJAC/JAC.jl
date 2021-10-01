@@ -6,10 +6,10 @@ setDefaults("unit: energy", "Kayser")
 setDefaults("unit: rate", "1/s")
 setDefaults("print summary: open", "zzz-radiative.sum")
 
-if false
+if true
 
     grid = Radial.Grid(true)
-    ##x grid = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 1.0e-2, hp = 0., rbox = 2.0)
+    grid = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 1.0e-2, hp = 0., rbox = -2.01)
     setDefaults("standard grid", grid)
     defaultsSettings = PhotoEmission.Settings()
     photoSettings = PhotoEmission.Settings(defaultsSettings, multipoles=[E1], gauges=[UseCoulomb,UseBabushkin], printBefore=true)
@@ -33,7 +33,7 @@ elseif false
                                             Configuration("1s^2 4p"), Configuration("1s^2 4d")], 
                             processSettings= PhotoEmission.Settings([E1], [UseCoulomb,JAC.UseBabushkin], false, true, LineSelection(), 0., 0., 10000. ) )
     wb = @time( perform(wa) )
-elseif false
+elseif true
     # LineSelection(true, indexPairs=[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)])
     wa = Atomic.Computation(Atomic.Computation(), name="xx",  grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(90.),
                             initialConfigs=[Configuration("1s^2 2s 2p")],
