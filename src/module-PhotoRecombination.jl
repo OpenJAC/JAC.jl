@@ -11,26 +11,27 @@ module PhotoRecombination
     """
     `struct  Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing photo recombination lines.
 
-        + multipoles              ::Array{EmMultipole}           ... Multipoles of the radiation field that are to be included.
-        + gauges                  ::Array{UseGauge}              ... Gauges to be included into the computations.
-        + electronEnergies        ::Array{Float64,1}             ... List of electron energies [in default units].
-        + ionEnergies             ::Array{Float64,1}             ... List of ion energies [in MeV/u].
-        + useIonEnergies          ::Bool                         ... Make use of ion energies in [MeV/u] to obtain the electron energies.
-        + calcAnisotropy          ::Bool                         ... True, if the overall anisotropy is to be calculated.
-        + calcTensors             ::Bool                         ... True, if the statistical tensors are to be calculated and false otherwise.
-        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
+        + multipoles          ::Array{EmMultipole}  ... Multipoles of the radiation field that are to be included.
+        + gauges              ::Array{UseGauge}     ... Gauges to be included into the computations.
+        + electronEnergies    ::Array{Float64,1}    ... List of electron energies [in default units].
+        + ionEnergies         ::Array{Float64,1}    ... List of ion energies [in MeV/u].
+        + useIonEnergies      ::Bool                ... Make use of ion energies in [MeV/u] to obtain the electron energies.
+        + calcAnisotropy      ::Bool                ... True, if the overall anisotropy is to be calculated.
+        + calcTensors         ::Bool                ... True, if the statistical tensors are to be calculated and 
+                                                        false otherwise.
+        + printBefore         ::Bool                ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection       ::LineSelection       ... Specifies the selected levels, if any.
     """
     struct Settings  <:  AbstractProcessSettings
-        multipoles                ::Array{EmMultipole}
-        gauges                    ::Array{UseGauge}
-        electronEnergies          ::Array{Float64,1} 
-        ionEnergies               ::Array{Float64,1}
-        useIonEnergies            ::Bool
-        calcAnisotropy            ::Bool
-        calcTensors               ::Bool 
-        printBefore               ::Bool 
-        lineSelection             ::LineSelection 
+        multipoles            ::Array{EmMultipole}
+        gauges                ::Array{UseGauge}
+        electronEnergies      ::Array{Float64,1} 
+        ionEnergies           ::Array{Float64,1}
+        useIonEnergies        ::Bool
+        calcAnisotropy        ::Bool
+        calcTensors           ::Bool 
+        printBefore           ::Bool 
+        lineSelection         ::LineSelection 
     end 
 
 

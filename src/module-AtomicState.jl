@@ -171,7 +171,6 @@ module AtomicState
         + levelsScf            ::Array{Int64,1}         ... Levels on which the optimization need to be carried out.
         + maxIterationsScf     ::Int64                  ... maximum number of SCF iterations in each RAS step.
         + accuracyScf          ::Float64                ... convergence criterion for the SCF field.
-        
     	+ eeInteractionCI      ::AbstractEeInteraction  ... logical flag to include Breit interactions.
         + levelSelectionCI     ::LevelSelection         ... Specifies the selected levels, if any.
     """
@@ -187,7 +186,7 @@ module AtomicState
     `AtomicState.RasSettings()`  ... constructor for setting the default values.
     """
     function RasSettings()
-    	RasSettings(Int64[1], 24, 1.0e-6, false, LevelSelection() )
+    	RasSettings(Int64[1], 24, 1.0e-6, CoulombInteraction(), LevelSelection() )
     end
     
     
@@ -216,7 +215,8 @@ module AtomicState
         + qeFrom            ::Array{Shell,1}        ... Quadrupole-excitations from shells   [sh_1, sh_2, ...]
         + qeTo              ::Array{Shell,1}        ... Quadrupole-excitations to shells  [sh_1, sh_2, ...]
         + frozenShells      ::Array{Shell,1}        ... List of shells that are kept 'frozen' in this step.
-        + constraints       ::Array{String,1}       ... List of Strings to define 'constraints/restrictions' to the generated CSF basis.
+        + constraints       ::Array{String,1}       ... List of Strings to define 'constraints/restrictions' 
+                                                        to the generated CSF basis.
     """
     struct  RasStep
         seFrom              ::Array{Shell,1}
@@ -248,7 +248,8 @@ module AtomicState
                         qeFrom::Array{Shell,1}=Shell[], qeTo::Array{Shell,1}=Shell[], 
                         frozen::Array{Shell,1}=Shell[], constraints::Array{String,1}=String[]  
                         
-        ... constructor for modifying the given rasStep by specifying all excitations, frozen shells and constraints optionally.
+        ... constructor for modifying the given rasStep by specifying all excitations, frozen shells and 
+            constraints optionally.
     """
     function RasStep(rasStep::AtomicState.RasStep;
                      seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[], 
@@ -310,7 +311,8 @@ module AtomicState
 
         + symmetries       ::Array{LevelSymmetry,1}         ... Symmetries of the levels/CSF in the many-electron basis.
         + NoElectrons      ::Int64                          ... Number of electrons.
-        + steps            ::Array{AtomicState.RasStep,1}   ... List of SCF steps that are to be done in this model computation.
+        + steps            ::Array{AtomicState.RasStep,1}   ... List of SCF steps that are to be done in this model 
+                                                                computation.
         + settings         ::AtomicState.RasSettings        ... Settings for the given RAS computation
     """
     struct         RasExpansion    <:  AbstractRepresentationType
