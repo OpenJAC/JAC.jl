@@ -7,6 +7,13 @@ The following features have been recently implemented and up-loaded into JAC's m
 
 ## 2021
 
+* **Strong-field ionization (together with Birger Böning):** A first module (and examples) have been worked out to 
+    apply the strong-field approximation (SFA) in a partial-wave reprensentation of the initial and Volkov states; 
+    this makes the SFA suitable for dealing with realistic electronic structures of atoms and with different gauges
+    of the radiation field. *(September'21)*
+* **Extended and improved User Guide & Compendium:**  *(August'21)*
+* **Write-up of atomic Green functions:** Cf. S. Fritzsche  & A. Surzhykov,
+    Molecules 2021, 26, 2660; https://doi.org/10.3390/molecules26092660   *(May'21)*
 * **Extended dielectronic recombination (DR) calculations:** Apart from the DR resonance strength, the
     DR (plasma) rate coefficients can be calculated as well.*(March'21)*
 * **Write-up of atomic cascade computations:** Cf. S. Fritzsche, P. Palmeri & S. Schippers,

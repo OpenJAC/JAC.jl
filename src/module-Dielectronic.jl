@@ -15,18 +15,21 @@ module Dielectronic
 
         + multipoles            ::Array{EmMultipoles}  ... Multipoles of the radiation field that are to be included.
         + gauges                ::Array{UseGauge}      ... Specifies the gauges to be included into the computations.
-        + calcRateAlpha         ::Bool                 ... True, if the DR rate coefficients are to be calculated, and false o/w.
-        + printBefore           ::Bool                 ... True, if all energies and pathways are printed before their eval.
+        + calcRateAlpha         ::Bool                 ... True, if the DR rate coefficients are to be calculated, 
+                                                           and false o/w.
+        + printBefore           ::Bool                 ... True, if all energies and pathways are printed before their 
+                                                           evaluation.
         + pathwaySelection      ::PathwaySelection     ... Specifies the selected levels/pathways, if any.
-        + electronEnergyShift   ::Float64              ... An overall energy shift for all electron energies (i.e. from the 
-                                                           initial to the resonance levels [Hartree].
-        + photonEnergyShift     ::Float64              ... An overall energy shift for all photon energies (i.e. from the 
-                                                           resonance to the final levels.
+        + electronEnergyShift   ::Float64              ... An overall energy shift for all electron energies (i.e. from 
+                                                           the initial to the resonance levels [Hartree].
+        + photonEnergyShift     ::Float64              ... An overall energy shift for all photon energies (i.e. from 
+                                                           the resonance to the final levels.
         + mimimumPhotonEnergy   ::Float64              ... minimum transition energy for which photon transitions are 
                                                            included into the evaluation.
         + temperatures          ::Array{Float64,1}
-        + augerOperator         ::AbstractEeInteraction .. Auger operator that is to be used for evaluating the Auger ampl's: 
-                                                           allowed values are: CoulombInteraction(), BreitInteration(), CoulombBreit()
+        + augerOperator         ::AbstractEeInteraction 
+          ... Auger operator that is to be used for evaluating the Auger amplitude's; the allowed values are: 
+              CoulombInteraction(), BreitInteration(), CoulombBreit().
     """
     struct Settings  <:  AbstractProcessSettings 
         multipoles              ::Array{EmMultipole,1}

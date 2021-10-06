@@ -1,7 +1,10 @@
 
 
 [![CI](https://github.com/OpenJAC/JAC.jl/workflows/CI/badge.svg)](https://github.com/OpenJAC/JAC.jl/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)
+
+[![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl) ... check for code coverage.
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master)  ... use JAC immediately with Binder in the cloud.
 
 
 
@@ -25,8 +28,8 @@ and the handling of atomic data should appear within the code similar to how the
 language. Shortly speaking, JAC aims to provide a powerful **platform for daily use and to extent atomic theory 
 towards new applications** or, in short, a **community platform for Just Atomic Computations**.
 
-**Remark**: Although major efforts have been undertaken during the past three years, JAC is still in a very early state 
-of its development and includes features that are only partly implemented or not yet tested in all detail. 
+**Remark**: Although major efforts have been undertaken during the past four years, JAC is still in an early state 
+of development and includes various features that are only partly implemented or have not yet tested in good detail. 
 Despite of possible failures and deficiencies of the present code, however, I here annouce JAC and kindly ask potential
 users and developers for response, support and encouragement.
 
@@ -112,21 +115,33 @@ Commons Attribution 4.0 International (CC BY 4.0) license.
 For reference to (using) this code, please, use the Computer Physics Communications publication on JAC:
 
 * S. Fritzsche, [Computer Physics Communications 240, 1 (2019)](https://doi.org/10.1016/j.cpc.2019.01.012)
+* S. Fritzsche, P. Palmeri & S. Schippers: Atomic Cascade Computations. [Symmetry 13, 520 (2021)](https://doi.org/10.3390/sym13030520)
+* S. Fritzsche: Symbolic Evaluation of Expressions from Racah’s Algebra. [Symmetry 13, 1558 (2021)](https://doi.org/10.3390/sym13091558)
+
+
 
 
 
 ## Installation
 
-For the installation of the JAC package, you need first to install **gfortran** to compile the Fortran code
-of the angular coeffients. Afterwards, you can install JAC by just entering the package manager (with <Alt> ]) 
+In Julia, you can install the JAC package like any other package by by just entering the package manager (with <Alt> ]) 
 and by typing
 ```
 pkg> add https://github.com/OpenJAC/JAC.jl
 ```
-Moreover, to run the tutorials, yo need to have Jupyter notebooks running.
+Moreover, to run the tutorials, you will need to have Jupyter notebooks running.typing
 
-If problems occur with the installation, please, see the Installation Guides for [Linux](InstallationGuideLinux.md),
+
+If you haven't used Julia and Jupyter before, you can also run under Linux or Windows either the script 
+[Install Julia, Jupyter & JAC via julialang.org](InstallJAC.bash) or [... via snap](InstallJAC2.bash). 
+
+JAC also works for Apple's MAC system, though there is less experience from our side. Please, see the Installation Guides 
 [Mac](InstallationGuideMac.md) or ... 
+
+
+If you found a good solution for still other operating systems and/or hardware architectures, where the hints above
+do not work, please, send useful comments and email to s.fritzsche@gsi.de. I will be happy too *add* them here to further
+facilitate the use.
 
 
 
@@ -134,7 +149,6 @@ If problems occur with the installation, please, see the Installation Guides for
 
 The JAC code makes use of:
 * standard Julia packages, such as SpecialFunctions, FortranFiles, GaussQuadrature, GSL and QuadGK.
-* ANCO library, G. Gaigalas, S. Fritzsche and I. P. Grant, Comp. Phys. Commun. 139, 269 (2001).
 * Matrix elements from G. Gaigalas, T. Zalandauskas and S. Fritzsche, Comp. Phys. Commun. 157, 239 (2004).
 
     

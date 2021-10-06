@@ -16,8 +16,10 @@ module AtomicState
     `abstract type AtomicState.AbstractRepresentationType` 
         ... defines an abstract type and a number of data types to work with and distinguish different atomic representations; see also:
         
-        + struct MeanFieldBasis       ... to represent (and generate) a mean-field basis and, especially, a set of (mean-field) orbitals.
-        + struct OneElectronSpectrum  ... to represent (and generate) a one-electron spectrum for the mean-field potential of refConfigs.
+        + struct MeanFieldBasis       ... to represent (and generate) a mean-field basis and, especially, a set of 
+                                          (mean-field) orbitals.
+        + struct OneElectronSpectrum  ... to represent (and generate) a one-electron spectrum for the mean-field 
+                                          potential of refConfigs.
         + struct CiExpansion          ... to represent (and generate) a configuration-interaction representation.
         + struct RasExpansion         ... to represent (and generate) a restricted active-space representation.
         + struct GreenExpansion       ... to represent (and generate) an approximate (many-electron) Green functions.
@@ -169,7 +171,6 @@ module AtomicState
         + levelsScf            ::Array{Int64,1}         ... Levels on which the optimization need to be carried out.
         + maxIterationsScf     ::Int64                  ... maximum number of SCF iterations in each RAS step.
         + accuracyScf          ::Float64                ... convergence criterion for the SCF field.
-        
     	+ eeInteractionCI      ::AbstractEeInteraction  ... logical flag to include Breit interactions.
         + levelSelectionCI     ::LevelSelection         ... Specifies the selected levels, if any.
     """
@@ -185,7 +186,7 @@ module AtomicState
     `AtomicState.RasSettings()`  ... constructor for setting the default values.
     """
     function RasSettings()
-    	RasSettings(Int64[1], 24, 1.0e-6, false, LevelSelection() )
+    	RasSettings(Int64[1], 24, 1.0e-6, CoulombInteraction(), LevelSelection() )
     end
     
     
@@ -214,7 +215,8 @@ module AtomicState
         + qeFrom            ::Array{Shell,1}        ... Quadrupole-excitations from shells   [sh_1, sh_2, ...]
         + qeTo              ::Array{Shell,1}        ... Quadrupole-excitations to shells  [sh_1, sh_2, ...]
         + frozenShells      ::Array{Shell,1}        ... List of shells that are kept 'frozen' in this step.
-        + constraints       ::Array{String,1}       ... List of Strings to define 'constraints/restrictions' to the generated CSF basis.
+        + constraints       ::Array{String,1}       ... List of Strings to define 'constraints/restrictions' 
+                                                        to the generated CSF basis.
     """
     struct  RasStep
         seFrom              ::Array{Shell,1}
@@ -246,7 +248,8 @@ module AtomicState
                         qeFrom::Array{Shell,1}=Shell[], qeTo::Array{Shell,1}=Shell[], 
                         frozen::Array{Shell,1}=Shell[], constraints::Array{String,1}=String[]  
                         
-        ... constructor for modifying the given rasStep by specifying all excitations, frozen shells and constraints optionally.
+        ... constructor for modifying the given rasStep by specifying all excitations, frozen shells and 
+            constraints optionally.
     """
     function RasStep(rasStep::AtomicState.RasStep;
                      seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[], 
@@ -308,7 +311,8 @@ module AtomicState
 
         + symmetries       ::Array{LevelSymmetry,1}         ... Symmetries of the levels/CSF in the many-electron basis.
         + NoElectrons      ::Int64                          ... Number of electrons.
-        + steps            ::Array{AtomicState.RasStep,1}   ... List of SCF steps that are to be done in this model computation.
+        + steps            ::Array{AtomicState.RasStep,1}   ... List of SCF steps that are to be done in this model 
+                                                                computation.
         + settings         ::AtomicState.RasSettings        ... Settings for the given RAS computation
     """
     struct         RasExpansion    <:  AbstractRepresentationType
@@ -349,7 +353,7 @@ module AtomicState
     `struct  AtomicState.CiSettings`  
         ... a struct for defining the settings for a configuration-interaction (CI) expansion.
 
-    	+ eeInteractionCI      ::AbstractEeInteraction   ... logical flag to include Breit interactions.
+    	+ eeInteractionCI      ::AbstractEeInteraction   ... Specifies the treatment of the e-e interaction.
         + levelSelectionCI     ::LevelSelection          ... Specifies the selected levels, if any.
     """
     struct  CiSettings
@@ -622,7 +626,8 @@ module AtomicState
             
             frozen      = [Shell("1s")]
             to          = [Shell("2s"), Shell("2p")]
-            step1       = RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
+            step1       = RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), 
+                                  frozen=deepcopy(frozen))
 
             append!(frozen, [Shell("2s"), Shell("2p")])
             append!(to,     [Shell("3s"), Shell("3p"), Shell("3d")])
@@ -642,7 +647,8 @@ module AtomicState
             levelSymmetries = [LevelSymmetry(1//2, Basics.plus), LevelSymmetry(3//2, Basics.plus)]
             greenSettings   = GreenSettings(5, [0, 1, 2], 0.01, true, false, Int64[])
             Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
-                           GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 3, greenSettings) ) 
+                           GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), 
+                           levelSymmetries, 3, greenSettings) ) 
                            
         ... These simple examples can be further improved by overwriting the corresponding parameters.
     """

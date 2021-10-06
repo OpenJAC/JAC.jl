@@ -8,7 +8,7 @@ module  RacahAlgebra
   
     using   SymEngine,  ..AngularMomentum, ..Basics,  ..Defaults
     
-    export  ClebschGordan, Kronecker, Triangle, W3j, W6j, W9j, Ylm, Djpq, RacahExpression
+    export  ClebschGordan, Integral, Kronecker, Triangle, W3j, W6j, W9j, Ylm, Djpq, RacahExpression
 
     
     """

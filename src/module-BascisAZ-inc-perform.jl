@@ -62,6 +62,10 @@
                     outcome = MultipolePolarizibility.computeOutcomes(multiplet, nModel, computation.grid, settings)         
                     if output    results = Base.merge( results, Dict("Polarizibility outcomes:" => outcome) )         end
                     #
+                elseif  typeof(settings) == ReducedDensityMatrix.Settings 
+                    outcome = ReducedDensityMatrix.computeOutcomes(multiplet, nModel, computation.grid, settings)         
+                    if output    results = Base.merge( results, Dict("RDM outcomes:" => outcome) )         end
+                    #
                 elseif  typeof(settings) == PlasmaShift.Settings 
                     outcome = PlasmaShift.computeOutcomes(multiplet, nModel, computation.grid, computation.asfSettings, settings)         
                     if output    results = Base.merge( results, Dict("Plasma shift outcomes:" => outcome) )            end

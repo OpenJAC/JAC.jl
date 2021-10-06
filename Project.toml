@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FortranFiles = "c58ffaec-ab22-586d-bfc5-781a99fd0b10"

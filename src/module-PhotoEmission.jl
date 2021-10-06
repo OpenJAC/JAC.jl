@@ -11,14 +11,15 @@ module PhotoEmission
 
 
     """
-    `struct  PhotoEmission.Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing radiative lines.
+    `struct  PhotoEmission.Settings  <:  AbstractProcessSettings`  
+        ... defines a type for the details and parameters of computing radiative lines.
 
         + multipoles              ::Array{EmMultipoles}     ... Specifies the (radiat. field) multipoles to be included.
         + gauges                  ::Array{UseGauge}         ... Gauges to be included into the computations.
         + calcAnisotropy          ::Bool                    ... True, if the anisotropy (structure) functions are to be 
                                                                 calculated and false otherwise 
         + printBefore             ::Bool                    ... True, if all energies and lines are printed before comput.
-        + lineSelection           ::LineSelection          ... Specifies the selected levels, if any.
+        + lineSelection           ::LineSelection           ... Specifies the selected levels, if any.
         + photonEnergyShift       ::Float64                 ... An overall energy shift for all photon energies.
         + mimimumPhotonEnergy     ::Float64                 ... minimum transition energy for which (photon) transitions 
                                                                 are included into the computation.
@@ -49,7 +50,7 @@ module PhotoEmission
     `PhotoEmission.Settings(set::PhotoEmission.Settings;`
     
             multipoles::=..,        gauges=..,          calcAnisotropy=..,          printBefore=..,
-            line=..,         selectedLines=..,   photonEnergyShift=..,       mimimumPhotonEnergy=.., 
+            line=..,                selectedLines=..,   photonEnergyShift=..,       mimimumPhotonEnergy=.., 
             maximumPhotonEnergy=..) 
                         
         ... constructor for modifying the given PhotoEmission.Settings by 'overwriting' the previously selected parameters.
@@ -175,7 +176,7 @@ module PhotoEmission
             
             nf = length(fLevel.basis.csfs);    ni = length(iLevel.basis.csfs)
             if  printout   printstyled("Compute radiative $(Mp) matrix of dimension $nf x $ni in the initial- and final-state bases " *
-                                       "for the transition [$(iLevel.index)-$(fLevel.index)] ... ", color=:light_green)    end
+                                       "for the transition [$(iLevel.index)-$(fLevel.index)] ... \n", color=:light_green)    end
             matrix = zeros(ComplexF64, nf, ni)
             #
             for  r = 1:nf
@@ -205,14 +206,13 @@ module PhotoEmission
                     me = 0.
                     ##x println("Enter loop ... r=$r   s=$s  length(wa) = $(length(wa))")
                     for  coeff in wa
-                        ##x ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
-                        ##x jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
-                        MbaCheng  = InteractionStrength.MbaEmissionCheng(Mp, gauge, omega, fLevel.basis.orbitals[coeff.a],  
-                                                                                           iLevel.basis.orbitals[coeff.b], grid)
-                        me = me + coeff.T * MbaCheng  ## sqrt( (ja + 1)/(jb + 1) ) * ##   0.707106781186548 *
-                        ##x @show coeff.T, MbaCheng, coeff.T * MbaCheng
+                        ##x MbaJohnsonx = InteractionStrength.MbaEmissionJohnsonx(Mp, gauge, omega, fLevel.basis.orbitals[coeff.a],  
+                        ##x                                                                     iLevel.basis.orbitals[coeff.b], grid)
+                        MabJohnsony = InteractionStrength.MabEmissionJohnsony(Mp, gauge, omega, fLevel.basis.orbitals[coeff.a],  
+                                                                                            iLevel.basis.orbitals[coeff.b], grid)
+                        me = me + coeff.T * MabJohnsony
+                        ##x @show coeff.a, coeff.b, Mp, gauge, MbaJohnsonx, MabJohnsony, abs(MbaJohnsonx/MabJohnsony)
                     end
-                    ##x @show r, s, me
                     matrix[r,s] = me
                 end
             end 
@@ -333,6 +333,10 @@ module PhotoEmission
                                                 line.finalLevel, line.initialLevel, grid, printout=printout)
             #
             push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
+            # Multiply with the multipolarity factors to keep different multipoles on the same footings
+            mp        = channel.multipole
+            amplitude = amplitude * sqrt( (2mp.L+1)*(mp.L+1)/mp.L )
+            #
             if       channel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2
             elseif   channel.gauge == Basics.Babushkin   rateB = rateB + abs(amplitude)^2
             elseif   channel.gauge == Basics.Magnetic    rateB = rateB + abs(amplitude)^2;   rateC = rateC + abs(amplitude)^2
@@ -340,8 +344,8 @@ module PhotoEmission
         end
         #     
         # Calculate the photonrate and angular beta if requested 
-        wa = 8.0pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) * 
-                                                      (Basics.twice(line.finalLevel.J) + 1)
+        wa = 2.0pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) 
+        ##                                         * (Basics.twice(line.finalLevel.J) + 1)
         photonrate  = EmProperty(wa * rateC, wa * rateB)    
         angularBeta = EmProperty(-9., -9.)
         line = PhotoEmission.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, true, newChannels)

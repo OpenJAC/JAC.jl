@@ -695,7 +695,7 @@ module Basics
 
 
     """
-    `Basics.Subshell(sa::String)`  ... constructor for a given principal quantum number n and (level) symmetry.
+    `Basics.Subshell(n::Int64, symmetry::LevelSymmetry)`  ... constructor for a given principal quantum number n and (level) symmetry.
     """
     function Subshell(n::Int64, symmetry::LevelSymmetry) 
         if  symmetry.parity == Basics.plus

@@ -19,7 +19,7 @@ module Nuclear
         + radius   ::Float64         ... (root-mean square) radius of a uniform or Fermi-distributed nucleus
         + spinI    ::AngularJ64      ... nuclear spin I, must be >= 0
         + mu       ::Float64         ... magnetic dipole moment in Bohr magnetons
-        + Q        ::Float64         ... electric qadrupole moment
+        + Q        ::Float64         ... electric quadrupole moment
     """
     struct  Model
         Z          ::Float64

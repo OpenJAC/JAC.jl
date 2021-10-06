@@ -277,7 +277,7 @@ module PhotoIonization
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   PhotoIonization.displayResults(iostream, newLines, settings)     end
         #
-        if    output    return( lines )
+        if    output    return( newLines )
         else            return( nothing )
         end
     end

@@ -12,24 +12,25 @@ module AutoIonization
     """
     `struct  Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing Auger lines.
 
-        + calcAnisotropy          ::Bool                         ... True, if the intrinsic alpha_2,4 angular parameters are to be calculated, 
-                                                                     and false otherwise.
-        + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
-        + minAugerEnergy          ::Float64                      ... Minimum energy of free (Auger) electrons to be included.
-        + maxAugerEnergy          ::Float64                      ... Maximum energy of free (Auger) electrons to be included.
-        + maxKappa                ::Int64                        ... Maximum kappa value of partial waves to be included.
-        + operator                ::AbstractEeInteraction        ... Auger operator that is to be used for evaluating the Auger amplitudes: 
-                                                                     allowed values are: CoulombInteraction(), BreitInteraction(), ...
+        + calcAnisotropy      ::Bool               ... True, if the intrinsic alpha_2,4 angular parameters are to be 
+                                                       calculated, and false otherwise.
+        + printBefore         ::Bool               ... True, if all energies and lines are printed before their evaluation.
+        + lineSelection       ::LineSelection      ... Specifies the selected levels, if any.
+        + minAugerEnergy      ::Float64            ... Minimum energy of free (Auger) electrons to be included.
+        + maxAugerEnergy      ::Float64            ... Maximum energy of free (Auger) electrons to be included.
+        + maxKappa            ::Int64              ... Maximum kappa value of partial waves to be included.
+        + operator            ::AbstractEeInteraction   
+            ... Auger operator that is to be used for evaluating the Auger amplitudes; allowed values are: 
+                CoulombInteraction(), BreitInteraction(), ...
     """
     struct Settings  <:  AbstractProcessSettings
-        calcAnisotropy            ::Bool         
-        printBefore               ::Bool 
-        lineSelection             ::LineSelection 
-        minAugerEnergy            ::Float64
-        maxAugerEnergy            ::Float64
-        maxKappa                  ::Int64
-        operator                  ::AbstractEeInteraction 
+        calcAnisotropy        ::Bool         
+        printBefore           ::Bool 
+        lineSelection         ::LineSelection 
+        minAugerEnergy        ::Float64
+        maxAugerEnergy        ::Float64
+        maxKappa              ::Int64
+        operator              ::AbstractEeInteraction 
     end 
 
 
@@ -220,9 +221,9 @@ module AutoIonization
     """
     function channelAmplitude(kind::String, channel::AutoIonization.Channel, energy::Float64, finalLevel::Level, 
                               initialLevel::Level, grid::Radial.Grid)
-        newiLevel = Basics.generateLevelWithSymmetryReducedBasis(initialLevel)
+        newiLevel = Basics.generateLevelWithSymmetryReducedBasis(initialLevel, initialLevel.basis.subshells)
         newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
-        newfLevel = Basics.generateLevelWithSymmetryReducedBasis(finalLevel)
+        newfLevel = Basics.generateLevelWithSymmetryReducedBasis(finalLevel, finalLevel.basis.subshells)
         cOrbital, phase  = Continuum.generateOrbital(energy, Subshell(101, channel.kappa), newfLevel, grid, contSettings)
         newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
         newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
@@ -274,9 +275,9 @@ module AutoIonization
                                                settings::PlasmaShift.AugerSettings; printout::Bool=true) 
         newChannels = AutoIonization.Channel[];   contSettings = Continuum.Settings(false, nrContinuum);   rate = 0.
         for channel in line.channels
-            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
+            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
-            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel)
+            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, line.finalLevel.basis.subshells)
             @warn "Adapt a proper continuum orbital for the plasma potential"
             cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
@@ -471,8 +472,8 @@ module AutoIonization
         printstyled("AutoIonization.computeLinesPlasma(): The computation of Auger rates starts now ... \n", color=:light_green)
         printstyled("---------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        augerSettings = AutoIonization.Settings(false, settings.printBefore, settings.selectLines, settings.selectedLines, 0., 1.0e6, 100, CoulombInteraction())
-        lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, augerSettings)
+        augerSettings = AutoIonization.Settings(false, settings.printBefore, settings.lineSelection, 0., 1.0e6, 100, CoulombInteraction())
+        lines         = AutoIonization.determineLines(finalMultiplet, initialMultiplet, augerSettings)
         # Display all selected lines before the computations start
         if  settings.printBefore    AutoIonization.displayLines(lines)    end
         # Determine maximum energy and check for consistency of the grid

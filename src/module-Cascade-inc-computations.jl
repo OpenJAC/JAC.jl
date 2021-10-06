@@ -244,6 +244,12 @@
                 if  printSummary   print(iostream, "* Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")   end
                 basis     = Basics.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
                 multiplet = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                # Shift the total energies of all levels if requested for the StepwiseDecayScheme
+                if  typeof(comp.scheme) == StepwiseDecayScheme   &&   haskey(comp.scheme.chargeStateShifts, confa.NoElectrons)
+                    energyShift = comp.scheme.chargeStateShifts[confa.NoElectrons]
+                    multiplet   = Basics.shiftTotalEnergies(multiplet, energyShift)
+                    print("shift all levels by $energyShift [a.u.] ... ")
+                end
                 push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
                 println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
             end

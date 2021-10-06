@@ -371,8 +371,10 @@ module ManyElectron
     `struct  ManyElectron.LSjjSettings`  ... defines a type for the details and parameters for performing jj-LS expansions.
 
         + makeIt         ::Bool            ... True, if the jj-LS expansion is to be made and false otherwise.
-        + minWeight      ::Float64         ... minimum weight with which a (relativistic) CSF must contribute to (at least one) level.
-        + printWeight    ::Float64         ... minimum weight of a nonrelativistic CSF to be printed out in the final expansion.
+        + minWeight      ::Float64         ... minimum weight with which a (relativistic) CSF must contribute 
+                                               to (at least one) level.
+        + printWeight    ::Float64         ... minimum weight of a nonrelativistic CSF to be printed out in the 
+                                               final expansion.
         + levelSelection ::LevelSelection  ... Specifies the selected levels, if any.
     """
     struct LSjjSettings 
@@ -405,19 +407,24 @@ module ManyElectron
         ... a struct for defining the settings for the atomic state functions, i.e. the self-consistent-field (SCF) 
             and CI computations
 
-        + generateScf          ::Bool                   ... True, if a SCF need to be generated, and false otherwise (frozen orbitals).
-        + eeInteraction        ::AbstractEeInteraction  ... Specify the e-e interaction to be included into the SCF computations.
-        + scField              ::AbstractScField        ... Specify the self-consistent field, for instance, Basics.ALField(), etc.
+        + generateScf          ::Bool                   ... True, if a SCF need to be generated, and false otherwise 
+                                                            (frozen orbitals).
+        + eeInteraction        ::AbstractEeInteraction  ... Specify the e-e interaction to be included into the SCF 
+                                                            computations.
+        + scField              ::AbstractScField        ... Specify the self-consistent field, for instance, 
+                                                            Basics.ALField(), etc.
         + startScfFrom         ::AbstractStartOrbitals  ... Specify the orbitals to start the SCF computations
         + maxIterationsScf     ::Int64                  ... maximum number of SCF iterations
         + accuracyScf          ::Float64                ... convergence criterion for the SCF field.
         + shellSequenceScf     ::Array{Subshell,1}      ... Sequence of subshells to be optimized.
         + frozenSubshells      ::Array{Subshell,1}      ... Sequence of subshells to be kept frozen.
         
-    	+ eeInteractionCI      ::AbstractEeInteraction  ... Specify the e-e interaction to be included into the CI computations.
-    	+ qedModel             ::AbstractQedModel       ... model for estimating QED corrections {NoneQed(), QedPetersburg(), QedSydney()}.
-    	##x + methodCI             ::AbstractCImethod       ... method for diagonalizing the matrix.
-    	+ jjLS                 ::LSjjSettings           ... settings to control a jj-LS transformation of atomic level, if requested.
+    	+ eeInteractionCI      ::AbstractEeInteraction  ... Specify the e-e interaction to be included into the 
+                                                            CI computations.
+    	+ qedModel             ::AbstractQedModel       ... model for estimating QED corrections {NoneQed(), 
+                                                            QedPetersburg(), QedSydney()}.
+    	+ jjLS                 ::LSjjSettings           ... settings to control a jj-LS transformation of atomic 
+                                                            level, if requested.
         + levelSelectionCI     ::LevelSelection         ... Specifies the selected levels, if any.
     """
     struct  AsfSettings
@@ -432,7 +439,6 @@ module ManyElectron
         #
     	eeInteractionCI        ::AbstractEeInteraction
     	qedModel               ::AbstractQedModel 	
-    	##x methodCI               ::AbstractCImethod
     	jjLS                   ::LSjjSettings 
     	levelSelectionCI       ::LevelSelection
      end
@@ -450,9 +456,10 @@ module ManyElectron
     """
     `ManyElectron.AsfSettings(settings::AsfSettings;`
         
-                generateScf=..,       eeInteraction=..,       scField=..,            startScfFrom=..,           maxIterationsScf=..,    
-                accuracyScf=..,       shellSequenceScf=..,    frozenSubshells=..,    eeInteractionCI=..,        qedModel=..,           
-                jjLS=..,              levelSelection=..,     printout::Bool=false)
+                generateScf=..,       eeInteraction=..,       scField=..,            startScfFrom=..,           
+                maxIterationsScf=..,  accuracyScf=..,         shellSequenceScf=..,   frozenSubshells=..,    
+                eeInteractionCI=..,   qedModel=..,            jjLS=..,               levelSelection=..,     
+                printout::Bool=false)
         ... constructor for re-defining a settings::AsfSettings.
     """
     function AsfSettings(settings::AsfSettings; 
@@ -495,7 +502,6 @@ module ManyElectron
     	  #
     	  println(io, "eeInteractionCI:      $(settings.eeInteractionCI)  ")
     	  println(io, "qedModel :            $(settings.qedModel)  ")
-    	  ##x println(io, "methodCI:             $(settings.methodCI)  ")
     	  println(io, "jjLS:                 $(settings.jjLS.makeIt)  ")
     	  println(io, "levelSelectionCI:     $(settings.levelSelectionCI)  ")
     end

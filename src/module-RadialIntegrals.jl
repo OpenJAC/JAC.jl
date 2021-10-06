@@ -254,7 +254,9 @@ module  RadialIntegrals
     """
     function isotope_smsB(a::Orbital, c::Orbital, Z::Float64, grid::Radial.Grid)
         mtp = min(size(a.P, 1), size(c.P, 1));   alphaZ = Defaults.getDefaults("alpha") * Z
-        minusa = Subshell(1, -a.subshell.kappa);    minusc = Subshell(1, -c.subshell.kappa)
+        kapa = a.subshell.kappa;   mkapa = -kapa;    kapc = c.subshell.kappa;   mkapc = -kapc 
+        
+        ##x @show AngularMomentum.sigma_reduced_me_ma(mkapa, kapc), AngularMomentum.sigma_reduced_me_mb(kapa,  mkapc)
         
         # Distinguish the radial integration for different grid definitions
         if  grid.meshType == Radial.MeshGrasp()
@@ -262,8 +264,8 @@ module  RadialIntegrals
         elseif  grid.meshType == Radial.MeshGL()
             wa = 0.
             for  i = 2:mtp   
-                wb = (- a.Q[i] * c.P[i] * AngularMomentum.sigma_reduced_me(minusa, c.subshell)  +
-                        c.Q[i] * a.P[i] * AngularMomentum.sigma_reduced_me(a.subshell, minusc)  )
+                wb = (- a.Q[i] * c.P[i] * AngularMomentum.sigma_reduced_me_ma(mkapa, kapc)  +
+                        c.Q[i] * a.P[i] * AngularMomentum.sigma_reduced_me_mb(kapa,  mkapc)  )
                 wa = wa - alphaZ / grid.r[i] * wb * grid.wr[i]   
             end
             return( wa )

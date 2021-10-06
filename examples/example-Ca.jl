@@ -9,7 +9,7 @@ if  true
     asfSettings   = AsfSettings(AsfSettings(), scField=Basics.DFSField())
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(26.), asfSettings=asfSettings,
                             configs=[Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d"), Configuration("[Ne] 3s^2 3p^5")],
-                            propertySettings=[ Einstein.Settings([E1], true, LineSelection(false), 0., 0., 10000. ) ])
+                            propertySettings=[ Einstein.Settings([E1,M1,E2], true, LineSelection(false), 0., 0., 10000. ) ])
 
     wb = perform(wa; output=true)
     #

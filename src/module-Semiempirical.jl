@@ -158,7 +158,7 @@ module Semiempirical
             for (sh,v) in  conf.shells
                 if      sh == Shell("1s")    if wa[1]  == -1.   error("stop aa")          else    wb = wb + v * wa[1]    end
                 elseif  sh == Shell("2s")    if wa[2]  == -1.   error("stop ab")          else    wb = wb + v * wa[2]    end
-                elseif  sh == Shell("2p")    if wa[3]  == -1.   error("stop ac")          else    wb = wb + v * wa[3]    end
+                elseif  sh == Shell("2p")    if wa[3]  == -1.   wb = wb + v * wa[2]/12.   else    wb = wb + v * wa[3]    end
                 elseif  sh == Shell("3s")    if wa[5]  == -1.   wb = wb + v * wa[2]/12.   else    wb = wb + v * wa[5]    end
                                              if wa[2]  == -1.   error("stop ad")   end
                 elseif  sh == Shell("3p")    if wa[6]  == -1.   wb = wb + v * wa[3]/12.   else    wb = wb + v * wa[6]    end

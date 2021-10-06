@@ -611,12 +611,12 @@
    
 
     """
-    `Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1})`  
-        ... display on stream the level energies of all given levels in ascending order, and together with the configuration of most leading term
-            in the level expansion. A neat table is printed but nothing is returned otherwise.
+    `Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1}; N::Int64=10)`  
+        ... display on stream the level energies of the N lowest levels in ascending order, and together with the configuration 
+            of most leading term in the level expansion. A neat table is printed but nothing is returned otherwise.
     """
-    function Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1})
-        allLevels = Level[];    nx = 84
+    function Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1}; N::Int64=10)
+        allLevels = Level[];    nx = 104
         for  multiplet  in multiplets
             for  level in  multiplet.levels   push!(allLevels, level)      end
         end
@@ -625,14 +625,15 @@
         println(stream, "  ", TableStrings.hLine(nx))
         println(stream, "    J Parity   No. electrons    Energy " * TableStrings.inUnits("energy") * "        Leading configuration") 
         println(stream, "  ", TableStrings.hLine(nx))
-        for  level  in  sortedLevels
+        for  (n, level)  in  enumerate(sortedLevels)
+            if  n > N   break   end
             mc2  = level.mc .* level.mc;   index = findmax(mc2)[2]
             conf = Basics.extractNonrelativisticConfigurationFromCsfR(level.basis.csfs[index],  level.basis)
             #
             sa   = TableStrings.flushright(12, string(LevelSymmetry(level.J, level.parity)))  * 
                    TableStrings.flushright(12, string(conf.NoElectrons))                      * 
                    TableStrings.flushright(20, @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", level.energy - energy0))) * "       " *
-                   TableStrings.flushleft(44, string(conf)) 
+                   TableStrings.flushleft(64, string(conf)) 
             println(stream, sa)
         end
         println(stream, "  ", TableStrings.hLine(nx))

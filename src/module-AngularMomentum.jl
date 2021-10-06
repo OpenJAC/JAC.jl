@@ -176,8 +176,8 @@ module AngularMomentum
         # i)  We now divide by sqrt(twoJ(jb)+1) instead of sqrt(twoJ(ja)+1) ... which is likely related to change emission - absorption
         # ii) The phase (-1)^(ja + L - jb) is replaced by (-1)^L  to get a proper phase between 1/2 --> 3/2 ME (compared to 3/2 --> 3/2) ...
         #     but which already comes from the Clebsch-Gordan
-        ## wa = AngularMomentum.phaseFactor([ja, +1, L, -1, jb]) * 
-        wa = (-1)^L.num  * sqrt( (Basics.twice(jb)+1)*(Basics.twice(L)+1) / (4*pi) ) / sqrt(Basics.twice(jb)+1) *  
+        wa = AngularMomentum.phaseFactor([ja, +1, L, -1, jb]) *  (-1)^L.num  * 
+        ## wa = (-1)^L.num  * sqrt( (Basics.twice(jb)+1)*(Basics.twice(L)+1) / (4*pi) ) / sqrt(Basics.twice(jb)+1) *  
              AngularMomentum.ClebschGordan(jb, AngularM64(1//2), L, AngularM64(0), ja, AngularM64(1//2)) 
         ##x @show "ChengI", wa, ChengI(kapa, AngularM64(ja), kapb, AngularM64(jb), L, AngularM64(L))
         ##x xa = (Basics.twice(ja) - Basics.twice(jb))/2.
@@ -302,6 +302,23 @@ module AngularMomentum
         else                                                              return( false )
         end
     end
+    
+    
+    """
+    `AngularMomentum.JohnsonI(kapa::Int64, ma::AngularM64, kapb::Int64, mb::AngularM64, L::AngularJ64, M::AngularM64)` 
+        ... evaluates the angular CL (kappa m, kappa' m', L M) integral as defined in his book. A value::Float64 is returned.
+    """
+    function JohnsonI(kapa::Int64, kapb::Int64, L::AngularJ64)
+        ja = Basics.subshell_j( Subshell(9, kapa) );    jb = Basics.subshell_j( Subshell(9, kapb) )   # Use principal QN n=9 arbitrarely here 
+        la = Basics.subshell_l( Subshell(9, kapa) );    lb = Basics.subshell_l( Subshell(9, kapb) ) 
+        #
+        # Test for parity
+        if  L.den != 1   error("stop a")                end 
+        if  isodd( la + lb + L.num )    return( 0. )    end
+        wa =  (-1+0im)^(jb.num+1/2)*sqrt((Basics.twice(jb)+1)*(Basics.twice(L)+1)*(Basics.twice(ja)+1)*(L.num+1) / 
+              (4*pi*L.num ) ) *AngularMomentum.Wigner_3j(ja, L, jb, AngularM64(1//2), AngularM64(0),  AngularM64(-1//2))
+        return( wa )
+    end
 
 
     """
@@ -398,11 +415,37 @@ module AngularMomentum
         lb = Basics.subshell_l(subb);    jb2 = Basics.subshell_2j(subb)
         if rem(la + lb, 2) != 0   return 0.     end
         
-        ## redme = ((-1)^((jb2-2L-1)/2)) * sqrt( (jb2+1) ) * 
-        ##         Wigner_3j(AngularJ64(ja2//2), AngularJ64(jb2//2), AngularJ64(L), AngularM64(1//2), AngularM64(-1//2), AngularM64(0) )
         redme = 0.
+        ##    redme = ((-1)^((jb2-2L-1)/2)) * sqrt( (jb2+1) ) * 
+        ##         Wigner_3j(AngularJ64(ja2//2), AngularJ64(jb2//2), AngularJ64(L), AngularM64(1//2), AngularM64(-1//2), AngularM64(0) )
                 
         return( redme )
+    end
+
+    function  sigma_reduced_me_ma(mkapa::Int64, kapb::Int64) 
+        suba = Subshell(9,-mkapa);   ja2 = Basics.subshell_2j(suba);   ja = Basics.subshell_j(suba);   la = Basics.subshell_l(suba)
+        subb = Subshell(9,  kapb);   jb2 = Basics.subshell_2j(subb);   jb = Basics.subshell_j(subb);   lb = Basics.subshell_l(subb)
+        
+        redme = 0.
+        if  ja2-1 == lb
+            redme = AngularMomentum.phaseFactor([AngularJ64(1//2), -1, ja]) * sqrt(6*(ja2+1)*(jb2+1)) *
+                    AngularMomentum.Wigner_6j(AngularJ64(1//2), ja, AngularJ64(ja2-1), jb, AngularJ64(1//2), AngularJ64(1))
+        end
+    
+        return (redme)
+    end
+
+    function  sigma_reduced_me_mb(kapa::Int64, mkapb::Int64) 
+        suba = Subshell(9,  kapa);   ja2 = Basics.subshell_2j(suba);   ja = Basics.subshell_j(suba);   la = Basics.subshell_l(suba)
+        subb = Subshell(9,-mkapb);   jb2 = Basics.subshell_2j(subb);   jb = Basics.subshell_j(subb);   lb = Basics.subshell_l(subb)
+        
+        redme = 0.
+        if  jb2-1 == la
+            redme = AngularMomentum.phaseFactor([AngularJ64(3//2+la), +1, ja]) * sqrt(6*(ja2+1)*(jb2+1)) *
+                    AngularMomentum.Wigner_6j(AngularJ64(1//2), ja, AngularJ64(la), jb, AngularJ64(1//2), AngularJ64(1))
+        end
+    
+        return (redme)
     end
 
 
