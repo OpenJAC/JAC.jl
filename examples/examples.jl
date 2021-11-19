@@ -35,7 +35,8 @@ println("Cf)  Test of the FormFactor module with ASF from an internally generate
 println("Cf)  Test of the FormFactor module with ASF from an internally generated multiplet.")
 println("Cg)  Test of the reduced 1- and 2-particle density matrices & natural orbitals.")
 println("Ch)  Test of the PlasmaShift module with ASF from an internally generated multiplet.")
-println("Ci)  Test of the DecayYields module with ASF from an internally generated multiplet.")
+println("Ci)  Test of the RadiativeOpacity module with ASF from an internally generated multiplet.")
+println("Cj)  Test of the DecayYields module with ASF from an internally generated multiplet.")
 #
 println("Cxh)  Test of the AlphaVariation module with ASF from an internally generated multiplet.")
 println("Cxk)  Test of the MultipolePolarizibility module with ASF from an internally generated multiplet.")

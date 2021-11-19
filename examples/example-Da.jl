@@ -9,7 +9,7 @@ setDefaults("print summary: open", "zzz-radiative.sum")
 if true
 
     grid = Radial.Grid(true)
-    grid = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 1.0e-2, hp = 0., rbox = -2.01)
+    ## grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5, h = 1.0e-2, hp = 0., rbox = 5.0)
     setDefaults("standard grid", grid)
     defaultsSettings = PhotoEmission.Settings()
     photoSettings = PhotoEmission.Settings(defaultsSettings, multipoles=[E1], gauges=[UseCoulomb,UseBabushkin], printBefore=true)

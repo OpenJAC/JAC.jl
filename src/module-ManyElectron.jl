@@ -196,7 +196,7 @@ module ManyElectron
         NoElectrons = 0;    shellDict    = Dict{Shell,Int64}()
         for shocc in shellOccList
             if       shocc == " "    continue
-            elseif   shocc  in [ "[He]", "[Ne]", "[Ar]", "[Kr]", "[Xe]" ]
+            elseif   shocc  in [ "[He]", "[Ne]", "[Ar]", "[Kr]", "[Pd]", "[Xe]", "[Er]", "[Pt]", "[Hg]", "[Rn]", "[Fm]" ]
                 shellDict = Base.merge( shellDict, Dict( Shell("1s") => 2));                                       NoElectrons = NoElectrons + 2
                 shocc == "[He]"  &&  continue
                 shellDict = Base.merge( shellDict, Dict(Shell("2s") => 2,  Shell("2p") => 6));                     NoElectrons = NoElectrons + 8  
@@ -205,8 +205,20 @@ module ManyElectron
                 shocc == "[Ar]"  &&  continue 
                 shellDict = Base.merge( shellDict, Dict(Shell("3d") => 10, Shell("4s") => 2, Shell("4p") => 6));   NoElectrons = NoElectrons + 18   
                 shocc == "[Kr]"  &&  continue   
-                shellDict = Base.merge( shellDict, Dict(Shell("4d") => 10, Shell("5s") => 2, Shell("5p") => 6));   NoElectrons = NoElectrons + 18  
+                shellDict = Base.merge( shellDict, Dict(Shell("4d") => 10));                                       NoElectrons = NoElectrons + 10  
+                shocc == "[Pd]"  &&  continue 
+                shellDict = Base.merge( shellDict, Dict(Shell("5s") => 2, Shell("5p") => 6));                      NoElectrons = NoElectrons + 8  
                 shocc == "[Xe]"  &&  continue 
+                shellDict = Base.merge( shellDict, Dict(Shell("4f") => 14));                                       NoElectrons = NoElectrons + 14  
+                shocc == "[Er]"  &&  continue 
+                shellDict = Base.merge( shellDict, Dict(Shell("5d") => 10));                                       NoElectrons = NoElectrons + 10  
+                shocc == "[Pt]"  &&  continue 
+                shellDict = Base.merge( shellDict, Dict(Shell("6s") => 2));                                        NoElectrons = NoElectrons + 2  
+                shocc == "[Hg]"  &&  continue 
+                shellDict = Base.merge( shellDict, Dict(Shell("6p") => 6));                                        NoElectrons = NoElectrons + 6  
+                shocc == "[Rn]"  &&  continue 
+                shellDict = Base.merge( shellDict, Dict(Shell("5f") => 14));                                       NoElectrons = NoElectrons + 14  
+                shocc == "[Fm]"  &&  continue 
             else
                 ia = findall(in("^"), shocc);    
                 if     length(ia) == 0     shellDict = Base.merge( shellDict, Dict( Shell(shocc) => 1));           NoElectrons = NoElectrons + 1

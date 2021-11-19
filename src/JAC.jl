@@ -81,7 +81,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        PhotoRecombination, PlasmaShift, Plasma, Polarity, Pulse,
        QedPetersburg, QedSydney,
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RAuger, RasSettings, RasStep, 
-       RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix,
+       RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix, RadiativeOpacity,
        RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
        SchiffMoment, Semiempirical, setDefaults, Shell, SolidAngle, Spectroscopy, SpinAngular, SphericalTensor, 
        StartFromHydrogenic, StartFromPrevious, StrongField, Subshell,
@@ -133,6 +133,7 @@ include("module-ReducedDensityMatrix.jl")
 include("module-PlasmaShift.jl")
 include("module-AlphaVariation.jl")
 include("module-DecayYield.jl")
+include("module-RadiativeOpacity.jl")
 ##x include("module-CloseCoupling.jl")
 include("module-MultipolePolarizibility.jl")
 

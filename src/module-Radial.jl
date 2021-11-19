@@ -30,54 +30,56 @@ module Radial
                                of the B-spline basis as well as for performing radial integrations.
 
         ** Physical grid parameter **
-        + rnt            ::Float64           ... smalles grid point > 0.
-        + h              ::Float64           ... stepsize in the construction of the exponential grid.
-        + hp             ::Float64           ... asymptotic stepsize of the log-lin grid.
-        + NoPoints       ::Int64             ... No. of grid points so that r[NoPoints] coincides also with the largest break point of 
-                                                 the B-spline knot.
+        + rnt        ::Float64           ... smalles grid point > 0.
+        + h          ::Float64           ... stepsize in the construction of the exponential grid.
+        + hp         ::Float64           ... asymptotic stepsize of the log-lin grid.
+        + NoPoints   ::Int64             ... No. of grid points so that r[NoPoints] coincides also 
+                                             with the largest break point of the B-spline knot.
         ** B-spline grid parameters and break points **
-        + tL             ::Array{Float64,1}  ... radial break points for the B-splines of the large component.
-        + tS             ::Array{Float64,1}  ... radial break points for the B-splines of the small component.
-        + ntL            ::Int64             ... number of break points in the t-grid of the large component.
-        + ntS            ::Int64             ... number of break points in the t-grid of the small component.
-        ##x + nth            ::Int64             ... take each nth-point from the 'physical grid' as break point.
-        + orderL         ::Int64             ... B-spline order of large components of the large component
-        + orderS         ::Int64             ... B-spline order of small components
-        + nsL            ::Int64             ... number of B-splines for large components
-        + nsS            ::Int64             ... number of B-splines for small components
-        + orderGL        ::Int64             ... order of the Gauss-Lengendre integration if mesh == Radial.MeshGL(); this is also
-                                                 equal of how the break points are generated as nth-point from the physical grid points.
+        + tL         ::Array{Float64,1}  ... radial break points for the B-splines of the large c.
+        + tS         ::Array{Float64,1}  ... radial break points for the B-splines of the small c.
+        + ntL        ::Int64             ... number of break points in the t-grid of the large c.
+        + ntS        ::Int64             ... number of break points in the t-grid of the small c.
+        ##x + nth    ::Int64             ... take each nth-point from the 'physical grid' as break point.
+        + orderL     ::Int64             ... B-spline order of large components of the large c.
+        + orderS     ::Int64             ... B-spline order of small components
+        + nsL        ::Int64             ... number of B-splines for large components
+        + nsS        ::Int64             ... number of B-splines for small components
+        + orderGL    ::Int64             
+            ... order of the Gauss-Lengendre integration if mesh == Radial.MeshGL(); this is also
+                equal of how the break points are generated as nth-point from the physical grid points.
         ** Radial mesh points **
-        + meshType       ::Radial.AbstractMesh
-        ##x + nr             ::Int64             ... number of mesh points in the r-grid.
-        + r              ::Array{Float64,1}  ... radial grid points
-        + rp             ::Array{Float64,1}  ... derivative of the radial grid at the grid points
-        + rpor           ::Array{Float64,1}  ... rp over r
-        + wr             ::Array{Float64,1}  ... integration weights for all grid points, for instance, GL weights.
+        + meshType   ::Radial.AbstractMesh
+        ##x + nr         ::Int64         ... number of mesh points in the r-grid.
+        + r          ::Array{Float64,1}  ... radial grid points
+        + rp         ::Array{Float64,1}  ... derivative of the radial grid at the grid points
+        + rpor       ::Array{Float64,1}  ... rp over r
+        + wr         ::Array{Float64,1}  ... integration weights for all grid points, 
+                                             for instance, GL weights.
     """
     struct  Grid
-        rnt              ::Float64
-        h                ::Float64
-        hp               ::Float64
-        NoPoints         ::Int64
+        rnt          ::Float64
+        h            ::Float64
+        hp           ::Float64
+        NoPoints     ::Int64
         #
-        tL               ::Array{Float64,1}
-        tS               ::Array{Float64,1}
-        ntL              ::Int64 
-        ntS              ::Int64 
-        ##x nth              ::Int64 
-        orderL           ::Int64
-        orderS           ::Int64
-        nsL              ::Int64
-        nsS              ::Int64
-        orderGL          ::Int64
+        tL           ::Array{Float64,1}
+        tS           ::Array{Float64,1}
+        ntL          ::Int64 
+        ntS          ::Int64 
+        ##x nth          ::Int64 
+        orderL       ::Int64
+        orderS       ::Int64
+        nsL          ::Int64
+        nsS          ::Int64
+        orderGL      ::Int64
         #
-        meshType         ::Radial.AbstractMesh
-        ##x nr               ::Int64 
-        r                ::Array{Float64,1}
-        rp               ::Array{Float64,1}
-        rpor             ::Array{Float64,1}
-        wr               ::Array{Float64,1}
+        meshType     ::Radial.AbstractMesh
+        ##x nr           ::Int64 
+        r            ::Array{Float64,1}
+        rp           ::Array{Float64,1}
+        rpor         ::Array{Float64,1}
+        wr           ::Array{Float64,1}
     end
 
 
@@ -114,8 +116,8 @@ module Radial
     """
     `Radial.Grid(gr::Radial.Grid;`
     
-            rnt=..,     h=..,       hp=..,      rbox=..,    orderL=..,  orderS=..,  orderGL=..,    meshType..,  printout=..)
-                        
+            rnt=..,     h=..,       hp=..,      rbox=..,    orderL=..,  orderS=..,  orderGL=..,    
+            meshType..,  printout=..)
         ... constructor for modifying the given Radial.Grid by 'overwriting' the previously selected parameters.
     """
     function Grid(gr::Radial.Grid;    
