@@ -326,7 +326,7 @@
 
         # Perform the SCF computations for the orbitals due to the given settings
         basis    = Basis(true, NoElectrons, subshellList, csfList, coreSubshellList, orbitals)
-        if   settings.scField in [Basics.DFSField(), Basics.HSField()]
+        if   typeof(settings.scField)  in  [Basics.DFSField, Basics.DFSwCPField, Basics.HSField]
             basis = Bsplines.solveSelfConsistentMeanField(wa, nuclearModel, basis, settings; printout=printout) 
         elseif   settings.scField in [Basics.NuclearField()]  && settings.startScfFrom == StartFromHydrogenic() 
             # Return the basis as already generated.

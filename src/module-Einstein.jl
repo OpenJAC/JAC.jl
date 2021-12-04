@@ -428,7 +428,7 @@ module Einstein
                                                                  (Basics.twice(line.finalLevel.J) + 1)
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
-                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to g_f",         line, chRate)) * "    "
+                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to f",           line, chRate)) * "    "
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to decay width", line, chRate)) * "    "
                 println(stream, sa)
             end

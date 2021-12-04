@@ -6,8 +6,6 @@
 module HydrogenicIon 
 
     using Printf, ..Basics, ..Defaults, ..Math, ..Nuclear, ..Radial, ..RadialIntegrals,  GSL
-    
-#    using SpecialFunctions, HypergeometricFunctions
 
 
     """
@@ -54,7 +52,7 @@ module HydrogenicIon
         value = r^(l+1) / factorial(2l+1) * sqrt( factorial(n+l) / (factorial(n-l-1) *2n)) *
                 (2Z / n)^(l+1.5) * exp(-Z*r/n) 
         
-        if  abs(value) < 1.e-15  &&  2Z*r/n > 99.    return(0.)   end
+        if  abs(value) < 1.e-14  &&  2Z*r/n > 99.    return(0.)   end
         
         value = value * GSL.hypergeom(-(n-l-1.), 2l+2., 2Z*r/n)
         return( value )
@@ -85,79 +83,45 @@ module HydrogenicIon
 
     """
     `HydrogenicIon.radialOrbital(sh::Subshell, Z::Float64, grid::Radial.Grid)`
-        ... to compute a relativistic hydrogenic Dirac orbital on the given grid; it starts from the expressions 
-            taken from J. Eichler, W. E. Meyerhof, Relativistic atomic collisions, section 4.3.
+        ... to compute a relativstic hydrogenic Dirac orbital on the given grid by applying the kinetic-balance to a 
+            corresponding non-relavistic orbital; an orbital::Radial.Orbital is returned.
     """
-    function radialOrbital(sh::Subshell, Z::Float64, r::Float64)
-        n = sh.n;   kappa = sh.kappa;   alpha = Defaults.getDefaults("alpha")
-        zeta = alpha*Z;     np = n-abs(kappa);      s = sqrt(kappa^2-zeta^2)
-        Wnk  = sqrt(1+(zeta/(np+s)^2))^(-1)
-        q    = zeta/(alpha*sqrt(zeta^2+(np+s)^2)) #sqrt(1-Wnk^2)/alpha
-        Ng   = sqrt(2)*q^(5/2)*alpha*sqrt(gamma(2*s+np+1)*(1+Wnk)/(factorial(np)*zeta*(zeta-kappa*q*alpha)))/gamma(2*s+1)
-        Nf   = -Ng*sqrt((1-Wnk)/(1+Wnk))
-        print(zeta, "\n")
-        print(s, "\n")
-        print(Wnk, "\n")
-        print(q, "\n")
-    
-        P = r*Ng*(2*q*r)^(s-1)*exp(-q*r)*(-np*HypergeometricFunctions.drummond1F1(-np+1, 2*s+1, 2*q*r) - 
-            (kappa-zeta/(q*alpha))*HypergeometricFunctions.drummond1F1(-np, 2*s+1, 2*q*r) )
-        Q = r*Nf*(2*q*r)^(s-1)*exp(-q*r)*(np*HypergeometricFunctions.drummond1F1(-np+1, 2*s+1, 2*q*r) - 
-            (kappa-zeta/(q*alpha))*HypergeometricFunctions.drummond1F1(-np, 2*s+1, 2*q*r) )
-    
-        return([P, Q])
-    end
-    
-
     function radialOrbital(sh::Subshell, Z::Float64, grid::Radial.Grid)
-        plist = zeros( grid.NoPoints )
-        qlist = zeros( grid.NoPoints )
-        for i = 1:length(plist)    
-            plist[i] = radialOrbital2(sh, Z, grid.r[i])[1]   
-            qlist[i] = radialOrbital2(sh, Z, grid.r[i])[2]   
-        end  
-        return( [plist, qlist] )
-    end
+        en  = HydrogenicIon.energy(sh, Z)
+        P   = HydrogenicIon.radialOrbital( Shell(sh.n, Basics.subshell_l(sh)), Z, grid)
+        
+        Q   = zeros(size(P, 1));   Pprime   = zeros(size(P, 1));    Qprime   = zeros(size(P, 1))
+        if  grid.meshType == Radial.MeshGrasp()
+            dP(i) = Math.derivative(P, i)
+            for i = 2:size(Q, 1)
+                Q[i] = -1/(2 * Defaults.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(i) / grid.h / grid.rp[i] + sh.kappa/grid.r[i]) * P[i]
+                @warn("radialOrbital():: P' and Q' not yet defined.")
+            end
+        elseif  grid.meshType == Radial.MeshGL()
+            @warn("radialOrbital():: Q[:] = zero everywhere; kinetic-balance not yet defined for Gauss-Legendre grids.")
+        else
+            error("stop a")
+        end
     
+        orb   = Radial.Orbital( sh, true, false, en, P, Q, Pprime, Qprime, grid)
+        norma = RadialIntegrals.overlap(orb, orb, grid)
+        orb.P = orb.P/sqrt(norma)
+        orb.Q = orb.Q/sqrt(norma)
+        normb = RadialIntegrals.overlap(orb, orb, grid)
+        println("HydrogenicIon.radialOrbital():  for subshell $sh : norm-before = $norma, norm-after = $normb")
+        
+        return( orb )
+    end
 
-####################### old function
-#
-#     function radialOrbital(sh::Subshell, Z::Float64, grid::Radial.Grid)
-#         en  = HydrogenicIon.energy(sh, Z)
-#         P   = HydrogenicIon.radialOrbital( Shell(sh.n, Basics.subshell_l(sh)), Z, grid)
-#         
-#         Q   = zeros(size(P, 1));   Pprime   = zeros(size(P, 1));    Qprime   = zeros(size(P, 1))
-#         if  grid.meshType == Radial.MeshGrasp()
-#             dP(i) = Math.derivative(P, i)
-#             for i = 2:size(Q, 1)
-#                 Q[i] = -1/(2 * Defaults.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(i) / grid.h / grid.rp[i] + sh.kappa/grid.r[i]) * P[i]
-#                 @warn("radialOrbital():: P' and Q' not yet defined.")
-#             end
-#         elseif  grid.meshType == Radial.MeshGL()
-#             @warn("radialOrbital():: Q[:] = zero everywhere; kinetic-balance not yet defined for Gauss-Legendre grids.")
-#         else
-#             error("stop a")
-#         end
-#     
-#         orb   = Radial.Orbital( sh, true, false, en, P, Q, Pprime, Qprime, grid)
-#         norma = RadialIntegrals.overlap(orb, orb, grid)
-#         orb.P = orb.P/sqrt(norma)
-#         orb.Q = orb.Q/sqrt(norma)
-#         normb = RadialIntegrals.overlap(orb, orb, grid)
-#         println("HydrogenicIon.radialOrbital():  for subshell $sh : norm-before = $norma, norm-after = $normb")
-#         
-#         return( orb )
-#     end
-# 
-# 
-#     """
-#     `HydrogenicIon.radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)`
-#         ... to compute a relativstic hydrogenic Dirac orbital for the given nuclear model by using an explicit diagonalization
-#             of the Dirac Hamiltonian in a B-spline basis; an orbital::Radial.Orbital is returned.
-#     """
-#     function radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)
-#         error("HydrogenicIon.radialOrbital() Not yet implemented.")
-#         return( orb )
-#     end
+
+    """
+    `HydrogenicIon.radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)`
+        ... to compute a relativstic hydrogenic Dirac orbital for the given nuclear model by using an explicit diagonalization
+            of the Dirac Hamiltonian in a B-spline basis; an orbital::Radial.Orbital is returned.
+    """
+    function radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)
+        error("HydrogenicIon.radialOrbital() Not yet implemented.")
+        return( orb )
+    end
     
 end # module

@@ -643,6 +643,38 @@
    
 
     """
+    `Basics.displayOrbitalOverlap(stream::IO, leftOrbitals::Dict{Subshell, Orbital}, rightOrbitals::Dict{Subshell, Orbital}, 
+                                  grid::Radial.Grid; kappas::Array{Int64,1} = [-1,1,-2])`  
+        ... display on stream the overlap of the orbitals from the set of leftOrbs and rightOrbs, and for the given
+            kappa-symmetries. A neat table is printed but nothing is returned otherwise.
+    """
+    function Basics.displayOrbitalOverlap(stream::IO, leftOrbitals::Dict{Subshell, Orbital}, rightOrbitals::Dict{Subshell, Orbital}, 
+                                          grid::Radial.Grid; kappas::Array{Int64,1} = [-1,1,-2])
+        nx = 150
+        println(stream, "\n  Orbital overlaps") 
+        println(stream,   "  ================") 
+        #
+        for kappa in kappas
+            sa = "\n  "
+            for  (kl,vl) in leftOrbitals
+                if   kl.kappa != kappa          continue    end
+                for  (kr,vr) in rightOrbitals
+                    if   kr.kappa != kappa      continue    end
+                    overlap = RadialIntegrals.overlap(vl, vr, grid)
+                    if     length(sa) < nx - 20   sa =    sa * "    |<$kl|$kr>|^2 = " * @sprintf("%.4e", overlap*overlap)
+                    else   println(stream, sa);   sa =  "  " * "    |<$kl|$kr>|^2 = " * @sprintf("%.4e", overlap*overlap) 
+                    end
+                end
+            end
+            println(stream, sa)
+        end
+        ## println(stream, "  ", TableStrings.hLine(nx))
+        
+        return( nothing )
+    end
+   
+
+    """
     `   + (stream::IO, channels::Array{AtomicState.GreenChannel,1}; N::Int64=10)`  
         ... display on stream the lowest N level energies of all levels from the (Green) channles in ascending order, and together with the 
             configuration of most leading term in the level expansion. A neat table is printed but nothing is returned otherwise.

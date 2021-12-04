@@ -93,7 +93,7 @@
                         if      process == Basics.Radiative()   
                             if  a == b   ||   maxEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons
-                                settings = PhotoEmission.Settings([E1], [UseBabushkin], false, false, LineSelection(), 0., 0., 1.0e6)
+                                settings = PhotoEmission.Settings([E1], [UseBabushkin], false, false, CorePolarization(), LineSelection(), 0., 0., 1.0e6)
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
                             end

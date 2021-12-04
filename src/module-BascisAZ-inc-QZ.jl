@@ -215,6 +215,10 @@
     + `("rate: radiative, to g_f", value::Float64)`  
         ... to recast a given radiative rate (Einstein A in atomic units) into an oscillator strength g_f; 
             a Float64 is returned.
+
+    + `("rate: radiative, to f", value::Float64)`  
+        ... to recast a given radiative rate (Einstein A in atomic units) into an oscillator strength f; 
+            a Float64 is returned.
     """
     function Basics.recast(sa::String, line::Union{Einstein.Line,PhotoEmission.Line}, wa::Float64)
     
@@ -227,15 +231,20 @@
             return( einsteinA )
 
         elseif   sa == "rate: radiative, to Einstein B"
-            einsteinB = (Basics.twice(line.initialLevel.J) + 1) / (Basics.twice(line.finalLevel.J) + 1) * pi^2 *
-                        Defaults.getDefaults("speed of light: c")^3 / line.omega^3  * wa
+            ##x einsteinB = (Basics.twice(line.initialLevel.J) + 1) / (Basics.twice(line.finalLevel.J) + 1) * pi^2 *
+            ##x             Defaults.getDefaults("speed of light: c")^3 / line.omega^3  * wa
+            einsteinB = pi^2 * Defaults.getDefaults("speed of light: c")^3 / line.omega^3  * wa
             einsteinB = Defaults.convertUnits("Einstein B: from atomic", einsteinB)
             return( einsteinB )
 
         elseif   sa == "rate: radiative, to g_f"
             gf = (Basics.twice(line.initialLevel.J) + 1) / (Basics.twice(line.finalLevel.J) + 1) / 2. * 
-                Defaults.getDefaults("speed of light: c")^3 / line.omega^2 * wa     
+                 Defaults.getDefaults("speed of light: c")^3 / line.omega^2 * wa   
             return( gf )
+
+        elseif   sa == "rate: radiative, to f"
+            f  = Defaults.getDefaults("speed of light: c") / (12. * pi * line.omega) * wa   
+            return( f )
 
         else     error("Unsupported keystring = $sa")
         end

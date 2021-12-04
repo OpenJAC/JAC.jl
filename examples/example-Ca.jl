@@ -13,10 +13,10 @@ if  true
 
     wb = perform(wa; output=true)
     #
-elseif  false
+elseif  true
     ## grid = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 1.0e-2, hp = 0., rbox = 2.0)
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.), 
-                            configs=[Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
+                            configs=[Configuration("1s^2 2s"), Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
                             propertySettings=[ Einstein.Settings([E1], true, LineSelection(true, indexPairs=[(13,0), (15,0)]), 0., 0., 10000. )] )
                             ## Einstein.Settings([M2], true, LineSelection(true, indexPairs=[(13,2), (15,5), (15,4)]), 0., 0., 10000. ) )
 

@@ -19,6 +19,7 @@ module PhotoEmission
         + calcAnisotropy          ::Bool                    ... True, if the anisotropy (structure) functions are to be 
                                                                 calculated and false otherwise 
         + printBefore             ::Bool                    ... True, if all energies and lines are printed before comput.
+        + corePolarization        ::CorePolarization        ... Parametrization of the core-polarization potential/contribution.
         + lineSelection           ::LineSelection           ... Specifies the selected levels, if any.
         + photonEnergyShift       ::Float64                 ... An overall energy shift for all photon energies.
         + mimimumPhotonEnergy     ::Float64                 ... minimum transition energy for which (photon) transitions 
@@ -31,6 +32,7 @@ module PhotoEmission
         gauges                    ::Array{UseGauge}
         calcAnisotropy            ::Bool         
         printBefore               ::Bool 
+        corePolarization          ::CorePolarization
         lineSelection             ::LineSelection 
         photonEnergyShift         ::Float64
         mimimumPhotonEnergy       ::Float64   
@@ -42,23 +44,23 @@ module PhotoEmission
     `PhotoEmission.Settings()`  ... constructor for the default values of radiative line computations
     """
     function Settings()
-        Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], false, false, LineSelection(), 0., 0., 10000.)
+        Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], false, false, CorePolarization(), LineSelection(), 0., 0., 10000.)
     end
 
 
     """
     `PhotoEmission.Settings(set::PhotoEmission.Settings;`
     
-            multipoles::=..,        gauges=..,          calcAnisotropy=..,          printBefore=..,
-            line=..,                selectedLines=..,   photonEnergyShift=..,       mimimumPhotonEnergy=.., 
-            maximumPhotonEnergy=..) 
+            multipoles::=..,        gauges=..,                calcAnisotropy=..,          printBefore=..,
+            corePolarization=..,    lineSelection=..,         photonEnergyShift=..,       
+            mimimumPhotonEnergy=.., maximumPhotonEnergy=..) 
                         
         ... constructor for modifying the given PhotoEmission.Settings by 'overwriting' the previously selected parameters.
     """
     function Settings(set::PhotoEmission.Settings;    
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,    gauges::Union{Nothing,Array{UseGauge}}=nothing,
         calcAnisotropy::Union{Nothing,Bool}=nothing,                printBefore::Union{Nothing,Bool}=nothing,
-        lineSelection::Union{Nothing,LineSelection}=nothing, 
+        corePolarization::Union{Nothing,CorePolarization}=nothing,  lineSelection::Union{Nothing,LineSelection}=nothing, 
         photonEnergyShift::Union{Nothing,Float64}=nothing,          mimimumPhotonEnergy::Union{Nothing,Float64}=nothing, 
         maximumPhotonEnergy::Union{Nothing,Float64}=nothing)
         
@@ -66,12 +68,13 @@ module PhotoEmission
         if  gauges              == nothing   gaugesx              = set.gauges                  else  gaugesx              = gauges                end 
         if  calcAnisotropy      == nothing   calcAnisotropyx      = set.calcAnisotropy          else  calcAnisotropyx      = calcAnisotropy        end 
         if  printBefore         == nothing   printBeforex         = set.printBefore             else  printBeforex         = printBefore           end 
+        if  corePolarization    == nothing   corePolarizationx    = set.corePolarization        else  corePolarizationx    = corePolarization      end 
         if  lineSelection       == nothing   lineSelectionx       = set.lineSelection           else  lineSelectionx       = lineSelection         end 
         if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift       else  photonEnergyShiftx   = photonEnergyShift     end 
         if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy     else  mimimumPhotonEnergyx = mimimumPhotonEnergy   end 
         if  maximumPhotonEnergy == nothing   maximumPhotonEnergyx = set.maximumPhotonEnergy     else  maximumPhotonEnergyx = maximumPhotonEnergy   end 
         
-        Settings( multipolesx, gaugesx, calcAnisotropyx, printBeforex, lineSelectionx,    ## selectLinesx, selectedLinesx, 
+        Settings( multipolesx, gaugesx, calcAnisotropyx, printBeforex, corePolarizationx, lineSelectionx, 
                   photonEnergyShiftx, mimimumPhotonEnergyx, maximumPhotonEnergyx)
     end
 
@@ -82,6 +85,7 @@ module PhotoEmission
         println(io, "gauges:                 $(settings.gauges)  ")
         println(io, "calcAnisotropy:         $(settings.calcAnisotropy)  ")
         println(io, "printBefore:            $(settings.printBefore)  ")
+        println(io, "corePolarization:       $(settings.corePolarization)  ")
         println(io, "lineSelection:          $(settings.lineSelection)  ")
         println(io, "photonEnergyShift:      $(settings.photonEnergyShift)  ")
         println(io, "mimimumPhotonEnergy:    $(settings.mimimumPhotonEnergy)  ")
@@ -240,6 +244,63 @@ module PhotoEmission
 
 
     """
+    `   + (kind::String, cp::CorePolarization, omega::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid; 
+           display::Bool=false, printout::Bool=false)`  
+            ... to compute the kind = E1 with core-polarization emission amplitude  
+                <alpha_f J_f || O^(E1, emission with core-polarization) || alpha_i J_i> in length gauge and for the given transition energy.
+                A value::ComplexF64 is returned. The amplitude value is printed to screen if display=true.
+    """
+    function amplitude(kind::String, cp::CorePolarization, omega::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid; 
+                       display::Bool=false, printout::Bool=false)
+        
+        if      kind == "E1 with core-polarization emission"
+        #---------------------------------------------------
+            if  initialLevel.basis.subshells == finalLevel.basis.subshells
+                iLevel = initialLevel;   fLevel = finalLevel
+            else
+                subshells = Basics.merge(initialLevel.basis.subshells, finalLevel.basis.subshells)
+                iLevel    = Level(initialLevel, subshells)
+                fLevel    = Level(finalLevel, subshells)
+            end
+            
+            nf = length(fLevel.basis.csfs);    ni = length(iLevel.basis.csfs)
+            if  printout   printstyled("Compute radiative E1 matrix of dimension $nf x $ni in the initial- and final-state bases " *
+                                       "for the transition [$(iLevel.index)-$(fLevel.index)] ... \n", color=:light_green)    end
+            matrix = zeros(ComplexF64, nf, ni)
+            #
+            for  r = 1:nf
+                if  fLevel.basis.csfs[r].J != fLevel.J      ||  fLevel.basis.csfs[r].parity  != fLevel.parity    continue    end 
+                for  s = 1:ni
+                    if  iLevel.basis.csfs[s].J != iLevel.J  ||  iLevel.basis.csfs[s].parity  != iLevel.parity    continue    end 
+                    subshellList = fLevel.basis.subshells
+                    opa = SpinAngular.OneParticleOperator(Mp.L, plus, true)
+                    wa  = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList) 
+                    for  coeff in wa
+                        MabMigdalek = InteractionStrength.MabEmissionMigdalek(cp, fLevel.basis.orbitals[coeff.a],  
+                                                                                  iLevel.basis.orbitals[coeff.b], grid)
+                        me = me + coeff.T * MabMigdalek
+                    end
+                    matrix[r,s] = me
+                end
+            end 
+            if  printout   printstyled("done. \n", color=:light_green)    end
+            amplitude = transpose(fLevel.mc) * matrix * iLevel.mc 
+            ##x @show iLevel.index, amplitude
+            #
+        else    error("stop a")
+        end
+        
+        if  display  
+            println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] ||" *
+                    " O^(E1, $kind) ($omega a.u., Length) ||" *
+                    " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+        end
+        
+        return( amplitude )
+    end
+
+
+    """
     `PhotoEmission.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, settings::PhotoEmission.Settings; 
                                 output=true)`  
         ... to compute the radiative transition amplitudes and all properties as requested by the given settings. A list of 
@@ -265,14 +326,14 @@ module PhotoEmission
             push!( newLines, newLine)
         end
         # Print all results to screen
-        PhotoEmission.displayRates(stdout, newLines)
-        if  settings.calcAnisotropy    PhotoEmission.displayAnisotropies(stdout, newLines)    end
-        PhotoEmission.displayLifetimes(stdout, newLines)
+        PhotoEmission.displayRates(stdout, newLines, settings)
+        if  settings.calcAnisotropy    PhotoEmission.displayAnisotropies(stdout, newLines, settings)    end
+        PhotoEmission.displayLifetimes(stdout, newLines, settings)
         #
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   PhotoEmission.displayRates(iostream, newLines)       
-                           PhotoEmission.displayAnisotropies(stdout, newLines)
-                           PhotoEmission.displayLifetimes(iostream, newLines)
+        if  printSummary   PhotoEmission.displayRates(iostream, newLines, settings)       
+                           PhotoEmission.displayAnisotropies(stdout, newLines, settings)
+                           PhotoEmission.displayLifetimes(iostream, newLines, settings)
         end
         #
         if    output    return( lines )
@@ -310,7 +371,7 @@ module PhotoEmission
         end
         # Print all results to a summary file, if requested
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   PhotoEmission.displayRates(iostream, newLines)    end
+        if  printSummary   PhotoEmission.displayRates(iostream, newLines, settings)    end
         #
         if    output    return( newLines )
         else            return( nothing )
@@ -329,8 +390,18 @@ module PhotoEmission
         newChannels = PhotoEmission.Channel[];    rateC = 0.;    rateB = 0.
         for channel in line.channels
             #
-            amplitude = PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, line.omega, 
-                                                line.finalLevel, line.initialLevel, grid, printout=printout)
+            if  settings.corePolarization.doApply
+                if      channel.multipole != E1     error("Core-polarization corrections are defined only for E1 transitions.") 
+                elseif  channel.gauge     == Basics.Coulomb     ||    channel.gauge     == Basics.Magnetic
+                    amplitude = 0.
+                else
+                    amplitude = PhotoEmission.amplitude("E1 with core-polarization emission", settings.corePolarization, line.omega, 
+                                                        line.finalLevel, line.initialLevel, grid, printout=printout)
+                end
+            else
+                amplitude = PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, line.omega, 
+                                                    line.finalLevel, line.initialLevel, grid, printout=printout)
+            end
             #
             push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
             # Multiply with the multipolarity factors to keep different multipoles on the same footings
@@ -404,11 +475,11 @@ module PhotoEmission
 
 
     """
-    `PhotoEmission.displayAnisotropies(stream::IO, lines::Array{PhotoEmission.Line,1})`  
+    `PhotoEmission.displayAnisotropies(stream::IO, lines::Array{PhotoEmission.Line,1}, settings::PhotoEmission.Settings)`  
         ... to list all energies and anisotropy parameters of the selected lines. A neat table is printed but nothing is 
             returned otherwise.
     """
-    function  displayAnisotropies(stream::IO, lines::Array{PhotoEmission.Line,1})
+    function  displayAnisotropies(stream::IO, lines::Array{PhotoEmission.Line,1}, settings::PhotoEmission.Settings)
         nx = 153
         println(stream, " ")
         println(stream, "  Anisotropy (structure) functions:")
@@ -505,10 +576,10 @@ module PhotoEmission
 
 
     """
-    `PhotoEmission.displayLifetimes(stream::IO, lines::Array{PhotoEmission.Line,1})`  
+    `PhotoEmission.displayLifetimes(stream::IO, lines::Array{PhotoEmission.Line,1}, settings::PhotoEmission.Settings)`  
         ... to list all lifetimes as derived from the selected lines. A neat table is printed but nothing is returned otherwise.
     """
-    function  displayLifetimes(stream::IO, lines::Array{PhotoEmission.Line,1})
+    function  displayLifetimes(stream::IO, lines::Array{PhotoEmission.Line,1}, settings::PhotoEmission.Settings)
         # Determine all initial levels (and their level information) for printing the lifetimes
         ilevels = Int64[];   istr = String[]
         for  i = 1:length(lines)
@@ -609,15 +680,21 @@ module PhotoEmission
 
 
     """
-    `PhotoEmission.displayRates(stream::IO, lines::Array{PhotoEmission.Line,1})`  
+    `PhotoEmission.displayRates(stream::IO, lines::Array{PhotoEmission.Line,1}, settings::PhotoEmission.Settings)`  
         ... to list all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is 
             returned otherwise.
     """
-    function  displayRates(stream::IO, lines::Array{PhotoEmission.Line,1})
+    function  displayRates(stream::IO, lines::Array{PhotoEmission.Line,1}, settings::PhotoEmission.Settings)
         nx = 145
         println(stream, " ")
         println(stream, "  Einstein coefficients, transition rates and oscillator strengths:")
         println(stream, " ")
+        if  settings.corePolarization.doApply
+            println(stream, "  + Calculate E1 amplitude with core-polarization corrections.")
+            println(stream, "  + alpha_c = $(settings.corePolarization.coreAlpha) a.u.")
+            println(stream, "  + r_c     = $(settings.corePolarization.coreRadius) a.u.")
+            println(stream, " ")
+        end
         println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
@@ -646,7 +723,7 @@ module PhotoEmission
                                                                  (Basics.twice(line.finalLevel.J) + 1)
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
-                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to g_f",         line, chRate)) * "    "
+                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to f",           line, chRate)) * "    "
                 sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to decay width", line, chRate)) * "      "
                 ##x sa = sa * @sprintf("%.5e  %.5e", ch.amplitude.re, ch.amplitude.im) * "        "
                 println(stream, sa)

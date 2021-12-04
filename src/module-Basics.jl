@@ -12,7 +12,7 @@ module Basics
 
     export  AbstractScField, AbstractPotential, AbstractLevelProperty, AbstractProcess, add, analyze, AngularJ, AngularJ64, AngularM, 
             AngularM64, Auger,
-            CartesianVector, compute, diagonalize,
+            CartesianVector, compute, CorePolarization, diagonalize,
             estimate, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
             generate,
             interpolate, integrate, 
@@ -1253,6 +1253,47 @@ module Basics
         return( sa )
     end
 
+
+    """
+    `struct  Basics.CorePolarization`  
+        ... defines a type to describe the influence of core-polarization upon the potential or interaction operator.
+
+        + doApply          ::Bool                ... True if core-polarization is to be applied, and false otherwise.
+        + coreAlpha        ::Float64             ... Polarizibility of the ionic core.
+        + coreRadius       ::Float64             ... Radius of the ionic core.
+        + valenceSubshells ::Array{Subshell,1}   ... Radius of the ionic core.
+    """
+    struct  CorePolarization
+        doApply            ::Bool     
+        coreAlpha          ::Float64 
+        coreRadius         ::Float64
+        valenceSubshells   ::Array{Subshell,1}
+    end 
+
+
+    """
+    `Basics.CorePolarization()`  ... constructor for the default values of core-polarization contributions.
+    """
+    function CorePolarization()
+        CorePolarization(false, 0., 0., Subshell[])
+    end
+
+
+
+    # `Base.show(io::IO, cp::CorePolarization)`  ... prepares a proper printout of the variable cp::CorePolarization.
+    function Base.show(io::IO, cp::CorePolarization) 
+        sa = Base.string(cp);                print(io, sa)
+    end
+
+
+    # `Base.string(cp::CorePolarization)`  ... provides a String notation for the variable cp::CorePolarization.
+    function Base.string(cp::CorePolarization)
+        if  cp.doApply  sa = "Apply "   else    sa = "Do not apply "     end
+        sa = sa * "core-polarization with alpha_c = $(cp.coreAlpha) a.u., r_c = $(cp.coreRadius) a.u. " *
+                  "valence shells = $(cp.valenceSubshells)."
+        return( sa )
+    end
+
     
     """
     `abstract type Basics.AbstractContinuumNormalization` 
@@ -1349,6 +1390,7 @@ module Basics
         + struct ALField          ... to represent an average-level field.        
         + struct EOLField         ... to represent an (extended) optimized-level field.        
         + struct DFSField         ... to represent an mean Dirac-Fock-Slater field.        
+        + struct DFSwCPField      ... to represent an mean Dirac-Fock-Slater with core-polarization field.        
         + struct HSField          ... to represent an mean Hartree-Slater field.        
         + struct NuclearField     ... to represent a pure nuclear (potential) field.        
     """
@@ -1358,9 +1400,20 @@ module Basics
     struct     DFSField             <:  AbstractScField     end
     struct     HSField              <:  AbstractScField     end
     struct     NuclearField         <:  AbstractScField     end
-    
-    export  AbstractScField, ALField, EOLField, DFSField, HSField, NuclearField
 
+    """
+    `struct  Basics.DFSwCPField          <:  AbstractScField`  
+        ... defines a type to describe a mean Dirac-Fock-Slater field with core-polarization.
+
+        + corePolarization  ::CorePolarization   ... Parametrization of the core-polarization potential/contribution.
+    """
+    struct     DFSwCPField          <:  AbstractScField   
+        corePolarization    ::CorePolarization
+    end
+
+    export  AbstractScField, ALField, EOLField, DFSField, DFSwCPField, HSField, NuclearField
+
+    
     
     """
     `abstract type Basics.AbstractEeInteraction` 
@@ -1599,6 +1652,7 @@ module Basics
     function computePotentialHartreeSlater                          end
     function computePotentialKohnSham                               end
     function computePotentialDFS                                    end
+    function computePotentialDFSwCP                                 end
     function computePotentialExtendedHartree                        end
     function computeScfCoefficients                                 end
     function determineEnergySharings                                end
@@ -1613,6 +1667,7 @@ module Basics
     function diracDelta                                             end
     function display                                                end
     function displayLevels                                          end
+    function displayOrbitalOverlap                                  end
     function excludeDoubles                                         end
     function extractLeadingConfiguration                            end
     function extractNoOpenShells                                    end
