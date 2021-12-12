@@ -1275,6 +1275,24 @@
 
 
     """
+    `Basics.generateSubshellList(shells::Array{Shell,1})`  
+        ... generates a list of relativistic subshells from the given shell list, and by keeping the same order.
+            A subshellList::Array{Subshell,1} is returned.
+    """
+    function Basics.generateSubshellList(shells::Array{Shell,1})
+        subshellList = Subshell[]
+        for  sh in shells
+            if  sh.l == 0   push!(subshellList, Subshell(sh.n, -1))
+            else            push!(subshellList, Subshell(sh.n, sh.l))
+                            push!(subshellList, Subshell(sh.n, -sh.l - 1))
+            end
+        end
+            
+        return( subshellList )
+    end
+
+
+    """
     `Basics.generateSpectrumLorentzian(xIntensities::Array{Tuple{Float64,Float64},1}, widths::Float64; 
                                        energyShift::Float64=0., resolution::Int64=500)`  
         ... to generate the Lorentzian spectrum for the given intensities (x-position, y-intensity) and the (constant) width.

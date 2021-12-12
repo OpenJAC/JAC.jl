@@ -298,11 +298,6 @@
         ... to compute a (radial) Dirac-Fock-Slater potential but for mean occupation of the given basis. Cf. Basics.computePotentialDFS. 
             A potential::RadialPotential is returned.
 
-    `Basics.compute("radial potential: DFS with core-polarization", grid::Radial.Grid, level::Level)`  
-        ... to compute a (radial) Dirac-Fock-Slater potential with core-polarization contributions from the given list of orbitals; this potential 
-            is still rather simple but includes core-polarization contributions. Cf. Basics.computePotentialDFSwCP. 
-            A potential::RadialPotential is returned.
-
     `Basics.compute("radial potential: extended Hartree", grid::Radial.Grid, level::Level)`  
         ... to compute a (radial) extended Hartree potential from the given list of orbitals; it is a local potential that is based on 
             direct and exchange coefficients as obtained from the configuration-averaged energy. Cf. Basics.computePotentialExtendedHartree. 
@@ -314,7 +309,6 @@
         elseif  sa == "radial potential: Hartree-Slater"             wa = Basics.computePotentialHartreeSlater(grid, level)
         elseif  sa == "radial potential: Kohn-Sham"                  wa = Basics.computePotentialKohnSham(grid, level)
         elseif  sa == "radial potential: Dirac-Fock-Slater"          wa = Basics.computePotentialDFS(grid, level) 
-        ##x elseif  sa == "radial potential: DFS with core-polarization" wa = Basics.computePotentialDFSwCP(grid, level) 
         elseif  sa == "radial potential: extended-Hartree"           wa = Basics.computePotentialExtendedHartree(grid, level)
         else    error("Unsupported keystring = $sa ")
         end
@@ -843,15 +837,12 @@
     end
 
 
-
     """
-    `Basics.computePotentialDFSwCP(cp::CorePolarization, grid::Radial.Grid, level::Level)`  
-        ... to compute a (radial) Dirac-Fock-Slater potential for the given level; a potential::RadialPotential is returned. 
-            The Dirac-Fock-Slater potential with core-polarization is defined by
-
+    `Basics.computePotentialDFSwCP(kappa::Int64, cp::CorePolarization, grid::Radial.Grid, level::Level)`  
+        ... to compute a (radial) Dirac-Fock-Slater potential for the given level; 
+            a potential::RadialPotential is returned. The Dirac-Fock-Slater potential with core-polarization is defined by
                                                
                 V_DFS_wCP(r) = V_DFS + V_p (r) delta_a,valence        with
-                
                 
                                   alpha_d  r^2
                 V_p (r)      = - ---------------
@@ -860,7 +851,7 @@
             and where alpha_d is the core-polarizibility and r_c the core radius.
             An Radial.Potential with -r * V_DFS(r)  is returned to be consistent with an effective charge Z(r).
     """
-    function Basics.computePotentialDFSwCP(cp::CorePolarization, grid::Radial.Grid, level::Level)
+    function Basics.computePotentialDFSwCP(kappa::Int64, cp::CorePolarization, grid::Radial.Grid, level::Level)
         basis = level.basis;    npoints = grid.NoPoints
         rhot = zeros( npoints );    wb = zeros( npoints );    wx = zeros( npoints )
         # Compute the charge density of the core orbitals for the given level
@@ -877,7 +868,16 @@
             wb[i] = wb[i] - (3 /(4*pi^2 * grid.r[i]^2) * rhot[i])^(1/3)
         end
         # Add the core-polarization contributions from the valence shells
-        wx = zeros( npoints )
+        if  cp.doApply
+            println(">>> Add core-polarization potential for kappa = $kappa.")
+            for i = 1:npoints
+                denom = 2.0 * (grid.r[i]^2 + cp.coreRadius^2)^3
+                wb[i] = wb[i] - cp.coreAlpha * grid.r[i]^2 / denom
+            end
+        else
+            println(">>> No core-polarization potential added for kappa = $kappa; this is an ERROR in the present implementation.")
+        end
+        #
         # Define the potential with regard to Z(r)
         for i = 2:npoints    wb[i] = - wb[i] * grid.r[i]   end;    wb[1] = 0.
         #

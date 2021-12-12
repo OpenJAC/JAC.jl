@@ -200,23 +200,23 @@
     `Basics.recast()`  
         ... recasts some data from one number/representation into another one; cf. the supported keystrings and return values.
 
-    + `("rate: radiative, to decay width", value::Float64)`  
+    + `("rate: radiative, to decay width", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
         ... to recast a given radiative rate (Einstein A in atomic units) into a decay withs, taking the selected energy unit 
             into account. A Float64 is returned.
 
-    + `("rate: radiative, to Einstein A", value::Float64)`  
+    + `("rate: radiative, to Einstein A", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
         ... to recast a given spontaneous radiative rate (= Einstein A-coefficient), taking the selected unit into account. 
             A Float64 is returned.
 
-    + `("rate: radiative, to Einstein B", value::Float64)`  
+    + `("rate: radiative, to Einstein B", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
         ... to recast a given radiative rate (Einstein A in atomic units) into an Einstein B-coefficient, taking the selected 
             unit into account. A Float64 is returned.
 
-    + `("rate: radiative, to g_f", value::Float64)`  
+    + `("rate: radiative, to g_f", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
         ... to recast a given radiative rate (Einstein A in atomic units) into an oscillator strength g_f; 
             a Float64 is returned.
 
-    + `("rate: radiative, to f", value::Float64)`  
+    + `("rate: radiative, to f", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
         ... to recast a given radiative rate (Einstein A in atomic units) into an oscillator strength f; 
             a Float64 is returned.
     """

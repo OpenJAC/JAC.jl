@@ -232,6 +232,8 @@ module PhotoEmission
             amplitude = conj(amplitude)
         else    error("stop a")
         end
+        # Multiply with the multipolarity factors to keep different multipoles on the same footings; this factor need to be better understood
+        # amplitude = amplitude * sqrt( (2Mp.L+1)*(Mp.L+1)/Mp.L )
         
         if  display  
             println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] ||" *
@@ -273,13 +275,13 @@ module PhotoEmission
                 for  s = 1:ni
                     if  iLevel.basis.csfs[s].J != iLevel.J  ||  iLevel.basis.csfs[s].parity  != iLevel.parity    continue    end 
                     subshellList = fLevel.basis.subshells
-                    opa = SpinAngular.OneParticleOperator(Mp.L, plus, true)
+                    opa = SpinAngular.OneParticleOperator(1, plus, true)
                     wa  = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList) 
+                    me  = 0.
                     for  coeff in wa
-                        MabMigdalek = InteractionStrength.MabEmissionMigdalek(cp, fLevel.basis.orbitals[coeff.a],  
-                                                                                  iLevel.basis.orbitals[coeff.b], grid)
-                        me = me + coeff.T * MabMigdalek
-                    end
+                        me = me + coeff.T * InteractionStrength.MbaEmissionMigdalek(cp, fLevel.basis.orbitals[coeff.a],  
+                                                                                        iLevel.basis.orbitals[coeff.b], grid)
+                     end
                     matrix[r,s] = me
                 end
             end 
@@ -404,9 +406,9 @@ module PhotoEmission
             end
             #
             push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
-            # Multiply with the multipolarity factors to keep different multipoles on the same footings
-            mp        = channel.multipole
-            amplitude = amplitude * sqrt( (2mp.L+1)*(mp.L+1)/mp.L )
+            ## # Multiply with the multipolarity factors to keep different multipoles on the same footings
+            ## mp        = channel.multipole
+            ## amplitude = amplitude * sqrt( (2mp.L+1)*(mp.L+1)/mp.L )
             #
             if       channel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2
             elseif   channel.gauge == Basics.Babushkin   rateB = rateB + abs(amplitude)^2
@@ -415,8 +417,9 @@ module PhotoEmission
         end
         #     
         # Calculate the photonrate and angular beta if requested 
-        wa = 2.0pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) 
-        ##                                         * (Basics.twice(line.finalLevel.J) + 1)
+        ##x wa = 2.0pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) 
+        ##x                                         * (Basics.twice(line.finalLevel.J) + 1)
+        wa = 8pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) * (Basics.twice(line.finalLevel.J) + 1)
         photonrate  = EmProperty(wa * rateC, wa * rateB)    
         angularBeta = EmProperty(-9., -9.)
         line = PhotoEmission.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, true, newChannels)
@@ -597,6 +600,7 @@ module PhotoEmission
         for  ii in  ilevels
             waCoulomb = 0.;    waBabushkin = 0.
             for  i = 1:length(lines)
+                ##x @show  ii, lines[i].initialLevel.index
                 if   lines[i].initialLevel.index == ii    
                     waCoulomb   = waCoulomb   + lines[i].photonRate.Coulomb
                     waBabushkin = waBabushkin + lines[i].photonRate.Babushkin
@@ -627,6 +631,7 @@ module PhotoEmission
             sa = sa * "Coulomb          " * @sprintf("%.6e",              1.0/irates[ii].Coulomb)     * "  "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("time: from atomic",   1.0/irates[ii].Coulomb) )   * "    "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic",     irates[ii].Coulomb) )
+            ##x @show 1.0/Defaults.convertUnits("rate: from atomic",  irates[ii].Coulomb), irates[ii].Coulomb
             println(stream, sa)
             sa = repeat(" ", length(istr[ii]) )
             sa = sa * "Babushkin        " * @sprintf("%.6e",              1.0/irates[ii].Babushkin)   * "  "

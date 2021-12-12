@@ -1261,13 +1261,13 @@ module Basics
         + doApply          ::Bool                ... True if core-polarization is to be applied, and false otherwise.
         + coreAlpha        ::Float64             ... Polarizibility of the ionic core.
         + coreRadius       ::Float64             ... Radius of the ionic core.
-        + valenceSubshells ::Array{Subshell,1}   ... Radius of the ionic core.
+        + coreShells       ::Array{Shell,1}      ... Shells of the ionic core
     """
     struct  CorePolarization
         doApply            ::Bool     
         coreAlpha          ::Float64 
         coreRadius         ::Float64
-        valenceSubshells   ::Array{Subshell,1}
+        coreShells         ::Array{Shell,1} 
     end 
 
 
@@ -1275,7 +1275,7 @@ module Basics
     `Basics.CorePolarization()`  ... constructor for the default values of core-polarization contributions.
     """
     function CorePolarization()
-        CorePolarization(false, 0., 0., Subshell[])
+        CorePolarization(false, 0., 0., Shell[])
     end
 
 
@@ -1290,7 +1290,7 @@ module Basics
     function Base.string(cp::CorePolarization)
         if  cp.doApply  sa = "Apply "   else    sa = "Do not apply "     end
         sa = sa * "core-polarization with alpha_c = $(cp.coreAlpha) a.u., r_c = $(cp.coreRadius) a.u. " *
-                  "valence shells = $(cp.valenceSubshells)."
+                  "core shells = $(cp.coreShells)."
         return( sa )
     end
 
@@ -1690,6 +1690,7 @@ module Basics
     function generateOrbitalsForPotential                           end
     function generateOrbitalSuperposition                           end
     function generateShellList                                      end
+    function generateSubshellList                                   end
     function generateSpectrumLorentzian                             end
     function generateSpectrumGaussian                               end
     function integrate                                              end

@@ -178,6 +178,28 @@ module  RadialIntegrals
 
 
     """
+    `RadialIntegrals.GrantJL_cp(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, cp::CorePolarization)`  
+        ... computes Grant's (radial) integral for two relativistic orbitals:  
+            J_L (q; a,b) = int_0^\\infty dr   [ P_a P_b + Q_a Q_b ] * r * [1 - coreAlpha / (r^2 + coreRadius^2)^3/2 ].
+    """
+    function GrantJL_cp(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, cp::CorePolarization)
+        mtp = min(size(a.P, 1), size(b.P, 1))
+        
+        # Distinguish the radial integration for different grid definitions
+        if  grid.meshType == Radial.MeshGrasp()
+            error("stop a")
+        elseif  grid.meshType == Radial.MeshGL()
+            wa = 0.
+            for  i = 2:mtp   wa = wa + (a.P[i] * b.P[i] + a.Q[i] * b.Q[i]) * grid.wr[i] * grid.r[i] * 
+                                       (1.0 - cp.coreAlpha / (grid.r[i]^2 + cp.coreRadius^2)^(3/2) )   end
+            return( wa )
+        else
+            error("stop a")
+        end
+    end
+
+
+    """
     `RadialIntegrals.isotope_boson(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid::Radial.Grid)`  
         ... computes the boson-field shift radial integral int_o^infty ... A value::Float64 is returned.
     """

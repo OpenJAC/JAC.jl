@@ -239,7 +239,7 @@
         sMinEn = @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", property.minPhotonEnergy))
         sMaxEn = @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", property.maxPhotonEnergy))
         println(stream, " ")
-        println(stream, "* Energies & (relative) photon intensities " * sMinEn * " and "  * sMaxEn * 
+        println(stream, "* Energies & (relative) photon intensities between " * sMinEn * " and "  * sMaxEn * 
                            TableStrings.inUnits("energy") * ":  ")
         println(stream, " ")
         println(stream, "  ", TableStrings.hLine(nx))
