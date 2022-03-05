@@ -299,6 +299,16 @@ module Radial
         wt             ::Array{Float64,1}
     end
 
+    
+
+    """
+    `Radial.GridGL()`  
+        ... specified a default version of a Gauss-Legendre grid with 6 points in the interval [0.,1.].
+    """
+    function GridGL()
+        GridGL("Finite", 0., 1., 6; printout=false)
+    end
+    
 
     """
     `Radial.GridGL("QED", orderGL::Int64; printout::Bool=false)`  
@@ -322,6 +332,7 @@ module Radial
            
         GridGL(nt, t, wt)
     end
+    
     
     """
     `Radial.GridGL("Finite", tmin::Float64, tmax::Float64, orderGL::Int64; printout::Bool=false)`  

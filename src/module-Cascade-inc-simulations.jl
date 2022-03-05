@@ -717,6 +717,12 @@
             levels = Cascade.reviewData(simulation, ascendingOrder=true)
             wa     = Cascade.simulateDrRateCoefficients(levels, simulation) 
             #
+        elseif  typeof(simulation.property) == Cascade.RrRateCoefficients
+                                             # --------------------------
+            linesR = simulation.computationData[1]["results"]["photo-recombination line data:"].linesR
+            @show typeof(linesR)
+            wa     = Cascade.simulateRrRateCoefficients(linesR, simulation) 
+            #
         elseif  typeof(simulation.property) == Cascade.MeanRelaxationTime
                                              # --------------------------
             levels = Cascade.reviewData(simulation, ascendingOrder=true)
@@ -1116,6 +1122,44 @@
         return( energiesInts )
     end
     
+
+    """
+    `Cascade.simulateRrRateCoefficients(lines::Array{PhotoRecombination.Line,1}, simulation)` 
+        ... Integrates over all selected cross sections in order to determine the RR plasma rate coefficients for a Maxwellian
+            distribution.
+    """
+    function simulateRrRateCoefficients(lines::Array{PhotoRecombination.Line,1}, simulation)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        # Check consistency of data
+        isym = LevelSymmetry(lines[1].initialLevel.J, lines[1].initialLevel.parity)
+        for  line  in  lines
+             if  LevelSymmetry(line.initialLevel.J, line.initialLevel.parity) != isym   error("error a")    end
+        end
+        
+        # Convert units into cm^3 / s
+        factor  = Defaults.convertUnits("length: from atomic to fm", 1.0)^3 * 1.0e-39 * 
+                  Defaults.convertUnits("rate: from atomic to 1/s", 1.0) 
+        
+        temperatures = simulation.property.temperatures
+        alphaRR      = EmProperty[]
+        #
+        for temp  in  temperatures
+            temp_au = Defaults.convertUnits("temperature: from Kelvin to (Hartree) units", temp)
+            wa      = EmProperty(0., 0.)
+            #
+            for  line  in  lines
+                # Determine cross section of this line
+                cs = EmProperty(1., 1.)
+                wa = wa + 4 / sqrt(2pi) * factor * line.electronEnergy * exp(-line.electronEnergy / temp_au ) * line.weight * cs
+            end
+            push!(alphaRR, wa)
+        end
+        
+        # Display the RR plasma rate coefficients
+        PhotoRecombination.displayRateCoefficients(stdout, isym, simulation.property.temperatures, alphaRR)
+
+        return( nothing )
+    end
 
     """
     `Cascade.sortByEnergy(levels::Array{Cascade.Level,1}; ascendingOrder::Bool=false)` 

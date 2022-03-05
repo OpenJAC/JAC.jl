@@ -16,10 +16,12 @@ module PhotoRecombination
         + electronEnergies    ::Array{Float64,1}    ... List of electron energies [in default units].
         + ionEnergies         ::Array{Float64,1}    ... List of ion energies [in MeV/u].
         + useIonEnergies      ::Bool                ... Make use of ion energies in [MeV/u] to obtain the electron energies.
+        + calcTotalCs         ::Bool                ... True, if the total cross sections is to be calculated/displayed for all initial levels.
         + calcAnisotropy      ::Bool                ... True, if the overall anisotropy is to be calculated.
         + calcTensors         ::Bool                ... True, if the statistical tensors are to be calculated and 
                                                         false otherwise.
         + printBefore         ::Bool                ... True, if all energies and lines are printed before their evaluation.
+        + maxKappa            ::Int64               ... Maximum kappa value of partial waves to be included.
         + lineSelection       ::LineSelection       ... Specifies the selected levels, if any.
     """
     struct Settings  <:  AbstractProcessSettings
@@ -28,9 +30,11 @@ module PhotoRecombination
         electronEnergies      ::Array{Float64,1} 
         ionEnergies           ::Array{Float64,1}
         useIonEnergies        ::Bool
+        calcTotalCs           ::Bool
         calcAnisotropy        ::Bool
         calcTensors           ::Bool 
         printBefore           ::Bool 
+        maxKappa              ::Int64 
         lineSelection         ::LineSelection 
     end 
 
@@ -39,7 +43,7 @@ module PhotoRecombination
     `PhotoRecombination.Settings()`  ... constructor for the default values of photo recombination line computations
     """
     function Settings()
-        Settings(EmMultipole[], UseGauge[], Float64[], Float64[], false, false, false, false, LineSelection() )
+        Settings(EmMultipole[], UseGauge[], Float64[], Float64[], false, false, false, false, false, 0, LineSelection() )
     end
 
 
@@ -51,9 +55,11 @@ module PhotoRecombination
         println(io, "electronEnergies:         $(settings.electronEnergies)  ")
         println(io, "ionEnergies:              $(settings.ionEnergies)  ")
         println(io, "useIonEnergies:           $(settings.useIonEnergies)  ")
+        println(io, "calcTotalCs:              $(settings.calcTotalCs)  ")
         println(io, "calcAnisotropy:           $(settings.calcAnisotropy)  ")
         println(io, "calcTensors:              $(settings.calcTensors)  ")
         println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "maxKappa:                 $(settings.maxKappa)  ")
         println(io, "lineSelection:            $(settings.lineSelection)  ")
     end
 
@@ -89,6 +95,7 @@ module PhotoRecombination
         + electronEnergy ::Float64                ... Energy of the (incoming free) electron.
         + photonEnergy   ::Float64                ... Energy of the emitted photon.
         + betaGamma2     ::Float64                ... beta^2 * gamma^2.
+        + weight         ::Float64                ... weight of line in the integration over electron energies.
         + crossSection   ::EmProperty             ... Cross section for this electron capture.
         + hasChannels    ::Bool                   ... Determines whether the individual (sub-) channels are defined in terms of their 
                                                       free-electron energy, kappa, multipole, etc., or not.
@@ -100,6 +107,7 @@ module PhotoRecombination
         electronEnergy   ::Float64
         photonEnergy     ::Float64
         betaGamma2       ::Float64 
+        weight           ::Float64
         crossSection     ::EmProperty
         hasChannels      ::Bool
         channels         ::Array{PhotoRecombination.Channel,1}
@@ -112,7 +120,7 @@ module PhotoRecombination
             and final level.
     """
     function Line(initialLevel::Level, finalLevel::Level)
-        Line(initialLevel::Level, finalLevel::Level, 0., 0., 0., EmProperty(0., 0.), false, Channel[])
+        Line(initialLevel::Level, finalLevel::Level, 0., 0., 0., 0., EmProperty(0., 0.), false, Channel[])
     end
 
 
@@ -123,6 +131,7 @@ module PhotoRecombination
         println(io, "electronEnergy:    $(line.electronEnergy)  ")
         println(io, "photonEnergy:      $(line.photonEnergy)  ")
         println(io, "betaGamma2:        $(line.betaGamma2)  ")
+        println(io, "weight:            $(line.weight)  ")
         println(io, "crossSection:      $(line.crossSection)  ")
         println(io, "hasChannels:       $(line.hasChannels)  ")
         println(io, "channels:          $(line.channels)  ")
@@ -200,7 +209,7 @@ module PhotoRecombination
         csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 * line.photonEnergy / (Ji2 + 1)
         crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
         newLine      = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, line.betaGamma2, 
-                                                crossSection, true, newChannels)
+                                                line.weight, crossSection, true, newChannels)
         return( newLine )
     end
 
@@ -288,6 +297,106 @@ module PhotoRecombination
         end
     end
 
+
+    """
+    `PhotoRecombination.computeLinesWithContinuumOrbital(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, 
+                                                         grid::Radial.Grid, cOrbitals::Dict{Subshell, Orbital}, energyGrid::Radial.GridGL, 
+                                                         settings::PhotoRecombination.Settings; output::Bool=true)` 
+        ... to compute the photo recombination transition amplitudes and all properties as requested by the given settings but with the
+            given continuum orbitals cOrbitals and for the (free-) electronEnergies. A error message is issued if these energies are not
+            the same a given by the settings. The continuum orbital with electronEnergies[i] has the principal quantum number 100+i.
+            A list of lines::Array{PhotoRecombination.Lines} is returned.
+    """
+    function  computeLinesWithContinuumOrbital(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, 
+                                               grid::Radial.Grid, cOrbitals::Dict{Subshell, Orbital}, energyGrid::Radial.GridGL, 
+                                               settings::PhotoRecombination.Settings; output::Bool=true)
+        # Check the consistency of the initial- and final-state multiplets
+        PhotoRecombination.checkConsistentMultiplets(finalMultiplet, initialMultiplet);     ie = 0
+        #
+        lines = PhotoRecombination.determineLines(finalMultiplet, initialMultiplet, settings)
+        # Display all selected lines before the computations start
+        if  settings.printBefore    PhotoRecombination.displayLines(lines)    end
+        # Determine maximum energy and check for consistency of the grid
+        newLines = PhotoRecombination.Line[]
+        for  (i,line)  in  enumerate(lines)
+            if  rem(i,500) == 0    println("> PhotoRecombination line $i:  ... calculated ")    end
+            # Calculate the individual channels with the given orbitals
+            newChannels = PhotoRecombination.Channel[];    csC = 0.;    csB = 0.
+            for channel in line.channels
+                newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, line.finalLevel.basis.subshells)
+                newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, newfLevel.basis.subshells)
+                en        = line.electronEnergy;    ieList = findall(x->x==en, energyGrid.t);   ie = ieList[1]  
+                @show  ie, ieList, en, energyGrid.t 
+                cSubsh    = Subshell(100+ie, channel.kappa)
+                newfLevel = Basics.generateLevelWithExtraSubshell(cSubsh, newfLevel)
+                cOrbital  = cOrbitals[cSubsh];      phase = 0.
+                newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newiLevel)
+                newChannel = PhotoRecombination.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
+                amplitude  = PhotoRecombination.amplitude("photorecombination", channel, line.photonEnergy, newfLevel, newcLevel, grid)
+                push!( newChannels, PhotoRecombination.Channel(newChannel.multipole, newChannel.gauge, newChannel.kappa, newChannel.symmetry, 
+                                                               newChannel.phase, amplitude) )
+                if       channel.gauge == Basics.Coulomb     csC = csC + abs(amplitude)^2
+                elseif   channel.gauge == Basics.Babushkin   csB = csB + abs(amplitude)^2
+                elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
+                end
+            end
+            Ji2 = Basics.twice(line.initialLevel.J)
+            csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 * line.photonEnergy / (Ji2 + 1)
+            crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
+            newLine      = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, line.betaGamma2, 
+                                                    energyGrid.wt[ie], crossSection, true, newChannels)
+            push!( newLines, newLine)
+        end
+        # Print all results to screen
+        PhotoRecombination.displayResults(stdout, newLines, settings)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        if  printSummary   PhotoRecombination.displayResults(iostream, newLines, settings)    end
+        #
+        if    output    return( newLines )
+        else            return( nothing )
+        end
+    end
+
+    
+
+    """
+    `PhotoRecombination.crossSectionStobbe(energy::Float64, Z::Float64)`  
+        ... to evaluate the (non-relativistic) Stobbe cross section for the RR of a free electron with energy into the 1s state of 
+            initially bare ions with nuclear charge Z; an cs::Float64 is returned.
+    """
+    function crossSectionStobbe(energy::Float64, Z::Float64)
+        eta = sqrt( Z^2 / 2. / energy)
+        cs  = 2^8 * pi^2 * Defaults.getDefaults("alpha")^3 / 3.
+        cs  = cs * eta^6 * exp(-4 * eta * atan(1/eta)) / (1 - exp(-2 * pi * eta)) / (eta^2 + 1)^2
+        return( cs )
+    end
+
+    
+
+    """
+    `PhotoRecombination.crossSectionKramers(energy::Float64, Z::Float64, nLowUp::Tuple{Int64,Int64})`  
+        ... to evaluate the (non-relativistic) Kramers cross section for the RR of a free electron with energy into all shells with
+            n = n_Low ... n_Up of initially bare ions with nuclear charge Z; an cs::Float64 is returned.
+    """
+    function crossSectionKramers(energy::Float64, Z::Float64, nLowUp::Tuple{Int64,Int64})
+        eta = sqrt( Z^2 / 2. / energy);     wa = 32 * pi * Defaults.getDefaults("alpha")^3 / 3. / sqrt(3.)
+        cs  = 0.;       for  n=nLowUp[1]:nLowUp[2]  cs = cs + wa * eta^4 / n / (eta^2 + n^2)    end
+        return( cs )
+    end
+
+    
+
+    """
+    `PhotoRecombination.crossSectionKramersTotal(energy::Float64, Z::Float64)`  
+        ... to evaluate the (non-relativistic) Kramers cross section for the RR of a free electron with energy into any shell
+            of initially bare ions with nuclear charge Z; an cs::Float64 is returned.
+    """
+    function crossSectionKramersTotal(energy::Float64, Z::Float64)
+        eta = sqrt( Z^2 / 2. / energy);     wa = 16 * pi * Defaults.getDefaults("alpha")^3 / 3. / sqrt(3.)
+        cs  = wa * eta^2 * log(1 + eta^2)
+        return( cs )
+    end
+
     
 
     """
@@ -305,6 +414,7 @@ module PhotoRecombination
                     kappaList = AngularMomentum.allowedKappaSymmetries(symi, symt)
                     for  kappa in kappaList
                         # Include further restrictions if appropriate
+                        if  abs(kappa) > settings.maxKappa      continue    end
                         if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
                             push!(channels, PhotoRecombination.Channel(mp, Basics.Coulomb,   kappa, symt, 0., Complex(0.)) )
                         elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
@@ -358,7 +468,7 @@ module PhotoRecombination
                         if  en < 0    continue   end 
                         omega    = en + iLevel.energy - fLevel.energy
                         channels = PhotoRecombination.determineChannels(fLevel, iLevel, settings) 
-                        push!( lines, PhotoRecombination.Line(iLevel, fLevel, en, omega, betaGamma2, EmProperty(0., 0.), true, channels) )
+                        push!( lines, PhotoRecombination.Line(iLevel, fLevel, en, omega, betaGamma2, 0., EmProperty(0., 0.), true, channels) )
                     end
                 end
             end
@@ -480,6 +590,45 @@ module PhotoRecombination
         println(stream, "  ", TableStrings.hLine(nx))
         #
         #
+        if  settings.calcTotalCs 
+            nx = 133
+            println(stream, " ")
+            println(stream, "  Total photorecombination cross sections for the intial levels:")
+            println(stream, " ")
+            println(stream, "  ", TableStrings.hLine(nx))
+            sa = "  ";   sb = "  "
+            sa = sa * TableStrings.center(18, "i-level"   ; na=0);                       sb = sb * TableStrings.hBlank(20)
+            sa = sa * TableStrings.center(16, "i--J^P "   ; na=3);                       sb = sb * TableStrings.hBlank(19)
+            sa = sa * TableStrings.center(12, "i--Energy "; na=4)               
+            sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
+            sa = sa * TableStrings.center(12, "omega"     ; na=4)             
+            sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
+            sa = sa * TableStrings.center(12, "Energy e_r"; na=3)             
+            sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
+            sa = sa * TableStrings.center(10, "Multipoles"; na=5);                         sb = sb * TableStrings.hBlank(15)
+            sa = sa * TableStrings.flushleft(57, "Total cross section"; na=4)  
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+            #   
+            for  line in lines
+                sa  = " ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                sa = sa * TableStrings.center(17, TableStrings.levels(line.initialLevel.index; na=2))
+                sa = sa * TableStrings.center(17, TableStrings.symmetry(isym); na=3)
+                en = line.initialLevel.energy
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                  * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) * "    "
+                multipoles = EmMultipole[]
+                for  ch in line.channels
+                    multipoles = push!( multipoles, ch.multipole)
+                end
+                multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
+                sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=3)
+                println(stream, sa);   sa = TableStrings.hBlank(102)
+            end
+            println(stream, "  ", TableStrings.hLine(nx))
+        end
+        #
+        #
         if  settings.calcAnisotropy  
             nx = 133
             println(stream, " ")
@@ -536,6 +685,40 @@ module PhotoRecombination
             println(stream, "  Reduced statistical tensors of the recombined ion ... not yet implemented !!")
             println(stream, " ")
         end
+        #
+        return( nothing )
+    end
+
+
+    """
+    `PhotoRecombination.displayRateCoefficients(stream::IO, isym::LevelSymmetry, temperatures::Array{Float64,1}, alphaRR::Array{EmProperty,1})`  
+        ... to print all rate coefficients for the selected temperatures in neat tables, 
+            though nothing is returned otherwise.
+    """
+    function  displayRateCoefficients(stream::IO, isym::LevelSymmetry, temperatures::Array{Float64,1}, alphaRR::Array{EmProperty,1})
+        #
+        ntemps = length(temperatures)
+        nx = 54 + 17 * min(ntemps, 7)
+        println(stream, " ")
+        println(stream, "  Rate coefficients [cm^3/s] for initial level with symmetry J^P = $isym:")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = sb = "                                   "
+        for  nt = 1:min(ntemps, 7)
+            sa = sa * TableStrings.center(14, "T = " * @sprintf("%.2e", temperatures[nt]); na=3);       
+            sb = sb * TableStrings.center(14, "[K]"; na=3)
+        end
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
+        println(stream, "  ")
+        sa = "  alpha^DR (T, i; Coulomb gauge):    " 
+        sb = "  alpha^DR (T, i; Babushkin gauge):  " 
+        for  nt = 1:min(ntemps, 7) 
+            sa = sa * @sprintf("%.4e", alphaRR[nt].Coulomb)    * "       "
+            sb = sb * @sprintf("%.4e", alphaRR[nt].Babushkin)  * "       "
+        end
+        println(stream, sa);    println(stream, sb)
+        println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
     end

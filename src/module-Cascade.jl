@@ -7,7 +7,8 @@ module Cascade
 
     using Dates, JLD2, Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
                                ..DecayYield, ..Dielectronic, ..ElectronCapture, ..Radial, ..ManyElectron, ..Nuclear, 
-                               ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..Semiempirical, ..TableStrings
+                               ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..PhotoRecombination, 
+                               ..Semiempirical, ..TableStrings
 
     
     """
@@ -24,6 +25,10 @@ module Cascade
             ... to represent the (dielectronic) capture of an electron for a maximum excitation energy and a given list of
                 subshells; the excitation energy refers to the levels of the reference configurations, and cascade blocks are built
                 only with the given subshells.
+        + struct RadiativeRecombinationScheme  
+            ... to represent the radiative recombination (capture) of an electron up to a maximum free-electron energy as well as
+                for a given list of shells (intoShells), into which the capture is considered; the energy of the emitted photons then
+                refer to the levels of the reference configurations, and all cascade blocks are built only with the given intoShells.
         + struct HollowIonScheme    
             ... to represent the capture of one or several electrons into a list of subshells; various distributions of the
                 electron among these shells are supported. For the subsequent decay, the list of decay shells need to be specified
@@ -266,6 +271,71 @@ module Cascade
 
 
     """
+    `struct  Cascade.RadiativeRecombinationScheme  <:  Cascade.AbstractCascadeScheme`  
+        ... a struct to define and describe the radiative recombination of electrons for an atom in some initial state/configuration;
+            for such a scheme, the configurations due to the electron capture are generated automatically due to given maximal numbers 
+            of the (into-) shells (nl) as well as the maximum displacement with regard to the initial configuration.
+            An additional maximum excitation energy need to be provided due to the maximum temperatures for which RR plasma rate coefficients
+            are to be determined, cf. Basics.convert().
+
+        + multipoles             ::Array{EmMultipole}           
+            ... Multipoles of the radiation field that are to be included into the radiative stabilization processes.
+        + lValues                ::Array{Int64,1}
+            ... Orbital angular momentum values of the free-electrons, for which partial waves are considered for the RR.
+        + NoFreeElectronEnergies ::Int64             
+            ... Number of free-electron energies that a chosen for a Gauss-Laguerre integration.
+        + maxFreeElectronEnergy  ::Float64             
+            ... Maximum free-electron energies [in a.u.] that restrict the energy of free-electron orbitals; this maximum energy has to 
+                be derived from the maximum temperature for which RR plasma coefficients need to be obtained and is typically set to 
+                about 5x T_e,max.
+        + electronEnergyShift    ::Float64                 
+            ... Energy shift for all bound-state energies relative to the levels from the reference configuration; this is realized by 
+                shifting the initial level energies by the negative amount. The shift is taken in the user-defined units.
+        + minPhotonEnergy       ::Float64                 
+            ... Minimum (mean) photon energy [in a.u.] for which the radiative decay is taken into account.
+        + intoShells            ::Array{Shell,1}
+            ... List of shells into which electrons are initially placed (captured).
+    """
+    struct   RadiativeRecombinationScheme  <:  Cascade.AbstractCascadeScheme
+        multipoles              ::Array{EmMultipole}  
+        lValues                 ::Array{Int64,1}
+        NoFreeElectronEnergies  ::Int64  
+        maxFreeElectronEnergy   ::Float64
+        electronEnergyShift     ::Float64 
+        minPhotonEnergy         ::Float64                 
+        intoShells              ::Array{Shell,1}
+    end
+
+
+    """
+    `Cascade.RadiativeRecombinationScheme()`  ... constructor for an 'default' instance of a Cascade.RadiativeRecombinationScheme.
+    """
+    function RadiativeRecombinationScheme()
+        RadiativeRecombinationScheme([E1], Int64[], 0, 0., 0., 0., Shell[] )
+    end
+
+
+    # `Base.string(scheme::RadiativeRecombinationScheme)`  ... provides a String notation for the variable scheme::RadiativeRecombinationScheme.
+    function Base.string(scheme::RadiativeRecombinationScheme)
+        sa = "Radiative recombination (scheme):"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, scheme::RadiativeRecombinationScheme)`  ... prepares a proper printout of the scheme::RadiativeRecombinationScheme.
+    function Base.show(io::IO, scheme::RadiativeRecombinationScheme)
+        sa = Base.string(scheme);                print(io, sa, "\n")
+        println(io, "multipoles:                 $(scheme.multipoles)  ")
+        println(io, "lValues:                    $(scheme.lValues)  ")
+        println(io, "NoFreeElectronEnergies:     $(scheme.NoFreeElectronEnergies)  ")
+        println(io, "maxFreeElectronEnergy:      $(scheme.maxFreeElectronEnergy)  ")
+        println(io, "electronEnergyShift:        $(scheme.electronEnergyShift)  ")
+        println(io, "minPhotonEnergy:            $(scheme.minPhotonEnergy)  ")
+        println(io, "intoShells:                 $(scheme.intoShells)  ")
+    end
+
+
+    """
     `struct  Cascade.HollowIonScheme  <:  Cascade.AbstractCascadeScheme`  
         ... a struct to define and describe the formation and decay of a hollow ion, e.g. an electronic core configuration 
             into which one or several additional electrons are captured into (high) nl shells. Both the shell (lists) for 
@@ -437,7 +507,8 @@ module Cascade
     """
     struct  Step
         process            ::Basics.AbstractProcess
-        settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings}
+        settings           ::Union{PhotoEmission.Settings, AutoIonization.Settings, PhotoIonization.Settings, PhotoExcitation.Settings, 
+                                   PhotoRecombination.Settings}
         initialConfigs     ::Array{Configuration,1}
         finalConfigs       ::Array{Configuration,1}
         initialMultiplet   ::Multiplet
@@ -540,11 +611,12 @@ module Cascade
 
     # `Base.string(comp::Cascade.Computation)`  ... provides a String notation for the variable comp::Cascade.Computation.
     function Base.string(comp::Cascade.Computation)
-        if        typeof(comp.scheme) == Cascade.StepwiseDecayScheme       sb = "stepwise decay scheme"
-        elseif    typeof(comp.scheme) == Cascade.PhotonIonizationScheme    sb = "(prior) photo-ionization scheme"
-        elseif    typeof(comp.scheme) == Cascade.PhotonExcitationScheme    sb = "photo-excitation scheme"
-        elseif    typeof(comp.scheme) == Cascade.DielectronicCaptureScheme     sb = "(di-) electronic capture scheme"
-        elseif    typeof(comp.scheme) == Cascade.HollowIonScheme           sb = "hollow ion scheme"
+        if        typeof(comp.scheme) == Cascade.StepwiseDecayScheme            sb = "stepwise decay scheme"
+        elseif    typeof(comp.scheme) == Cascade.PhotonIonizationScheme         sb = "(prior) photo-ionization scheme"
+        elseif    typeof(comp.scheme) == Cascade.PhotonExcitationScheme         sb = "photo-excitation scheme"
+        elseif    typeof(comp.scheme) == Cascade.DielectronicCaptureScheme      sb = "(di-) electronic capture scheme"
+        elseif    typeof(comp.scheme) == Cascade.RadiativeRecombinationScheme   sb = "radiative recombination capture scheme"
+        elseif    typeof(comp.scheme) == Cascade.HollowIonScheme                sb = "hollow ion scheme"
         else      error("unknown typeof(comp.scheme)")
         end
         
@@ -641,7 +713,7 @@ module Cascade
     """
     `struct  Cascade.ExcitationData  <:  Cascade.AbstractData`  ... defines a type for an atomic cascade, i.e. lists of excitation lines.
 
-        + linesE         ::Array{PhotoExcitation.Line,1}        ... List of photoionization lines.
+        + linesE         ::Array{PhotoExcitation.Line,1}        ... List of photoexcitation lines.
     """  
     struct  ExcitationData  <:  Cascade.AbstractData
         linesE           ::Array{PhotoExcitation.Line,1}
@@ -659,6 +731,30 @@ module Cascade
     # `Base.show(io::IO, data::Cascade.ExcitationData)`  ... prepares a proper printout of the variable data::Cascade.ExcitationData.
     function Base.show(io::IO, data::Cascade.ExcitationData) 
         println(io, "linesE:                  $(data.linesE)  ")
+    end
+
+
+    """
+    `struct  Cascade.RecombinationData  <:  Cascade.AbstractData`  ... defines a type for an atomic cascade, i.e. lists of photorecombination lines.
+
+        + linesR         ::Array{PhotoRecombination.Line,1}        ... List of photorecombination lines.
+    """  
+    struct  RecombinationData  <:  Cascade.AbstractData
+        linesR           ::Array{PhotoRecombination.Line,1}
+    end 
+
+
+    """
+    `Cascade.RecombinationData()`  ... (simple) constructor for cascade recombination data.
+    """
+    function RecombinationData()
+        RecombinationData(Array{PhotoRecombination.Line,1}[] )
+    end
+
+
+    # `Base.show(io::IO, data::Cascade.RecombinationData)`  ... prepares a proper printout of the variable data::Cascade.RecombinationData.
+    function Base.show(io::IO, data::Cascade.RecombinationData) 
+        println(io, "linesR:                  $(data.linesR)  ")
     end
     
 
@@ -721,6 +817,36 @@ module Cascade
     function Base.show(io::IO, dist::Cascade.DrRateCoefficients) 
         println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
         println(io, "electronEnergyShift:      $(dist.electronEnergyShift)  ")
+        println(io, "temperatures:             $(dist.temperatures)  ")
+    end
+
+
+    """
+    `struct  Cascade.RrRateCoefficients   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the RR plasma rate coefficients as function of the (free) electron energy and
+            plasma temperature.
+
+        + initialLevelNo      ::Int64       ... Level No of initial level for which rate coefficients are to be computed.
+        + temperatures        ::Array{Float64,1}
+            ... temperatures [K] for which the DR plasma rate coefficieints to be calculated.
+    """  
+    struct  RrRateCoefficients   <:  Cascade.AbstractSimulationProperty
+        initialLevelNo        ::Int64 
+        temperatures          ::Array{Float64,1}
+    end 
+
+
+    """
+    `Cascade.RrRateCoefficients()`  ... (simple) constructor for cascade RrRateCoefficients.
+    """
+    function RrRateCoefficients()
+        RrRateCoefficients(1, Float64[])
+    end
+
+
+    # `Base.show(io::IO, dist::Cascade.RrRateCoefficients)`  ... prepares a proper printout of the variable data::Cascade.RrRateCoefficients.
+    function Base.show(io::IO, dist::Cascade.RrRateCoefficients) 
+        println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
         println(io, "temperatures:             $(dist.temperatures)  ")
     end
 
@@ -1100,6 +1226,7 @@ module Cascade
     include("module-Cascade-inc-photoabsorption.jl")
     include("module-Cascade-inc-photoexcitation.jl")
     include("module-Cascade-inc-photoionization.jl")
+    include("module-Cascade-inc-radiative-recombination.jl")
     include("module-Cascade-inc-stepwise-decay.jl")
     include("module-Cascade-inc-simulations.jl")
     

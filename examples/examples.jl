@@ -74,6 +74,8 @@ println("Ea) Three-step cascade after 1s-3p photo-excitation of Si^+: Configurat
 println("Eb) Simulation of the four-step cascade after 1s-3p photo-excitation of Si^+: Configuration model.")
 println("Ec) Three-step cascade computations and simulations for the decay of the neon 1s^-1 3p hole states: AverageSCA model.")
 println("Ed) Photoabsorption of Ne^+: AverageSCA model.")
+println("Ee) Dielectronic recombination cascade.")
+println("Ef) Radiative recombination cascade.")
 println("")
 println("F)  Tests & development of symbolic evaluations of Racah expressions")
 println("--------------------------------------------------------------------")
