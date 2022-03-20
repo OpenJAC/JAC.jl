@@ -1,5 +1,5 @@
 
-    # Functions and methods for cheme::Cascade.HollowIonScheme computations
+    # Functions and methods for scheme::Cascade.HollowIonScheme computations
 
 
     """
@@ -7,7 +7,7 @@
         ... computes in turn all the requested (decay) transition amplitudes as well as AutoIonization.Line's, etc. for all 
             pre-specified decay steps of the cascade. When compared with standard computations of these atomic 
             processes, however, the amount of output is largely reduced and often just printed into the summary file. 
-            A set of  data::Cascade.DrRateData  is returned.
+            A set of  data::Cascade.DecayData  is returned.
     """
     function computeSteps(scheme::Cascade.HollowIonScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
         linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    linesC = ElectronCapture.Line[];    cOrbitals = Dict{Subshell, Orbital}()
@@ -24,10 +24,42 @@
                 newLines = DielectronicCapture.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
                                                                step.settings, output=true, printout=false) 
                 append!(linesC, newLines);    nt = length(linesC)
+            elseif  step.process == Basics.Auger()  &&   comp.approach == Cascade.AverageSCA()
+                # First determine the `mean' free-electron energy for this Auger block and calculate a common set of continuum orbital
+                meanEn = 0.;    NoEn = 0
+                for  p = 1:length(step.initialMultiplet.levels),  q = 1:length(step.finalMultiplet.levels)
+                    en = step.initialMultiplet.levels[p].energy - step.finalMultiplet.levels[q].energy
+                    if  en > 0.1    meanEn = meanEn + en;    NoEn = NoEn + 1    end
+                end
+                if  NoEn > 0     meanEn = meanEn/ NoEn     else     meanEn = 0.1    end
+                if  abs(meanEn - previousMeanEn) / meanEn  < 0.15   # no new continuum orbitals
+                    println(">> No new continum orbitals are generated for $(keys(cOrbitals)) and for the energy $meanEn ")
+                else
+                    previousMeanEn = meanEn;    cOrbitals = Dict{Subshell, Orbital}()
+                    for kappa = -step.settings.maxKappa-1:step.settings.maxKappa        if   kappa == 0     continue    end
+                        sh           = Subshell(101, kappa);     nrContinuum = Continuum.gridConsistency(meanEn, comp.grid)
+                        contSettings = Continuum.Settings(false, nrContinuum);   
+                        npot         = Nuclear.nuclearPotential(comp.nuclearModel, comp.grid)
+                        ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
+                        ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
+                        ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
+                        ## wp           = Basics.compute("radial potential: Dirac-Fock-Slater", comp.grid, step.finalMultiplet.levels[1].basis)
+                        wp           = Basics.computePotentialDFS(comp.grid, step.finalMultiplet.levels[1])
+                        pot          = Basics.add(npot, wp)
+                        cOrbital, phase, normF  = Continuum.generateOrbitalLocalPotential(meanEn, sh, pot, contSettings)
+                        cOrbitals[sh] = cOrbital
+                    end
+                    println(">> Generate continum orbitals in DFS potential for $(keys(cOrbitals)) and for the energy $meanEn ")
+                end
+          
+                newLines = AutoIonization.computeLinesFromOrbitals(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
+                                                                   step.settings, cOrbitals, output=true, printout=false) 
+                append!(linesA, newLines);    nt = length(linesA)
             elseif  step.process == Basics.Auger() 
                 # Compute continuum orbitals independently for all transitions in the given block.
                 newLines = AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
                                                               step.settings, output=true, printout=false) 
+                ##x @show newLines
                 append!(linesA, newLines);    nt = length(linesA)
             elseif  step.process == Basics.Radiative()
                 newLines = PhotoEmission.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
@@ -58,11 +90,20 @@
                 for  (ib, blockb) in enumerate(capturedList)
                     if   ia == ib   continue     end
                     for  process  in  comp.scheme.processes
+                        #
                         if      process == Basics.Radiative()  
                             if  blocka.NoElectrons == blockb.NoElectrons   &&
                                 Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet) > 0.
-                                @show  Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet)
+                                ##x @show  Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet)
                                 settings = PhotoEmission.Settings(PhotoEmission.Settings(); multipoles=scheme.multipoles)
+                                push!( stepList, Cascade.Step(process, settings, blocka.confs, blockb.confs, blocka.multiplet, blockb.multiplet) )
+                            end
+                        #
+                        elseif  process == Basics.Auger()  
+                            if  blocka.NoElectrons == blockb.NoElectrons + 1   &&
+                                Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet) > 0.
+                                ##x @show  Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet)
+                                settings = AutoIonization.Settings(AutoIonization.Settings(); maxKappa=4)
                                 push!( stepList, Cascade.Step(process, settings, blocka.confs, blockb.confs, blocka.multiplet, blockb.multiplet) )
                             end
                         end
@@ -132,6 +173,71 @@
 
 
     """
+    `Cascade.generateConfigurationsForHollowIons(initialConfigs::Array{Configurations,1}, intoShells::Array{Shell,1}, 
+                                                 decayShells::Array{Shell,1}, noElectrons::Int64)`  
+        ... generates all possible configurations as obtained by the capture of noElectrons into the intoShells. 
+            A confList::Array{Configuration,1} is returned.
+    """
+    function generateConfigurationsForHollowIons(initialConfigs::Array{Configuration,1}, intoShells::Array{Shell,1}, 
+                                                 decayShells::Array{Shell,1}, noElectrons::Int64)
+        # Generate all configurations with additional noElectrons in the intoShells 
+        newConfigs = copy(initialConfigs)
+        for  ne = 1:noElectrons
+            newConfigs = Basics.generateConfigurationsWithElectronCapture(newConfigs,Shell[],intoShells,0)
+        end
+        #
+        # Build configurations with all decayShells 'in between', even if zero occupation
+        configs = newConfigs;    newConfigs = Configuration[]
+        for  conf  in  configs  
+            nshells = copy(conf.shells)
+            for shell in decayShells    if  haskey(nshells, shell)   else    nshells[shell] = 0    end   end
+            push!(newConfigs, Configuration(nshells, conf.NoElectrons))
+        end
+        ##x @show "a", unique(newConfigs), length(newConfigs)
+        #
+        # Now add all decay configurations
+        decayConfigs = Configuration[];    dConfigs = copy(newConfigs)
+        further = true
+        while  further
+            dConfigs = Cascade.generateConfigurationsWith2OuterHoles(dConfigs, decayShells)
+            if length(dConfigs) > 0     append!(decayConfigs, dConfigs)     else   further = false      end
+        end
+        decayConfigs = unique(decayConfigs)
+        ##x @show "b", decayConfigs
+        #
+        dConfigs = copy(newConfigs);   append!(dConfigs, decayConfigs)
+        further = true
+        while  further
+            dConfigs = Cascade.generateConfigurationsWith1OuterHole(dConfigs, decayShells)
+            if length(dConfigs) > 0     append!(decayConfigs, dConfigs)     else   further = false      end
+        end
+        decayConfigs = unique(decayConfigs)
+        ##x@show "c", decayConfigs
+        
+        dConfigs = copy(newConfigs);   append!(dConfigs, decayConfigs)
+        dConfigs = unique(dConfigs)
+        
+        ##x @show length(dConfigs), length(newConfigs)
+        #
+        # Remove obsolete shells and double configurations
+        nconfList = Configuration[];   nshells = Dict{Shell,Int64}();    ne = 0
+        for  conf  in  dConfigs  
+            nshells = Dict{Shell,Int64}();      ne = 0
+            for  (sh,occ) in conf.shells   if  occ > 0     nshells[sh] = occ;  ne = ne + occ    end     end
+            push!(nconfList, Configuration( nshells, ne))
+        end
+        ##x nconfList = unique(nconfList)
+        ##x @show "d", nconfList
+        #
+        # Discard configurations with energies higher than initial configurations after electron capture;
+        # this may be required for a very large number of configurations (not yet)
+
+        return( nconfList )
+    end
+
+
+    #==
+    """
     `Cascade.generateConfigurationsForDielectronicCapture(multiplets::Array{Multiplet,1},  scheme::HollowIonScheme, 
                                                       nm::Nuclear.Model, grid::Radial.Grid)`  
         ... generates all possible doubly-excited configurations due to (dielectronic) electron capture into the given multiplets.
@@ -178,7 +284,7 @@
         println(">>> initial configuration(s) have mena energies  $initialMean  [a.u.].")
 
         return( (initialConfList, blockConfList)  )
-    end
+    end  ==#
 
 
     """
@@ -211,23 +317,20 @@
         Cascade.displayLevels(stdout, multiplets, sa="initial ")
         if  printSummary   Cascade.displayLevels(iostream, multiplets, sa="initial ")                            end
         #
-        # Generate subsequent cascade configurations as well as display and group them together
-        wa  = Cascade.generateConfigurationsForDielectronicCapture(multiplets, comp.scheme, comp.nuclearModel, comp.grid)
-        ##x wb1 = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa[1], sa="(initial part of the) electron capture ")
-        wb2 = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa[2], sa="hollow ion configurations ")
+        # Generate all configurations with NoCapturedElectrons in the intoShells 
+        wa = Cascade.generateConfigurationsForHollowIons(comp.initialConfigs, comp.scheme.intoShells, comp.scheme.decayShells, 
+                                                          comp.scheme.NoCapturedElectrons)
+        # Display and group all configuration together
+        wb = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa, sa="hollow ion configurations ")
         #
         # Determine first all configuration 'blocks' and from them the individual steps of the cascade
-        ##x wc1 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb1)
-        wc2 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb2, printout=false)
-        ##x Cascade.displayBlocks(stdout, wc1, sa="for the (initial part of the) excited cascade ");      
-        Cascade.displayBlocks(stdout, wc2, sa="for the hollow ion cascade ")
-        if  printSummary   ##x Cascade.displayBlocks(iostream, wc1, sa="for the (initial part of the) excited cascade ")
-                           Cascade.displayBlocks(iostream, wc2, sa="for the hollow ion cascade ")    end      
+        wc = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb, printout=false)
+        Cascade.displayBlocks(stdout, wc, sa="for the hollow ion cascade ")
+        if  printSummary   Cascade.displayBlocks(iostream, wc, sa="for the hollow ion cascade ")    end      
         #
         # Determine, modify and compute the transition data for all steps, ie. the PhotoIonization.Line's, etc.
-        gMultiplets = Multiplet[];     for block in wc2  push!(gMultiplets, block.multiplet)    end
-        ##x we = Cascade.determineSteps(scheme, comp, wc1, wc2)
-        we = Cascade.determineSteps(scheme, comp, wc2)
+        gMultiplets = Multiplet[];     for block in wc  push!(gMultiplets, block.multiplet)    end
+        we = Cascade.determineSteps(scheme, comp, wc)
         Cascade.displaySteps(stdout, we, sa="hollow ion decay ")
         if  printSummary   Cascade.displaySteps(iostream, we, sa="hollow ion decay ")    end      
         wf   = Cascade.modifySteps(we)

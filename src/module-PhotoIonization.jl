@@ -15,6 +15,7 @@ module PhotoIonization
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
         + photonEnergies          ::Array{Float64,1}             ... List of photon energies.  
+        + electronEnergies        ::Array{Float64,1}             ... List of electron energies; usually only one of these lists are utilized. 
         + calcAnisotropy          ::Bool                         ... True, if the beta anisotropy parameters are to be calculated and false otherwise (o/w). 
         + calcPartialCs           ::Bool                         ... True, if partial cross sections are to be calculated and false otherwise.  
         + calcTensors             ::Bool                         ... True, if statistical tensors of the excited atom are to be calculated and false o/w. 
@@ -26,6 +27,7 @@ module PhotoIonization
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge}
         photonEnergies            ::Array{Float64,1} 
+        electronEnergies          ::Array{Float64,1} 
         calcAnisotropy            ::Bool 
         calcPartialCs             ::Bool 
         calcTensors               ::Bool 
@@ -39,7 +41,7 @@ module PhotoIonization
     `PhotoIonization.Settings()`  ... constructor for the default values of photoionization line computations
     """
     function Settings()
-        Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb, Basics.UseBabushkin], Float64[], false, false, false, false, 
+        Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb, Basics.UseBabushkin], Float64[], Float64[], false, false, false, false, 
                  LineSelection(), Basics.ExpStokes())
     end
 
@@ -47,22 +49,23 @@ module PhotoIonization
     """
     `PhotoIonization.Settings(set::PhotoIonization.Settings;`
     
-            multipoles=..,          gauges=..,                  photonEnergies=..,          calcAnisotropy=..,    
-            calcPartialCs0..,       calcTensors=..,             printBefore=..,             lineSelection=..,             
-            stokes=..)
+            multipoles=..,          gauges=..,                  photonEnergies=..,          electronEnergies=..,     
+            calcAnisotropy=..,      calcPartialCs0..,           calcTensors=..,             printBefore=..,             
+            lineSelection=..,       stokes=..)
                         
         ... constructor for modifying the given PhotoIonization.Settings by 'overwriting' the previously selected parameters.
     """
     function Settings(set::PhotoIonization.Settings;    
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
-        photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,                calcAnisotropy::Union{Nothing,Bool}=nothing,
-        calcPartialCs::Union{Nothing,Bool}=nothing,                             calcTensors::Union{Nothing,Bool}=nothing,                       
-        printBefore::Union{Nothing,Bool}=nothing,                               lineSelection::Union{Nothing,LineSelection}=nothing,                           
-        stokes::Union{Nothing,ExpStokes}=nothing)  
+        photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,                electronEnergies::Union{Nothing,Array{Float64,1}}=nothing,       
+        calcAnisotropy::Union{Nothing,Bool}=nothing,                            calcPartialCs::Union{Nothing,Bool}=nothing,      
+        calcTensors::Union{Nothing,Bool}=nothing,                               printBefore::Union{Nothing,Bool}=nothing,  
+        lineSelection::Union{Nothing,LineSelection}=nothing,                    stokes::Union{Nothing,ExpStokes}=nothing)  
         
         if  multipoles      == nothing   multipolesx      = set.multipoles        else  multipolesx      = multipoles       end 
         if  gauges          == nothing   gaugesx          = set.gauges            else  gaugesx          = gauges           end 
         if  photonEnergies  == nothing   photonEnergiesx  = set.photonEnergies    else  photonEnergiesx  = photonEnergies   end 
+        if  electronEnergies== nothing   electronEnergiesx= set.electronEnergies  else  electronEnergiesx= electronEnergies end 
         if  calcAnisotropy  == nothing   calcAnisotropyx  = set.calcAnisotropy    else  calcAnisotropyx  = calcAnisotropy   end 
         if  calcPartialCs   == nothing   calcPartialCsx   = set.calcPartialCs     else  calcPartialCsx   = calcPartialCs    end 
         if  calcTensors     == nothing   calcTensorsx     = set.calcTensors       else  calcTensorsx     = calcTensors      end 
@@ -70,8 +73,8 @@ module PhotoIonization
         if  lineSelection   == nothing   lineSelectionx   = set.lineSelection     else  lineSelectionx   = lineSelection    end 
         if  stokes          == nothing   stokesx          = set.stokes            else  stokesx          = stokes           end 
 
-        Settings( multipolesx, gaugesx, photonEnergiesx, calcAnisotropyx, calcPartialCsx, calcTensorsx, printBeforex, 
-                  lineSelectionx, stokesx)
+        Settings( multipolesx, gaugesx, photonEnergiesx, electronEnergiesx, calcAnisotropyx, calcPartialCsx, calcTensorsx, 
+                  printBeforex, lineSelectionx, stokesx)
     end
 
 
@@ -80,6 +83,7 @@ module PhotoIonization
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
         println(io, "photonEnergies:           $(settings.photonEnergies)  ")
+        println(io, "electronEnergies:         $(settings.electronEnergies)  ")
         println(io, "calcAnisotropy:           $(settings.calcAnisotropy)  ")
         println(io, "calcPartialCs:            $(settings.calcPartialCs)  ")
         println(io, "calcTensors:              $(settings.calcTensors)  ")
@@ -203,6 +207,9 @@ module PhotoIonization
         ##x csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
         ##x csFactor     = 4 * pi^2 / Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
         csFactor     = 8 * pi^3 / Defaults.getDefaults("alpha") / line.photonEnergy
+        csFactor     = csFactor / 2.   # Not fully clear, arises likely from the Rydberg normalization
+        ##  Correct for energy normalization 
+        ##  if  line.electronEnergy < 2.0   csFactor = csFactor * (line.electronEnergy/2.0)^1.5     end
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         newLine = PhotoIonization.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, 
                                         crossSection, true, newChannels)
@@ -298,7 +305,8 @@ module PhotoIonization
         # Display all selected lines before the computations start
         # if  settings.printBefore    PhotoIonization.displayLines(lines)    end  
         # Determine maximum energy and check for consistency of the grid
-        maxEnergy = 0.;   for  en in settings.photonEnergies   maxEnergy = max(maxEnergy, Defaults.convertUnits("energy: to atomic", en))   end
+        maxEnergy = 0.;   for  en in settings.photonEnergies     maxEnergy = max(maxEnergy, Defaults.convertUnits("energy: to atomic", en))   end
+                          for  en in settings.electronEnergies   maxEnergy = max(maxEnergy, Defaults.convertUnits("energy: to atomic", en))   end
         nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
         # Calculate all amplitudes and requested properties
         newLines = PhotoIonization.Line[]
@@ -332,8 +340,8 @@ module PhotoIonization
         printstyled("PhotoIonization.computeLinesPlasma(): The computation of photo-ionization cross sections starts now ... \n", color=:light_green)
         printstyled("------------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        photoSettings = PhotoIonization.Settings(settings.multipoles, settings.gauges, settings.photonEnergies, false, false, false,
-                                                 settings.printBefore, settings.selectLines, settings.selectedLines, Basics.ExpStokes() )
+        photoSettings = PhotoIonization.Settings(settings.multipoles, settings.gauges, settings.photonEnergies, settings.electronEnergies, 
+                            false, false, false, settings.printBefore, settings.selectLines, settings.selectedLines, Basics.ExpStokes() )
         
         lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, photoSettings)
         # Display all selected lines before the computations start
@@ -490,13 +498,23 @@ module PhotoIonization
         for  iLevel  in  initialMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
                 if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
+                    # Add lines for all photon energies
                     for  omega in settings.photonEnergies
                         # Photon energies are still in 'pre-defined' units; convert to Hartree
                         omega_au = Defaults.convertUnits("energy: to atomic", omega)
                         energy   = omega_au - (fLevel.energy - iLevel.energy)
-                        if  energy < 0    continue   end  
+                        if  energy < 0.    continue   end  
                         channels = PhotoIonization.determineChannels(fLevel, iLevel, settings) 
                         push!( lines, PhotoIonization.Line(iLevel, fLevel, energy, omega_au, EmProperty(0., 0.), true, channels) )
+                    end
+                    # Add lines for all electron energies
+                    for  en in settings.electronEnergies
+                        # Electron energies are still in 'pre-defined' units; convert to Hartree
+                        energy_au = Defaults.convertUnits("energy: to atomic", en)
+                        omega     = energy_au + (fLevel.energy - iLevel.energy)
+                        if  energy_au < 0.    continue   end  
+                        channels = PhotoIonization.determineChannels(fLevel, iLevel, settings) 
+                        push!( lines, PhotoIonization.Line(iLevel, fLevel, energy_au, omega, EmProperty(0., 0.), true, channels) )
                     end
                 end
             end

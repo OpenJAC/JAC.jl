@@ -341,7 +341,7 @@ module TestFrames
                                 initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
                                 finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")], 
                                 processSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(3,1), (4,1), (5,1), (6,1)]), 
-                                                                          0., 1.0e6, 2, CoulombInteraction()) )
+                                                                          0., 0., 1.0e6, 2, CoulombInteraction()) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -881,8 +881,8 @@ module TestFrames
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),
                                 initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
                                 finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ], 
-                                processSettings=PhotoIonization.Settings([E1, M1], [UseCoulomb, UseBabushkin], [3000., 4000.], false, true, true, true, 
-                                                                         LineSelection(true, indexPairs=[(1,1), (1,2)]), ExpStokes(1., 0., 0.)) )
+                                processSettings=PhotoIonization.Settings([E1, M1], [UseCoulomb, UseBabushkin], [3000., 4000.], Float64[], 
+                                                false, true, true, true, LineSelection(true, indexPairs=[(1,1), (1,2)]), ExpStokes(1., 0., 0.)) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -907,7 +907,7 @@ module TestFrames
                                 initialConfigs=[Configuration("1s^2")],
                                 finalConfigs  =[Configuration("1s^2 2s"), Configuration("1s^2 3s"), Configuration("1s^2 3p"), Configuration("1s^2 3d")], 
                                 processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10.], 
-                                                     [2.18, 21.8, 218.0], false, false, false, true, LineSelection() ) )
+                                                     [2.18, 21.8, 218.0], false, false, false, false, true, 2, LineSelection() ) )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")

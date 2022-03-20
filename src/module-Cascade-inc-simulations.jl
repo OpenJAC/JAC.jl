@@ -803,7 +803,7 @@
                     prob  = level.relativeOcc;   rates = zeros(length(level.daugthers))
                     for  (i,daugther) in  enumerate(level.daugthers)
                         idx = daugther.index
-                        if      daugther.process == Basics.Radiative()     rates[i] = daugther.lineSet.linesR[idx].photonRate.Babushkin
+                        if      daugther.process == Basics.Radiative()     rates[i] = daugther.lineSet.linesR[idx].photonRate.Coulomb
                         elseif  daugther.process == Basics.Auger()         rates[i] = daugther.lineSet.linesA[idx].totalRate
                         elseif  daugther.process == Basics.Photo()         rates[i] = daugther.lineSet.linesP[idx].crossSection.Coulomb
                         else    error("stop a; process = $(daugther.process) ")
@@ -1041,13 +1041,13 @@
                 if      daugther.process == Basics.Auger()
                     aLine  = daugther.lineSet.linesA[daugther.index]
                     @show aLine.totalRate
-                    if  minRate > aLine.totalRate       minRate = aLine.totalRate   end
+                    if  minRate > aLine.totalRate > 0.  minRate = aLine.totalRate   end
                     if  maxRate < aLine.totalRate       maxRate = aLine.totalRate   end
                 elseif  daugther.process == Basics.Radiative()
                     rLine  = daugther.lineSet.linesR[daugther.index]
                     @show rLine.photonRate.Coulomb
-                    if  minRate > rLine.photonRate.Coulomb      minRate = rLine.photonRate.Coulomb   end
-                    if  maxRate < rLine.photonRate.Coulomb      maxRate = rLine.photonRate.Coulomb   end
+                    if  minRate > rLine.photonRate.Coulomb > 0.  minRate = rLine.photonRate.Coulomb   end
+                    if  maxRate < rLine.photonRate.Coulomb       maxRate = rLine.photonRate.Coulomb   end
                 else    error("stop a")
                 end
             end
@@ -1058,7 +1058,7 @@
         @show wocc
         #
         # Now propagate the occupation in time
-        goon = true
+        goon = true;    pr70 = true;    pr80 = true;    pr90 = true
         while  goon
             time = time + dt;   nx = nx + 1
             Cascade.propagateOccupationInTime!(levels, dt)
@@ -1067,6 +1067,9 @@
             for  i = 1:length(relaxPercentage) 
                 if wocc < relaxPercentage[i]    relaxTimes[i] = time    end
             end
+            if  pr70  &&  wocc > 0.70   pr70 = false;   println("70%  at  time = $(relaxTimes[1])")   end
+            if  pr80  &&  wocc > 0.80   pr80 = false;   println("80%  at  time = $(relaxTimes[2])")   end
+            if  pr90  &&  wocc > 0.90   pr90 = false;   println("90%  at  time = $(relaxTimes[3])")   end
             if  wocc > 0.91     goon = false    end
         end
 
@@ -1247,7 +1250,7 @@
         for  enInt in energiesInts
             if  minPhotonEnergy <= enInt[1] <= maxPhotonEnergy    push!(w1EnergiesInts, enInt);     push!(we, enInt[1])   end
         end
-        @show we
+        ##x @show we
         # Add contributions with equal energies contributions
         w2EnergiesInts = Tuple{Float64,Float64}[];  wasConsidered = falses(length(we))
         for  (en, enInt) in  enumerate(w1EnergiesInts)

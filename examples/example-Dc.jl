@@ -5,7 +5,7 @@ setDefaults("print summary: open", "zzz-PhotoIonization.sum")
 setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
 setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
-if  true
+if  false
     # Neon subshell cross sections from 10..1000 eV photon energy
     setDefaults("unit: energy", "eV") # then, give photonEnergies in eV
 
@@ -38,6 +38,38 @@ elseif  false
                               ## finalConfigs  =[Configuration("1s^2 2s 2p^6 3s^2"), Configuration("1s^2 2s^2 2p^5 3s^2"), 
                               ##                 Configuration("1s^2 2s^2 2p^6 3s")], 
                               process = Photo(),  processSettings=photoSettings)
+    @show wa
+    perform(wa)                                         
+
+elseif  true
+    # Test: 2s and 2p photoionization of neon; cf. Kennedy and Manson (1972)
+    setDefaults("unit: energy", "Hartree") 
+    photoSettings = PhotoIonization.Settings(PhotoIonization.Settings(), gauges=[UseCoulomb, UseBabushkin], electronEnergies=[1.0, 3.0, 10.0],
+                                             ## lineSelection=LineSelection(true, [(1,0), (2,0)], Tuple{LevelSymmetry,LevelSymmetry}[]),
+                                             calcAnisotropy=false, calcPartialCs=false, printBefore=true)
+                                         
+    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 20.0)
+    wa   = Atomic.Computation(Atomic.Computation(), name="2s and 2p photoionization of neon", 
+                              grid=grid, nuclearModel=Nuclear.Model(10.),
+                              initialConfigs=[Configuration("1s^2 2s^2 2p^6")],
+                              finalConfigs  =[Configuration("1s^2 2s^1 2p^6")],
+                              processSettings=photoSettings)
+    @show wa
+    perform(wa)                                         
+
+elseif  true
+    # Test: 2s ... 3p photoionization of argon; cf. Kennedy and Manson (1972)
+    setDefaults("unit: energy", "Hartree") 
+    photoSettings = PhotoIonization.Settings(PhotoIonization.Settings(), gauges=[UseCoulomb, UseBabushkin], electronEnergies=[1.0, 3.0, 10.0],
+                                             ## lineSelection=LineSelection(true, [(1,0), (2,0)], Tuple{LevelSymmetry,LevelSymmetry}[]),
+                                             calcAnisotropy=false, calcPartialCs=false, printBefore=true)
+                                         
+    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 20.0)
+    wa   = Atomic.Computation(Atomic.Computation(), name="2s .. 3p photoionization of argon", 
+                              grid=grid, nuclearModel=Nuclear.Model(18.),
+                              initialConfigs=[Configuration("1s^2 2s^2 2p^6 3s^2 3p^6")],
+                              finalConfigs  =[Configuration("1s^2 2s^2 2p^6 3s^2 3p^5")],
+                              processSettings=photoSettings)
     @show wa
     perform(wa)                                         
 

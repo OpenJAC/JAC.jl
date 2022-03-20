@@ -6,7 +6,7 @@ setDefaults("unit: energy", "Kayser")
 setDefaults("unit: rate", "1/s")
 setDefaults("print summary: open", "zzz-radiative.sum")
 
-if true
+if false
 
     grid = Radial.Grid(true)
     ## grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5, h = 1.0e-2, hp = 0., rbox = 5.0)
@@ -33,21 +33,33 @@ elseif false
                                             Configuration("1s^2 4p"), Configuration("1s^2 4d")], 
                             processSettings= PhotoEmission.Settings([E1], [UseCoulomb,JAC.UseBabushkin], false, true, LineSelection(), 0., 0., 10000. ) )
     wb = @time( perform(wa) )
-elseif true
+elseif false
     # LineSelection(true, indexPairs=[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)])
     wa = Atomic.Computation(Atomic.Computation(), name="xx",  grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(90.),
                             initialConfigs=[Configuration("1s^2 2s 2p")],
                             finalConfigs  =[Configuration("1s^2 2s^2")], 
                             processSettings= PhotoEmission.Settings([E1,M1,E2,M2], [UseCoulomb,JAC.UseBabushkin], false, true, LineSelection(), 0., 0., 10000. ) )
     wb = @time( perform(wa) )
+elseif false
+    # Test: Lifetimes of various helium- and lithium-like ions; cf. Figure 8.1 in section 8.1.a
+    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 20.0)
+    grid = Radial.Grid(true)
+    pSettings = PhotoEmission.Settings([E1,M1], [UseCoulomb,JAC.UseBabushkin], false, true, CorePolarization(), LineSelection(), 0., 0., 10000. )
+    wa = Atomic.Computation(Atomic.Computation(), name="xx",  grid=grid, nuclearModel=Nuclear.Model(14.),
+                            initialConfigs=[Configuration("1s 2s"), Configuration("1s 2p")],
+                            finalConfigs  =[Configuration("1s^2")], 
+                            processSettings=pSettings)
+    wb = @time( perform(wa) )
 elseif true 
-    # Test for dielectronic computations
-    wa = Atomic.Computation(Atomic.Computation(), name="Energies and Einstein rates for DR configurations", 
-                            grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(6.), 
-                            initialConfigs = [Configuration("1s 2s^2 2p")],
-                            finalConfigs   = [Configuration("1s^2 2s^2")], 
-                            processSettings = PhotoEmission.Settings([E1, M1, E2], [JAC.UseCoulomb, JAC.UseBabushkin], 
-                                              false, true, LineSelection(), 0., 0., 10000. ) );
+    # Test: Lifetimes for lithium-like ions; cf. Figure 8.1 in section 8.1.a
+    grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 20.0)
+    grid = Radial.Grid(true)
+    pSettings = PhotoEmission.Settings([E1,M1], [UseCoulomb,JAC.UseBabushkin], false, true, CorePolarization(), LineSelection(), 0., 0., 10000. )
+    wa = Atomic.Computation(Atomic.Computation(), name="Lifetimes for lithium-like ions", 
+                            grid=grid, nuclearModel=Nuclear.Model(12.), 
+                            initialConfigs = [Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
+                            finalConfigs   = [Configuration("1s^2 2s"), Configuration("1s^2 2p")], 
+                            processSettings = pSettings );
     wb = @time( perform(wa) )
     #
 elseif true 

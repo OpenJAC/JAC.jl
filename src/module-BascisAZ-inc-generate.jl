@@ -564,8 +564,8 @@
                 for  i = nx+1:length(basisB.subshells)    push!(subshells, basisB.subshells[i])    end
             end
         else
-            println("basisA.subshells = $(basisA.subshells)")
-            println("basisB.subshells = $(basisB.subshells)")
+            ## println("basisA.subshells = $(basisA.subshells)")
+            ## println("basisB.subshells = $(basisB.subshells)")
             # If subshell order is NOT equal, all subshell in basisA and basisB must follow standard order
             standardList = Defaults.getDefaults("ordered subshell list: relativistic", 7)
             na = 0;  nb = 0
@@ -584,7 +584,7 @@
                 else  wb = findall(x->x==sh, subshells);    if wb[1] <= nn   error("stop a")   else   nn = wb[1]  end    
                 end
             end
-            println("*** extended subshells from two basis = $subshells")
+            println(">>> Extended subshells from two basis = $subshells")
         end
 
         return( subshells )
@@ -1039,6 +1039,46 @@
 
 
     """
+    `Basics.generateLevelWithExtraSubshell(sh::Subshell, level::Level, ns::Int64)`  
+        ... generates a (new) level with one extra subshell sh but with the same overall symmetry as before. The function assumes that the 
+            new subshell is not yet part of the basis and terminates if this assumptions is not fulfilled. 
+            It builts the subshell sh at position ns and moves all other subshells further.
+            A newLevel::Level with the same symmetry, number of CSF, energy and the same representation (eigenvector) as the given 
+            level is returned. 
+    """
+    function Basics.generateLevelWithExtraSubshell(sh::Subshell, level::Level, ns::Int64)
+        basis = level.basis;    newCsfs = CsfR[];   J = level.J;   parity = level.parity
+        newOrbitals = copy(basis.orbitals)
+        
+        # Build the new subshell list and add the associated orbital
+        newSubshells = basis.subshells[1:ns-1];   push!(newSubshells, sh);    append!(newSubshells, basis.subshells[ns:end])
+        newOrbitals = Base.merge( newOrbitals, Dict( sh => Orbital(sh, -10000.) ))
+        Defaults.setDefaults("relativistic subshell list", newSubshells; printout=false)
+    
+        for  i = 1:length(basis.csfs)
+            stateList   = ManyElectron.provideSubshellStates(sh, 0)
+            if    length(stateList) != 1        error("Improper number of subshell states.")   
+            else                                substate = stateList[1]
+            end
+            
+            occupation  = copy(basis.csfs[i].occupation[1:ns-1]);  push!(occupation, substate.occ);    append!(occupation, basis.csfs[i].occupation[ns:end]) 
+            seniorityNr = copy(basis.csfs[i].seniorityNr[1:ns-1]); push!(seniorityNr,  substate.nu);   append!(seniorityNr, basis.csfs[i].seniorityNr[ns:end]) 
+            subshellJ   = copy(basis.csfs[i].subshellJ[1:ns-1]);   push!(subshellJ,  AngularJ64(substate.Jsub2//2) );  append!(subshellJ, basis.csfs[i].subshellJ[ns:end]) 
+            @show ns, basis.csfs[i].subshellX
+            if  ns  > 1    subshellX   = copy(basis.csfs[i].subshellX[1:ns-1]);    push!(subshellX,  subshellX[ns-1])
+            else           subshellX   = AngularJ64[AngularJ64(0)]                           
+            end
+            append!(subshellX, basis.csfs[i].subshellX[ns:end])
+            push!(newCsfs, CsfR(true, basis.csfs[i].J, basis.csfs[i].parity, occupation, seniorityNr, subshellJ, subshellX, Subshell[] ) )
+        end
+
+        newBasis = Basis(true, basis.NoElectrons, newSubshells, newCsfs, copy(basis.coreSubshells), newOrbitals)
+        newLevel = Level(level.J, level.M, level.parity, level.index, level.energy, level.relativeOcc, true, newBasis, level.mc)
+        return( newLevel )
+    end
+
+
+    """
     `Basics.generateLevelWithSymmetryReducedBasis(level::Level, subshells::Array{Subshell,1})`  
         ... generates a level with a new basis and representation that only includes the CSF with the same symmetry as the level 
             itself. It also ensures that the new basis is based on the given subshells so that it can be later used with levels
@@ -1051,16 +1091,25 @@
         testBasis = level.basis;    newCsfs = CsfR[];    newMc = Float64[]
 
         # Decide of whether the basis need to be extended by some subshells
+        ##x @show testBasis.subshells, subshells
         nt = length(testBasis.subshells)
         if      testBasis.subshells == subshells      basis = testBasis;    nLevel = level
         elseif  nt >= length(subshells)               error("stop a")
         elseif  nt + 1 == length(subshells)  &&  testBasis.subshells == subshells[1:nt]
                 nLevel = Basics.generateLevelWithExtraSubshell(subshells[end], level)
                 basis  = nLevel.basis
-        else
+        elseif  testBasis.subshells == subshells[1:nt]
             nLevel  = level
             for  ns = nt+1:length(subshells)
                 nLevel = Basics.generateLevelWithExtraSubshell(subshells[ns], nLevel)
+            end
+            basis  = nLevel.basis
+        else
+            nLevel  = level
+            for  (ns, sh) in enumerate(subshells)
+                if  sh in testBasis.subshells    continue   
+                else      nLevel = Basics.generateLevelWithExtraSubshell(sh, nLevel, ns)
+                end
             end
             basis  = nLevel.basis
         end

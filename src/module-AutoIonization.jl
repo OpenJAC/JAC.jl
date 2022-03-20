@@ -16,6 +16,7 @@ module AutoIonization
                                                        calculated, and false otherwise.
         + printBefore         ::Bool               ... True, if all energies and lines are printed before their evaluation.
         + lineSelection       ::LineSelection      ... Specifies the selected levels, if any.
+        + augerEnergyShift    ::Float64            ... An overall energy shift for all Auger (free-electron) energies.
         + minAugerEnergy      ::Float64            ... Minimum energy of free (Auger) electrons to be included.
         + maxAugerEnergy      ::Float64            ... Maximum energy of free (Auger) electrons to be included.
         + maxKappa            ::Int64              ... Maximum kappa value of partial waves to be included.
@@ -27,6 +28,7 @@ module AutoIonization
         calcAnisotropy        ::Bool         
         printBefore           ::Bool 
         lineSelection         ::LineSelection 
+        augerEnergyShift      ::Float64
         minAugerEnergy        ::Float64
         maxAugerEnergy        ::Float64
         maxKappa              ::Int64
@@ -38,33 +40,34 @@ module AutoIonization
     `AutoIonization.Settings()`  ... constructor for the default values of AutoIonization line computations
     """
     function Settings()
-        Settings(false, false, LineSelection(), 0., 10e5, 100, CoulombInteraction())
+        Settings(false, false, LineSelection(), 0., 0., 10e5, 100, CoulombInteraction())
     end
 
 
     """
     `AutoIonization.Settings(set::AutoIonization.Settings;`
     
-            calcAnisotropy=..,      printBefore=..,              
+            calcAnisotropy=..,      printBefore=..,             augerEnergyShift=.., 
             minAugerEnergy=..,      maxAugerEnergy=..,          maxKappa=..,            operator=..)
                         
         ... constructor for modifying the given AutoIonization.Settings by 'overwriting' the previously selected parameters.
     """
     function Settings(set::AutoIonization.Settings;    
         calcAnisotropy::Union{Nothing,Bool}=nothing,            printBefore::Union{Nothing,Bool}=nothing, 
-        lineSelection::Union{Nothing,LineSelection}=nothing, 
+        lineSelection::Union{Nothing,LineSelection}=nothing,    augerEnergyShift::Union{Nothing,Float64}=nothing, 
         minAugerEnergy::Union{Nothing,Float64}=nothing,         maxAugerEnergy::Union{Nothing,Float64}=nothing,
         maxKappa::Union{Nothing,Int64}=nothing,                 operator::Union{Nothing,String}=nothing)  
         
-        if  calcAnisotropy  == nothing   calcAnisotropyx  = set.calcAnisotropy    else  calcAnisotropyx  = calcAnisotropy   end 
-        if  printBefore     == nothing   printBeforex     = set.printBefore       else  printBeforex     = printBefore      end 
-        if  lineSelection   == nothing   lineSelectionx   = set.lineSelection     else  lineSelectionx   = lineSelection    end 
-        if  minAugerEnergy  == nothing   minAugerEnergyx  = set.minAugerEnergy    else  minAugerEnergyx  = minAugerEnergy   end 
-        if  maxAugerEnergy  == nothing   maxAugerEnergyx  = set.maxAugerEnergy    else  maxAugerEnergyx  = maxAugerEnergy   end 
-        if  maxKappa        == nothing   maxKappax        = set.maxKappa          else  maxKappax        = maxKappa         end 
-        if  operator        == nothing   operatorx        = set.operator          else  operatorx        = operator         end 
+        if  calcAnisotropy   == nothing   calcAnisotropyx    = set.calcAnisotropy    else  calcAnisotropyx    = calcAnisotropy    end 
+        if  printBefore      == nothing   printBeforex       = set.printBefore       else  printBeforex       = printBefore       end 
+        if  lineSelection    == nothing   lineSelectionx     = set.lineSelection     else  lineSelectionx     = lineSelection     end 
+        if  augerEnergyShift == nothing   augerEnergyShiftx  = set.augerEnergyShift  else  augerEnergyShiftx  = augerEnergyShift  end 
+        if  minAugerEnergy   == nothing   minAugerEnergyx    = set.minAugerEnergy    else  minAugerEnergyx    = minAugerEnergy    end 
+        if  maxAugerEnergy   == nothing   maxAugerEnergyx    = set.maxAugerEnergy    else  maxAugerEnergyx    = maxAugerEnergy    end 
+        if  maxKappa         == nothing   maxKappax          = set.maxKappa          else  maxKappax          = maxKappa          end 
+        if  operator         == nothing   operatorx          = set.operator          else  operatorx          = operator          end 
 
-        Settings( calcAnisotropyx, printBeforex, lineSelectionx, minAugerEnergyx, maxAugerEnergyx, maxKappax, operatorx)
+        Settings( calcAnisotropyx, printBeforex, lineSelectionx, augerEnergyShiftx, minAugerEnergyx, maxAugerEnergyx, maxKappax, operatorx)
     end
 
 
@@ -73,6 +76,7 @@ module AutoIonization
         println(io, "calcAnisotropy:                $(settings.calcAnisotropy)  ")
         println(io, "printBefore:                   $(settings.printBefore)  ")
         println(io, "lineSelection:                 $(settings.lineSelection)  ")
+        println(io, "augerEnergyShift:              $(settings.augerEnergyShift)  ")
         println(io, "minAugerEnergy:                $(settings.minAugerEnergy)  ")
         println(io, "maxAugerEnergy:                $(settings.maxAugerEnergy)  ")
         println(io, "maxKappa:                      $(settings.maxKappa)  ")
@@ -160,11 +164,22 @@ module AutoIonization
                                   color=:light_green)    end
         matrix = zeros(ComplexF64, nt, ni)
         #
+        ##x @show initialLevel.basis.subshells
+        ##x @show continuumLevel.basis.subshells
+        if  initialLevel.basis.subshells == continuumLevel.basis.subshells
+            iLevel = initialLevel;   cLevel = continuumLevel
+        else
+            subshells = Basics.merge(initialLevel.basis.subshells, continuumLevel.basis.subshells)
+            ##x @show subshells
+            iLevel    = Level(initialLevel, subshells)
+            cLevel    = Level(continuumLevel, subshells)
+        end
+        #
         if      kind in [ CoulombInteraction(), BreitInteraction(), CoulombBreit()]        ## pure V^Coulomb interaction
         #--------------------------------------------------------------------------
             for  r = 1:nt
                 for  s = 1:ni
-                    if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity      continue    end 
+                    if  iLevel.basis.csfs[s].J != iLevel.J  ||  iLevel.basis.csfs[s].parity != iLevel.parity      continue    end 
                     ##x wa = compute("angular coefficients: e-e, Ratip2013", continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                     # Calculate the spin-angular coefficients
                     if  Defaults.saRatip()
@@ -174,7 +189,7 @@ module AutoIonization
                     if  Defaults.saGG()
                         subshellList = continuumLevel.basis.subshells
                         opa  = SpinAngular.TwoParticleOperator(0, plus, true)
-                        waG2 = SpinAngular.computeCoefficients(opa, continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s], subshellList)
+                        waG2 = SpinAngular.computeCoefficients(opa, cLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList)
                         wa   = [1.0, waG2]
                     end
                     if  Defaults.saRatip() && Defaults.saGG() && true
@@ -186,18 +201,18 @@ module AutoIonization
                     for  coeff in wa[2]
                         if   kind in [ CoulombInteraction(), CoulombBreit()]    
                             me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 
-                                                    continuumLevel.basis.orbitals[coeff.a], continuumLevel.basis.orbitals[coeff.b],
-                                                    initialLevel.basis.orbitals[coeff.c],   initialLevel.basis.orbitals[coeff.d], grid)   end
+                                                    cLevel.basis.orbitals[coeff.a], cLevel.basis.orbitals[coeff.b],
+                                                    iLevel.basis.orbitals[coeff.c], iLevel.basis.orbitals[coeff.d], grid)   end
                         if   kind in [ BreitInteraction(), CoulombBreit()]    
                             me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, 
-                                                    continuumLevel.basis.orbitals[coeff.a], continuumLevel.basis.orbitals[coeff.b],
-                                                    initialLevel.basis.orbitals[coeff.c],   initialLevel.basis.orbitals[coeff.d], grid)   end
+                                                    cLevel.basis.orbitals[coeff.a], cLevel.basis.orbitals[coeff.b],
+                                                    iLevel.basis.orbitals[coeff.c], iLevel.basis.orbitals[coeff.d], grid)   end
                     end
                     matrix[r,s] = me
                 end
             end 
             if  printout  printstyled("done. \n", color=:light_green)    end
-            amplitude = transpose(continuumLevel.mc) * matrix * initialLevel.mc 
+            amplitude = transpose(cLevel.mc) * matrix * iLevel.mc 
             amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
             #
             #
@@ -243,18 +258,29 @@ module AutoIonization
     function computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, settings::AutoIonization.Settings; 
                                          printout::Bool=true) 
         newChannels = AutoIonization.Channel[];   contSettings = Continuum.Settings(false, nrContinuum);   rate = 0.
+        # Define a common subshell list for both multiplets
+        subshellList = Basics.generate("subshells: ordered list for two bases", line.finalLevel.basis, line.initialLevel.basis)
+        Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
+        
         for channel in line.channels
-            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
-            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
+            ##x newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
+            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
+            ##x @show newiLevel.basis.subshells
+            ##x newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
+            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, subshellList)
+            ##x @show newfLevel.basis.subshells
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
             cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
+            ##x @show newcLevel.basis.subshells
             newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
             amplitude  = AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
             rate       = rate + conj(amplitude) * amplitude
             push!( newChannels, AutoIonization.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )
         end
         totalRate = 2pi* rate;   angularAlpha = 0.
+        ##  Correct for energy normalization for Yasumasa (2022)
+        ##  if  line.electronEnergy < 2.0   totalRate = totalRate * (line.electronEnergy/2.0)^1.5     end
         newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, true, newChannels)
         #
         if  settings.calcAnisotropy    angularAlpha = AutoIonization.computeIntrinsicAlpha(2, newLine)
@@ -388,6 +414,10 @@ module AutoIonization
     function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                   settings::AutoIonization.Settings; output::Bool=true, printout::Bool=true)
         
+        ##x # Define a common subshell list for both multiplets
+        ##x subshellList = Basics.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
+        ##x Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
+        
         lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
         # if  settings.printBefore    AutoIonization.displayLines(lines)    end  
@@ -425,13 +455,35 @@ module AutoIonization
         lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
         # Calculate all amplitudes and requested properties
         newLines = AutoIonization.Line[]
+        
         for  (i,line)  in  enumerate(lines)
+            # Define a common subshell list for both multiplets
+            subshellList = Basics.generate("subshells: ordered list for two bases", line.finalLevel.basis, line.initialLevel.basis)
+            Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
+        
             if  rem(i,500) == 0    println("> Auger line $i:  ... calculated ")    end
             # Calculate the individual channels with the given orbitals
             newChannels = AutoIonization.Channel[];   rate = 0.
+
+            #==
+            ##x newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
+            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
+            ##x @show newiLevel.basis.subshells
+            ##x newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
+            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, subshellList)
+            ##x @show newfLevel.basis.subshells
+            newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
+            cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
+            newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
+            ##x @show newcLevel.basis.subshells
+            newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
+            amplitude  = AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
+            rate       = rate + conj(amplitude) * amplitude
+            push!( newChannels, AutoIonization.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )  ==#
+             
             for channel in line.channels
-                newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
-                newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
+                newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
+                newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, subshellList)
                 sh         = Subshell(101, channel.kappa)
                 if haskey(contOrbitals, sh)   cOrbital = contOrbitals[sh]      else    println(">>> skip Auger channel for $sh");   continue    end
                 newiLevel  = Basics.generateLevelWithExtraSubshell(sh, newiLevel)
@@ -525,7 +577,7 @@ module AutoIonization
         for  iLevel  in  initialMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
                 if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
-                    energy = iLevel.energy - fLevel.energy
+                    energy = iLevel.energy - fLevel.energy   + settings.augerEnergyShift
                     if   energy < 0.01                                                             continue   end
                     if   energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
                     channels = AutoIonization.determineChannels(fLevel, iLevel, settings) 

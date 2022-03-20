@@ -310,26 +310,56 @@
             A confList::Array{Configuration,1} is returned.
     """
     function generateConfigurationsWith1OuterHole(conf::Configuration,  holeShell::Shell)
-         shList = Basics.generate("shells: ordered list for NR configurations", [conf]);   i0 = 0
-         for  i = 1:length(shList)
-             if   holeShell == shList[i]    i0 = i;    break    end
-         end
-         if  i0 == 0   error("stop a")   end
-         #
-         # Now move the hole 'outwards'
-         confList = Configuration[]
-         for  i = i0+1:length(shList)
-             if  haskey(conf.shells, shList[i])  &&  conf.shells[ shList[i] ] >= 1  
-                 newshells = copy( conf.shells )
-                 newshells[ shList[i] ] = newshells[ shList[i] ] - 1
-                 newshells[ holeShell ] = newshells[ holeShell ] + 1
-                 push!(confList, Configuration( newshells, conf.NoElectrons ) )
-             end
-         end
-         return( confList )
+        shList = Basics.generate("shells: ordered list for NR configurations", [conf]);   i0 = 0
+        for  i = 1:length(shList)
+            if   holeShell == shList[i]    i0 = i;    break    end
+        end
+        if  i0 == 0   error("stop a")   end
+        #
+        # Now move the hole 'outwards'
+        confList = Configuration[]
+        for  i = i0+1:length(shList)
+            if  haskey(conf.shells, shList[i])  &&  conf.shells[ shList[i] ] >= 1  
+                newshells = copy( conf.shells )
+                newshells[ shList[i] ] = newshells[ shList[i] ] - 1
+                newshells[ holeShell ] = newshells[ holeShell ] + 1
+                if  newshells[ holeShell ]  >  2*(2*holeShell.l + 1)    continue    end
+                push!(confList, Configuration( newshells, conf.NoElectrons ) )
+            end
+        end
+        ##x #
+        ##x # Remove obsolete shells and double configurations
+        ##x nconfList = Configuration[];   nshells = Dict{Shell,Int64}();    ne = 0
+        ##x for  conf  in  confList  
+        ##x     nshells = Dict{Shell,Int64}();      ne = 0
+        ##x     for  (sh,occ) in conf.shells   if  occ > 0     nshells[sh] = occ;  ne = ne + occ    end     end
+        ##x     push!(nconfList, Configuration( nshells, ne))
+        ##x end
+        ##x nconfList = unique(nconfList)
+        ##x @show "1-outer", confList
+
+        return( confList )
     end
 
 
+    """
+    `Cascade.generateConfigurationsWith1OuterHole(configs::Array{Configuration,1},  holeShells::Array{Shell,1})`  
+        ... generates all possible (decay) configurations where one hole from holeShells is moved 'outwards'. 
+            A confList::Array{Configuration,1} is returned.
+    """
+    function generateConfigurationsWith1OuterHole(configs::Array{Configuration,1},  holeShells::Array{Shell,1})
+        nconfList = Configuration[]
+        for  conf in configs
+            for  shell in holeShells
+                dcs = Cascade.generateConfigurationsWith1OuterHole(conf, shell)
+                append!(nconfList, dcs)
+            end
+        end
+        nconfList = unique(nconfList)
+        return(nconfList)
+    end
+    
+    
     """
     `Cascade.generateConfigurationsWith2OuterHoles(conf,  holeShell)`  
         ... generates all possible (decay) configurations where the hole in holeShell is moved 'outwards'. 
@@ -349,6 +379,7 @@
                  newshells = copy( conf.shells )
                  newshells[ shList[i] ] = newshells[ shList[i] ] - 2
                  newshells[ holeShell ] = newshells[ holeShell ] + 1
+                 if  newshells[ holeShell ]  >  2*(2*holeShell.l + 1)    continue    end
                  push!(confList, Configuration( newshells, conf.NoElectrons - 1 ) )
              end
              #
@@ -359,11 +390,41 @@
                      newshells[ shList[i] ] = newshells[ shList[i] ] - 1
                      newshells[ shList[j] ] = newshells[ shList[j] ] - 1
                      newshells[ holeShell ] = newshells[ holeShell ] + 1
+                     if  newshells[ holeShell ]  >  2*(2*holeShell.l + 1)    continue    end
                      push!(confList, Configuration( newshells, conf.NoElectrons - 1 ) )
                  end
              end
          end
-         return( confList )
+        #
+        ##x # Remove obsolete shells and double configurations
+        ##x nconfList = Configuration[];   nshells = Dict{Shell,Int64}();    ne = 0
+        ##x for  conf  in  confList  
+        ##x     nshells = Dict{Shell,Int64}();      ne = 0
+        ##x     for  (sh,occ) in conf.shells   if  occ > 0     nshells[sh] = occ;  ne = ne + occ    end     end
+        ##x     push!(nconfList, Configuration( nshells, ne))
+        ##x end
+        ##x nconfList = unique(nconfList)
+        ##x @show "2-outer", confList
+
+        return( confList )
+    end
+
+
+    """
+    `Cascade.generateConfigurationsWith2OuterHoles(configs::Array{Configuration,1},  holeShells::Array{Shell,1})`  
+        ... generates all possible (decay) configurations where two holes from holeShells are moved 'outwards'. 
+            A confList::Array{Configuration,1} is returned.
+    """
+    function generateConfigurationsWith2OuterHoles(configs::Array{Configuration,1},  holeShells::Array{Shell,1})
+        nconfList = Configuration[]
+        for  conf in configs
+            for  shell in holeShells
+                dcs = Cascade.generateConfigurationsWith2OuterHoles(conf, shell)
+                append!(nconfList, dcs)
+            end
+        end
+        nconfList = unique(nconfList)
+        return(nconfList)
     end
 
 
