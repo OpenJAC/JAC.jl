@@ -736,7 +736,7 @@ module  RadialIntegrals
             for  r = 2:mtp_ac
                 for  s = 2:mtp_bd   wa = wa + wac[r] * ul(grid.r[r], grid.r[s]) * wbd[s]   end
             end
-            ## println("Test: SlaterRk_2dim(); wa = $wa")
+            ##x @show a.subshell, c.subshell, b.subshell, d.subshell, k, wa
             return( wa )
         else
             error("stop a")

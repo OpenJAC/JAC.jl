@@ -5,18 +5,22 @@
 """
 module ImpactExcitation 
 
-    using Printf, ..AngularMomentum, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear, ..TableStrings
+    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, 
+                  ..Nuclear, ..Radial, ..SpinAngular, ..TableStrings
 
     """
     `struct  ImpactExcitationSettings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing electron-impact excitation lines.
 
-        + electronEnergies        ::Array{Float64,1}             ... List of impact-energies of the incoming elecgtrons.
+        + electronEnergies        ::Array{Float64,1}             ... List of impact-energies of the incoming elecgtrons (in user-defined units).
         + includeBreit            ::Bool                         ... True if the Breit interaction is to be included, and false otherwise.
         + calcCollisionStrength   ::Bool                         ... True, if collision strength need to be calculated, and false otherwise.
         + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
         + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
-        + maxKappa                ::Int64                        ... Maximum kappa value of partial waves to be included.
         + energyShift             ::Float64                      ... An overall energy shift for all transitions |i> --> |f>.
+        + maxKappa                ::Int64                        ... Maximum kappa value of partial waves to be included.
+        + operator                ::AbstractEeInteraction   
+            ... Interaction operator that is to be used for evaluating the e-e interaction amplitudes; allowed values are: 
+                CoulombInteraction(), BreitInteraction(), ...
     """
     struct Settings  <:  AbstractProcessSettings
         electronEnergies          ::Array{Float64,1}
@@ -24,8 +28,9 @@ module ImpactExcitation
         calcCollisionStrength     ::Bool
         printBefore               ::Bool 
         lineSelection             ::LineSelection  
-        maxKappa                  ::Int64
         energyShift               ::Float64    
+        maxKappa                  ::Int64
+        operator                  ::AbstractEeInteraction 
     end 
 
 
@@ -33,7 +38,7 @@ module ImpactExcitation
     `ImpactExcitation.Settings()`  ... constructor for the default values of electron-impact excitation line computations.
     """
     function Settings()
-       Settings( Float64[], false, false, false, LineSelection(), 0, 0.)
+       Settings( Float64[], false, false, false, LineSelection(), 0., 0, CoulombInteraction())
     end
 
 
@@ -44,8 +49,9 @@ module ImpactExcitation
         println(io, "calcCollisionStrength:      $(settings.calcCollisionStrength)  ")
         println(io, "printBefore:                $(settings.printBefore)  ")
         println(io, "lineSelection:              $(settings.lineSelection)  ")
-        println(io, "maxKappa:                   $(settings.maxKappa)  ")
         println(io, "energyShift:                $(settings.energyShift)  ")
+        println(io, "maxKappa:                   $(settings.maxKappa)  ")
+        println(io, "operator:                   $(settings.operator)  ")
     end
 
 
@@ -91,8 +97,7 @@ module ImpactExcitation
         + initialElectronEnergy  ::Float64       ... energy of the incoming (initial-state) free-electron
         + finalElectronEnergy    ::Float64       ... energy of the outgoing (final-state) free-electron
         + crossSection           ::Float64       ... total cross section of this line
-        + hasChannels            ::Bool          ... Determines whether the individual scattering (sub-) channels are defined in terms of their 
-                                                     kappa's, phases and the total angular momentum/parity as well as the amplitude, or not.
+        + collisionStrength      ::Float64       ... total collision strength of this line
         + channels               ::Array{ImpactExcitation.Channel,1}  ... List of ImpactExcitation channels of this line.
     """
     struct  Line
@@ -101,7 +106,7 @@ module ImpactExcitation
         initialElectronEnergy    ::Float64
         finalElectronEnergy      ::Float64
         crossSection             ::Float64 
-        hasChannels              ::Bool
+        collisionStrength        ::Float64 
         channels                 ::Array{ImpactExcitation.Channel,1}
     end 
 
@@ -110,7 +115,7 @@ module ImpactExcitation
     `ImpactExcitation.Line()`  ... 'empty' constructor for an electron-impact excitation line between a specified initial and final level.
     """
     function Line()
-        Line(Level(), Level(), 0., 0., 0., false, ImpactExcitation.Channel[] )
+        Line(Level(), Level(), 0., 0., 0., 0., ImpactExcitation.Channel[] )
     end
 
 
@@ -119,7 +124,7 @@ module ImpactExcitation
         ... constructor for an electron-impact excitation line between a specified initial and final level.
     """
     function Line(initialLevel::Level, finalLevel::Level, crossSection::Float64)
-        Line(initialLevel, finalLevel, 0., 0., crossSection, false, ImpactExcitation.Channel[] )
+        Line(initialLevel, finalLevel, 0., 0., crossSection, 0., ImpactExcitation.Channel[] )
     end
 
 
@@ -130,38 +135,115 @@ module ImpactExcitation
         println(io, "initialElectronEnergy:   $(line.initialElectronEnergy)  ")
         println(io, "finalElectronEnergy:     $(line.finalElectronEnergy)  ")
         println(io, "crossSection:            $(line.crossSection)  ")
-        println(io, "hasChannels:             $(line.hasChannels)  ")
+        println(io, "collisionStrength:       $(line.collisionStrength)  ")
         println(io, "channels:                $(line.channels)  ")
     end
 
 
     """
-    `ImpactExcitation.computeAmplitudesProperties(line::ImpactExcitation.Line, grid::Radial.Grid, settings::ImpactExcitation.Settings)`  
+    `ImpactExcitation.amplitude(kind::AbstractEeInteraction, channel::ImpactExcitation.Channel, cFinalLevel::Level, cInitialLevel::Level, 
+                                grid::Radial.Grid; printout::Bool=true)`  
+        ... to compute the kind in  CoulombInteraction(), BreitInteraction(), CoulombBreit() electron-impact interaction amplitude 
+            <(alpha_f J_f, kappa_f) J_t || O^(e-e, kind) || (alpha_i J_i, kappa_i) J_t>  due to the interelectronic interaction for 
+            the given final and initial (continuum) level. A value::ComplexF64 is returned.
+    """
+    function amplitude(kind::AbstractEeInteraction, channel::ImpactExcitation.Channel, cFinalLevel::Level, cInitialLevel::Level, 
+                       grid::Radial.Grid; printout::Bool=true)
+        nf = length(cFinalLevel.basis.csfs);      fPartial = Subshell(9,channel.finalKappa)         
+        ni = length(cInitialLevel.basis.csfs);    iPartial = Subshell(9,channel.initialKappa)    
+        
+        if  printout  printstyled("Compute ($kind) e-e matrix of dimension $nf x $ni in the final- and initial-state (continuum) bases " *
+                                  "for the transition [$(cInitialLevel.index)- ...] " * 
+                                  "and for partial waves $(string(fPartial)[2:end]),  $(string(iPartial)[2:end])... ", color=:light_green)    end
+        matrix = zeros(ComplexF64, nf, ni)
+        #
+        ##x @show cInitialLevel.basis.subshells
+        ##x @show cFinalLevel.basis.subshells
+        if  cInitialLevel.basis.subshells == cFinalLevel.basis.subshells
+            iLevel = cInitialLevel;   fLevel = cFinalLevel
+        else
+            subshells = Basics.merge(cInitialLevel.basis.subshells, cFinalLevel.basis.subshells)
+            iLevel    = Level(cInitialLevel, subshells)
+            fLevel    = Level(cFinalLevel,   subshells)
+        end
+        #
+        if      kind in [ CoulombInteraction(), BreitInteraction(), CoulombBreit()]        ## pure V^Coulomb interaction
+        #--------------------------------------------------------------------------
+            for  r = 1:nf
+                for  s = 1:ni
+                    if  iLevel.basis.csfs[s].J != iLevel.J  ||  iLevel.basis.csfs[s].parity != iLevel.parity      continue    end 
+                    subshellList = fLevel.basis.subshells
+                    opa  = SpinAngular.TwoParticleOperator(0, plus, true)
+                    wa   = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList)
+                    #
+                    me = 0.
+                    for  coeff in wa
+                        if   kind in [ CoulombInteraction(), CoulombBreit()]    
+                            me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 
+                                                    fLevel.basis.orbitals[coeff.a], fLevel.basis.orbitals[coeff.b],
+                                                    iLevel.basis.orbitals[coeff.c], iLevel.basis.orbitals[coeff.d], grid)   end
+                        if   kind in [ BreitInteraction(), CoulombBreit()]    
+                            me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, 
+                                                    fLevel.basis.orbitals[coeff.a], fLevel.basis.orbitals[coeff.b],
+                                                    iLevel.basis.orbitals[coeff.c], iLevel.basis.orbitals[coeff.d], grid)   end
+                    end
+                    matrix[r,s] = me
+                end
+            end 
+            if  printout  printstyled("done. \n", color=:light_green)    end
+            amplitude = transpose(fLevel.mc) * matrix * iLevel.mc 
+            amplitude = im^Basics.subshell_l(Subshell(102, channel.finalKappa))   * exp( -im*channel.finalPhase )   * 
+                        im^Basics.subshell_l(Subshell(101, channel.initialKappa)) * exp(  im*channel.initialPhase ) * amplitude
+            @show amplitude
+            #
+            #
+         elseif  kind == "H-E"
+        #--------------------
+            amplitude = 0.;    error("stop a")
+        else    error("stop b")
+        end
+        
+        return( amplitude )
+    end
+
+
+    """
+    `ImpactExcitation.computeAmplitudesProperties(line::ImpactExcitation.Line, nm::Nuclear.Model, grid::Radial.Grid, 
+                                                  settings::ImpactExcitation.Settings; printout::Bool=true)`  
         ... to compute all amplitudes and properties of the given line; a line::ImpactExcitation.Line is returned for which the amplitudes and
             properties are now evaluated.
     """
-    function  computeAmplitudesProperties(line::ImpactExcitation.Line, grid::Radial.Grid, settings::ImpactExcitation.Settings)
-        newChannels = ImpactExcitation.Channel[]
+    function  computeAmplitudesProperties(line::ImpactExcitation.Line, nm::Nuclear.Model, grid::Radial.Grid, 
+                                          settings::ImpactExcitation.Settings; printout::Bool=true)
+        newChannels = ImpactExcitation.Channel[];   contSettings = Continuum.Settings(false, grid.NoPoints-50);   cross = 0.;   coll = 0.
+        # Define a common subshell list for both multiplets
+        subshellList = Basics.generate("subshells: ordered list for two bases", line.finalLevel.basis, line.initialLevel.basis)
+        Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
+        
         for channel in line.channels
             # Generate two continuum orbitals
-            println("ImpactExcitation.computeAmplitudesProperties-aa: warning ... no coninuum orbitals are generated.")
-            initialPhase = 0.;    finalPhase = 0.
-            # Define a proper continuum basis from the initialLevel.basis and finalLevel.basis with the two continuum orbital
-            println("ImpactExcitation.computeAmplitudesProperties-ab: warning ... no continuum bases are generated.")
-            # Compute the transition matrix for the two constructed continuum bases
-            println("ImpactExcitation.computeAmplitudesProperties-ac: warning ... no transition matrix is computed.")
-            # matrix    = ImpactExcitation.computeMatrix(channel.multipole, channel.gauge, line.omega, line.finalLevel.basis, 
-            #                                                line.initialLevel.basis, grid, settings)
-            # amplitude = line.finalLevel.mc * matrix * line.initialLevel.mc 
-            amplitude = 1.0 
-            push!( newChannels, ImpactExcitation.Channel( channel.initialKappa, channel.finalKappa, channel.symmetry, 
-                                                          initialPhase, finalPhase, amplitude) )
+            newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
+            newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel,   subshellList)
+            iSubshell  = Subshell(101, channel.initialKappa)
+            fSubshell  = Subshell(102, channel.finalKappa)
+            ciOrbital, iPhase  = Continuum.generateOrbitalForLevel(line.initialElectronEnergy, iSubshell, newiLevel, nm, grid, contSettings)
+            cfOrbital, fPhase  = Continuum.generateOrbitalForLevel(line.finalElectronEnergy,   fSubshell, newfLevel, nm, grid, contSettings)
+            newiLevel = Basics.generateLevelWithExtraElectron(ciOrbital, channel.symmetry, newiLevel)
+            newiLevel = Basics.generateLevelWithExtraSubshell(fSubshell,   newiLevel)
+            newfLevel = Basics.generateLevelWithExtraSubshell(iSubshell, newfLevel)
+            newfLevel = Basics.generateLevelWithExtraElectron(cfOrbital, channel.symmetry, newfLevel)
+            ##x @show newiLevel.basis.subshells
+            ##x @show newfLevel.basis.subshells
+            newChannel = ImpactExcitation.Channel(channel.initialKappa, channel.finalKappa, channel.symmetry, iPhase, fPhase, 0.)
+            #
+            amplitude  = ImpactExcitation.amplitude(settings.operator, newChannel, newfLevel, newiLevel, grid, printout=printout)
+            coll       = coll + conj(amplitude) * amplitude
+            push!( newChannels, ImpactExcitation.Channel(newChannel.initialKappa, newChannel.finalKappa, newChannel.symmetry, iPhase, fPhase, amplitude) )
         end
         # Calculate the electron-impact excitation strength and cross section
         println("ImpactExcitation.computeAmplitudesProperties-ba: warning ... cs and strength set to -1.")
         crossSection = -1.
-        line = ImpactExcitation.Line( line.initialLevel, line.finalLevel, line.initialElectronEnergy, line.finalElectronEnergy, 
-                                      crossSection, true, newChannels)
+        line = ImpactExcitation.Line( line.initialLevel, line.finalLevel, line.initialElectronEnergy, line.finalElectronEnergy, cs, newChannels)
         return( line )
     end
 
@@ -185,7 +267,7 @@ module ImpactExcitation
         # Calculate all amplitudes and requested properties
         newLines = ImpactExcitation.Line[]
         for  line in lines
-            newLine = ImpactExcitation.computeAmplitudesProperties(line, grid, settings) 
+            newLine = ImpactExcitation.computeAmplitudesProperties(line, nm, grid, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
@@ -241,16 +323,17 @@ module ImpactExcitation
             returned. Apart from the level specification, all physical properties are set to zero during the initialization process.
     """
     function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::ImpactExcitation.Settings)
+        energyShift = Defaults.convertUnits("energy: to atomic", settings.energyShift)
         lines = ImpactExcitation.Line[]
         for  iLevel  in  initialMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
                 if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
                     for  en in settings.electronEnergies
-                        initialElectronEnergy  = en
-                        finalElectronEnergy    = en - (iLevel.energy - fLevel.energy) + settings.energyShift
+                        initialElectronEnergy  = Defaults.convertUnits("energy: to atomic", en)
+                        finalElectronEnergy    = initialElectronEnergy - (iLevel.energy - fLevel.energy) + energyShift
                         if  finalElectronEnergy < 0    continue   end  
                         channels = ImpactExcitation.determineChannels(fLevel, iLevel, settings) 
-                        push!( lines, ImpactExcitation.Line(iLevel, fLevel, initialElectronEnergy, finalElectronEnergy, 0., true, channels) )
+                        push!( lines, ImpactExcitation.Line(iLevel, fLevel, initialElectronEnergy, finalElectronEnergy, 0., channels) )
                     end
                 end
             end
