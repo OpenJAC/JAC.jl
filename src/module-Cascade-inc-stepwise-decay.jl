@@ -117,6 +117,91 @@
 
 
     """
+    `Cascade.generateConfigurationsForStepwiseDecay(scheme::Cascade.StepwiseDecayScheme, initialConfigs::Array{Configurations,1})`  
+        ... generates all possible configurations as obtained by a stepwise loss of maxElectronLoss electrons and by considering
+            NoShakeDisplacements displacements. A confList::Array{Configuration,1} is returned.
+    """
+    function generateConfigurationsForStepwiseDecay(scheme::Cascade.StepwiseDecayScheme, initialConfigs::Array{Configuration,1})
+        initialNo = initialConfigs[1].NoElectrons
+        ##x Determine principal quantum number nmax that occurs in the initial configurations
+        ##x nmax = 0;   
+        ##x for config  in  initialConfigs
+        ##x     for (k,v)  in  config.shells    nmax = max(nmax, k.n)   end
+        ##x end
+        ##x decayShells = Defaults.getDefaults("ordered shell list: non-relativistic", nmax)
+        ##x @show nmax, decayShells
+        
+        #
+        decayShells = scheme.decayShells;   maxElectronLoss = scheme.maxElectronLoss;    maxElectronLoss = scheme.maxElectronLoss
+        # Build configurations with all decayShells 'in between', even if zero occupation
+        newConfigs = Configuration[]
+        for  conf  in  initialConfigs  
+            nshells = copy(conf.shells)
+            for shell in decayShells    if  haskey(nshells, shell)   else    nshells[shell] = 0    end   end
+            push!(newConfigs, Configuration(nshells, conf.NoElectrons))
+        end
+        newConfigs = Basics.excludeConfigurations(newConfigs, initialNo-maxElectronLoss)
+        ##x @show "a", newConfigs
+        #
+        # Now add all decay configurations
+        allConfigs   = copy(newConfigs)
+        decayConfigs = Configuration[];    dConfigs = copy(newConfigs)
+        #
+        further = true
+        while  further
+            dConfigs = Cascade.generateConfigurationsWith1OuterHole(dConfigs, decayShells)
+            if length(dConfigs) > 0     append!(decayConfigs, dConfigs)     else   further = false      end
+        end
+        decayConfigs = unique(decayConfigs)
+        decayConfigs = Basics.excludeConfigurations(decayConfigs, initialNo-maxElectronLoss)
+        ##x @show "a", decayConfigs
+        allConfigs   = append!(allConfigs, decayConfigs)
+        dConfigs     = copy(newConfigs)
+        #
+        further = true
+        while  further
+            dConfigs = Cascade.generateConfigurationsWith2OuterHoles(dConfigs, decayShells)
+            if length(dConfigs) > 0     append!(decayConfigs, dConfigs)     else   further = false      end
+        end
+        decayConfigs = unique(decayConfigs)
+        decayConfigs = Basics.excludeConfigurations(decayConfigs, initialNo-maxElectronLoss)
+        ##x @show "a", decayConfigs
+        allConfigs   = append!(allConfigs, decayConfigs)
+        dConfigs     = copy(decayConfigs)
+        #
+        further = true
+        while  further
+            dConfigs = Cascade.generateConfigurationsWith1OuterHole(dConfigs, decayShells)
+            if length(dConfigs) > 0     append!(decayConfigs, dConfigs)     else   further = false      end
+        end
+        allConfigs   = append!(allConfigs, decayConfigs)
+        allConfigs   = unique(allConfigs)
+        allConfigs   = Basics.excludeConfigurations(allConfigs, initialNo-maxElectronLoss)
+        ##x @show "c", allConfigs
+        
+        ##x dConfigs = copy(newConfigs);   append!(dConfigs, decayConfigs)
+        ##x dConfigs = unique(dConfigs)
+        
+        ##x @show length(dConfigs), length(newConfigs)
+        #
+        # Remove obsolete shells and double configurations
+        ##x nconfList = Configuration[];   nshells = Dict{Shell,Int64}();    ne = 0
+        ##x for  conf  in  decayConfigs  
+        ##x     nshells = Dict{Shell,Int64}();      ne = 0
+        ##x     for  (sh,occ) in conf.shells   if  occ > 0     nshells[sh] = occ;  ne = ne + occ    end     end
+        ##x     push!(nconfList, Configuration( nshells, ne))
+        ##x end
+        ##x nconfList = unique(nconfList)
+        ##x @show "d", nconfList
+        #
+        # Discard configurations with energies higher than initial configurations after electron capture;
+        # this may be required for a very large number of configurations (not yet)
+
+        return( allConfigs )
+    end
+
+
+    """
     `Cascade.perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation)`  
         ... to set-up and perform a cascade computation that starts from a given set of initial configurations and proceeds via 
             various steps until a given number of electrons has been removed or the decay stops at some stable levels with regard 
@@ -145,8 +230,10 @@
         if  printSummary   Cascade.displayLevels(iostream, multiplets, sa="initial ")          end
         #
         # Generate subsequent cascade configurations as well as display and group them together
-        wa = Cascade.generateConfigurationList(multiplets, comp.scheme.maxElectronLoss, comp.scheme.NoShakeDisplacements)
-        wb = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa, sa="decay ")
+        wax  = Cascade.generateConfigurationList(multiplets, comp.scheme.maxElectronLoss, comp.scheme.NoShakeDisplacements)
+        wa   = Cascade.generateConfigurationsForStepwiseDecay(comp.scheme, comp.initialConfigs)
+        wb  = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa, sa="decay ")
+        wbx = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wax, sa="OLD decay ")
         #
         # Determine first all configuration 'blocks' and from them the individual steps of the cascade
         wc = Cascade.generateBlocks(comp, wb, basis.orbitals, sa="for the decay cascade:")

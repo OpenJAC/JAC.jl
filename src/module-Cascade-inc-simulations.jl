@@ -75,6 +75,32 @@
     
     
     """
+    `Cascade.displayExpansionOpacities(stream::IO, sc::String, property::Cascade.ExpansionOpacities, kappas::Array{Float64,1})` 
+        ... displays the expansion opacities in a neat table. Nothing is returned.
+    """
+    function displayExpansionOpacities(stream::IO, sc::String, property::Cascade.ExpansionOpacities, kappas::Array{Float64,1})
+        nx = 99
+        println(stream, " ")
+        println(stream, "  Expansion opacities:  $sc ")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        error("a")
+        sa = "  "
+        sa = sa * TableStrings.center(14, "No. electrons"; na=4)        
+        sa = sa * TableStrings.center(10,"Rel. occ.";      na=2)
+        println(stream, sa)
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        # For loop to add the opacities to sa
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  Total distributed probability:  " * @sprintf("%.5e", 0.3)
+        println(stream, sa)
+
+        return( nothing )
+    end
+    
+    
+    """
     `Cascade.displayIonDistribution(stream::IO, sc::String, levels::Array{Cascade.Level,1})` 
         ... displays the (current or final) ion distribution in a neat table. Nothing is returned.
     """
@@ -730,6 +756,11 @@
             if output   results = Base.merge( results, Dict("relaxPercentage:"  => wa[1]) )   
                         results = Base.merge( results, Dict("relaxTimes:"       => wa[2]) )   end
             #
+        elseif  typeof(simulation.property) == Cascade.ExpansionOpacities
+                                             # --------------------------
+            photoExcData = Cascade.extractPhotoExcitationData(simulation.computationData)
+            wa           = Cascade.simulateExpansionOpacities(photoExcData, simulation) 
+            #
         else         error("stop b")
         end
 
@@ -965,6 +996,33 @@
         settings = Dielectronic.Settings(Dielectronic.Settings(), calcRateAlpha=true, temperatures=simulation.property.temperatures)
         Dielectronic.displayResults(stdout, resonances, settings)
         Dielectronic.displayRateCoefficients(stdout, resonances, settings)
+
+        return( nothing )
+    end
+    
+
+    """
+    `Cascade.simulateExpansionOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, simulation::Cascade.Simulation)` 
+        ... runs through all excitation lines, sums up their contributions and form a (list of) expansion opacities for the given 
+            parameters. Nothing is returned.
+    """
+    function simulateExpansionOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, simulation::Cascade.Simulation)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        #
+        lambdas = simulation.property.lambdas;  NoLambdas = length(lambdas);    exptime = simulation.property.expansionTime
+        T       = simulation.property.temperature;                              rho     = simulation.property.ionDensity
+        kappas  = zeros(NoLambdas)
+        #
+        for  linesE  in photoexcitationData
+            for  line  in linesE
+                for  ilambda = 1:NoLambdas
+                    kappas[ilambda] = kappas[ilambda] + 0.1
+                end
+            end
+        end
+        #
+        Cascade.displayExpansionOpacities(stdout, simulation.name, simulation.property, kappas)     
+        if  printSummary   Cascade.displayExpansionOpacities(stdout, simulation.name, simulation.property, kappas)      end
 
         return( nothing )
     end

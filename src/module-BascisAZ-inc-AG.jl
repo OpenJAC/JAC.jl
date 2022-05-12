@@ -730,6 +730,21 @@
     
         
     """
+    `Basics.excludeConfigurations(confList::Array{Configuration,1},NoElectrons::Int64)`  
+        ... excludes all configurations from confList with less than NoElectrons; 
+            a newConfList::Array{Configuration,1} is returned. 
+    """
+    function Basics.excludeConfigurations(confList::Array{Configuration,1},NoElectrons::Int64)
+        newConfList = Configuration[]
+        for  conf in confList       
+            if  conf.NoElectrons >= NoElectrons     push!(newConfList, conf)    end
+        end
+        
+        return( newConfList )
+    end
+    
+        
+    """
     `Basics.extractLeadingConfiguration(level::ManyElectron.Level)`  
         ... extract the leading configuration of the given level; a conf::Configuration is returned.
     """

@@ -1668,6 +1668,7 @@ module Basics
     function display                                                end
     function displayLevels                                          end
     function displayOrbitalOverlap                                  end
+    function excludeConfigurations                                  end
     function excludeDoubles                                         end
     function extractLeadingConfiguration                            end
     function extractNoOpenShells                                    end
@@ -1685,6 +1686,8 @@ module Basics
     function generateConfigurationsWithElectronCapture              end
     function generateLevelWithExtraElectron                         end
     function generateLevelWithExtraSubshell                         end
+    function generateLevelWithExtraSubshells                        end
+    function generateLevelWithExtraTwoElectrons                     end
     function generateLevelWithSymmetryReducedBasis                  end
     function generateOrbitalsForBasis                               end
     function generateOrbitalsForPotential                           end

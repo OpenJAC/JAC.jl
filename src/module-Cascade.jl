@@ -33,6 +33,10 @@ module Cascade
             ... to represent the capture of one or several electrons into a list of subshells; various distributions of the
                 electron among these shells are supported. For the subsequent decay, the list of decay shells need to be specified
                 as well.
+        + struct ExpansionOpacityScheme  
+            ... to represent the expansion opacity of an ion in its ground or some low-lying state; this scheme takes a maximum photon
+                (transition) energy and excitation fromShells and toShells in order to select the relevant configurations. These shell
+                lists refer to the reference configurations.
         + struct ElectronExcitationScheme  
             ... to represent a (prior) electron-impact excitation part of a cascade for given electron energies (not yet).
     """
@@ -53,6 +57,7 @@ module Cascade
                 channels by simply shifting the total energies of all levels.
         + NoShakeDisplacements  ::Int64             
             ... Maximum number of electron displacements due to shake-up  or shake-down processes in any individual step of cascade.
+        + decayShells           ::Array{Shell,1}        ... List of shells that may occur during the decay.
         + shakeFromShells       ::Array{Shell,1}        ... List of shells from which shake transitions may occur.
         + shakeToShells         ::Array{Shell,1}        ... List of shells into which shake transitions may occur.
     """
@@ -61,6 +66,7 @@ module Cascade
         maxElectronLoss         ::Int64
         chargeStateShifts       ::Dict{Int64,Float64}
         NoShakeDisplacements    ::Int64
+        decayShells             ::Array{Shell,1}
         shakeFromShells         ::Array{Shell,1}
         shakeToShells           ::Array{Shell,1}
     end
@@ -70,7 +76,7 @@ module Cascade
     `Cascade.StepwiseDecayScheme()`  ... constructor for an 'default' instance of a Cascade.StepwiseDecayScheme.
     """
     function StepwiseDecayScheme()
-        StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, Shell[], Shell[] )
+        StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, Shell[], Shell[], Shell[] )
     end
 
 
@@ -88,6 +94,7 @@ module Cascade
         println(io, "maxElectronLoss:            $(scheme.maxElectronLoss)  ")
         println(io, "chargeStateShifts:          $(scheme.chargeStateShifts)  ")
         println(io, "NoShakeDisplacements:       $(scheme.NoShakeDisplacements)  ")
+        println(io, "decayShells:                $(scheme.decayShells)  ")
         println(io, "shakeFromShells:            $(scheme.shakeFromShells)  ")
         println(io, "shakeToShells:              $(scheme.shakeToShells)  ")
     end
@@ -389,6 +396,69 @@ module Cascade
 
 
     """
+    `struct  Cascade.ExpansionOpacityScheme  <:  Cascade.AbstractCascadeScheme`  
+        ... a struct to define and describe the expansion opacity of ions in some initial state/configuration; for this scheme,
+            the excited (even- and odd-parity) configurations due to the photoabsorption and emission in a plasma are generated automatically 
+            in terms of the chosen excitation scheme and a maximum photon (transition) energy that is taken into account.
+            
+        + multipoles            ::Array{EmMultipole}           
+            ... Multipoles of the radiation field that are to be included for the radiative transitions in the plasma.
+        + maxPhotonEnergy       ::Float64                 
+            ... Maximum photon (transition) energy [in a.u.] that are taken into account for all absorption lines; 
+                this transition energy refers to the shortest wavelength for which the opacity is needed.
+        + minPhotonEnergy       ::Float64                 
+            ... Minimum photon (transition) energy [in a.u.] that are taken into account for all absorption lines; 
+                this transition energy refers to the longest wavelength for which transition amplitudes are calculated.
+        + meanEnergyShift       ::Float64                 
+            ... Energy shift for all excited configurations [in a.u.]; this allows to correct for missing correlation 
+                contributions.
+        + NoExcitations         ::Int64                 
+            ... (Maximum) Number of electron replacements in the excited configuration with regard to the initial configurations/multiplets.
+        + excitationFromShells  ::Array{Shell,1}    
+            ... List of shells from which excitations are to be considered.
+        + excitationToShells  ::Array{Shell,1}    
+            ... List of shells to which excitations are to be considered.
+    """
+    struct   ExpansionOpacityScheme  <:  Cascade.AbstractCascadeScheme
+        multipoles              ::Array{EmMultipole}  
+        maxPhotonEnergy         ::Float64   
+        minPhotonEnergy         ::Float64 
+        meanEnergyShift         ::Float64                 
+        NoExcitations           ::Int64
+        excitationFromShells    ::Array{Shell,1}
+        excitationToShells      ::Array{Shell,1}
+    end
+
+
+    """
+    `Cascade.ExpansionOpacityScheme()`  ... constructor for an 'default' instance of a Cascade.ExpansionOpacityScheme.
+    """
+    function ExpansionOpacityScheme()
+        ExpansionOpacityScheme([E1], 1.0, 0., 0., 1, Shell[], Shell[] )
+    end
+
+
+    # `Base.string(scheme::ExpansionOpacityScheme)`  ... provides a String notation for the variable scheme::ExpansionOpacityScheme.
+    function Base.string(scheme::ExpansionOpacityScheme)
+        sa = "Expansion opacity calculation (scheme):"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, scheme::ExpansionOpacityScheme)`  ... prepares a proper printout of the scheme::ExpansionOpacityScheme.
+    function Base.show(io::IO, scheme::ExpansionOpacityScheme)
+        sa = Base.string(scheme);                print(io, sa, "\n")
+        println(io, "multipoles:                 $(scheme.multipoles)  ")
+        println(io, "maxPhotonEnergy:            $(scheme.maxPhotonEnergy)  ")
+        println(io, "minPhotonEnergy:            $(scheme.minPhotonEnergy)  ")
+        println(io, "meanEnergyShift:            $(scheme.meanEnergyShift)  ")
+        println(io, "NoExcitations:              $(scheme.NoExcitations)  ")
+        println(io, "excitationFromShells:       $(scheme.excitationFromShells)  ")
+        println(io, "excitationToShells:         $(scheme.excitationToShells)  ")
+    end
+
+
+    """
     `struct  Cascade.ElectronExcitationScheme  <:  Cascade.AbstractCascadeScheme`  
         ... a struct to represent (and generate) a mean-field orbital basis.
 
@@ -617,6 +687,7 @@ module Cascade
         elseif    typeof(comp.scheme) == Cascade.DielectronicCaptureScheme      sb = "(di-) electronic capture scheme"
         elseif    typeof(comp.scheme) == Cascade.RadiativeRecombinationScheme   sb = "radiative recombination capture scheme"
         elseif    typeof(comp.scheme) == Cascade.HollowIonScheme                sb = "hollow ion scheme"
+        elseif    typeof(comp.scheme) == Cascade.ExpansionOpacityScheme         sb = "expansion opacity scheme"
         else      error("unknown typeof(comp.scheme)")
         end
         
@@ -848,6 +919,46 @@ module Cascade
     function Base.show(io::IO, dist::Cascade.RrRateCoefficients) 
         println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
         println(io, "temperatures:             $(dist.temperatures)  ")
+    end
+
+
+    """
+    `struct  Cascade.ExpansionOpacities   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the expansion opacity as function of the wavelength as well as (parametrically) the density
+            and expansion time.
+
+        + ionDensity             ::Float64       ... ion density [in ions/cm^3]
+        + temperature            ::Float64       ... temperature [in K]
+        + expansionTime          ::Float64       ... time [in sec]
+        + transitionEnergyShift  ::Float64     
+            ... (total) energy shifts that apply to all transition energies; the amplitudes are re-scaled accordingly.
+        + wavelength             ::Array{Float64,1}
+            ... wavelength [in user-defined units] for which the expansion opacity is to be calculated.
+    """  
+    struct  ExpansionOpacities      <:  Cascade.AbstractSimulationProperty
+        ionDensity               ::Float64
+        temperature              ::Float64
+        expansionTime            ::Float64
+        transitionEnergyShift    ::Float64
+        lambdas                  ::Array{Float64,1}
+    end 
+
+
+    """
+    `Cascade.ExpansionOpacities()`  ... (simple) constructor for expansion opacity simulations.
+    """
+    function ExpansionOpacities()
+        ExpansionOpacities(1, 1000., 1.,  0., Float64[])
+    end
+
+
+    # `Base.show(io::IO, dist::Cascade.ExpansionOpacities)`  ... prepares a proper printout of the variable data::Cascade.ExpansionOpacities.
+    function Base.show(io::IO, dist::Cascade.ExpansionOpacities) 
+        println(io, "ionDensity:                 $(dist.ionDensity)  ")
+        println(io, "temperature:                $(dist.temperature)  ")
+        println(io, "expansionTime:              $(dist.expansionTime)  ")
+        println(io, "transitionEnergyShift:      $(dist.transitionEnergyShift)  ")
+        println(io, "lambdas:                    $(dist.lambdas)  ")
     end
 
 
@@ -1222,6 +1333,7 @@ module Cascade
     
     include("module-Cascade-inc-computations.jl")
     include("module-Cascade-inc-dielectronic-capture.jl")
+    include("module-Cascade-inc-expansion-opacity.jl")
     include("module-Cascade-inc-hollow-ion.jl")
     include("module-Cascade-inc-photoabsorption.jl")
     include("module-Cascade-inc-photoexcitation.jl")

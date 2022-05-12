@@ -1007,6 +1007,49 @@
 
 
     """
+    `Basics.generateLevelWithExtraTwoElectrons(orb1::Orbital, symx::LevelSymmetry, orb2::Orbital, symt::LevelSymmetry, level::Level)`  
+        ... generates a (new) level with two extra electrons in subshells orb1.subshell and orb2.subshell and with intermediate
+            symmetry symx and overall symmetry symt. The function assumes that all CSF in the basis of level have the 
+            same symmetry as the level itself, that the new subshells are not yet part of the basis and that CSF with the 
+            intermediate and total symmetries can be constructed; it terminates with an error if one of this assumptions
+            is violated. A newLevel::Level with the same number of CSF and the same representation (eigenvector) as the given level is 
+            returned. From a physics viewpoint, newLevel refers to a antisymmetrized product state of 
+            [ [level x orbital1(sh, energy)] Jx^Px  x orbital1(sh, energy)] J^P  (symt) and with an 
+            total energy = level.energy + orb1.energy + orb2.energy.
+    """
+    function Basics.generateLevelWithExtraTwoElectrons(orb1::Orbital, symx::LevelSymmetry, orb2::Orbital, symt::LevelSymmetry, level::Level)
+        basis = level.basis;    newSubshells = copy(basis.subshells);    newCsfs = CsfR[];   J = level.J;   parity = level.parity
+        
+        push!(newSubshells, orb1.subshell);     push!(newSubshells, orb2.subshell)
+        Defaults.setDefaults("relativistic subshell list", newSubshells; printout=false)
+        newOrbitals = Base.merge( copy(basis.orbitals), Dict( orb1.subshell => orb1, orb2.subshell => orb2 ))
+    
+        for  i = 1:length(basis.csfs)
+            stateList1   = ManyElectron.provideSubshellStates(orb1.subshell, 1)
+            stateList2   = ManyElectron.provideSubshellStates(orb2.subshell, 1)
+            if  basis.csfs[i].J != J     ||   basis.csfs[i].parity != parity    error("Improper symmetry of CSF.")             end
+            if  length(stateList1) != length(stateList2) != 1                   error("Improper number of subshell states.")   end
+            if  AngularMomentum.triangularDelta(J,      Basics.subshell_j(orb1.subshell), symx.J) != 1    
+                                                               error("Improper coupling of (new) subshell & intermediate J.")  end
+            if  AngularMomentum.triangularDelta(symt.J, Basics.subshell_j(orb2.subshell), symt.J) != 1    
+                                                               error("Improper coupling of (new) subshell & total J.")         end
+            substate1   = stateList1[1];    substate2  = stateList2[1]
+            occupation  = copy(basis.csfs[i].occupation);    push!(occupation, substate1.occ);    push!(occupation, substate2.occ)
+            seniorityNr = copy(basis.csfs[i].seniorityNr);   push!(seniorityNr,substate1.nu);     push!(seniorityNr,substate2.nu)
+            subshellJ   = copy(basis.csfs[i].subshellJ);     push!(subshellJ,  AngularJ64(substate1.Jsub2//2) )
+                                                             push!(subshellJ,  AngularJ64(substate2.Jsub2//2) )
+            subshellX   = copy(basis.csfs[i].subshellX);     push!(subshellX,  symx.J);           push!(subshellX,  symt.J)
+            push!(newCsfs, CsfR(true, symt.J, symt.parity, occupation, seniorityNr, subshellJ, subshellX, Subshell[] ) )
+        end
+
+        newBasis = Basis(true, basis.NoElectrons+2, newSubshells, newCsfs, copy(basis.coreSubshells), newOrbitals)
+        newLevel = Level(symt.J, AngularM64(symt.J), symt.parity, level.index, level.energy+orb1.energy+orb2.energy, level.relativeOcc, 
+                        true, newBasis, level.mc)
+        return( newLevel )
+    end
+
+
+    """
     `Basics.generateLevelWithExtraSubshell(sh::Subshell, level::Level)`  
         ... generates a (new) level with one extra subshell sh but with the same overall symmetry as before. The function assumes that the 
             new subshell is not yet part of the basis; it terminates with an error if one of this assumptions is violated. 
@@ -1034,6 +1077,19 @@
 
         newBasis = Basis(true, basis.NoElectrons, newSubshells, newCsfs, copy(basis.coreSubshells), newOrbitals)
         newLevel = Level(level.J, level.M, level.parity, level.index, level.energy, level.relativeOcc, true, newBasis, level.mc)
+        return( newLevel )
+    end
+
+
+    """
+    `Basics.generateLevelWithExtraSubshells(subshells::Array{Subshell,1}, level::Level)`  
+        ... generates a (new) level with one or several extra subshells but with the same overall symmetry as before. 
+            The function assumes that the new subshell is not yet part of the basis. A newLevel::Level with the same symmetry, 
+            number of CSF, energy and the same representation (eigenvector) as the given level is returned. 
+    """
+    function Basics.generateLevelWithExtraSubshells(subshells::Array{Subshell,1}, level::Level)
+        newLevel = deepcopy(level)
+        for  sh in subshells    newLevel = Basics.generateLevelWithExtraSubshell(sh::Subshell, newLevel::Level)    end
         return( newLevel )
     end
 

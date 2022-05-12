@@ -16,19 +16,19 @@ if  false
     levelSymmetries  = [LevelSymmetry(0, Basics.minus), LevelSymmetry(1, Basics.minus)]
     greenSettings    = GreenSettings(3, [0, 1], 0.01, true, LevelSelection())
     greenRep         = Representation(name, Nuclear.Model(10.), Radial.Grid(true), refConfigs, 
-                                      GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 3, greenSettings) ) 
+                                      GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 10, greenSettings) ) 
     greenOut         = generate(greenRep, output=true)
     doubleGreen      = greenOut["Green channels"]
     
 elseif true
     # Single-photon 2p^2 photoionization of neon
-    doubleSettings   = PhotoDoubleIonization.Settings(EmMultipole[E1], UseGauge[UseCoulomb, UseBabushkin], [50.0, 70.], doubleGreen, 2, 
-                                                      false, true, 2, LineSelection(true, indexPairs=[(1,0)]))
+    doubleSettings   = PhotoDoubleIonization.Settings(EmMultipole[E1], UseGauge[UseBabushkin], [50.], doubleGreen, 4, 
+                                                      false, true, 2, LineSelection(true, indexPairs=[(1,2)]))
     
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(10.), 
                             initialConfigs  =[Configuration("1s^2 2s^2 2p^6")],
-                            finalConfigs    =[Configuration("1s^2 2s^2 2p^4")], 
-                            process = PhotoDouble(),  processSettings = doubleSettings )
+                            finalConfigs    =[Configuration("1s 2s 2p^6")], 
+                            processSettings = doubleSettings )
 
     wb = perform(wa)
     

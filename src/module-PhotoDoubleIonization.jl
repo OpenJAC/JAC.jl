@@ -9,7 +9,8 @@ module PhotoDoubleIonization
 
 
     """
-    `struct  PhotoDoubleIonization.Settings`  ... defines a type for the settings in estimating single-photon double-ionization cross sections.
+    `struct  PhotoDoubleIonization.Settings  <:  AbstractProcessSettings`  
+        ... defines a type for the settings in estimating single-photon double-ionization cross sections.
 
         + multipoles              ::Array{EmMultipole}      ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}         ... Specifies the gauges to be included into the computations.
@@ -21,7 +22,7 @@ module PhotoDoubleIonization
         + maxKappa                ::Int64                   ... Maximum kappa value of partial waves to be included.
         + lineSelection           ::LineSelection           ... Specifies the selected levels, if any.
     """
-    struct Settings
+    struct Settings  <:  AbstractProcessSettings
         multipoles                ::Array{EmMultipole}
         gauges                    ::Array{UseGauge} 
         photonEnergies            ::Array{Float64,1}
@@ -172,39 +173,77 @@ module PhotoDoubleIonization
 
 
     """
-    `PhotoDoubleIonization.computeAmplitudesProperties(line::PhotoDoubleIonization.Line, grid::Radial.Grid, settings::PhotoDoubleIonization.Settings)`  
+    `PhotoDoubleIonization.amplitude(kind::String, newChannel, newcLevel, settings.green, newiLevel, grid
+    
+    
+                        channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, 
+                                   initialLevel::Level, grid::Radial.Grid)`  
+        ... to compute the kind = (photoionization) amplitude  <(alpha_f J_f, epsilon kappa) J_t || O^(photoionization) || alpha_i J_i>  
+            due to the electron-photon interaction for the given final and initial level, the partial wave of the outgoing 
+            electron as well as the given multipole and gauge. A value::ComplexF64 is returned.
+    """
+    function amplitude(kind::String, channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, initialLevel::Level, grid::Radial.Grid)
+        if      kind in [ "photodoubleionization"]
+        #-----------------------------------
+            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, energy, continuumLevel, initialLevel, grid, 
+                                                display=false, printout=false)
+            amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
+        else    error("stop b")
+        end
+        
+        return( amplitude )
+    end
+
+
+    """
+    `PhotoDoubleIonization.computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
+                                                       settings::PhotoDoubleIonization.Settings)`  
         ... to compute all amplitudes and properties of the given line; a line::PhotoDoubleIonization.Line is returned for which the amplitudes 
             and properties have now been evaluated.
     """
-    function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, grid::Radial.Grid, settings::PhotoDoubleIonization.Settings)
-        newSharings = PhotoDoubleIonization.Sharing[]
+    function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
+                                          settings::PhotoDoubleIonization.Settings)
+        newSharings = PhotoDoubleIonization.Sharing[];   contSettings = Continuum.Settings(false, grid.NoPoints-50);    tcsC = 0.;    tcsB = 0.  
+        #
         for sharing in line.sharings
-            newChannels = PhotoDoubleIonization.ReducedChannel[]
+            newChannels = PhotoDoubleIonization.ReducedChannel[];    dcsC = 0.;    dcsB = 0.
             for ch in sharing.channels
-                # Generate a continuum orbital
-                phase     = 1.3
-                amplitude = 1.0im 
-                push!( newChannels, ReducedChannel(ch.multipole, ch.gauge, ch.omega, ch.energy1, ch.kappa1, phase, ch.xSymmetry,
-                                                                                     ch.energy2, ch.kappa2, phase, ch.tSymmetry, amplitude) )
+                newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
+                newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
+                newiLevel = Basics.generateLevelWithExtraSubshells([Subshell(101, ch.kappa1),Subshell(102, ch.kappa2)], newiLevel)
+                # Generate two continuum orbitals as associated with this sharing; these orbitals move each in the potential of the final level
+                cOrbital1, phase1 = Continuum.generateOrbitalForLevel(ch.energy1, Subshell(101, ch.kappa1), newfLevel, nm, grid, contSettings)
+                cOrbital2, phase2 = Continuum.generateOrbitalForLevel(ch.energy2, Subshell(102, ch.kappa2), newfLevel, nm, grid, contSettings)
+                newcLevel  = Basics.generateLevelWithExtraTwoElectrons(cOrbital1, ch.xSymmetry, cOrbital2, ch.tSymmetry, newfLevel)
+                newChannel = PhotoDoubleIonization.ReducedChannel(ch.multipole, ch.gauge, ch.omega, ch.energy1, ch.kappa1, phase1, ch.xSymmetry, 
+                                                                                                    ch.energy2, ch.kappa2, phase2, ch.tSymmetry, 0.)
+                amplitude  = PhotoDoubleIonization.amplitude("photodoubleionization", newChannel, newcLevel, settings.green, newiLevel, grid)
+                push!( newChannels, ReducedChannel(ch.multipole, ch.gauge, ch.omega, ch.energy1, ch.kappa1, phase1, ch.xSymmetry,
+                                                                                     ch.energy2, ch.kappa2, phase2, ch.tSymmetry, amplitude) )
+                if       ch.gauge == Basics.Coulomb     dcsC = dcsC + abs(amplitude)^2
+                elseif   ch.gauge == Basics.Babushkin   dcsB = dcsB + abs(amplitude)^2
+                elseif   ch.gauge == Basics.Magnetic    dcsB = dcsB + abs(amplitude)^2;   dcsC = dcsC + abs(amplitude)^2
+                end
             end
             # Calculate the differential cross section 
-            diffCs = EmProperty(-1., -1.)
+            diffCs = EmProperty(dcsC, dcsB)
             push!( newSharings, PhotoDoubleIonization.Sharing( sharing.omega, sharing.epsilon1, sharing.epsilon2, sharing.weight, diffCs, newChannels) )
+            tcsC = tcsC + sharing.weight * dcsC;        tcsB = tcsB + sharing.weight * dcsB
         end
         # Calculate the total cross section 
-        totalCs = EmProperty(-1., -1.)
+        totalCs = EmProperty(tcsC, tcsB)
         line = PhotoDoubleIonization.Line( line.initialLevel, line.finalLevel, line.omega, totalCs, newSharings)
         return( line )
     end
 
 
     """
-    `PhotoDoubleIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+    `PhotoDoubleIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                        settings::PhotoDoubleIonization.Settings; output=true)`  
         ... to compute the double-Auger transition amplitudes and all properties as requested by the given settings. A list of 
             lines::Array{PhotoDoubleIonization.Lines} is returned.
     """
-    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                            settings::PhotoDoubleIonization.Settings; output=true)
         println("")
         printstyled("PhotoDoubleIonization.computeLines(): The computation of single-photon double-ionization cs starts now ... \n", color=:light_green)
@@ -217,7 +256,7 @@ module PhotoDoubleIonization
         # Calculate all amplitudes and requested properties
         newLines = PhotoDoubleIonization.Line[]
         for  line in lines
-            newLine = PhotoDoubleIonization.computeAmplitudesProperties(line, grid, settings) 
+            newLine = PhotoDoubleIonization.computeAmplitudesProperties(line, nm, grid, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen

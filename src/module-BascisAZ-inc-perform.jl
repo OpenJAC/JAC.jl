@@ -126,7 +126,7 @@
                 outcome = PhotoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("photoionization lines:" => outcome) )                 end
             elseif  typeof(computation.processSettings) == PhotoDoubleIonization.Settings   
-                outcome = PhotoDoubleIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = PhotoDoubleIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Single-photon double-ionization lines:" => outcome) ) end
             elseif  typeof(computation.processSettings) == PhotoExcitation.Settings
                 outcome = PhotoExcitation.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 

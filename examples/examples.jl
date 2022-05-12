@@ -76,6 +76,7 @@ println("Ec) Three-step cascade computations and simulations for the decay of th
 println("Ed) Photoabsorption of Ne^+: AverageSCA model.")
 println("Ee) Dielectronic recombination cascade.")
 println("Ef) Radiative recombination cascade.")
+println("Eg) Expansion opacity (cascade) calculations.")
 println("")
 println("F)  Tests & development of symbolic evaluations of Racah expressions")
 println("--------------------------------------------------------------------")

@@ -526,7 +526,7 @@ module Defaults
         if        sa == "ordered shell list: non-relativistic"
             wa = Shell[]
             for  n = 1:n_max
-            for l = 0:n_max-1    push!(wa, Shell(n,l) )    end
+            for  l = 0:n-1    push!(wa, Shell(n,l) )    end
             end
         elseif    sa == "ordered subshell list: relativistic"  
             wa = Subshell[]
