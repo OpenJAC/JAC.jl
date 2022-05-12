@@ -266,3 +266,7 @@ A few further suggestions for extending and improving JAC can be found in sectio
 * Martino Trassinelli (U Sorbonne Paris, France)
 * Andrey Volotka (HI Jena, Germany)
 
+
+## Citing
+
+See [`CITATION.bib`](CITATION.bib) for the relevant references(s).

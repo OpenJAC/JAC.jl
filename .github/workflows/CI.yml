@@ -10,10 +10,9 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          #- '1.0'
-          - '1.5'
+           - '1.6'
           #- '1'
-          #- 'nightly'
+          - 'nightly'
         os:
           - ubuntu-latest
           #- macOS-latest
