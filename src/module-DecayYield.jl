@@ -107,13 +107,14 @@ module DecayYield
         elseif  settings.approach == "SCA"           cApproach = Cascade.SCA()
         else    error("Improper (cascade) approach for yield computations; approach = $(settings.approach)")    
         end
+        decayShells = Basics.extractNonrelativisticShellList(initialConfigs)
         wa = Cascade.Computation(Cascade.Computation(), name="photon lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
-                                 scheme=Cascade.StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, Shell[], Shell[]),
+                                 scheme=Cascade.StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
                                  approach=cApproach, initialConfigs=initialConfigs)
         wb = perform(wa, output=true, outputToFile=false);   linesR = wb["decay line data:"].linesR
         println("\nPerform a cascade computation for all (single-electron) Auger decay channels of the levels from the initial configurations:")
         wa = Cascade.Computation(Cascade.Computation(), name="Auger lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
-                                 scheme=Cascade.StepwiseDecayScheme([Auger()], 1, Dict{Int64,Float64}(), 0, Shell[], Shell[]),
+                                 scheme=Cascade.StepwiseDecayScheme([Auger()], 1, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
                                  approach=cApproach, initialConfigs=initialConfigs)
         wb = perform(wa, output=true, outputToFile=false);   linesA = wb["decay line data:"].linesA
         #

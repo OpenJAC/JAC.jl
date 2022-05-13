@@ -5,7 +5,7 @@
 """
 module TestFrames
 
-    using Printf, JLD, JAC, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
+    using Printf, SymEngine, JLD, JAC, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
     
     export testDummy
 
@@ -365,8 +365,9 @@ module TestFrames
         ### Make the tests
         name = "Cascade after neon 1s --> 3p excitation"
         grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, rbox = 9.5)
+        decayShells = [Shell(1,0), Shell(2,0), Shell(2,1), Shell(3,1)]
         wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(10.), grid=grid, approach=Cascade.AverageSCA(),
-                                   scheme=Cascade.StepwiseDecayScheme([Auger(), Radiative()], 1, Dict{Int64,Float64}(), 0, Shell[], Shell[]),
+                                   scheme=Cascade.StepwiseDecayScheme([Auger(), Radiative()], 1, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
                                    initialConfigs=[Configuration("1s^1 2s^2 2p^6 3p")] )
         println(wa)
         wb = perform(wa; output=true)

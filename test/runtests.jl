@@ -20,7 +20,7 @@ using JAC, ..Defaults, ..TestFrames
         @test TestFrames.testEvaluation_Wigner_6j_specialValues() 
         @test TestFrames.testEvaluation_Wigner_9j_specialValues() 
         @test TestFrames.testEvaluation_sumRulesForOneWnj() 
-        ## @test TestFrames.testEvaluation_sumRulesForTwoWnj() 
+        @test TestFrames.testEvaluation_sumRulesForTwoWnj() 
         @test RacahAlgebra.testSpecialValuesW3j()
         @test RacahAlgebra.testSpecialValuesW6j()
         @test RacahAlgebra.testSpecialValuesW9j()
@@ -66,7 +66,7 @@ using JAC, ..Defaults, ..TestFrames
     end
 
     @testset "JAC cascades" begin
-        ## @test TestFrames.testModule_Cascade_StepwiseDecay()
+        @test TestFrames.testModule_Cascade_StepwiseDecay()
         @test TestFrames.testModule_Cascade_PhotonIonization()
         @test TestFrames.testModule_Cascade_PhotonExcitation()
         ## @test TestFrames.testModule_Cascade_Simulation()

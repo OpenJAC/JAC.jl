@@ -1,10 +1,9 @@
 
 
-[![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl) ... check for code coverage.
+[![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)
+[![Build Status](https://github.com/OpenJAC/JAC.jl/workflows/CI/badge.svg)](https://github.com/OpenJAC/JAC.jl/actions)
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master)  ... use JAC immediately with Binder in the cloud.
-
-[![Build Status](https://github.com/OpenJAC/JAC.jl/workflows/CI/badge.svg)](https://github.com/OpenJAC/JAC.jl/actions)  ... current CI status.
 
 
 # Jena Atomic Calculator (JAC) for the computation of atomic representations, processes and cascades
@@ -113,10 +112,19 @@ Commons Attribution 4.0 International (CC BY 4.0) license.
 
 For reference to (using) this code, please, use the Computer Physics Communications publication on JAC:
 
-* S. Fritzsche, [Computer Physics Communications 240, 1 (2019)](https://doi.org/10.1016/j.cpc.2019.01.012)
-* S. Fritzsche, P. Palmeri & S. Schippers: Atomic Cascade Computations. [Symmetry 13, 520 (2021)](https://doi.org/10.3390/sym13030520)
-* S. Fritzsche: Symbolic Evaluation of Expressions from Racah’s Algebra. [Symmetry 13, 1558 (2021)](https://doi.org/10.3390/sym13091558)
+* S. Fritzsche: A fresh computational approach to atomic structures, processes and cascades 
+     [Computer Physics Communications 240, 1 (2019)](https://doi.org/10.1016/j.cpc.2019.01.012)
+* G. Gaigalas & S. Fritzsche: Angular coefficients for symmetry-adapted configuration states in jj-coupling.
+     [Comp. Phys. Commun. 267, 108086 (2021)](https://doi.org/10.1016/j.cpc.2021.108086)
+* S. Fritzsche, P. Palmeri & S. Schippers: Atomic cascade computations. [Symmetry 13, 520 (2021)](https://doi.org/10.3390/sym13030520)
+* S. Fritzsche: Symbolic evaluation of expressions from Racah’s algebra. [Symmetry 13, 1558 (2021)](https://doi.org/10.3390/sym13091558)
+* S. Fritzsche & A. Surzhykov: Approximate atomic Green functions. [Molecules 26, 2660 (2021)](https://doi.org/10.3390/molecules26092660)
+* S. Fritzsche: Dielectronic recombination strengths and plasma rate coefficients of multiply-charged ions.
+     [A&A 656, A163 (2021)](https://doi.org/10.1051/0004-6361/202141673)
+* S. Fritzsche: Level structure and properties of open f-shell elements. [Atoms 10, 7 (2022)](https://doi.org/10.3390/atoms10010007)
+* S. Fritzsche: Photon emission from hollow ions near surfaces. [Atoms 10, 37 (2022)](https://doi.org/10.3390/atoms10020037)
 
+See also [`CITATION.bib`](CITATION.bib) for the relevant references(s).
 
 
 
@@ -148,7 +156,7 @@ facilitate the use.
 
 The JAC code makes use of:
 * standard Julia packages, such as SpecialFunctions, FortranFiles, GaussQuadrature, GSL and QuadGK.
-* Matrix elements from G. Gaigalas, T. Zalandauskas and S. Fritzsche, Comp. Phys. Commun. 157, 239 (2004).
+* Matrix elements from G. Gaigalas and S. Fritzsche, Comp. Phys. Commun. 267, 108086 (2021).
 
     
     
@@ -266,8 +274,3 @@ A few further suggestions for extending and improving JAC can be found in sectio
 * Andrey Surzhykov (U Braunschweig, Germany)
 * Martino Trassinelli (U Sorbonne Paris, France)
 * Andrey Volotka (HI Jena, Germany)
-
-
-## Citing
-
-See [`CITATION.bib`](CITATION.bib) for the relevant references(s).
