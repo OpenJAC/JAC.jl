@@ -2378,7 +2378,7 @@ module  RacahAlgebra
     function testSpecialValuesW3j(; short::Bool=true)
         success  = true;   
         #
-        for n = 1:16
+        for n = 2:16
             w3j = RacahAlgebra.selectW3j(n);;    nrex = RacahAlgebra.evaluate(w3j);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
             if  nwnjs != 0   println(">> Test fails for special value rule  $n :");      @show w3j;    @show nrex;    @show nwnjs     end
             success = success && (nwnjs == 0)

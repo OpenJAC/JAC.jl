@@ -5,8 +5,22 @@ The following features have been recently implemented and up-loaded into JAC's m
 
 
 
+## 2022
+
+* **Electron-impact excitation of ions:** The collision strength and electron-impact excitation cross sections
+    can now be modeled for simple shell structures. *(May'22)* 
+* **Expansion opacity computations:** Estimates on the expansion opacity of atoms and ions have been implemented
+    as a cascade scheme. *(May'22)* 
+* **Decay cascades for ions with empty shells:** The cascades calculations for the stepwise decay of inner-shell
+    holes now proceed also for intially empty shells. *(April'22)*
+
+
+
 ## 2021
 
+* **Hollow-ion cascades:** The photon spectra and autoionization of hollow ions can be modeled by just providing
+    the initial configurations and the decay shells that are occupied during the stabilitation; cf. S. Fritzsche, 
+    Atoms 2021, 10, 37; https://doi.org/10.3390/atoms10020037  *(December'21)*
 * **Strong-field ionization (together with Birger Böning):** A first module (and examples) have been worked out to 
     apply the strong-field approximation (SFA) in a partial-wave reprensentation of the initial and Volkov states; 
     this makes the SFA suitable for dealing with realistic electronic structures of atoms and with different gauges
