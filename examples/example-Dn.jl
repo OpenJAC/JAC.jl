@@ -11,7 +11,7 @@ if true
     wa = Atomic.Computation(Atomic.Computation(), name="impact excitation", grid=grid, nuclearModel=Nuclear.Model(18.), 
                 initialConfigs  = [Configuration("1s^2 2s^2 2p^6 3s")],
                 finalConfigs    = [Configuration("1s^2 2s^2 2p^6 3p")], 
-                processSettings = ImpactExcitation.Settings([100.], true, true, true, LineSelection(true, indexPairs=[(1,1)]), 0., 2, CoulombInteraction()) )
+                processSettings = ImpactExcitation.Settings([20.], true, true, true, LineSelection(true, indexPairs=[(1,1), (1,2)]), 0., 10, CoulombInteraction()) )
     @show wa
     wb = perform(wa)
     #

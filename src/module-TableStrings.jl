@@ -22,6 +22,22 @@ module TableStrings
 
 
     """
+    `TableStrings.floatList(n::Int64, floats::Array{Float64,1})`  
+        ... a list of Strings is returned, each containing up to n floats of length 6.
+    """
+    function  floatList(n::Int64, floats::Array{Float64,1})
+        sa = "";   wa = String[];   nc = 0
+        for  flt  in  floats
+           nc = nc + 1;   sa = sa * " " * @sprintf("%.3e", flt) * " "
+           if   nc == n   push!(wa, sa);    sa = "";   nc = 0   end
+        end
+        if  sa != ""      push!(wa, sa)                         end
+        
+        return( wa )
+    end
+
+
+    """
     `TableStrings.flushleft(n::Int64, sa::String)`  
         ... a string sa is left-placed within a string of length n, and optionally, na blanks are appended; a string is returned.
     """
@@ -223,6 +239,22 @@ module TableStrings
            sa = sa * string(mp) * ", "
         end
         return( sa[1:end-2] )
+    end
+
+
+    """
+    `TableStrings.subshellList(n::Int64, subshells::Array{Subshell,1})`  
+        ... a list of Strings is returned, each containing up to n subshells.
+    """
+    function  subshellList(n::Int64, subshells::Array{Subshell,1})
+        sa = "";   wa = String[];   nc = 0
+        for  subsh  in  subshells
+           nc = nc + 1;   sa = sa * " " * string(subsh) * "    "
+           if   nc == n   push!(wa, sa);    sa = "";   nc = 0   end
+        end
+        if  sa != ""      push!(wa, sa)                         end
+        
+        return( wa )
     end
 
 
