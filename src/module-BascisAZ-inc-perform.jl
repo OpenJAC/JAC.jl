@@ -118,7 +118,7 @@
                 outcome = Dielectronic.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 
                                                                     computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("dielectronic recombination pathways:" => outcome) )   end
-            elseif  typeof(computation.processSettings) == MultiPhotonIonization.Settings
+            elseif  typeof(computation.processSettings) == MultiPhotonDeExcitation.Settings
                 outcome = MultiPhotonDeExcitation.computeLines(computation.processSettings.process,
                                                                finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("multi-photon-de-excitation lines:" => outcome) )      end

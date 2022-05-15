@@ -77,30 +77,60 @@
 
 
     """
-    `MultiPhotonDeExcitation.computeAmplitudesProperties_2pEmission(line::MultiPhotonDeExcitation.Line_2pEmission, 
-                             grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)` 
-        ... to compute all amplitudes and properties of the given line; a line::MultiPhotonDeExcitation.Line_2pEmission 
-            is returned for which the amplitudes and properties are now evaluated.
+    `MultiPhotonDeExcitation.computeAmplitudes_2pEmission(line::MultiPhotonDeExcitation.Line_2pEmission, 
+                                                          grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)` 
+        ... to compute all amplitudes of the given line; a line::MultiPhotonDeExcitation.Line_2pEmission 
+            is returned for which the amplitudes are now evaluated.
     """
-    function  computeAmplitudesProperties_2pEmission(line::MultiPhotonDeExcitation.Line_2pEmission, 
-                                                     grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)
+    function  computeAmplitudes_2pEmission(line::MultiPhotonDeExcitation.Line_2pEmission, 
+                                           grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)
         newSharings = MultiPhotonDeExcitation.Sharing_2pEmission[]
         for sharing in line.sharings
+            @show sharing.omega1, sharing.omega2
             newChannels = MultiPhotonDeExcitation.ReducedChannel_2pEmission[]
             for ch in sharing.channels
                 amplitude = MultiPhotonDeExcitation.computeReducedAmplitudeEmission(ch.K, line.finalLevel, ch.omega2, ch.multipole2, 
                                                                 ch.Jsym, ch.omega1, ch.multipole1, line.initialLevel, ch.gauge, grid, settings.green)
                 push!( newChannels, MultiPhotonDeExcitation.ReducedChannel_2pEmission(ch.K, ch.omega1, ch.omega2, ch.multipole1, ch.multipole2, 
                                                                                       ch.gauge, ch.Jsym, amplitude) )
+                @show ch, amplitude
             end
-            # Calculate the differential rate 
-            diffRate = EmProperty(-1., -1.)
-            push!( newSharings, MultiPhotonDeExcitation.Sharing_2pEmission( sharing.omega1, sharing.omega2, sharing.weight, diffRate, newChannels) )
+            push!( newSharings, MultiPhotonDeExcitation.Sharing_2pEmission( sharing.omega1, sharing.omega2, sharing.weight, EmProperty(0.), newChannels) )
         end
-        # Calculate the totalRate 
-        totalRate = EmProperty(-1., -1.)
-        line = MultiPhotonDeExcitation.Line_2pEmission( line.initialLevel, line.finalLevel, totalRate, newSharings)
-        return( line )
+        newLine = MultiPhotonDeExcitation.Line_2pEmission( line.initialLevel, line.finalLevel, EmProperty(0.), newSharings)
+        return( newLine )
+    end
+
+
+    """
+    `MultiPhotonDeExcitation.computeEnergyDiffCs(sharing::MultiPhotonDeExcitation.Sharing_2pEmission, line::MultiPhotonDeExcitation.Line_2pEmission, 
+                                                 gauge::EmGauge, settings::MultiPhotonDeExcitation.Settings)`  
+        ... to compute the energy differential cross section for the given line and the energy sharing omega1. A dcs::Float64 is returned.
+    """
+    function computeEnergyDiffCs(sharing::MultiPhotonDeExcitation.Sharing_2pEmission, line::MultiPhotonDeExcitation.Line_2pEmission, 
+                                 gauge::EmGauge, settings::MultiPhotonDeExcitation.Settings)
+        omega1 = sharing.omega1;    omega2 = sharing.omega2;    dcs = 0.
+        for  mp1 in settings.multipoles
+            for  mp2 in settings.multipoles
+                symi        = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity);    symf = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity) 
+                symmetries  = AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
+                Klist       = oplus(line.finalLevel.J, line.initialLevel.J)
+                for Jsym in symmetries
+                    wk = ComplexF64(0.)
+                    for  K in Klist
+                        wk =  wk + MultiPhotonDeExcitation.getReducedAmplitudeEmission(K, line.finalLevel, omega2, mp2, Jsym, omega1, mp1, 
+                                                                                          line.initialLevel, gauge, sharing.channels) +
+                               AngularMomentum.phaseFactor([K, +1, line.finalLevel.J, +1, line.initialLevel.J]) * 
+                                   MultiPhotonDeExcitation.getReducedAmplitudeEmission(K, line.finalLevel, omega1, mp1, Jsym, omega2, mp2, 
+                                                                                          line.initialLevel, gauge, sharing.channels)
+                    end
+                    dcs = dcs + abs( wk )^2
+                end
+            end
+        end
+        dcs = dcs * 2pi * Defaults.getDefaults("alpha")^2 / (Basics.twice(line.initialLevel.J) + 1) * omega1 * omega2
+        
+        return( dcs )
     end
 
 
@@ -121,54 +151,53 @@
         lines = MultiPhotonDeExcitation.determineLines_2pEmission(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
         if  settings.printBefore    MultiPhotonDeExcitation.displayLines_2pEmission(lines)    end
-        # Calculate all amplitudes and requested properties
+        # Calculate all amplitudes
         newLines = MultiPhotonDeExcitation.Line_2pEmission[]
         for  line in lines
-            newLine = MultiPhotonDeExcitation.computeAmplitudesProperties_2pEmission(line, grid, settings) 
+            newLine = MultiPhotonDeExcitation.computeAmplitudes_2pEmission(line, grid, settings) 
+            newLine = MultiPhotonDeExcitation.computeProperties_2pEmission(newLine, grid, settings)
             push!( newLines, newLine)
         end
         # Print all results to screen
-        MultiPhotonDeExcitation.displayTotalRates_2pEmission(stdout, lines, settings)
-        MultiPhotonDeExcitation.displayDifferentialRates_2pEmission(stdout, lines, settings)
+        MultiPhotonDeExcitation.displayTotalRates_2pEmission(stdout, newLines, settings)
+        MultiPhotonDeExcitation.displayDifferentialRates_2pEmission(stdout, newLines, settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   MultiPhotonDeExcitation.displayTotalRates_2pEmission(iostream, lines, settings)
-                           MultiPhotonDeExcitation.displayDifferentialRates_2pEmission(iostream, lines, settings)     end
+        if  printSummary   MultiPhotonDeExcitation.displayTotalRates_2pEmission(iostream, newLines, settings)
+                           MultiPhotonDeExcitation.displayDifferentialRates_2pEmission(iostream, newLines, settings)     end
         #
-        if    output    return( lines )
+        if    output    return( newLines )
         else            return( nothing )
         end
     end
 
 
     """
-    `MultiPhotonDeExcitation.computeEnergyDiffCs(omega1::Float64, omega2::Float64, line::MultiPhotonDeExcitation.Line_2pEmission, 
-                                                 settings::MultiPhotonDeExcitation.Settings)`  
-        ... to compute the energy differential cross section for the given line and the energy sharing omega1. A dcs::Float64 is returned.
+    `MultiPhotonDeExcitation.computeProperties_2pEmission(line::MultiPhotonDeExcitation.Line_2pEmission, 
+                                                          grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)` 
+        ... to compute all properties of the given line; a line::MultiPhotonDeExcitation.Line_2pEmission 
+            is returned for which the properties are now evaluated.
     """
-    function computeEnergyDiffCs(omega1::Float64, omega2::Float64, line::MultiPhotonDeExcitation.Line_2pEmission, gauge::EmGauge,
-                                 settings::MultiPhotonDeExcitation.Settings)
-        dcs = 0.
-        for  mp1 in settings.multipoles
-            for  mp2 in settings.multipoles
-                symi        = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity);    symf = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity) 
-                symmetries  = AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
-                Klist       = oplus(line.finalLevel.J, line.initialLevel.J)
-                for Jsym in symmetries
-                    wk  = ComplexF64(0.);   wm = ComplexF64(0.)
-                    for  K in Klist
-                        wk =  wk + MultiPhotonDeExcitation.getReducedAmplitudeEmission(K, line.finalLevel, omega2, mp2, Jsym, omega1, mp1, 
-                                                                                          line.initialLevel, gauge, line.channels) +
-                               AngularMomentum.phaseFactor([K, +1, line.finalLevel.J, +1, line.initialLevel.J]) * 
-                                   MultiPhotonDeExcitation.getReducedAmplitudeEmission(K, line.finalLevel, omega1, mp1, Jsym, omega2, mp2, 
-                                                                                          line.initialLevel, gauge, line.channels)
-                    end
-                    dcs = dcs + abs( wk )^2
-                end
+    function  computeProperties_2pEmission(line::MultiPhotonDeExcitation.Line_2pEmission, 
+                                           grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)
+        newSharings = MultiPhotonDeExcitation.Sharing_2pEmission[];     totalRate = EmProperty(0.)
+        for sharing in line.sharings
+            @show sharing.omega1, sharing.omega2
+            diffRate = EmProperty(0.)
+            if  Basics.UseCoulomb  in  settings.gauges
+                    dr_Cou = MultiPhotonDeExcitation.computeEnergyDiffCs(sharing, line, EmGauge("Coulomb"), settings)
+            else    dr_Cou = 0.
             end
+            if  Basics.UseBabushkin  in  settings.gauges
+                    dr_Bab = MultiPhotonDeExcitation.computeEnergyDiffCs(sharing, line, EmGauge("Babushkin"), settings)
+            else    dr_Bab = 0.
+            end
+            diffRate = diffRate + EmProperty(dr_Cou, dr_Bab)
+            push!( newSharings, MultiPhotonDeExcitation.Sharing_2pEmission( sharing.omega1, sharing.omega2, sharing.weight, diffRate, sharing.channels) )
+            totalRate = totalRate + sharing.weight * diffRate
         end
-        dcs = dcs * 2pi * Defaults.getDefaults("alpha")^2 / (Basics.twice(line.initialLevel.J) + 1) * omega1 * omega2
-        
-        return( dcs )
+        # Calculate the totalRate 
+        newLine = MultiPhotonDeExcitation.Line_2pEmission( line.initialLevel, line.finalLevel, totalRate, newSharings)
+        return( newLine )
     end
 
 

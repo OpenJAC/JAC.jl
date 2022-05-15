@@ -64,42 +64,25 @@
 
 
     """
-    `MultiPhotonDeExcitation.computeAmplitudesProperties_2pAbsorptionMonochromatic(
+    `MultiPhotonDeExcitation.computeChannelAmplitudes_2pAbsorptionMonochromatic(
                              line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic, grid::Radial.Grid, 
                              settings::MultiPhotonDeExcitation.Settings)` 
         ... to compute all amplitudes and properties of the given line; a line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic 
             is returned for which the amplitudes and properties are now evaluated.
     """
-    function  computeAmplitudesProperties_2pAbsorptionMonochromatic(line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic, 
-                                                                    grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)
+    function  computeChannelAmplitudes_2pAbsorptionMonochromatic(line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic, 
+                                                                 grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)
         newChannels = MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic[]
         for channel in line.channels
             amplitude = MultiPhotonDeExcitation.computeReducedAmplitudeAbsorption(channel.K, line.finalLevel, channel.multipole2, 
                                             channel.Jsym, channel.omega, channel.multipole1, line.initialLevel, channel.gauge, grid, settings.green)
+            @show channel, amplitude
             push!( newChannels, MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic(channel.K, channel.omega, channel.multipole1, channel.multipole2, 
                                                                                           channel.gauge, channel.Jsym, amplitude) )
         end
-        # Calculate the requested cross sections, etc.
-        csLinear        = EmProperty(0., 0.)
-        csRightCircular = EmProperty(0., 0.)
-        csUnpolarized   = EmProperty(0., 0.)
-        for property in settings.process.properties
-            if      typeof(property) == TotalCsLinear          
-                totalCs_Cou = MultiPhotonDeExcitation.computeTotalCsLinear(line, EmGauge("Coulomb"), settings)
-                totalCs_Bab = MultiPhotonDeExcitation.computeTotalCsLinear(line, EmGauge("Babushkin"), settings)
-                csLinear    = EmProperty( totalCs_Cou,  totalCs_Bab)
-            elseif  typeof(property) == TotalCsRightCircular   
-                totalCs_Cou = MultiPhotonDeExcitation.computeTotalCsRightCircular(line, EmGauge("Coulomb"), settings)
-                totalCs_Bab = MultiPhotonDeExcitation.computeTotalCsRightCircular(line, EmGauge("Babushkin"), settings)
-                csRightCircular = EmProperty( totalCs_Cou,  totalCs_Bab)
-            elseif  typeof(property) == TotalCsUnpolarized     
-                totalCs_Cou = MultiPhotonDeExcitation.computeTotalCsUnpolarized(line, EmGauge("Coulomb"), settings)
-                totalCs_Bab = MultiPhotonDeExcitation.computeTotalCsUnpolarized(line, EmGauge("Babushkin"), settings)
-                csUnpolarized = EmProperty( totalCs_Cou,  totalCs_Bab)
-            end
-        end
         line = MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic( line.initialLevel, line.finalLevel, line.omega, 
-                                                                       csLinear, csRightCircular, csUnpolarized, newChannels)
+                                                                       EmProperty(0.), EmProperty(0.), EmProperty(0.), newChannels)
+        
         return( line )
     end
 
@@ -125,17 +108,70 @@
         # Calculate all amplitudes and requested properties
         newLines = MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic[]
         for  line in lines
-            newLine = MultiPhotonDeExcitation.computeAmplitudesProperties_2pAbsorptionMonochromatic(line, grid, settings) 
+            newLine = MultiPhotonDeExcitation.computeChannelAmplitudes_2pAbsorptionMonochromatic(line, grid, settings) 
+            newLine = MultiPhotonDeExcitation.computeProperties_2pAbsorptionMonochromatic(newLine, grid, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        MultiPhotonDeExcitation.displayCrossSections_2pAbsorptionMonochromatic(stdout, settings.process.properties, lines)
+        MultiPhotonDeExcitation.displayCrossSections_2pAbsorptionMonochromatic(stdout, settings.process.properties, newLines)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    MultiPhotonDeExcitation.displayCrossSections_2pAbsorptionMonochromatic(iostream, settings.process.properties, lines)   end
+        if  printSummary    MultiPhotonDeExcitation.displayCrossSections_2pAbsorptionMonochromatic(iostream, settings.process.properties, newLines)   end
         #
-        if    output    return( lines )
+        if    output    return( newLines )
         else            return( nothing )
         end
+    end
+
+
+    """
+    `MultiPhotonDeExcitation.computeProperties_2pAbsorptionMonochromatic(
+                             line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic, grid::Radial.Grid, 
+                             settings::MultiPhotonDeExcitation.Settings)` 
+        ... to compute all amplitudes and properties of the given line; a line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic 
+            is returned for which the amplitudes and properties are now evaluated.
+    """
+    function  computeProperties_2pAbsorptionMonochromatic(line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic, 
+                                                          grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)
+        # Calculate the requested cross sections, etc.
+        csLinear        = EmProperty(0., 0.)
+        csRightCircular = EmProperty(0., 0.)
+        csUnpolarized   = EmProperty(0., 0.)
+        for property in settings.process.properties
+            if      typeof(property) == TotalCsLinear          
+                if  Basics.UseCoulomb  in  settings.gauges
+                        totalCs_Cou = MultiPhotonDeExcitation.computeTotalCsLinear(line, EmGauge("Coulomb"), settings)
+                else    totalCs_Cou = 0.
+                end
+                if  Basics.UseBabushkin  in  settings.gauges
+                        totalCs_Bab = MultiPhotonDeExcitation.computeTotalCsLinear(line, EmGauge("Babushkin"), settings)
+                else    totalCs_Bab = 0.
+                end
+                csLinear    = EmProperty( totalCs_Cou,  totalCs_Bab)
+            elseif  typeof(property) == TotalCsRightCircular   
+                if  Basics.UseCoulomb  in  settings.gauges
+                        totalCs_Cou = MultiPhotonDeExcitation.computeTotalCsRightCircular(line, EmGauge("Coulomb"), settings)
+                else    totalCs_Cou = 0.
+                end
+                if  Basics.UseBabushkin  in  settings.gauges
+                        totalCs_Bab = MultiPhotonDeExcitation.computeTotalCsRightCircular(line, EmGauge("Babushkin"), settings)
+                else    totalCs_Bab = 0.
+                end
+                csRightCircular = EmProperty( totalCs_Cou,  totalCs_Bab)
+            elseif  typeof(property) == TotalCsUnpolarized     
+                if  Basics.UseCoulomb  in  settings.gauges
+                        totalCs_Cou = MultiPhotonDeExcitation.computeTotalCsUnpolarized(line, EmGauge("Coulomb"), settings)
+                else    totalCs_Cou = 0.
+                end
+                if  Basics.UseBabushkin  in  settings.gauges
+                        totalCs_Bab = MultiPhotonDeExcitation.computeTotalCsUnpolarized(line, EmGauge("Babushkin"), settings)
+                else    totalCs_Bab = 0.
+                end
+                csUnpolarized = EmProperty( totalCs_Cou,  totalCs_Bab)
+            end
+        end
+        line = MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic( line.initialLevel, line.finalLevel, line.omega, 
+                                                                       csLinear, csRightCircular, csUnpolarized, line.channels)
+        return( line )
     end
 
 
@@ -301,7 +337,7 @@
         end 
         
         if    found                                
-              println("U^{K, 2gamma absorption} (..) = $U   ** amplitude found. ")
+              ## println("U^{K, 2gamma absorption} (..) = $U   ** amplitude found. ")
         else  println("U^{$K, 2gamma absorption} (Jf, mp2=$multipole2, Jsym=$Jsym, omega=$omega, mp1=$multipole1, Ji)  ** NO amplitude found.")
         end 
         
@@ -326,9 +362,9 @@
                 for  symn in symmetries
                     for  gauge in settings.gauges
                         # Include further restrictions if appropriate
-                        if     string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseCoulomb
+                        if     string(mp1)[1] == 'E' && string(mp2)[1] == 'E'  &&   gauge == Basics.UseCoulomb
                             for K in Klist  push!(channels, MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic(K, omega, mp1, mp2, Basics.Coulomb, symn, 0.) )     end 
-                        elseif string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
+                        elseif string(mp1)[1] == 'E'  string(mp2)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
                             for K in Klist  push!(channels, MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic(K, omega, mp1, mp2, Basics.Babushkin, symn, 0.) )   end
                         elseif string(mp1)[1] == 'M' && string(mp2)[1] == 'M'
                             for K in Klist  push!(channels, MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic(K, omega, mp1, mp2, Basics.Magnetic, symn, 0.) )    end

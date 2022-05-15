@@ -17,19 +17,19 @@ if  false
                         LevelSymmetry(1//2, Basics.plus),  LevelSymmetry(3//2, Basics.plus)]
     greenSettings    = GreenSettings(3, [0, 1], 0.01, true, LevelSelection())
 
-    greenRep         = Representation(name, Nuclear.Model(54.), grid, refConfigs, 
+    greenRep         = Representation(name, Nuclear.Model(14.), grid, refConfigs, 
                                       GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 3, greenSettings) )  
                                    ## GreenExpansion( AtomicState.CoreSpaceCI(), Basics.DeExciteSingleElectron(), 
                                    ## GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron()
     greenOut         = generate(greenRep, output=true)
     mpGreen          = greenOut["Green channels"]
     
-elseif  false
+elseif false
     #
     println("Calculate two-photon absorption cross sections by monochromatic and equally-polarized photons from the same beam")
     mpSettings       = MultiPhotonDeExcitation.Settings(MultiPhotonDeExcitation.TwoPhotonAbsorptionMonochromatic(), 
-                                                        [E1,M1], [UseCoulomb], mpGreen, 0, true, LineSelection())
-    wa = Atomic.Computation(Atomic.Computation(), name=name, grid=grid, nuclearModel=Nuclear.Model(54.), 
+                                                        [E1, M1], [UseCoulomb, UseBabushkin], mpGreen, 0, true, LineSelection())
+    wa = Atomic.Computation(Atomic.Computation(), name=name, grid=grid, nuclearModel=Nuclear.Model(14.), 
                             initialConfigs= [Configuration("1s^2 2s")],
                             finalConfigs  = [Configuration("1s^2 3s")], 
                             processSettings= mpSettings  )
@@ -41,7 +41,7 @@ elseif  true
     mpSettings       = MultiPhotonDeExcitation.Settings(MultiPhotonDeExcitation.TwoPhotonEmission(), 
                                                         [E1,M1], [UseCoulomb], mpGreen, 4, true, LineSelection())
     
-    wc = Atomic.Computation(Atomic.Computation(), name=name, grid=grid, nuclearModel=Nuclear.Model(54.), 
+    wc = Atomic.Computation(Atomic.Computation(), name=name, grid=grid, nuclearModel=Nuclear.Model(14.), 
                             initialConfigs= [Configuration("1s^2 3s")],
                             finalConfigs  = [Configuration("1s^2 2s")], 
                             processSettings= mpSettings    )
