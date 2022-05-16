@@ -12,8 +12,8 @@ grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rb
 if  false
     # Green function for single-photon 2p^2 photoionization of neon
     name             = "Double Auger decay of 1s photoionized neon"
-    refConfigs       = [Configuration("1s^2 2s^2 2p^6")]
-    levelSymmetries  = [LevelSymmetry(0, Basics.minus), LevelSymmetry(1, Basics.minus)]
+    refConfigs       = [Configuration("1s^2 2s^2")]
+    levelSymmetries  = [LevelSymmetry(0, Basics.plus), LevelSymmetry(1, Basics.minus)]
     greenSettings    = GreenSettings(3, [0, 1], 0.01, true, LevelSelection())
     greenRep         = Representation(name, Nuclear.Model(10.), Radial.Grid(true), refConfigs, 
                                       GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 10, greenSettings) ) 
@@ -22,12 +22,12 @@ if  false
     
 elseif true
     # Single-photon 2p^2 photoionization of neon
-    doubleSettings   = PhotoDoubleIonization.Settings(EmMultipole[E1], UseGauge[UseBabushkin], [50.], doubleGreen, 4, 
-                                                      false, true, 2, LineSelection(true, indexPairs=[(1,2)]))
+    doubleSettings   = PhotoDoubleIonization.Settings(EmMultipole[E1], UseGauge[UseBabushkin], [50.], doubleGreen, 2, 
+                                                      false, true, 1, LineSelection(true, indexPairs=[(1,2)]))
     
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(10.), 
-                            initialConfigs  =[Configuration("1s^2 2s^2 2p^6")],
-                            finalConfigs    =[Configuration("1s 2s 2p^6")], 
+                            initialConfigs  =[Configuration("1s^2 2s^2")],
+                            finalConfigs    =[Configuration("1s 2s")], 
                             processSettings = doubleSettings )
 
     wb = perform(wa)

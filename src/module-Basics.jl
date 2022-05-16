@@ -1658,6 +1658,7 @@ module Basics
     function determineEnergySharings                                end
     function determineHoleShells                                    end
     function determineMeanEnergy                                    end
+    function determineNonorthogonalShellOverlap                     end
     function determineParity                                        end
     function determinePolarizationLambda                            end
     function determinePolarizationVector                            end

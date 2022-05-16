@@ -173,21 +173,62 @@ module PhotoDoubleIonization
 
 
     """
-    `PhotoDoubleIonization.amplitude(kind::String, newChannel, newcLevel, settings.green, newiLevel, grid
-    
-    
-                        channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, 
-                                   initialLevel::Level, grid::Radial.Grid)`  
-        ... to compute the kind = (photoionization) amplitude  <(alpha_f J_f, epsilon kappa) J_t || O^(photoionization) || alpha_i J_i>  
-            due to the electron-photon interaction for the given final and initial level, the partial wave of the outgoing 
-            electron as well as the given multipole and gauge. A value::ComplexF64 is returned.
+    `PhotoDoubleIonization.amplitude(kind::String, channel::PhotoDoubleIonization.ReducedChannel, 
+                                     continuumLevel::Level, green::Array{GreenChannel,1}, initialLevel::Level, grid::Radial.Grid)`  
+        ... to compute the kind = (photoionization) amplitude  <(alpha_f J_f, epsilon kappa) J_t || A || alpha_i J_i>  with second-order operator
+        
+                A = V^(e-e)  O^(photoionization) + O^(photoionization)  V^(e-e)
+                  = Sum_n  V^(e-e)  |n >< n|  O^(photoionization)  +  O^(photoionization)  |n >< n|  V^(e-e) / (E_i + w - E_n)
+                  
+            due to the electron-photon interaction V^(e-e) and the photoionization amplitude for the given final and initial level. 
+            Of course, this amplitude depends on the partial wave of the outgoing electron as well as the given multipole and gauge. 
+            A value::ComplexF64 is returned.
     """
-    function amplitude(kind::String, channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, initialLevel::Level, grid::Radial.Grid)
+    function amplitude(kind::String, channel::PhotoDoubleIonization.ReducedChannel, 
+                       continuumLevel::Level, green::Array{GreenChannel,1}, initialLevel::Level, grid::Radial.Grid)
         if      kind in [ "photodoubleionization"]
-        #-----------------------------------
-            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, energy, continuumLevel, initialLevel, grid, 
-                                                display=false, printout=false)
-            amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
+        #-----------------------------------------
+            symi = LevelSymmetry(initialLevel.J, initialLevel.parity);      symc = LevelSymmetry(continuumLevel.J, continuumLevel.parity)
+            eni  = initialLevel.energy + channel.omega
+            amplitude = ComplexF64(0.);
+            # Compute the terms for <(alpha_f J_f, epsilon kappa) J_t || V^(e-e)  |n >< n|  O^(photoionization) || alpha_i J_i>
+            for greenChannel in green
+                if  AngularMomentum.isAllowedMultipole(greenChannel.symmetry, channel.multipole, symi)  &&   symc == greenChannel.symmetry
+                    for  (nlev, level)  in  enumerate(greenChannel. gMultiplet.levels)
+                        if  nlev > 2   continue     end
+                        piChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa1, channel.xSymmetry, 
+                                                            channel.phase1, ComplexF64(0.))
+                        am_ni     = PhotoIonization.amplitude("photoionization", piChannel, channel.omega, level, initialLevel, grid::Radial.Grid)
+                        auChannel = AutoIonization.Channel(channel.kappa2, channel.tSymmetry, channel.phase2, ComplexF64(0.))
+                        ## am_fn     = AutoIonization.amplitude(CoulombInteraction(), auChannel, continuumLevel, level, grid; printout=false)
+                        am_fn     = AutoIonization.amplitudeWithOverlapEstimation(CoulombInteraction(), auChannel, continuumLevel, level, 
+                                                                                  grid; printout=false)
+                        amplitude = amplitude  +  am_fn * am_ni / (eni - level.energy)
+                        println(">> PDI first  for level $nlev  with  am_fi = $am_fn  and  am_ni = $am_ni")
+                    end 
+                else    println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
+                end
+            end
+            #
+            # Compute the terms for <(alpha_f J_f, epsilon kappa) J_t || O^(photoionization)  |n >< n|  V^(e-e) || alpha_i J_i>
+            for greenChannel in green
+                if  AngularMomentum.isAllowedMultipole(greenChannel.symmetry, channel.multipole, symc)  &&   symi == greenChannel.symmetry
+                    for  (nlev, level)  in  enumerate(greenChannel. gMultiplet.levels)
+                        if  nlev > 2   continue     end
+                        auChannel = AutoIonization.Channel(channel.kappa1, channel.xSymmetry, channel.phase1, ComplexF64(0.))
+                        am_ni     = AutoIonization.amplitude(CoulombInteraction(), auChannel, level, initialLevel, grid; printout=false)
+                        piChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa2, channel.tSymmetry, 
+                                                            channel.phase2, ComplexF64(0.))
+                        ## am_fn     = PhotoIonization.amplitude("photoionization", piChannel, channel.omega, continuumLevel, level, grid::Radial.Grid)
+                        am_fn     = PhotoIonization.amplitudeWithOverlapEstimation("photoionization", piChannel, channel.omega, 
+                                                                                   continuumLevel, level, grid::Radial.Grid)
+                        amplitude = amplitude  +  am_fn * am_ni / (eni - level.energy)
+                        println(">> PDI second for level $nlev  with  am_fi = $am_fn  and  am_ni = $am_ni")
+                    end 
+                else    println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
+                end
+            end
+            #
         else    error("stop b")
         end
         
@@ -206,8 +247,10 @@ module PhotoDoubleIonization
         newSharings = PhotoDoubleIonization.Sharing[];   contSettings = Continuum.Settings(false, grid.NoPoints-50);    tcsC = 0.;    tcsB = 0.  
         #
         for sharing in line.sharings
+            @show sharing.epsilon1, sharing.epsilon2, sharing.weight
             newChannels = PhotoDoubleIonization.ReducedChannel[];    dcsC = 0.;    dcsB = 0.
-            for ch in sharing.channels
+            for (ich, ch)  in  enumerate(sharing.channels)
+                @show  ich, ch.kappa1, ch.kappa2
                 newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
                 newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
                 newiLevel = Basics.generateLevelWithExtraSubshells([Subshell(101, ch.kappa1),Subshell(102, ch.kappa2)], newiLevel)
@@ -224,6 +267,7 @@ module PhotoDoubleIonization
                 elseif   ch.gauge == Basics.Babushkin   dcsB = dcsB + abs(amplitude)^2
                 elseif   ch.gauge == Basics.Magnetic    dcsB = dcsB + abs(amplitude)^2;   dcsC = dcsC + abs(amplitude)^2
                 end
+                @show amplitude, dcsC, dcsB
             end
             # Calculate the differential cross section 
             diffCs = EmProperty(dcsC, dcsB)
@@ -232,8 +276,8 @@ module PhotoDoubleIonization
         end
         # Calculate the total cross section 
         totalCs = EmProperty(tcsC, tcsB)
-        line = PhotoDoubleIonization.Line( line.initialLevel, line.finalLevel, line.omega, totalCs, newSharings)
-        return( line )
+        newLine = PhotoDoubleIonization.Line( line.initialLevel, line.finalLevel, line.omega, totalCs, newSharings)
+        return( newLine )
     end
 
 
@@ -260,13 +304,13 @@ module PhotoDoubleIonization
             push!( newLines, newLine)
         end
         # Print all results to screen
-        PhotoDoubleIonization.displayTotalCrossSections(stdout, lines, settings)
-        PhotoDoubleIonization.displayDifferentialCrossSections(stdout, lines, settings)
+        PhotoDoubleIonization.displayTotalCrossSections(stdout, newLines, settings)
+        PhotoDoubleIonization.displayDifferentialCrossSections(stdout, newLines, settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   PhotoDoubleIonization.displayTotalCrossSections(iostream, lines, settings)
-                           PhotoDoubleIonization.displayDifferentialCrossSections(iostream, lines, settings)     end
+        if  printSummary   PhotoDoubleIonization.displayTotalCrossSections(iostream, newLines, settings)
+                           PhotoDoubleIonization.displayDifferentialCrossSections(iostream, newLines, settings)     end
         #
-        if    output    return( lines )
+        if    output    return( newLines )
         else            return( nothing )
         end
     end
@@ -423,7 +467,7 @@ module PhotoDoubleIonization
         # Second, print lines and channles
         nx = 150
         println(" ")
-        println("  Selected photo-double ionization lines & channels:")
+        println("  Selected photo-double ionization lines & channels:   ... channels are shown only for the first sharing")
         println(" ")
         println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "

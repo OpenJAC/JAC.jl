@@ -232,6 +232,33 @@
     end
 
 
+    """
+    `Basics..determineNonorthogonalShellOverlap(finalSubshells::Array{Subshell,1}, initialSubshells::Array{Subshell,1}, 
+                                                grid::Radial.Grid)`  
+        ... determines the overlap of those shells that do not agree in both sets but have the same symmetry; a zero
+            overlap and Subshell(99,-99) are returned in cases that no such pair can be found.
+            A triple (shella, shellb, overlap) is returned.
+    """
+    function Basics.determineNonorthogonalShellOverlap(finalSubshells::Array{Subshell,1}, initialSubshells::Array{Subshell,1}, 
+                                                       grid::Radial.Grid)
+        neSubshells = setdiff(union(finalSubshells, initialSubshells),  intersect(finalSubshells, initialSubshells))
+        ret = (Subshell(99,-99), Subshell(99,-99), 0.);     ne = length(neSubshells)
+        ##x @show  neSubshells
+        for  a = 1:ne
+            for  b = a+1:ne
+                if   neSubshells[a].kappa == neSubshells[b].kappa   
+                    println(">>>> non-zero overlap integral < $(neSubshells[a]) | $(neSubshells[b]) > ")
+                    ret = (neSubshells[a], neSubshells[b], 0.1)
+                end
+            end
+        end
+        
+        if  ret[3] == 0.  println(">>>> zero overlap integral for $neSubshells ")  end
+        
+        return( ret )
+    end
+
+
 
     """
     `Basics.determineParity(conf::Configuration)`  ... to determine the parity of a given non-relativistic configuration.
@@ -1022,6 +1049,45 @@
         subshellList = Base.sort(subshellList)
         println(">> Generated subshell list:  $subshellList ")
         return( subshellList )
+    end
+
+
+    """
+    `Basics.extractRelativisticSubshellList(csf::CsfR, subshells::Array{Subshell,1})`  
+        ... extract all (relativistic) subshells that are occupied in the given CSF with regard to the given subshells. 
+            A subshellList::Array{Subshell,1} is returned.
+    """
+    function Basics.extractRelativisticSubshellList(csf::CsfR, subshells::Array{Subshell,1})
+        reducedSubshells = Subshell[]
+        
+        for (i, subsh) in enumerate(subshells)
+            if  csf.occupation[i]  != 0     push!(reducedSubshells, subsh)  end
+        end
+        
+        return( reducedSubshells )
+    end
+
+
+    """
+    `Basics.extractRelativisticSubshellList(level::Level)`  
+        ... extract all (relativistic) subshells that are occupied in the given level in CSF with weigth > 0.1. 
+            A subshellList::Array{Subshell,1} is returned.
+    """
+    function Basics.extractRelativisticSubshellList(level::Level)
+        # Only consider CSF in the basis with non-zero mixing coefficients
+        reducedSubshells = Subshell[]
+        ##x wa = findmax(abs.(level.mc));    wb = Basics.extractRelativisticSubshellList(level.basis.csfs[ wa[2] ], level.basis.subshells)
+        ##x @show wa, wa[2], wb
+
+        for (i, coeff) in enumerate(level.mc)
+            if  coeff*coeff  >  0.1   
+                redSubshells     = Basics.extractRelativisticSubshellList(level.basis.csfs[i], level.basis.subshells)
+                reducedSubshells = append!(reducedSubshells, redSubshells)
+            end
+        end
+        reducedSubshells     = unique(reducedSubshells)
+        
+        return( reducedSubshells )
     end
 
 

@@ -7,12 +7,15 @@ The following features have been recently implemented and up-loaded into JAC's m
 
 ## 2022
 
+* **Two-photon excitation and decay rates:** Use of an appropriate Green function to generate (first) two-photon
+    excitation and decay rates. *(May'22)* 
 * **Electron-impact excitation of ions:** The collision strength and electron-impact excitation cross sections
     can now be modeled for simple shell structures. *(May'22)* 
 * **Expansion opacity computations:** Estimates on the expansion opacity of atoms and ions have been implemented
     as a cascade scheme. *(May'22)* 
 * **Decay cascades for ions with empty shells:** The cascades calculations for the stepwise decay of inner-shell
     holes now proceed also for intially empty shells. *(April'22)*
+* **Reduced 1-p density matrix & natural orbitals:** Can be calculated for individual levels. *(March'22)*
 
 
 

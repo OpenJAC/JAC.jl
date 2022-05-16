@@ -158,18 +158,73 @@ module PhotoIonization
 
 
     """
-    `PhotoIonization.amplitude(kind::String, channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, 
+    `PhotoIonization.amplitude(kind::String, channel::PhotoIonization.Channel, omega::Float64, continuumLevel::Level, 
                                    initialLevel::Level, grid::Radial.Grid)`  
         ... to compute the kind = (photoionization) amplitude  <(alpha_f J_f, epsilon kappa) J_t || O^(photoionization) || alpha_i J_i>  
             due to the electron-photon interaction for the given final and initial level, the partial wave of the outgoing 
             electron as well as the given multipole and gauge. A value::ComplexF64 is returned.
     """
-    function amplitude(kind::String, channel::PhotoIonization.Channel, energy::Float64, continuumLevel::Level, initialLevel::Level, grid::Radial.Grid)
+    function amplitude(kind::String, channel::PhotoIonization.Channel, omega::Float64, continuumLevel::Level, initialLevel::Level, grid::Radial.Grid)
         if      kind in [ "photoionization"]
         #-----------------------------------
-            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, energy, continuumLevel, initialLevel, grid, 
+            amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, omega, continuumLevel, initialLevel, grid, 
                                                 display=false, printout=false)
             amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
+        else    error("stop b")
+        end
+        
+        return( amplitude )
+    end
+
+
+    """
+    `PhotoIonization.amplitudeWithOverlapEstimation(kind::String, channel::PhotoIonization.Channel, 
+                                                   continuumLevel::Level, initialLevel::Level, grid::Radial.Grid; printout::Bool=true)`  
+        ... to compute the kind in  CoulombInteraction(), BreitInteraction(), CoulombBreit()   Auger amplitude 
+            <(alpha_f J_f, kappa) J_i || O^(photoionization, multipole) || alpha_i J_i>  due to the electron-photon interaction 
+            for the given final and initial level. 
+            
+            Here, however, it is assumed that the underlying CSF of the final and initial levels differ by two or more displacements
+            but one of them of the same symmetry/partial wave. These orbitals need to be identified, their overlap calculated
+            and the CSF basis for the computation of the angular coefficients need to be 'built new together'. 
+            
+            In this evaluation it is assumed that always two excited orbitals of the same symmetry can be identified and
+            applied with equal principal quantum number to generate non-zero angular coefficients. A zero amplitude is returned,
+            if this is not the case (i.e. omitting inner-shell excitation, though a warning is issued in this case).            
+            A value::ComplexF64 is returned.
+    """
+    function amplitudeWithOverlapEstimation(kind::String, channel::PhotoIonization.Channel, 
+                                            continuumLevel::Level, initialLevel::Level, grid::Radial.Grid; printout::Bool=true)
+        nt = length(continuumLevel.basis.csfs);    ni = length(initialLevel.basis.csfs);    partial = Subshell(9,channel.kappa)
+        if  printout  printstyled("Compute ($kind) matrix of dimension $nt x $ni with overlap estimate for orbitals of the same symmetry " *
+                                  "for the transition [$(initialLevel.index)- ...] and for partial wave $(string(partial)[2:end]) ... ", 
+                                  color=:light_green)    end
+        matrix = zeros(ComplexF64, nt, ni)
+        #
+        if      kind in  [ "photoionization"]        ## pure electron-photon interaction
+        #------------------------------------
+            for  r = 1:nt
+                for  s = 1:ni
+                    if  true
+                        # Simply estimate the contribution of the CSF pair from the overlap of the (different) orbitals
+                        # in the lhs and rhs basis; this neglects the calculation of angular coefficients and set all contribution
+                        # to positive value
+                        if   abs(continuumLevel.mc[r] * initialLevel.mc[s])  <  0.05    continue    end
+                        wr = Basics.extractRelativisticSubshellList(continuumLevel.basis.csfs[r], continuumLevel.basis.subshells)
+                        ws = Basics.extractRelativisticSubshellList(initialLevel.basis.csfs[s],   initialLevel.basis.subshells)
+                        #
+                        overlap     = Basics.determineNonorthogonalShellOverlap(wr, ws, grid)
+                        matrix[r,s] = abs(overlap[3])
+                    else
+                        error("stop xx")
+                    end
+                 end
+            end 
+            if  printout  printstyled("done. \n", color=:light_green)    end
+            amplitude = transpose(continuumLevel.mc) * matrix * initialLevel.mc 
+            amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
+            #
+            #
         else    error("stop b")
         end
         
