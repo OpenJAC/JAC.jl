@@ -284,13 +284,13 @@ module InteractionStrength
     end
 
     """
-    `InteractionStrength.MbaEmissionMigdalek(cp::CorePolarization, b::Orbital, a::Orbital, grid::Radial.Grid)`  
+    `InteractionStrength.MbaEmissionMigdalek(cp::CorePolarization, a::Orbital, b::Orbital, grid::Radial.Grid)`  
         ... to compute the (single-electron reduced matrix element) interaction strength <b || O^(E1, emission with core-polarization) || a>  
             in length gauge. A value::Float64 is returned. 
     """
-    function MbaEmissionMigdalek(cp::CorePolarization, b::Orbital, a::Orbital, grid::Radial.Grid)
+    function MbaEmissionMigdalek(cp::CorePolarization, a::Orbital, b::Orbital, grid::Radial.Grid)
         mp   = E1;    kapa = a.subshell.kappa;   kapb = b.subshell.kappa
-        ja   = Basics.subshell_j(a.subshell);   jb    = Basics.subshell_j(b.subshell);   
+        ja   = Basics.subshell_j(a.subshell);    jb   = Basics.subshell_j(b.subshell);   
         #
         JohnsonI = AngularMomentum.JohnsonI(kapa, kapb, AngularJ64(mp.L))
         wr       = RadialIntegrals.GrantJL_cp(mp.L, 0., a, b, grid::Radial.Grid, cp::CorePolarization)

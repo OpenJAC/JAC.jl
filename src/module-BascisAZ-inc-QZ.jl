@@ -219,6 +219,10 @@
     + `("rate: radiative, to f", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
         ... to recast a given radiative rate (Einstein A in atomic units) into an oscillator strength f; 
             a Float64 is returned.
+
+    + `("rate: radiative, to S", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
+        ... to recast a given radiative rate (Einstein A in atomic units) into a line strength S; 
+            a Float64 is returned.
     """
     function Basics.recast(sa::String, line::Union{Einstein.Line,PhotoEmission.Line}, wa::Float64)
     
@@ -244,7 +248,16 @@
 
         elseif   sa == "rate: radiative, to f"
             f  = Defaults.getDefaults("speed of light: c") / (12. * pi * line.omega) * wa   
+            ## f  = 2 * line.omega / 3. / (Basics.twice(line.initialLevel.J) + 1) * wa
             return( f )
+
+        elseif   sa == "rate: radiative, to S"
+            einsteinA = Defaults.convertUnits("rate: from atomic to 1/s", wa)
+            if      true                    S = 3.707342e-14 * (Basics.twice(line.finalLevel.J) + 1) * einsteinA / (line.omega^3)
+            elseif  line.multipole == E1    S = 8.928970e-19 * (Basics.twice(line.finalLevel.J) + 1) * einsteinA / (line.omega^5)
+            else                            S = 0.
+            end
+            return( S )
 
         else     error("Unsupported keystring = $sa")
         end

@@ -180,41 +180,25 @@ module PhotoEmission
             
             nf = length(fLevel.basis.csfs);    ni = length(iLevel.basis.csfs)
             if  printout   printstyled("Compute radiative $(Mp) matrix of dimension $nf x $ni in the initial- and final-state bases " *
-                                       "for the transition [$(iLevel.index)-$(fLevel.index)] ... \n", color=:light_green)    end
+                                       "for the transition [$(iLevel.index)-$(fLevel.index)] ... ", color=:light_green)    end
             matrix = zeros(ComplexF64, nf, ni)
             #
             for  r = 1:nf
                 if  fLevel.basis.csfs[r].J != fLevel.J      ||  fLevel.basis.csfs[r].parity  != fLevel.parity    continue    end 
                 for  s = 1:ni
                     if  iLevel.basis.csfs[s].J != iLevel.J  ||  iLevel.basis.csfs[s].parity  != iLevel.parity    continue    end 
-                    ##x wa = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, fLevel.basis.csfs[r], iLevel.basis.csfs[s])
-                    ##x # Calculate the spin-angular coefficients
-                    ##x if  Defaults.saRatip()
-                    ##x     waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, Mp.L, finalLevel.basis.csfs[r], initialLevel.basis.csfs[s])
-                    ##xx    wa  = waR       
-                    ##x end
-                    ##x if  Defaults.saGG()
                     subshellList = fLevel.basis.subshells
                     opa = SpinAngular.OneParticleOperator(Mp.L, plus, true)
                     wa  = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList) 
-                    ##x @show wa
-                    ##x     wa  = waG
-                    ##x end
-                    ##x if  Defaults.saRatip() && Defaults.saGG() && true
-                    ##x     if  length(waR) != 0     println("\n>> Angular coeffients from GRASP/MCT   = $waR ")    end
-                    ##x     if  length(waG) != 0     println(  ">> Angular coeffients from SpinAngular = $waG ")    end
-                    ##x end
-                    #
-                    ##x @show finalLevel.basis  ## .csfs[r]
-                    ##x @show initialLevel.basis  ## .csfs[s]
                     me = 0.
-                    ##x println("Enter loop ... r=$r   s=$s  length(wa) = $(length(wa))")
                     for  coeff in wa
-                        ##x MbaJohnsonx = InteractionStrength.MbaEmissionJohnsonx(Mp, gauge, omega, fLevel.basis.orbitals[coeff.a],  
-                        ##x                                                                     iLevel.basis.orbitals[coeff.b], grid)
+                        ## MbaJohnsonx = InteractionStrength.MbaEmissionJohnsonx(Mp, gauge, omega, fLevel.basis.orbitals[coeff.a],  
+                        ##                                                                         iLevel.basis.orbitals[coeff.b], grid)
                         MabJohnsony = InteractionStrength.MabEmissionJohnsony(Mp, gauge, omega, fLevel.basis.orbitals[coeff.a],  
-                                                                                            iLevel.basis.orbitals[coeff.b], grid)
-                        me = me + coeff.T * MabJohnsony
+                                                                                                iLevel.basis.orbitals[coeff.b], grid)
+                        ja = Basics.subshell_2j(fLevel.basis.orbitals[coeff.a].subshell)
+                        ## jb = Basics.subshell_2j(iLevel.basis.orbitals[coeff.b].subshell)
+                        me = me + coeff.T * MabJohnsony / sqrt( ja + 1) * sqrt( (Basics.twice(fLevel.J) + 1))      ## * sqrt( jb + 1)
                         ##x @show coeff.a, coeff.b, Mp, gauge, MbaJohnsonx, MabJohnsony, abs(MbaJohnsonx/MabJohnsony)
                     end
                     matrix[r,s] = me
@@ -222,7 +206,7 @@ module PhotoEmission
             end 
             if  printout   printstyled("done. \n", color=:light_green)    end
             amplitude = transpose(fLevel.mc) * matrix * iLevel.mc 
-            ##x @show iLevel.index, amplitude
+            ##x @show "*******", iLevel.index, fLevel.index, amplitude, iLevel.J, fLevel.J
             #
             #
         elseif  kind == "absorption"
@@ -279,15 +263,20 @@ module PhotoEmission
                     wa  = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList) 
                     me  = 0.
                     for  coeff in wa
-                        me = me + coeff.T * InteractionStrength.MbaEmissionMigdalek(cp, fLevel.basis.orbitals[coeff.a],  
-                                                                                        iLevel.basis.orbitals[coeff.b], grid)
+                        MbaMigdalek = InteractionStrength.MbaEmissionMigdalek(cp, fLevel.basis.orbitals[coeff.a],  
+                                                                                  iLevel.basis.orbitals[coeff.b], grid)
+                        MbaMigdalek = MbaMigdalek / Defaults.getDefaults("speed of light: c") * omega * sqrt(2.0) / 4.                                                       
+                        MabJohnsony = InteractionStrength.MabEmissionJohnsony(E1, Basics.Babushkin, omega, fLevel.basis.orbitals[coeff.a],  
+                                                                                                           iLevel.basis.orbitals[coeff.b], grid)
+                        ja = Basics.subshell_2j(fLevel.basis.orbitals[coeff.a].subshell)
+                        me = me + coeff.T * MbaMigdalek / sqrt( ja + 1) * sqrt( (Basics.twice(fLevel.J) + 1))
+                        @show MbaMigdalek, MabJohnsony
                      end
                     matrix[r,s] = me
                 end
             end 
             if  printout   printstyled("done. \n", color=:light_green)    end
             amplitude = transpose(fLevel.mc) * matrix * iLevel.mc 
-            ##x @show iLevel.index, amplitude
             #
         else    error("stop a")
         end
@@ -299,6 +288,51 @@ module PhotoEmission
         end
         
         return( amplitude )
+    end
+
+
+    """
+    `PhotoEmission.computeAmplitudesProperties(line::PhotoEmission.Line, grid::Radial.Grid, settings::Einstein.Settings; printout::Bool=true)`  
+        ... to compute all amplitudes and properties of the given line; a line::Einstein.Line is returned for which the amplitudes and 
+            properties are now evaluated.
+    """
+    function  computeAmplitudesProperties(line::PhotoEmission.Line, grid::Radial.Grid, settings::PhotoEmission.Settings; printout::Bool=true)
+        global JAC_counter
+        newChannels = PhotoEmission.Channel[];    rateC = 0.;    rateB = 0.
+        for channel in line.channels
+            #
+            if  settings.corePolarization.doApply
+                if      channel.multipole != E1     error("Core-polarization corrections are defined only for E1 transitions.") 
+                elseif  channel.gauge     == Basics.Coulomb     ||    channel.gauge     == Basics.Magnetic
+                    amplitude = 0.
+                else
+                    amplitude = PhotoEmission.amplitude("E1 with core-polarization emission", settings.corePolarization, line.omega, 
+                                                        line.finalLevel, line.initialLevel, grid, printout=printout)
+                end
+            else
+                amplitude = PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, line.omega, 
+                                                    line.finalLevel, line.initialLevel, grid, printout=printout)
+            end
+            #
+            push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
+            ##x # Multiply with the multipolarity factors to keep different multipoles on the same footings
+            ##x mp        = channel.multipole
+            ##x amplitude = amplitude * sqrt( (2mp.L+1)*(mp.L+1)/mp.L )
+            #
+            if       channel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2
+            elseif   channel.gauge == Basics.Babushkin   rateB = rateB + abs(amplitude)^2
+            elseif   channel.gauge == Basics.Magnetic    rateB = rateB + abs(amplitude)^2;   rateC = rateC + abs(amplitude)^2
+            end
+        end
+        #     
+        # Calculate the photonrate and angular beta if requested 
+        ##x wa = 2.0pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) 
+        ##x                                         * (Basics.twice(line.finalLevel.J) + 1)
+        wa = 8pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) 
+        photonrate  = EmProperty(wa * rateC, wa * rateB)    
+        angularBeta = EmProperty(-9., -9.)
+        line = PhotoEmission.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, true, newChannels)
+        return( line )
     end
 
 
@@ -357,8 +391,8 @@ module PhotoEmission
         subshellList = Basics.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
         Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
         lines = PhotoEmission.determineLines(finalMultiplet, initialMultiplet, settings)
-        # Display all selected lines before the computations start
-        # if  settings.printBefore    PhotoEmission.displayLines(lines)    end
+        ## Display all selected lines before the computations start
+        ## if  settings.printBefore    PhotoEmission.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
         newLines = PhotoEmission.Line[]
         for  (i,line)  in  enumerate(lines)
@@ -378,52 +412,6 @@ module PhotoEmission
         if    output    return( newLines )
         else            return( nothing )
         end
-    end
-
-
-
-    """
-    `PhotoEmission.computeAmplitudesProperties(line::PhotoEmission.Line, grid::Radial.Grid, settings::Einstein.Settings; printout::Bool=true)`  
-        ... to compute all amplitudes and properties of the given line; a line::Einstein.Line is returned for which the amplitudes and 
-            properties are now evaluated.
-    """
-    function  computeAmplitudesProperties(line::PhotoEmission.Line, grid::Radial.Grid, settings::PhotoEmission.Settings; printout::Bool=true)
-        global JAC_counter
-        newChannels = PhotoEmission.Channel[];    rateC = 0.;    rateB = 0.
-        for channel in line.channels
-            #
-            if  settings.corePolarization.doApply
-                if      channel.multipole != E1     error("Core-polarization corrections are defined only for E1 transitions.") 
-                elseif  channel.gauge     == Basics.Coulomb     ||    channel.gauge     == Basics.Magnetic
-                    amplitude = 0.
-                else
-                    amplitude = PhotoEmission.amplitude("E1 with core-polarization emission", settings.corePolarization, line.omega, 
-                                                        line.finalLevel, line.initialLevel, grid, printout=printout)
-                end
-            else
-                amplitude = PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, line.omega, 
-                                                    line.finalLevel, line.initialLevel, grid, printout=printout)
-            end
-            #
-            push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
-            ## # Multiply with the multipolarity factors to keep different multipoles on the same footings
-            ## mp        = channel.multipole
-            ## amplitude = amplitude * sqrt( (2mp.L+1)*(mp.L+1)/mp.L )
-            #
-            if       channel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2
-            elseif   channel.gauge == Basics.Babushkin   rateB = rateB + abs(amplitude)^2
-            elseif   channel.gauge == Basics.Magnetic    rateB = rateB + abs(amplitude)^2;   rateC = rateC + abs(amplitude)^2
-            end
-        end
-        #     
-        # Calculate the photonrate and angular beta if requested 
-        ##x wa = 2.0pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) 
-        ##x                                         * (Basics.twice(line.finalLevel.J) + 1)
-        wa = 8pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) * (Basics.twice(line.finalLevel.J) + 1)
-        photonrate  = EmProperty(wa * rateC, wa * rateB)    
-        angularBeta = EmProperty(-9., -9.)
-        line = PhotoEmission.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, true, newChannels)
-        return( line )
     end
 
 
@@ -690,7 +678,7 @@ module PhotoEmission
             returned otherwise.
     """
     function  displayRates(stream::IO, lines::Array{PhotoEmission.Line,1}, settings::PhotoEmission.Settings)
-        nx = 145
+        nx = 161
         println(stream, " ")
         println(stream, "  Einstein coefficients, transition rates and oscillator strengths:")
         println(stream, " ")
@@ -711,8 +699,10 @@ module PhotoEmission
         sa = sa * TableStrings.center(26, "A--Einstein--B"; na=3);       
         sb = sb * TableStrings.center(26, TableStrings.inUnits("rate")*"          "*TableStrings.inUnits("rate"); na=2)
         sa = sa * TableStrings.center(11, "Osc. strength"    ; na=3);                 sb = sb * TableStrings.hBlank(17)
-        sa = sa * TableStrings.center(12, "Decay widths"; na=4);       
+        sa = sa * TableStrings.center(12, "Decay widths"; na=3);       
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(13, "Line strength"; na=4);       
+        sb = sb * TableStrings.center(12, "[a.u.]"       ; na=4)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
@@ -724,13 +714,15 @@ module PhotoEmission
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
                 sa = sa * TableStrings.center(9,  string(ch.multipole); na=4)
                 sa = sa * TableStrings.flushleft(11, string(ch.gauge);  na=2)
-                chRate =  8pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) * 
-                                                                 (Basics.twice(line.finalLevel.J) + 1)
-                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
-                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
-                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to f",           line, chRate)) * "    "
-                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to decay width", line, chRate)) * "      "
-                ##x sa = sa * @sprintf("%.5e  %.5e", ch.amplitude.re, ch.amplitude.im) * "        "
+                chRate =  8pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) * (abs(ch.amplitude)^2) 
+                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein A",    line, chRate)) * "  "
+                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein B",    line, chRate)) * "    "
+                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to g_f",           line, chRate)) * "    "
+                sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to decay width",   line, chRate)) * "    "
+                if  ch.multipole == E1
+                        sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to S",     line, chRate)) * "    "
+                else    sa = sa * "  --  " 
+                end
                 println(stream, sa)
             end
         end
