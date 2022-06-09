@@ -844,6 +844,12 @@ module ManyElectron
                     push!(nseniorityNr, csf.seniorityNr[ii])
                     push!(nsubshellJ,   csf.subshellJ[ii]) 
                     push!(nsubshellX,   csf.subshellX[ii])
+                elseif   length(nsubshellX) == 0
+                    # Extend quantum numbers properly
+                    push!(noccupation,  0)
+                    push!(nseniorityNr, 0)
+                    push!(nsubshellJ,   AngularJ64(0)) 
+                    push!(nsubshellX,   AngularJ64(0))
                 else
                     # Extend quantum numbers properly
                     push!(noccupation,  0)

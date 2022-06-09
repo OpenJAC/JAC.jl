@@ -16,6 +16,8 @@ module MultiPhotonDeExcitation
         
         + struct EnergyDiffCs           
                     ... Energy differential cross section for initially unpolarized atoms (TwoPhotonEmission, ...)
+        + struct TotalAlpha0          
+                    ... Total alpha_0 parameter (TwoPhotonAbsorptionMonochromatic, ...)
         + struct TotalCsLinear          
                     ... Total cross section for linerarly-polarized incident radiation (TwoPhotonAbsorptionMonochromatic, ...)
         + struct TotalCsRightCircular   
@@ -37,6 +39,17 @@ module MultiPhotonDeExcitation
 
     function Base.show(property::EnergyDiffCs)
         sa = "energy-differential cross sections for multi-photon emission";  print(io, sa, "\n")
+    end
+
+
+    """
+    `struct  MultiPhotonDeExcitation.TotalAlpha0  <:  MultiPhotonDeExcitation.AbstractMultiPhotonProperty`  
+        ... a struct to request for the calculation of the total alpha_0 parameter (usually in cm^4 / Ws) for the incident radiation.
+    """
+    struct   TotalAlpha0  <:  MultiPhotonDeExcitation.AbstractMultiPhotonProperty      end
+
+    function Base.show(property::TotalAlpha0)
+        sa = "total alpha_0 parameter for incident radiation";  print(io, sa, "\n")
     end
 
 
@@ -111,7 +124,7 @@ module MultiPhotonDeExcitation
         ... constructor for an 'default' instance of a MultiPhotonDeExcitation.TwoPhotonAbsorptionMonochromatic() process.
     """
     function TwoPhotonAbsorptionMonochromatic()
-        TwoPhotonAbsorptionMonochromatic( [TotalCsLinear(), TotalCsUnpolarized()] )
+        TwoPhotonAbsorptionMonochromatic( [TotalAlpha0(), TotalCsLinear()] )
     end
 
 

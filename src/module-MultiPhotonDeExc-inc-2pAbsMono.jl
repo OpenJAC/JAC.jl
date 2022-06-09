@@ -33,6 +33,7 @@
         + initialLevel     ::Level          ... initial-(state) level
         + finalLevel       ::Level          ... final-(state) level
         + omega            ::Float64        ... Energy of the incoming photons.
+        + alpha0           ::EmProperty     ... Two-photon absorption parameter alpha_0 [often in cm^4 / Ws]
         + csLinear         ::EmProperty     ... Total cross section for linearly-polarized incident light.
         + csRightCircular  ::EmProperty     ... Total cross section for right-circularly polarized incident light.
         + csUnpolarized    ::EmProperty     ... Total cross section for unpolarized incident light.
@@ -43,6 +44,7 @@
         initialLevel       ::Level
         finalLevel         ::Level
         omega              ::Float64
+        alpha0             ::EmProperty
         csLinear           ::EmProperty
         csRightCircular    ::EmProperty
         csUnpolarized      ::EmProperty
@@ -56,6 +58,7 @@
         println(io, "initialLevel:      $(line.initialLevel)  ")
         println(io, "finalLevel:        $(line.finalLevel)  ")
         println(io, "omega:             $(line.omega)  ")
+        println(io, "alpha0:            $(line.alpha0)  ")
         println(io, "csLinear:          $(line.csLinear)  ")
         println(io, "csRightCircular:   $(line.csRightCircular)  ")
         println(io, "csUnpolarized:     $(line.csUnpolarized)  ")
@@ -81,7 +84,7 @@
                                                                                           channel.gauge, channel.Jsym, amplitude) )
         end
         line = MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic( line.initialLevel, line.finalLevel, line.omega, 
-                                                                       EmProperty(0.), EmProperty(0.), EmProperty(0.), newChannels)
+                                                                       EmProperty(0.), EmProperty(0.), EmProperty(0.), EmProperty(0.), newChannels)
         
         return( line )
     end
@@ -133,11 +136,22 @@
     function  computeProperties_2pAbsorptionMonochromatic(line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic, 
                                                           grid::Radial.Grid, settings::MultiPhotonDeExcitation.Settings)
         # Calculate the requested cross sections, etc.
+        alpha0          = EmProperty(0., 0.)
         csLinear        = EmProperty(0., 0.)
         csRightCircular = EmProperty(0., 0.)
         csUnpolarized   = EmProperty(0., 0.)
         for property in settings.process.properties
-            if      typeof(property) == TotalCsLinear          
+            if      typeof(property) == TotalAlpha0          
+                if  Basics.UseCoulomb  in  settings.gauges
+                        totalA0_Cou = MultiPhotonDeExcitation.computeTotalAlpha0(line, EmGauge("Coulomb"), settings)
+                else    totalA0_Cou = 0.
+                end
+                if  Basics.UseBabushkin  in  settings.gauges
+                        totalA0_Bab = MultiPhotonDeExcitation.computeTotalAlpha0(line, EmGauge("Babushkin"), settings)
+                else    totalA0_Bab = 0.
+                end
+                alpha0      = EmProperty( totalA0_Cou,  totalA0_Bab)
+            elseif  typeof(property) == TotalCsLinear          
                 if  Basics.UseCoulomb  in  settings.gauges
                         totalCs_Cou = MultiPhotonDeExcitation.computeTotalCsLinear(line, EmGauge("Coulomb"), settings)
                 else    totalCs_Cou = 0.
@@ -170,7 +184,7 @@
             end
         end
         line = MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic( line.initialLevel, line.finalLevel, line.omega, 
-                                                                       csLinear, csRightCircular, csUnpolarized, line.channels)
+                                                                       alpha0, csLinear, csRightCircular, csUnpolarized, line.channels)
         return( line )
     end
 
@@ -204,6 +218,39 @@
         end 
         
         return( U )
+    end
+
+
+    """
+    `MultiPhotonDeExcitation.computeTotalAlpha0(line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic, 
+                                                gauge::EmGauge, settings::MultiPhotonDeExcitation.Settings)`  
+        ... to compute the (total) alpha_0 parameter for the two-photon absorption line. A ta0::Float64 is returned.
+    """
+    function computeTotalAlpha0(line::MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic, 
+                                gauge::EmGauge, settings::MultiPhotonDeExcitation.Settings)
+        ta0 = 0.;   Klist = oplus(line.finalLevel.J, line.initialLevel.J);      omega = line.omega;     amp = ComplexF64(0.)
+        symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity);    symf = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity) 
+        
+        for  K in Klist
+            for  mp1 in settings.multipoles
+                for  mp2 in settings.multipoles
+                    if   mp1.electric   p1 = 1    else    p1 = 0    end
+                    if   mp2.electric   p2 = 1    else    p2 = 0    end
+                    symmetries  = AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
+                    for Jsym in symmetries
+                        amp = MultiPhotonDeExcitation.getReducedAmplitudeAbsorption(K, line.finalLevel, mp2, Jsym, omega, mp1, 
+                                                                                       line.initialLevel, gauge, line.channels) 
+                        println("computeTotalAlpha0: K, Jsym, ta0 = $K, $Jsym, $ta0")
+                        ta0 = ta0 + abs( amp )^2
+                    end
+                end
+            end
+        end
+        
+        println("computeTotalAlpha0: ta0 = $ta0")
+        ta0 = ta0 * 2*pi^3 / Defaults.getDefaults("alpha")^2 / omega^3  ## / (Basics.twice(line.initialLevel.J) + 1)
+        
+        return( ta0 )
     end
 
 
@@ -395,7 +442,7 @@
                     omega    = (fLevel.energy - iLevel.energy) / 2.
                     channels = MultiPhotonDeExcitation.determineChannels_2pAbsorptionMonochromatic(omega, fLevel, iLevel, settings) 
                     push!( lines, MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic(iLevel, fLevel, omega,
-                                                                     EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), channels) )
+                                               EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), channels) )
                 end
             end
         end
@@ -467,11 +514,11 @@
         noCs = 0  # Number of cross sections to be printed
         for property in properties
             if      typeof(property) == TotalCsLinear          
-                noCs = noCs + 1;   println(stream, "    + total cross sections for linearly-polarized incident light ($noCs)")  
+                noCs = noCs + 1;   println(stream, "    + total cross sections for linearly-polarized incident light ($noCs); still incorrect")  
             elseif  typeof(property) == TotalCsRightCircular   
-                noCs = noCs + 1;   println(stream, "    + total cross sections for right-circularly polarized incident light ($noCs)") 
+                noCs = noCs + 1;   println(stream, "    + total cross sections for right-circularly polarized incident light ($noCs); still incorrect") 
             elseif  typeof(property) == TotalCsUnpolarized     
-                noCs = noCs + 1;   println(stream, "    + total cross sections for unpolarized incident light ($noCs)") 
+                noCs = noCs + 1;   println(stream, "    + total cross sections for unpolarized incident light ($noCs); still incorrect") 
             end
         end
         println(stream, " ")
@@ -500,6 +547,9 @@
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.omega))     * "        "
             for property in properties
                 if      typeof(property) == TotalCsLinear          
+                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Coulomb))          * "      "
+                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Babushkin))        * "          "
+                elseif  typeof(property) == TotalCsLinear          
                     sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Coulomb))          * "      "
                     sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Babushkin))        * "          "
                 elseif  typeof(property) == TotalCsRightCircular
