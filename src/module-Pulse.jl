@@ -140,10 +140,11 @@ module Pulse
     function Base.show(io::IO, beam::PlaneWaveBeam)
         sa = string(beam);       print(io, sa, "\n")
     end
-
+    
 
     #====================================================================================== 
     #  These data types need to be worked through
+    
     """
     `struct  Pulse.Envelope`  ... defines a type for the envelope (function) of an em pulse.
 
@@ -366,60 +367,64 @@ module Pulse
 
 
     """
-    `Pulse.envelopeVolkovIntegral(plus::Bool, envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
-        ... evaluates the envelope (time) integral F^(Volkov) [+/-; omega; f^(infinite); A; angles & energies] for an infinite pulse with given 
+    `Pulse.pulseShapeIntegral(plus::Bool, envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)`  
+        ... evaluates the pulse-shape integral F^(orderSFA) [+/-; omega; f^(infinite); A; angles & energies] for an infinite pulse with given 
             parameters; an ntg::Complex{Float64} is retured.
     """
-    function envelopeVolkovIntegral(plus::Bool, envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        wa = 0. * im;                            
-        phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) / beam.omega;   Up = beam.A0^2 / 4
-        lambda = Basics.determinePolarizationLambda(polarization)
-        #
-        # Compute the summation over the Bessel functions first; start with value for s = 0
-        for  s = -10:10
-            if  plus   wb = Basics.diracDelta((s-1)*beam.omega + energyp - initialEn + Up, 1.0e-3)
-            else       wb = Basics.diracDelta((s+1)*beam.omega + energyp - initialEn + Up, 1.0e-3)       
-            end
-            #
-            if  wb != 0.
-                wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * (phiCep - lambda*phip)) * wb
-            end
-        end
-        if  plus   wa = wa * 2pi * beam.A0 * exp(-im*phiCep)
-        else       wa = wa * 2pi * beam.A0 * exp(im*phiCep)
-        end
+    function pulseShapeIntegral(plus::Bool, envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)
+        if orderSFA == 0
+		wa = 0. * im;                            
+		phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) / beam.omega;   Up = beam.A0^2 / 4
+		lambda = Basics.determinePolarizationLambda(polarization)
+		#
+		# Compute the summation over the Bessel functions first; start with value for s = 0
+		for  s = -10:10
+		    if  plus   wb = Basics.diracDelta((s-1)*beam.omega + energyp - initialEn + Up, 1.0e-3)
+		    else       wb = Basics.diracDelta((s+1)*beam.omega + energyp - initialEn + Up, 1.0e-3)       
+		    end
+		    #
+		    if  wb != 0.
+		        wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * (phiCep - lambda*phip)) * wb
+		    end
+		end
+		if  plus   wa = wa * 2pi * beam.A0 * exp(-im*phiCep)
+		else       wa = wa * 2pi * beam.A0 * exp(im*phiCep)
+		end
+	end
         
         return( wa )
     end
 
 
     """
-    `Pulse.envelopeVolkovIntegral(plus::Bool, envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
-        ... evaluates the envelope (time) integral F^(Volkov) [+/-; omega; f^(rectangular); A; angles & energies] for an infinite pulse with given 
+    `Pulse.pulseShapeIntegral(plus::Bool, envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)`  
+        ... evaluates the pulse-shape integral F^(orderSFA) [+/-; omega; f^(rectangular); A; angles & energies] for an infinite pulse with given 
             parameters; an ntg::Complex{Float64} is retured.
     """
-    function envelopeVolkovIntegral(plus::Bool, envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        wa = 0. * im;   Tp = 2pi * envelope.cycles / beam.omega
-        phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / ( sqrt(2) * beam.omega );   Up = beam.A0^2 / 4
-        lambda = Basics.determinePolarizationLambda(polarization)
-        phaseConstant = phiCep - lambda*phip
-        #
-        # Compute the summation over the Bessel functions first; start with value for s = 0
-        for  s = -20:20
-            if  plus   wb = (s-1)*beam.omega + energyp - initialEn + Up
-            else       wb = (s+1)*beam.omega + energyp - initialEn + Up       
-            end
-            #
-            if  wb != 0.
-                wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * phaseConstant) / wb * ( exp(im*wb*Tp) - 1 )
-            end
-        end
-        if  plus   wa = wa * (-im) * exp(-im * a * sin(phaseConstant)) * beam.A0 * exp(-im*phiCep)
-        else       wa = wa * (-im) * exp(-im * a * sin(phaseConstant)) * beam.A0 * exp(im*phiCep)
+    function pulseShapeIntegral(plus::Bool, envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)
+        if orderSFA == 0
+		wa = 0. * im;   Tp = 2pi * envelope.cycles / beam.omega
+		phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / ( sqrt(2) * beam.omega );   Up = beam.A0^2 / 4
+		lambda = Basics.determinePolarizationLambda(polarization)
+		phaseConstant = phiCep - lambda*phip
+		#
+		# Compute the summation over the Bessel functions first; start with value for s = 0
+		for  s = -20:20
+		    if  plus   wb = (s-1)*beam.omega + energyp - initialEn + Up
+		    else       wb = (s+1)*beam.omega + energyp - initialEn + Up       
+		    end
+		    #
+		    if  wb != 0.
+		        wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * phaseConstant) / wb * ( exp(im*wb*Tp) - 1 )
+		    end
+		end
+		if  plus   wa = wa * (-im) * exp(-im * a * sin(phaseConstant)) * beam.A0 * exp(-im*phiCep)
+		else       wa = wa * (-im) * exp(-im * a * sin(phaseConstant)) * beam.A0 * exp(im*phiCep)
+		end
         end
         
         return( wa )
@@ -427,53 +432,74 @@ module Pulse
     
     
     """
-    `Pulse.envelopeVolkovIntegral(plus::Bool, envelope::Pulse.SinSquaredEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
-        ... evaluates the envelope (time) integral F^(Volkov) [+/-; omega; f^(rectangular); A; angles & energies] for a sine-squared pulse with given 
+    `Pulse.pulseShapeIntegral(plus::Bool, envelope::Pulse.SinSquaredEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)`  
+        ... evaluates the pulse-shape integral F^(orderSFA) [+/-; omega; f^(rectangular); A; angles & energies] for a sine-squared pulse with given 
             parameters; an ntg::Complex{Float64} is retured.
     """
-    function envelopeVolkovIntegral(plus::Bool, envelope::Pulse.SinSquaredEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        wa = 0. * im;   np = envelope.cycles;   Tp = 2pi * np / beam.omega
-        phiCep = beam.cep;  a = beam.A0 * sqrt(2*energyp) * sin(thetap) / ( sqrt(2) * beam.omega );   Up = beam.A0^2 / 4
-        sinSqrArg = 0.5 * beam.omega / np;  volkovFac = 0.25/sinSqrArg * Up
-        lambda = Basics.determinePolarizationLambda(polarization)
-        phaseConstant = phiCep - lambda*phip
-        
-        kfac = [ (1-1/np), 1, (1+1/np) ]
-        ack = a * [ -0.25/kfac[1], 0.5/kfac[2], -0.25/kfac[3] ]
-        
-        #Define Gauss-Legendre grid, convergence is typically good for orderGL = 100 * np (time consuming for np > 10); tested up to np = 20
-        if  np <= 10     orderGL = 100*np
-        else             orderGL = 1000
-        end
-        gaussLegendre = Radial.GridGL("Finite",0.0,Tp,orderGL)
-        tgrid = gaussLegendre.t
-        weights = gaussLegendre.wt
-        
-        
-        #Sum over grid and compute Gauss-Legendre sum
-        for    j = 1:orderGL
-            t = tgrid[j]
-            
-            #Compute Volkov phase at gridpoint t
-            SVolkov = ( energyp + 3/8 * Up ) * t - volkovFac * sin(2*sinSqrArg*t) + 0.125 * volkovFac * sin(4*sinSqrArg*t)
-            for k = 1:3
-                SVolkov = SVolkov + ack[k] * ( sin( beam.omega * kfac[k] * t + phaseConstant ) - sin(phaseConstant) )
-            end
-            
-            #Compute integrand at gridpoint t
-            if  plus    integrand = sin( sinSqrArg * t )^2 * exp( -im * ( ( initialEn + beam.omega ) * t - SVolkov ) )
-            else        integrand = sin( sinSqrArg * t )^2 * exp( -im * ( ( initialEn - beam.omega ) * t - SVolkov ) )
-            end
-            
-            #Gauss-Legendre sum
-            wa = wa + weights[j] * integrand
-        end
-        
-        #Multiply with global factor
-        if  plus    wa = beam.A0 * exp(-im * phiCep) * wa
-        else        wa = beam.A0 * exp(im * phiCep) * wa
+    function pulseShapeIntegral(plus::Bool, envelope::Pulse.SinSquaredEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)
+        if orderSFA == 0
+		wa = 0. * im;   np = envelope.cycles;   Tp = 2pi * np / beam.omega
+		omega = beam.omega
+		phiCep = beam.cep;
+		sinSqrArg = 0.5 * omega / np;
+		lambda = Basics.determinePolarizationLambda(polarization)
+		
+		p = sqrt(2.0*energyp)
+		px = p*sin(thetap)*cos(phip)
+		py = p*sin(thetap)*sin(phip)
+		
+		epsilon = 1.0
+		if polarization != Basics.RightCircular() && polarization != Basics.LeftCircular()
+		    epsilon = polarization.ellipticity
+		end
+		
+		A0eps = beam.A0/sqrt(1.0 + epsilon^2)
+		
+		#Define Gauss-Legendre grid, convergence is typically good for orderGL = 100 * np (time consuming for np > 10); tested up to np = 20
+		if  np <= 10     orderGL = 100*np
+		else             orderGL = 1000
+		end
+		gaussLegendre = Radial.GridGL("Finite",0.0,Tp,orderGL)
+		tgrid = gaussLegendre.t
+		weights = gaussLegendre.wt
+		
+		#Sum over grid and compute Gauss-Legendre sum
+		for    j = 1:orderGL
+		    t = tgrid[j]
+		    
+		    #Compute Volkov phase at gridpoint t
+		    cosIntegral = 0.25 / (omega * (np^2-1)) * (  2*sin(phiCep) + 2 * (np^2-1) * sin(phiCep + omega*t) - np * ( (1+np)*sin( phiCep + (np-1)/np * omega*t ) + (np-1) * sin( phiCep + (np+1)/np * omega*t )  ) )
+		    
+		    sinIntegral = 0.25 / (omega * (np^2-1)) * ( -2*cos(phiCep) - 2 * (np^2-1) * cos(phiCep + omega*t) + np * ( (1+np)*cos( phiCep + (np-1)/np * omega*t ) + (np-1) * cos( phiCep + (np+1)/np * omega*t )  ) )
+		    
+		    cos2Integral = sin(2*phiCep)/omega * ( -6 - np/(np-1) - np/(np+1) + 8*np/(2*np-1) + 8*np/(2*np+1) )
+		                    + 12*t + 6/omega * cos(2*omega*t) * sin(2*phiCep) + 6/omega * cos(2*phiCep) * sin(2*omega*t) - 16/omega*np*sin(omega*t/np) + 2/omega*np*sin(2*omega*t/np)
+		                    - 8*np/(omega*(1+2*np)) * sin(2*phiCep + (2+1/np)*omega*t) + np/(omega*(np-1)) * sin(2*(phiCep + (np-1)/np *omega*t))
+		                    + np/(omega*(1+np)) * sin(2*(phiCep + (np+1)/np * omega*t)) - 8*np/(omega*(2*np-1))*sin(2*phiCep + (2*np-1)/np * omega*t )
+		    cos2Integral = cos2Integral / 64
+		    
+		    sin2Integral = 12*t + 6/omega * sin(2*phiCep) * ( 1/(1-5*np^2+4*np^4) - cos(2*omega*t) ) - 6/omega * cos(2*phiCep)*sin(2*omega*t)
+		                    - 16/omega * np * sin(omega*t/np) + 2/omega * np * sin(2*omega*t/np) + 8*np/(omega*(1+2*np)) * sin(2*phiCep + (2+1/np)*omega*t)
+		                    - np/(omega*(np-1)) * sin(2*(phiCep + (np-1)/np *omega*t )) - np/(omega*(1+np)) * sin(2*(phiCep + (np+1)/np*omega*t)) + 8/omega * np/(2*np-1) * sin(2*phiCep + (2*np-1)/np*omega*t)
+		    sin2Integral = sin2Integral / 64
+		    
+		    SVolkov = energyp*t + A0eps*px*cosIntegral + A0eps*lambda*epsilon*py*sinIntegral + 0.5 * A0eps^2 * ( cos2Integral + epsilon^2 * sin2Integral )
+		    
+		    #Compute integrand at gridpoint t
+		    if  plus    integrand = sin( sinSqrArg * t )^2 * exp( -im * ( ( initialEn + beam.omega ) * t - SVolkov ) )
+		    else        integrand = sin( sinSqrArg * t )^2 * exp( -im * ( ( initialEn - beam.omega ) * t - SVolkov ) )
+		    end
+		    
+		    #Gauss-Legendre sum
+		    wa = wa + weights[j] * integrand
+		end
+		
+		#Multiply with global factor
+		if  plus    wa = beam.A0 * exp(-im * phiCep) * wa
+		else        wa = beam.A0 * exp(im * phiCep) * wa
+		end
         end
         
         return( wa )
@@ -481,274 +507,304 @@ module Pulse
     
     
     """
-    `Pulse.envelopeVolkovIntegral(plus::Bool, envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
-        ... evaluates the envelope (time) integral F^(Volkov) [+/-; omega; f^(rectangular); A; angles & energies] for a gaussian pulse with given 
+    `Pulse.pulseShapeIntegral(plus::Bool, envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)`  
+        ... evaluates the pulse-shape integral F^(orderSFA) [+/-; omega; f^(rectangular); A; angles & energies] for a gaussian pulse with given 
             parameters; an ntg::Complex{Float64} is retured.
     """
-    function envelopeVolkovIntegral(plus::Bool, envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64 )
-        wa = 0. * im;  Tp = envelope.fwhm
-        phiCep = beam.cep;   Up = beam.A0^2 / 4
-        a1 = 0.25 * Up * sqrt(pi/log(4)) * Tp
-        a2 = 0.125 * Tp * sqrt(pi/log(2)) * beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) * exp( -beam.omega^2 * Tp^2 / log( 65536 ) )
-        lambda = Basics.determinePolarizationLambda(polarization)
-        phaseConstant = phiCep - lambda*phip
-        
-        # Factor from (linear) variable transformation tau -> t in order to allow Gauss-Hermite integration ( weight function e^(-t^2) )
-        transformFac = Tp/(2*sqrt(log(2)))
-        
-        #Define Gauss-Hermite grid, convergence is typically good for orderGH = 10000
-        orderGH = 10000
-        gaussHermite = Radial.GridGH(orderGH)
-        tgrid = gaussHermite.t
-        weights = gaussHermite.wt
-        
-        # Sum over grid and compute Gauss-Legendre sum
-        for    j = 1:orderGH
-            t = transformFac * tgrid[j]
-            
-            #Compute Volkov phase at gridpoint t
-            SVolkov = energyp * t + a1 * erf(2 * sqrt(log(4)) * t/Tp) 
-                        + a2 * ( exp( -im*phaseConstant ) * erf( (im*Tp^2*beam.omega + 8*log(2)*t)/(4*Tp*sqrt(log(2))) )
-                               - exp(  im*phaseConstant ) * erf( (im*Tp^2*beam.omega - 8*log(2)*t)/(4*Tp*sqrt(log(2))) ) )
-            
-            # Compute integrand at gridpoint t
-            if  plus    integrand = exp( -im * ( ( initialEn + beam.omega ) * t - SVolkov ) )
-            else        integrand = exp( -im * ( ( initialEn - beam.omega ) * t - SVolkov ) )
-            end
-            
-            # Gauss-Hermite sum
-            wa = wa + weights[j] * integrand
-        end
-        
-        # Multiply with global factor
-        if  plus    wa = transformFac * beam.A0 * exp(-im * phiCep) * wa
-        else        wa = transformFac * beam.A0 * exp(im * phiCep) * wa
-        end
+    function pulseShapeIntegral(plus::Bool, envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int )
+	if orderSFA == 0
+		wa = 0. * im;  Tp = envelope.fwhm
+		phiCep = beam.cep;   Up = beam.A0^2 / 4
+		a1 = 0.25 * Up * sqrt(pi/log(4)) * Tp
+		a2 = 0.125 * Tp * sqrt(pi/log(2)) * beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) * exp( -beam.omega^2 * Tp^2 / log( 65536 ) )
+		lambda = Basics.determinePolarizationLambda(polarization)
+		phaseConstant = phiCep - lambda*phip
+		
+		transformFac = Tp/(2*sqrt(log(2))) #factor from (linear) variable transformation tau -> t in order to allow Gauss-Hermite integration ( weight function e^(-t^2) )
+		
+		#Define Gauss-Hermite grid, convergence is typically good for orderGH = 10000
+		orderGH = 10000
+		gaussHermite = Radial.GridGH(orderGH)
+		tgrid = gaussHermite.t
+		weights = gaussHermite.wt
+		
+		#Sum over grid and compute Gauss-Legendre sum
+		for    j = 1:orderGH
+		    t = transformFac * tgrid[j]
+		    
+		    #Compute Volkov phase at gridpoint t
+		    SVolkov = energyp * t + a1 * erf(2 * sqrt(log(4)) * t/Tp) 
+		                + a2 * ( exp( -im*phaseConstant ) * erf( (im*Tp^2*beam.omega + 8*log(2)*t)/(4*Tp*sqrt(log(2))) )
+		                         - exp( im*phaseConstant ) * erf( (im*Tp^2*beam.omega - 8*log(2)*t)/(4*Tp*sqrt(log(2))) ) )
+		    
+		    #Compute integrand at gridpoint t
+		    if  plus    integrand = exp( -im * ( ( initialEn + beam.omega ) * t - SVolkov ) )
+		    else        integrand = exp( -im * ( ( initialEn - beam.omega ) * t - SVolkov ) )
+		    end
+		    
+		    #Gauss-Hermite sum
+		    wa = wa + weights[j] * integrand
+		end
+		
+		#Multiply with global factor
+		if  plus    wa = transformFac * beam.A0 * exp(-im * phiCep) * wa
+		else        wa = transformFac * beam.A0 * exp(im * phiCep) * wa
+		end
+	end
         
         return( wa )
     end  
     
     
     """
-    `Pulse.envelopeVolkovIntegral(plus::Bool, envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderGH::Int64)`  
-        ... evaluates the envelope (time) integral F^(Volkov) [+/-; omega; f^(rectangular); A; angles & energies] for a gaussian pulse with given 
+    `Pulse.pulseShapeIntegral(plus::Bool, envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                  thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderGH::Int64, orderSFA::Int)`  
+        ... evaluates the pulse-shape integral F^(orderSFA) [+/-; omega; f^(rectangular); A; angles & energies] for a gaussian pulse with given 
             parameters; an ntg::Complex{Float64} is retured.
     """
-    function envelopeVolkovIntegral(plus::Bool, envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderGH::Int64)
-        wa = 0. * im;  Tp = envelope.fwhm
-        phiCep = beam.cep;   Up = beam.A0^2 / 4
-        a1 = 0.25 * Up * sqrt(pi/log(4)) * Tp
-        a2 = 0.125 * Tp * sqrt(pi/log(2)) * beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) * exp( -beam.omega^2 * Tp^2 / log( 65536 ) )
-        lambda = Basics.determinePolarizationLambda(polarization)
-        phaseConstant = phiCep - lambda*phip
-        
-        # Factor from (linear) variable transformation tau -> t in order to allow Gauss-Hermite integration ( weight function e^(-t^2)
-        transformFac = Tp/(2*sqrt(log(2)))
-        
-        gaussHermite = Radial.GridGH(orderGH)
-        tgrid = gaussHermite.t
-        weights = gaussHermite.wt
-        
-        # Sum over grid and compute Gauss-Legendre sum
-        for    j = 1:orderGH
-            t = transformFac * tgrid[j]
-            
-            #Compute Volkov phase at gridpoint t
-            SVolkov = energyp * t + a1 * erf(2 * sqrt(log(4)) * t/Tp) 
-                        + a2 * ( exp( -im*phaseConstant ) * erf( (im*Tp^2*beam.omega + 8*log(2)*t)/(4*Tp*sqrt(log(2))) )
-                               - exp(  im*phaseConstant ) * erf( (im*Tp^2*beam.omega - 8*log(2)*t)/(4*Tp*sqrt(log(2))) ) )
-            
-            # Compute integrand at gridpoint t
-            if  plus    integrand = exp( -im * ( ( initialEn + beam.omega ) * t - SVolkov ) )
-            else        integrand = exp( -im * ( ( initialEn - beam.omega ) * t - SVolkov ) )
-            end
-            
-            # Gauss-Hermite sum
-            wa = wa + weights[j] * integrand
-        end
-        
-        #Multiply with global factor
-        if  plus    wa = transformFac * beam.A0 * exp(-im * phiCep) * wa
-        else        wa = transformFac * beam.A0 * exp(im * phiCep) * wa
-        end
+    function pulseShapeIntegral(plus::Bool, envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderGH::Int64, orderSFA::Int)
+        if orderSFA == 0
+		wa = 0. * im;  Tp = envelope.fwhm
+		phiCep = beam.cep;   Up = beam.A0^2 / 4
+		a1 = 0.25 * Up * sqrt(pi/log(4)) * Tp
+		a2 = 0.125 * Tp * sqrt(pi/log(2)) * beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) * exp( -beam.omega^2 * Tp^2 / log( 65536 ) )
+		lambda = Basics.determinePolarizationLambda(polarization)
+		phaseConstant = phiCep - lambda*phip
+		
+		transformFac = Tp/(2*sqrt(log(2))) #factor from (linear) variable transformation tau -> t in order to allow Gauss-Hermite integration ( weight function e^(-t^2) )
+		
+		gaussHermite = Radial.GridGH(orderGH)
+		tgrid = gaussHermite.t
+		weights = gaussHermite.wt
+		
+		#Sum over grid and compute Gauss-Legendre sum
+		for    j = 1:orderGH
+		    t = transformFac * tgrid[j]
+		    
+		    #Compute Volkov phase at gridpoint t
+		    SVolkov = energyp * t + a1 * erf(2 * sqrt(log(4)) * t/Tp) 
+		                + a2 * ( exp( -im*phaseConstant ) * erf( (im*Tp^2*beam.omega + 8*log(2)*t)/(4*Tp*sqrt(log(2))) )
+		                         - exp( im*phaseConstant ) * erf( (im*Tp^2*beam.omega - 8*log(2)*t)/(4*Tp*sqrt(log(2))) ) )
+		    
+		    #Compute integrand at gridpoint t
+		    if  plus    integrand = exp( -im * ( ( initialEn + beam.omega ) * t - SVolkov ) )
+		    else        integrand = exp( -im * ( ( initialEn - beam.omega ) * t - SVolkov ) )
+		    end
+		    
+		    #Gauss-Hermite sum
+		    wa = wa + weights[j] * integrand
+		end
+		
+		#Multiply with global factor
+		if  plus    wa = transformFac * beam.A0 * exp(-im * phiCep) * wa
+		else        wa = transformFac * beam.A0 * exp(im * phiCep) * wa
+		end
+	end
         
         return( wa )
     end  
     
     
     """
-    `Pulse.envelopeQuadVolkovIntegral(envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
-        ... evaluates the envelope (time) integral F^(quad, Volkov) [f^(infinite); A; angles & energies] for an infinite pulse with given 
+    `Pulse.pulseShapeQuadIntegral(envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)`  
+        ... evaluates the pulse-shape integral F^(orderSFA)_2[f^(infinite); A; angles & energies] for an infinite pulse with given 
             parameters; an ntg::Complex{Float64} is retured.
     """
-    function envelopeQuadVolkovIntegral(envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                        thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        wa = 0. * im;                            
-        phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) / beam.omega;   Up = beam.A0^2 / 4
-        lambda = Basics.determinePolarizationLambda(polarization)
-        #
-        # Compute the summation over the Bessel functions first; start with value for s = 0
-        for  s = -10:10
-            wb = Basics.diracDelta(s*beam.omega + energyp - initialEn + Up, 1.0e-3)
-            #
-            if  wb != 0.    wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * (phiCep - lambda*phip)) * wb     
-            end
-        end
-        wa = wa * 4pi * Up
-        return( wa )
+    function pulseShapeQuadIntegral(envelope::Pulse.InfiniteEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                        thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)
+	if orderSFA == 0
+		wa = 0. * im;                            
+		phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) / beam.omega;   Up = beam.A0^2 / 4
+		lambda = Basics.determinePolarizationLambda(polarization)
+		#
+		# Compute the summation over the Bessel functions first; start with value for s = 0
+		for  s = -10:10
+		    wb = Basics.diracDelta(s*beam.omega + energyp - initialEn + Up, 1.0e-3)
+		    #
+		    if  wb != 0.    wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * (phiCep - lambda*phip)) * wb     
+		    end
+		end
+		wa = wa * 4pi * Up
+	end
+	return( wa )
     end
 
 
     """
-    `Pulse.envelopeQuadVolkovIntegral(envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
-        ... evaluates the envelope (time) integralF^(quad, Volkov) [f^(infinite); A; angles & energies]  for a rectangular pulse with given 
+    `Pulse.pulseShapeQuadIntegral(envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)`  
+        ... evaluates the pulse-shape integral F^(orderSFA)_2[f^(infinite); A; angles & energies]  for a rectangular pulse with given 
             parameters; an ntg::Complex{Float64} is retured.
     """
-    function envelopeQuadVolkovIntegral(envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                        thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        wa = 0. * im;   Tp = 2pi * envelope.cycles / beam.omega
-        phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) / beam.omega;   Up = beam.A0^2 / 4
-        lambda = Basics.determinePolarizationLambda(polarization)
-        phaseConstant = phiCep - lambda*phip
-        @show beam.omega
-        # Compute the summation over the Bessel functions first; start with value for s = 0
-        for  s = -20:20
-            wb = s*beam.omega + energyp - initialEn + Up
-            #
-            if  wb != 0.    wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * phaseConstant) / wb * ( exp(im*wb*Tp) - 1 )   
-            end
+    function pulseShapeQuadIntegral(envelope::Pulse.RectangularEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                        thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)
+        if orderSFA == 0
+		wa = 0. * im;   Tp = 2pi * envelope.cycles / beam.omega
+		phiCep = beam.cep;       a = beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) / beam.omega;   Up = beam.A0^2 / 4
+		lambda = Basics.determinePolarizationLambda(polarization)
+		phaseConstant = phiCep - lambda*phip
+
+		# Compute the summation over the Bessel functions first; start with value for s = 0
+		for  s = -20:20
+		    wb = s*beam.omega + energyp - initialEn + Up
+		    #
+		    if  wb != 0.    wa = wa + GSL.sf_bessel_Jn(s, a) * exp(im*s * phaseConstant) / wb * ( exp(im*wb*Tp) - 1 )   
+		    end
+		end
+		wa = wa * (-im) * 2 * Up * exp(-im * a * sin(phaseConstant))
         end
-        wa = wa * (-im) * 2 * Up * exp(-im * a * sin(phaseConstant))
         
         return( wa )
     end
     
     
     """
-    `Pulse.envelopeQuadVolkovIntegral(envelope::Pulse.SinSquaredEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
-        ... evaluates the envelope (time) integral F^(quad, Volkov) [f^(infinite); A; angles & energies] for a sine-squared pulse with given 
+    `Pulse.pulseShapeQuadIntegral(envelope::Pulse.SinSquaredEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)`  
+        ... evaluates the pulse-shape integral F^(orderSFA)_2[f^(infinite); A; angles & energies] for a sine-squared pulse with given 
             parameters; an ntg::Complex{Float64} is retured.
     """
-    function envelopeQuadVolkovIntegral(envelope::Pulse.SinSquaredEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        wa = 0. * im;   np = envelope.cycles;   Tp = 2pi * np / beam.omega
-        phiCep = beam.cep;  a = beam.A0 * sqrt(2*energyp) * sin(thetap) / ( sqrt(2) * beam.omega );   Up = beam.A0^2 / 4
-        sinSqrArg = 0.5 * beam.omega / np;  volkovFac = 0.25/sinSqrArg * Up
-        lambda = Basics.determinePolarizationLambda(polarization)
-        phaseConstant = phiCep - lambda*phip
-        
-        kfac = [ (1-1/np), 1, (1+1/np) ]
-        ack = a * [ -0.25/kfac[1], 0.5/kfac[2], -0.25/kfac[3] ]
-        
-        # Define Gauss-Legendre grid, convergence is typically good for orderGL = 100 * np (time consuming for np > 10); tested up to np = 20
-        if  np <= 10     orderGL = 100*np
-        else             orderGL = 1000
+    function pulseShapeQuadIntegral(envelope::Pulse.SinSquaredEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)
+        if orderSFA == 0
+		wa = 0. * im;   np = envelope.cycles;   Tp = 2pi * np / beam.omega
+		omega = beam.omega
+		phiCep = beam.cep
+		sinSqrArg = 0.5 * omega / np
+		lambda = Basics.determinePolarizationLambda(polarization)
+		
+		p = sqrt(2.0*energyp)
+		px = p*sin(thetap)*cos(phip)
+		py = p*sin(thetap)*sin(phip)
+		
+		epsilon = 1.0
+		if polarization != Basics.RightCircular() && polarization != Basics.LeftCircular()
+		    epsilon = polarization.ellipticity
+		end
+		
+		A0eps = beam.A0/sqrt(1.0 + epsilon^2)
+		
+		#Define Gauss-Legendre grid, convergence is typically good for orderGL = 100 * np (time consuming for np > 10); tested up to np = 20
+		if  np <= 10     orderGL = 100*np
+		else             orderGL = 1000
+		end
+		gaussLegendre = Radial.GridGL("Finite",0.0,Tp,orderGL)
+		tgrid = gaussLegendre.t
+		weights = gaussLegendre.wt
+		
+		#Sum over grid and compute Gauss-Legendre sum
+		for    j = 1:orderGL
+		    t = tgrid[j]
+		    
+		    #Compute Volkov phase at gridpoint t
+		    cosIntegral = 0.25 / (omega * (np^2-1)) * (  2*sin(phiCep) + 2 * (np^2-1) * sin(phiCep + omega*t) - np * ( (1+np)*sin( phiCep + (np-1)/np * omega*t ) + (np-1) * sin( phiCep + (np+1)/np * omega*t )  ) )
+		    
+		    sinIntegral = 0.25 / (omega * (np^2-1)) * ( -2*cos(phiCep) - 2 * (np^2-1) * cos(phiCep + omega*t) + np * ( (1+np)*cos( phiCep + (np-1)/np * omega*t ) + (np-1) * cos( phiCep + (np+1)/np * omega*t )  ) )
+		    
+		    cos2Integral = sin(2*phiCep)/omega * ( -6 - np/(np-1) - np/(np+1) + 8*np/(2*np-1) + 8*np/(2*np+1) )
+		                    + 12*t + 6/omega * cos(2*omega*t) * sin(2*phiCep) + 6/omega * cos(2*phiCep) * sin(2*omega*t) - 16/omega*np*sin(omega*t/np) + 2/omega*np*sin(2*omega*t/np)
+		                    - 8*np/(omega*(1+2*np)) * sin(2*phiCep + (2+1/np)*omega*t) + np/(omega*(np-1)) * sin(2*(phiCep + (np-1)/np *omega*t))
+		                    + np/(omega*(1+np)) * sin(2*(phiCep + (np+1)/np * omega*t)) - 8*np/(omega*(2*np-1))*sin(2*phiCep + (2*np-1)/np * omega*t )
+		    cos2Integral = cos2Integral / 64
+		    
+		    sin2Integral = 12*t + 6/omega * sin(2*phiCep) * ( 1/(1-5*np^2+4*np^4) - cos(2*omega*t) ) - 6/omega * cos(2*phiCep)*sin(2*omega*t)
+		                    - 16/omega * np * sin(omega*t/np) + 2/omega * np * sin(2*omega*t/np) + 8*np/(omega*(1+2*np)) * sin(2*phiCep + (2+1/np)*omega*t)
+		                    - np/(omega*(np-1)) * sin(2*(phiCep + (np-1)/np *omega*t )) - np/(omega*(1+np)) * sin(2*(phiCep + (np+1)/np*omega*t)) + 8/omega * np/(2*np-1) * sin(2*phiCep + (2*np-1)/np*omega*t)
+		    sin2Integral = sin2Integral / 64
+		    
+		    SVolkov = energyp*t + A0eps*px*cosIntegral + A0eps*lambda*epsilon*py*sinIntegral + 0.5 * A0eps^2 * ( cos2Integral + epsilon^2 * sin2Integral )
+		    
+		    #Compute integrand at gridpoint t
+		    integrand = sin( sinSqrArg * t )^4 * ( cos(omega*t+phiCep)^2 + epsilon^2 * sin(omega*t+phiCep)^2 ) * exp( -im * ( initialEn * t - SVolkov ) )
+		    
+		    #Gauss-Legendre sum
+		    wa = wa + weights[j] * integrand
+		end
+		
+		#Multiply with global factor
+		wa = A0eps^2 * wa
         end
-        gaussLegendre = Radial.GridGL("Finite",0.0,Tp,orderGL)
-        tgrid = gaussLegendre.t
-        weights = gaussLegendre.wt
-        
-        # Sum over grid and compute Gauss-Legendre sum
-        for    j = 1:orderGL
-            t = tgrid[j]
-            
-            #Compute Volkov phase at gridpoint t
-            SVolkov = ( energyp + 3/8 * Up ) * t - volkovFac * sin(2*sinSqrArg*t) + 0.125 * volkovFac * sin(4*sinSqrArg*t)
-            for k = 1:3
-                SVolkov = SVolkov + ack[k] * ( sin( beam.omega * kfac[k] * t + phaseConstant ) - sin(phaseConstant) )
-            end
-            
-            # Compute integrand at gridpoint t
-            integrand = 0.5 * sin( sinSqrArg * t )^4 * exp( -im * ( initialEn * t - SVolkov ) )
-            
-            # Gauss-Legendre sum
-            wa = wa + weights[j] * integrand
-        end
-        
-        # Multiply with global factor
-        wa = beam.A0^2 * wa
         
         return( wa )
     end
-
+    
+    
     
     """
-    `Pulse.envelopeQuadVolkovIntegral(envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)` 
-        ... evaluates the envelope (time) integral F^(quad, Volkov) [f^(infinite); A; angles & energies] for a gaussian pulse with given 
+    `Pulse.pulseShapeQuadIntegral(envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)` 
+        ... evaluates the pulse-shape integral F^(orderSFA)_2[f^(infinite); A; angles & energies] for a gaussian pulse with given 
             parameters; an ntg::Complex{Float64} is retured.
     """
-    function envelopeQuadVolkovIntegral(envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        wa = 0. * im;  Tp = envelope.fwhm
-        phiCep = beam.cep;   Up = beam.A0^2 / 4
-        a1 = 0.25 * Up * sqrt(pi/log(4)) * Tp
-        a2 = 0.125 * Tp * sqrt(pi/log(2)) * beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) * exp( -beam.omega^2 * Tp^2 / log( 65536 ) )
-        lambda = Basics.determinePolarizationLambda(polarization)
-        phaseConstant = phiCep - lambda*phip
-        
-        # Factor from (linear) variable transformation tau -> t in order to allow Gauss-Hermite integration ( weight function e^(-t^2) )
-        transformFac = Tp/(2*sqrt(2*log(2))) 
-        
-        # Define Gauss-Hermite grid, convergence is typically good for ......
-        orderGH = 10000
-        gaussHermite = Radial.GridGH(orderGH)
-        tgrid = gaussHermite.t
-        weights = gaussHermite.wt
-        
-        # Sum over grid and compute Gauss-Legendre sum
-        for    j = 1:orderGH
-            t = transformFac * tgrid[j]
-            
-            # Compute Volkov phase at gridpoint t
-            SVolkov = energyp * t + a1 * erf(2 * sqrt(log(4)) * t/Tp) 
-                        + a2 * ( exp( -im*phaseConstant ) * erf( (im*Tp^2*beam.omega + 8*log(2)*t)/(4*Tp*sqrt(log(2))) )
-                               - exp( im*phaseConstant )  * erf( (im*Tp^2*beam.omega - 8*log(2)*t)/(4*Tp*sqrt(log(2))) ) )
-            
-            # Compute integrand at gridpoint t
-            integrand = exp( -im * ( initialEn * t - SVolkov ) )
-            
-            # Gauss-Hermite sum
-            wa = wa + weights[j] * integrand
+    function pulseShapeQuadIntegral(envelope::Pulse.GaussianEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)
+        if orderSFA == 0
+		wa = 0. * im;  Tp = envelope.fwhm
+		phiCep = beam.cep;   Up = beam.A0^2 / 4
+		a1 = 0.25 * Up * sqrt(pi/log(4)) * Tp
+		a2 = 0.125 * Tp * sqrt(pi/log(2)) * beam.A0 * sqrt(2*energyp) * sin(thetap) / sqrt(2) * exp( -beam.omega^2 * Tp^2 / log( 65536 ) )
+		lambda = Basics.determinePolarizationLambda(polarization)
+		phaseConstant = phiCep - lambda*phip
+		
+		transformFac = Tp/(2*sqrt(2*log(2))) #factor from (linear) variable transformation tau -> t in order to allow Gauss-Hermite integration ( weight function e^(-t^2) )
+		
+		#Define Gauss-Hermite grid, convergence is typically good for ......
+		orderGH = 10000
+		gaussHermite = Radial.GridGH(orderGH)
+		tgrid = gaussHermite.t
+		weights = gaussHermite.wt
+		
+		#Sum over grid and compute Gauss-Legendre sum
+		for    j = 1:orderGH
+		    t = transformFac * tgrid[j]
+		    
+		    #Compute Volkov phase at gridpoint t
+		    SVolkov = energyp * t + a1 * erf(2 * sqrt(log(4)) * t/Tp) 
+		                + a2 * ( exp( -im*phaseConstant ) * erf( (im*Tp^2*beam.omega + 8*log(2)*t)/(4*Tp*sqrt(log(2))) )
+		                         - exp( im*phaseConstant ) * erf( (im*Tp^2*beam.omega - 8*log(2)*t)/(4*Tp*sqrt(log(2))) ) )
+		    
+		    #Compute integrand at gridpoint t
+		    integrand = exp( -im * ( initialEn * t - SVolkov ) )
+		    
+		    #Gauss-Hermite sum
+		    wa = wa + weights[j] * integrand
+		end
+		
+		#Multiply with global factor
+		wa = 0.5 * transformFac * beam.A0^2 * wa
         end
-        
-        # Multiply with global factor
-        wa = 0.5 * transformFac * beam.A0^2 * wa
         
         return( wa )
     end  
-    
 
     """
-    `Pulse.envelopeQuadVolkovIntegral(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
-        ... evaluates the envelope (time) integralF^(quad, Volkov) [f^(infinite); A; angles & energies]  for all pulses for which no analytical
+    `Pulse.pulseShapeQuadIntegral(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)`  
+        ... evaluates the pulse-shape integral F^(orderSFA)_2[f^(infinite); A; angles & energies]  for all pulses for which no analytical
             expression is so easily available.an ntg::Complex{Float64} is retured.
     """
-    function envelopeQuadVolkovIntegral(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                        thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        wa = 0. * im;   
-        # Collect parameters that are specific to a given pulse envelope
-        if       typeof(envelope) == SinSquaredEnvelope
-        elseif   typeof(envelope) == GaussianEnvelope
-        end
-        #
-        # Determine first the integrant; the timeGrid must still be adapted to thos
-        timeGrid = [0.1i for i = 1:10]
-        for   t  in  timeGrid 
-            phase = Pulse.volkovPhase(t, envelope) ## , ...)
-        end
-        #
-        error("Not yet implemented.")
-        
-        return( wa )
+    function pulseShapeQuadIntegral(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                        thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64, orderSFA::Int)
+        if orderSFA == 0
+		wa = 0. * im;   
+		# Collect parameters that are specific to a given pulse envelope
+		if       typeof(envelope) == SinSquaredEnvelope
+		elseif   typeof(envelope) == GaussianEnvelope
+		end
+		#
+		# Determine first the integrant; the timeGrid must still be adapted to thos
+		timeGrid = [0.1i for i = 1:10]
+		for   t  in  timeGrid 
+		    phase = Pulse.volkovPhase(t, envelope) ## , ...)
+		end
+		#
+		error("Not yet implemented.")
+	end
+	return( wa )
     end
     
 end # module

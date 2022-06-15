@@ -85,7 +85,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix, RadiativeOpacity,
        RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
        SchiffMoment, Semiempirical, setDefaults, Shell, SolidAngle, Spectroscopy, SpinAngular, SphericalTensor, 
-       StartFromHydrogenic, StartFromPrevious, StrongField, Subshell,
+       StartFromHydrogenic, StartFromPrevious, StrongField, StrongField2, Subshell,
        tabulate, TestFrames, Triangle, tools,
        UseCoulomb, UseBabushkin, UseGauge,
        WeightedCartesian, W3j, W6j, W9j,

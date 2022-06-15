@@ -5,20 +5,25 @@
 """
 module StrongField
 
-    using    GSL, HypergeometricFunctions, Plots, Printf, SpecialFunctions, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..Radial, ..ManyElectron, 
-             ..Nuclear, ..Pulse, ..TableStrings
+    using    DelimitedFiles, GSL,  HypergeometricFunctions,  Plots, Printf,  SpecialFunctions, 
+             ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, ..Pulse,  
+             ..Radial, ..RadialIntegrals, 
+             ..TableStrings
 
     export   aaaa
     
+
     """
     `abstract type StrongField.AbstractSFAObservable` 
         ... defines an abstract and a number of types for the observables that can be computed with SFA amplitudes.
 
-        + struct SfaNoObservable            ... an empty instance of an observable that does not help compute anything.
-        + struct SfaEnergyDistribution      ... to compute the energy distribution of the photoelectrons.
-        + struct SfaMomentumDistribution    ... to compute the momentum distribution of the photoelectrons.
-        + struct SfaAzimuthalAngularDistribution     ... to compute the angular distribution (azimuthal angle phi) of photoelectrons with fixed energy and fixed polar angle.
-        + struct SfaPolarAngularDistribution     ... to compute the angular distribution (polar angle theta) of photoelectrons with fixed energy and fixed azimuthal angle.
+        + struct SfaNoObservable                    ... an empty instance of an observable that does not help compute anything.
+        + struct SfaEnergyDistribution              ... to compute the energy distribution of the photoelectrons.
+        + struct SfaMomentumDistribution            ... to compute the momentum distribution of the photoelectrons.
+        + struct SfaAzimuthalAngularDistribution    ... to compute the angular distribution (azimuthal angle phi) of photoelectrons 
+                                                        with fixed energy and fixed polar angle.
+        + struct SfaPolarAngularDistribution        ... to compute the angular distribution (polar angle theta) of photoelectrons 
+                                                        with fixed energy and fixed azimuthal angle.
     """
     abstract type  AbstractSFAObservable                                 end
     struct   SfaNoObservable     <: StrongField.AbstractSFAObservable    end
@@ -37,6 +42,7 @@ module StrongField
         phi             ::Float64
         energies        ::Array{Float64,1}
     end
+    
 
     """
     `StrongField.SfaEnergyDistribution(theta::Float64, phi::Float64, NoEnergies::Int64, maxEnergy::Float64)`  
@@ -47,19 +53,23 @@ module StrongField
         energies = Float64[];      for  i=1:NoEnergies   push!(energies, i*maxEnergy / NoEnergies)   end
         SfaEnergyDistribution(theta, phi, energies)
     end
+    
 
     function Base.string(obs::SfaEnergyDistribution)
         sa = "Compute photo-electron energy distribution at angles (theta,phi) = ($(obs.theta), $(obs.phi)) for the energies [a.u.]:" 
         return( sa )
     end
+    
 
     function Base.show(io::IO, obs::SfaEnergyDistribution)
         sa = string(obs);       print(io, sa, "\n");     print(io, "   ", obs.energies)
     end
     
+    
     """
     `struct  StrongField.SfaMomentumDistribution  <: StrongField.AbstractSFAObservable`   
-        ... to compute in SFA the momentum distribution of photoelectrons for given polar angle theta and at given energies and azimuthal angles.
+        ... to compute in SFA the momentum distribution of photoelectrons for given polar angle theta and at given energies 
+            and azimuthal angles.
 
         + theta         ::Float64             ... polar angle of the energy distribution
         + phi           ::Array{Float64,1}    ... specifies the azimuthal angles
@@ -69,23 +79,27 @@ module StrongField
         theta           ::Float64
         phis            ::Array{Float64,1}
         energies        ::Array{Float64,1}
+        
     end
+    
     
     """
     `StrongField.SfaMomentumDistribution(theta::Float64, NoPhi::Int64, NoEnergies::Int64, maxEnergy::Float64)`  
-        ... defines a momentum distribution for given theta and for NoEnergies between 0 < energy <= maxEnergy and NoPhi between 0 <= phi < 2pi;
-            a dist::SfaMomentumDistribution is returned.
+        ... defines a momentum distribution for given theta and for NoEnergies between 0 < energy <= maxEnergy and 
+            NoPhi between 0 <= phi < 2pi; a dist::SfaMomentumDistribution is returned.
     """
     function SfaMomentumDistribution(theta::Float64, NoPhi::Int64, NoEnergies::Int64, maxEnergy::Float64)
         energies = Float64[];      for  i=1:NoEnergies   push!(energies, i*maxEnergy / NoEnergies)   end
         phis = Float64[];          for  i=1:NoPhi        push!(phis, i*2pi / NoPhi)                  end
         SfaMomentumDistribution(theta, phis, energies)
     end
+    
 
     function Base.string(obs::SfaMomentumDistribution)
         sa = "Compute photo-electron momentum distribution at polar angle theta = $(obs.theta) for (energy [a.u.], phi):" 
         return( sa )
     end
+    
 
     function Base.show(io::IO, obs::SfaMomentumDistribution)
         sa = string(obs);       print(io, sa, "\n");     print(io, "   ", obs.energies);    print(io, "   ", obs.phi)
@@ -94,7 +108,8 @@ module StrongField
     
     """
     `struct  StrongField.SfaAzimuthalAngularDistribution  <: StrongField.AbstractSFAObservable`   
-        ... to compute in SFA the angular distribution of photoelectrons for given polar angle theta and at given azimuthal angles for a fixed energy
+        ... to compute in SFA the angular distribution of photoelectrons for given polar angle theta and at given azimuthal 
+            angles for a fixed energy
 
         + theta         ::Float64             ... polar angle of the energy distribution
         + phi           ::Array{Float64,1}    ... specifies the azimuthal angles
@@ -106,6 +121,7 @@ module StrongField
         energy          ::Float64
     end
     
+    
     """
     `StrongField.SfaAzimuthalAngularDistribution(theta::Float64, NoPhi::Int64, energy::Float64)`  
         ... defines a angular distribution for given theta and for NoPhi between 0 <= phi < 2pi and a fixed energy
@@ -116,11 +132,13 @@ module StrongField
         SfaAzimuthalAngularDistribution(theta, phis, energy)
     end
 
+
     function Base.string(obs::SfaAzimuthalAngularDistribution)
         sa = "Compute photoelectron angular distribution at polar angle theta = $(obs.theta) and energy $(obs.energy) for phi:" 
         return( sa )
     end
 
+    
     function Base.show(io::IO, obs::SfaAzimuthalAngularDistribution)
         sa = string(obs);       print(io, sa, "\n");    print(io, "   ", obs.phi)
     end
@@ -128,7 +146,8 @@ module StrongField
     
     """
     `struct  StrongField.SfaPolarAngularDistribution  <: StrongField.AbstractSFAObservable`   
-        ... to compute in SFA the angular distribution of photoelectrons for given azimuthal angle phi and at given polar angles for a fixed energy
+        ... to compute in SFA the angular distribution of photoelectrons for given azimuthal angle phi and at given polar angles 
+            for a fixed energy
 
         + phi         ::Float64             ... phi angle of the energy distribution
         + theta       ::Array{Float64,1}    ... specifies the polar angles
@@ -140,20 +159,23 @@ module StrongField
         energy        ::Float64
     end
     
+    
     """
     `StrongField.SfaPolarAngularDistribution(phi::Float64, NoTheta::Int64, energy::Float64)`  
         ... defines a angular distribution for given phi and for NoPhi between 0 <= phi < 2pi and a fixed energy
             a dist::SfaPolarAngularDistribution is returned.
     """
     function SfaPolarAngularDistribution(phi::Float64, NoTheta::Int64, energy::Float64)
-        thetas = Float64[];          for  i=1:NoTheta        push!(thetas, i*2pi / NoTheta)                  end
+        thetas = Float64[];          for  i=1:NoTheta        push!(thetas, i*2pi / NoTheta)         end
         SfaPolarAngularDistribution(phi, thetas, energy)
     end
+    
 
     function Base.string(obs::SfaPolarAngularDistribution)
         sa = "Compute photoelectron angular distribution at azimuthal angle phi = $(obs.phi) and energy $(obs.energy) for theta:" 
         return( sa )
     end
+    
 
     function Base.show(io::IO, obs::SfaPolarAngularDistribution)
         sa = string(obs);       print(io, sa, "\n");    print(io, "   ", obs.theta)
@@ -181,13 +203,16 @@ module StrongField
         Z   ::Float64
     end
     
-    struct         DistortedVolkov   <:  AbstractVolkovState   end
+    
+    """
+    `struct StrongField.DistortedVolkov     <:  StrongField.AbstractVolkovState`
+    """
+    struct  DistortedVolkov   <:  AbstractVolkovState   end
     
     
-    
-    function Base.string(volkov::FreeVolkov)         return( "Free-Volkov states" )         end
-    function Base.string(volkov::CoulombVolkov)      return( "Coulomb-Volkov states in potential of charge Z = $(volkov.Z)" )      end
-    function Base.string(volkov::DistortedVolkov)    return( "Distorted-Volkov states" )    end
+    function Base.string(volkov::FreeVolkov)         return( "Free-Volkov states" )                                             end
+    function Base.string(volkov::CoulombVolkov)      return( "Coulomb-Volkov states in potential of charge Z = $(volkov.Z)" )   end
+    function Base.string(volkov::DistortedVolkov)    return( "Distorted-Volkov states" )                                        end
     
     
     """
@@ -195,16 +220,18 @@ module StrongField
         ... defines a type for the details and parameters of computing SFA amplitudes.
 
         + multipoles            ::Array{EmMultipoles}  ... Multipoles of the radiation field that are to be included.
-        + gauges                ::Array{UseGauge}      ... Specifies the gauges to be included into the computations.
+        + gauge                 ::String               ... Specifies the gauge to be used for the computation.
         + printAmplitudes       ::Bool                 ... True: the amplitudes are printed during computation
-        + coupledBasis          ::Bool                 ... True: compute in |j l mj> angular momentum basis; False: compute in |l ml> angular momentum basis
+        + coupledBasis          ::Bool                 ... True: compute in |j l mj> angular momentum basis; 
+                                                           False: compute in |l ml> angular momentum basis
         + hydrogenic            ::Bool                 ... True: Use hydrogenic wave functions for the initial state
         + hydrogenic1s          ::Bool                 ... True: Use hydrogenic wave functions for the initial state
-        + mAverage              ::Bool                 ... True: Average over initialState projections mj or ml and sum over continuum spin projection msp
+        + mAverage              ::Bool                 ... True: Average over initialState projections mj or ml and sum over continuum 
+                                                           spin projection msp
     """
     struct Settings 
         multipoles              ::Array{EmMultipole,1}
-        gauges                  ::Array{UseGauge}
+        gauge                   ::String
         printAmplitudes         ::Bool
         coupledBasis            ::Bool
         hydrogenic              ::Bool
@@ -225,8 +252,7 @@ module StrongField
     # `Base.show(io::IO, settings::StrongField.Settings)`  ... prepares a proper printout of the variable settings::StrongField.Settings.
     function Base.show(io::IO, settings::StrongField.Settings) 
         println(io, "multipoles:                 $(settings.multipoles)  ")
-        println(io, "use-gauges:                 $(settings.gauges)  ")
-        println(io, "printBefore:                $(settings.printBefore)  ")
+        println(io, "use-gauges:                 $(settings.gauge)  ")
         println(io, "printAmplitudes:            $(settings.printAmplitudes)  ")
         println(io, "coupledBasis:               $(settings.coupledBasis)  ")
         println(io, "hydrogenic:                 $(settings.hydrogenic)  ")
@@ -264,7 +290,7 @@ module StrongField
 
     
     """
-    `StrongField.Computation()`  ... constructor for an `empty` instance of StrongField.Computation().
+    `StrongField.Computation()`  ... constructor for an `default` instance of StrongField.Computation().
     """
     function Computation()
         Computation( SfaNoObservable(), Nuclear.Model(1.0), Radial.Grid(true), Orbital("1s_1/2",0.5), Orbital("1s_1/2",0.5), 
@@ -337,7 +363,8 @@ module StrongField
     end
 
 
-    # `Base.show(io::IO, outcome::StrongField.OutcomeEnergyDistribution)`  ... prepares a proper printout of the variable outcome::StrongField.OutcomeEnergyDistribution.
+    # `Base.show(io::IO, outcome::StrongField.OutcomeEnergyDistribution)`  
+    #       ... prepares a proper printout of the variable outcome::StrongField.OutcomeEnergyDistribution.
     function Base.show(io::IO, outcome::StrongField.OutcomeEnergyDistribution) 
         println(io, "theta:             $(outcome.theta)  ")
         println(io, "phi:               $(outcome.phi)  ")
@@ -362,7 +389,8 @@ module StrongField
     end
 
 
-    # `Base.show(io::IO, outcome::StrongField.OutcomeMomentumDistribution)`  ... prepares a proper printout of the variable outcome::StrongField.OutcomeMomentumDistribution.
+    # `Base.show(io::IO, outcome::StrongField.OutcomeMomentumDistribution)`  
+    #       ... prepares a proper printout of the variable outcome::StrongField.OutcomeMomentumDistribution.
     function Base.show(io::IO, outcome::StrongField.OutcomeMomentumDistribution) 
         println(io, "theta:             $(outcome.theta)  ")
         println(io, "momenta:           $(outcome.momenta)  ")
@@ -388,13 +416,15 @@ module StrongField
     end
 
 
-    # `Base.show(io::IO, outcome::StrongField.OutcomeAzimuthalAngularDistribution)`  ... prepares a proper printout of the variable outcome::StrongField.OutcomePolarAngularDistribution.
+    # `Base.show(io::IO, outcome::StrongField.OutcomeAzimuthalAngularDistribution)`  
+    #       ... prepares a proper printout of the variable outcome::StrongField.OutcomePolarAngularDistribution.
     function Base.show(io::IO, outcome::StrongField.OutcomeAzimuthalAngularDistribution) 
         println(io, "theta:             $(outcome.theta)  ")
         println(io, "energy:            $(outcome.energy)  ")
         println(io, "phis:              $(outcome.phis)  ")
         println(io, "probabilities:     $(outcome.probabilities)  ")
     end
+    
     
     """
     `struct  StrongField.OutcomePolarAngularDistribution`   
@@ -403,7 +433,7 @@ module StrongField
 
         + phi           ::Float64             ... azimuthal angle of the angular distribution
         + energy        ::Float64             ... photoelectron energy 
-        + thetas        ::Array{Float64,1}      ... polar angles phi
+        + thetas        ::Array{Float64,1}    ... polar angles phi
         + probabilities ::Array{Float64,1}    ... calculated probabilities of the angular distribution.
     """
     struct   OutcomePolarAngularDistribution
@@ -414,7 +444,8 @@ module StrongField
     end
 
 
-    # `Base.show(io::IO, outcome::StrongField.OutcomePolarAngularDistribution)`  ... prepares a proper printout of the variable outcome::StrongField.OutcomePolarAngularDistribution.
+    # `Base.show(io::IO, outcome::StrongField.OutcomePolarAngularDistribution)`  
+    #   ... prepares a proper printout of the variable outcome::StrongField.OutcomePolarAngularDistribution.
     function Base.show(io::IO, outcome::StrongField.OutcomePolarAngularDistribution) 
         println(io, "phi:             $(outcome.phi)  ")
         println(io, "energy:            $(outcome.energy)  ")
@@ -422,14 +453,13 @@ module StrongField
         println(io, "probabilities:     $(outcome.probabilities)  ")
     end
     
-    ##################################################################################################################################################
-    ##################################################################################################################################################
-    ##################################################################################################################################################
+    ######################################################################################################################################
+    ######################################################################################################################################
+    ######################################################################################################################################
     
     """
     `StrongField.VolkovP(epsilonp::Float64, lp::Int, rGrid::Array{Float64,1})`  
-        ... returns the (plane-wave) Volkov radial wave function
-                at the radial grid points rGrid
+        ... returns the (plane-wave) Volkov radial wave function at the radial grid points rGrid.
     """
     function  VolkovP(epsilonp::Float64, lp::Int, rGrid::Array{Float64,1})
         P = Float64[]
@@ -443,10 +473,10 @@ module StrongField
         return( P )
     end
     
+    
     """
     `StrongField.CoulombVolkovP(epsilonp::Float64, lp::Int, ZContinuum::Float64, rGrid::Array{Float64,1})`  
-        ... returns the Coulomb-Volkov radial wave function
-                at the radial grid points rGrid
+        ... returns the Coulomb-Volkov radial wave function at the radial grid points rGrid.
     """
     function  CoulombVolkovP(epsilonp::Float64, lp::Int, ZContinuum::Float64, rGrid::Array{Float64,1})
         sqrtTwoEps = sqrt(2*epsilonp)
@@ -459,57 +489,30 @@ module StrongField
             eta = -ZContinuum/sqrtTwoEps
             GammaValue = gamma( lp + 1 + eta * im )
             sigma = angle( GammaValue )
-            Fl = 2.0^lp * exp(-0.5*pi*eta) * abs( GammaValue ) / factorial(2*lp+1) * rho^(lp+1) * exp( rho * im ) * HypergeometricFunctions.drummond1F1(lp+1+eta*im,2*lp+2,-2*rho*im)
-        
+            Fl = 2.0^lp * exp(-0.5*pi*eta) * abs( GammaValue ) / factorial(2*lp+1) * rho^(lp+1) * exp( rho * im ) *
+                 HypergeometricFunctions.drummond1F1(lp+1+eta*im,2*lp+2,-2*rho*im)
         
             p = Fl * exp( sigma * im ) / sqrtTwoEps
-            
             push!( P, p )
         end
         
         return( P )
-    end
-    
-    ####################################################################################################################
-    ####################################################################################################################
-
-    """
-    `StrongField.computeEnvelopeIntegrals(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                          thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
-        ... computes the pulse-envelope integrals for the given laser pulse; this pulse is completely specified by its beam character
-            and parameters, the pulse-envelope parameters and the polarization of the light. A tuple of the two integrals
-            (fVolkov, fVolkovSquared)::Tuple{Complex{Float64},Complex{Float64}} is returned.
-    """
-    function computeEnvelopeIntegrals(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
-                                      thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        fVolkovPlus    = Pulse.envelopeVolkovIntegral(true,  envelope, beam, polarization, thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        fVolkovMinus   = Pulse.envelopeVolkovIntegral(false, envelope, beam, polarization, thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        fVolkovSquared = Pulse.envelopeQuadVolkovIntegral(envelope, beam, polarization,    thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
-        
-        #println("> Envelope integrals for a $(string(envelope)) with A0=$(beam.A0), omega=$(beam.omega) [a.u.], cep=$(beam.cep)" * 
-        #        " and for $(string(polarization)) light are:" )
-        #println("    F^(Volkov) [+; omega; f^(env); A]   = $fVolkovPlus" )
-        #println("    F^(Volkov) [-; omega; f^(env); A]   = $fVolkovMinus" )
-        #println("    F^(quad, Volkov) [f^(env); A]       = $fVolkovSquared" )
-        
-        return( (fVolkovPlus, fVolkovMinus, fVolkovSquared) )
     end
 
 
     """
     `StrongField.computeOutcome(observable::StrongField.SfaEnergyDistribution, amplitudes::Array{SphericalAmplitude,3})`  
         ... computes the requested photoelectron energy distribution and returns the results in the variable
-            outcome::StrongField.OutcomeEnergyDistribution
+            outcome::StrongField.OutcomeEnergyDistribution.
     """
     function  computeOutcome(obs::StrongField.SfaEnergyDistribution, amplitudes::Array{SphericalAmplitude,3})
-        probabilities = Float64[]
-        dimensions = size(amplitudes)
+        probabilities = Float64[];      dimensions = size(amplitudes)
         for  jAmp  = 1:dimensions[3]
             pp = sqrt(2*amplitudes[1,1,jAmp].energy)
             amp = 0.
             for jmi = 1:dimensions[1]
                 for jmf = 1:dimensions[2]
-                    amp += amplitudes[jmi,jmf,jAmp].value * conj(amplitudes[jmi,jmf,jAmp].value) #sum of probabilities
+                    amp += amplitudes[jmi,jmf,jAmp].value * conj(amplitudes[jmi,jmf,jAmp].value)   # sum of probabilities
                 end
             end
             push!(probabilities, pp * amp )
@@ -517,6 +520,7 @@ module StrongField
         outcome = OutcomeEnergyDistribution(obs.theta, obs.phi, obs.energies, probabilities)
         return( outcome )
     end
+    
 
     """
     `StrongField.computeOutcome(observable::StrongField.SfaMomentumDistribution, amplitudes::Array{SphericalAmplitude,3})`  
@@ -524,9 +528,7 @@ module StrongField
             outcome::StrongField.OutcomeMomentumDistribution
     """
     function  computeOutcome(obs::StrongField.SfaMomentumDistribution, amplitudes::Array{SphericalAmplitude,3})
-        probabilities   = Float64[]
-        dimensions      = size(amplitudes)
-        momenta         = Array{Float64}(undef,0,2)
+        probabilities   = Float64[];    dimensions = size(amplitudes);      momenta = Array{Float64}(undef,0,2)
         
         for  jAmp  = 1:dimensions[3]
             pp = sqrt(2*amplitudes[1,1,jAmp].energy)
@@ -536,7 +538,7 @@ module StrongField
             amp = 0.
             for jmi = 1:dimensions[1]
                 for jmf = 1:dimensions[2]
-                    amp += amplitudes[jmi,jmf,jAmp].value * conj(amplitudes[jmi,jmf,jAmp].value) #sum of probabilities
+                    amp += amplitudes[jmi,jmf,jAmp].value * conj(amplitudes[jmi,jmf,jAmp].value)    # sum of probabilities
                 end
             end
             push!(probabilities, pp * amp )
@@ -545,20 +547,20 @@ module StrongField
         return( outcome )
     end
     
+    
     """
     `StrongField.computeOutcome(observable::StrongField.SfaAzimuthalAngularDistribution, amplitudes::Array{SphericalAmplitude,3})`  
         ... computes the requested photoelectron angular distribution and returns the results in the variable
             outcome::StrongField.OutcomeAzimuthalAngularDistribution
     """
     function  computeOutcome(obs::StrongField.SfaAzimuthalAngularDistribution, amplitudes::Array{SphericalAmplitude,3})
-        probabilities = Float64[]
-        dimensions = size(amplitudes)
+        probabilities = Float64[];      dimensions = size(amplitudes)
         for  jAmp  = 1:dimensions[3]
             pp = sqrt(2*amplitudes[1,1,jAmp].energy)
             amp = 0.
             for jmi = 1:dimensions[1]
                 for jmf = 1:dimensions[2]
-                    amp += amplitudes[jmi,jmf,jAmp].value * conj(amplitudes[jmi,jmf,jAmp].value) #sum of probabilities
+                    amp += amplitudes[jmi,jmf,jAmp].value * conj(amplitudes[jmi,jmf,jAmp].value)  # sum of probabilities
                 end
             end
             push!(probabilities, pp * amp )
@@ -567,20 +569,20 @@ module StrongField
         return( outcome )
     end
     
+    
     """
     `StrongField.computeOutcome(observable::StrongField.SfaPolarAngularDistribution, amplitudes::Array{SphericalAmplitude,3})`  
         ... computes the requested photoelectron angular distribution and returns the results in the variable
             outcome::StrongField.OutcomePolarAngularDistribution
     """
     function  computeOutcome(obs::StrongField.SfaPolarAngularDistribution, amplitudes::Array{SphericalAmplitude,3})
-        probabilities = Float64[]
-        dimensions = size(amplitudes)
+        probabilities = Float64[];      dimensions = size(amplitudes)
         for  jAmp  = 1:dimensions[3]
             pp = sqrt(2*amplitudes[1,1,jAmp].energy)
             amp = 0.
             for jmi = 1:dimensions[1]
                 for jmf = 1:dimensions[2]
-                    amp += amplitudes[jmi,jmf,jAmp].value * conj(amplitudes[jmi,jmf,jAmp].value) #sum of probabilities
+                    amp += amplitudes[jmi,jmf,jAmp].value * conj(amplitudes[jmi,jmf,jAmp].value)    # sum of probabilities
                 end
             end
             push!(probabilities, pp * amp )
@@ -590,80 +592,45 @@ module StrongField
     end
 
     
-    #---------------------------------------------------------------------------------------------------
-    #--------------------------------------FORMULATION in j-l-mj-BASIS:---------------------------------
-    #---------------------------------------------------------------------------------------------------
-    
     """
-    `StrongField.pReducedME(Pepsplp::Array{ComplexF64,1}, lp::Int, jp::Float64, n::Int, l::Int, j::Float64, initialOrbital::Orbital, grid::Radial.Grid)`  
-        ... computes the reduced matrix elements of the momentum operator <epsilonp lp jp||p||n l j> in the one-particle picture
-            where the radial wave function Pepsplp of |epsilonp lp jp> needs to be provided as an argument on the grid rGrid
+    `StrongField.computePulseShapeIntegrals(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                            thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)`  
+        ... computes the pulse-envelope integrals for the given laser pulse; this pulse is completely specified by its beam character
+            and parameters, the pulse-envelope parameters and the polarization of the light. A tuple of the two integrals
+            (fVolkov, fVolkovSquared)::Tuple{Complex{Float64},Complex{Float64}} is returned.
     """
-    function  pReducedME(Pepsplp::Array{ComplexF64,1}, lp::Int, jp::Float64, l::Int, j::Float64, initialOrbital::Orbital, grid::Radial.Grid)
-    
-        #---- Compute the factor in <epsilonp lp jp||p||n l j> = fac * <epsilonp lp||p||n l>-----
-        fac = 0.
-        for    kms = -1:0 #ms = 1/2 + kms
-            ms = 1/2 + kms
-            for    ml = -l:l
-                mj = ml + ms
-                for    mlp = -lp:lp
-                    mjp = mlp + ms
-                    fac = fac + AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(lp)),   AngularM64(Rational(mlp)) , 
-                                                                    AngularJ64(1//2),           AngularM64(Rational(ms)), 
-                                                                    AngularJ64(Rational(jp)),   AngularM64(Rational(mjp))       )       * 
-                                AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(l)),    AngularM64(Rational(ml)),  
-                                                                    AngularJ64(1//2),           AngularM64(Rational(ms)), 
-                                                                    AngularJ64(Rational(j)),    AngularM64(Rational(mj))       )
-                end
-            end
-        end
-        #----------------------------------------------------------------------------------------
+    function computePulseShapeIntegrals(envelope::Pulse.AbstractEnvelope, beam::AbstractBeam, polarization::Basics.AbstractPolarization,
+                                        thetap::Float64, phip::Float64, energyp::Float64, initialEn::Float64)
+        fVolkovPlus    = Pulse.pulseShapeIntegral(true,  envelope, beam, polarization, thetap, phip, energyp, initialEn, 0)
+        fVolkovMinus   = Pulse.pulseShapeIntegral(false, envelope, beam, polarization, thetap, phip, energyp, initialEn, 0)
+        fVolkovSquared = Pulse.pulseShapeQuadIntegral(envelope, beam, polarization,    thetap, phip, energyp, initialEn, 0)
         
-    
-        #--------------------------------Compute <epsilonp lp||p||n l>---------------------------        
-        rvalues = grid.r
-        rweights = grid.wr
-        orderGL = min(size(Pepsplp, 1), size(initialOrbital.P, 1))
+        ## println("> Pulse-shape integral for a $(string(envelope)) with A0=$(beam.A0), omega=$(beam.omega) [a.u.], cep=$(beam.cep)" * 
+        ##         " and for $(string(polarization)) light are:" )
+        ## println("    F^(Volkov) [+; omega; f^(env); A]   = $fVolkovPlus" )
+        ## println("    F^(Volkov) [-; omega; f^(env); A]   = $fVolkovMinus" )
+        ## println("    F^(quad, Volkov) [f^(env); A]       = $fVolkovSquared" )
         
-        integral = 0. * im
-        
-        #Sum over grid and compute Gauss-Legendre sum
-        for    k = 1:orderGL
-            r = rvalues[k]
-            integrand = conj( Pepsplp[k] )/r * ( r*initialOrbital.Pprime[k] - ((lp-l)*(lp+l+1))/2 * initialOrbital.P[k] )
-
-            #Gauss-Legendre sum
-            integral = integral + rweights[k] * integrand
-        end
-
-        #Note that GSL.sf_coupling_3j takes takes the input (2*j1,2*j2,2*j3,2*m1,2*m2,2*m3)
-        integral = integral * (-im)^(lp+1) * (-1)^lp * GSL.sf_coupling_3j( 2*lp, 2*1, 2*l, 0, 0, 0 )
-        #----------------------------------------------------------------------------------------
-        
-        return( fac * integral )
+        return( (fVolkovPlus, fVolkovMinus, fVolkovSquared) )
     end
     
     
     """
-    `StrongField.scalarProdBoundCont(Pepsplp::Array{ComplexF64,1}, l::Int, initialOrbital::Orbital, grid::Radial.Grid)`  
+    `StrongField.computeScalarProdBoundCont(Pepsplp::Array{ComplexF64,1}, l::Int, initialOrbital::Orbital, grid::Radial.Grid)`  
         ... computes the scalar product of the bound and continuum states in the one-particle picture
-            where the radial wave function Pepsplp of |epsilonp lp jp> needs to be provided as an argument on the grid rGrid
+            where the radial wave function Pepsplp of |epsilonp lp jp> needs to be provided as an argument on the grid rGrid.
     """
-    function  scalarProdBoundCont(Pepsplp::Array{ComplexF64,1}, l::Int, initialOrbital::Orbital, grid::Radial.Grid)     
-        rvalues = grid.r
-        rweights = grid.wr
-        
+    function  computeScalarProdBoundCont(Pepsplp::Array{ComplexF64,1}, l::Int, initialOrbital::Orbital, grid::Radial.Grid)     
+        rvalues = grid.r;   rweights = grid.wr
         orderGL = min(size(Pepsplp, 1), size(initialOrbital.P, 1))
         
         integral = 0. * im
         
-        #Sum over grid and compute Gauss-Legendre sum
+        # Sum over grid and compute Gauss-Legendre sum
         for    k = 1:orderGL
             r = rvalues[k]
             integrand = conj( Pepsplp[k] ) * initialOrbital.P[k]
-
-            #Gauss-Legendre sum
+            # Gauss-Legendre sum
             integral = integral + rweights[k] * integrand
         end
         
@@ -673,51 +640,50 @@ module StrongField
     
     """
     `StrongField.computeSphericalAmplitudes(comp::StrongField.Computation)`  
-        ... computes all necessary spherical amplitudes for the given initial and final levels, the Volkov states
-            and polarization and by using the pulse envelope integrals - using a coupled angular-momentum basis for the active electron,
+        ... computes all necessary spherical amplitudes for the given initial and final levels, the Volkov states and polarization 
+            and by using the pulse envelope integrals - using a coupled angular-momentum basis for the active electron,
             A sfaAmplitudes::Array{SphericalAmplitude,3} is returned.
     """
     function  computeSphericalAmplitudes(comp::StrongField.Computation)
         
-        #Extract the initial orbital of the active electron from the many-electron comp.initialLevel and set quantum numbers
+        # Extract the initial orbital of the active electron from the many-electron comp.initialLevel and set quantum numbers
         initialOrbitals = comp.initialLevel.basis.orbitals
         
-        #Find highest lying orbital (smallest ionization potential)
-        defaultSubshell = [sh for (sh,or) in initialOrbitals][1] #This is not nice; must be a better way to simply get a default element from a Dict
-        initialOrbital = initialOrbitals[defaultSubshell]
+        # Find highest lying orbital (smallest ionization potential)
+        # This is not nice; must be a better way to simply get a default element from a Dict
+        defaultSubshell = [sh for (sh,or) in initialOrbitals][1] #
+        initialOrbital  = initialOrbitals[defaultSubshell]
         minIonPotential = abs(initialOrbital.energy)
         for (subshell,orbital) in initialOrbitals
             if   abs(orbital.energy) < minIonPotential
-                initialOrbital = orbital
+                initialOrbital  = orbital
                 minIonPotential = abs(orbital.energy)
             end
         end
         
         initialEneV = convertUnits("energy: from atomic to eV", initialOrbital.energy)
         println("")
-        println("Selected orbital $(initialOrbital.subshell) as active electron for the strong-field ionization process. Binding energy: $(initialEneV) eV.")
+        println(">> Selected orbital $(initialOrbital.subshell) as active electron for the strong-field ionization process. " *
+                "Binding energy: $(initialEneV) eV.")
         println("")
         
         ls = LevelSymmetry(initialOrbital.subshell)
-        n = initialOrbital.subshell.n;      l = (ls.J.num+1)/2;    j = ls.J.num/2;     initialEn = initialOrbital.energy
+        n  = initialOrbital.subshell.n;      l = (ls.J.num+1)/2;    j = ls.J.num/2;     initialEn = initialOrbital.energy
         
         if  (sign((-1)^l) == -1 && ls.parity == plus::Parity) || (sign((-1)^l) == 1 && ls.parity == minus::Parity)
             l = l - 1
         end
         l = floor(Int,l)
         
-        if comp.settings.hydrogenic && comp.settings.hydrogenic1s
-            n = 1
-            l = 0
-            j = 1/2
+        if comp.settings.hydrogenic   &&   comp.settings.hydrogenic1s
+            n = 1;      l = 0;      j = 1/2
         end
         
-        lpMin = abs(l-1)
-        lpMax = l+1
+        lpMin = abs(l-1);   lpMax = l+1
            
-        #Determine which spherical SFA amplitudes need to be computed before the actual computation starts
-        mjNum = 1; mspNum = 1    #If comp.Average == false
-        mjAverageFactor = 1.     #If comp.Average == false
+        # Determine which spherical SFA amplitudes need to be computed before the actual computation starts
+        mjNum = 1; mspNum = 1    # If comp.Average == false
+        mjAverageFactor = 1.     # If comp.Average == false
         if( comp.settings.mAverage )
             mjNum = Int(2*j + 1)
             mspNum = 2
@@ -726,48 +692,40 @@ module StrongField
         
         sfaAmplitudes = StrongField.determineSphericalAmplitudes(comp.observable,mjNum,mspNum)
         
-        #-----Generate continuum wave functions for all energies and values of lp that are needed below-----
-        
+        # Generate continuum wave functions for all energies and values of lp that are needed below
         println("")
         println("Computing continuum wave functions...")
         
         energies = Array{Float64}(undef,length(sfaAmplitudes[1,1,:]))
-        for  jAmp = 1:length(sfaAmplitudes[1,1,:])  #Get all different energy values
+        for  jAmp = 1:length(sfaAmplitudes[1,1,:])  # Get all different energy values
             energies[jAmp] = sfaAmplitudes[1,1,jAmp].energy
         end
         energies = unique(energies)
-        lpArray = unique( [lpMin l lpMax] )
+        lpArray  = unique( [lpMin l lpMax] )
         
         Pepsplp = Array{ComplexF64}(undef,size(energies)[1],size(lpArray)[1],size(comp.grid.r)[1])
         
         for jlp = 1:size(lpArray)[1]
-
             lp = lpArray[jlp]
-            
             for jE = 1:size(energies)[1]
-            
                 epsilonp = energies[jE]
         
-                if  typeof(comp.volkov) == FreeVolkov
-                
+                if      typeof(comp.volkov) == FreeVolkov
                     Pepsplp[jE,jlp,:] = VolkovP( epsilonp, lp, comp.grid.r )
-                    
                 elseif  typeof(comp.volkov) == CoulombVolkov
-                
                     Pepsplp[jE,jlp,:] = CoulombVolkovP( epsilonp, lp, comp.volkov.Z, comp.grid.r )
-                    
                 elseif  typeof(comp.volkov) == DistortedVolkov
-                
                     eta = (-1)^(lp+1)
                     kappa = eta*(lp+1/2)-1/2
                 
-                    nrContinuum = Continuum.gridConsistency(epsilonp, comp.grid)
+                    nrContinuum  = Continuum.gridConsistency(epsilonp, comp.grid)
                     contSettings = Continuum.Settings(false, comp.grid.NoPoints)
 
                     newiLevel = Basics.generateLevelWithSymmetryReducedBasis(comp.initialLevel, comp.initialLevel.basis.subshells)
                     newfLevel = Basics.generateLevelWithSymmetryReducedBasis(comp.finalLevel, newiLevel.basis.subshells)
                     newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, kappa), newiLevel)
-                    cOrbital, phase  = Continuum.generateOrbitalForLevel(epsilonp, Subshell(101, kappa), newfLevel, comp.nuclearModel, comp.grid, contSettings)
+                    cOrbital, phase  = Continuum.generateOrbitalForLevel(epsilonp, Subshell(101, kappa), newfLevel, 
+                                                                         comp.nuclearModel, comp.grid, contSettings)
                     
                     jr = size(cOrbital.P)[1]
                     while jr < size(comp.grid.r)[1]
@@ -775,14 +733,10 @@ module StrongField
                         jr += 1
                     end
                     Pepsplp[jE,jlp,:] = cOrbital.P * exp(im*phase)
-                    
                 end
                 
-            end #end for energy
-            
-        end #end for lp
-        
-        #---------------------------------------------------------------------------------------------------
+            end     # end for energy
+        end         # end for lp
         
         println("")
         println("Computing SFA amplitudes...")
@@ -790,30 +744,31 @@ module StrongField
         
         # Compute the requested amplitudes
         for jmj = 1:mjNum
-            mj = -j + (jmj-1) 
+            mj  = -j + (jmj-1) 
             for jmsp = 1:mspNum
-                msp = -1/2 + (jmsp-1)
-                for  jAmp = 1:length(sfaAmplitudes[jmj,jmsp,:]) #amp in  sfaAmplitudes[jmj,jmsp]
+                msp  = -1/2 + (jmsp-1)
+                for  jAmp = 1:length(sfaAmplitudes[jmj,jmsp,:])    # amp in  sfaAmplitudes[jmj,jmsp]
                     amp = sfaAmplitudes[jmj,jmsp,jAmp]
-                    thetap        = amp.theta;   phip = amp.phi;     
-                    energyp = amp.energy; jE = findall(x->x==energyp, vec(energies))[1]
-                    envIntegrals  = StrongField.computeEnvelopeIntegrals(comp.envelope, comp.beam, comp.polarization, thetap, phip, energyp, initialEn)
-                    fVolkovPlus, fVolkovMinus, fVolkovSquared = envIntegrals
+                    thetap  = amp.theta;    phip = amp.phi;     
+                    energyp = amp.energy;   jE = findall(x->x==energyp, vec(energies))[1]
+                    envIntegrals  = StrongField.computePulseShapeIntegrals(comp.envelope, comp.beam, comp.polarization, 
+                                                                           thetap, phip, energyp, initialEn)
+                    fVolkovPlus, fVolkovMinus, fVolkovSquared  = envIntegrals
                     #
                     
                     wminus = 0.0im;    wplus = 0.0im
                     # Collect contributions from all l_p, j_p, q terms
                     for  jlp = 1:size(lpArray)[1]
                         lp = lpArray[jlp]
-                        
-                        kjpMin = floor(Int, ( 2 * abs(lp-1/2) - 1 ) / 2) # jp = (2*kjp + 1)/2, so that the sum below only runs over the correct values. THERE IS A BETTER WAY
+                        # jp = (2*kjp + 1)/2, so that the sum below only runs over the correct values;   THERE IS A BETTER WAY
+                        kjpMin = floor(Int, ( 2 * abs(lp-1/2) - 1 ) / 2)
                         kjpMax = floor(Int, ( 2 * abs(lp+1/2) - 1 ) / 2)
                         
-                        #Compute the sum over total angular momentum jp
+                        # Compute the sum over total angular momentum jp
                         for kjp = kjpMin:kjpMax 
                             jp = 1/2 * (2 * kjp + 1)
-                            
-                            KWignerEckart = 1.0/sqrt(2*jp+1) #Factor in the Wigner-Eckart theorem (CONVENTION that needs to fit the reduced ME!)
+                            #Factor in the Wigner-Eckart theorem (CONVENTION that needs to fit the reduced ME!)
+                            KWignerEckart = 1.0/sqrt(2*jp+1) 
                             
                             if comp.settings.hydrogenic
                                 reducedME = pReducedMEHydrogenic(Pepsplp[jE,jlp,:], lp, jp, initialEn, n, l, j, comp.grid)
@@ -822,49 +777,51 @@ module StrongField
                             end
                             
                             
-                            #Compute the sum over spherical basis components
-                            #Note: sphericalYlm needs an integer in the second argument. mj-msp-q is always a whole number, so we can convert to Int using floor without problems
+                            # Compute the sum over spherical basis components
+                            # Note: sphericalYlm needs an integer in the second argument. mj-msp-q is always a whole number, so we can 
+                            # convert to Int using floor without problems
                             for  q in [-1, 0, 1]
-                                wplus = wplus +  KWignerEckart * (-1)^q * Basics.determinePolarizationVector(q, comp.polarization, star=false)   * 
-                                                    AngularMomentum.sphericalYlm(lp, floor(Int,mj-msp-q), amp.theta, amp.phi)                           *
-                                                    AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(lp)),   AngularM64(Rational(mj-msp-q)), 
-                                                                                        AngularJ64(1//2),           AngularM64(Rational(msp)), 
-                                                                                        AngularJ64(Rational(jp)),   AngularM64(Rational(mj-q)) )        *
-                                                    AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(j)),    AngularM64(Rational(mj)), 
-                                                                                        AngularJ64(1),              AngularM64(Rational(-q)), 
-                                                                                        AngularJ64(Rational(jp)),   AngularM64(Rational(mj-q)) )         * 
-                                                    reducedME
+                                wplus = wplus +  
+                                        KWignerEckart * (-1)^q * Basics.determinePolarizationVector(q, comp.polarization, star=false)    * 
+                                          AngularMomentum.sphericalYlm(lp, floor(Int,mj-msp-q), amp.theta, amp.phi)                      *
+                                          AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(lp)),   AngularM64(Rational(mj-msp-q)), 
+                                                                              AngularJ64(1//2),           AngularM64(Rational(msp)), 
+                                                                              AngularJ64(Rational(jp)),   AngularM64(Rational(mj-q)) )   *
+                                          AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(j)),    AngularM64(Rational(mj)), 
+                                                                              AngularJ64(1),              AngularM64(Rational(-q)), 
+                                                                              AngularJ64(Rational(jp)),   AngularM64(Rational(mj-q)) )   * 
+                                          reducedME
                                         
-                                wminus = wminus +  KWignerEckart * Basics.determinePolarizationVector(q, comp.polarization, star=true)           * 
-                                                    AngularMomentum.sphericalYlm(lp, floor(Int,mj-msp+q), amp.theta, amp.phi)               *
-                                                    AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(lp)),   AngularM64(Rational(mj-msp+q)), 
-                                                                                        AngularJ64(1//2),           AngularM64(Rational(msp)), 
-                                                                                        AngularJ64(Rational(jp)),   AngularM64(Rational(mj+q)) )        *
-                                                    AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(j)),    AngularM64(Rational(mj)), 
-                                                                                        AngularJ64(1),              AngularM64(Rational(q)), 
-                                                                                        AngularJ64(Rational(jp)),   AngularM64(Rational(mj+q)) )         * 
-                                                    reducedME
+                                wminus = wminus +  
+                                         KWignerEckart * Basics.determinePolarizationVector(q, comp.polarization, star=true)             * 
+                                         AngularMomentum.sphericalYlm(lp, floor(Int,mj-msp+q), amp.theta, amp.phi)                       *
+                                         AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(lp)),   AngularM64(Rational(mj-msp+q)), 
+                                                                             AngularJ64(1//2),           AngularM64(Rational(msp)), 
+                                                                             AngularJ64(Rational(jp)),   AngularM64(Rational(mj+q)) )    *
+                                         AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(j)),    AngularM64(Rational(mj)), 
+                                                                             AngularJ64(1),              AngularM64(Rational(q)), 
+                                                                             AngularJ64(Rational(jp)),   AngularM64(Rational(mj+q)) )    * 
+                                         reducedME
                             end
                             
                         end # for jp
-                        
-                    end # for lp
+                     end    # for lp
                     
                     #Compute the scalar product in the term proportional to F_2 in the spherical amplitude
                     if comp.settings.hydrogenic
                         jlp = findall(x->x==l, vec(lpArray))[1]
-                        scalarProd = scalarProdBoundContHydrogenic(Pepsplp[jE,jlp,:], initialEn, n, l, comp.grid)
+                        scalarProd = computeScalarProdBoundContHydrogenic(Pepsplp[jE,jlp,:], initialEn, n, l, comp.grid)
                     else
                         jlp = findall(x->x==l, vec(lpArray))[1]
-                        scalarProd = scalarProdBoundCont(Pepsplp[jE,jlp,:], l, initialOrbital, comp.grid)
+                        scalarProd = computeScalarProdBoundCont(Pepsplp[jE,jlp,:], l, initialOrbital, comp.grid)
                     end
                     
-                    #Compute the total amplitude
-                    wa = (fVolkovPlus * wminus + fVolkovMinus * wplus) + fVolkovSquared * AngularMomentum.sphericalYlm(l, floor(Int,mj-msp), amp.theta, amp.phi) *
-                                                                            AngularMomentum.ClebschGordan_old(    AngularJ64(Rational(l)),    AngularM64(Rational(mj-msp)), 
-                                                                                                                    AngularJ64(1//2),           AngularM64( Rational(msp) ), 
-                                                                                                                    AngularJ64(Rational(j)),    AngularM64(Rational(mj))       )  *
-                                                                            scalarProd
+                    # Compute the total amplitude
+                    wa = (fVolkovPlus * wminus + fVolkovMinus * wplus) + 
+                         fVolkovSquared * AngularMomentum.sphericalYlm(l, floor(Int,mj-msp), amp.theta, amp.phi)       *
+                                          AngularMomentum.ClebschGordan_old(  AngularJ64(Rational(l)), AngularM64(Rational(mj-msp)), 
+                                                                              AngularJ64(1//2),        AngularM64(Rational(msp)), 
+                                                     AngularJ64(Rational(j)), AngularM64(Rational(mj)) )   * scalarProd
                     
                     wa = - im/sqrt(2*pi) * wa
                     wa = mjAverageFactor * wa
@@ -875,25 +832,226 @@ module StrongField
                         println(">> $(SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa))")
                     end
                 end #for amp
-            end #for jmsp
-        end #for jmj
+            end     #for jmsp
+        end         #for jmj
                 
         return( sfaAmplitudes )
     end
+
+    """
+    `StrongField.computeSphericalAmplitudesUncoupled(comp::StrongField.Computation)`  
+        ... computes all necessary spherical amplitudes for the given initial and final levels, the Volkov states
+            and polarization and by using the pulse envelope integrals. A newAmplitudes::Array{SphericalAmplitude,1} is returned.
+    """
+    function  computeSphericalAmplitudesUncoupled(comp::StrongField.Computation)
+        
+        # Extract the initial orbital of the active electron from the many-electron comp.initialLevel and set quantum numbers
+        initialOrbitals = comp.initialLevel.basis.orbitals
+
+        # Find highest lying orbital (smallest ionization potential)
+        # This is not nice; must be a better way to simply get a default element from a Dict
+        defaultSubshell = [sh for (sh,or) in initialOrbitals][1] 
+        initialOrbital  = initialOrbitals[defaultSubshell]
+        minIonPotential = abs(initialOrbital.energy)
+        for (subshell,orbital) in initialOrbitals
+            if   abs(orbital.energy) < minIonPotential
+                initialOrbital  = orbital
+                minIonPotential = abs(orbital.energy)
+            end
+        end
+        
+        initialEneV = convertUnits("energy: from atomic to eV", initialOrbital.energy)
+        println("")
+        println(">> Selected orbital $(initialOrbital.subshell) as active electron for the strong-field ionization process. " * 
+                "Binding energy: $(initialEneV) eV.")
+        println("")
+        
+        ls = LevelSymmetry(initialOrbital.subshell)
+        n  = initialOrbital.subshell.n;     l = (ls.J.num+1)/2;    initialEn = initialOrbital.energy
+        if  (sign((-1)^l) == -1  &&  ls.parity == plus::Parity) || (sign((-1)^l) == 1 && ls.parity == minus::Parity)
+            l = l - 1
+        end
+        l = floor(Int,l)
+        
+        if comp.settings.hydrogenic1s
+            n = 1;    l = 0
+        end
+        
+        lpMin = abs(l-1);    lpMax = l+1
+        
+        # First determine which spherical SFA amplitudes need to be computed before the actual computation starts
+        mNum = 1                 # If comp.Average == false
+        miAverageFactor = 1.     # If comp.Average == false
+        if( comp.settings.mAverage )
+            mNum = 2*l + 1
+            miAverageFactor = 1.0/sqrt( mNum )
+        end
+        sfaAmplitudes = StrongField.determineSphericalAmplitudes(comp.observable,mNum,1)
+        
+        # Compute the requested SFA amplitudes
+        for jm = 1:mNum
+            m = -l + (jm-1) 
+            for  jAmp = 1:length(sfaAmplitudes[jm,1,:]) # amp in  sfaAmplitudes[jm,1]
+                amp = sfaAmplitudes[jm,1,jAmp]
+                thetap        = amp.theta;   phip = amp.phi;     energyp = amp.energy
+                envIntegrals  = StrongField.computePulseShapeIntegrals(comp.envelope, comp.beam, comp.polarization, 
+                                                                        thetap, phip, energyp, initialEn)
+                fVolkovPlus, fVolkovMinus, fVolkovSquared = envIntegrals
+                #
+                reducedMEArray = ComplexF64[]
+                for lp = lpMin:lpMax
+                    push!( reducedMEArray, pReducedMEHydrogenicUncoupled(energyp, lp, n, l, initialEn, comp.volkov, comp.grid) )
+                end
+                    
+                wminus = 0.0im;    wplus = 0.0im
+                # Collect contributions from all l_p, q terms
+                for  lp = lpMin:lpMax
+                    reducedME = reducedMEArray[lp-lpMin+1]
+                    # Factor in the Wigner-Eckart theorem (CONVENTION that needs to fit the reduced ME!)
+                    KWignerEckart = 1.0/sqrt(2*lp+1)
+                    for  q in [-1, 0, 1]
+                        wplus = wplus + KWignerEckart * AngularMomentum.sphericalYlm(lp, m-q, amp.theta, amp.phi) * (-1)^q  * 
+                                Basics.determinePolarizationVector(q, comp.polarization, star=false)                        *
+                                AngularMomentum.ClebschGordan_old( AngularJ64(Rational(l)),  AngularM64(Rational(m)),  AngularJ64(1), 
+                                       AngularM64(Rational(-q)), AngularJ64(Rational(lp)), AngularM64(Rational(m-q)) ) * reducedME
+                                
+                        wminus = wminus + KWignerEckart * AngularMomentum.sphericalYlm(lp, m+q, amp.theta, amp.phi)         * 
+                                Basics.determinePolarizationVector(q, comp.polarization, star=true)                         *
+                                AngularMomentum.ClebschGordan_old( AngularJ64(Rational(l)), AngularM64(Rational(m)),  AngularJ64(1),
+                                            AngularM64(Rational(q)), AngularJ64(Rational(lp)), AngularM64(Rational(m+q)) )  * reducedME
+                    end
+                end
+                
+                scalarProd = scalarProdBoundContHydrogenicUncoupled(energyp, l, n, l, m, initialEn, comp.volkov, comp.grid)
+            
+                wa = (fVolkovPlus * wminus + fVolkovMinus * wplus)  + 
+                     fVolkovSquared * AngularMomentum.sphericalYlm(l, m, amp.theta, amp.phi) * scalarProd
+                wa = - im/sqrt(2*pi) * wa
+                wa = miAverageFactor * wa
+                
+                sfaAmplitudes[jm,1,jAmp] = SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa)
+            
+                if( comp.settings.printAmplitudes )
+                    println(">> $(SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa))")
+                end
+            end  # for amp
+        end      # for jmj
+                
+        return( sfaAmplitudes )
+    end
+
+
+
+    """
+    `StrongField.computeSphericalAmplitudesUncoupledLengthGauge(comp::StrongField.Computation)`  
+        ... computes all necessary spherical amplitudes for the given initial and final levels, the Volkov states
+            and polarization and by using the pulse envelope integrals. A newAmplitudes::Array{SphericalAmplitude,1} 
+            is returned.
+    """
+    function  computeSphericalAmplitudesUncoupledLengthGauge(comp::StrongField.Computation)
+        # Extract the initial orbital of the active electron from the many-electron comp.initialLevel and set quantum numbers
+        initialOrbitals = comp.initialLevel.basis.orbitals
+
+        # Find highest lying orbital (smallest ionization potential)
+        # This is not nice; must be a better way to simply get a default element from a Dict
+        defaultSubshell = [sh for (sh,or) in initialOrbitals][1] 
+        initialOrbital  = initialOrbitals[defaultSubshell]
+        minIonPotential = abs(initialOrbital.energy)
+        for  (subshell,orbital) in initialOrbitals
+            if   abs(orbital.energy) < minIonPotential
+                initialOrbital = orbital
+                minIonPotential = abs(orbital.energy)
+            end
+        end
+        
+        initialEneV = convertUnits("energy: from atomic to eV", initialOrbital.energy)
+        println("")
+        println(">> Selected orbital $(initialOrbital.subshell) as active electron for the strong-field ionization process. " * 
+                "Binding energy: $(initialEneV) eV.")
+        println("")
+        
+        ls = LevelSymmetry(initialOrbital.subshell)
+        n  = initialOrbital.subshell.n;      l = (ls.J.num+1)/2;    initialEn = initialOrbital.energy
+        if  (sign((-1)^l) == -1  &&  ls.parity == plus::Parity) || (sign((-1)^l) == 1  &&  ls.parity == minus::Parity)
+            l = l - 1
+        end
+        l = floor(Int,l)
+        
+        if comp.settings.hydrogenic1s
+            n = 1;    l = 0
+        end
+
+        lpMin = abs(l-1)
+        lpMax = l+1
+        
+        # First determine which spherical SFA amplitudes need to be computed before the actual computation starts
+        mNum = 1                  # If comp.Average == false
+        miAverageFactor = 1.      # If comp.Average == false
+        if( comp.settings.mAverage )
+            mNum = 2*l + 1
+            miAverageFactor = 1.0/sqrt( mNum )
+        end
+
+        sfaAmplitudes = StrongField.determineSphericalAmplitudes(comp.observable,mNum,1)
+
+        # Compute the requested SFA amplitudes
+        for jm = 1:mNum
+            m = -l + (jm-1) 
+            for  jAmp = 1:length(sfaAmplitudes[jm,1,:])     # amp in  sfaAmplitudes[jm,1]
+
+                amp = sfaAmplitudes[jm,1,jAmp]
+                thetap = amp.theta;     phip  = amp.phi;     energyp = amp.energy
+                wminus = 0.0im;         wplus = 0.0im
+
+                for  lp = lpMin:lpMax
+                    KWignerEckart = 1.0/sqrt(2*lp+1)
+                    buf = ReducedTime( initialEn, comp.volkov,comp.envelope, comp.beam, comp.polarization, 
+                                       thetap, phip, energyp,lp, n, l, comp.grid) 
+                    fVolkovPlus  = buf[1]
+                    fVolkovMinus = buf[2]
+                    for  q in [-1, 1]
+                        wplus = wplus + AngularMomentum.sphericalYlm(lp, m-q, thetap, phip) * (-1)^q           * 
+                                        Basics.determinePolarizationVector(q, comp.polarization, star=false)   * 
+                                        AngularMomentum.ClebschGordan_old( AngularJ64(l),  AngularM64(m),  AngularJ64(1), 
+                                                                           AngularM64(-q), AngularJ64(lp), AngularM64(m-q) )
+                        ## (-im)^lp * (-1)   * AngularMomentum.ClebschGordan(l, m, 1, -q, lp, m-q) * (-1) *
+                        ##                     AngularMomentum.ClebschGordan(lp, 0, 1, 0, l, 0)
+
+                        wminus = wminus + AngularMomentum.sphericalYlm(lp, m+q, thetap, phip)                 * 
+                                          Basics.determinePolarizationVector(q, comp.polarization, star=true) *
+                                          AngularMomentum.ClebschGordan_old( AngularJ64(l), AngularM64(m),  AngularJ64(1), 
+                                                                             AngularM64(q), AngularJ64(lp), AngularM64(m+q) )
+                        ## AngularMomentum.ClebschGordan(l, m, 1, q, lp, m+q)*(-im)^lp * (-1) *
+                        ## AngularMomentum.ClebschGordan(lp, 0, 1, 0, l, 0) 
+                    end
+                    wplus  = KWignerEckart * wplus * fVolkovPlus
+                    wminus = KWignerEckart * wminus * fVolkovMinus
+                end
+                wa = - im/sqrt(2*pi)*(wminus + wplus )
+                wa = miAverageFactor * wa       #  / sqrt(12)
+                
+                sfaAmplitudes[jm,1,jAmp] = SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa)
+            
+                if( comp.settings.printAmplitudes )
+                    println(">> $(SphericalAmplitude(amp.energy, amp.theta, amp.phi, wa))")
+                end
+            end         # for amp
+        end             # for jmj
+                
+        return( sfaAmplitudes )
     
-    #---------------------------------------------------------------------------------------------------
-    #---------------------------------------------------------------------------------------------------
-    #----------------------------------------------------------------------------------------------------
+    end
+
     
 
     """
     `StrongField.determineSphericalAmplitudes(observable::StrongField.SfaEnergyDistribution, miNum::Int64, mfNum::Int64)`  
-        ... determines which direct (and other) SFA amplitudes need to be computed; these amplitudes are not yet computed here but can be arranged
-            so that only a minimum number of Volkov states and/or reduced many-electron matrix elements need to be computed.
-            A list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
+        ... determines which direct (and other) SFA amplitudes need to be computed; these amplitudes are not yet computed here 
+            but can be arranged so that only a minimum number of Volkov states and/or reduced many-electron matrix elements need 
+            to be computed. A list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
     """
-    function  determineSphericalAmplitudes(observable::StrongField.SfaEnergyDistribution, miNum::Int64, mfNum::Int64 )
-        ENum = length(observable.energies)
+    function  determineSphericalAmplitudes(observable::StrongField.SfaEnergyDistribution, miNum::Int64, mfNum::Int64)
+        ENum       = length(observable.energies)
         amplitudes = Array{StrongField.SphericalAmplitude}(undef, miNum, mfNum, ENum)
         
         for jmi = 1:miNum
@@ -912,13 +1070,12 @@ module StrongField
     
     """
     `StrongField.determineSphericalAmplitudes(observable::StrongField.SfaMomentumDistribution, miNum::Int64, mfNum::Int64)`  
-        ... determines which direct (and other) SFA amplitudes need to be computed; these amplitudes are not yet computed here but can be arranged
-            so that only a minimum number of Volkov states and/or reduced many-electron matrix elements need to be computed.
-            A list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
+        ... determines which direct (and other) SFA amplitudes need to be computed; these amplitudes are not yet computed here 
+            but can be arranged so that only a minimum number of Volkov states and/or reduced many-electron matrix elements need 
+            to be computed. A list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
     """
     function  determineSphericalAmplitudes(observable::StrongField.SfaMomentumDistribution, miNum::Int64, mfNum::Int64)
-        ENum = length(observable.energies)
-        phiNum = length(observable.phis)
+        ENum = length(observable.energies);     phiNum = length(observable.phis)
     
         amplitudes = Array{StrongField.SphericalAmplitude}(undef, miNum, mfNum, ENum*phiNum)
         
@@ -941,12 +1098,12 @@ module StrongField
     
     """
     `StrongField.determineSphericalAmplitudes(observable::StrongField.SfaAzimuthalAngularDistribution, miNum::Int64, mfNum::Int64)`  
-        ... determines which direct (and other) SFA amplitudes need to be computed; these amplitudes are not yet computed here but can be arranged
-            so that only a minimum number of Volkov states and/or reduced many-electron matrix elements need to be computed.
-            A list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
+        ... determines which direct (and other) SFA amplitudes need to be computed; these amplitudes are not yet computed here 
+            but can be arranged so that only a minimum number of Volkov states and/or reduced many-electron matrix elements need 
+            to be computed. A list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
     """
     function  determineSphericalAmplitudes(observable::StrongField.SfaAzimuthalAngularDistribution, miNum::Int64, mfNum::Int64)
-        phiNum = length(observable.phis)
+        phiNum     = length(observable.phis)
         amplitudes = Array{StrongField.SphericalAmplitude}(undef, miNum, mfNum, phiNum)
         
         for jmi = 1:miNum
@@ -964,12 +1121,12 @@ module StrongField
     
     """
     `StrongField.determineSphericalAmplitudes(observable::StrongField.SfaPolarAngularDistribution, miNum::Int64, mfNum::Int64)`  
-        ... determines which direct (and other) SFA amplitudes need to be computed; these amplitudes are not yet computed here but can be arranged
-            so that only a minimum number of Volkov states and/or reduced many-electron matrix elements need to be computed.
-            A list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
+        ... determines which direct (and other) SFA amplitudes need to be computed; these amplitudes are not yet computed here 
+            but can be arranged so that only a minimum number of Volkov states and/or reduced many-electron matrix elements need 
+            to be computed. A list of amplitudes::Array{StrongField.SphericalAmplitude,1} is returned.
     """
     function  determineSphericalAmplitudes(observable::StrongField.SfaPolarAngularDistribution, miNum::Int64, mfNum::Int64)
-        thetaNum = length(observable.thetas)
+        thetaNum   = length(observable.thetas)
         amplitudes = Array{StrongField.SphericalAmplitude}(undef, miNum, mfNum, thetaNum)
         
         for jmi = 1:miNum
@@ -985,6 +1142,54 @@ module StrongField
     end
 
     
+    """
+    `StrongField.pReducedME(Pepsplp::Array{ComplexF64,1}, lp::Int, jp::Float64, n::Int, l::Int, j::Float64, 
+                            initialOrbital::Orbital, grid::Radial.Grid)`  
+        ... computes the reduced matrix elements of the momentum operator <epsilonp lp jp||p||n l j> in the one-particle picture
+            where the radial wave function Pepsplp of |epsilonp lp jp> needs to be provided as an argument on the grid rGrid.
+            
+            FORMULATION in j-l-mj-BASIS:
+    """
+    function  pReducedME(Pepsplp::Array{ComplexF64,1}, lp::Int, jp::Float64, l::Int, j::Float64, 
+                         initialOrbital::Orbital, grid::Radial.Grid)
+    
+        # Compute the factor for  <epsilonp lp jp||p||n l j> = fac * <epsilonp lp||p||n l>
+        fac = 0.
+        for    kms = -1:0   # ms = 1/2 + kms
+            ms = 1/2 + kms
+            for    ml = -l:l
+                mj = ml + ms
+                for    mlp = -lp:lp
+                    mjp = mlp + ms
+                    fac = fac + AngularMomentum.ClebschGordan_old(  AngularJ64(lp), AngularM64(mlp) , AngularJ64(1//2),           
+                                                                    AngularM64(ms), AngularJ64(jp),   AngularM64(mjp) )       * 
+                                AngularMomentum.ClebschGordan_old(  AngularJ64(l),  AngularM64(ml),   AngularJ64(1//2), 
+                                                                    AngularM64(ms), AngularJ64(j),    AngularM64(mj)  )
+                end
+            end
+        end
+
+        
+        # Compute <epsilonp lp||p||n l>   
+        rvalues = grid.r;       rweights = grid.wr
+        orderGL = min(size(Pepsplp, 1), size(initialOrbital.P, 1))
+        
+        integral = 0. * im
+        
+        # Sum over grid and compute Gauss-Legendre sum
+        for    k = 1:orderGL
+            r = rvalues[k]
+            integrand = conj( Pepsplp[k] )/r * ( r*initialOrbital.Pprime[k] - ((lp-l)*(lp+l+1))/2 * initialOrbital.P[k] )
+            # Gauss-Legendre sum
+            integral = integral + rweights[k] * integrand
+        end
+
+        # Note that GSL.sf_coupling_3j takes the input (2*j1,2*j2,2*j3,2*m1,2*m2,2*m3)
+        integral = integral * (-im)^(lp+1) * (-1)^lp * GSL.sf_coupling_3j( 2*lp, 2*1, 2*l, 0, 0, 0 )
+        
+        return( fac * integral )
+    end
+    
 
     """
     `StrongField.perform(comp::StrongField.Computation; output::Bool=false)` 
@@ -999,7 +1204,11 @@ module StrongField
             if  comp.settings.coupledBasis
                 sfaAmplitudes = StrongField.computeSphericalAmplitudes(comp)
             else
-                sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupled(comp)
+                if comp.settings.gauge == "VelocityGauge"
+                    sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupled(comp)
+                elseif comp.settings.gauge == "LengthGauge"
+                    sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupledLengthGauge(comp)
+                end
             end
             sfaOutcome    = StrongField.computeOutcome(comp.observable, sfaAmplitudes)
             if output    results = Base.merge( results, Dict("computation" => comp, "energy distribution" => sfaOutcome) )  end
@@ -1007,7 +1216,11 @@ module StrongField
             if  comp.settings.coupledBasis
                 sfaAmplitudes = StrongField.computeSphericalAmplitudes(comp)
             else
-                sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupled(comp)
+                if comp.settings.gauge == "VelocityGauge"
+                    sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupled(comp)
+                elseif comp.settings.gauge == "LengthGauge"
+                    sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupledLengthGauge(comp)
+                end
             end
             sfaOutcome    = StrongField.computeOutcome(comp.observable, sfaAmplitudes)
             if output    results = Base.merge( results, Dict("computation" => comp, "momentum distribution" => sfaOutcome) )  end
@@ -1015,7 +1228,11 @@ module StrongField
             if  comp.settings.coupledBasis
                 sfaAmplitudes = StrongField.computeSphericalAmplitudes(comp)
             else
-                sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupled(comp)
+                if comp.settings.gauge == "VelocityGauge"
+                    sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupled(comp)
+                elseif comp.settings.gauge == "LengthGauge"
+                    sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupledLengthGauge(comp)
+                end
             end
             sfaOutcome    = StrongField.computeOutcome(comp.observable, sfaAmplitudes)
             if output    results = Base.merge( results, Dict("computation" => comp, "angular distribution" => sfaOutcome) )  end
@@ -1023,7 +1240,11 @@ module StrongField
             if  comp.settings.coupledBasis
                 sfaAmplitudes = StrongField.computeSphericalAmplitudes(comp)
             else
-                sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupled(comp)
+                if comp.settings.gauge == "VelocityGauge"
+                    sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupled(comp)
+                elseif comp.settings.gauge == "LengthGauge"
+                    sfaAmplitudes = StrongField.computeSphericalAmplitudesUncoupledLengthGauge(comp)
+                end
             end
             sfaOutcome    = StrongField.computeOutcome(comp.observable, sfaAmplitudes)
             if output    results = Base.merge( results, Dict("computation" => comp, "angular distribution" => sfaOutcome) )  end
@@ -1033,12 +1254,142 @@ module StrongField
         if  output   return( results )   else    return( nothing )   end
     end
     
+
+    """
+    `StrongField.ReducedTime(epsiloni::Float64, volkov::AbstractVolkovState,envelope::Pulse.SinSquaredEnvelope, 
+                             beam::Pulse.AbstractBeam, polarization::Basics.AbstractPolarization,
+                             thetap::Float64, phip::Float64, energyp::Float64,lp::Int, n::Int, l::Int)`  
+        ... computes the time integral in the length gauge SFA that includes the reduced matrix element of the momentum operator 
+            that is time dependent due to the canonical momentum. This has only been implemented for SinSquared envelopes.
+    """
+
+    function ReducedTime(epsiloni::Float64, volkov::AbstractVolkovState, envelope::Pulse.SinSquaredEnvelope, 
+                         beam::Pulse.AbstractBeam, polarization::Basics.AbstractPolarization, 
+                         thetap::Float64, phip::Float64, energyp::Float64,lp::Int, n::Int, l::Int, grid::Radial.Grid)
+        
+        #Beam parameters needed below
+        omega  = beam.omega
+        np     = envelope.cycles;   Tp = 2.0*pi / omega * np
+        phiCep = beam.cep
+        phiCepMinusPiHalf = phiCep - 0.5*pi
+        beta   = pi/Tp;
+        lambda = Basics.determinePolarizationLambda(polarization)
+        
+        epsilon = 1.0
+        if polarization != Basics.RightCircular()  &&  polarization != Basics.LeftCircular()
+            epsilon = polarization.ellipticity
+        end
+        
+        A0eps          = beam.A0/sqrt(1.0 + epsilon^2)
+        E0             = beam.A0 * omega
+        omegaOverNp    = omega/np
+        omegaOverTwoNp = 0.5*omegaOverNp
+        
+        #Photoelectron momentum
+        pp = sqrt(2*energyp)
+        px = pp*sin(thetap)*cos(phip)
+        py = pp*sin(thetap)*sin(phip)
+        
+        #Define Gauss-Legendre grid for t integral
+        if   np <= 10   orderGLt = 100*np
+        else            orderGLt = 1000
+        end
+
+        gaussLegendret = Radial.GridGL("Finite",0.,Tp,orderGLt)
+        tgrid = gaussLegendret.t;       weightst = gaussLegendret.wt 
+
+        #Define Gauss-Legendre grid for r integral
+        rvalues = grid.r;               rweights = grid.wr
+        
+        #Compute the initial state wave function (hydrogenic) on the radial grid points
+        Pnl = HydrogenPnl( epsiloni, n, l, rvalues )
+        
+        #Sum over grid and compute Gauss-Legendre sum
+        waplus  = 0. * im;      waminus = 0. * im
+        
+        for    j = 1:orderGLt
+            t = tgrid[j]
+
+            # Compute vector potential and (complex) electric field at grid point t
+            Apotx = A0eps * cos(omega*t+phiCep) * (sin(omegaOverTwoNp*t))^2
+            Apoty = A0eps * epsilon * sin(omega*t+phiCep) * (sin(omegaOverTwoNp*t))^2
+            
+            ## Ec     = beam.A0* omega/2.0 * ( -sin(2*beta*t)/np - cos(2*beta*t)*im + im) * exp( -im * (omega * t + phiCep) )
+            ## CHANGED: I use beam.A0 withou /sqrt(1.0 + epsilon^2), epsilon should be in polarization unit vector u
+            ## EcStar = beam.A0* omega/2.0 * ( -sin(2*beta*t)/np + cos(2*beta*t)*im - im) * exp(  im * (omega * t + phiCep) )
+            ## CHANGED:
+            ## Ec     = A0eps * omega / np * sin(omegaOverTwoNp*t) * 
+            ##          ( - cos(omegaOverTwoNp*t) + im * np * sin(omegaOverTwoNp*t) ) * exp( -im * (omega * t + phiCep) )
+            ## EcStar = A0eps * omega / np * sin(omegaOverTwoNp*t) * 
+            ##          ( - cos(omegaOverTwoNp*t) - im * np * sin(omegaOverTwoNp*t) ) * exp(  im * (omega * t + phiCep) )
+            
+            #Envelope of Ec without amplitude and phase
+            fE 	   = sin(omegaOverTwoNp*t) * ( im * cos(omegaOverTwoNp*t) / np + sin(omegaOverTwoNp*t) ) 
+            fEStar = sin(omegaOverTwoNp*t) * ( - im * cos(omegaOverTwoNp*t) / np + sin(omegaOverTwoNp*t) )
+
+            # Compute the square of canonical momentum at gridpoint t
+            p2p = (px+Apotx)^2+(py+Apoty)^2
+            
+            #Compute the radial continuum wave function at gridpoint t
+            if  typeof(volkov) == FreeVolkov            Pepsplp = VolkovP( p2p/2, lp, rvalues )
+            elseif  typeof(volkov) == CoulombVolkov     Pepsplp = CoulombVolkovP( p2p/2, lp, volkov.Z, rvalues )
+            end
+            
+            # Compute the reduced matrix element of the position operator at gridpoint t
+            rIntegral = RadialIntegrals.rkDiagonal(1, conj( Pepsplp), Pnl, grid)
+            rIntegral = rIntegral * (-im)^lp * sqrt(2*l+1) * (-1)^(l+1-lp) * 
+                        AngularMomentum.ClebschGordan_old( AngularJ64(l), AngularM64(0),  AngularJ64(1), 
+                                                           AngularM64(0), AngularJ64(lp), AngularM64(0) )
+            
+            # Compute Volkov phase at gridpoint t
+            cosIntegral = 0.25 / (omega * (np^2-1)) * 
+                          (  2*sin(phiCep) + 2 * (np^2-1) * sin(phiCep + omega*t) - 
+                          np * ( (1+np)*sin( phiCep + (np-1)/np * omega*t ) + (np-1) * sin( phiCep + (np+1)/np * omega*t )  ) )
+
+            sinIntegral = 0.25 / (omega * (np^2-1)) * ( -2*cos(phiCep) - 2 * (np^2-1) * 
+                          cos(phiCep + omega*t) + np * ( (1+np)*cos( phiCep + (np-1)/np * omega*t )   + 
+                          (np-1) * cos( phiCep + (np+1)/np * omega*t )  ) )
+
+            cos2Integral = sin(2*phiCep)/omega * ( -6 - np/(np-1) - np/(np+1) + 8*np/(2*np-1) + 8*np/(2*np+1) )  + 
+                           12*t + 6/omega * cos(2*omega*t) * sin(2*phiCep) + 6/omega * cos(2*phiCep) * sin(2*omega*t) - 
+                           16/omega*np*sin(omega*t/np) + 2/omega*np*sin(2*omega*t/np)  - 
+                           8*np/(omega*(1+2*np)) * sin(2*phiCep + (2+1/np)*omega*t) + np/(omega*(np-1)) * 
+                           sin(2*(phiCep + (np-1)/np *omega*t))  + np/(omega*(1+np)) * sin(2*(phiCep + (np+1)/np * omega*t)) - 
+                           8*np/(omega*(2*np-1))*sin(2*phiCep + (2*np-1)/np * omega*t )
+            cos2Integral = cos2Integral / 64
+
+            sin2Integral = 12*t + 6/omega * sin(2*phiCep) * ( 1/(1-5*np^2+4*np^4) - cos(2*omega*t) ) - 
+                           6/omega * cos(2*phiCep)*sin(2*omega*t)  - 
+                           16/omega * np * sin(omega*t/np) + 2/omega * np * sin(2*omega*t/np)  + 
+                           8*np/(omega*(1+2*np)) * sin(2*phiCep + (2+1/np)*omega*t)            - 
+                           np/(omega*(np-1)) * sin(2*(phiCep + (np-1)/np *omega*t ))  - 
+                           np/(omega*(1+np)) * sin(2*(phiCep + (np+1)/np*omega*t))  + 
+                           8/omega * np/(2*np-1) * sin(2*phiCep + (2*np-1)/np*omega*t)
+            sin2Integral = sin2Integral / 64
+
+            SVolkov = energyp*t + A0eps*px*cosIntegral + A0eps*lambda*epsilon*py*sinIntegral + 
+                      0.5 * A0eps^2 * ( cos2Integral + epsilon^2 * sin2Integral )
+
+            expEpsilonVolkov = exp(-im * epsiloni*t) * exp(im * SVolkov)
+
+            # Compute the time integral
+            waplus  = waplus  + fE * rIntegral * expEpsilonVolkov * exp(-im * omega * t) * weightst[j]
+            waminus = waminus + fEStar * rIntegral * expEpsilonVolkov * exp(im * omega * t) * weightst[j]
+        end
+        
+        waplus 	= waplus  * E0 * exp(-im*phiCepMinusPiHalf)
+        waminus = waminus * E0 * exp(im*phiCepMinusPiHalf)
+
+        return( (waplus,waminus) )
+    end 
+    
+    
+    
     #######################################################################################################################################
     #######################################################################################################################################
     
-    include("module-StrongField-inc-hydrogenic.jl") #StrongField routines for hydrogenic initial states
-    include("module-StrongField-inc-uncoupled.jl")  #StrongField routines for computations in the basis of "uncoupled" angular momentum l,ml instead of j,l,mj
-    ## include("module-StrongField-inc-postProcessing.jl")       #StrongField.plot(...) routine to plot results of StrongField computations
+    include("module-StrongField-inc-hydrogenic.jl")            #  StrongField routines for hydrogenic initial states
+    include("module-StrongField-inc-postProcessing.jl")        #  StrongField.plot(...) routine to plot results of StrongField computations
 
 end # module
 
