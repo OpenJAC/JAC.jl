@@ -119,10 +119,10 @@
                     wk = ComplexF64(0.)
                     for  K in Klist
                         wk =  wk + MultiPhotonDeExcitation.getReducedAmplitudeEmission(K, line.finalLevel, omega2, mp2, Jsym, omega1, mp1, 
-                                                                                          line.initialLevel, gauge, sharing.channels) +
+                                                                                          line.initialLevel, gauge, line.sharings) +
                                AngularMomentum.phaseFactor([K, +1, line.finalLevel.J, +1, line.initialLevel.J]) * 
                                    MultiPhotonDeExcitation.getReducedAmplitudeEmission(K, line.finalLevel, omega1, mp1, Jsym, omega2, mp2, 
-                                                                                          line.initialLevel, gauge, sharing.channels)
+                                                                                          line.initialLevel, gauge, line.sharings)
                     end
                     dcs = dcs + abs( wk )^2
                 end
@@ -202,9 +202,10 @@
 
 
     """
-    `MultiPhotonDeExcitation.computeReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega2::Float64, multipole2::EmMultipole, Jsym::LevelSymmetry, 
-                                                                                               omega1::Float64, multipole1::EmMultipole, initialLevel::Level,
-                                                                               gauge::EmGauge, grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})`  
+    `MultiPhotonDeExcitation.computeReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, 
+                                                             omega2::Float64, multipole2::EmMultipole, Jsym::LevelSymmetry, 
+                                                             omega1::Float64, multipole1::EmMultipole, initialLevel::Level,
+                                             gauge::EmGauge, grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})`  
         ... to compute the reduced amplitude U^{K, 2gamma emission} (K, Jf, omega2, multipole2, Jsym, omega1, multipole1, Ji) by means of the
             given Green function channels. An amplitude::Complex{Float64} is returned.
     """
@@ -223,10 +224,11 @@
             end
         end 
         
-        if    found                                
-              U = U * AngularMomentum.Wigner_6j(initialLevel.J, finalLevel.J, K, AngularJ64(multipole2.L), AngularJ64(multipole1.L), Jsym.J)
-              ##x println(" ")
-        else  println("No Green function cannel found for amplitude U^{K, 2gamma emission} (K, Jf, omega2, multipole2, Jsym = $Jsym, omega1, multipole1, Ji) ")
+        if    found
+            wx = AngularMomentum.Wigner_6j(initialLevel.J, finalLevel.J, K, AngularJ64(multipole2.L), AngularJ64(multipole1.L), Jsym.J)
+            U  = U * wx
+        else  println("No Green function cannel found for amplitude U^{K, 2gamma emission} " *
+                      "(K, Jf, omega2, multipole2, Jsym = $Jsym, omega1, multipole1, Ji) ")
         end 
         
         return( U )
@@ -234,27 +236,32 @@
 
 
     """
-    `MultiPhotonDeExcitation.getReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega2::Float64, multipole2::EmMultipole, Jsym::LevelSymmetry, 
-                                                                                           omega1::Float64, multipole1::EmMultipole, initialLevel::Level, 
-                                                                           gauge::EmGauge, channels::Array{MultiPhotonDeExcitation.ReducedChannel_2pEmission,1})`  
-        ... to get/return the reduced amplitude U^{K, 2gamma emission} (K, Jf, omega2, multipole2, Jsym, omega1, multipole1, Ji) from the calculated list
-            of channels. An amplitude::Complex{Float64} is returned.
+    `MultiPhotonDeExcitation.getReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, 
+                                                         omega2::Float64, multipole2::EmMultipole, Jsym::LevelSymmetry, 
+                                                         omega1::Float64, multipole1::EmMultipole, initialLevel::Level, 
+                                         gauge::EmGauge, sharings:Array{MultiPhotonDeExcitation.Sharing_2pEmission,1})`  
+        ... to get/return the reduced amplitude U^{K, 2gamma emission} (K, Jf, omega2, multipole2, Jsym, omega1, multipole1, Ji) 
+            from the calculated list of channels. An amplitude::Complex{Float64} is returned.
     """
     function getReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega2::Float64, multipole2::EmMultipole, Jsym::LevelSymmetry, 
                                                                            omega1::Float64, multipole1::EmMultipole, initialLevel::Level, 
-                                                                           gauge::EmGauge, channels::Array{MultiPhotonDeExcitation.ReducedChannel_2pEmission,1})
+                                                           gauge::EmGauge, sharings::Array{MultiPhotonDeExcitation.Sharing_2pEmission,1})
         U = Complex(0.);    found = false
-        for channel in channels
-            if  K == channel.K  &&  omega1 == channel.omega1  &&  omega2 == channel.omega2  &&  Jsym == channel.Jsym  &&  
-                multipole1 == channel.multipole1  &&  multipole2 == channel.multipole2      && 
-                (gauge == channel.gauge  ||  EmGauge("Magnetic")  == channel.gauge)
-                U = channel.amplitude;    found = true
+        for sharing in sharings
+            for channel in sharing.channels
+                ## omega1 == channel.omega1  &&  omega2 == channel.omega2  &&  
+                if  K == channel.K         &&  abs(omega1 - channel.omega1) < 1.e-10  &&   abs(omega2 - channel.omega2) < 1.e-10 && 
+                    Jsym == channel.Jsym   &&  multipole1 == channel.multipole1  &&  multipole2 == channel.multipole2            && 
+                    gauge == channel.gauge
+                    ## (gauge == channel.gauge  ||  EmGauge("Magnetic")  == channel.gauge)
+                    U = channel.amplitude;    found = true;     continue
+                end
             end
         end 
         
         if    found                                
-              println("U^{K, 2gamma emission} (..) = $U found. ")
-        else  println("No U^{K, 2gamma emission} (K, Jf, omega2, multipole2, Jsym = $Jsym, omega1, multipole1, Ji) amplitude found.")
+              println("U^{K, 2gamma emission} ($gauge..) = $U found. ")
+        else  println("No U^{K, 2gamma emission} ($gauge, $K, Jf, $omega2, $multipole2, Jsym = $Jsym, $omega1, $multipole1, Ji) amplitude found.")
         end 
         
         return( U )
@@ -303,11 +310,11 @@
                     for  symx in symmetries
                         for  gauge in settings.gauges
                             # Include further restrictions if appropriate
-                            if     string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseCoulomb
+                            if     (string(mp1)[1] == 'E' || string(mp2)[1] == 'E')  &&   gauge == Basics.UseCoulomb
                                 for K in Klist  push!(channels, ReducedChannel_2pEmission(K, omega1, omega2, mp1, mp2, Basics.Coulomb, symx, 0.) )    end 
-                            elseif string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
+                            elseif (string(mp1)[1] == 'E' || string(mp2)[1] == 'E')  &&   gauge == Basics.UseBabushkin    
                                 for K in Klist  push!(channels, ReducedChannel_2pEmission(K, omega1, omega2, mp1, mp2, Basics.Babushkin, symx, 0.) )  end
-                            elseif string(mp1)[1] == 'M' && string(mp2)[1] == 'M'
+                            elseif (string(mp1)[1] == 'M' && string(mp2)[1] == 'M')
                                 for K in Klist  push!(channels, ReducedChannel_2pEmission(K, omega1, omega2, mp1, mp2, Basics.Magnetic, symx, 0.) )   end
                             end
                         end

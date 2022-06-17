@@ -116,9 +116,9 @@
             push!( newLines, newLine)
         end
         # Print all results to screen
-        MultiPhotonDeExcitation.displayCrossSections_2pAbsorptionMonochromatic(stdout, settings.process.properties, newLines)
+        MultiPhotonDeExcitation.displayResults_2pAbsorptionMonochromatic(stdout, settings.process.properties, newLines)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary    MultiPhotonDeExcitation.displayCrossSections_2pAbsorptionMonochromatic(iostream, settings.process.properties, newLines)   end
+        if  printSummary    MultiPhotonDeExcitation.displayResults_2pAbsorptionMonochromatic(iostream, settings.process.properties, newLines)  end
         #
         if    output    return( newLines )
         else            return( nothing )
@@ -249,6 +249,7 @@
         
         println("computeTotalAlpha0: ta0 = $ta0")
         ta0 = ta0 * 2*pi^3 / Defaults.getDefaults("alpha")^2 / omega^3  ## / (Basics.twice(line.initialLevel.J) + 1)
+        ta0 = ta0 / Defaults.getDefaults("alpha")
         
         return( ta0 )
     end
@@ -498,25 +499,78 @@
 
 
     """
-    `MultiPhotonDeExcitation.displayCrossSections_2pAbsorptionMonochromatic(stream::IO, 
-                                                  properties::Array{MultiPhotonDeExcitation.AbstractMultiPhotonProperty,1},
-                                                  lines::Array{MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic,1})`  
+    `MultiPhotonDeExcitation.displayTotalAlpha0_2pAbsorptionMonochromatic(stream::IO, 
+                                                properties::Array{MultiPhotonDeExcitation.AbstractMultiPhotonProperty,1},
+                                                lines::Array{MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic,1})`  
         ... to display all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is 
             returned otherwise.
     """
-    function  displayCrossSections_2pAbsorptionMonochromatic(stream::IO, properties::Array{AbstractMultiPhotonProperty,1},
-                                                             lines::Array{Line_2pAbsorptionMonochromatic,1})
+    function  displayTotalAlpha0_2pAbsorptionMonochromatic(stream::IO, properties::Array{AbstractMultiPhotonProperty,1},
+                                                           lines::Array{Line_2pAbsorptionMonochromatic,1})
+        nx = 105
+        wx = Defaults.convertUnits("length: from atomic to cm", 1.0)^4 / Defaults.convertUnits("energy: from atomic to Ws", 1.0)
+        println(stream, " ")
+        println(stream, "  Total alpha_0 parameter are given in cm^4/Ws :")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+        sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+        sa = sa * TableStrings.center(10, "Energy"; na=4);              
+        sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(10, "omega";  na=4);              
+        sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=4)
+        sa = sa * TableStrings.center(28, "Cou --  total alpha_0  -- Bab"; na=4);              
+        sb = sb * TableStrings.center(28, "[cm^4/Ws]"  * "           " * "[cm^4/Ws]"; na=8)
+
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
+        for  line in lines
+            sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
+            energy = line.finalLevel.energy - line.initialLevel.energy
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", energy))         * "    "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.omega))     * "        "
+            for property in properties
+                if      typeof(property) == TotalAlpha0          
+                    sa = sa * @sprintf("%.4e", line.alpha0.Coulomb   * wx)        * "      "
+                    sa = sa * @sprintf("%.4e", line.alpha0.Babushkin * wx)        * "          "
+                else
+                end
+            end
+            println(stream, sa )
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        return( nothing )
+    end
+
+
+    """
+    `MultiPhotonDeExcitation.displayResults_2pAbsorptionMonochromatic(stream::IO, 
+                                            properties::Array{MultiPhotonDeExcitation.AbstractMultiPhotonProperty,1},
+                                            lines::Array{MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic,1})`  
+        ... to display all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is 
+            returned otherwise.
+    """
+    function  displayResults_2pAbsorptionMonochromatic(stream::IO, properties::Array{AbstractMultiPhotonProperty,1},
+                                                       lines::Array{Line_2pAbsorptionMonochromatic,1})
         nx = 75
+        wx = Defaults.convertUnits("length: from atomic to cm", 1.0)^4 / Defaults.convertUnits("energy: from atomic to Ws", 1.0)
+        ## wx = wx * Defaults.convertUnits("time: from atomic to sec", 1.0)
         println(stream, " ")
         println(stream, "  Two-photon absorption by monochromatic and equally-polarized photons (usually from the same beam):")
         println(stream, " ")
-        println(stream, "  Cross sections are given for:")
+        println(stream, "  Cross sections [cm^4/W] are given for:")
         noCs = 0  # Number of cross sections to be printed
         for property in properties
             if      typeof(property) == TotalCsLinear          
                 noCs = noCs + 1;   println(stream, "    + total cross sections for linearly-polarized incident light ($noCs); still incorrect")  
             elseif  typeof(property) == TotalCsRightCircular   
-                noCs = noCs + 1;   println(stream, "    + total cross sections for right-circularly polarized incident light ($noCs); still incorrect") 
+                noCs = noCs + 1;   println(stream, "    + total cross sections for right-circularly polarized incident " *
+                                                   "light ($noCs); still incorrect") 
             elseif  typeof(property) == TotalCsUnpolarized     
                 noCs = noCs + 1;   println(stream, "    + total cross sections for unpolarized incident light ($noCs); still incorrect") 
             end
@@ -532,7 +586,7 @@
         sb = sb * TableStrings.center(10, TableStrings.inUnits("energy"); na=7)
         for no = 1:noCs
             sa = sa * TableStrings.center(28, "Cou -- cross section ($no) -- Bab"; na=4);              
-            sb = sb * TableStrings.center(28, TableStrings.inUnits("cross section") * "          " * TableStrings.inUnits("cross section"); na=8)
+            sb = sb * TableStrings.center(28, "[cm^4/W]" * "          " * "[cm^4/W]"; na=8)
         end
 
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx + 34noCs)) 
@@ -547,22 +601,25 @@
             sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.omega))     * "        "
             for property in properties
                 if      typeof(property) == TotalCsLinear          
-                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Coulomb))          * "      "
-                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Babushkin))        * "          "
-                elseif  typeof(property) == TotalCsLinear          
-                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Coulomb))          * "      "
-                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csLinear.Babushkin))        * "          "
+                    sa = sa * @sprintf("%.4e", line.csLinear.Coulomb          * wx)   * "      "
+                    sa = sa * @sprintf("%.4e", line.csLinear.Babushkin        * wx)   * "          "
                 elseif  typeof(property) == TotalCsRightCircular
-                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csRightCircular.Coulomb))   * "      "
-                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csRightCircular.Babushkin)) * "          "
+                    sa = sa * @sprintf("%.4e", line.csRightCircular.Coulomb   * wx)   * "      "
+                    sa = sa * @sprintf("%.4e", line.csRightCircular.Babushkin * wx)   * "          "
                 elseif  typeof(property) == TotalCsUnpolarized 
-                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csUnpolarized.Coulomb))     * "      "
-                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic",   line.csUnpolarized.Babushkin))   * "          "
+                    sa = sa * @sprintf("%.4e", line.csUnpolarized.Coulomb     * wx)   * "      "
+                    sa = sa * @sprintf("%.4e", line.csUnpolarized.Babushkin   * wx)   * "          "
                 end
             end
             println(stream, sa )
         end
         println(stream, "  ", TableStrings.hLine(nx + 34noCs))
+        #
+        #
+        # Display the TotalAlpha0 parameters if calculated
+        if  TotalAlpha0()  in   properties
+            MultiPhotonDeExcitation.displayTotalAlpha0_2pAbsorptionMonochromatic(stream, properties, lines)
+        end
         #
         return( nothing )
     end

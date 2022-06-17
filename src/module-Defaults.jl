@@ -113,8 +113,9 @@ module Defaults
     + `("einstein B: from atomic", value::Float64)`  
         ... to convert a Einstein B coefficient from atomic to the speficied energy units; a Float64 is returned.or
 
-    + `("energy: from atomic to eV", value::Float64)`  or  `("energy: from atomic to Kayser", value::Float64)`  or
-      `("energy: from atomic to Hz", value::Float64)`  or  `("energy: from atomic to Angstrom", value::Float64)` 
+    + `("energy: from atomic to eV", value::Float64)`  or  `("energy: from atomic to Kayser", value::Float64)`    or
+      `("energy: from atomic to Hz", value::Float64)`  or  `("energy: from atomic to Angstrom", value::Float64)`  or
+      `("energy: from atomic to Ws", value::Float64)`
         ... to convert an energy value from atomic to the speficied energy unit; a Float64 is returned.
 
     + `("energy: from predefined to atomic unit", value::Float64)`  or  `("energy: to atomic", value::Float64)`... to convert an energy value 
@@ -132,7 +133,8 @@ module Defaults
                                                     a Float64 is returned.
 
     + `("length: from fm to atomic", value::Float64)`  ... to convert a length value (in fm) into a.u.;  a Float64 is returned.
-    + `("length: from atomic to fm", value::Float64)`  ... to convert a length value (in Bohr's a.u.) into fm;  a Float64 is returned.
+    + `("length: from atomic to fm", value::Float64)`  or  `("energy: from atomic to Kayser", value::Float64)`  
+        ... to convert a length value (in Bohr's a.u.) to the speficied length unit;  a Float64 is returned.
 
     + `("rate: from atomic to predefined unit", value::Float64)`  or  ("rate: from atomic", value::Float64)  ... to convert a rate value 
                                                 from atomic to the predefined rate unit; a Float64 is returned.
@@ -203,6 +205,7 @@ module Defaults
         elseif   sa in ["energy: from atomic to Kayser"]                    return( wa * CONVERT_ENERGY_AU_TO_KAYSERS )
         elseif   sa in ["energy: from atomic to Hz"]                        return( wa * CONVERT_ENERGY_AU_TO_PER_SEC )
         elseif   sa in ["energy: from atomic to Angstrom"]                  return( 1.0e8 / ( CONVERT_ENERGY_AU_TO_KAYSERS * wa ) )
+        elseif   sa in ["energy: from atomic to Ws"]                        return( wa * 4.35974e-18 )
 
         elseif   sa in ["energy: from predefined to atomic unit", "energy: to atomic"]
             if      Defaults.getDefaults("unit: energy") == "eV"            return( wa / CONVERT_ENERGY_AU_TO_EV )
@@ -265,6 +268,7 @@ module Defaults
 
         elseif  sa in ["length: from fm to atomic"]                         return (wa / CONVERT_LENGTH_AU_TO_FEMTOMETER )
         elseif  sa in ["length: from atomic to fm"]                         return (wa * CONVERT_LENGTH_AU_TO_FEMTOMETER )
+        elseif  sa in ["length: from atomic to cm"]                         return (wa * CONVERT_LENGTH_AU_TO_FEMTOMETER * 1.0e-13 )
 
         elseif  sa in ["kinetic energy to wave number: atomic units"]
             c = INVERSE_FINE_STRUCTURE_CONSTANT
