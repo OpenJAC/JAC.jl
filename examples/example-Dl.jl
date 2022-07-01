@@ -11,21 +11,21 @@ grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rb
 
 if  false
     # Green function for single-photon 2p^2 photoionization of neon
-    name             = "Double Auger decay of 1s photoionized neon"
+    name             = "Photo-double ionization of Be-like neon"
     refConfigs       = [Configuration("1s^2 2s^2")]
     levelSymmetries  = [LevelSymmetry(0, Basics.plus), LevelSymmetry(1, Basics.minus)]
-    greenSettings    = GreenSettings(3, [0, 1], 0.01, true, LevelSelection())
-    greenRep         = Representation(name, Nuclear.Model(10.), Radial.Grid(true), refConfigs, 
-                                      GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 10, greenSettings) ) 
+    greenSettings    = GreenSettings(10, [0, 1, 2], 0.01, true, LevelSelection())
+    greenexpansion   = GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 4, greenSettings)
+    greenRep         = Representation(name, Nuclear.Model(5.), grid, refConfigs, greenexpansion) 
     greenOut         = generate(greenRep, output=true)
     doubleGreen      = greenOut["Green channels"]
     
 elseif true
     # Single-photon 2p^2 photoionization of neon
-    doubleSettings   = PhotoDoubleIonization.Settings(EmMultipole[E1], UseGauge[UseBabushkin], [50.], doubleGreen, 2, 
-                                                      false, true, 1, LineSelection(true, indexPairs=[(1,2)]))
+    doubleSettings   = PhotoDoubleIonization.Settings(EmMultipole[E1], UseGauge[UseCoulomb, UseBabushkin], [10., 20., 30.], doubleGreen, 2, 
+                                                      false, true, 2, LineSelection(true, indexPairs=[(1,2)]))
     
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(10.), 
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(5.), 
                             initialConfigs  =[Configuration("1s^2 2s^2")],
                             finalConfigs    =[Configuration("1s 2s")], 
                             processSettings = doubleSettings )

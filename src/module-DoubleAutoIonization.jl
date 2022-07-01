@@ -9,7 +9,8 @@ module DoubleAutoIonization
 
 
     """
-    `struct  DoubleAutoIonization.Settings`  ... defines a type for the settings in estimating double-Auger and autoionization rates.
+    `struct  DoubleAutoIonization.Settings  <:  AbstractProcessSettings`  
+        ... defines a type for the settings in estimating double-Auger and autoionization rates.
 
         + green                   ::Array{GreenChannel,1}   ... Precalculated and user-specified Green function of the ion.
         + NoEnergySharings        ::Int64                   ... Number of energy sharings that are used in the computations for each line.
@@ -21,7 +22,7 @@ module DoubleAutoIonization
                                                                 allowed values are: CoulombInteraction(), BreitInteraction(), ...
         + lineSelection           ::LineSelection           ... Specifies the selected levels, if any.
     """
-    struct Settings
+    struct Settings  <:  AbstractProcessSettings
         green                     ::Array{GreenChannel,1}
         NoEnergySharings          ::Int64 
         printBefore               ::Bool 
@@ -108,14 +109,14 @@ module DoubleAutoIonization
         + epsilon1         ::Float64         ... Energy of (free) electron 1.
         + epsilon2         ::Float64         ... Energy of (free) electron 2.
         + weight           ::Float64         ... Gauss-Lengendre weight of this sharing for energy-integrated quantities.
-        + differentialRate ::EmProperty      ... differential cross section of this energy sharing.
+        + differentialRate ::Float64         ... differential cross section of this energy sharing.
         + channels         ::Array{DoubleAutoIonization.ReducedChannel,1}  ... List of DoubleAutoIonization (reduced) channels of this line.
     """
     struct  Sharing
         epsilon1           ::Float64
         epsilon2           ::Float64
         weight             ::Float64 
-        differentialRate   ::EmProperty
+        differentialRate   ::Float64
         channels           ::Array{DoubleAutoIonization.ReducedChannel,1}
     end
 
@@ -134,13 +135,13 @@ module DoubleAutoIonization
 
         + initialLevel   ::Level            ... initial-(state) level
         + finalLevel     ::Level            ... final-(state) level
-        + totalRate      ::EmProperty       ... Total rate of this line.
+        + totalRate      ::Float64          ... Total rate of this line.
         + sharings       ::Array{DoubleAutoIonization.Sharing,1}  ... List of DoubleAutoIonization sharings of this line.
     """
     struct  Line
         initialLevel     ::Level
         finalLevel       ::Level
-        totalRate        ::EmProperty
+        totalRate        ::Float64
         sharings         ::Array{DoubleAutoIonization.Sharing,1}
     end 
 
@@ -155,38 +156,121 @@ module DoubleAutoIonization
 
 
     """
-    `DoubleAutoIonization.computeAmplitudesProperties(line::DoubleAutoIonization.Line, grid::Radial.Grid, settings::DoubleAutoIonization.Settings)`  
-        ... to compute all amplitudes and properties of the given line; a line::DoubleAutoIonization.Line is returned for which the amplitudes 
-            and properties have now been evaluated.
+    `DoubleAutoIonization.amplitude(kind::String, channel::DoubleAutoIonization.ReducedChannel, 
+                                    continuumLevel::Level, green::Array{GreenChannel,1}, initialLevel::Level, grid::Radial.Grid)`  
+        ... to compute the kind = (autoionization) amplitude  
+            <((alpha_f J_f, epsilon1 kappa1) J_x, epsilon2 kappa2) J_i || A || alpha_i J_i>  with second-order operator
+        
+                A  =  V^(e-e)  V^(e-e)  =  Sum_n  (V^(e-e)  |n >< n|  V^(e-e)) / (E_i - E_n)
+                  
+            due to the electron-electron interaction V^(e-e) for the given final and initial level. Of course, this amplitude 
+            depends on the partial wave of the outgoing electrons. A value::ComplexF64 is returned.
+            A present, the CoulombInteraction() is hard-coded for the electron-electron interaction.
     """
-    function  computeAmplitudesProperties(line::DoubleAutoIonization.Line, grid::Radial.Grid, settings::DoubleAutoIonization.Settings)
-        newSharings = DoubleAutoIonization.Sharing[]
-        for sharing in line.sharings
-            newChannels = DoubleAutoIonization.ReducedChannel[]
-            for ch in sharing.channels
-                # Generate a continuum orbital
-                phase     = 1.3
-                amplitude = 1.0im 
-                push!( newChannels, ReducedChannel(ch.energy1, ch.kappa1, phase, ch.xSymmetry, ch.energy2, ch.kappa2, phase, amplitude) )
+    function amplitude(kind::String, channel::DoubleAutoIonization.ReducedChannel, 
+                       continuumLevel::Level, green::Array{GreenChannel,1}, initialLevel::Level, grid::Radial.Grid)
+        if      kind in [ "double-Auger"]
+        #--------------------------------
+            symi = LevelSymmetry(initialLevel.J, initialLevel.parity);      symc = LevelSymmetry(continuumLevel.J, continuumLevel.parity)
+            eni  = initialLevel.energy
+            amplitude = ComplexF64(0.);
+            # Compute the terms for <((alpha_f J_f, epsilon1 kappa1) J_x, epsilon2 kappa2) J_i || A || alpha_i J_i>
+            for greenChannel in green
+                if  greenChannel.symmetry == symi == symc
+                    println(">>> Apply Green function channel with symmetry $(greenChannel.symmetry)")
+                    for  (nlev, level)  in  enumerate(greenChannel. gMultiplet.levels)
+                        ## if  nlev > 2  println(">>> Skip nlev > 2 ... need to be corrected !!!!");    break     end
+                        auChannel = AutoIonization.Channel(channel.kappa1, channel.xSymmetry, channel.phase1, ComplexF64(0.))
+                        am_ni     = AutoIonization.amplitude(CoulombInteraction(), auChannel, level, initialLevel, grid; printout=false)
+                        auChannel = AutoIonization.Channel(channel.kappa2, symi, channel.phase2, ComplexF64(0.))
+                        ##x @show continuumLevel.basis.csfs[1]
+                        ##x @show level.basis.csfs[1]
+                        am_fn     = AutoIonization.amplitude(CoulombInteraction(), auChannel, continuumLevel, level, grid; printout=false)
+                        amplitude = amplitude  +  am_fn * am_ni / (eni - level.energy)
+                        println(">> DAI for level $nlev  with  am_fn(A) = $am_fn  and  am_ni(A) = $am_ni")
+                    end 
+                else    ## println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
+                end
             end
-            # Calculate the differential rate 
-            diffRate = EmProperty(-1., -1.)
-            push!( newSharings, DoubleAutoIonization.Sharing(sharing.epsilon1, sharing.epsilon2, sharing.weight, diffRate, newChannels) )
+            #
+        else    error("stop b")
         end
-        # Calculate the total rate
-        totalRate = EmProperty(-1., -1.)
-        line = DoubleAutoIonization.Line(line.initialLevel, line.finalLevel, totalRate, newSharings)
-        return( line )
+        
+        return( amplitude )
     end
 
 
     """
-    `DoubleAutoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+    `DoubleAutoIonization.computeAmplitudesProperties(line::DoubleAutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
+                                                      settings::DoubleAutoIonization.Settings)`  
+        ... to compute all amplitudes and properties of the given line; a line::DoubleAutoIonization.Line is returned 
+            for which the amplitudes and properties have now been evaluated.
+    """
+    function  computeAmplitudesProperties(line::DoubleAutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
+                                          settings::DoubleAutoIonization.Settings)
+        newSharings  = DoubleAutoIonization.Sharing[]
+        contSettings = Continuum.Settings(false, grid.NoPoints-50);    trate = 0.
+        symi         = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity)
+        #
+        for sharing in line.sharings
+            @show sharing.epsilon1, sharing.epsilon2, sharing.weight
+            newChannels = DoubleAutoIonization.ReducedChannel[];    drate = 0.
+            for (ich, ch)  in  enumerate(sharing.channels)
+                ##x @show  ich, ch.kappa1, ch.kappa2
+                newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
+                newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
+                # Generate two continuum orbitals as associated with this sharing; these orbitals move each in the potential of the final level
+                cOrbital1, phase1 = Continuum.generateOrbitalForLevel(ch.energy1, Subshell(101, ch.kappa1), newfLevel, nm, grid, contSettings)
+                cOrbital2, phase2 = Continuum.generateOrbitalForLevel(ch.energy2, Subshell(102, ch.kappa2), newfLevel, nm, grid, contSettings)
+                # Expand these continuum orbitals in the orbital set as given by the Green function
+                greenOrbs  = settings.green[1].gMultiplet.levels[1].basis.orbitals
+                bOrbitals1 = Basics.expandOrbital(cOrbital1, greenOrbs, 3.0e-5, grid, printout=true)
+                bOrbitals2 = Basics.expandOrbital(cOrbital2, greenOrbs, 3.0e-5, grid, printout=true)
+                # Loop through all sub-orbital contribution in the expansion of the continuum orbitals
+                newChannel = DoubleAutoIonization.ReducedChannel(ch.energy1, ch.kappa1, phase1, ch.xSymmetry, 
+                                                                 ch.energy2, ch.kappa2, phase2, ComplexF64(0.) )
+                amplitude  = ComplexF64(0.)
+                for  bOrb1  in  bOrbitals1
+                    ##x @show bOrb1.subshell, newfLevel.basis.subshells
+                    if   bOrb1.subshell  in  newfLevel.basis.subshells        continue    end
+                    for  bOrb2  in  bOrbitals2
+                        if   bOrb2.subshell  in  newfLevel.basis.subshells    continue    end
+                        @show ich, bOrb1.subshell, bOrb2.subshell
+                        if   bOrb1.subshell < bOrb2.subshell
+                            # Only  subshell_1 < subshell_2  need to be considered since the 'reversed' case is part of another channel 
+                            # Perhaps, one needs to multiply with 2 here (??)
+                            symf = LevelSymmetry(newfLevel.J, newfLevel.parity) 
+                            ##x @show  symf, bOrb1.subshell, ch.xSymmetry, bOrb2.subshell, symi
+                            newcLevel  = Basics.generateLevelWithExtraTwoElectrons(bOrb1, ch.xSymmetry, bOrb2, symi, newfLevel)
+                            amplitude  = amplitude + 
+                                         DoubleAutoIonization.amplitude("double-Auger", newChannel, newcLevel, settings.green, newiLevel, grid)
+                        elseif   bOrb1.subshell  ==  bOrb2.subshell     error("stop a")
+                        end
+                    end
+                end
+                push!( newChannels, ReducedChannel(ch.energy1, ch.kappa1, phase1, ch.xSymmetry,
+                                                   ch.energy2, ch.kappa2, phase2, amplitude) )
+                drate = drate  +  2pi * abs(amplitude)^2
+                @show ich, drate, "   ", amplitude
+            end
+            # Calculate the differential decay rates
+            push!( newSharings, DoubleAutoIonization.Sharing( sharing.epsilon1, sharing.epsilon2, sharing.weight, drate, newChannels) )
+            trate = trate + sharing.weight * drate
+        end
+        # Add the total decay rate
+        newLine = DoubleAutoIonization.Line( line.initialLevel, line.finalLevel, trate, newSharings)
+        return( newLine )
+
+    end
+
+
+    """
+    `DoubleAutoIonization.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                        settings::DoubleAutoIonization.Settings; output=true)`  
         ... to compute the double-Auger transition amplitudes and all properties as requested by the given settings. A list of 
             lines::Array{DoubleAutoIonization.Lines} is returned.
     """
-    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
+    function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                            settings::DoubleAutoIonization.Settings; output=true)
         println("")
         printstyled("DoubleAutoIonization.computeLines(): The computation of double-Auger rates starts now ... \n", color=:light_green)
@@ -199,17 +283,17 @@ module DoubleAutoIonization
         # Calculate all amplitudes and requested properties
         newLines = DoubleAutoIonization.Line[]
         for  line in lines
-            newLine = DoubleAutoIonization.computeAmplitudesProperties(line, grid, settings) 
+            newLine = DoubleAutoIonization.computeAmplitudesProperties(line, nm, grid, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
-        DoubleAutoIonization.displayTotalRates(stdout, lines, settings)
-        DoubleAutoIonization.displayDifferentialRates(stdout, lines, settings)
+        DoubleAutoIonization.displayTotalRates(stdout, newLines, settings)
+        DoubleAutoIonization.displayDifferentialRates(stdout, newLines, settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        if  printSummary   DoubleAutoIonization.displayTotalRates(iostream, lines, settings)
-                           DoubleAutoIonization.displayDifferentialRates(iostream, lines, settings)     end
+        if  printSummary   DoubleAutoIonization.displayTotalRates(iostream, newLines, settings)
+                           DoubleAutoIonization.displayDifferentialRates(iostream, newLines, settings)     end
         #
-        if    output    return( lines )
+        if    output    return( newLines )
         else            return( nothing )
         end
     end
@@ -229,7 +313,7 @@ module DoubleAutoIonization
                     energy     = iLevel.energy - fLevel.energy
                     if  energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
                     sharings = DoubleAutoIonization.determineSharingsAndChannels(fLevel, iLevel, energy, settings) 
-                    push!( lines, DoubleAutoIonization.Line(iLevel, fLevel, EmProperty(0., 0.,), sharings) )
+                    push!( lines, DoubleAutoIonization.Line(iLevel, fLevel, 0., sharings) )
                 end
             end
         end
@@ -252,7 +336,7 @@ module DoubleAutoIonization
             for  coupling  in  couplings
                 push!(channels, ReducedChannel(epsilon1, coupling[1], 0., coupling[2], epsilon2, coupling[3], 0., Complex(0.)) ) 
             end
-            push!(sharings, DoubleAutoIonization.Sharing(epsilon1, epsilon2, weight, EmProperty(0., 0.), channels) )
+            push!(sharings, DoubleAutoIonization.Sharing(epsilon1, epsilon2, weight, 0., channels) )
         end
         return( sharings )  
     end
@@ -265,7 +349,7 @@ module DoubleAutoIonization
     function  displayDifferentialRates(stream::IO, lines::Array{DoubleAutoIonization.Line,1}, settings::DoubleAutoIonization.Settings)
         #
         # First, print lines and sharings
-        nx = 128
+        nx = 110
         println(stream, " ")
         println(stream, "  Energy-differential rates of selected double-Auger lines:")
         println(stream, " ")
@@ -276,9 +360,8 @@ module DoubleAutoIonization
         sa = sa * TableStrings.flushleft(38, "Energies (all in " * TableStrings.inUnits("energy") * ")"; na=3);              
         sb = sb * TableStrings.flushleft(38, "  i -- f        epsilon_1     epsilon_2"; na=3)
         sa = sa * TableStrings.center(14, "Weight"; na=0);                            sb = sb * TableStrings.hBlank(14)
-        sa = sa * TableStrings.center(34, "Cou --  diff. rate  -- Bab"; na=3)      
-        sb = sb * TableStrings.center(34, TableStrings.inUnits("rate") * "        " * 
-                                          TableStrings.inUnits("rate"); na=3)
+        sa = sa * TableStrings.center(16, "Diff. rate"; na=3)      
+        sb = sb * TableStrings.center(16, TableStrings.inUnits("rate"); na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
@@ -291,11 +374,10 @@ module DoubleAutoIonization
             #
             for  (is, sharing)  in  enumerate(line.sharings)
                 if  is == 1     sb = sa     else    sb = TableStrings.hBlank( length(sa) )    end
-                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon1))                 * "    "
-                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon2))                 * "    "
-                sb = sb * @sprintf("%.4e",                                              sharing.weight)                    * "       "
-                sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", sharing.differentialRate.Coulomb))   * "   "
-                sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", sharing.differentialRate.Babushkin)) * "   "
+                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon1))           * "    "
+                sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon2))           * "    "
+                sb = sb * @sprintf("%.4e",                                              sharing.weight)              * "     "
+                sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic",   sharing.differentialRate))   * "   "
                 println(stream,  sb )
             end
         end
@@ -346,7 +428,7 @@ module DoubleAutoIonization
         # Second, print lines and channles
         nx = 123
         println(" ")
-        println("  Selected photo-double ionization lines & channels:")
+        println("  Selected photo-double ionization lines & channels:   ... channels are shown only for the first sharing")
         println(" ")
         println("  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
@@ -384,7 +466,7 @@ module DoubleAutoIonization
     function  displayTotalRates(stream::IO, lines::Array{DoubleAutoIonization.Line,1}, settings::DoubleAutoIonization.Settings)
         #
         # First, print lines and sharings
-        nx = 88
+        nx = 70
         println(stream, " ")
         println(stream, "  Total rates of selected double-Auger lines:")
         println(stream, " ")
@@ -394,9 +476,8 @@ module DoubleAutoIonization
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=2);                         sb = sb * TableStrings.hBlank(21)
         sa = sa * TableStrings.center(12, "i--Energy--f"; na=3)               
         sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=3)
-        sa = sa * TableStrings.center(30, "Cou --   total rate   -- Bab"; na=4)      
-        sb = sb * TableStrings.center(30, TableStrings.inUnits("rate") * "          " * 
-                                          TableStrings.inUnits("rate"); na=3)
+        sa = sa * TableStrings.center(16, "Total rate"; na=4)      
+        sb = sb * TableStrings.center(16, TableStrings.inUnits("rate"); na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
@@ -405,10 +486,8 @@ module DoubleAutoIonization
             sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4) 
             energy = line.initialLevel.energy - line.finalLevel.energy
-            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", energy))                 * "      "
-            #
-            sb = sa * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", line.totalRate.Coulomb))   * "     "
-            sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", line.totalRate.Babushkin)) * "   "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", energy))        * "       "
+            sb = sa * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic", line.totalRate))  * "     "
             println(stream,  sb )
         end
         println(stream, "  ", TableStrings.hLine(nx))

@@ -1671,6 +1671,7 @@ module Basics
     function displayOrbitalOverlap                                  end
     function excludeConfigurations                                  end
     function excludeDoubles                                         end
+    function expandOrbital                                          end
     function extractLeadingConfiguration                            end
     function extractNoOpenShells                                    end
     function extractNonrelativisticShellList                        end

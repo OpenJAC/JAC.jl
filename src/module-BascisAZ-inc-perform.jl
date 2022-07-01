@@ -112,7 +112,7 @@
                 outcome = RayleighCompton.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Rayleigh-Compton lines:" => outcome) )                end
             elseif  typeof(computation.processSettings) == DoubleAutoIonization.Settings   
-                outcome = DoubleAutoIonization.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
+                outcome = DoubleAutoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("Double-Auger lines:" => outcome) )                    end
             elseif  typeof(computation.processSettings) == Dielectronic.Settings 
                 outcome = Dielectronic.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 

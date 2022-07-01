@@ -162,9 +162,19 @@ The JAC code makes use of:
     
 ## Quickstart
 
-The numerous features of JAC can be easily understood by (first) following the tutorials that are distributed 
-together with the code. Further details can then be found from the 
-[User Guide, Compendium & Theoretical Background to JAC](UserGuide-Jac.pdf). Make use the index or a
+The 'simplest access' to the JAC toolbox is by using Binder in the cloud. If you click here:
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master) 
+
+you will get a Jupyter notebook where you can call 'using JAC' in order to have Julia and JAC installed.
+Then you can run all examples and calls like on your own computer, just a bit slower (by a factor 3..5).
+This will help you to run a few first examples (as shown in the example folder above) and in order to decide of 
+whether you wish to install the code locally.
+
+You can also directly access the 
+[Getting started with JAC](https://mybinder.org/v2/gh/openjac/JAC.jl/master?labpath=tutorials%2F12-getting-started-with-JAC.ipynb)
+tutorial, and similar for other tutorials that are distributed together with the code. Further details can then be 
+found from the [User Guide, Compendium & Theoretical Background to JAC](UserGuide-Jac.pdf). Make use the index or a
 full-text search to find selected items in this (.pdf) User Guide.
 
 A very **simple example** has been discussed in the [CPC reference](https://doi.org/10.1016/j.cpc.2019.01.012)
@@ -185,11 +195,12 @@ radiation field that are to be applied in these calculations:
                               grid = grid, nuclearModel = Nuclear.Model(26.);
                               initialConfigs = [Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],
                               finalConfigs   = [Configuration("[Ne] 3s^2 3p^5")], 
-                              process = Radiative(), processSettings = photoSettings ); 
+                              processSettings = photoSettings ); 
     perform(comp::Atomic.Computation)
 ```
 
-This example is discussed also in one of the [tutorials](tutorials/51-compute-Fe-X-spectrum.ipynb) below.
+This example is discussed also in one of the [tutorials](tutorials/51-compute-Fe-X-spectrum.ipynb) below or directly in the
+[cloud](https://mybinder.org/v2/gh/openjac/JAC.jl/master?labpath=tutorials%2F51-compute-Fe-X-spectrum.ipynb).
     
     
 ## Tutorials

@@ -43,7 +43,7 @@ module PhotoDoubleIonization
     end
 
 
-    # `Base.show(io::IO, settings::PhotoDoubleIonization.Settings)`  ... prepares a proper printout of the variable settings::PhotoDoubleIonization.Settings.
+    # `Base.show(io::IO, settings::PhotoDoubleIonization.Settings)`  ... prepares a proper printout of settings::PhotoDoubleIonization.Settings.
     function Base.show(io::IO, settings::PhotoDoubleIonization.Settings) 
         println(io, "multipoles:                   $(settings.multipoles)  ")
         println(io, "gauges:                       $(settings.gauges)  ")
@@ -93,10 +93,6 @@ module PhotoDoubleIonization
     # `Base.show(io::IO, channel::PhotoDoubleIonization.ReducedChannel)`  
     #       ... prepares a proper printout of the variable cannel::PhotoDoubleIonization.ReducedChannel.
     function Base.show(io::IO, channel::PhotoDoubleIonization.ReducedChannel) 
-        ## sa = "reduced DA channel for incoming photon with  " * 
-        ##      "kappa1=$(channel.kappa1), energy1=$(channel.energy1), phase1=$(channel.phase1), J^P_x=(channel.xSymmetry), " *
-        ##     "kappa2=$(channel.kappa2), energy2=$(channel.energy2), phase2=$(channel.phase2), J^P_t=(channel.tSymmetry), amp=$(channel.amplitude) "
-        ## println(io, sa)
         println(io, "multipole:                    $(channel.multipole)  ")
         println(io, "gauge:                        $(channel.gauge)  ")
         println(io, "omega:                        $(channel.omega)  ")
@@ -133,7 +129,7 @@ module PhotoDoubleIonization
     end
 
 
-    # `Base.show(io::IO, sharing::PhotoDoubleIonization.Sharing)`  ... prepares a proper printout of the variable sharing::PhotoDoubleIonization.Sharing.
+    # `Base.show(io::IO, sharing::PhotoDoubleIonization.Sharing)`  ... prepares a proper printout of sharing::PhotoDoubleIonization.Sharing.
     function Base.show(io::IO, sharing::PhotoDoubleIonization.Sharing) 
         println(io, "omega:                  $(sharing.omega)  ")
         println(io, "epsilon1:               $(sharing.epsilon1)  ")
@@ -162,7 +158,7 @@ module PhotoDoubleIonization
     end 
 
 
-    # `Base.show(io::IO, line::PhotoDoubleIonization.Line)`  ... prepares a proper printout of the variable line::PhotoDoubleIonization.Line.
+    # `Base.show(io::IO, line::PhotoDoubleIonization.Line)`  ... prepares a proper printout of line::PhotoDoubleIonization.Line.
      function Base.show(io::IO, line::PhotoDoubleIonization.Line) 
         println(io, "initialLevel:           $(line.initialLevel)  ")
         println(io, "finalLevel:             $(line.finalLevel)  ")
@@ -186,7 +182,7 @@ module PhotoDoubleIonization
     """
     function amplitude(kind::String, channel::PhotoDoubleIonization.ReducedChannel, 
                        continuumLevel::Level, green::Array{GreenChannel,1}, initialLevel::Level, grid::Radial.Grid)
-        if      kind in [ "photodoubleionization"]
+        if      kind in [ "PDI"]
         #-----------------------------------------
             symi = LevelSymmetry(initialLevel.J, initialLevel.parity);      symc = LevelSymmetry(continuumLevel.J, continuumLevel.parity)
             eni  = initialLevel.energy + channel.omega
@@ -194,38 +190,41 @@ module PhotoDoubleIonization
             # Compute the terms for <(alpha_f J_f, epsilon kappa) J_t || V^(e-e)  |n >< n|  O^(photoionization) || alpha_i J_i>
             for greenChannel in green
                 if  AngularMomentum.isAllowedMultipole(greenChannel.symmetry, channel.multipole, symi)  &&   symc == greenChannel.symmetry
+                    println(">>> Apply Green function channel with symmetry $(greenChannel.symmetry)")
                     for  (nlev, level)  in  enumerate(greenChannel. gMultiplet.levels)
-                        if  nlev > 2   continue     end
+                        ##x if  nlev > 2  println(">>> Skip nlev > 2 ... need to be corrected !!!!");    break     end
                         piChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa1, channel.xSymmetry, 
                                                             channel.phase1, ComplexF64(0.))
                         am_ni     = PhotoIonization.amplitude("photoionization", piChannel, channel.omega, level, initialLevel, grid::Radial.Grid)
                         auChannel = AutoIonization.Channel(channel.kappa2, channel.tSymmetry, channel.phase2, ComplexF64(0.))
-                        ## am_fn     = AutoIonization.amplitude(CoulombInteraction(), auChannel, continuumLevel, level, grid; printout=false)
-                        am_fn     = AutoIonization.amplitudeWithOverlapEstimation(CoulombInteraction(), auChannel, continuumLevel, level, 
-                                                                                  grid; printout=false)
+                        ##x @show channel.tSymmetry, continuumLevel.J, continuumLevel.parity
+                        ##x @show continuumLevel.basis.NoElectrons, continuumLevel.basis.coreSubshells
+                        ##x @show level.basis.NoElectrons, level.basis.coreSubshells
+                        ##x @show continuumLevel.basis.csfs[1]
+                        ##x @show level.basis.csfs[1]
+                        am_fn     = AutoIonization.amplitude(CoulombInteraction(), auChannel, continuumLevel, level, grid; printout=false)
                         amplitude = amplitude  +  am_fn * am_ni / (eni - level.energy)
-                        println(">> PDI first  for level $nlev  with  am_fi = $am_fn  and  am_ni = $am_ni")
+                        println(">> PDI first  for level $nlev  with  am_fn(A) = $am_fn  and  am_ni(P) = $am_ni")
                     end 
-                else    println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
+                else    ## println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
                 end
             end
             #
             # Compute the terms for <(alpha_f J_f, epsilon kappa) J_t || O^(photoionization)  |n >< n|  V^(e-e) || alpha_i J_i>
             for greenChannel in green
                 if  AngularMomentum.isAllowedMultipole(greenChannel.symmetry, channel.multipole, symc)  &&   symi == greenChannel.symmetry
+                    println(">>> Apply Green function channel with symmetry $(greenChannel.symmetry)")
                     for  (nlev, level)  in  enumerate(greenChannel. gMultiplet.levels)
-                        if  nlev > 2   continue     end
+                        ##x if  nlev > 2  println(">>> Skip nlev > 2 ... need to be corrected !!!!");    break     end
                         auChannel = AutoIonization.Channel(channel.kappa1, channel.xSymmetry, channel.phase1, ComplexF64(0.))
                         am_ni     = AutoIonization.amplitude(CoulombInteraction(), auChannel, level, initialLevel, grid; printout=false)
                         piChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa2, channel.tSymmetry, 
                                                             channel.phase2, ComplexF64(0.))
-                        ## am_fn     = PhotoIonization.amplitude("photoionization", piChannel, channel.omega, continuumLevel, level, grid::Radial.Grid)
-                        am_fn     = PhotoIonization.amplitudeWithOverlapEstimation("photoionization", piChannel, channel.omega, 
-                                                                                   continuumLevel, level, grid::Radial.Grid)
+                        am_fn     = PhotoIonization.amplitude("photoionization", piChannel, channel.omega, continuumLevel, level, grid::Radial.Grid)
                         amplitude = amplitude  +  am_fn * am_ni / (eni - level.energy)
-                        println(">> PDI second for level $nlev  with  am_fi = $am_fn  and  am_ni = $am_ni")
+                        println(">> PDI second for level $nlev  with  am_fn(P) = $am_fn  and  am_ni(A) = $am_ni")
                     end 
-                else    println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
+                else    ## println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
                 end
             end
             #
@@ -239,35 +238,56 @@ module PhotoDoubleIonization
     """
     `PhotoDoubleIonization.computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
                                                        settings::PhotoDoubleIonization.Settings)`  
-        ... to compute all amplitudes and properties of the given line; a line::PhotoDoubleIonization.Line is returned for which the amplitudes 
-            and properties have now been evaluated.
+        ... to compute all amplitudes and properties of the given line; a line::PhotoDoubleIonization.Line is returned 
+            for which the amplitudes and properties have now been evaluated.
     """
     function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
                                           settings::PhotoDoubleIonization.Settings)
-        newSharings = PhotoDoubleIonization.Sharing[];   contSettings = Continuum.Settings(false, grid.NoPoints-50);    tcsC = 0.;    tcsB = 0.  
+        #
+        newSharings  = PhotoDoubleIonization.Sharing[];   
+        contSettings = Continuum.Settings(false, grid.NoPoints-50);    tcsC = 0.;    tcsB = 0.  
         #
         for sharing in line.sharings
             @show sharing.epsilon1, sharing.epsilon2, sharing.weight
             newChannels = PhotoDoubleIonization.ReducedChannel[];    dcsC = 0.;    dcsB = 0.
             for (ich, ch)  in  enumerate(sharing.channels)
-                @show  ich, ch.kappa1, ch.kappa2
+                ## @show  ich, ch.kappa1, ch.kappa2
                 newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
                 newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
-                newiLevel = Basics.generateLevelWithExtraSubshells([Subshell(101, ch.kappa1),Subshell(102, ch.kappa2)], newiLevel)
                 # Generate two continuum orbitals as associated with this sharing; these orbitals move each in the potential of the final level
                 cOrbital1, phase1 = Continuum.generateOrbitalForLevel(ch.energy1, Subshell(101, ch.kappa1), newfLevel, nm, grid, contSettings)
                 cOrbital2, phase2 = Continuum.generateOrbitalForLevel(ch.energy2, Subshell(102, ch.kappa2), newfLevel, nm, grid, contSettings)
-                newcLevel  = Basics.generateLevelWithExtraTwoElectrons(cOrbital1, ch.xSymmetry, cOrbital2, ch.tSymmetry, newfLevel)
-                newChannel = PhotoDoubleIonization.ReducedChannel(ch.multipole, ch.gauge, ch.omega, ch.energy1, ch.kappa1, phase1, ch.xSymmetry, 
-                                                                                                    ch.energy2, ch.kappa2, phase2, ch.tSymmetry, 0.)
-                amplitude  = PhotoDoubleIonization.amplitude("photodoubleionization", newChannel, newcLevel, settings.green, newiLevel, grid)
+                # Expand these continuum orbitals in the orbital set as given by the Green function
+                greenOrbs  = settings.green[1].gMultiplet.levels[1].basis.orbitals
+                bOrbitals1 = Basics.expandOrbital(cOrbital1, greenOrbs, 1.0e-1, grid, printout=true)
+                bOrbitals2 = Basics.expandOrbital(cOrbital2, greenOrbs, 1.0e-1, grid, printout=true)
+                # Loop through all sub-orbital contribution in the expansion of the continuum orbitals
+                newChannel = PhotoDoubleIonization.ReducedChannel(ch.multipole, ch.gauge, ch.omega, 
+                                                                  ch.energy1, ch.kappa1, phase1, ch.xSymmetry, 
+                                                                  ch.energy2, ch.kappa2, phase2, ch.tSymmetry, 0.)
+                amplitude  = ComplexF64(0.)
+                for  bOrb1  in  bOrbitals1
+                    if   bOrb1.subshell  in  newfLevel.basis.subshells        continue    end
+                    for  bOrb2  in  bOrbitals2
+                        if   bOrb2.subshell  in  newfLevel.basis.subshells    continue    end
+                        @show ich, bOrb1.subshell, bOrb2.subshell
+                        if   bOrb1.subshell < bOrb2.subshell
+                            # Only  subshell_1 < subshell_2  need to be considered since the 'reversed' case is part of another channel 
+                            # Perhaps, one needs to multiply with 2 here (??)
+                            newcLevel  = Basics.generateLevelWithExtraTwoElectrons(bOrb1, ch.xSymmetry, bOrb2, ch.tSymmetry, newfLevel)
+                            amplitude  = amplitude + 
+                                         PhotoDoubleIonization.amplitude("PDI", newChannel, newcLevel, settings.green, newiLevel, grid)
+                        elseif   bOrb1.subshell  ==  bOrb2.subshell     error("stop a")
+                        end
+                    end
+                end
                 push!( newChannels, ReducedChannel(ch.multipole, ch.gauge, ch.omega, ch.energy1, ch.kappa1, phase1, ch.xSymmetry,
                                                                                      ch.energy2, ch.kappa2, phase2, ch.tSymmetry, amplitude) )
                 if       ch.gauge == Basics.Coulomb     dcsC = dcsC + abs(amplitude)^2
                 elseif   ch.gauge == Basics.Babushkin   dcsB = dcsB + abs(amplitude)^2
                 elseif   ch.gauge == Basics.Magnetic    dcsB = dcsB + abs(amplitude)^2;   dcsC = dcsC + abs(amplitude)^2
                 end
-                @show amplitude, dcsC, dcsB
+                @show ich, ch.gauge, dcsC, dcsB, "   ", amplitude
             end
             # Calculate the differential cross section 
             diffCs = EmProperty(dcsC, dcsB)
@@ -342,11 +362,14 @@ module PhotoDoubleIonization
     """
     `PhotoDoubleIonization.determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, omega::Float64, energy::Float64,
                                                         settings::PhotoDoubleIonization.Settings)`  
-        ... to determine a list of PhotoDoubleIonization Sharing's and Channel's for a transitions from the initial to final level and by taking into 
-            account the particular settings of for this computation; an Array{PhotoDoubleIonization.Sharing,1} is returned.
+        ... to determine a list of PhotoDoubleIonization Sharing's and Channel's for a transitions from the initial to final level 
+            and by taking into account the particular settings of for this computation; an Array{PhotoDoubleIonization.Sharing,1} 
+            is returned.
     """
-    function determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, omega::Float64, energy::Float64, settings::PhotoDoubleIonization.Settings)
-        sharings = PhotoDoubleIonization.Sharing[];    eSharings = Basics.determineEnergySharings(energy, settings.NoEnergySharings) 
+    function determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, omega::Float64, energy::Float64,
+                                          settings::PhotoDoubleIonization.Settings)
+        sharings  = PhotoDoubleIonization.Sharing[]
+        eSharings = Basics.determineEnergySharings(omega - energy, settings.NoEnergySharings) 
         for  es in eSharings
             epsilon1  = es[1];    epsilon2 = es[2];    weight = es[3] 
             channels  = PhotoDoubleIonization.ReducedChannel[];   

@@ -1031,7 +1031,7 @@
             if  length(stateList1) != length(stateList2) != 1                   error("Improper number of subshell states.")   end
             if  AngularMomentum.triangularDelta(J,      Basics.subshell_j(orb1.subshell), symx.J) != 1    
                                                                error("Improper coupling of (new) subshell & intermediate J.")  end
-            if  AngularMomentum.triangularDelta(symt.J, Basics.subshell_j(orb2.subshell), symt.J) != 1    
+            if  AngularMomentum.triangularDelta(symx.J, Basics.subshell_j(orb2.subshell), symt.J) != 1    
                                                                error("Improper coupling of (new) subshell & total J.")         end
             substate1   = stateList1[1];    substate2  = stateList2[1]
             occupation  = copy(basis.csfs[i].occupation);    push!(occupation, substate1.occ);    push!(occupation, substate2.occ)

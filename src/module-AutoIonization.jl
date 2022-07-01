@@ -170,9 +170,13 @@ module AutoIonization
             iLevel = initialLevel;   cLevel = continuumLevel
         else
             subshells = Basics.merge(initialLevel.basis.subshells, continuumLevel.basis.subshells)
-            ##x @show subshells
+            Defaults.setDefaults("relativistic subshell list", subshells; printout=false)
             iLevel    = Level(initialLevel, subshells)
             cLevel    = Level(continuumLevel, subshells)
+            ##x @show subshells
+            ##x @show length(iLevel.basis.csfs)
+            ##x @show cLevel.basis.csfs[1]
+            ##x @show iLevel.basis.csfs[1]
         end
         #
         if      kind in [ CoulombInteraction(), BreitInteraction(), CoulombBreit()]        ## pure V^Coulomb interaction
@@ -187,7 +191,8 @@ module AutoIonization
                         wa  = waR       
                     end
                     if  Defaults.saGG()
-                        subshellList = continuumLevel.basis.subshells
+                        ##x subshellList = continuumLevel.basis.subshells
+                        subshellList = cLevel.basis.subshells
                         opa  = SpinAngular.TwoParticleOperator(0, plus, true)
                         waG2 = SpinAngular.computeCoefficients(opa, cLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList)
                         wa   = [1.0, waG2]
@@ -213,87 +218,6 @@ module AutoIonization
             end 
             if  printout  printstyled("done. \n", color=:light_green)    end
             amplitude = transpose(cLevel.mc) * matrix * iLevel.mc 
-            amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
-            #
-            #
-         elseif  kind == "H-E"
-        #--------------------
-            iLevel = finalLevel;   fLevel = initialLevel
-            amplitude = 0.;    error("stop a")
-        else    error("stop b")
-        end
-        
-        return( amplitude )
-    end
-
-
-    """
-    `AutoIonization.amplitudeWithOverlapEstimation(kind::AbstractEeInteraction, channel::AutoIonization.Channel, 
-                                                   continuumLevel::Level, initialLevel::Level, grid::Radial.Grid; printout::Bool=true)`  
-        ... to compute the kind in  CoulombInteraction(), BreitInteraction(), CoulombBreit()   Auger amplitude 
-            <(alpha_f J_f, kappa) J_i || O^(Auger, kind) || alpha_i J_i>  due to the interelectronic interaction for the given 
-            final and initial level. 
-            
-            Here, however, it is assumed that the underlying CSF of the final and initial levels differ by three displacements
-            but one of them of the same symmetry/partial wave. These orbitals need to be identified, their overlap calculated
-            and the CSF basis for the computation of the angular coefficients need to be 'built new together'. 
-            
-            In this evaluation it is assumed that always two excited orbitals of the same symmetry can be identified and
-            applied with equal principal quantum number to generate non-zero angular coefficients. A zero amplitude is returned,
-            if this is not the case (i.e. omitting inner-shell excitation, though a warning is issued in this case).            
-            A value::ComplexF64 is returned.
-    """
-    function amplitudeWithOverlapEstimation(kind::AbstractEeInteraction, channel::AutoIonization.Channel, 
-                                            continuumLevel::Level, initialLevel::Level, grid::Radial.Grid; printout::Bool=true)
-        nt = length(continuumLevel.basis.csfs);    ni = length(initialLevel.basis.csfs);    partial = Subshell(9,channel.kappa)
-        if  printout  printstyled("Compute ($kind) Auger matrix of dimension $nt x $ni with overlap estimate for orbitals of the same symmetry " *
-                                  "for the transition [$(initialLevel.index)- ...] and for partial wave $(string(partial)[2:end]) ... ", 
-                                  color=:light_green)    end
-        matrix = zeros(ComplexF64, nt, ni)
-        #
-        ##x wx = Basics.extractRelativisticSubshellList(initialLevel);    @show  wx
-        ##x wy = Basics.extractRelativisticSubshellList(continuumLevel);  @show  wy
-        ##x wz = setdiff(union(wx, wy),  intersect(wx, wy));              @show  wz
-        #
-        if      kind in [ CoulombInteraction(), BreitInteraction(), CoulombBreit()]        ## pure V^Coulomb interaction
-        #--------------------------------------------------------------------------
-            for  r = 1:nt
-                for  s = 1:ni
-                    if  initialLevel.basis.csfs[s].J != initialLevel.J  ||  initialLevel.basis.csfs[s].parity != initialLevel.parity      continue    end 
-                    if  true
-                        # Simply estimate the contribution of the CSF pair from the overlap of the (different) orbitals
-                        # in the lhs and rhs basis; this neglects the calculation of angular coefficients and set all contribution
-                        # to positive value
-                        if   abs(continuumLevel.mc[r] * initialLevel.mc[s])  <  0.05    continue    end
-                        wr = Basics.extractRelativisticSubshellList(continuumLevel.basis.csfs[r], continuumLevel.basis.subshells)
-                        ws = Basics.extractRelativisticSubshellList(initialLevel.basis.csfs[s],   initialLevel.basis.subshells)
-                        #
-                        overlap     = Basics.determineNonorthogonalShellOverlap(wr, ws, grid)
-                        matrix[r,s] = abs(overlap[3])
-                    else
-                        error("stop xx")
-                        # generateCommonBasisWithOverlap()
-                        subshellList = continuumLevel.basis.subshells
-                        opa  = SpinAngular.TwoParticleOperator(0, plus, true)
-                        waG2 = SpinAngular.computeCoefficients(opa, cLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList)
-                        wa   = [1.0, waG2]
-                        me = 0.
-                        for  coeff in wa[2]
-                            if   kind in [ CoulombInteraction(), CoulombBreit()]    
-                                me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 
-                                                        cLevel.basis.orbitals[coeff.a], cLevel.basis.orbitals[coeff.b],
-                                                        iLevel.basis.orbitals[coeff.c], iLevel.basis.orbitals[coeff.d], grid)   end
-                            if   kind in [ BreitInteraction(), CoulombBreit()]    
-                                me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, 
-                                                        cLevel.basis.orbitals[coeff.a], cLevel.basis.orbitals[coeff.b],
-                                                        iLevel.basis.orbitals[coeff.c], iLevel.basis.orbitals[coeff.d], grid)   end
-                        end
-                        matrix[r,s] = me
-                    end
-                 end
-            end 
-            if  printout  printstyled("done. \n", color=:light_green)    end
-            amplitude = transpose(continuumLevel.mc) * matrix * initialLevel.mc 
             amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
             #
             #

@@ -236,18 +236,18 @@
     `Basics..determineNonorthogonalShellOverlap(finalSubshells::Array{Subshell,1}, initialSubshells::Array{Subshell,1}, 
                                                 grid::Radial.Grid)`  
         ... determines the overlap of those shells that do not agree in both sets but have the same symmetry; a zero
-            overlap and Subshell(99,-99) are returned in cases that no such pair can be found.
+            overlap and Subshell(99,-1) are returned in cases that no such pair can be found.
             A triple (shella, shellb, overlap) is returned.
     """
     function Basics.determineNonorthogonalShellOverlap(finalSubshells::Array{Subshell,1}, initialSubshells::Array{Subshell,1}, 
                                                        grid::Radial.Grid)
         neSubshells = setdiff(union(finalSubshells, initialSubshells),  intersect(finalSubshells, initialSubshells))
-        ret = (Subshell(99,-99), Subshell(99,-99), 0.);     ne = length(neSubshells)
+        ret = (Subshell(99,-1), Subshell(99,-1), 0.);     ne = length(neSubshells)
         ##x @show  neSubshells
         for  a = 1:ne
             for  b = a+1:ne
                 if   neSubshells[a].kappa == neSubshells[b].kappa   
-                    println(">>>> non-zero overlap integral < $(neSubshells[a]) | $(neSubshells[b]) > ")
+                    println(">>>> non-zero overlap integral < $(neSubshells[a]) | $(neSubshells[b]) > = 0.1  ... but incorrect !!!")
                     ret = (neSubshells[a], neSubshells[b], 0.1)
                 end
             end
@@ -768,6 +768,38 @@
         end
         
         return( newConfList )
+    end
+    
+        
+    """
+    `Basics.expandOrbital(orbital::Orbital, boundOrbitals::Dict{Subshell, Orbital}, threshold::Float64, grid::Radial.Grid; 
+                          printout::Bool=false)`  
+        ... expand the orbital in the given orbitalList; only those orbitals with  <orb | orbital>^2  >= threshold are
+            taken into account. If printout=true, this function 'reports' about the expansion by showing the 
+            orbitals, their overlap as well as the total contribution. In general, the given orbital is not normalized
+            and the expansion is usually incomplete. A list of (non-normalized) orbitals is returned in which
+            the large and small components are mutiplied by the corresponding overlap.. 
+    """
+    function Basics.expandOrbital(orbital::Orbital, boundOrbitals::Dict{Subshell, Orbital}, threshold::Float64, grid::Radial.Grid; 
+                                  printout::Bool=false)
+        expansion = Orbital[];    n = orbital.subshell.n;    kappa = orbital.subshell.kappa;    tovl2 = 0.
+        overlap   = RadialIntegrals.overlap(orbital, orbital, grid)   # | <orbital|overlap> |^2 of given orbital
+        for  (subsh, orb) in boundOrbitals
+            if  subsh.kappa == kappa  
+                ovl = RadialIntegrals.overlap(orb, orbital, grid)
+                if  ovl^2 >= threshold
+                    tovl2  = tovl2 + ovl^2
+                    newOrb = Orbital(orb.subshell, orb.isBound, orb.useStandardGrid, orb.energy, ovl * orb.P, ovl * orb.Q, 
+                                     ovl * orb.Pprime, ovl * orb.Qprime, orb.grid)
+                    push!(expansion, newOrb)
+                    ## println(">>>> $subsh [$(newOrb.subshell)] with overlap $ovl appended to expansion of $(orbital.subshell).")   
+                end
+            end
+        end
+        println(">>> Expansion of $(orbital.subshell) with |<..|..>|^2 = $overlap into $(length(expansion)) partial waves with " *
+                "total overlap |<new|given>|^2 = $tovl2 ")
+        
+        return( expansion )
     end
     
         

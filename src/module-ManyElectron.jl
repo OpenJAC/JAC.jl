@@ -621,25 +621,23 @@ module ManyElectron
     
     # `Base.string(csf::CsfR)`  ... provides a String notation for csf::CsfR.
     function Base.string(csf::CsfR) 
-    	  sa = "\n   CSF: "
+        sa = "\n   CSF: "
         if    csf.useStandardSubshells
-
-    	      for  i in 1:length(csf.occupation)
+            for  i in 1:length(csf.occupation)
     		    sa = sa * Basics.subshellStateString(string(Defaults.GBL_STANDARD_SUBSHELL_LIST[i]), csf.occupation[i], csf.seniorityNr[i], 
-                                                  csf.subshellJ[i], csf.subshellX[i])
+                                                     csf.subshellJ[i], csf.subshellX[i])
     		    sa = sa * ", "
-    	      end
-    	      sa = sa * ": J=" * string(csf.J) * string(csf.parity)
-
-            else
-    	      for  i in 1:length(csf.subshells)
+            end
+            sa = sa * ": J=" * string(csf.J) * string(csf.parity)
+        else
+            for  i in 1:length(csf.subshells)
     		    sa = sa * Basics.subshellStateString(string(csf.subshells[i]), csf.occupation[i], csf.seniorityNr[i], 
-                                                  csf.subshellJ[i], csf.subshellX[i])
+                                                     csf.subshellJ[i], csf.subshellX[i])
     		    sa = sa * ", "
-    	      end
-    	      sa = sa * ": J=" * string(csf.J) * string(csf.parity)
-    	  end
-    	  return( sa )
+            end
+            sa = sa * ": J=" * string(csf.J) * string(csf.parity)
+        end
+        return( sa )
     end
     
 
