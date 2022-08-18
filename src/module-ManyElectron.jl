@@ -188,6 +188,7 @@ module ManyElectron
     """
     `ManyElectron.Configuration(sa::String)`  
         ... constructor for a given configuration string, such as "[He]", "[Ne]", "[Ne] 3s 3p^6"  or "1s 2p^6 3s^2 3p".
+            One can also use "1s^0" to represent a (bare-ion) empty configuration.
     """
     function Configuration(sa::String)
         sax = strip(sa)
@@ -255,8 +256,7 @@ module ManyElectron
     # `Base.string(conf::Configuration)`  ... provides a String notation for the variable conf::Configuration.
     function Base.string(conf::Configuration)
         wa = keys(conf.shells);   va = values(conf.shells)
-        ##x wb = Defaults.getDefaults("ordered shell list: non-relativistic", 7)
-        shells = Shell[];   for  k in wa    push!(shells, k)    end
+        shells = Shell[];   for  k in wa    push!(shells, k)        end
         sortedShells = Base.sort( shells , lt=Base.isless)
 
         sa = ""

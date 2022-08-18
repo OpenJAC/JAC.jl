@@ -206,8 +206,10 @@ module PhotoRecombination
             end
         end
         Ji2 = Basics.twice(line.initialLevel.J)
-        csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 * line.photonEnergy / (Ji2 + 1)
-        crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
+        csFactor     = 8 * pi^3 / Defaults.getDefaults("alpha") / line.photonEnergy
+        ## csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 / line.photonEnergy / (Ji2 + 1)
+        ## crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
+        crossSection = EmProperty(csFactor * csC, csFactor * csB)
         newLine      = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, line.betaGamma2, 
                                                 line.weight, crossSection, true, newChannels)
         return( newLine )
@@ -342,7 +344,8 @@ module PhotoRecombination
             end
             Ji2 = Basics.twice(line.initialLevel.J)
             csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 * line.photonEnergy / (Ji2 + 1)
-            crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
+            ## crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
+            crossSection = EmProperty(csFactor * csC, csFactor * csB)
             newLine      = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, line.betaGamma2, 
                                                     energyGrid.wt[ie], crossSection, true, newChannels)
             push!( newLines, newLine)
@@ -355,6 +358,75 @@ module PhotoRecombination
         if    output    return( newLines )
         else            return( nothing )
         end
+    end
+    
+
+    """
+    `PhotoRecombination.compareCrossSectionEmpirical(energies::Array{Float64,1}, Z::Float64)`  
+        ... to evaluate and compare different (non-relativistic) shell-resolved and total cross section for the 
+            RR of a free electron with energy into initially bare ions with nuclear charge Z; an cs::Float64 is returned.
+    """
+    function compareCrossSectionEmpirical(energies::Array{Float64,1}, Z::Float64)
+        csStobbe = Float64[];    csKramers = Float64[];     csKramersTotal = Float64[]
+        
+        nx = 110
+        println(" ")
+        println("  Comparison of different semi-empirical RR cross sections:    Z = $Z      ... all in [a.u.]")
+        println(" ")
+        println("  ", TableStrings.hLine(nx))
+        sa =  "  Energy         eta             Stobbe(1s)      Kramers(1s)     Kramers(1..60)  Kramers(total)  Bell(total) "
+        println(sa);    println("  ", TableStrings.hLine(nx)) 
+        #
+        for  energy in energies
+            sa =  "  " * @sprintf("%.4e", energy) * "     "
+            wa = sqrt( Z^2 / 2. / energy);                                              sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = crossSectionStobbe(energy, Z);             push!(csStobbe, wa);        sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = crossSectionKramers(energy, Z, (1,1));     push!(csKramers, wa);       sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = crossSectionKramers(energy, Z, (1,60));                                sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = crossSectionKramersTotal(energy, Z);       push!(csKramersTotal, wa);  sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = crossSectionBellTotal(energy, Z);                                      sa = sa * @sprintf("%.4e", wa) * "      "
+            println(sa)
+        end
+        # 
+        println("  ", TableStrings.hLine(nx)) 
+
+        return( nothing )
+    end
+    
+
+    """
+    `PhotoRecombination.comparePlasmaRateEmpirical(temps::Array{Float64,1}, Z::Float64)`  
+        ... to evaluate and compare different plasma rate coefficients for the capture of a Maxwellian-distributed
+            free electron with temperature Te in temps into initially bare ions with nuclear charge Z; nothing is returned.
+    """
+    function comparePlasmaRateEmpirical(temps::Array{Float64,1}, Z::Float64)
+        alphaKotelnikov = Float64[];    alphaKotelnikov1s = Float64[];    
+        factor  = Defaults.convertUnits("length: from atomic to fm", 1.0)^3 * 1.0e-39 * 
+                  Defaults.convertUnits("rate: from atomic to 1/s", 1.0) 
+        
+        nx = 110
+        println(" ")
+        println("  Comparison of different semi-empirical RR plasma rate coefficieints:    Z = $Z ")
+        println(" ")
+        println("  ", TableStrings.hLine(nx))
+        sa =  "  Temperature    Temperature     2Te/Z^2         Kotelnikov      Kotelnikov      Kotelnikov(1s)  Kotelnikov(1s)   " *
+            "\n     [a.u.]          [K]                           [a.u.]         [cm^3/s]         [a.u.]          [cm^3/s]      "
+        println(sa);    println("  ", TableStrings.hLine(nx)) 
+        #
+        for  temp in temps
+            sa =  "  " * @sprintf("%.4e", temp) * "     "
+            wa = Defaults.convertUnits("temperature: from atomic to Kelvin", temp);         sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = 2*temp / Z^2;                                                              sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = plasmaRateKotelnikov(temp, Z);             push!(alphaKotelnikov, wa);     sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = wa * factor;                                                               sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = plasmaRateKotelnikov_1s(temp, Z);          push!(alphaKotelnikov1s, wa);   sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = wa * factor;                                                               sa = sa * @sprintf("%.4e", wa) * "      "
+            println(sa)
+        end
+        # 
+        println("  ", TableStrings.hLine(nx)) 
+
+        return( nothing )
     end
 
     
@@ -383,7 +455,6 @@ module PhotoRecombination
         cs  = 0.;       for  n=nLowUp[1]:nLowUp[2]  cs = cs + wa * eta^4 / n / (eta^2 + n^2)    end
         return( cs )
     end
-
     
 
     """
@@ -395,6 +466,47 @@ module PhotoRecombination
         eta = sqrt( Z^2 / 2. / energy);     wa = 16 * pi * Defaults.getDefaults("alpha")^3 / 3. / sqrt(3.)
         cs  = wa * eta^2 * log(1 + eta^2)
         return( cs )
+    end
+    
+
+    """
+    `PhotoRecombination.crossSectionBellTotal(energy::Float64, Z::Float64)`  
+        ... to evaluate the (non-relativistic) total Bell & Bell cross section for the RR of a free electron with energy 
+            into any shell of initially bare ions with nuclear charge Z; an cs::Float64 is returned.
+    """
+    function crossSectionBellTotal(energy::Float64, Z::Float64)
+        eta = sqrt( Z^2 / 2. / energy);     wa = 32 * pi * Defaults.getDefaults("alpha")^3 / 3. / sqrt(3.)
+        cs = log(eta) + 0.1492 + 0.5250 / eta^(2/3)
+        cs  = wa * eta^2 * cs
+        return( cs )
+    end
+    
+
+    """
+    `PhotoRecombination.plasmaRateKotelnikov(Te::Float64, Z::Float64)`  
+        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
+            energies and an initially bare ions with nuclear charge Z; an alpha::Float64 is returned.
+    """
+    function plasmaRateKotelnikov(Te::Float64, Z::Float64)
+        wx    = 2*Te / Z^2
+        alpha = 8.414 * Defaults.getDefaults("alpha")^3 * Z
+        alpha = alpha * (log(1.0 + 1.0/wx) + 3.499)
+        alpha = alpha / (sqrt(wx)  +  0.6517 * wx  +  0.2138 * wx^1.5)
+        return( alpha )
+    end
+    
+
+    """
+    `PhotoRecombination.plasmaRateKotelnikov_1s(Te::Float64, Z::Float64)`  
+        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
+            energies and an initially bare ions with nuclear charge Z; here only the capture into 1s is taken into account.
+            An alpha::Float64 is returned.
+    """
+    function plasmaRateKotelnikov_1s(Te::Float64, Z::Float64)
+        wx    = 2*Te / Z^2
+        alpha = 8.414 * Defaults.getDefaults("alpha")^3 * Z
+        alpha = alpha / (sqrt(wx)  +  0.3593 * wx^(7/6)  +  0.1471 * wx^1.5)
+        return( alpha )
     end
 
     
@@ -611,8 +723,8 @@ module PhotoRecombination
             #   
             for  line in lines
                 sa  = " ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
-                sa = sa * TableStrings.center(17, TableStrings.levels(line.initialLevel.index; na=2))
-                sa = sa * TableStrings.center(17, TableStrings.symmetry(isym); na=3)
+                sa = sa * TableStrings.center(17, TableStrings.level(line.initialLevel.index))
+                sa = sa * TableStrings.center(17, string(isym))
                 en = line.initialLevel.energy
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                  * "    "
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "    "

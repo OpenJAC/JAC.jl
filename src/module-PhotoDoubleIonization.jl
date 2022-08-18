@@ -67,7 +67,6 @@ module PhotoDoubleIonization
         + energy1        ::Float64              ... energy of the partial wave_1
         + kappa1         ::Int64                ... partial-wave of the free electron_1
         + phase1         ::Float64              ... phase of the partial wave_1
-        + xSymmetry      ::LevelSymmetry        ... angular momentum and parity after coupling electron1.
         + energy2        ::Float64              ... energy of the partial wave_2
         + kappa2         ::Int64                ... partial-wave of the free electron_2
         + phase2         ::Float64              ... phase of the partial wave_2
@@ -81,7 +80,6 @@ module PhotoDoubleIonization
         energy1          ::Float64 
         kappa1           ::Int64 
         phase1           ::Float64
-        xSymmetry        ::LevelSymmetry
         energy2          ::Float64 
         kappa2           ::Int64   
         phase2           ::Float64 
@@ -99,12 +97,54 @@ module PhotoDoubleIonization
         println(io, "energy1:                      $(channel.energy1)  ")
         println(io, "kappa1:                       $(channel.kappa1)  ")
         println(io, "phase1:                       $(channel.phase1)  ")
-        println(io, "xSymmetry:                    $(channel.xSymmetry)  ")
         println(io, "energy2:                      $(channel.energy2)  ")
         println(io, "kappa2:                       $(channel.kappa2)  ")
         println(io, "phase2:                       $(channel.phase2)  ")
         println(io, "tSymmetry:                    $(channel.tSymmetry)  ")
         println(io, "amplitude:                    $(channel.amplitude)  ")
+    end
+
+
+    """
+    `struct  PhotoDoubleIonization.ReducedCoupling`  
+        ... defines a type for a PhotoDoubleIonization (reduced) coupling to help characterize a scattering (continuum) state of many 
+            electron-states with two free electrons.
+
+        + multipole      ::EmMultipole          ... Multipole of the photon absorption.
+        + gauge          ::EmGauge              ... Gauge for dealing with the (coupled) radiation field.
+        + omega          ::Float64              ... photon energy
+        + kappa1         ::Int64                ... partial-wave of the free electron_1
+        + phase1         ::Float64              ... phase of the partial wave_1
+        + xSymmetry      ::LevelSymmetry        ... angular momentum and parity after coupling the first electron
+        + kappa2         ::Int64                ... partial-wave of the free electron_2
+        + phase2         ::Float64              ... phase of the partial wave_2
+        + tSymmetry      ::LevelSymmetry        ... total angular momentum and parity of the scattering state
+    """
+    struct  ReducedCoupling
+        multipole        ::EmMultipole 
+        gauge            ::EmGauge 
+        omega            ::Float64 
+        kappa1           ::Int64 
+        phase1           ::Float64
+        xSymmetry        ::LevelSymmetry
+        kappa2           ::Int64   
+        phase2           ::Float64 
+        tSymmetry        ::LevelSymmetry
+    end
+
+
+    # `Base.show(io::IO, channel::PhotoDoubleIonization.ReducedCoupling)`  
+    #       ... prepares a proper printout of the variable cannel::PhotoDoubleIonization.ReducedCoupling.
+    function Base.show(io::IO, channel::PhotoDoubleIonization.ReducedCoupling) 
+        println(io, "multipole:                    $(channel.multipole)  ")
+        println(io, "gauge:                        $(channel.gauge)  ")
+        println(io, "omega:                        $(channel.omega)  ")
+        println(io, "kappa1:                       $(channel.kappa1)  ")
+        println(io, "phase1:                       $(channel.phase1)  ")
+        println(io, "xSymmetry:                    $(channel.xSymmetry)  ")
+        println(io, "kappa2:                       $(channel.kappa2)  ")
+        println(io, "phase2:                       $(channel.phase2)  ")
+        println(io, "tSymmetry:                    $(channel.tSymmetry)  ")
     end
 
 
@@ -169,7 +209,7 @@ module PhotoDoubleIonization
 
 
     """
-    `PhotoDoubleIonization.amplitude(kind::String, channel::PhotoDoubleIonization.ReducedChannel, 
+    `PhotoDoubleIonization.amplitude(kind::String, channel::PhotoDoubleIonization.ReducedCoupling, 
                                      continuumLevel::Level, green::Array{GreenChannel,1}, initialLevel::Level, grid::Radial.Grid)`  
         ... to compute the kind = (photoionization) amplitude  <(alpha_f J_f, epsilon kappa) J_t || A || alpha_i J_i>  with second-order operator
         
@@ -180,10 +220,10 @@ module PhotoDoubleIonization
             Of course, this amplitude depends on the partial wave of the outgoing electron as well as the given multipole and gauge. 
             A value::ComplexF64 is returned.
     """
-    function amplitude(kind::String, channel::PhotoDoubleIonization.ReducedChannel, 
+    function amplitude(kind::String, channel::PhotoDoubleIonization.ReducedCoupling,
                        continuumLevel::Level, green::Array{GreenChannel,1}, initialLevel::Level, grid::Radial.Grid)
         if      kind in [ "PDI"]
-        #-----------------------------------------
+        #-----------------------
             symi = LevelSymmetry(initialLevel.J, initialLevel.parity);      symc = LevelSymmetry(continuumLevel.J, continuumLevel.parity)
             eni  = initialLevel.energy + channel.omega
             amplitude = ComplexF64(0.);
@@ -192,19 +232,14 @@ module PhotoDoubleIonization
                 if  AngularMomentum.isAllowedMultipole(greenChannel.symmetry, channel.multipole, symi)  &&   symc == greenChannel.symmetry
                     println(">>> Apply Green function channel with symmetry $(greenChannel.symmetry)")
                     for  (nlev, level)  in  enumerate(greenChannel. gMultiplet.levels)
-                        ##x if  nlev > 2  println(">>> Skip nlev > 2 ... need to be corrected !!!!");    break     end
+                        ## if  nlev > 1  println(">>> Skip nlev > 1 ... need to be corrected !!!!");    break     end
                         piChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa1, channel.xSymmetry, 
                                                             channel.phase1, ComplexF64(0.))
                         am_ni     = PhotoIonization.amplitude("photoionization", piChannel, channel.omega, level, initialLevel, grid::Radial.Grid)
                         auChannel = AutoIonization.Channel(channel.kappa2, channel.tSymmetry, channel.phase2, ComplexF64(0.))
-                        ##x @show channel.tSymmetry, continuumLevel.J, continuumLevel.parity
-                        ##x @show continuumLevel.basis.NoElectrons, continuumLevel.basis.coreSubshells
-                        ##x @show level.basis.NoElectrons, level.basis.coreSubshells
-                        ##x @show continuumLevel.basis.csfs[1]
-                        ##x @show level.basis.csfs[1]
                         am_fn     = AutoIonization.amplitude(CoulombInteraction(), auChannel, continuumLevel, level, grid; printout=false)
                         amplitude = amplitude  +  am_fn * am_ni / (eni - level.energy)
-                        println(">> PDI first  for level $nlev  with  am_fn(A) = $am_fn  and  am_ni(P) = $am_ni")
+                        ## println(">> PDI first  for level $nlev  with  am_fn(A) = $am_fn  and  am_ni(P) = $am_ni")
                     end 
                 else    ## println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
                 end
@@ -215,14 +250,14 @@ module PhotoDoubleIonization
                 if  AngularMomentum.isAllowedMultipole(greenChannel.symmetry, channel.multipole, symc)  &&   symi == greenChannel.symmetry
                     println(">>> Apply Green function channel with symmetry $(greenChannel.symmetry)")
                     for  (nlev, level)  in  enumerate(greenChannel. gMultiplet.levels)
-                        ##x if  nlev > 2  println(">>> Skip nlev > 2 ... need to be corrected !!!!");    break     end
+                        ## if  nlev > 1  println(">>> Skip nlev > 1 ... need to be corrected !!!!");    break     end
                         auChannel = AutoIonization.Channel(channel.kappa1, channel.xSymmetry, channel.phase1, ComplexF64(0.))
                         am_ni     = AutoIonization.amplitude(CoulombInteraction(), auChannel, level, initialLevel, grid; printout=false)
                         piChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa2, channel.tSymmetry, 
                                                             channel.phase2, ComplexF64(0.))
                         am_fn     = PhotoIonization.amplitude("photoionization", piChannel, channel.omega, continuumLevel, level, grid::Radial.Grid)
                         amplitude = amplitude  +  am_fn * am_ni / (eni - level.energy)
-                        println(">> PDI second for level $nlev  with  am_fn(P) = $am_fn  and  am_ni(A) = $am_ni")
+                        ## println(">> PDI second for level $nlev  with  am_fn(P) = $am_fn  and  am_ni(A) = $am_ni")
                     end 
                 else    ## println(">>> Skip Green function channel with symmetry $(greenChannel.symmetry)")
                 end
@@ -244,11 +279,14 @@ module PhotoDoubleIonization
     function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
                                           settings::PhotoDoubleIonization.Settings)
         #
+        symf         = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity)
         newSharings  = PhotoDoubleIonization.Sharing[];   
-        contSettings = Continuum.Settings(false, grid.NoPoints-50);    tcsC = 0.;    tcsB = 0.  
+        contSettings = Continuum.Settings(false, grid.NoPoints-50);    tcs = EmProperty(0.);     
         #
-        for sharing in line.sharings
-            @show sharing.epsilon1, sharing.epsilon2, sharing.weight
+        for (ish, sharing)  in  enumerate(line.sharings)
+            # Calculate only "half" of the sharings since the differential CS is always symmetric
+            @show ish, sharing.epsilon1, sharing.epsilon2, sharing.weight
+            if  ish > length(line.sharings)/2     continue    end
             newChannels = PhotoDoubleIonization.ReducedChannel[];    dcsC = 0.;    dcsB = 0.
             for (ich, ch)  in  enumerate(sharing.channels)
                 ## @show  ich, ch.kappa1, ch.kappa2
@@ -262,26 +300,38 @@ module PhotoDoubleIonization
                 bOrbitals1 = Basics.expandOrbital(cOrbital1, greenOrbs, 1.0e-1, grid, printout=true)
                 bOrbitals2 = Basics.expandOrbital(cOrbital2, greenOrbs, 1.0e-1, grid, printout=true)
                 # Loop through all sub-orbital contribution in the expansion of the continuum orbitals
-                newChannel = PhotoDoubleIonization.ReducedChannel(ch.multipole, ch.gauge, ch.omega, 
-                                                                  ch.energy1, ch.kappa1, phase1, ch.xSymmetry, 
-                                                                  ch.energy2, ch.kappa2, phase2, ch.tSymmetry, 0.)
                 amplitude  = ComplexF64(0.)
                 for  bOrb1  in  bOrbitals1
                     if   bOrb1.subshell  in  newfLevel.basis.subshells        continue    end
                     for  bOrb2  in  bOrbitals2
                         if   bOrb2.subshell  in  newfLevel.basis.subshells    continue    end
-                        @show ich, bOrb1.subshell, bOrb2.subshell
-                        if   bOrb1.subshell < bOrb2.subshell
-                            # Only  subshell_1 < subshell_2  need to be considered since the 'reversed' case is part of another channel 
-                            # Perhaps, one needs to multiply with 2 here (??)
-                            newcLevel  = Basics.generateLevelWithExtraTwoElectrons(bOrb1, ch.xSymmetry, bOrb2, ch.tSymmetry, newfLevel)
-                            amplitude  = amplitude + 
-                                         PhotoDoubleIonization.amplitude("PDI", newChannel, newcLevel, settings.green, newiLevel, grid)
+                        println(">>> Omega = $(line.omega), Sharing = $ish,  channel = $ich,  subsh1 = $(bOrb1.subshell), subsh2 = $(bOrb2.subshell)")
+                        if      bOrb1.subshell < bOrb2.subshell
+                            symxList = AngularMomentum.allowedDoubleKappaSymmetries(symf, bOrb1.subshell.kappa, bOrb2.subshell.kappa, ch.tSymmetry)
+                            ##x newcLevel  = Basics.generateLevelWithExtraTwoElectrons(bOrb1, ch.xSymmetry, bOrb2, ch.tSymmetry, newfLevel)
+                            for  symx  in  symxList
+                                newCoupling = PhotoDoubleIonization.ReducedCoupling(ch.multipole, ch.gauge, ch.omega, 
+                                                                                    bOrb1.subshell.kappa, phase1, symx,
+                                                                                    bOrb2.subshell.kappa, phase2, ch.tSymmetry)
+                                newcLevel   = Basics.generateLevelWithExtraTwoElectrons(bOrb1, symx, bOrb2, ch.tSymmetry, newfLevel)
+                                amplitude   = amplitude + 
+                                              PhotoDoubleIonization.amplitude("PDI", newCoupling, newcLevel, settings.green, newiLevel, grid)
+                            end
+                        elseif  bOrb1.subshell > bOrb2.subshell
+                            symxList = AngularMomentum.allowedDoubleKappaSymmetries(symf, bOrb2.subshell.kappa, bOrb1.subshell.kappa, ch.tSymmetry)
+                            for  symx  in  symxList
+                                newCoupling = PhotoDoubleIonization.ReducedCoupling(ch.multipole, ch.gauge, ch.omega, 
+                                                                                    bOrb2.subshell.kappa, phase2, symx,
+                                                                                    bOrb1.subshell.kappa, phase1, ch.tSymmetry)
+                                newcLevel  = Basics.generateLevelWithExtraTwoElectrons(bOrb2, symx, bOrb1, ch.tSymmetry, newfLevel)
+                                amplitude  = amplitude - 
+                                             PhotoDoubleIonization.amplitude("PDI", newCoupling, newcLevel, settings.green, newiLevel, grid)
+                            end
                         elseif   bOrb1.subshell  ==  bOrb2.subshell     error("stop a")
                         end
                     end
                 end
-                push!( newChannels, ReducedChannel(ch.multipole, ch.gauge, ch.omega, ch.energy1, ch.kappa1, phase1, ch.xSymmetry,
+                push!( newChannels, ReducedChannel(ch.multipole, ch.gauge, ch.omega, ch.energy1, ch.kappa1, phase1, 
                                                                                      ch.energy2, ch.kappa2, phase2, ch.tSymmetry, amplitude) )
                 if       ch.gauge == Basics.Coulomb     dcsC = dcsC + abs(amplitude)^2
                 elseif   ch.gauge == Basics.Babushkin   dcsB = dcsB + abs(amplitude)^2
@@ -290,13 +340,13 @@ module PhotoDoubleIonization
                 @show ich, ch.gauge, dcsC, dcsB, "   ", amplitude
             end
             # Calculate the differential cross section 
-            diffCs = EmProperty(dcsC, dcsB)
+            csFactor = 4 * pi^2 / Defaults.getDefaults("alpha") / line.omega
+            diffCs   = EmProperty(csFactor*dcsC, csFactor*dcsB)
             push!( newSharings, PhotoDoubleIonization.Sharing( sharing.omega, sharing.epsilon1, sharing.epsilon2, sharing.weight, diffCs, newChannels) )
-            tcsC = tcsC + sharing.weight * dcsC;        tcsB = tcsB + sharing.weight * dcsB
+            tcs = tcs + sharing.weight * 2 * diffCs  ## Factor 2 because only half of the symmetric differential CS are calculated
         end
         # Calculate the total cross section 
-        totalCs = EmProperty(tcsC, tcsB)
-        newLine = PhotoDoubleIonization.Line( line.initialLevel, line.finalLevel, line.omega, totalCs, newSharings)
+        newLine = PhotoDoubleIonization.Line( line.initialLevel, line.finalLevel, line.omega, tcs, newSharings)
         return( newLine )
     end
 
@@ -378,20 +428,21 @@ module PhotoDoubleIonization
                 for  gauge in settings.gauges
                     symList = AngularMomentum.allowedMultipoleSymmetries(symi, mp)
                     for  symt in symList
-                        couplings = AngularMomentum.allowedDoubleKappaCouplingSequence(symf, symt, settings.maxKappa)
-                        for  coupling  in  couplings
+                        # Use the allowed values kappa_1 kappa_2 and deal with their coupling later
+                        kappaPairs = AngularMomentum.allowedDoubleKappas(symf, symt, settings.maxKappa)
+                        for  kappas  in  kappaPairs
                             # Include further restrictions if appropriate
                             if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
-                                push!(channels, ReducedChannel(mp, Basics.Coulomb,   omega, epsilon1, coupling[1], 0., coupling[2], 
-                                                                                            epsilon2, coupling[3], 0., symt, Complex(0.)) ) 
+                                push!(channels, ReducedChannel(mp, Basics.Coulomb,   omega, epsilon1, kappas[1], 0.,
+                                                                                            epsilon2, kappas[2], 0., symt, Complex(0.)) ) 
                             elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
-                                push!(channels, ReducedChannel(mp, Basics.Babushkin, omega, epsilon1, coupling[1], 0., coupling[2], 
-                                                                                            epsilon2, coupling[3], 0., symt, Complex(0.)) ) 
+                                push!(channels, ReducedChannel(mp, Basics.Babushkin, omega, epsilon1, kappas[1], 0.,
+                                                                                            epsilon2, kappas[2], 0., symt, Complex(0.)) ) 
                             elseif string(mp)[1] == 'M'                                
-                                push!(channels, ReducedChannel(mp, Basics.Magnetic,  omega, epsilon1, coupling[1], 0., coupling[2], 
-                                                                                            epsilon2, coupling[3], 0., symt, Complex(0.)) ) 
+                                push!(channels, ReducedChannel(mp, Basics.Magnetic,  omega, epsilon1, kappas[1], 0.,
+                                                                                            epsilon2, kappas[2], 0., symt, Complex(0.)) ) 
                             end 
-                        end
+                        end  
                     end
                 end
             end
@@ -418,10 +469,10 @@ module PhotoDoubleIonization
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
         sa = sa * TableStrings.flushleft(38, "Energies (all in " * TableStrings.inUnits("energy") * ")"; na=3);              
         sb = sb * TableStrings.flushleft(38, "  i -- f        epsilon_1     epsilon_2"; na=3)
-        sa = sa * TableStrings.center(14, "Weight"; na=0);                            sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(14, "Weight"; na=0);                            sb = sb * TableStrings.hBlank(13)
         sa = sa * TableStrings.center(34, "Cou -- diff. cross section -- Bab"; na=3)      
-        sb = sb * TableStrings.center(34, TableStrings.inUnits("cross section") * "        " * 
-                                          TableStrings.inUnits("cross section"); na=3)
+        sb = sb * TableStrings.center(34, TableStrings.inUnits("differential cross section") * "     " * 
+                                          TableStrings.inUnits("differential cross section"); na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         for  line in lines
@@ -437,8 +488,8 @@ module PhotoDoubleIonization
                 sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon1))                        * "    "
                 sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon2))                        * "    "
                 sb = sb * @sprintf("%.4e",                                              sharing.weight)                           * "       "
-                sb = sb * @sprintf("%.5e", Defaults.convertUnits("cross section: from atomic", sharing.differentialCs.Coulomb))   * "   "
-                sb = sb * @sprintf("%.5e", Defaults.convertUnits("cross section: from atomic", sharing.differentialCs.Babushkin)) * "   "
+                sb = sb * @sprintf("%.5e", Defaults.convertUnits("energy-diff. cross section: from atomic", sharing.differentialCs.Coulomb))   * "   "
+                sb = sb * @sprintf("%.5e", Defaults.convertUnits("energy-diff. cross section: from atomic", sharing.differentialCs.Babushkin)) * "   "
                 println(stream,  sb )
             end
         end
@@ -488,7 +539,7 @@ module PhotoDoubleIonization
         #
         #
         # Second, print lines and channles
-        nx = 150
+        nx = 130
         println(" ")
         println("  Selected photo-double ionization lines & channels:   ... channels are shown only for the first sharing")
         println(" ")
@@ -497,7 +548,7 @@ module PhotoDoubleIonization
         sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
         sa = sa * TableStrings.flushleft(100, "Channels (all energies in " * TableStrings.inUnits("energy") * ")" ; na=5);              
-        sb = sb * TableStrings.flushleft(100, "Multipole  Gauge      omega       (epsilon, kappa)_1   -->    J^P_x   -->  (epsilon, kappa)_2   -->    J^P_t"; na=5)
+        sb = sb * TableStrings.flushleft(100, "Multipole  Gauge      omega       (epsilon, kappa)_1   (epsilon, kappa)_2   -->    J^P_t"; na=5)
         println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #
         for  line in lines
@@ -508,11 +559,10 @@ module PhotoDoubleIonization
             for (ic, ch) in enumerate(line.sharings[1].channels)
                 if  ic == 1     sb = sa     else    sb = TableStrings.hBlank( length(sa) )    end
                 skappa1 = "  " * string(ch.kappa1);         skappa2 = "  " * string(ch.kappa2);    
-                sxsym   = "      " * string(ch.xSymmetry);  stsym   = "      " * string(ch.tSymmetry)
+                stsym   = "      " * string(ch.tSymmetry)
                 sb = sb * string(ch.multipole) * "         " * string(ch.gauge)[1:3] * "      " 
                 sb = sb * @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", ch.omega)) * "     "
-                sb = sb * " (" * @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", ch.energy1)) * ", " * skappa1[end-2:end] * ")    -->"
-                sb = sb * sxsym[end-8:end] * "   -->  "
+                sb = sb * " (" * @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", ch.energy1)) * ", " * skappa1[end-2:end] * ")    "
                 sb = sb * " (" * @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", ch.energy2)) * ", " * skappa2[end-2:end] * ")    -->"
                 sb = sb * stsym[end-8:end]
                 println( sb )

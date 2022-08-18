@@ -10,6 +10,28 @@ setDefaults("unit: rate", "a.u.")
 grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
 
 if  false
+    # Green function for single-photon 1s^2 photoionization of helium
+    name             = "Photo-double ionization of helium"
+    refConfigs       = [Configuration("1s^2")]
+    levelSymmetries  = [LevelSymmetry(0, Basics.plus), LevelSymmetry(1, Basics.minus)]
+    greenSettings    = GreenSettings(10, [0, 1, 2], 0.1, true, LevelSelection())
+    greenexpansion   = GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 2, greenSettings)
+    greenRep         = Representation(name, Nuclear.Model(2.), grid, refConfigs, greenexpansion) 
+    greenOut         = generate(greenRep, output=true)
+    doubleGreen      = greenOut["Green channels"]
+    
+elseif true
+    # Single-photon 1s^2 photoionization of helium
+    doubleSettings   = PhotoDoubleIonization.Settings(EmMultipole[E1], UseGauge[UseCoulomb, UseBabushkin], [3., 3.5, 4., 4.5, 5., 6., 7., 8., 9.], 
+                                                      doubleGreen, 4, false, true, 3, LineSelection(true, indexPairs=[(1,0)]))
+    
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(2.), 
+                            initialConfigs  =[Configuration("1s^2")],
+                            finalConfigs    =[Configuration("1s^0")], 
+                            processSettings = doubleSettings )
+
+    wb = perform(wa)
+elseif  false
     # Green function for single-photon 2p^2 photoionization of neon
     name             = "Photo-double ionization of Be-like neon"
     refConfigs       = [Configuration("1s^2 2s^2")]

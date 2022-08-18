@@ -5,10 +5,11 @@
 """
 module Cascade
 
-    using Dates, JLD2, Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
-                               ..DecayYield, ..Dielectronic, ..ElectronCapture, ..Radial, ..ManyElectron, ..Nuclear, 
-                               ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..PhotoRecombination, 
-                               ..Semiempirical, ..TableStrings
+    using Dates, JLD2, Printf, FastGaussQuadrature,
+          ..AngularMomentum, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
+          ..DecayYield, ..Dielectronic, ..ElectronCapture, ..Radial, ..ManyElectron, ..Nuclear, 
+          ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..PhotoRecombination, 
+          ..Semiempirical, ..TableStrings
 
     
     """
@@ -403,12 +404,12 @@ module Cascade
             
         + multipoles            ::Array{EmMultipole}           
             ... Multipoles of the radiation field that are to be included for the radiative transitions in the plasma.
-        + maxPhotonEnergy       ::Float64                 
-            ... Maximum photon (transition) energy [in a.u.] that are taken into account for all absorption lines; 
-                this transition energy refers to the shortest wavelength for which the opacity is needed.
         + minPhotonEnergy       ::Float64                 
             ... Minimum photon (transition) energy [in a.u.] that are taken into account for all absorption lines; 
                 this transition energy refers to the longest wavelength for which transition amplitudes are calculated.
+        + maxPhotonEnergy       ::Float64                 
+            ... Maximum photon (transition) energy [in a.u.] that are taken into account for all absorption lines; 
+                this transition energy refers to the shortest wavelength for which the opacity is needed.
         + meanEnergyShift       ::Float64                 
             ... Energy shift for all excited configurations [in a.u.]; this allows to correct for missing correlation 
                 contributions.
@@ -416,17 +417,19 @@ module Cascade
             ... (Maximum) Number of electron replacements in the excited configuration with regard to the initial configurations/multiplets.
         + excitationFromShells  ::Array{Shell,1}    
             ... List of shells from which excitations are to be considered.
-        + excitationToShells  ::Array{Shell,1}    
+        + excitationToShells    ::Array{Shell,1}    
             ... List of shells to which excitations are to be considered.
+        + printTransitions      ::Bool      ... Print transition data for comparison, if true.
     """
     struct   ExpansionOpacityScheme  <:  Cascade.AbstractCascadeScheme
         multipoles              ::Array{EmMultipole}  
-        maxPhotonEnergy         ::Float64   
         minPhotonEnergy         ::Float64 
+        maxPhotonEnergy         ::Float64   
         meanEnergyShift         ::Float64                 
         NoExcitations           ::Int64
         excitationFromShells    ::Array{Shell,1}
         excitationToShells      ::Array{Shell,1}
+        printTransitions        ::Bool
     end
 
 
@@ -434,7 +437,7 @@ module Cascade
     `Cascade.ExpansionOpacityScheme()`  ... constructor for an 'default' instance of a Cascade.ExpansionOpacityScheme.
     """
     function ExpansionOpacityScheme()
-        ExpansionOpacityScheme([E1], 1.0, 0., 0., 1, Shell[], Shell[] )
+        ExpansionOpacityScheme([E1], 0., 1.0, 0., 1, Shell[], Shell[], false)
     end
 
 
@@ -449,12 +452,13 @@ module Cascade
     function Base.show(io::IO, scheme::ExpansionOpacityScheme)
         sa = Base.string(scheme);                print(io, sa, "\n")
         println(io, "multipoles:                 $(scheme.multipoles)  ")
-        println(io, "maxPhotonEnergy:            $(scheme.maxPhotonEnergy)  ")
         println(io, "minPhotonEnergy:            $(scheme.minPhotonEnergy)  ")
+        println(io, "maxPhotonEnergy:            $(scheme.maxPhotonEnergy)  ")
         println(io, "meanEnergyShift:            $(scheme.meanEnergyShift)  ")
         println(io, "NoExcitations:              $(scheme.NoExcitations)  ")
         println(io, "excitationFromShells:       $(scheme.excitationFromShells)  ")
         println(io, "excitationToShells:         $(scheme.excitationToShells)  ")
+        println(io, "printTransitions:           $(scheme.printTransitions)  ")
     end
 
 
@@ -923,24 +927,68 @@ module Cascade
 
 
     """
+    abstract type  Cascade.AbstractOpacityDependence`  
+        ... defines an abstract type to distinguish different dependencies for the opacity; see also:
+
+        + struct FrequencyOpacityDependence     ... to deal with omega-dependence opacities [omega].
+        + struct WavelengthOpacityDependence    ... to deal with wavelength-dependence opacities [lambda].
+        + struct TemperatureOpacityDependence   ... to deal with temperature-normalized dependent opacities [u].
+    """
+    abstract type  AbstractOpacityDependence      end
+
+    
+    """
+    `struct  Cascade.FrequencyOpacityDependence   <:  Cascade.AbstractOpacityDependence`  
+        ... to deal with omega-dependence opacities [omega] and a binning that need to be given in Hartree.
+    """  
+    struct  FrequencyOpacityDependence   <:  Cascade.AbstractOpacityDependence
+        binning    ::Float64
+    end
+
+    
+    """
+    `struct  Cascade.WavelengthOpacityDependence   <:  Cascade.AbstractOpacityDependence`  
+        ... to deal with wavelength-dependence opacities [lambda] and a binning that need always to be given in nm.
+    """  
+    struct  WavelengthOpacityDependence   <:  Cascade.AbstractOpacityDependence
+        binning    ::Float64
+    end
+
+    
+    """
+    `struct  Cascade.TemperatureOpacityDependence   <:  Cascade.AbstractOpacityDependence`  
+        ... to deal with temperature-normalized dependent opacities [u] and a binning that need to be given Hartree.
+    """  
+    struct  TemperatureOpacityDependence   <:  Cascade.AbstractOpacityDependence
+        binning    ::Float64
+    end
+    
+
+    """
     `struct  Cascade.ExpansionOpacities   <:  Cascade.AbstractSimulationProperty`  
         ... defines a type for simulating the expansion opacity as function of the wavelength as well as (parametrically) the density
             and expansion time.
 
-        + ionDensity             ::Float64       ... ion density [in ions/cm^3]
+        + levelPopulation        ::Basics.AbstractLevelPopulation  
+            ... to specify the kind of level population that is considered for the given opacity calculations.
+        + opacityDependence      ::Cascade.AbstractOpacityDependence    
+            ... to specify the dependence of the opacities [omega, lambda, (temperature-normalized) u]
+        + ionDensity             ::Float64       ... ion density [in g/cm^3]
         + temperature            ::Float64       ... temperature [in K]
-        + expansionTime          ::Float64       ... time [in sec]
+        + expansionTime          ::Float64       ... (expansion/observation) time [in sec]
         + transitionEnergyShift  ::Float64     
             ... (total) energy shifts that apply to all transition energies; the amplitudes are re-scaled accordingly.
-        + wavelength             ::Array{Float64,1}
-            ... wavelength [in user-defined units] for which the expansion opacity is to be calculated.
+        + dependencyValues       ::Array{Float64,1}
+            ... values [in a.u.] for which the expansion opacity is to be calculated.
     """  
     struct  ExpansionOpacities      <:  Cascade.AbstractSimulationProperty
+        levelPopulation          ::Basics.AbstractLevelPopulation
+        opacityDependence        ::Cascade.AbstractOpacityDependence
         ionDensity               ::Float64
         temperature              ::Float64
         expansionTime            ::Float64
         transitionEnergyShift    ::Float64
-        lambdas                  ::Array{Float64,1}
+        dependencyValues         ::Array{Float64,1}
     end 
 
 
@@ -948,17 +996,64 @@ module Cascade
     `Cascade.ExpansionOpacities()`  ... (simple) constructor for expansion opacity simulations.
     """
     function ExpansionOpacities()
-        ExpansionOpacities(1, 1000., 1.,  0., Float64[])
+        ExpansionOpacities(Basics.BoltzmannLevelPopulation(), WavelengthOpacityDependence(0.01), 1, 1000., 1.,  0., Float64[])
     end
 
 
-    # `Base.show(io::IO, dist::Cascade.ExpansionOpacities)`  ... prepares a proper printout of the variable data::Cascade.ExpansionOpacities.
-    function Base.show(io::IO, dist::Cascade.ExpansionOpacities) 
-        println(io, "ionDensity:                 $(dist.ionDensity)  ")
-        println(io, "temperature:                $(dist.temperature)  ")
-        println(io, "expansionTime:              $(dist.expansionTime)  ")
-        println(io, "transitionEnergyShift:      $(dist.transitionEnergyShift)  ")
-        println(io, "lambdas:                    $(dist.lambdas)  ")
+    # `Base.show(io::IO, opacities::Cascade.ExpansionOpacities)`  ... prepares a proper printout of the opacities::Cascade.ExpansionOpacities.
+    function Base.show(io::IO, opacities::Cascade.ExpansionOpacities) 
+        println(io, "levelPopulation:            $(opacities.levelPopulation)  ")
+        println(io, "opacityDependence:          $(opacities.opacityDependence)  ")
+        println(io, "ionDensity:                 $(opacities.ionDensity)  ")
+        println(io, "temperature:                $(opacities.temperature)  ")
+        println(io, "expansionTime:              $(opacities.expansionTime)  ")
+        println(io, "transitionEnergyShift:      $(opacities.transitionEnergyShift)  ")
+        println(io, "dependencyValues:           $(opacities.dependencyValues)  ")
+    end
+    
+
+    """
+    `struct  Cascade.RosselandOpacities   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the Rosseland opacity as function of the temperature or density as well as (parametrically) 
+            the expansion time. Usually, different values are given for either the temperature or density.
+
+        + levelPopulation        ::Basics.AbstractLevelPopulation  
+            ... to specify the kind of level population that is considered for the given opacity calculations.
+        + opacityDependence      ::Cascade.TemperatureOpacityDependence    
+            ... to specify the dependence of the opacities in terms of (the temperature-normalized) u]
+        + ionDensities           ::Array{Float64,1}      ... list of ion densities [in g/cm^3]
+        + temperatures           ::Array{Float64,1}      ... list of temperatures [in K]
+        + expansionTime          ::Float64               ... (expansion/observation) time [in sec]
+        + transitionEnergyShift  ::Float64     
+            ... (total) energy shifts that apply to all transition energies; the amplitudes are re-scaled accordingly.
+    """  
+    struct  RosselandOpacities      <:  Cascade.AbstractSimulationProperty
+        levelPopulation          ::Basics.AbstractLevelPopulation
+        opacityDependence        ::Cascade.TemperatureOpacityDependence
+        ionDensities             ::Array{Float64,1}
+        temperatures             ::Array{Float64,1}
+        expansionTime            ::Float64
+        transitionEnergyShift    ::Float64
+    end 
+
+
+    """
+    `Cascade.RosselandOpacities()`  ... (simple) constructor for RosselandOpacities opacity simulations.
+    """
+    function RosselandOpacitiesOpacities()
+        RosselandOpacitiesOpacities(Basics.BoltzmannLevelPopulation(), TemperatureOpacityDependence(0.01), [1.0], [1.0], 1.,  0.)
+    end
+
+
+    # `Base.show(io::IO, opacities::Cascade.RosselandOpacities)`  
+    #   ... prepares a proper printout of opacities::Cascade.RosselandOpacities.
+    function Base.show(io::IO, opacities::Cascade.RosselandOpacities) 
+        println(io, "levelPopulation:            $(opacities.levelPopulation)  ")
+        println(io, "opacityDependence:          $(opacities.opacityDependence)  ")
+        println(io, "ionDensities:               $(opacities.ionDensities)  ")
+        println(io, "temperatures:               $(opacities.temperatures)  ")
+        println(io, "expansionTime:              $(opacities.expansionTime)  ")
+        println(io, "transitionEnergyShift:      $(opacities.transitionEnergyShift)  ")
     end
 
 

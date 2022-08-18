@@ -10,7 +10,8 @@ module Basics
 
     using Printf
 
-    export  AbstractScField, AbstractPotential, AbstractLevelProperty, AbstractProcess, add, analyze, AngularJ, AngularJ64, AngularM, 
+    export  AbstractScField, AbstractPotential, AbstractLevelProperty, AbstractProcess, 
+            add, analyze, AngularJ, AngularJ64, AngularM, 
             AngularM64, Auger,
             CartesianVector, compute, CorePolarization, diagonalize,
             estimate, EmMultipole, E1, M1, E2, M2, E3, M3, E4, M4, EmProperty, ExpStokes, EmStokes, 
@@ -1442,6 +1443,7 @@ module Basics
     struct     FullCIeigen          <:  AbstractCImethod     end
     
     export  AbstractCImethod, FullCIeigen  ==#
+    
 
     """
     `abstract type Basics.AbstractPotential` 
@@ -1610,6 +1612,21 @@ module Basics
     function Base.string(propc::Radiative)          return( "Radiative" )                          end
     function Base.string(propc::RAuger)             return( "Radiative Auger" )                    end
     function Base.string(propc::Rec)                return( "Rec" )                                end
+    
+
+    """
+    `abstract type Basics.AbstractLevelPopulation` 
+        ... defines an abstract and a number of singleton types to distinguish between different level population (models).
+
+        + struct BoltzmannLevelPopulation     ... to represent a Boltzmann level population.       
+        + struct SahaLevelPopulation          ... to represent a Saha level population.        
+    """
+    abstract type  AbstractLevelPopulation                                end
+    struct    BoltzmannLevelPopulation      <:  AbstractLevelPopulation   end
+    struct    SahaLevelPopulation           <:  AbstractLevelPopulation   end
+    
+    export  AbstractLevelPopulation, BoltzmannLevelPopulation, SahaLevelPopulation
+
     
     """
     `abstract type Basics.AbstractSpectrumKind` 

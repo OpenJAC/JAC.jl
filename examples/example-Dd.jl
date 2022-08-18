@@ -5,8 +5,23 @@ println("Dd) Test of the PhotoRecombination module with ASF from an internally g
 setDefaults("print summary: open", "zzz-PhotoRecombination.sum")
 setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
 setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
+setDefaults("unit: energy", "eV")
+setDefaults("unit: rate", "1/s")
+
+grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.6e-2, rbox = 10.0)
 
 if  true
+    # RR into the bare ion; comparison with Eichler and coworkers
+    phSettings = PhotoRecombination.Settings([E1], [JAC.UseCoulomb, JAC.UseBabushkin], [1., 10., 100., 1000.], [0.], 
+                                             false, true, false, false, true, 3, LineSelection() )
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(5.), 
+                            initialConfigs =[Configuration("1s^0") ],
+                            finalConfigs   =[Configuration("1s")], 
+                            processSettings=phSettings )
+
+    wb = perform(wa)
+    
+elseif  false
     grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.), 
                             initialConfigs=[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6") ],

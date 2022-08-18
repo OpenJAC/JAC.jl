@@ -21,7 +21,11 @@
                                                  
             if      step.process == Basics.PhotoExc()
                 newLines = PhotoExcitation.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
-                                                               step.settings, output=true, printout=false) 
+                                                               step.settings, output=true, printout=false)
+                if  scheme.printTransitions 
+                    println("\n ****** Prepare a printout of the emission rates for photoexcitation lines (not yet !!). ****** \n")
+                    ## PhotoExcitation.displayEmissionRates(stdout, newLines, PhotoExcitation.Settings())
+                end 
                 append!(linesE, newLines);    nt = length(linesE)
             else   error("Unsupported atomic process for cascade computations.")
             end
@@ -231,7 +235,7 @@
             results = Base.merge( results, Dict("cascade scheme"                => comp.scheme) ) 
             results = Base.merge( results, Dict("initial multiplets:"           => multiplets) )    
             results = Base.merge( results, Dict("generated multiplets:"         => gMultiplets) )    
-            results = Base.merge( results, Dict("line data:"                    => data) )
+            results = Base.merge( results, Dict("photoexcitation line data:"    => data) )
             #
             #  Write out the result to file to later continue with simulations on the cascade data
             filename = "zzz-cascade-expansion-opacity-computations-" * string(Dates.now())[1:13] * ".jld"

@@ -69,18 +69,19 @@ module Defaults
 
     #
     # Global settings that can be (re-) defined by the user.
-    GBL_FRAMEWORK               = "relativistic"
-    GBL_CONT_SOLUTION           = BsplineGalerkin()         ###  ContBessel(), ContSine(), AsymptoticCoulomb(), NonrelativisticCoulomb(), BsplineGalerkin()
-    GBL_CONT_NORMALIZATION      = PureSineNorm()            ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm()
-    GBL_QED_HYDROGENIC_LAMBDAC  = [1.0,  1.0,  1.0,  1.0,  1.0]
-    GBL_QED_NUCLEAR_CHARGE      = 0.1
-    GBL_WARNINGS                = String[]
+    GBL_FRAMEWORK                = "relativistic"
+    GBL_CONT_SOLUTION            = BsplineGalerkin()         ###  ContBessel(), ContSine(), AsymptoticCoulomb(), NonrelativisticCoulomb(), BsplineGalerkin()
+    GBL_CONT_NORMALIZATION       = PureSineNorm()            ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm()
+    GBL_QED_HYDROGENIC_LAMBDAC   = [1.0,  1.0,  1.0,  1.0,  1.0]
+    GBL_QED_NUCLEAR_CHARGE       = 0.1
+    GBL_WARNINGS                 = String[]
 
-    GBL_ENERGY_UNIT             = "eV"
-    GBL_CROSS_SECTION_UNIT      = "barn"
-    GBL_RATE_UNIT               = "1/s"
-    GBL_STRENGTH_UNIT           = "cm^2 eV"
-    GBL_TIME_UNIT               = "sec"
+    GBL_ENERGY_UNIT              = "eV"
+    GBL_CROSS_SECTION_UNIT       = "barn"
+    GBL_EDIFF_CROSS_SECTION_UNIT = "barn/eV"
+    GBL_RATE_UNIT                = "1/s"
+    GBL_STRENGTH_UNIT            = "cm^2 eV"
+    GBL_TIME_UNIT                = "sec"
 
     GBL_PRINT_SUMMARY           = false
     GBL_PRINT_TEST              = false
@@ -101,7 +102,7 @@ module Defaults
         ... converts some data from one format/unit into another one; cf. the supported keystrings and return values.
 
     + `("cross section: from atomic to predefined unit", value::Float64)`  or  `("cross section: from atomic", value::Float64)`  
-        ... to convert an energy value from atomic to the predefined cross section unit; a Float64 is returned.
+        ... to convert an cross section value from atomic to the predefined cross section unit; a Float64 is returned.
 
     + `("cross section: from atomic to barn", value::Float64)`  or  `("cross section: from atomic to Mbarn", value::Float64)`  or
       `("cross section: from atomic to Hz", value::Float64)`  or  `("energy: from atomic to Angstrom", value::Float64)` 
@@ -112,6 +113,11 @@ module Defaults
 
     + `("einstein B: from atomic", value::Float64)`  
         ... to convert a Einstein B coefficient from atomic to the speficied energy units; a Float64 is returned.or
+
+    + `("energy-diff. cross section: from atomic to predefined unit", value::Float64)`  or  
+      `("energy-diff. cross section: from atomic", value::Float64)`  
+        ... to convert an energy-diff. cross section value from atomic to the predefined energy-diff. cross section unit; 
+            a Float64 is returned.
 
     + `("energy: from atomic to eV", value::Float64)`  or  `("energy: from atomic to Kayser", value::Float64)`    or
       `("energy: from atomic to Hz", value::Float64)`  or  `("energy: from atomic to Angstrom", value::Float64)`  or
@@ -191,20 +197,29 @@ module Defaults
             end
 
         elseif   sa in ["Einstein B: from atomic"]                          return( wa )  # Einstein B not yet properly converted.
+    
+        elseif   sa in ["energy-diff. cross section: from atomic to predefined unit", "energy-diff. cross section: from atomic"]
+            if      Defaults.getDefaults("unit: energy-diff. cross section") == "a.u."      return( wa )
+            elseif  Defaults.getDefaults("unit: energy-diff. cross section") == "barn/eV"   
+                                                                            return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN/CONVERT_ENERGY_AU_TO_EV )
+            else    error("stop bb")
+            end
 
         elseif   sa in ["energy: from atomic to predefined unit", "energy: from atomic"]
             if      Defaults.getDefaults("unit: energy") == "eV"            return( wa * CONVERT_ENERGY_AU_TO_EV )
             elseif  Defaults.getDefaults("unit: energy") == "Kayser"        return( wa * CONVERT_ENERGY_AU_TO_KAYSERS )
             elseif  Defaults.getDefaults("unit: energy") == "Hartree"       return( wa )
             elseif  Defaults.getDefaults("unit: energy") == "Hz"            return( wa * CONVERT_ENERGY_AU_TO_PER_SEC )
-            elseif  Defaults.getDefaults("unit: energy") == "A"             return( 1.0e8 / ( CONVERT_ENERGY_AU_TO_KAYSERS * wa ) )
+            elseif  Defaults.getDefaults("unit: energy") == "A"             return( 2pi * Defaults.INVERSE_FINE_STRUCTURE_CONSTANT / wa * 
+                                                                                          Defaults.BOHR_RADIUS_SI * 1.0e10 )
             else    error("stop c")
             end
         
         elseif   sa in ["energy: from atomic to eV"]                        return( wa * CONVERT_ENERGY_AU_TO_EV )
         elseif   sa in ["energy: from atomic to Kayser"]                    return( wa * CONVERT_ENERGY_AU_TO_KAYSERS )
         elseif   sa in ["energy: from atomic to Hz"]                        return( wa * CONVERT_ENERGY_AU_TO_PER_SEC )
-        elseif   sa in ["energy: from atomic to Angstrom"]                  return( 1.0e8 / ( CONVERT_ENERGY_AU_TO_KAYSERS * wa ) )
+        elseif   sa in ["energy: from atomic to Angstrom"]                  return( 2pi * Defaults.INVERSE_FINE_STRUCTURE_CONSTANT / wa * 
+                                                                                          Defaults.BOHR_RADIUS_SI * 1.0e10 )
         elseif   sa in ["energy: from atomic to Ws"]                        return( wa * 4.35974e-18 )
 
         elseif   sa in ["energy: from predefined to atomic unit", "energy: to atomic"]
@@ -212,7 +227,8 @@ module Defaults
             elseif  Defaults.getDefaults("unit: energy") == "Kayser"        return( wa / CONVERT_ENERGY_AU_TO_KAYSERS )
             elseif  Defaults.getDefaults("unit: energy") == "Hartree"       return( wa )
             elseif  Defaults.getDefaults("unit: energy") == "Hz"            return( wa / CONVERT_ENERGY_AU_TO_PER_SEC )
-            elseif  Defaults.getDefaults("unit: energy") == "A"             return( CONVERT_ENERGY_AU_TO_KAYSERS / (1.0e8 * wa) )
+            elseif  Defaults.getDefaults("unit: energy") == "A"             return( 2pi * Defaults.INVERSE_FINE_STRUCTURE_CONSTANT / wa * 
+                                                                                          Defaults.BOHR_RADIUS_SI * 1.0e10 )
             else    error("stop d")
             end
 
@@ -289,6 +305,20 @@ module Defaults
         else
             error("Unsupported keystring = $sa")
         end
+    end
+    
+    
+    """
+    
+    
+    + `(string, values::Array{Float64,1})`  
+        ... to convert for the same strings as above but for an list of values; a corresponding Array{Float64,1} is returned.
+    """
+    function convertUnits(sa::String, values::Array{Float64,1})
+        newValues = Float64[]
+        for  wa  in  values   wb = convertUnits(sa, wa);     push!(newValues, wb)    end
+        
+        return( newValues )
     end
 
 
@@ -504,6 +534,7 @@ module Defaults
         elseif    sa in ["electron rest energy", "mc^2"]                    return (1/(FINE_STRUCTURE_CONSTANT^2))   
         elseif    sa == "unit: energy"                                      return (GBL_ENERGY_UNIT)
         elseif    sa == "unit: cross section"                               return (GBL_CROSS_SECTION_UNIT)
+        elseif    sa == "unit: energy-diff. cross section"                  return (GBL_EDIFF_CROSS_SECTION_UNIT)
         elseif    sa == "unit: rate"                                        return (GBL_RATE_UNIT)
         elseif    sa == "unit: strength"                                    return (GBL_STRENGTH_UNIT)
         elseif    sa == "unit: time"                                        return (GBL_TIME_UNIT)

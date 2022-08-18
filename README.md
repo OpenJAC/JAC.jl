@@ -166,16 +166,18 @@ The 'simplest access' to the JAC toolbox is by using Binder in the cloud. If you
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master) 
 
-you will get a Jupyter notebook where you can call 'using JAC' in order to have Julia and JAC installed.
-Then you can run all examples and calls like on your own computer, just a bit slower (by a factor 3..5).
-This will help you to run a few first examples (as shown in the example folder above) and in order to decide of 
-whether you wish to install the code locally.
+you will get a Jupyter notebook where you can call 'using JAC' in order to have Julia and JAC (completely) 
+installed. -- Then you can run all examples and calls like on your own computer, just a bit slower 
+(say, by a factor 3..5). This will help you to run a few first examples (as shown in the example folder above) 
+and in order to decide of whether you wish to install the code locally.
+
 
 You can also directly access the 
 [Getting started with JAC](https://mybinder.org/v2/gh/openjac/JAC.jl/master?labpath=tutorials%2F12-getting-started-with-JAC.ipynb)
-tutorial, and similar for other tutorials that are distributed together with the code. Further details can then be 
-found from the [User Guide, Compendium & Theoretical Background to JAC](UserGuide-Jac.pdf). Make use the index or a
-full-text search to find selected items in this (.pdf) User Guide.
+tutorial in the cloud, and similar for other tutorials that are distributed together with the code. Further details 
+can then be found from the [User Guide, Compendium & Theoretical Background to JAC](UserGuide-Jac.pdf). Make use the 
+index or a full-text search to find selected items in this (.pdf) User Guide.
+
 
 A very **simple example** has been discussed in the [CPC reference](https://doi.org/10.1016/j.cpc.2019.01.012)
 above and just refers to the low-lying level structure and the Einstein A and B coefficients of the 

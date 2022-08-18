@@ -263,11 +263,18 @@
     `Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
                        printout::Bool=true)`  
         ... to generate an atomic basis and to compute the self-consistent field (SCF) for this basis due to the given settings; 
-            a basis::Basis is returned.  
+            a basis::Basis is returned.   
     """
     function Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
                                printout::Bool=true)
         if  printout    println("\n... in performSCF ...")    end
+        
+        ##x # An empty (bare-ion) configuration does not require any SCF procedure; an empty basis is returned instead.
+        ##x if      configs[1].NoElectrons == 0  &&  length(configs) != 1  error("stop aa")
+        ##x elseif  configs[1].NoElectrons == 0  
+        ##x     csfR = CsfR( AngularJ64(0), Basics.plus, )
+        ##x     return( Basis(true, 0, [Subshell(1,-1)], csfR, Subshell[], Dict{Subshell, Orbital}() ) )
+        ##x end  ==#
         
         # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
         relconfList = ConfigurationR[]
@@ -502,6 +509,12 @@
             level structure of the corresponding multiplet due to the given settings; a multiplet::Multiplet is returned.   
     """
     function Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
+        
+        ##x # For a bare ion with basis.isDefined == false, an empty multiplet is returned
+        ##x if  !basis.isDefined
+        ##x     level = Level(AngularJ64(0), AngularM64(0), Basics.plus, 1, 0., 0., true, basis, [1.0])
+        ##x     return( Multiplet("bare ion", [level]) )   
+        ##x end
         
         # Determine the J^P symmetry blocks
         symmetries = Dict{LevelSymmetry,Int64}()

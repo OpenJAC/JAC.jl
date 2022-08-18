@@ -75,26 +75,38 @@
     
     
     """
-    `Cascade.displayExpansionOpacities(stream::IO, sc::String, property::Cascade.ExpansionOpacities, kappas::Array{Float64,1})` 
+    `Cascade.displayExpansionOpacities(stream::IO, sc::String, property::Cascade.ExpansionOpacities, 
+                                       energyInterval::Tuple{Float64, Float64}, kappas::Array{Basics.EmProperty,1})` 
         ... displays the expansion opacities in a neat table. Nothing is returned.
     """
-    function displayExpansionOpacities(stream::IO, sc::String, property::Cascade.ExpansionOpacities, kappas::Array{Float64,1})
-        nx = 99
+    function displayExpansionOpacities(stream::IO, sc::String, property::Cascade.ExpansionOpacities, 
+                                       energyInterval::Tuple{Float64, Float64}, kappas::Array{Basics.EmProperty,1})
+        nx = 63
         println(stream, " ")
-        println(stream, "  Expansion opacities:  $sc ")
-        println(stream, " ")
+        sa = "  Expansion opacities:  $sc       ... are evaluated for the following parameters: \n" *
+            "\n    + level population                   = $(property.levelPopulation)    " *
+            "\n    + opacityDependence                  = $(property.opacityDependence)    " *
+            "\n    + ion density [ions/cm^3]            = $(property.ionDensity)    " *
+            "\n    + plasma temperature [K]             = $(property.temperature)   " *
+            "\n    + expansion/observation time [sec]   = $(property.expansionTime) " *
+            "\n    + binning [Hartree]                  = $(property.opacityDependence.binning) " *
+            "\n    + energy interval [Hartree]          = $(energyInterval) " *
+            "\n    + energy shift  [Hartree]            = $(property.transitionEnergyShift) \n"
+        println(stream, sa)
         println(stream, "  ", TableStrings.hLine(nx))
-        error("a")
+        sb = TableStrings.inUnits("energy")
+        if  typeof(property.opacityDependence) == Cascade.TemperatureOpacityDependence    sb = "[dim-less]"     end
         sa = "  "
-        sa = sa * TableStrings.center(14, "No. electrons"; na=4)        
-        sa = sa * TableStrings.center(10,"Rel. occ.";      na=2)
+        sa = sa * TableStrings.center(20, "Values " * sb; na=1)        
+        sa = sa * TableStrings.center(36, "Cou -- kappa^(expansion) [cm^2/g] -- Bab";      na=2)
         println(stream, sa)
         println(stream, "  ", TableStrings.hLine(nx))
-        #
-        # For loop to add the opacities to sa
+        for (i,value) in enumerate(property.dependencyValues)
+            sa = "       " * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", value)) * 
+                 "         " * @sprintf("%.6e", kappas[i].Coulomb) * "        " * @sprintf("%.6e", kappas[i].Babushkin)
+            println(stream, sa)
+        end
         println(stream, "  ", TableStrings.hLine(nx))
-        sa = "  Total distributed probability:  " * @sprintf("%.5e", 0.3)
-        println(stream, sa)
 
         return( nothing )
     end
@@ -428,7 +440,9 @@
     function extractPhotoExcitationData(dataDicts::Array{Dict{String,Any},1})
         photoexcitationData = Cascade.ExcitationData[]
         for data  in  dataDicts       results = data["results"]
-            if  haskey(results, "photo-excited line data:")  push!(photoexcitationData, results["photo-excited line data:"])   end
+            if  haskey(results, "photoexcitation line data:") 
+                push!(photoexcitationData, results["photoexcitation line data:"])   
+            end
         end
         
         return( photoexcitationData )
@@ -759,7 +773,12 @@
         elseif  typeof(simulation.property) == Cascade.ExpansionOpacities
                                              # --------------------------
             photoExcData = Cascade.extractPhotoExcitationData(simulation.computationData)
-            wa           = Cascade.simulateExpansionOpacities(photoExcData, simulation) 
+            wa           = Cascade.simulateExpansionOpacities(photoExcData, simulation.name, simulation.property, printout=true) 
+            #
+        elseif  typeof(simulation.property) == Cascade.RosselandOpacities
+                                             # --------------------------
+            photoExcData = Cascade.extractPhotoExcitationData(simulation.computationData)
+            wa           = Cascade.simulateRosselandOpacities(photoExcData, simulation) 
             #
         else         error("stop b")
         end
@@ -1002,29 +1021,94 @@
     
 
     """
-    `Cascade.simulateExpansionOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, simulation::Cascade.Simulation)` 
+    `Cascade.simulateExpansionOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, name::String, 
+                                        property::Cascade.ExpansionOpacities; printout::Bool=true)` 
         ... runs through all excitation lines, sums up their contributions and form a (list of) expansion opacities for the given 
             parameters. Nothing is returned.
     """
-    function simulateExpansionOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, simulation::Cascade.Simulation)
+    function simulateExpansionOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, name::String, 
+                                        property::Cascade.ExpansionOpacities; printout::Bool=true)
+        #
+        function lambda_over_dlambda(opacityDependence::AbstractOpacityDependence, lineOmega::Float64, kT::Float64, depValue::Float64)
+            # Calculates the value lambda / Delta lambda for the given binning and depValue, for which the opacity need to be
+            # determined; the binning is assumed in Hartree (for frequency- and temperature-normalized dependence) and in
+            # nm for wavelength-dependent opacities; an value = 0. is returned if the lineOmega does not fall into the (binning)
+            # interval
+            wa = 0.;  halfBinning = opacityDependence.binning / 2.
+            #
+            if     typeof(opacityDependence) == FrequencyOpacityDependence
+                # Binning, depValue and lineOmega are all in Hartree and readily to compare; ratio need to be inverted, when compared
+                # with wavelength.
+                if  depValue - halfBinning < lineOmega < depValue + halfBinning             wa = 2* halfBinning / lineOmega        end
+            elseif typeof(opacityDependence) == WavelengthOpacityDependence
+                # Binning in nm, lineOmega & depValue in Hartree are first converted into nm ... and ratio is determined in nm as well
+                lineOmega_nm = convertUnits("energy: from atomic to Angstrom", lineOmega) / 10.
+                depValue_nm  = convertUnits("energy: from atomic to Angstrom", depValue)  / 10.
+                if  depValue_nm - halfBinning < lineOmega_nm < depValue_nm + halfBinning    wa = lineOmega_nm / (2* halfBinning)   end
+            elseif typeof(opacityDependence) == TemperatureOpacityDependence
+                # Binning and lineOmega are in Hartree, depValue in [u] and need to be converted; 
+                # ratio still need to be inverted, when compared with wavelength.
+                if  depValue * kT - halfBinning < lineOmega < depValue + halfBinning * kT   wa = 2* halfBinning / lineOmega        end
+            else   error("stop a")
+            end
+            
+            return( wa )
+        end
+        #
+        #
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
-        lambdas = simulation.property.lambdas;  NoLambdas = length(lambdas);    exptime = simulation.property.expansionTime
-        T       = simulation.property.temperature;                              rho     = simulation.property.ionDensity
-        kappas  = zeros(NoLambdas)
+        values     = property.dependencyValues;                
+        exptime    = property.expansionTime;                   
+        dependence = property.opacityDependence;                   
+        exptime_au = exptime / convertUnits("time: from atomic to sec", 1.0)
+        T          = property.temperature;                                
+        rho        = property.ionDensity
+        eshift     = property.transitionEnergyShift
+        ne         = 1.0 ## number density [1/a_o^3] ?? 
+        NoValues   = length(values);                                      
+        kappas     = Basics.EmProperty[];    for  i = 1:NoValues     push!(kappas, Basics.EmProperty(0.))   end
         #
-        for  linesE  in photoexcitationData
-            for  line  in linesE
-                for  ilambda = 1:NoLambdas
-                    kappas[ilambda] = kappas[ilambda] + 0.1
+        # Determine c in cm/s
+        alpha   = Defaults.getDefaults("alpha")
+        c_in_SI = Defaults.getDefaults("speed of light: c") * convertUnits("length: from atomic to fm", 1.0) * 1.0e-13 /
+                  convertUnits("time: from atomic to sec", 1.0)
+        factor  = 1.0 / (rho * c_in_SI * exptime)
+        kT      = convertUnits("temperature: from Kelvin to (Hartree) units", T)
+        A_au    = convertUnits("length: from fm to atomic", 1.0e5)
+        #
+        if length(photoexcitationData) == 0     error("No photoexcitationData provided.")     end
+        #
+        minEnergy = 1000.;   maxEnergy = 0.
+        for  excData  in photoexcitationData
+            for  line  in excData.linesE
+                if  minEnergy > line.omega     minEnergy = line.omega   end
+                if  maxEnergy < line.omega     maxEnergy = line.omega   end
+                    omega       = line.omega + eshift
+                    fosc        = line.oscStrength
+                    g0          = Basics.twice(line.initialLevel.J) + 1;   ge = Basics.twice(line.finalLevel.J) + 1
+                    lambda_au   = convertUnits("energy: from atomic to Angstrom", omega) * A_au
+                for  ivalue = 1:NoValues
+                    lmd_over_dl    = lambda_over_dlambda(dependence, omega, kT, values[ivalue])
+                    if  lmd_over_dl == 0.  continue  end
+                    tau_Cou        = pi * alpha * ne * lambda_au * exptime_au * ge / g0 * fosc.Coulomb   * exp(-omega/kT)
+                    tau_Bab        = pi * alpha * ne * lambda_au * exptime_au * ge / g0 * fosc.Babushkin * exp(-omega/kT)
+                    term_Cou       = factor * lmd_over_dl * (1.0 - exp(-tau_Cou))
+                    term_Bab       = factor * lmd_over_dl * (1.0 - exp(-tau_Bab))
+                    kappas[ivalue] = kappas[ivalue] + Basics.EmProperty(term_Cou, term_Bab)
                 end
             end
         end
         #
-        Cascade.displayExpansionOpacities(stdout, simulation.name, simulation.property, kappas)     
-        if  printSummary   Cascade.displayExpansionOpacities(stdout, simulation.name, simulation.property, kappas)      end
+        if  printout
+            Cascade.displayExpansionOpacities(stdout, name, property, (minEnergy,maxEnergy), kappas)     
+            if  printSummary   
+                Cascade.displayExpansionOpacities(iostream, name, property, (minEnergy,maxEnergy), kappas)      end
+                
+              return( nothing )
+        else  return( kappas )
+        end
 
-        return( nothing )
     end
     
 
@@ -1185,6 +1269,40 @@
     
 
     """
+    `Cascade.simulateRosselandOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, simulation::Cascade.Simulation)` 
+        ... runs through all excitation lines, sums up their contributions and form a (list of) Rosseland opacities, based on
+            the expansion opacities, for the given parameters. Nothing is returned.
+    """
+    function simulateRosselandOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, simulation::Cascade.Simulation)
+        ulist, wlist = FastGaussQuadrature.gausslaguerre(8);            kappaList    = Float64[]
+        
+        opacityDependence = simulation.property.opacityDependence
+        for  rho in simulation.property.ionDensities
+            for  T in simulation.property.temperatures
+                property=Cascade.ExpansionOpacities(Basics.BoltzmannLevelPopulation(), opacityDependence, rho, T, 
+                                 simulation.property.expansionTime, simulation.property.transitionEnergyShift, ulist)
+                                 
+                kappas = Cascade.simulateExpansionOpacities(photoexcitationData, "expansion opacity for rho = $rho & T=$T", 
+                                                            property, printout=false)    
+                #
+                # Form the u-integral of the Rosseland opacity
+                rosseland = Basics.EmProperty(0.)
+                for (i,u)  in  enumerate(ulist)
+                    rosseland = rosseland + 15.0/ (4*pi^4) * u^4 * wlist[i] / ( (1.0 - exp(-u))^2 ) * kappas[i]
+                end
+                #
+                sa = "> Rosseland opacity for rho = " * @sprintf("%.3e",rho) * "[g/cm^3]  &  T="    * @sprintf("%.3e",T) *
+                     " [K]  is  kappa^Rosseland [cm^2/g] = " * @sprintf("%.5e",rosseland.Coulomb)   * " [Coulomb]  "  *
+                                                               @sprintf("%.5e",rosseland.Babushkin) * " [Babushkin]"
+                println(sa)
+            end
+        end
+        
+        return( nothing )
+    end
+    
+
+    """
     `Cascade.simulateRrRateCoefficients(lines::Array{PhotoRecombination.Line,1}, simulation)` 
         ... Integrates over all selected cross sections in order to determine the RR plasma rate coefficients for a Maxwellian
             distribution.
@@ -1221,6 +1339,7 @@
 
         return( nothing )
     end
+    
 
     """
     `Cascade.sortByEnergy(levels::Array{Cascade.Level,1}; ascendingOrder::Bool=false)` 

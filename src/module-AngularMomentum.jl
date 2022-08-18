@@ -31,6 +31,26 @@ module AngularMomentum
         return( couplings )         
     end
 
+    
+    """
+    `AngularMomentum.allowedDoubleKappas(syma::LevelSymmetry, symb::LevelSymmetry, maxKappa::Int64)`  
+        ... to determine all allowed pairs of kappa that fulfill  syma + (kappa1, kappa2) --> symb,
+            and where |kappa1|, |kappa2| <= maxKappa. A list::Array{Tuple{Int64,Int64},1}) of (kappa1, kappa2) is returned.
+    """
+    function  allowedDoubleKappas(syma::LevelSymmetry, symb::LevelSymmetry, maxKappa::Int64)
+        kappaPairs = Tuple{Int64,Int64}[];     kx = abs(maxKappa)
+        for  kappa1 = -kx:kx
+            if  kappa1 == 0          continue    end
+            for  kappa2 = -kx:kx
+                if  kappa2 == 0      continue    end
+                symx = allowedDoubleKappaSymmetries(syma, kappa1, kappa2, symb)
+                if  length(symx) > 0    push!( kappaPairs, (kappa1, kappa2))      end
+            end
+        end
+
+        return( kappaPairs )         
+    end
+
 
     """
     `AngularMomentum.allowedDoubleKappaSymmetries(syma::LevelSymmetry, kappa1::Int64, kappa2::Int64, symb::LevelSymmetry)`  
