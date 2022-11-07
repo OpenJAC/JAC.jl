@@ -434,6 +434,31 @@ module  RadialIntegrals
     
             return( Math.integrateTransform(f, 1, mtp, grid) )
         elseif  grid.meshType == Radial.MeshGL()
+            wa = 0.
+            for  i = 1:grid.NoPoints 
+                if i > mtp   break   end
+                wa = wa + p1List[i] * p2List[i] * grid.wr[i]   
+            end
+            return( wa )
+        else
+            error("stop b")
+        end
+    end
+
+    
+    function overlap_old2022(p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)
+        
+        mtp = min( length(p1List), length(p2List))
+        
+        # Distinguish the radial integration for different grid definitions
+        if  grid.meshType == Radial.MeshGrasp()
+    
+            function f(i :: Int64)
+                return( p1List[i] * p2List[i] )
+            end
+    
+            return( Math.integrateTransform(f, 1, mtp, grid) )
+        elseif  grid.meshType == Radial.MeshGL()
             error("stop a")
         else
             error("stop b")

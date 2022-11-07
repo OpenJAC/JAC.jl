@@ -325,13 +325,14 @@ module PhotoRecombination
             # Calculate the individual channels with the given orbitals
             newChannels = PhotoRecombination.Channel[];    csC = 0.;    csB = 0.
             for channel in line.channels
-                newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, line.finalLevel.basis.subshells)
-                newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, newfLevel.basis.subshells)
-                en        = line.electronEnergy;    ieList = findall(x->x==en, energyGrid.t);   ie = ieList[1]  
+                newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, line.finalLevel.basis.subshells)
+                newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, newfLevel.basis.subshells)
+                en         = line.electronEnergy;    ieList = findall(x->x==en, energyGrid.t);
                 @show  ie, ieList, en, energyGrid.t 
-                cSubsh    = Subshell(100+ie, channel.kappa)
-                newfLevel = Basics.generateLevelWithExtraSubshell(cSubsh, newfLevel)
-                cOrbital  = cOrbitals[cSubsh];      phase = 0.
+                ie         = ieList[1]  
+                cSubsh     = Subshell(100+ie, channel.kappa)
+                newfLevel  = Basics.generateLevelWithExtraSubshell(cSubsh, newfLevel)
+                cOrbital   = cOrbitals[cSubsh];      phase = 0.
                 newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newiLevel)
                 newChannel = PhotoRecombination.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
                 amplitude  = PhotoRecombination.amplitude("photorecombination", channel, line.photonEnergy, newfLevel, newcLevel, grid)
@@ -371,20 +372,20 @@ module PhotoRecombination
         
         nx = 110
         println(" ")
-        println("  Comparison of different semi-empirical RR cross sections:    Z = $Z      ... all in [a.u.]")
-        println(" ")
+        println("  Comparison of different semi-empirical RR cross sections:        Z = $Z      ... all in [a.u.]")
+        println("  Note Kramers(total) and Bell(total) valid only for eta >> 1.")
         println("  ", TableStrings.hLine(nx))
-        sa =  "  Energy         eta             Stobbe(1s)      Kramers(1s)     Kramers(1..60)  Kramers(total)  Bell(total) "
+        sa =  "  Energy         eta             Stobbe(1s)      Kramers(1s)     Kramers(1..50)  Kramers(total)  Bell(total) "
         println(sa);    println("  ", TableStrings.hLine(nx)) 
         #
         for  energy in energies
             sa =  "  " * @sprintf("%.4e", energy) * "     "
             wa = sqrt( Z^2 / 2. / energy);                                              sa = sa * @sprintf("%.4e", wa) * "      "
-            wa = crossSectionStobbe(energy, Z);             push!(csStobbe, wa);        sa = sa * @sprintf("%.4e", wa) * "      "
-            wa = crossSectionKramers(energy, Z, (1,1));     push!(csKramers, wa);       sa = sa * @sprintf("%.4e", wa) * "      "
-            wa = crossSectionKramers(energy, Z, (1,60));                                sa = sa * @sprintf("%.4e", wa) * "      "
-            wa = crossSectionKramersTotal(energy, Z);       push!(csKramersTotal, wa);  sa = sa * @sprintf("%.4e", wa) * "      "
-            wa = crossSectionBellTotal(energy, Z);                                      sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = PhotoRecombination.crossSectionStobbe(energy, Z);             push!(csStobbe, wa);        sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = PhotoRecombination.crossSectionKramers(energy, Z, (1,1));     push!(csKramers, wa);       sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = PhotoRecombination.crossSectionKramers(energy, Z, (1,50));                                sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = PhotoRecombination.crossSectionKramersTotal(energy, Z);       push!(csKramersTotal, wa);  sa = sa * @sprintf("%.4e", wa) * "      "
+            wa = PhotoRecombination.crossSectionBellTotal(energy, Z);                                      sa = sa * @sprintf("%.4e", wa) * "      "
             println(sa)
         end
         # 
@@ -400,27 +401,34 @@ module PhotoRecombination
             free electron with temperature Te in temps into initially bare ions with nuclear charge Z; nothing is returned.
     """
     function comparePlasmaRateEmpirical(temps::Array{Float64,1}, Z::Float64)
-        alphaKotelnikov = Float64[];    alphaKotelnikov1s = Float64[];    
+        alphaKotelnikov = Float64[];    alphaKotelnikov1s = Float64[];    alphaSeaton = Float64[];    alphaPartialSeaton = Float64[];    
         factor  = Defaults.convertUnits("length: from atomic to fm", 1.0)^3 * 1.0e-39 * 
                   Defaults.convertUnits("rate: from atomic to 1/s", 1.0) 
         
-        nx = 110
+        nx = 170
         println(" ")
         println("  Comparison of different semi-empirical RR plasma rate coefficieints:    Z = $Z ")
+        println("  alpha(Seaton) valid for 2Te/Z^2 << 1.")
         println(" ")
         println("  ", TableStrings.hLine(nx))
-        sa =  "  Temperature    Temperature     2Te/Z^2         Kotelnikov      Kotelnikov      Kotelnikov(1s)  Kotelnikov(1s)   " *
-            "\n     [a.u.]          [K]                           [a.u.]         [cm^3/s]         [a.u.]          [cm^3/s]      "
+        sa =  "  Temperature  Temperature     2Te/Z^2   " *
+              "    Seaton        Seaton      Kotelnikov    Kotelnikov  Kotelnikov(1s) Kotelnikov(1s) partial Seaton(2*) partial Seaton(2*)   " *
+            "\n     [a.u.]        [K]                   " *
+              "    [a.u.]       [cm^3/s]       [a.u.]       [cm^3/s]       [a.u.]        [cm^3/s]        [a.u.]            [cm^3/s]     "
         println(sa);    println("  ", TableStrings.hLine(nx)) 
         #
         for  temp in temps
-            sa =  "  " * @sprintf("%.4e", temp) * "     "
-            wa = Defaults.convertUnits("temperature: from atomic to Kelvin", temp);         sa = sa * @sprintf("%.4e", wa) * "      "
-            wa = 2*temp / Z^2;                                                              sa = sa * @sprintf("%.4e", wa) * "      "
-            wa = plasmaRateKotelnikov(temp, Z);             push!(alphaKotelnikov, wa);     sa = sa * @sprintf("%.4e", wa) * "      "
-            wa = wa * factor;                                                               sa = sa * @sprintf("%.4e", wa) * "      "
-            wa = plasmaRateKotelnikov_1s(temp, Z);          push!(alphaKotelnikov1s, wa);   sa = sa * @sprintf("%.4e", wa) * "      "
-            wa = wa * factor;                                                               sa = sa * @sprintf("%.4e", wa) * "      "
+            sa =  "  " * @sprintf("%.4e", temp)                                                                            * "   "
+            wa = Defaults.convertUnits("temperature: from atomic to Kelvin", temp);         sa = sa * @sprintf("%.4e", wa) * "    "
+            wa = 2*temp / Z^2;                                                              sa = sa * @sprintf("%.4e", wa) * "    "
+            wa = plasmaRateSeaton(temp, Z);                 push!(alphaSeaton, wa);         sa = sa * @sprintf("%.4e", wa) * "    "
+            wa = wa * factor;                                                               sa = sa * @sprintf("%.4e", wa) * "    "
+            wa = plasmaRateKotelnikov(temp, Z);             push!(alphaKotelnikov, wa);     sa = sa * @sprintf("%.4e", wa) * "    "
+            wa = wa * factor;                                                               sa = sa * @sprintf("%.4e", wa) * "    "
+            wa = plasmaRateKotelnikov_1s(temp, Z);          push!(alphaKotelnikov1s, wa);   sa = sa * @sprintf("%.4e", wa) * "    "
+            wa = wa * factor;                                                               sa = sa * @sprintf("%.4e", wa) * "       "
+            wa = plasmaRatePartialSeaton(temp, Z, 2);       push!(alphaPartialSeaton, wa);  sa = sa * @sprintf("%.4e", wa) * "       "
+            wa = wa * factor;                                                               sa = sa * @sprintf("%.4e", wa) * "    "
             println(sa)
         end
         # 
@@ -506,6 +514,35 @@ module PhotoRecombination
         wx    = 2*Te / Z^2
         alpha = 8.414 * Defaults.getDefaults("alpha")^3 * Z
         alpha = alpha / (sqrt(wx)  +  0.3593 * wx^(7/6)  +  0.1471 * wx^1.5)
+        return( alpha )
+    end
+    
+
+    """
+    `PhotoRecombination.plasmaRatePartialSeaton(Te::Float64, Z::Float64, n::Int64)`  
+        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
+            energies and an initially bare ions with nuclear charge Z.
+            An alpha::Float64 is returned.
+    """
+    function plasmaRatePartialSeaton(Te::Float64, Z::Float64, n::Int64)
+        wx    = Z^2 / (2*n^2 * Te)
+        alpha = 64 * Defaults.getDefaults("alpha")^3 / 3. * sqrt(pi/3.) * wx^(3/2) * exp(wx)
+        alpha = 11 * alpha  # fudge factor
+        # Formal integral is still missing.
+        return( alpha )
+    end
+    
+
+    """
+    `PhotoRecombination.plasmaRateSeaton(Te::Float64, Z::Float64)`  
+        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
+            energies and an initially bare ions with nuclear charge Z; this formula is valid for 2*Te / Z^2 << 1.
+            An alpha::Float64 is returned.
+    """
+    function plasmaRateSeaton(Te::Float64, Z::Float64)
+        wx    = 2*Te / Z^2
+        alpha = 32 * sqrt(pi) * Defaults.getDefaults("alpha")^3 * Z / (3. * sqrt(3.))
+        alpha = alpha * sqrt(1/wx) * (log(1/wx) + 0.8576 + 0.9380 * (1/wx)^(-1/3))  
         return( alpha )
     end
 
@@ -631,7 +668,7 @@ module PhotoRecombination
                                                     line.channels[i].symmetry) )
             end
             wa = TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
-            sb = sa * wa[1];    println( sb )  
+            if  length(wa) > 0  sb = sa * wa[1]   else    sb = sa    end;    println( sb )  
             for  i = 2:length(wa)
                 sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
             end

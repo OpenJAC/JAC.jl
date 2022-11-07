@@ -83,6 +83,7 @@
                             initialList::Array{Cascade.Block,1}, capturedList::Array{Cascade.Block,1})
         # Determine a (free-electron) energy grid 
         enGrid   = Radial.GridGL("Finite", 0.0, scheme.maxFreeElectronEnergy, scheme.NoFreeElectronEnergies, printout=true)
+        @show  enGrid.t
         stepList = Cascade.Step[]
         if  comp.approach  in  [Cascade.AverageSCA(), Cascade.SCA()]
             for  capturedBlock in capturedList
@@ -92,7 +93,7 @@
                     maxKappa = maximum(scheme.lValues) + 1
                     ##x @show maxKappa, enGrid.t
                     settings = PhotoRecombination.Settings(scheme.multipoles, [UseCoulomb, UseBabushkin], enGrid.t, 
-                                                           Float64[], false, false, false, false, maxKappa, LineSelection())
+                                                           Float64[], false, false, false, false, true, maxKappa, LineSelection())
                     push!( stepList, Cascade.Step(Basics.Rec(), settings, initialBlock.confs,     capturedBlock.confs,     
                                                                           initialBlock.multiplet, capturedBlock.multiplet ) )
                 end

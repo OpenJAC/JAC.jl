@@ -470,7 +470,7 @@ module ManyElectron
         
                 generateScf=..,       eeInteraction=..,       scField=..,            startScfFrom=..,           
                 maxIterationsScf=..,  accuracyScf=..,         shellSequenceScf=..,   frozenSubshells=..,    
-                eeInteractionCI=..,   qedModel=..,            jjLS=..,               levelSelection=..,     
+                eeInteractionCI=..,   qedModel=..,            jjLS=..,               levelSelectionCI=..,     
                 printout::Bool=false)
         ... constructor for re-defining a settings::AsfSettings.
     """

@@ -1,4 +1,6 @@
 
+using  SpecialFunctions,  HypergeometricFunctions, ..Bsplines
+
 """
 `module  JAC.HydrogenicIon`  
     ... a submodel of JAC that contains methods for computing various one-electron energies, matrix elements, etc..
@@ -79,14 +81,35 @@ module HydrogenicIon
         for i = 1:length(plist)    plist[i] = HydrogenicIon.radialOrbital(sh, Z, rlist[i])    end
         return( plist )
     end
+ 
+ 
+     """
+    `HydrogenicIon.radialOrbital(sh::Subshell, Z::Float64, grid::Radial.Grid)`
+        ... to compute a relativistic hydrogenic Dirac orbital on the given grid; 
+            an Array with the large and small component is returned; contributed by C Naumann (2022).
+    """
+    function radialOrbital(sh::Subshell, Z::Float64, grid::Radial.Grid)
+        mtp = grid.NoPoints
+        plist = zeros( mtp )
+        qlist = zeros( mtp )
+        for i = 1:length(plist)    
+            plist[i] = radialOrbital(sh, Z, grid.r[i])[1]   
+            qlist[i] = radialOrbital(sh, Z, grid.r[i])[2]   
+        end  
+        # Ensure that the large component of all orbitals start 'positive'
+        wSign     = sum( plist[1:50] )
+        if  wSign < 0.   plist[1:mtp] = -plist[1:mtp];   qlist[1:mtp] = -qlist[1:mtp]    end
+            
+        return( [plist, qlist] )
+    end
 
 
     """
-    `HydrogenicIon.radialOrbital(sh::Subshell, Z::Float64, grid::Radial.Grid)`
+    `HydrogenicIon.radialOrbital_old2022(sh::Subshell, Z::Float64, grid::Radial.Grid)`
         ... to compute a relativstic hydrogenic Dirac orbital on the given grid by applying the kinetic-balance to a 
             corresponding non-relavistic orbital; an orbital::Radial.Orbital is returned.
     """
-    function radialOrbital(sh::Subshell, Z::Float64, grid::Radial.Grid)
+    function radialOrbital_old2022(sh::Subshell, Z::Float64, grid::Radial.Grid)
         en  = HydrogenicIon.energy(sh, Z)
         P   = HydrogenicIon.radialOrbital( Shell(sh.n, Basics.subshell_l(sh)), Z, grid)
         
@@ -112,14 +135,50 @@ module HydrogenicIon
         
         return( orb )
     end
+    
+    
+    """
+    `HydrogenicIon.radialOrbital(sh::Subshell, Z::Float64, r::Float64)`
+        ... to compute a relativistic hydrogenic Dirac orbital for the given subshell and nuclear charge Z; 
+            a value::Float64 is returned; contributed by C Naumann (2022).
+            Implementation of the analytical solution of the Dirac equation for a point-like nucleus following the book by
+            Johnson: Atomic Structure Theory.
+    """
+    function radialOrbital(sh::Subshell, Z::Float64, r::Float64)
+    	n = sh.n; kappa = sh.kappa; alpha = Defaults.getDefaults("alpha")
+    	k = abs(kappa); zeta = alpha*Z; gammak = sqrt(kappa*kappa-zeta*zeta)
+    	E = 1/(alpha*alpha*sqrt(1+zeta*zeta/((gammak+n-k)*(gammak+n-k))))
+    	N = sqrt(n*n-2*(n-k)*(k-gammak))
+    	N_nk   = 1/(N*gamma(2*gammak+1))*sqrt(Z*gamma(2*gammak+1+n-k)/(2*factorial(n-k)*(N-kappa)))
+    	lambda = Z/N;  x = 2*lambda*r 
+    
+    	P = sqrt(1+alpha*alpha*E)*N_nk*exp(-x/2)*x^(gammak)*((N-kappa)*HypergeometricFunctions.drummond1F1(-n+k, 2*gammak+1, x) - 
+            (n-k)*HypergeometricFunctions.drummond1F1(-n+k+1, 2*gammak+1, x))
+    	Q = sqrt(1-alpha*alpha*E)*N_nk*exp(-x/2)*x^(gammak)*((N-kappa)*HypergeometricFunctions.drummond1F1(-n+k, 2*gammak+1, x) + 
+            (n-k)*HypergeometricFunctions.drummond1F1(-n+k+1, 2*gammak+1, x))
+                     
+    	return([P,Q])
+    end
+       
+    """
+    `HydrogenicIon.radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)`
+        ... to compute a relativstic hydrogenic Dirac orbital for the given nuclear model by using an explicit diagonalization 
+            of the Dirac Hamiltonian in a B-spline basis; an orbital::Radial.Orbital is returned; contributed by C Naumann (2022).
+    """
+    function radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)
+        basis   = Bsplines.generatePrimitives(grid)
+        orb_dic = Bsplines.generateOrbitalsHydrogenic(basis, nm, [sh]; printout = false)
+        orb     = orb_dic[sh]
+        return( orb )
+    end
 
 
     """
-    `HydrogenicIon.radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)`
+    `HydrogenicIon.radialOrbital_old2022(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)`
         ... to compute a relativstic hydrogenic Dirac orbital for the given nuclear model by using an explicit diagonalization
             of the Dirac Hamiltonian in a B-spline basis; an orbital::Radial.Orbital is returned.
     """
-    function radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)
+    function radialOrbital_old2022(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)
         error("HydrogenicIon.radialOrbital() Not yet implemented.")
         return( orb )
     end

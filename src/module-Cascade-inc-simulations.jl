@@ -762,6 +762,7 @@
             linesR = simulation.computationData[1]["results"]["photo-recombination line data:"].linesR
             @show typeof(linesR)
             wa     = Cascade.simulateRrRateCoefficients(linesR, simulation) 
+            if output   results = Base.merge( results, Dict("alpha^RR:"  => wa) )   end
             #
         elseif  typeof(simulation.property) == Cascade.MeanRelaxationTime
                                              # --------------------------
@@ -1326,10 +1327,18 @@
             temp_au = Defaults.convertUnits("temperature: from Kelvin to (Hartree) units", temp)
             wa      = EmProperty(0., 0.)
             #
+            @warn "Cross sections not yet properly set."
             for  line  in  lines
                 # Determine cross section of this line
-                cs = EmProperty(1., 1.)
-                wa = wa + 4 / sqrt(2pi) * factor * line.electronEnergy * exp(-line.electronEnergy / temp_au ) * line.weight * cs
+                cs = EmProperty(0., 0.)
+                # Determine cross section if only one final level contributes; for test purposes
+                if   line.finalLevel.index == 1
+                      wb = PhotoRecombination.crossSectionKramers(line.electronEnergy, 26.0::Float64, (1,50))
+                      ## wb = PhotoRecombination.crossSectionStobbe(line.electronEnergy, 26.0::Float64)
+                      cs = EmProperty(wb, wb)
+                else  cs = EmProperty(0., 0.)
+                end
+                wa = wa + 2 / sqrt(2pi) / temp_au^(3/2) * factor * line.electronEnergy * exp(-line.electronEnergy / temp_au ) * line.weight * cs
             end
             push!(alphaRR, wa)
         end
@@ -1337,7 +1346,7 @@
         # Display the RR plasma rate coefficients
         PhotoRecombination.displayRateCoefficients(stdout, isym, simulation.property.temperatures, alphaRR)
 
-        return( nothing )
+        return( alphaRR )
     end
     
 

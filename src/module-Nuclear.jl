@@ -252,7 +252,8 @@ module Nuclear
         ##x println("uniformNucleus()::  R_au = $R_au")
     
         for i = 1:grid.NoPoints
-            if     grid.r[i] <= R_au    zz[i] = Z / (2 * R_au) * (grid.r[i]^2/R_au^2 - 3.) * grid.r[i] * grid.r[i]
+            if     grid.r[i] <= R_au    zz[i] = Z / (2 * R_au) * (3. - grid.r[i]^2/R_au^2) * grid.r[i]
+            ## if     grid.r[i] <= R_au    zz[i] = Z / (2 * R_au) * (grid.r[i]^2/R_au^2 - 3.) * grid.r[i] * grid.r[i]
             else   zz[i] = Z
             end
         end

@@ -130,6 +130,51 @@ module Bsplines
         return( wa )
     end
 
+    
+    """
+    Bsplines.generatematrix(nsL::Int64,nsS::Int64,kappa::Int64)
+        ... contribution from the boundary terms; contributed by C. Naumann; 
+            W.R.Johnson, S.A. Blundell, and J.Sapirstein. Finite Basis sets for the Dirac equation constructed from b-splines. 
+            Phys. Rev. A, 37, 1988. Implementierung der A'-Matrix (contribution from the boundary terms)
+    """   
+    function generatematrix(nsL::Int64,nsS::Int64,kappa::Int64)
+        c = Defaults.getDefaults("speed of light: c")
+        wa = zeros(nsL+nsS,nsL+nsS)
+        if kappa < 0
+            for i = 1:nsL+nsS
+                for j = 1:nsL+nsS
+                    if i == 1 
+                        if j == 1 wa[i,j] = c
+                        elseif j == nsL+1 wa[i,j] = -c/2 end
+                    elseif i == nsL+1 
+                        if j == 1 wa[i,j] = -c/2 end 
+                    elseif i == nsL
+                        if j == nsL wa[i,j] = c/2 end
+                    elseif i == nsL+nsS
+                        if j == nsL+nsS wa[i,j] = c/2 end
+                    end
+                end 
+            end
+        end 
+        if kappa > 0
+            for i = 1:nsL+nsS
+                for j = 1:nsL+nsS
+                    if i == 1 
+                        if j == 1 wa[i,j] = 2*c*c
+                        elseif j == nsL+1 wa[i,j] = -c/2 end
+                    elseif i == nsL+1 
+                        if j == 1 wa[i,j] = -c/2 end 
+                    elseif i == nsL
+                        if j == nsL wa[i,j] = c/2 end
+                    elseif i == nsL+nsS
+                        if j == nsL+nsS wa[i,j] = c/2 end
+                    end
+                end 
+            end
+        end
+        return(wa)
+    end
+
 
     """
     `Bsplines.generateOrbitalFromPrimitives(sh::Subshell, wc::Basics.Eigen, primitives::Bsplines.Primitives, nsL::Int64, nsS::Int64)`  
@@ -163,7 +208,7 @@ module Bsplines
                          if  abs(Qprimex[j]) < 1.0e-10    Qprimex[j] = 0.   end      end
                          
         # Ensure that the large component of all orbitals start 'positive'
-        wSign     = sum( Px[1:20] )
+        wSign     = sum( Px[1:30] )
         if  wSign < 0.   Px[1:mtp] = -Px[1:mtp];   Qx[1:mtp] = -Qx[1:mtp]   
                          Pprimex[1:mtp] = -Pprimex[1:mtp];   Qprimex[1:mtp] = -Qprimex[1:mtp]   end
         orbital   = Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, Radial.Grid())
@@ -331,6 +376,63 @@ module Bsplines
 
         return( wa )
     end
+    
+    
+    #==  new from Chiara (2022)
+    """
+    `Bsplines.setupLocalMatrix(kappa::Int64, primitives::Bsplines.Primitives, nsL::Int64, nsS::Int64, 
+                               pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}}) 
+         ...setp-up the local parts of the generalized eigenvalue problem for the symmetry block kappa and the given (local) potential. 
+            The B-spline (basis) functions are defined by primitivesL for the large component and primitivesS for the small one, respectively.
+            Änderung des Vorzeichens in Zeile 170 und 171 zur Übereinstimmung mit oben genannter Quelle und Einbau der neu 
+            implementierten Matrix in Zeile 188.
+            
+    """
+    function setupLocalMatrix(kappa::Int64, primitives::Bsplines.Primitives, nsL::Int64, nsS::Int64, 
+                              pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}})
+        ##x nsL = primitives.grid.nsL - 2;     nsS = primitives.grid.nsS - 2
+        wa  = zeros( nsL+nsS, nsL+nsS );   wb  = zeros( nsL+nsS, nsL+nsS )
+        ##x @show "setupLocalMatrix", nsL, nsS, pot.grid.nsL, pot.grid.nsS
+        # (1) Compute or fetch the diagonal 'overlap' blocks
+        wb[1:nsL,1:nsL]                 = generateMatrix!(0, "LL-overlap", primitives, nsL, nsS, storage)
+        wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = generateMatrix!(0, "SS-overlap", primitives, nsL, nsS, storage)
+        # (2) Re-compute the diagonal blocks for the local potential
+        for  i = 1:nsL
+            for  j = 1:nsL   
+                wa[i,j] = JAC.RadialIntegrals.Vlocal(primitives.bsplinesL[i], primitives.bsplinesL[j], pot, primitives.grid)
+            end
+        end
+        for  i = 1:nsS    
+            for  j = 1:nsS    
+                wa[nsL+i,nsL+j] = JAC.RadialIntegrals.Vlocal(primitives.bsplinesS[i], primitives.bsplinesS[j], pot, primitives.grid)
+            end
+        end
+        # (3) Substract the rest mass from the 'SS' block
+        wa[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = wa[nsL+1:nsL+nsS,nsL+1:nsL+nsS] - 2 * Defaults.getDefaults("speed of light: c")^2 * wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS]
+        # (4) Compute or fetch the diagonal 'D_kappa' blocks
+        wa[1:nsL,nsL+1:nsL+nsS] = wa[1:nsL,nsL+1:nsL+nsS] - generateMatrix!(kappa, "LS-D_kappa^-", primitives, nsL, nsS, storage)
+        wa[nsL+1:nsL+nsS,1:nsL] = wa[nsL+1:nsL+nsS,1:nsL] - generateMatrix!(kappa, "SL-D_kappa^+", primitives, nsL, nsS, storage)
+        
+        #=====
+        # Test for 'real-symmetric matrix' ... this is not fullfilled if the last B-spline is included !!
+        nx = 0
+        for  i = 1:nsL+nsS    
+            for  j = i+1:nsL+nsS    
+                if  abs(  (wa[i,j] - wa[j,i])/(wa[i,j] + wa[j,i]) ) > 1.0e-7   nx = nx + 1    
+                    @show "setupLocalMatrix", i, j, wa[i,j], wa[j,i] 
+                end
+            end
+        end
+        ny = (nsL+nsS)^2/2 - (nsL+nsS)
+        if  nx > 0    
+            println(">>> setupLocalMatrix:: $nx (from $(ny)) non-symmetric H-matrix integrals for kappa = $kappa with relative deviation > 1.0e-7.")  end
+        =====#
+        
+        ## wc = generatematrix(nsL,nsS, kappa)
+        ## wa = wa + wc
+       
+        return( wa )
+    end ==#
 
 
 
@@ -381,7 +483,7 @@ module Bsplines
         =====#
        
         return( wa )
-    end
+    end   
 
 
 
