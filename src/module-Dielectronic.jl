@@ -116,8 +116,6 @@ module Dielectronic
         + angularBeta       ::EmProperty              ... beta parameter of the photon emission
         + reducedStrength   ::EmProperty              ... reduced resonance strength S(i -> d -> f) * Gamma_d of this pathway;
                                                           this reduced strength does not require the knowledge of Gamma_d for each pathway.
-        ##x + hasChannels       ::Bool                    ... Determines whether the individual channels are defined in terms of their possible
-        ##x                                                   Auger and radiative channels, or not.
         + captureChannels   ::Array{AutoIonization.Channel,1}   ... List of |i> -->  |n>   dielectronic (Auger) capture channels.
         + photonChannels    ::Array{PhotoEmission.Channel,1}    ... List of |n> -->  |f>   radiative stabilization channels.
     """
@@ -131,7 +129,6 @@ module Dielectronic
         photonRate          ::EmProperty
         angularBeta         ::EmProperty
         reducedStrength     ::EmProperty
-        ##x hasChannels         ::Bool
         captureChannels     ::Array{AutoIonization.Channel,1} 
         photonChannels      ::Array{PhotoEmission.Channel,1} 
     end 
@@ -159,7 +156,6 @@ module Dielectronic
         println(io, "photonRate:                 $(pathway.photonRate)  ")
         println(io, "angularBeta:                $(pathway.angularBeta)  ")
         println(io, "reducedStrength:            $(pathway.reducedStrength)  ")
-        ##x println(io, "hasChannels:                $(pathway.hasChannels)  ")
         println(io, "captureChannels:            $(pathway.captureChannels)  ")
         println(io, "photonChannels:             $(pathway.photonChannels)  ")
     end

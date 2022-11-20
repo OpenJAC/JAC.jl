@@ -73,9 +73,6 @@ module ImpactExcitationAutoion
         + electronOutEnergy   ::Float64     ... energy of the (outgoing, scattered) electron
         + electronAugerEnergy ::Float64     ... energy of the (emitted Auger) electron
         + crossSection        ::Float64     ... total cross section of this pathway
-        + hasChannels         ::Bool        ... Determines whether the individual excitation and autoionization 
-                                                channels are defined in terms of their free-electron kappa's, phases 
-                                                and the total angular momentum/parity as well as the amplitude, or not.
         + channels            ::Array{ImpactExcitationAutoion.Channel,1}  ... List of channels of this pathway.
     """
     struct  Pathway
@@ -86,8 +83,7 @@ module ImpactExcitationAutoion
         electronOutEnergy     ::Float64
         electronAugerEnergy   ::Float64
         crossSection          ::Float64 
-        hasChannels           ::Bool
-        channels              ::Array{ImpactExcitationAutoion.Channel,1}
+         channels              ::Array{ImpactExcitationAutoion.Channel,1}
     end 
 
 
@@ -111,8 +107,7 @@ module ImpactExcitationAutoion
         println(io, "electronOutEnergy:          $(pathway.electronOutEnergy)  ")
         println(io, "electronAugerEnergy:        $(pathway.electronAugerEnergy)  ")
         println(io, "crossSection:               $(pathway.crossSection)  ")
-        println(io, "hasChannels:                $(pathway.hasChannels)  ")
-        println(io, "channels:                   $(pathway.channels)  ")
+       println(io, "channels:                   $(pathway.channels)  ")
     end
 
 

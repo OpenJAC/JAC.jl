@@ -79,8 +79,6 @@ module PairProduction
         + positronEnergy ::Float64                ... Energy of the (outgoing free) positron.
         + photonEnergy   ::Float64                ... Energy of the absorbed photon.
         + crossSection   ::EmProperty             ... Cross section for this pair-production (positron) line.
-        + hasChannels    ::Bool                   ... Determines whether the individual (sub-) channels are defined in terms of their 
-                                                      free-electron energy, kappa, multipole, etc., or not.
         + channels       ::Array{PairProduction.Channel,1}  ... List of PairProduction.Channels of this line.
     """
     struct  Line
@@ -89,8 +87,7 @@ module PairProduction
         positronEnergy   ::Float64
         photonEnergy     ::Float64
         crossSection     ::EmProperty
-        hasChannels      ::Bool
-        channels         ::Array{PairProduction.Channel,1}
+       channels         ::Array{PairProduction.Channel,1}
     end
 
 
@@ -109,8 +106,7 @@ module PairProduction
         println(io, "positronEnergy:    $(line.positronEnergy)  ")
         println(io, "photonEnergy:      $(line.photonEnergy)  ")
         println(io, "crossSection:      $(line.crossSection)  ")
-        println(io, "hasChannels:       $(line.hasChannels)  ")
-        println(io, "channels:          $(line.channels)  ")
+       println(io, "channels:          $(line.channels)  ")
     end
 
 end # module

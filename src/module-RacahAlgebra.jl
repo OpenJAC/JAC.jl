@@ -801,7 +801,6 @@ module  RacahAlgebra
                                       rex.deltas, rex.triangles, rex.w3js, rex.w6js, rex.w9js, rex.ylms, rex.djpqs )
             ##x @show "evaluate:", newrex
             while true
-                ##x @show "evaluate:", newrex
                 cont = false
                 wa = RacahAlgebra.sumRulesForTwoW6jOneW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
                 wa = RacahAlgebra.sumRulesForOneW6jTwoW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end
@@ -835,8 +834,6 @@ module  RacahAlgebra
             end
         end
         
-        ##x println("\nNo simplification found for:  $rex ");  
-        ##x return( nothing )
     end
 
 
@@ -1113,7 +1110,6 @@ module  RacahAlgebra
         for  wa in waList   
             if       length(SymEngine.get_args(wa)) == 0    newphase = newphase + wa
             elseif   length(SymEngine.get_args(wa)) == 2
-                ##x @show wa
                 wb = SymEngine.get_args(wa);   wc = convert(Int64,wb[1]);   wc = rem(wc+100,4);    if  wc == 3   wc = -1   end                                    
                                                             newphase = newphase + wc * wb[2]
             else     error("stop a")
@@ -1317,8 +1313,6 @@ module  RacahAlgebra
         summations = Basic[];   phase = Basic(0);   weight = Basic(1);   w3js = W3j[]
         summations = appendSummation( csq.a, csq.b)
         w3js       = appendW3j( csq.a, csq.b, csq.c)
-        ##x println("***** summations = $summations")
-        ##x println("***** w3js       = $w3js")
         for  w3j in w3js
             phase  = phase  + w3j.ja - w3j.jb - w3j.mc
             weight = weight * sqrt(2*w3j.jc+1)
@@ -1738,7 +1732,6 @@ module  RacahAlgebra
         nrex = rex
         #
         for  delta  in  rex.deltas     
-            ##x @show "simplify deltas:", delta, nrex
             newSummations = nrex.summations;    newPhase = nrex.phase;     newWeight    = nrex.weight;     newDeltas = nrex.deltas;    
             newTriangles  = nrex.triangles;     newW3js  = nrex.w3js;      newW6js      = nrex.w6js;       newW9js   = nrex.w9js
             newYlms       = nrex.ylms;          newDjpqs = nrex.djpqs;     newIntegrals = nrex.djpqs
@@ -1746,13 +1739,10 @@ module  RacahAlgebra
             if  delta.i == delta.k  &&  (delta.i in newSummations  ||   -delta.i in newSummations)
                 newDeltas = Kronecker[]
                 for dt in nrex.deltas   if  dt == delta   else   push!(newDeltas, RacahAlgebra.subs(dt, delta.i, delta.k))   end    end
-                ##x newSummations = RacahAlgebra.removeIndex([delta.i], newSummations)
-                ##x newWeight     = newWeight * (2delta.i + 1)
             elseif  delta.i == delta.k 
                 newDeltas = Kronecker[]
                 for dt in nrex.deltas   
-                    ##x @show dt == delta, dt, delta
-                    if  dt == delta   else   push!(newDeltas, RacahAlgebra.subs(dt, delta.i, delta.k))   end    
+                   if  dt == delta   else   push!(newDeltas, RacahAlgebra.subs(dt, delta.i, delta.k))   end    
                 end
             elseif  delta.i in newSummations
                 newDeltas = Kronecker[]
@@ -2101,12 +2091,10 @@ module  RacahAlgebra
         ... substitutes in rex the symbols by the corresponding rational numbers in subList; a ww:RacahExpression is returned.
     """
     function subs(rex::RacahAlgebra.RacahExpression, subList::Array{Pair{Symbol,Rational{Int64}},1})
-        ##x println("subList = $subList")
         summations = rex.summations;  phase     = rex.phase;    weight = rex.weight
         deltas      = Kronecker[];    triangles = Triangle[];   w3js   = W3j[];          w6js  = W6j[];        
         w9js        = W9j[];          integrals = Integral[];   ylms   = Ylm[];          djpqs = Djpq[]
         for  (a,b) in subList
-            ##x println("a = $a   b = $b")
             if   Basic(a) in summations   summations = SymEngine.subs(summations, Basic(a) => Basic(b))   end
             phase      = SymEngine.subs(phase,      Basic(a) => Basic(b))
             weight     = SymEngine.subs(weight,     Basic(a) => Basic(b))
@@ -2363,7 +2351,6 @@ module  RacahAlgebra
             rex = RacahAlgebra.selectRacahExpression(nn);    nrex = RacahAlgebra.evaluate(rex);      nwnjs = RacahAlgebra.countWignerSymbols(nrex)
             if  nwnjs != nwnjList[n]   println(">> Test fails for rule  $nn :");    @show rex;    @show nrex;    @show nwnjs     end
             success = success && (nwnjs == nwnjList[n])
-            ##x println("\n**** Test for rule $n  with nwnjs = $(nwnjs)  !=== $(nwnjList[n])")
         end
         
         return( success )

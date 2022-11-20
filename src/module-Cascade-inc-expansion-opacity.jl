@@ -93,7 +93,6 @@
                     append!( relconfList, wa)
                 end
                 subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
-                ##x @show "aa1", subshellList
                 Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
                 wa                 = Bsplines.generatePrimitives(comp.grid)
                 hydrogenicOrbitals = Bsplines.generateOrbitalsHydrogenic(wa, comp.nuclearModel, subshellList; printout=printout)
@@ -176,7 +175,6 @@
     function generateConfigurationsForExpansionOpacity(initialConfigs::Array{Configuration,1}, scheme::ExpansionOpacityScheme,
                                                        nm::Nuclear.Model, grid::Radial.Grid)
         newConfigs = Basics.generateConfigurations(initialConfigs, scheme.excitationFromShells, scheme.excitationToShells, scheme.NoExcitations)  
-        ##x @show newConfigs
 
         return( newConfigs )
     end

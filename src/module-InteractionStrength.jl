@@ -140,7 +140,7 @@ module InteractionStrength
             This procedure has been first worked out with Andrey; in this case, however, the phases are not under good control,
             and this gives rise to wrong amplitudes and rates. The procedure is currently not in use.
     """
-    function MbaEmissionChengOld(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
+    function MbaEmissionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)
         kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
         #
         if       gauge == Basics.Magnetic
@@ -193,6 +193,7 @@ module InteractionStrength
             wr     = - RadialIntegrals.GrantJL(mp.L, q, a, b, grid::Radial.Grid)
             wr     = wr +  (kapb-kapa)/(mp.L+1) * RadialIntegrals.GrantILplus(mp.L+1, q, a, b, grid::Radial.Grid)
             wr     = wr +  RadialIntegrals.GrantILminus(mp.L+1, q, a, b, grid::Radial.Grid)
+            ##x @show JohnsonI, wr, kapa, kapb
             wa     = JohnsonI * wr
         #
         elseif   gauge == Basics.Coulomb

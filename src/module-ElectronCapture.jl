@@ -99,9 +99,6 @@ module ElectronCapture
         + finalLevel     ::Level           ... final-(state) level
         + electronEnergy ::Float64         ... Energy of the (incoming free) electron.
         + totalRate      ::Float64         ... Total rate of this line.
-        + hasChannels    ::Bool            
-            ... Determines whether the individual scattering (sub-) channels are defined in terms of their free-electron energy, kappa 
-                and the total angular momentum/parity as well as the amplitude, or not.
         + channels       ::Array{ElectronCapture.Channel,1}  ... List of ElectronCapture channels of this line.
     """
     struct  Line
@@ -109,7 +106,6 @@ module ElectronCapture
         finalLevel       ::Level
         electronEnergy   ::Float64
         totalRate        ::Float64
-        hasChannels      ::Bool
         channels         ::Array{ElectronCapture.Channel,1}
     end 
 
@@ -129,7 +125,6 @@ module ElectronCapture
         println(io, "finalLevel:             $(line.finalLevel)  ")
         println(io, "electronEnergy:         $(line.electronEnergy)  ")
         println(io, "totalRate:              $(line.totalRate)  ")
-        println(io, "hasChannels:            $(line.hasChannels)  ")
         println(io, "channels:               $(line.channels)  ")
     end
 

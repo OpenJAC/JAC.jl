@@ -6,7 +6,8 @@
 """
 module PhotoRecombination
 
-    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..PhotoEmission, ..Radial, ..Nuclear, ..TableStrings
+    using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..HydrogenicIon, ..InteractionStrength,
+                  ..ManyElectron, ..PhotoEmission, ..Radial, ..Nuclear, ..TableStrings
 
     """
     `struct  Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing photo recombination lines.
@@ -97,8 +98,6 @@ module PhotoRecombination
         + betaGamma2     ::Float64                ... beta^2 * gamma^2.
         + weight         ::Float64                ... weight of line in the integration over electron energies.
         + crossSection   ::EmProperty             ... Cross section for this electron capture.
-        + hasChannels    ::Bool                   ... Determines whether the individual (sub-) channels are defined in terms of their 
-                                                      free-electron energy, kappa, multipole, etc., or not.
         + channels       ::Array{PhotoRecombination.Channel,1}    ... List of photorecombination channels of this line.
     """
     struct  Line
@@ -109,7 +108,6 @@ module PhotoRecombination
         betaGamma2       ::Float64 
         weight           ::Float64
         crossSection     ::EmProperty
-        hasChannels      ::Bool
         channels         ::Array{PhotoRecombination.Channel,1}
     end 
 
@@ -133,7 +131,6 @@ module PhotoRecombination
         println(io, "betaGamma2:        $(line.betaGamma2)  ")
         println(io, "weight:            $(line.weight)  ")
         println(io, "crossSection:      $(line.crossSection)  ")
-        println(io, "hasChannels:       $(line.hasChannels)  ")
         println(io, "channels:          $(line.channels)  ")
     end
 
@@ -189,29 +186,23 @@ module PhotoRecombination
     """
     function  computeAmplitudesProperties(line::PhotoRecombination.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64,
                                           settings::PhotoRecombination.Settings)
-        newChannels = PhotoRecombination.Channel[];;   contSettings = Continuum.Settings(false, nrContinuum);    csC = 0.;    csB = 0.
+        newChannels = PhotoRecombination.Channel[];;   contSettings = Continuum.Settings(false, nrContinuum)
         for channel in line.channels
-            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, line.finalLevel.basis.subshells)
-            newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, newfLevel.basis.subshells)
-            newfLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newfLevel)
-            cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newiLevel, nm, grid, contSettings)
+            newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, line.finalLevel.basis.subshells)
+            newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, newfLevel.basis.subshells)
+            newfLevel  = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newfLevel)
+            cOrbital, phase = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newiLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newiLevel)
             newChannel = PhotoRecombination.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
             amplitude  = PhotoRecombination.amplitude("photorecombination", channel, line.photonEnergy, newfLevel, newcLevel, grid)
             push!( newChannels, PhotoRecombination.Channel(newChannel.multipole, newChannel.gauge, newChannel.kappa, newChannel.symmetry, 
                                                            newChannel.phase, amplitude) )
-            if       channel.gauge == Basics.Coulomb     csC = csC + abs(amplitude)^2
-            elseif   channel.gauge == Basics.Babushkin   csB = csB + abs(amplitude)^2
-            elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
-            end
         end
-        Ji2 = Basics.twice(line.initialLevel.J)
-        csFactor     = 8 * pi^3 / Defaults.getDefaults("alpha") / line.photonEnergy
-        ## csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 / line.photonEnergy / (Ji2 + 1)
-        ## crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
-        crossSection = EmProperty(csFactor * csC, csFactor * csB)
         newLine      = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, line.betaGamma2, 
-                                                line.weight, crossSection, true, newChannels)
+                                                line.weight, line.crossSection, newChannels)
+        crossSection = PhotoRecombination.computeCrossSectionForMultipoles(settings.multipoles, newLine)
+        newLine      = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, line.betaGamma2, 
+                                                line.weight, crossSection, newChannels)
         return( newLine )
     end
 
@@ -223,8 +214,7 @@ module PhotoRecombination
             A value::ComplexF64 is returned.
     """
     function  computeAnisotropyParameter(nu::Int64, gauge::EmGauge, line::PhotoRecombination.Line)
-        if  !line.hasChannels   error("No channels are defined for the given PhotoRecombination.line.")         end
-        wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J   
+         wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J   
         wn = 0.;    
         for  ch in line.channels   
             if  gauge != ch.gauge  &&  gauge != Basics.Magnetic   continue    end
@@ -260,7 +250,81 @@ module PhotoRecombination
         value = - 0.5 * wa / wn
         return( value )
     end
+    
 
+    """
+    `PhotoRecombination.computeCrossSectionBareIon(energy_eV::Float64, subshell::Subshell, multipoles::Array{EmMultipole,1}, 
+                                                   gauge::EmGauge, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64)`  
+        ... to compute the (hydrogenic) RR cross section for the capture of an electron into a single subshell; 
+            only the amplitudes for the given multipoles are taken into account; an cs::Float64 [a.u.] is returned.
+    """
+    function computeCrossSectionBareIon(energy_eV::Float64, subshell::Subshell, multipoles::Array{EmMultipole,1}, 
+                                        gauge::EmGauge, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64)
+        energy   = Defaults.convertUnits("energy: from eV to atomic", energy_eV)
+        
+        fOrbital = HydrogenicIon.orbital(subshell, nm, grid)
+        omega    = energy - fOrbital.energy
+        #
+        cs = 0.;       maxKappa = 4;        contSettings = Continuum.Settings(false, nrContinuum);   
+        jf = Basics.subshell_j(subshell);   lf           = Basics.subshell_l(subshell)
+        if   iseven(lf)   symf = LevelSymmetry( jf, Basics.plus )   else   symf = LevelSymmetry( jf, Basics.minus ) end
+        @show  energy_eV, nm.Z, omega, energy, gauge, subshell, symf, fOrbital.energy
+        # Generate a Coulomb potential for the given nuclear model
+        potential = Nuclear.nuclearPotential(nm, grid)
+        for  multipole  in  multipoles
+            for  kappa = -maxKappa:maxKappa
+                if  kappa == 0    continue    end
+                jc = AngularMomentum.kappa_j(kappa);   lc = Basics.subshell_l(Subshell(101,kappa))
+                if  iseven(lc)   symc = LevelSymmetry( jc, Basics.plus )   else   symc = LevelSymmetry( jc, Basics.minus ) end
+                ##x @show symf, multipole, symc, AngularMomentum.isAllowedMultipole(symf, multipole, symc)
+                # Determine whether a non-zero amplitude is possible for the given multipole
+                if  AngularMomentum.isAllowedMultipole(symf, multipole, symc)
+                    # Generate continuum orbital for given energy and kappa
+                    cOrbital, phase, normFactor = Continuum.generateOrbitalLocalPotential(energy, 
+                                                                           Subshell(101,kappa), potential, contSettings)
+                    ##x @show phase, normFactor, multipole, gauge, omega
+                    amplitude = InteractionStrength.MabEmissionJohnsony(multipole, gauge, omega, fOrbital, cOrbital, grid) 
+                    ## amplitude = InteractionStrength.MbaEmissionCheng(multipole, gauge, omega, fOrbital, cOrbital, grid) 
+                    ##x @show  subshell, multipole, Subshell(101,kappa), amplitude, cs
+                    cs = cs + conj(amplitude) * amplitude
+                end
+            end          
+        end
+        #
+        cs = 160. * pi^3 * Defaults.getDefaults("alpha")^2 * omega / energy * abs(cs) / (Basics.twice(jf) +1)
+        ## cs = 8 * pi^3 * Defaults.getDefaults("alpha")^3 / omega * abs(cs)
+        cs = Defaults.convertUnits("cross section: from atomic to barn", cs)
+        
+        println("***** RR cross section for energy = $(energy_eV) eV is  $cs  barn")
+        
+        return( cs )
+    end
+    
+
+    """
+    `PhotoRecombination.computeCrossSectionForMultipoles(multipoles::Array{EmMultipole,1}, line::PhotoRecombination.Line)`  
+        ... to compute the cross section from the channel amplitudes of a given line; only the amplitudes
+            for the given multipoles are taken into account; an cs::EmProperty is returned.
+    """
+    function computeCrossSectionForMultipoles(multipoles::Array{EmMultipole,1}, line::PhotoRecombination.Line)
+        csC = 0.;    csB = 0.
+        for channel  in  line.channels
+            if  !(channel.multipole  in  multipoles)     continue                 end
+            amplitude = ComplexF64(0.)
+            if       channel.gauge == Basics.Coulomb     csC = csC + abs(amplitude)^2
+            elseif   channel.gauge == Basics.Babushkin   csB = csB + abs(amplitude)^2
+            elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
+            end
+        end
+        Ji2 = Basics.twice(line.initialLevel.J)
+        csFactor     = 8 * pi^3 / Defaults.getDefaults("alpha") / line.photonEnergy
+        ## csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 / line.photonEnergy / (Ji2 + 1)
+        ## crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
+        crossSection = EmProperty(csFactor * csC, csFactor * csB)
+        
+        return( crossSection )
+    end
+    
 
     """
     `PhotoRecombination.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
@@ -436,7 +500,7 @@ module PhotoRecombination
 
         return( nothing )
     end
-
+ 
     
 
     """
@@ -487,63 +551,6 @@ module PhotoRecombination
         cs = log(eta) + 0.1492 + 0.5250 / eta^(2/3)
         cs  = wa * eta^2 * cs
         return( cs )
-    end
-    
-
-    """
-    `PhotoRecombination.plasmaRateKotelnikov(Te::Float64, Z::Float64)`  
-        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
-            energies and an initially bare ions with nuclear charge Z; an alpha::Float64 is returned.
-    """
-    function plasmaRateKotelnikov(Te::Float64, Z::Float64)
-        wx    = 2*Te / Z^2
-        alpha = 8.414 * Defaults.getDefaults("alpha")^3 * Z
-        alpha = alpha * (log(1.0 + 1.0/wx) + 3.499)
-        alpha = alpha / (sqrt(wx)  +  0.6517 * wx  +  0.2138 * wx^1.5)
-        return( alpha )
-    end
-    
-
-    """
-    `PhotoRecombination.plasmaRateKotelnikov_1s(Te::Float64, Z::Float64)`  
-        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
-            energies and an initially bare ions with nuclear charge Z; here only the capture into 1s is taken into account.
-            An alpha::Float64 is returned.
-    """
-    function plasmaRateKotelnikov_1s(Te::Float64, Z::Float64)
-        wx    = 2*Te / Z^2
-        alpha = 8.414 * Defaults.getDefaults("alpha")^3 * Z
-        alpha = alpha / (sqrt(wx)  +  0.3593 * wx^(7/6)  +  0.1471 * wx^1.5)
-        return( alpha )
-    end
-    
-
-    """
-    `PhotoRecombination.plasmaRatePartialSeaton(Te::Float64, Z::Float64, n::Int64)`  
-        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
-            energies and an initially bare ions with nuclear charge Z.
-            An alpha::Float64 is returned.
-    """
-    function plasmaRatePartialSeaton(Te::Float64, Z::Float64, n::Int64)
-        wx    = Z^2 / (2*n^2 * Te)
-        alpha = 64 * Defaults.getDefaults("alpha")^3 / 3. * sqrt(pi/3.) * wx^(3/2) * exp(wx)
-        alpha = 11 * alpha  # fudge factor
-        # Formal integral is still missing.
-        return( alpha )
-    end
-    
-
-    """
-    `PhotoRecombination.plasmaRateSeaton(Te::Float64, Z::Float64)`  
-        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
-            energies and an initially bare ions with nuclear charge Z; this formula is valid for 2*Te / Z^2 << 1.
-            An alpha::Float64 is returned.
-    """
-    function plasmaRateSeaton(Te::Float64, Z::Float64)
-        wx    = 2*Te / Z^2
-        alpha = 32 * sqrt(pi) * Defaults.getDefaults("alpha")^3 * Z / (3. * sqrt(3.))
-        alpha = alpha * sqrt(1/wx) * (log(1/wx) + 0.8576 + 0.9380 * (1/wx)^(-1/3))  
-        return( alpha )
     end
 
     
@@ -617,7 +624,7 @@ module PhotoRecombination
                         if  en < 0    continue   end 
                         omega    = en + iLevel.energy - fLevel.energy
                         channels = PhotoRecombination.determineChannels(fLevel, iLevel, settings) 
-                        push!( lines, PhotoRecombination.Line(iLevel, fLevel, en, omega, betaGamma2, 0., EmProperty(0., 0.), true, channels) )
+                        push!( lines, PhotoRecombination.Line(iLevel, fLevel, en, omega, betaGamma2, 0., EmProperty(0., 0.), channels) )
                     end
                 end
             end
@@ -870,6 +877,63 @@ module PhotoRecombination
         println(stream, "  ", TableStrings.hLine(nx))
         #
         return( nothing )
+    end
+    
+
+    """
+    `PhotoRecombination.plasmaRateKotelnikov(Te::Float64, Z::Float64)`  
+        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
+            energies and an initially bare ions with nuclear charge Z; an alpha::Float64 is returned.
+    """
+    function plasmaRateKotelnikov(Te::Float64, Z::Float64)
+        wx    = 2*Te / Z^2
+        alpha = 8.414 * Defaults.getDefaults("alpha")^3 * Z
+        alpha = alpha * (log(1.0 + 1.0/wx) + 3.499)
+        alpha = alpha / (sqrt(wx)  +  0.6517 * wx  +  0.2138 * wx^1.5)
+        return( alpha )
+    end
+    
+
+    """
+    `PhotoRecombination.plasmaRateKotelnikov_1s(Te::Float64, Z::Float64)`  
+        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
+            energies and an initially bare ions with nuclear charge Z; here only the capture into 1s is taken into account.
+            An alpha::Float64 is returned.
+    """
+    function plasmaRateKotelnikov_1s(Te::Float64, Z::Float64)
+        wx    = 2*Te / Z^2
+        alpha = 8.414 * Defaults.getDefaults("alpha")^3 * Z
+        alpha = alpha / (sqrt(wx)  +  0.3593 * wx^(7/6)  +  0.1471 * wx^1.5)
+        return( alpha )
+    end
+    
+
+    """
+    `PhotoRecombination.plasmaRatePartialSeaton(Te::Float64, Z::Float64, n::Int64)`  
+        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
+            energies and an initially bare ions with nuclear charge Z.
+            An alpha::Float64 is returned.
+    """
+    function plasmaRatePartialSeaton(Te::Float64, Z::Float64, n::Int64)
+        wx    = Z^2 / (2*n^2 * Te)
+        alpha = 64 * Defaults.getDefaults("alpha")^3 / 3. * sqrt(pi/3.) * wx^(3/2) * exp(wx)
+        alpha = 11 * alpha  # fudge factor
+        # Formal integral is still missing.
+        return( alpha )
+    end
+    
+
+    """
+    `PhotoRecombination.plasmaRateSeaton(Te::Float64, Z::Float64)`  
+        ... to evaluate the RR plasma rate coefficient at temperature Te and for a Maxwellian distribution of electron
+            energies and an initially bare ions with nuclear charge Z; this formula is valid for 2*Te / Z^2 << 1.
+            An alpha::Float64 is returned.
+    """
+    function plasmaRateSeaton(Te::Float64, Z::Float64)
+        wx    = 2*Te / Z^2
+        alpha = 32 * sqrt(pi) * Defaults.getDefaults("alpha")^3 * Z / (3. * sqrt(3.))
+        alpha = alpha * sqrt(1/wx) * (log(1/wx) + 0.8576 + 0.9380 * (1/wx)^(-1/3))  
+        return( alpha )
     end
 
 end # module

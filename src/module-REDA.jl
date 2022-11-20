@@ -73,9 +73,6 @@ module REDA
         + electronAugerEnergy1   ::Float64         ... energy of the (first emitted Auger) electron
         + electronAugerEnergy2   ::Float64         ... energy of the (second emitted Auger) electron
         + crossSection           ::Float64         ... total cross section of this pathway
-        + hasChannels            ::Bool            
-            ... Determines whether the individual excitation and autoionization channels are defined in terms of their free-electron kappa's, 
-                phases and the total angular momentum/parity as well as the amplitude, or not.
         + channels               ::Array{REDA.Channel,1}  ... List of channels of this pathway.
     """
     struct  Pathway
@@ -88,7 +85,6 @@ module REDA
         electronAugerEnergy1     ::Float64
         electronAugerEnergy2     ::Float64
         crossSection             ::Float64 
-        hasChannels              ::Bool
         channels                 ::Array{REDA.Channel,1}
     end 
 
@@ -114,7 +110,6 @@ module REDA
         println(io, "electronAugerEnergy1:       $(pathway.electronAugerEnergy1)  ")
         println(io, "electronAugerEnergy2:       $(pathway.electronAugerEnergy2)  ")
         println(io, "crossSection:               $(pathway.crossSection)  ")
-        println(io, "hasChannels:                $(pathway.hasChannels)  ")
         println(io, "channels:                   $(pathway.channels)  ")
     end
 

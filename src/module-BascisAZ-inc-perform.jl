@@ -269,13 +269,6 @@
                                printout::Bool=true)
         if  printout    println("\n... in performSCF ...")    end
         
-        ##x # An empty (bare-ion) configuration does not require any SCF procedure; an empty basis is returned instead.
-        ##x if      configs[1].NoElectrons == 0  &&  length(configs) != 1  error("stop aa")
-        ##x elseif  configs[1].NoElectrons == 0  
-        ##x     csfR = CsfR( AngularJ64(0), Basics.plus, )
-        ##x     return( Basis(true, 0, [Subshell(1,-1)], csfR, Subshell[], Dict{Subshell, Orbital}() ) )
-        ##x end  ==#
-        
         # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
         relconfList = ConfigurationR[]
         for  conf in configs
@@ -310,7 +303,6 @@
         if  typeof(settings.startScfFrom) == StartFromHydrogenic
             if  printout   println("Start SCF process with hydrogenic orbitals.")   end
             # Generate start orbitals for the SCF field by using B-splines
-            ##x orbitals  = Bsplines.generateOrbitalsHydrogenic(waL, nsL, waS, nsS, nuclearModel, subshellList)
             orbitals  = Bsplines.generateOrbitalsHydrogenic(wa, nuclearModel, subshellList; printout=printout)
         elseif  typeof(settings.startScfFrom) == StartFromPrevious
             if  printout   println("Start SCF process from given list of orbitals.energy")    end
@@ -510,12 +502,6 @@
     """
     function Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
         
-        ##x # For a bare ion with basis.isDefined == false, an empty multiplet is returned
-        ##x if  !basis.isDefined
-        ##x     level = Level(AngularJ64(0), AngularM64(0), Basics.plus, 1, 0., 0., true, basis, [1.0])
-        ##x     return( Multiplet("bare ion", [level]) )   
-        ##x end
-        
         # Determine the J^P symmetry blocks
         symmetries = Dict{LevelSymmetry,Int64}()
         for  csf in basis.csfs
@@ -533,14 +519,11 @@
         multiplets = Multiplet[]
         for  (sym,v) in  symmetries
             # Skip the symmetry block if it not selected
-            ##x @show  sym, settings.levelSelectionCI,  Basics.selectSymmetry(sym, settings.levelSelectionCI)
-            if  !Basics.selectSymmetry(sym, settings.levelSelectionCI)     continue    end
+             if  !Basics.selectSymmetry(sym, settings.levelSelectionCI)     continue    end
             matrix = compute("matrix: CI, J^P symmetry", sym, basis, nuclearModel, grid, settings; printout=printout)
             #
             ##x if  size(matrix,1) == 2   matrix[1,2] = matrix[2,1] = -1.0 * matrix[2,1]     end
             eigen  = Basics.diagonalize("matrix: LinearAlgebra", matrix)
-            ##x eigen  = Basics.diagonalize("matrix: Julia, eigfact", matrix)
-            ##x @show matrix, eigen
             levels = Level[]
             for  ev = 1:length(eigen.values)
                 # Construct the eigenvector with regard to the given basis (not w.r.t the symmetry block)

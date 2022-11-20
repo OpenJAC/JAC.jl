@@ -904,10 +904,16 @@ module Cascade
         + initialLevelNo      ::Int64       ... Level No of initial level for which rate coefficients are to be computed.
         + temperatures        ::Array{Float64,1}
             ... temperatures [K] for which the DR plasma rate coefficieints to be calculated.
+        + multipoles          ::Array{EmMultipole}           
+            ... Multipoles of the radiation field that are to be included into the excitation processes.
+        + finalLevelSelection ::LevelSelection    ... Specifies the selected final levels, if any.
+
     """  
     struct  RrRateCoefficients   <:  Cascade.AbstractSimulationProperty
         initialLevelNo        ::Int64 
         temperatures          ::Array{Float64,1}
+        multipoles            ::Array{EmMultipole} 
+        finalLevelSelection   ::LevelSelection
     end 
 
 
@@ -915,7 +921,7 @@ module Cascade
     `Cascade.RrRateCoefficients()`  ... (simple) constructor for cascade RrRateCoefficients.
     """
     function RrRateCoefficients()
-        RrRateCoefficients(1, Float64[])
+        RrRateCoefficients(1, Float64[], EmMultipole[], LevelSelection())
     end
 
 
@@ -923,6 +929,8 @@ module Cascade
     function Base.show(io::IO, dist::Cascade.RrRateCoefficients) 
         println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
         println(io, "temperatures:             $(dist.temperatures)  ")
+        println(io, "multipoles:               $(dist.multipoles)  ")
+        println(io, "finalLevelSelection:      $(dist.levelSelection)  ")
     end
 
 

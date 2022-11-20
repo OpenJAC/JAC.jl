@@ -86,8 +86,6 @@ module PairAnnihilation2Photon
         + photon1Energy  ::Float64                ... Energy of the emitted photon1.
         + photon2Energy  ::Float64                ... Energy of the emitted photon2.
         + crossSection   ::EmProperty             ... Cross section for this pair-annihilation (photon) line.
-        + hasChannels    ::Bool                   ... Determines whether the individual (sub-) channels are defined in terms of their 
-                                                      free-positron energy, kappa, multipole, etc., or not.
         + channels       ::Array{PairAnnihilation2Photon.Channel,1}  ... List of PairAnnihilation2Photon.Channels of this line.
     """
     struct  Line
@@ -97,7 +95,6 @@ module PairAnnihilation2Photon
         photon1Energy    ::Float64
         photon2Energy    ::Float64
         crossSection     ::EmProperty
-        hasChannels      ::Bool
         channels         ::Array{PairAnnihilation2Photon.Channel,1}
     end
 
@@ -120,7 +117,6 @@ module PairAnnihilation2Photon
         println(io, "photon1Energy:     $(line.photon1Energy)  ")
         println(io, "photon2Energy:     $(line.photon2Energy)  ")
         println(io, "crossSection:      $(line.crossSection)  ")
-        println(io, "hasChannels:       $(line.hasChannels)  ")
         println(io, "channels:          $(line.channels)  ")
     end
 

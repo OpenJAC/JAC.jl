@@ -5,7 +5,7 @@ setDefaults("print summary: open", "zzz-Einstein.sum")
 setDefaults("unit: energy", "Kayser")
 grid=Radial.Grid(true)
 ## grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 1.0e-2, hp = 1.0e-2, NoPoints = 2000)
-if  false
+if  true
     asfSettings   = AsfSettings(AsfSettings(), scField=Basics.DFSField())
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(26.), asfSettings=asfSettings,
                             configs=[Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 4s"), Configuration("[Ne] 3s^2 3p^5")],

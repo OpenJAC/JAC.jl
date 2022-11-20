@@ -59,8 +59,7 @@
                 # Compute continuum orbitals independently for all transitions in the given block.
                 newLines = AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
                                                               step.settings, output=true, printout=false) 
-                ##x @show newLines
-                append!(linesA, newLines);    nt = length(linesA)
+                 append!(linesA, newLines);    nt = length(linesA)
             elseif  step.process == Basics.Radiative()
                 newLines = PhotoEmission.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
                                                              step.settings, output=true, printout=false) 
@@ -94,7 +93,6 @@
                         if      process == Basics.Radiative()  
                             if  blocka.NoElectrons == blockb.NoElectrons   &&
                                 Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet) > 0.
-                                ##x @show  Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet)
                                 settings = PhotoEmission.Settings(PhotoEmission.Settings(); multipoles=scheme.multipoles)
                                 push!( stepList, Cascade.Step(process, settings, blocka.confs, blockb.confs, blocka.multiplet, blockb.multiplet) )
                             end
@@ -102,7 +100,6 @@
                         elseif  process == Basics.Auger()  
                             if  blocka.NoElectrons == blockb.NoElectrons + 1   &&
                                 Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet) > 0.
-                                ##x @show  Basics.determineMeanEnergy(blocka.multiplet) - Basics.determineMeanEnergy(blockb.multiplet)
                                 settings = AutoIonization.Settings(AutoIonization.Settings(); maxKappa=4)
                                 push!( stepList, Cascade.Step(process, settings, blocka.confs, blockb.confs, blocka.multiplet, blockb.multiplet) )
                             end
@@ -193,7 +190,6 @@
             for shell in decayShells    if  haskey(nshells, shell)   else    nshells[shell] = 0    end   end
             push!(newConfigs, Configuration(nshells, conf.NoElectrons))
         end
-        ##x @show "a", unique(newConfigs), length(newConfigs)
         #
         # Now add all decay configurations
         decayConfigs = Configuration[];    dConfigs = copy(newConfigs)
@@ -203,7 +199,6 @@
             if length(dConfigs) > 0     append!(decayConfigs, dConfigs)     else   further = false      end
         end
         decayConfigs = unique(decayConfigs)
-        ##x @show "b", decayConfigs
         #
         dConfigs = copy(newConfigs);   append!(dConfigs, decayConfigs)
         further = true
@@ -212,12 +207,10 @@
             if length(dConfigs) > 0     append!(decayConfigs, dConfigs)     else   further = false      end
         end
         decayConfigs = unique(decayConfigs)
-        ##x@show "c", decayConfigs
         
         dConfigs = copy(newConfigs);   append!(dConfigs, decayConfigs)
         dConfigs = unique(dConfigs)
         
-        ##x @show length(dConfigs), length(newConfigs)
         #
         # Remove obsolete shells and double configurations
         nconfList = Configuration[];   nshells = Dict{Shell,Int64}();    ne = 0
@@ -226,8 +219,6 @@
             for  (sh,occ) in conf.shells   if  occ > 0     nshells[sh] = occ;  ne = ne + occ    end     end
             push!(nconfList, Configuration( nshells, ne))
         end
-        ##x nconfList = unique(nconfList)
-        ##x @show "d", nconfList
         #
         # Discard configurations with energies higher than initial configurations after electron capture;
         # this may be required for a very large number of configurations (not yet)

@@ -521,29 +521,8 @@ module  RadialIntegrals
                 wx = wx + sqrt(t^2 - 1.) / t^2 * (1. + 1. / (2.0*t^2)) / (4*t*r/alpha) * qgrid.wt[i] *
                      (Base.MathConstants.e^(-2.0*t*abs(r-rp)/alpha) * qgrid.wt[i] - Base.MathConstants.e^(-2.0*t*(r+rp)/alpha))
             end
-            ##x @show wx
             return( wx )
         end
-
-        ##x println("\n\n a = $(a.subshell)  b = $(b.subshell)    \n ======================\n")
-        ##x if  a.subshell == b.subshell == Subshell("1s_1/2")    
-        ##x    r = 0.9973e-3;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
-        ##x    r = 0.1038e-2;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
-        ##x    r = 0.9975e-2;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
-        ##x    r = 0.1004e-1;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
-        ##x    r = 0.9992e-1;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
-        ##x    r = 0.1012e-0;   tx = tIntegral(r);  println("r = $r    tx = $tx")  
-        ##x end
-        ##x println("\n")
-        ##x npoints = grid.NoPoints;    rhot = zeros( npoints )
-        ##x # Compute the charge density of the core orbitals for the given level
-        ##x for  sh in basis.subshells
-        ##x     orb  = basis.orbitals[sh]
-        ##x     occ  = Basics.computeMeanSubshellOccupation(sh, basis)
-        ##x     nrho = length(orb.P)
-        ##x     for    i = 1:nrho   rhot[i] = rhot[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
-        ##x end
-        ##x @show rhot
         
         mtp = min(size(a.P, 1), size(b.P, 1))
         # Distinguish the radial integration for different grid definitions
@@ -554,7 +533,6 @@ module  RadialIntegrals
                 for  ip = 2:mtp 
                     rho_rp
                     wb  = wb + tIntegral(grid.r[i],grid.r[ip]) * (4pi) * grid.r[ip] * rho_rp * grid.wr[ip]  
-                    ##x @show i, ip, tIntegral(grid.r[i],grid.r[ip]), rhot[ip], wb
                 end
                 wa = wa + (a.P[i]*wb*b.P[i] + a.Q[i]*wb*b.Q[i]) * grid.wr[i]  
                 ## x@show wa
@@ -600,16 +578,6 @@ module  RadialIntegrals
             error("stop a")
         end
        
-        ##x println("\n\n a = $(a.subshell)  b = $(b.subshell)    \n ======================\n")
-        ##x if  a.subshell == b.subshell == Subshell("1s_1/2")    
-        ##x     for i = 100:2:mtp-100
-        ##x         r  = grid.r[i];      wb = tIntegral(r);      wc = (-pot.Zr[i] / r);      
-        ##x         wu = wb*wc* 2. * Defaults.getDefaults("alpha") / (3*pi)
-        ##x         println("r = $r     Vnuc = $wc     tx = $(2/3*wb)    VUeh = $wu")  
-        ##x     end
-        ##x end
-        ##x println("\n")
-        
         println("QED single-electron strength <$(a.subshell)| h^(simplified Uehling) | $(b.subshell)> = $wa ")
         return( wa )
     end

@@ -75,8 +75,6 @@ module CoulombExcitation
         + finalLevel     ::Level                  ... final-(state) level
         + crossSection   ::EmProperty             ... Cross section for this photoionization.
         + alignmentA2    ::EmProperty             ... Alignment A_2 parameter.
-        + hasChannels    ::Bool                   ... Determines whether the individual (sub-) channels are defined in terms of their 
-                                                      magnetic substates, etc., or not.
         + channels       ::Array{CoulombExcitation.Channel,1}  ... List of CoulombExcitation.Channels of this line.
     """
     struct  Line
@@ -84,7 +82,6 @@ module CoulombExcitation
         finalLevel       ::Level
         crossSection     ::EmProperty
         alignmentA2      ::EmProperty
-        hasChannels      ::Bool
         channels         ::Array{CoulombExcitation.Channel,1}
     end
 

@@ -105,7 +105,7 @@ include("module-BiOrthogonal.jl");      using ..BiOrthogonal
 include("module-AngularMomentum.jl")
 ## include("module-AngularCoefficients-Ratip2013.jl")  ## keep for internal test purposes only
 include("module-SpinAngular.jl");       using ..SpinAngular
-include("module-Bsplines.jl")
+include("module-Bsplines.jl");          using ..Bsplines
 include("module-Continuum.jl")
 include("module-Details.jl")
 include("module-RadialIntegrals.jl")
@@ -193,7 +193,6 @@ include("module-BasicsAZ.jl")
 include("module-ManyElectronAZ.jl")
 
 # Specialized macros
-##x include("macro-racahsum.jl")
 
 # All test functions/methods stay with the JAC root module
 include("module-TestFrames.jl");        using ..TestFrames

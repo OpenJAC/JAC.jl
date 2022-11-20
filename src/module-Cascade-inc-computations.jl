@@ -288,7 +288,6 @@
                 end
             end
             newConfList = unique(newConfList)
-            ##x if  length(newConfList) > 0    newConfList = Basics.excludeDoubles(newConfList)    end
             cList = newConfList
             append!(confList, newConfList)
         end
@@ -298,7 +297,6 @@
             if  conf.NoElectrons + further >= initialNoElectrons   push!(newConfList, conf)    end
         end
         # Add further shake-displacements if appropriate
-        ##x newConfList = Basics.excludeDoubles(newConfList)
         newConfList = unique(newConfList)
         return( newConfList )
     end
@@ -327,16 +325,6 @@
                 push!(confList, Configuration( newshells, conf.NoElectrons ) )
             end
         end
-        ##x #
-        ##x # Remove obsolete shells and double configurations
-        ##x nconfList = Configuration[];   nshells = Dict{Shell,Int64}();    ne = 0
-        ##x for  conf  in  confList  
-        ##x     nshells = Dict{Shell,Int64}();      ne = 0
-        ##x     for  (sh,occ) in conf.shells   if  occ > 0     nshells[sh] = occ;  ne = ne + occ    end     end
-        ##x     push!(nconfList, Configuration( nshells, ne))
-        ##x end
-        ##x nconfList = unique(nconfList)
-        ##x @show "1-outer", confList
 
         return( confList )
     end
@@ -396,15 +384,6 @@
              end
          end
         #
-        ##x # Remove obsolete shells and double configurations
-        ##x nconfList = Configuration[];   nshells = Dict{Shell,Int64}();    ne = 0
-        ##x for  conf  in  confList  
-        ##x     nshells = Dict{Shell,Int64}();      ne = 0
-        ##x     for  (sh,occ) in conf.shells   if  occ > 0     nshells[sh] = occ;  ne = ne + occ    end     end
-        ##x     push!(nconfList, Configuration( nshells, ne))
-        ##x end
-        ##x nconfList = unique(nconfList)
-        ##x @show "2-outer", confList
 
         return( confList )
     end

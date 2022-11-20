@@ -116,9 +116,7 @@
             wa = Basics.generate("configuration list: relativistic", conf)
             append!( relconfList, wa)
         end
-        ##x if  false    for  i = 1:length(relconfList)    println(">> include ", relconfList[i])    end   end
         subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
-        ##x Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
         csfList = CsfR[]
         for  relconf in relconfList
             newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
@@ -1120,7 +1118,6 @@
             occupation  = copy(basis.csfs[i].occupation[1:ns-1]);  push!(occupation, substate.occ);    append!(occupation, basis.csfs[i].occupation[ns:end]) 
             seniorityNr = copy(basis.csfs[i].seniorityNr[1:ns-1]); push!(seniorityNr,  substate.nu);   append!(seniorityNr, basis.csfs[i].seniorityNr[ns:end]) 
             subshellJ   = copy(basis.csfs[i].subshellJ[1:ns-1]);   push!(subshellJ,  AngularJ64(substate.Jsub2//2) );  append!(subshellJ, basis.csfs[i].subshellJ[ns:end]) 
-            ##x @show ns, basis.csfs[i].subshellX
             if  ns  > 1    subshellX   = copy(basis.csfs[i].subshellX[1:ns-1]);    push!(subshellX,  subshellX[ns-1])
             else           subshellX   = AngularJ64[AngularJ64(0)]                           
             end
@@ -1147,7 +1144,6 @@
         testBasis = level.basis;    newCsfs = CsfR[];    newMc = Float64[]
 
         # Decide of whether the basis need to be extended by some subshells
-        ##x @show testBasis.subshells, subshells
         nt = length(testBasis.subshells)
         if      testBasis.subshells == subshells      basis = testBasis;    nLevel = level
         elseif  nt >= length(subshells)               error("stop a")

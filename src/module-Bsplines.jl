@@ -216,9 +216,11 @@ module Bsplines
         # Renormalize the radial orbital   
         wN        = sqrt( JAC.RadialIntegrals.overlap(orbital, orbital, primitives.grid) )   
         Px[1:mtp] = Px[1:mtp] / wN;    Qx[1:mtp] = Qx[1:mtp] / wN
-        Pprimex[1:mtp] = Pprimex[1:mtp] / wN;    Qprimex[1:mtp] = Qprimex[1:mtp] / wN    
+        Pprimex[1:mtp] = Pprimex[1:mtp] / wN;    Qprimex[1:mtp] = Qprimex[1:mtp] / wN 
         
-        return( Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, Radial.Grid()) )   
+        orb = Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, Radial.Grid())
+        
+        return( orb )   
     end
 
 
@@ -606,6 +608,7 @@ module Bsplines
             if  printout   Basics.tabulateKappaSymmetryEnergiesDirac(sh.kappa, w2.values, nsi, nuclearModel)    end
             ##x error("aa")
             newOrbitals[sh] = generateOrbitalFromPrimitives(sh, w2, primitives, nsL, nsS)
+            alreadyDone[i]  = true
             # Take over orbitals of the same symmetry
             for  j = 1:length(subshells)
                 if  alreadyDone[j]   continue

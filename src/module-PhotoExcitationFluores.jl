@@ -75,8 +75,6 @@ module PhotoExcitationFluores
         + excitEnergy         ::Float64                ... photon excitation energy of this pathway
         + fluorEnergy         ::Float64                ... photon fluorescence energy of this pathway
         + crossSection        ::EmProperty             ... total cross section of this pathway
-        + hasChannels         ::Bool                   ... Determines whether the individual excitation and fluorescence channels are defined 
-                                                           in terms of their multipole, gauge as well as the amplitude, or not.
         + excitChannels       ::Array{PhotoEmission.Channel,1}  ... List of excitation channels of this pathway.
         + fluorChannels       ::Array{PhotoEmission.Channel,1}  ... List of fluorescence channels of this pathway.
     """
@@ -87,7 +85,6 @@ module PhotoExcitationFluores
         excitEnergy           ::Float64
         fluorEnergy           ::Float64
         crossSection          ::EmProperty
-        hasChannels           ::Bool
         excitChannels         ::Array{PhotoEmission.Channel,1}
         fluorChannels         ::Array{PhotoEmission.Channel,1}
     end 
@@ -112,7 +109,6 @@ module PhotoExcitationFluores
         println(io, "excitEnergy                 $(pathway.excitEnergy)  ") 
         println(io, "fluorEnergy                 $(pathway.fluorEnergy)  ")
         println(io, "crossSection:               $(pathway.crossSection)  ")
-        println(io, "hasChannels:                $(pathway.hasChannels)  ")
         println(io, "excitChannels:              $(pathway.excitChannels)  ")
         println(io, "fluorChannels:              $(pathway.fluorChannels)  ")
     end

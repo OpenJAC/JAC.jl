@@ -1,13 +1,12 @@
 
-using  SpecialFunctions,  HypergeometricFunctions, ..Bsplines
-
 """
 `module  JAC.HydrogenicIon`  
     ... a submodel of JAC that contains methods for computing various one-electron energies, matrix elements, etc..
 """
 module HydrogenicIon 
 
-    using Printf, ..Basics, ..Defaults, ..Math, ..Nuclear, ..Radial, ..RadialIntegrals,  GSL
+    using  Printf, ..Basics, ..Bsplines, ..Defaults, ..Math, ..Nuclear, ..Radial, ..RadialIntegrals,  GSL
+    using  SpecialFunctions,  HypergeometricFunctions
 
 
     """
@@ -41,6 +40,20 @@ module HydrogenicIon
         sa = "  Energy for subshell $sh is [in $(Defaults.getDefaults("unit: energy"))]: " * @sprintf("%.8e", wb)
         println(sa)
         return( wa )
+    end
+    
+       
+    """
+    `HydrogenicIon.orbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)`
+        ... to compute a relativstic hydrogenic Dirac orbital for the given nuclear model by using an explicit diagonalization 
+            of the Dirac Hamiltonian in a B-spline basis; an orbital::Radial.Orbital is returned.
+    """
+    function orbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)
+        Defaults.setDefaults("standard grid", grid; printout=false)
+        basis    = Bsplines.generatePrimitives(grid)
+        orbitals = Bsplines.generateOrbitalsHydrogenic(basis, nm, [sh]; printout = false)
+        orb      = orbitals[sh]
+        return( orb )
     end
 
 
@@ -83,7 +96,7 @@ module HydrogenicIon
     end
  
  
-     """
+    """
     `HydrogenicIon.radialOrbital(sh::Subshell, Z::Float64, grid::Radial.Grid)`
         ... to compute a relativistic hydrogenic Dirac orbital on the given grid; 
             an Array with the large and small component is returned; contributed by C Naumann (2022).
@@ -159,6 +172,7 @@ module HydrogenicIon
                      
     	return([P,Q])
     end
+    
        
     """
     `HydrogenicIon.radialOrbital(sh::Subshell, nm::Nuclear.Model, grid::Radial.Grid)`
@@ -169,6 +183,7 @@ module HydrogenicIon
         basis   = Bsplines.generatePrimitives(grid)
         orb_dic = Bsplines.generateOrbitalsHydrogenic(basis, nm, [sh]; printout = false)
         orb     = orb_dic[sh]
+        @show orb_dic
         return( orb )
     end
 

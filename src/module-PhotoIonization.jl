@@ -123,9 +123,7 @@ module PhotoIonization
         + electronEnergy ::Float64                ... Energy of the (outgoing free) electron.
         + photonEnergy   ::Float64                ... Energy of the absorbed photon.
         + crossSection   ::EmProperty             ... Cross section for this photoionization.
-        + hasChannels    ::Bool                   ... Determines whether the individual (sub-) channels are defined in terms of their 
-                                                      free-electron energy, kappa, multipole, etc., or not.
-        + channels       ::Array{PhotoIonization.Channel,1}  ... List of PhotoIonization.Channels of this line.
+         + channels       ::Array{PhotoIonization.Channel,1}  ... List of PhotoIonization.Channels of this line.
     """
     struct  Line
         initialLevel     ::Level
@@ -133,8 +131,7 @@ module PhotoIonization
         electronEnergy   ::Float64
         photonEnergy     ::Float64
         crossSection     ::EmProperty
-        hasChannels      ::Bool
-        channels         ::Array{PhotoIonization.Channel,1}
+         channels         ::Array{PhotoIonization.Channel,1}
     end
 
 
@@ -211,7 +208,7 @@ module PhotoIonization
         ##  if  line.electronEnergy < 2.0   csFactor = csFactor * (line.electronEnergy/2.0)^1.5     end
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         newLine = PhotoIonization.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, 
-                                        crossSection, true, newChannels)
+                                        crossSection, newChannels)
         return( newLine )
     end
 
@@ -388,8 +385,7 @@ module PhotoIonization
             return( wb )
         end
         
-        if  !line.hasChannels   error("No channels are defined for the given PhotoIonization.line.")         end
-        wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J;
+         wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J;
         kappaList = PhotoIonization.getLineKappas(line)
         for  kappa in kappaList
             for  cha  in line.channels
@@ -419,8 +415,7 @@ module PhotoIonization
     """
     function  computeStatisticalTensorUnpolarized(k::Int64, q::Int64, gauge::EmGauge, line::PhotoIonization.Line, 
                                                   settings::PhotoIonization.Settings)
-        if  !line.hasChannels   error("No channels are defined for the given PhotoIonization.line.")         end
-        wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J   
+         wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J   
         kappaList = PhotoIonization.getLineKappas(line);    P1 = settings.stokes.P1;   P2 = settings.stokes.P2;   P3 = settings.stokes.P3
         for  kappa in kappaList
             j = AngularMomentum.kappa_j(kappa)
@@ -504,7 +499,7 @@ module PhotoIonization
                         energy   = omega_au - (fLevel.energy - iLevel.energy)
                         if  energy < 0.    continue   end  
                         channels = PhotoIonization.determineChannels(fLevel, iLevel, settings) 
-                        push!( lines, PhotoIonization.Line(iLevel, fLevel, energy, omega_au, EmProperty(0., 0.), true, channels) )
+                        push!( lines, PhotoIonization.Line(iLevel, fLevel, energy, omega_au, EmProperty(0., 0.), channels) )
                     end
                     # Add lines for all electron energies
                     for  en in settings.electronEnergies
@@ -513,7 +508,7 @@ module PhotoIonization
                         omega     = energy_au + (fLevel.energy - iLevel.energy)
                         if  energy_au < 0.    continue   end  
                         channels = PhotoIonization.determineChannels(fLevel, iLevel, settings) 
-                        push!( lines, PhotoIonization.Line(iLevel, fLevel, energy_au, omega, EmProperty(0., 0.), true, channels) )
+                        push!( lines, PhotoIonization.Line(iLevel, fLevel, energy_au, omega, EmProperty(0., 0.), channels) )
                     end
                 end
             end

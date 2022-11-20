@@ -93,16 +93,12 @@ module ImpactIonization
         + initialLevel   ::Level          ... initial-(state) level
         + finalLevel     ::Level          ... final-(state) level
         + crossSection   ::Float64        ... total cross section of this line
-        + hasChannels    ::Bool           ... Determines whether the individual scattering (sub-) channels are defined in terms of their free-
-                                              electron energies, kappa's, phases and the total angular momentum/parity as well as the amplitude, 
-                                              or not.
         + channels       ::Array{ImpactIonization.Line,1}  ... List of Eimex channels of this line.
     """
     struct  Line
         initialLevel     ::Level
         finalLevel       ::Level
         crossSection     ::Float64 
-        hasChannels      ::Bool
         channels         ::Array{ImpactIonization.Channel,1}
     end 
 
@@ -112,7 +108,6 @@ module ImpactIonization
         println(io, "initialLevel:     $(line.initialLevel)  ")
         println(io, "finalLevel:       $(line.finalLevel)  ")
         println(io, "crossSection:     $(line.crossSection)  ")
-        println(io, "hasChannels:      $(line.hasChannels)  ")
         println(io, "channels:         $(line.channels)  ")
     end
 

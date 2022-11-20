@@ -1324,21 +1324,27 @@
         alphaRR      = EmProperty[]
         #
         for temp  in  temperatures
-            temp_au = Defaults.convertUnits("temperature: from Kelvin to (Hartree) units", temp)
-            wa      = EmProperty(0., 0.)
+            temp_au  = Defaults.convertUnits("temperature: from Kelvin to (Hartree) units", temp)
+            wa       = EmProperty(0., 0.)
             #
-            @warn "Cross sections not yet properly set."
+            ## @warn "Cross sections not yet properly set."
             for  line  in  lines
                 # Determine cross section of this line
-                cs = EmProperty(0., 0.)
+                cs  = EmProperty(0., 0.)
+                if   simulation.property.finalLevelSelection.active  &&  
+                     !(line.finalLevel.index  in  simulation.property.finalLevelSelection.indices)    continue    end
+                pcs = PhotoRecombination.computeCrossSectionForMultipoles(simulation.property.multipoles, line.channels)
+                cs  = cs + pcs
+                #==
                 # Determine cross section if only one final level contributes; for test purposes
                 if   line.finalLevel.index == 1
                       wb = PhotoRecombination.crossSectionKramers(line.electronEnergy, 26.0::Float64, (1,50))
                       ## wb = PhotoRecombination.crossSectionStobbe(line.electronEnergy, 26.0::Float64)
                       cs = EmProperty(wb, wb)
                 else  cs = EmProperty(0., 0.)
-                end
-                wa = wa + 2 / sqrt(2pi) / temp_au^(3/2) * factor * line.electronEnergy * exp(-line.electronEnergy / temp_au ) * line.weight * cs
+                end  ==#
+                wa = wa + 2 / sqrt(2pi) / temp_au^(3/2) * factor * line.electronEnergy * 
+                          exp(-line.electronEnergy / temp_au ) * line.weight * cs
             end
             push!(alphaRR, wa)
         end

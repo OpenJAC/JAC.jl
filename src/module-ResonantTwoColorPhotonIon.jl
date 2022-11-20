@@ -77,8 +77,6 @@ module ResonantTwoColorPhotonIon
         + finalLevel       ::Level           ... final-(state) level
         + photonEnergy     ::Float64         ... Energy of the incoming photons; all photons are assumed to have equal energy.
         + crossSection     ::EmProperty      ... Cross section for this multi-photon ionization.
-        + hasChannels      ::Bool            ... Determines whether the individual (sub-) channels are defined in terms of their multipolarities, 
-                                                 etc., or not.
         + channels         ::Array{ResonantTwoColorPhotonIon.Channel,1}  ... List of ResonantTwoColorPhotonIon.Channels of this line.
     """
     struct  Line
@@ -86,7 +84,6 @@ module ResonantTwoColorPhotonIon
         finalLevel         ::Level
         photonEnergy       ::Float64
         crossSection       ::EmProperty
-        hasChannels        ::Bool
         channels           ::Array{ResonantTwoColorPhotonIon.Channel,1}
     end
 
@@ -97,8 +94,7 @@ module ResonantTwoColorPhotonIon
         println(io, "finalLevel:        $(line.finalLevel)  ")
         println(io, "photonEnergy:      $(line.photonEnergy)  ")
         println(io, "crossSection:      $(line.crossSection)  ")
-        println(io, "hasChannels:       $(line.hasChannels)  ")
-        println(io, "channels:          $(line.channels)  ")
+       println(io, "channels:          $(line.channels)  ")
     end
 
 end # module

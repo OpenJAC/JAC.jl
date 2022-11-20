@@ -126,7 +126,7 @@ module Defaults
 
     + `("energy: from predefined to atomic unit", value::Float64)`  or  `("energy: to atomic", value::Float64)`... to convert an energy value 
                                                     from the predefined to the atomic energy unit; a Float64 is returned.
-    + `("energy: from eV to atomic unit", value::Float64)` ... to convert an energy value from eV to the atomic energy unit; a Float64 is returned.
+    + `("energy: from eV to atomic", value::Float64)` ... to convert an energy value from eV to the atomic energy unit; a Float64 is returned.
 
     + `("energy: from wavelength [nm] to atomic", value::Float64)` ... to convert a wavelength [nm] to the atomic energy unit; a Float64 is returned.
 

@@ -40,7 +40,6 @@ module Radial
         + tS         ::Array{Float64,1}  ... radial break points for the B-splines of the small c.
         + ntL        ::Int64             ... number of break points in the t-grid of the large c.
         + ntS        ::Int64             ... number of break points in the t-grid of the small c.
-        ##x + nth    ::Int64             ... take each nth-point from the 'physical grid' as break point.
         + orderL     ::Int64             ... B-spline order of large components of the large c.
         + orderS     ::Int64             ... B-spline order of small components
         + nsL        ::Int64             ... number of B-splines for large components
@@ -50,8 +49,7 @@ module Radial
                 equal of how the break points are generated as nth-point from the physical grid points.
         ** Radial mesh points **
         + meshType   ::Radial.AbstractMesh
-        ##x + nr         ::Int64         ... number of mesh points in the r-grid.
-        + r          ::Array{Float64,1}  ... radial grid points
+         + r          ::Array{Float64,1}  ... radial grid points
         + rp         ::Array{Float64,1}  ... derivative of the radial grid at the grid points
         + rpor       ::Array{Float64,1}  ... rp over r
         + wr         ::Array{Float64,1}  ... integration weights for all grid points, 
@@ -67,7 +65,6 @@ module Radial
         tS           ::Array{Float64,1}
         ntL          ::Int64 
         ntS          ::Int64 
-        ##x nth          ::Int64 
         orderL       ::Int64
         orderS       ::Int64
         nsL          ::Int64
@@ -75,7 +72,6 @@ module Radial
         orderGL      ::Int64
         #
         meshType     ::Radial.AbstractMesh
-        ##x nr           ::Int64 
         r            ::Array{Float64,1}
         rp           ::Array{Float64,1}
         rpor         ::Array{Float64,1}
@@ -130,7 +126,6 @@ module Radial
         if  h        == nothing   hx        = gr.h          else    hx        = h         end 
         if  hp       == nothing   hpx       = gr.hp         else    hpx       = hp        end 
         if  rbox     == nothing   rboxx     = nothing       else    rboxx     = rbox      end 
-        ##x if  nth      == nothing   nthx      = gr.nth        else    nthx      = nth       end 
         if  orderL   == nothing   orderLx   = gr.orderL     else    orderLx   = orderL    end 
         if  orderS   == nothing   orderSx   = gr.orderS     else    orderSx   = orderS    end 
         if  orderGL  == nothing   orderGLx  = gr.orderGL    else    orderGLx  = orderGL   end 
@@ -187,8 +182,7 @@ module Radial
         rnt    = grid.rnt;       h      = grid.h;         hp      = grid.hp;        NoPoints = grid.NoPoints
         nth    = grid.orderGL;   orderL = grid.orderL;    orderS  = grid.orderS;    orderGL  = grid.orderGL
         nr     = grid.NoPoints;  r      = zeros(nr);      rp      = zeros(nr);      rpor     = zeros(nr);      nsL = 0;   nsS = 0
-        ##x @show nr, NoPoints
-        
+         
         # Ensure that the largest grid points is always consistent with the largest break point of the B-splines
         if  NoPoints != NoPoints - rem(NoPoints,orderGL)    error("stop a")     end
 
@@ -245,19 +239,9 @@ module Radial
         end
         for   i = ntL+1:ntL+orderL-1   push!( tL, tL[ntL] )   end;    nsL = ntL - 1;   ntL = length(tL)
         for   i = ntS+1:ntS+orderS-1   push!( tS, tS[ntS] )   end;    nsS = ntS - 1;   ntS = length(tS)
-        ##x @show r
-        ##x @show " "
-        ##x @show t
-        ##x ## nsL = nt + orderL - 1 - 8;    nsS = nt + orderS - 1 - 8;    nr = nrmax - 10
-        ##x ## nsL = nt + orderL -3;    nsS = nt + orderS - 3;    nr = nrmax - 2
-        ##x nsL = nt - 3;    nsS = nt - 2
-        ##x for   ip = nt+1:nt+orderL    push!( t, t[nt] )   end
-        ##x @show nsL, nsS, nt+orderL, t[nt+orderL]
-        ##x @show t
         
         # Define the radial grid due to the definition
         wr = zeros(nr)
-        ##x @show nr, NoPoints
         if  meshType == Radial.MeshGL()
             nr = 0;   r = Float64[];   rp = Float64[];   rpor = Float64[];   wr = Float64[];    rlow = 0.
             wax = gauss(orderGL);   ra = wax[1];   wa = wax[2] 
@@ -555,7 +539,6 @@ module Radial
 
     # `Base.show(io::IO, orbital::Orbital)`  ... prepares a proper printout of the variable orbital::Orbital.
     function Base.show(io::IO, orbital::Orbital) 
-        return()
         n = length(orbital.P)
 
         if   orbital.useStandardGrid
@@ -684,7 +667,6 @@ module Radial
         #x grid = Defaults.getDefaults("standard grid");    
         #x qn = SubshellQuantumNumbers( string(subshell) );    n = qn[1];    kappa = qn[2];   l = qn[3]
         n = subshell.n;    kappa = subshell.kappa;   l = Basics.subshell_l(subshell)
-        ##x println("n, l = $n, $l")
     
         wa = Basics.store("orbital functions: NR, Bunge (1993)", Z)
         if      l == 0  &&  n > wa[5][1]+0     error("orbitals with s symmetry for Z = $Z only available up to $(wa[5][1]+0) only.")
@@ -704,7 +686,6 @@ module Radial
                 Njl = (2*Zjl)^(njl+0.5) / sqrt( factorial(2*njl) ) 
                 Rnl = Rnl + Cjl*Njl*r^(njl-1)*exp(-Zjl*r);
             end
-            ##x println("OrbitalBunge1993-aa: k, r, Rnl = $k  $r  $Rnl ")
             push!(P, Rnl*r )
         end
  
@@ -716,7 +697,6 @@ module Radial
         for i = 2:size(Q, 1)
             Q[i] = -1/(2 * JAC.Defaults.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(i) / grid.h / grid.rp[i] + kappa/grid.r[i]) * P[i]
         end
-        ##x println("OrbitalBunge1993-ab: ",Q)
     
         o     = Orbital( subshell, true, true, -0.5, P, Q, grid)
         norma = RadialIntegrals.overlap(o, o, grid)
@@ -724,7 +704,6 @@ module Radial
         o.Q = o.Q/sqrt(norma)
 
         normb = RadialIntegrals.overlap(o, o, grid)
-        ##x println("OrbitalBunge1993-ac:  for subshell $subshell : norm-before = $norma, norm-after = $normb")
     
         return( o )
     end
@@ -814,8 +793,7 @@ module Radial
     function determineZbar(pot::Radial.Potential) 
         nx = 5   # Number of grid points for determining the effective charge Zbar
         mtp = size( pot.Zr, 1);    grid = pot.grid;    meanZbar = zeros(nx);    devsZbar = zeros(nx);   ny = 0
-        ##x println("mtp = $mtp,  pot.Zr = $(pot.Zr[mtp-nx+1:mtp])")
-        for  i = mtp-nx+1:mtp
+         for  i = mtp-nx+1:mtp
             ny  = ny + 1;    meanZbar[ny] = pot.Zr[mtp]
         end
         mZbar   = sum(meanZbar) / nx;   for  i = 1:nx    devsZbar[i] = (meanZbar[i] - mZbar)^2    end

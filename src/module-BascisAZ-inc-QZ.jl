@@ -235,9 +235,7 @@
             return( einsteinA )
 
         elseif   sa == "rate: radiative, to Einstein B"
-            ##x einsteinB = (Basics.twice(line.initialLevel.J) + 1) / (Basics.twice(line.finalLevel.J) + 1) * pi^2 *
-            ##x             Defaults.getDefaults("speed of light: c")^3 / line.omega^3  * wa
-            einsteinB = pi^2 * Defaults.getDefaults("speed of light: c")^3 / line.omega^3  * wa
+           einsteinB = pi^2 * Defaults.getDefaults("speed of light: c")^3 / line.omega^3  * wa
             einsteinB = Defaults.convertUnits("Einstein B: from atomic", einsteinB)
             return( einsteinB )
 
@@ -272,8 +270,7 @@
     function Basics.selectLevel(level::Level, levelSelection::LevelSelection)
         if  levelSelection.active
             # Test for level index
-            ##x @show level.index, levelSelection.indices
-            if  level.index  in  levelSelection.indices                                 return( true )   end
+             if  level.index  in  levelSelection.indices                                 return( true )   end
             if  LevelSymmetry(level.J, level.parity)  in  levelSelection.symmetries     return( true )   end
         else                                                                            return( true ) 
         end

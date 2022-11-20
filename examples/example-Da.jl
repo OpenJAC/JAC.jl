@@ -6,7 +6,7 @@ setDefaults("unit: energy", "Kayser")
 setDefaults("unit: rate", "1/s")
 setDefaults("print summary: open", "zzz-radiative.sum")
 
-if false
+if true
 
     grid = Radial.Grid(true)
     ## grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5, h = 1.0e-2, hp = 0., rbox = 5.0)

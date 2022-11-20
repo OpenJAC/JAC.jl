@@ -113,7 +113,6 @@
         end
         
         # Exclude double configurations as well as those with too high average energy
-        ##x confList = Basics.excludeDoubles(allnewconfList)
         confList = unique(allnewconfList)
         newconfList = Configuration[]
         for  conf in confList  

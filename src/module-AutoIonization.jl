@@ -112,9 +112,6 @@ module AutoIonization
         + electronEnergy ::Float64         ... Energy of the (incoming free) electron.
         + totalRate      ::Float64         ... Total rate of this line.
         + angularAlpha   ::Float64         ... Angular alpha_2 coefficient.
-        + hasChannels    ::Bool            
-            ... Determines whether the individual scattering (sub-) channels are defined in terms of their free-electron energy, kappa 
-                and the total angular momentum/parity as well as the amplitude, or not.
         + channels       ::Array{AutoIonization.Channel,1}  ... List of AutoIonization channels of this line.
     """
     struct  Line
@@ -123,7 +120,6 @@ module AutoIonization
         electronEnergy   ::Float64
         totalRate        ::Float64
         angularAlpha     ::Float64
-        hasChannels      ::Bool
         channels         ::Array{AutoIonization.Channel,1}
     end 
 
@@ -144,7 +140,6 @@ module AutoIonization
         println(io, "electronEnergy:         $(line.electronEnergy)  ")
         println(io, "totalRate:              $(line.totalRate)  ")
         println(io, "angularAlpha:           $(line.angularAlpha)  ")
-        println(io, "hasChannels:            $(line.hasChannels)  ")
         println(io, "channels:               $(line.channels)  ")
     end
 
@@ -173,10 +168,6 @@ module AutoIonization
             Defaults.setDefaults("relativistic subshell list", subshells; printout=false)
             iLevel    = Level(initialLevel, subshells)
             cLevel    = Level(continuumLevel, subshells)
-            ##x @show subshells
-            ##x @show length(iLevel.basis.csfs)
-            ##x @show cLevel.basis.csfs[1]
-            ##x @show iLevel.basis.csfs[1]
         end
         #
         if      kind in [ CoulombInteraction(), BreitInteraction(), CoulombBreit()]        ## pure V^Coulomb interaction
@@ -184,15 +175,13 @@ module AutoIonization
             for  r = 1:nt
                 for  s = 1:ni
                     if  iLevel.basis.csfs[s].J != iLevel.J  ||  iLevel.basis.csfs[s].parity != iLevel.parity      continue    end 
-                    ##x wa = compute("angular coefficients: e-e, Ratip2013", continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s])
-                    # Calculate the spin-angular coefficients
+                     # Calculate the spin-angular coefficients
                     if  Defaults.saRatip()
                         waR = compute("angular coefficients: e-e, Ratip2013", continuumLevel.basis.csfs[r], initialLevel.basis.csfs[s])
                         wa  = waR       
                     end
                     if  Defaults.saGG()
-                        ##x subshellList = continuumLevel.basis.subshells
-                        subshellList = cLevel.basis.subshells
+                         subshellList = cLevel.basis.subshells
                         opa  = SpinAngular.TwoParticleOperator(0, plus, true)
                         waG2 = SpinAngular.computeCoefficients(opa, cLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList)
                         wa   = [1.0, waG2]
@@ -268,16 +257,11 @@ module AutoIonization
         Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
         
         for channel in line.channels
-            ##x newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
             newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
-            ##x @show newiLevel.basis.subshells
-            ##x newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
             newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, subshellList)
-            ##x @show newfLevel.basis.subshells
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
             cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
-            ##x @show newcLevel.basis.subshells
             newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
             amplitude  = AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
             rate       = rate + conj(amplitude) * amplitude
@@ -286,10 +270,10 @@ module AutoIonization
         totalRate = 2pi* rate;   angularAlpha = 0.
         ##  Correct for energy normalization for Yasumasa (2022)
         ##  if  line.electronEnergy < 2.0   totalRate = totalRate * (line.electronEnergy/2.0)^1.5     end
-        newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, true, newChannels)
+        newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, newChannels)
         #
         if  settings.calcAnisotropy    angularAlpha = AutoIonization.computeIntrinsicAlpha(2, newLine)
-            newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, real(angularAlpha), true, newChannels)
+            newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, real(angularAlpha), newChannels)
         end
         
         return( newLine )
@@ -332,7 +316,6 @@ module AutoIonization
         ... to compute the intrinsic alpha_k anisotropy parameter for the given line. A value::Float64 is returned.
     """
     function  computeIntrinsicAlpha(k::Int64, line::AutoIonization.Line)
-        if  !line.hasChannels   error("No channels are defined for the given AutoIonization.line.")                   end
         wn = 0.;    for  channel in line.channels    wn = wn + conj(channel.amplitude) * channel.amplitude   end
         wa = 0.;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J;
         for  cha  in line.channels  
@@ -419,10 +402,6 @@ module AutoIonization
     function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                   settings::AutoIonization.Settings; output::Bool=true, printout::Bool=true)
         
-        ##x # Define a common subshell list for both multiplets
-        ##x subshellList = Basics.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
-        ##x Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
-        
         lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
         # if  settings.printBefore    AutoIonization.displayLines(lines)    end  
@@ -471,16 +450,11 @@ module AutoIonization
             newChannels = AutoIonization.Channel[];   rate = 0.
 
             #==
-            ##x newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
             newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
-            ##x @show newiLevel.basis.subshells
-            ##x newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
-            newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, subshellList)
-            ##x @show newfLevel.basis.subshells
-            newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
+           newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, subshellList)
+           newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
             cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
-            ##x @show newcLevel.basis.subshells
             newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
             amplitude  = AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
             rate       = rate + conj(amplitude) * amplitude
@@ -499,10 +473,10 @@ module AutoIonization
                 push!( newChannels, AutoIonization.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )
             end
             totalRate = 2pi* rate;   angularAlpha = 0.
-            newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, true, newChannels)
+            newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, newChannels)
             ##
             ## if  settings.calcAnisotropy    angularAlpha = AutoIonization.computeIntrinsicAlpha(2, newLine)
-            ##  newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, real(angularAlpha), true, newChannels)
+            ##  newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, real(angularAlpha), newChannels)
             ## end
             push!( newLines, newLine)
         end
@@ -586,7 +560,7 @@ module AutoIonization
                     if   energy < 0.01                                                             continue   end
                     if   energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
                     channels = AutoIonization.determineChannels(fLevel, iLevel, settings) 
-                    push!( lines, AutoIonization.Line(iLevel, fLevel, energy, 0., 0., true, channels) )
+                    push!( lines, AutoIonization.Line(iLevel, fLevel, energy, 0., 0., channels) )
                 end
             end
         end

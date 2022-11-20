@@ -1262,7 +1262,6 @@ module SpinAngular
             end
         end
         if wa == 0.0 return( wa ) end
-        ##x if ia == 1 return( wa ) end
         for i = 1:ia-1   if leftCsf.subshellX[i] != rightCsf.subshellX[i]    wa = 0.0  end   end
         return( wa )
     end

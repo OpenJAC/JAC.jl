@@ -91,8 +91,6 @@ module MultiPhotonDoubleIon
         + NoPhotons        ::Int64           ... Number of photons in the multi-photon process
         + photonEnergy     ::Float64         ... Energy of the incoming photons; all photons are assumed to have equal energy.
         + crossSection     ::EmProperty      ... Cross section for this multi-photon ionization.
-        + hasChannels      ::Bool            ... Determines whether the individual (sub-) channels are defined in terms of 
-                                                 their multipolarities, etc., or not.
         + channels         ::Array{MultiPhotonDoubleIon.Channel,1}  ... List of MultiPhotonDoubleIon.Channels of this line.
     """
     struct  Line
@@ -101,7 +99,6 @@ module MultiPhotonDoubleIon
         NoPhotons          ::Int64 
         photonEnergy       ::Float64
         crossSection       ::EmProperty
-        hasChannels        ::Bool
         channels           ::Array{MultiPhotonDoubleIon.Channel,1}
     end
 
@@ -113,7 +110,6 @@ module MultiPhotonDoubleIon
         println(io, "NoPhotons:         $(line.NoPhotons)  ")
         println(io, "photonEnergy:      $(line.photonEnergy)  ")
         println(io, "crossSection:      $(line.crossSection)  ")
-        println(io, "hasChannels:       $(line.hasChannels)  ")
         println(io, "channels:          $(line.channels)  ")
     end
 

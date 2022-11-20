@@ -25,7 +25,6 @@ module Tools
     `Tools.perform(obs::Observable{Any})`  ... performs different tasks due to the given Observable.
     """
     function perform(obs::Observable{Any})
-        ##x println(obs[])
         #
         if      obs[] == "Start task"          println("Nothing is implemented here.")
         elseif  obs[] == "Grid calculator"     Tools.taskGridCalculator()

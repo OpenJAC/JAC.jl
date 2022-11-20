@@ -155,7 +155,6 @@
                     append!( relconfList, wa)
                 end
                 subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
-                ##x @show "aa1", subshellList
                 Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
                 wa                 = Bsplines.generatePrimitives(comp.grid)
                 hydrogenicOrbitals = Bsplines.generateOrbitalsHydrogenic(wa, comp.nuclearModel, subshellList; printout=printout)
@@ -304,11 +303,6 @@
         if  comp.initialConfigs != Configuration[]
             basis      = Basics.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
             multiplet  = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
-            ##x # Shift the initial level energy by -electronEnergyShift
-            ##x if  scheme.electronEnergyShift != 0.  
-            ##x     multiplet = Basics.shiftTotalEnergies(multiplet, Defaults.convertUnits("energy: to atomic", -scheme.electronEnergyShift))
-            ##x     println(">> Shift all initial level energies by -$(scheme.electronEnergyShift) $(Defaults.getDefaults("unit: energy"))")
-            ##x end
             multiplets = [Multiplet("initial states", multiplet.levels)]
         else
             #== # Shift the initial level energy by -electronEnergyShift

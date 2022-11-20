@@ -75,9 +75,6 @@ module PhotoIonizationAutoion
         + photonEnergy        ::Float64         ... energy of the (incoming) electron
         + electronEnergy      ::Float64         ... energy of the (finally outgoing, scattered) electron
         + crossSection        ::EmProperty      ... total cross section of this pathway
-        + hasChannels         ::Bool            ... Determines whether the individual excitation and autoionization channels 
-                                                    are defined in terms of their multipole, gauge, free-electron kappa, 
-                                                    phases and the total angular momentum/parity as well as the amplitude, or not.
         + channels            ::Array{PhotoIonizationAutoion.Channel,1}     ... List of channels of this pathway.
     """
     struct  Pathway
@@ -87,7 +84,6 @@ module PhotoIonizationAutoion
         photonEnergy          ::Float64
         electronEnergy        ::Float64
         crossSection          ::EmProperty
-        hasChannels           ::Bool
         channels              ::Array{PhotoIonizationAutoion.Channel,1}
     end 
 
@@ -111,7 +107,6 @@ module PhotoIonizationAutoion
         println(io, "photonEnergy                $(pathway.photonEnergy)  ") 
         println(io, "electronEnergy              $(pathway.electronEnergy)  ")
         println(io, "crossSection:               $(pathway.crossSection)  ")
-        println(io, "hasChannels:                $(pathway.hasChannels)  ")
         println(io, "channels:                   $(pathway.channels)  ")
     end
 

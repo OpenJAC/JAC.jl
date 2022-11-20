@@ -1108,8 +1108,6 @@
     function Basics.extractRelativisticSubshellList(level::Level)
         # Only consider CSF in the basis with non-zero mixing coefficients
         reducedSubshells = Subshell[]
-        ##x wa = findmax(abs.(level.mc));    wb = Basics.extractRelativisticSubshellList(level.basis.csfs[ wa[2] ], level.basis.subshells)
-        ##x @show wa, wa[2], wb
 
         for (i, coeff) in enumerate(level.mc)
             if  coeff*coeff  >  0.1   

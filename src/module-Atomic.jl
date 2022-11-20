@@ -35,17 +35,6 @@ module Atomic
         + intermediateAsfSettings        ::AsfSettings                     ... Provides the SCF settings for the intermediate-state multiplet.
         + finalConfigs                   ::Array{Configuration,1}          ... A list of final-state configurations.
         + finalAsfSettings               ::AsfSettings                     ... Provides the SCF and CI settings for the final-state multiplet.
-        ##x + alphaSettings                  ::AlphaVariation.Settings         ... Settings for alpha-variation parameter calculations.
-        ##x + einsteinSettings               ::Einstein.Settings               ... Settings for Einstein coefficient calculations.
-        ##x + formSettings                   ::FormFactor.Settings             ... Settings for atomic form factor calculations.
-        ##x + hfsSettings                    ::Hfs.Settings                    ... Settings for hyperfine parameter calculations.
-        ##x + isotopeSettings                ::IsotopeShift.Settings           ... Settings for isotope shift parameter calculations.
-        ##x + plasmaSettings                 ::PlasmaShift.Settings            ... Settings for plasma-shift calculations.
-        ##x + polaritySettings               ::MultipolePolarizibility.Settings .. Settings for polarizibility calculations.
-        ##x + yieldSettings                  ::DecayYield.Settings             ... Settings for fluoresence and Auger yield calculations.
-        ##x + zeemanSettings                 ::LandeZeeman.Settings            ... Settings for Lande-Zeeman coefficient calculations.
-        ##x + process                        ::Basic.AbstractProcess           
-        ##x     ... An (additional) process for which the properties are to be evaluated for the given initial- and final-state configurations.
         + processSettings                ::Basics.AbstracProcessSettings   ... Provides the settings for the selected process.
     """
     struct  Computation
@@ -96,12 +85,6 @@ module Atomic
         initialConfigs::Union{Nothing,Array{Configuration,1}}=nothing,              initialAsfSettings::Union{Nothing,AsfSettings}=nothing, 
         intermediateConfigs::Union{Nothing,Array{Configuration,1}}=nothing,         intermediateAsfSettings::Union{Nothing,AsfSettings}=nothing, 
         finalConfigs::Union{Nothing,Array{Configuration,1}}=nothing,                finalAsfSettings::Union{Nothing,AsfSettings}=nothing, 
-        ##x alphaSettings::Union{Nothing,AlphaVariation.Settings}=nothing,              einsteinSettings::Union{Nothing,Einstein.Settings}=nothing, 
-        ##x formSettings::Union{Nothing,FormFactor.Settings}=nothing,                   hfsSettings::Union{Nothing,Hfs.Settings}=nothing,
-        ##x isotopeSettings::Union{Nothing,IsotopeShift.Settings}=nothing,              plasmaSettings::Union{Nothing,PlasmaShift.Settings}=nothing, 
-        ##x polaritySettings::Union{Nothing,MultipolePolarizibility.Settings}=nothing,  yieldSettings::Union{Nothing,DecayYield.Settings}=nothing, 
-        ##x zeemanSettings::Union{Nothing,LandeZeeman.Settings}=nothing, 
-        ##x process::Union{Nothing,Basics.AbstractProcess}=nothing,                     
         processSettings::Union{Nothing,Any}=nothing,            
         printout::Bool=false)
         
@@ -117,48 +100,11 @@ module Atomic
         if  intermediateAsfSettings == nothing  intermediateAsfSettingsx = comp.intermediateAsfSettings else  intermediateAsfSettingsx = intermediateAsfSettings  end 
         if  finalConfigs            == nothing  finalConfigsx            = comp.finalConfigs            else  finalConfigsx            = finalConfigs             end 
         if  finalAsfSettings        == nothing  finalAsfSettingsx        = comp.finalAsfSettings        else  finalAsfSettingsx        = finalAsfSettings         end 
-        ##x if  alphaSettings           == nothing  alphaSettingsx           = comp.alphaSettings           else  alphaSettingsx           = alphaSettings            end 
-        ##x if  einsteinSettings        == nothing  einsteinSettingsx        = comp.einsteinSettings        else  einsteinSettingsx        = einsteinSettings         end 
-        ##x if  formSettings            == nothing  formSettingsx            = comp.formSettings            else  formSettingsx            = formSettings             end 
-        ##x if  hfsSettings             == nothing  hfsSettingsx             = comp.hfsSettings             else  hfsSettingsx             = hfsSettings              end 
-        ##x if  isotopeSettings         == nothing  isotopeSettingsx         = comp.isotopeSettings         else  isotopeSettingsx         = isotopeSettings          end 
-        ##x if  plasmaSettings          == nothing  plasmaSettingsx          = comp.plasmaSettings          else  plasmaSettingsx          = plasmaSettings           end 
-        ##x if  polaritySettings        == nothing  polaritySettingsx        = comp.polaritySettings        else  polaritySettingsx        = polaritySettings         end 
-        ##x if  yieldSettings           == nothing  yieldSettingsx           = comp.yieldSettings           else  yieldSettingsx           = yieldSettings            end 
-        ##x if  zeemanSettings          == nothing  zeemanSettingsx          = comp.zeemanSettings          else  zeemanSettingsx          = zeemanSettings           end 
-        ##x if  process                 == nothing  processx                 = comp.process                 else  processx                 = process                  end 
         if  processSettings         == nothing  prsx                     = comp.processSettings         else  prsx                     = processSettings          end 
         
-        #==
-        if      processx == Basics.NoProcess                                                              prsx = PhotoEmission.Settings()
-        elseif  processx == Basics.Auger            && typeof(prsx) != AutoIonization.Settings            prsx = AutoIonization.Settings()
-        elseif  processx == Basics.AugerInPlasma    && typeof(prsx) != PlasmaShift.AugerSettings          prsx = PlasmaShift.AugerSettings()
-        elseif  processx == Basics.Radiative        && typeof(prsx) != PhotoEmission.Settings             prsx = PhotoEmission.Settings()
-        elseif  processx == Basics.PhotoExc         && typeof(prsx) != PhotoExcitation.Settings           prsx = PhotoExcitation.Settings()
-        elseif  process == Basics.Photo             && typeof(prsx) != PhotoIonization.Settings           prsx = PhotoIonization.Settings()
-        elseif  process == Basics.PhotoInPlasma     && typeof(prsx) != PlasmaShift.PhotoSettings          prsx = PlasmaShift.PhotoSettings()
-        elseif  process == Basics.Rec               && typeof(prsx) != PhotoRecombination.Settings        prsx = PhotoRecombination.Settings()
-        elseif  process == Basics.Dierec            && typeof(prsx) != Dielectronic.Settings              prsx = Dielectronic.Settings()
-        elseif  process == Basics.PhotoExcFluor     && typeof(prsx) != PhotoExcitationFluores.Settings    prsx = PhotoExcitationFluores.Settings()
-        elseif  process == Basics.PhotoExcAuto      && typeof(prsx) != PhotoExcitationAutoion.Settings    prsx = PhotoExcitationAutoion.Settings()
-        elseif  process == Basics.PhotoIonFluor     && typeof(prsx) != PhotoIonizationFluores.Settings    prsx = PhotoIonizationFluores.Settings()
-        elseif  process == Basics.PhotoIonAuto      && typeof(prsx) != PhotoIonizationAutoion.Settings    prsx = PhotoIonizationAutoion.Settings()
-        elseif  process == Basics.MultiPhotonDE     && typeof(prsx) != MultiPhotonDeExcitation.Settings   prsx = MultiPhotonDeExcitation.Settings()
-        elseif  process == Basics.Compton           && typeof(prsx) != RayleighCompton.Settings           prsx = RayleighCompton.Settings()
-        elseif  process == Basics.Eimex             && typeof(prsx) != ImpactExcitation.Settings          prsx = ImpactExcitation.Settings()
-        elseif  process == Basics.ImpactExcAuto     && typeof(prsx) != ImpactExcitationAutoion.Settings   prsx = ImpactExcitationAutoion.Settings()
-        elseif  process == Basics.RAuger            && typeof(prsx) != RadiativeAuger.Settings            prsx = RadiativeAuger.Settings()
-        elseif  process == Basics.MultiPI           && typeof(prsx) != MultiPhotonIonization.Settings     prsx = MultiPhotonIonization.Settings()
-        elseif  process == Basics.MultiPDI          && typeof(prsx) != MultiPhotonDoubleIon.Settings      prsx = MultiPhotonDoubleIon.Settings()
-        elseif  process == Basics.InternalConv      && typeof(prsx) != InternalConversion.Settings        prsx = InternalConversion.Settings()
-        elseif  process == Basics.Coulex            && typeof(prsx) != CoulombExcitation.Settings         prsx = CoulombExcitation.Settings()
-        elseif  process == Basics.Coulion           && typeof(prsx) != CoulombIonization.Settings         prsx = CoulombIonization.Settings()
-        end  ==#
         
         cp = Computation(namex, nuclearModelx, gridx, propertySettingsx, configsx, asfSettingsx, initialConfigsx, initialAsfSettingsx,     
                          intermediateConfigsx,  intermediateAsfSettingsx, finalConfigsx, finalAsfSettingsx,        
-                         ##x alphaSettingsx, einsteinSettingsx , formSettingsx, hfsSettingsx, isotopeSettingsx, plasmaSettingsx,
-                         ##x polaritySettingsx, yieldSettingsx, zeemanSettingsx,  processx, 
                          prsx) 
                          
         if printout  Base.show(cp)      end
