@@ -68,7 +68,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        generate, GreenSettings, GreenChannel, GreenExpansion, getDefaults, Green, Gui,
        Hfs, HighHarmonic, HFS, HydrogenicIon,
        interpolate, integrate, Integral, ImpactExcAuto, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, 
-       InternalConv, InternalConversion, Isotope, IsotopeShift, 
+       InteractionStrength, InternalConv, InternalConversion, Isotope, IsotopeShift, 
        Kronecker,
        LandeZeeman, LandeJ,  LandeF, Level, LevelSymmetry, LSjj, LSjjSettings, LevelSelection, LineSelection, 
        ManyElectron, MeanFieldSettings, MeanFieldBasis, minus, Model, modify, MultiPhotonDE, MultiPhotonDeExcitation, MultiPhotonDoubleIon, 
@@ -204,7 +204,7 @@ function __init__()
 end
 
 println("\nWelcome to JAC:  A community approach to the computation of atomic structures, cascades and time evolutions " * 
-        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2021)].")
+        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2023)].")
 
 end
 

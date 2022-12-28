@@ -10,7 +10,9 @@
     function computeContinuumOrbitals(scheme::Cascade.RadiativeRecombinationScheme, comp::Cascade.Computation, level::ManyElectron.Level)
         cOrbitals = Dict{Subshell, Orbital}()
         # Generate potential for continuum orbitals for this step
-        enGrid       = Radial.GridGL("Finite", 0.0, scheme.maxFreeElectronEnergy, scheme.NoFreeElectronEnergies, printout=false)
+        maxFreeElectronEnergy_au  = Defaults.convertUnits("energy: to atomic", scheme.maxFreeElectronEnergy)
+        enGrid       = Radial.GridGL("Finite", 0.0, maxFreeElectronEnergy_au, scheme.NoFreeElectronEnergies, printout=false)
+        @show "computeContinuumOrbitals", enGrid.t
         maxKappa     = maximum(scheme.lValues) + 1
         nrContinuum  = Continuum.gridConsistency(maximum(enGrid.t) + 0.1, comp.grid)
         contSettings = Continuum.Settings(false, nrContinuum);   
@@ -24,6 +26,7 @@
             for  kappa = -maxKappa:maxKappa     
                 if  kappa == 0      continue    end
                 sh    = Subshell(100+ie, kappa)
+                @show "computeContinuumOrbitals", en
                 cOrbital, phase, normF  = Continuum.generateOrbitalLocalPotential(en, sh, pot, contSettings)
                 cOrbitals[sh]           = cOrbital
                 println(">> New continum orbital generated for $sh and energy $en ")
@@ -44,7 +47,9 @@
     function computeSteps(scheme::Cascade.RadiativeRecombinationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
         linesRR = PhotoRecombination.Line[]
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        enGrid       = Radial.GridGL("Finite", 0.0, scheme.maxFreeElectronEnergy, scheme.NoFreeElectronEnergies, printout=false)
+        maxFreeElectronEnergy_au  = Defaults.convertUnits("energy: to atomic", scheme.maxFreeElectronEnergy)
+        enGrid       = Radial.GridGL("Finite", 0.0, maxFreeElectronEnergy_au, scheme.NoFreeElectronEnergies, printout=false)
+        @show "computeContinuumOrbitals", enGrid.t
         nt = 0;   st = 0;   previousMeanEn = 0.
         # First compute all necessary continuum orbitals
         cOrbitals = Cascade.computeContinuumOrbitals(scheme, comp, stepList[1].initialMultiplet.levels[1])
@@ -82,8 +87,11 @@
     function determineSteps(scheme::Cascade.RadiativeRecombinationScheme, comp::Cascade.Computation, 
                             initialList::Array{Cascade.Block,1}, capturedList::Array{Cascade.Block,1})
         # Determine a (free-electron) energy grid 
-        enGrid   = Radial.GridGL("Finite", 0.0, scheme.maxFreeElectronEnergy, scheme.NoFreeElectronEnergies, printout=true)
-        @show  enGrid.t
+        println(" ")
+        maxFreeElectronEnergy_au  = Defaults.convertUnits("energy: to atomic", scheme.maxFreeElectronEnergy)
+        enGrid       = Radial.GridGL("Finite", 0.0, scheme.maxFreeElectronEnergy, scheme.NoFreeElectronEnergies, printout=true)
+        @show "determineSteps", enGrid.t
+        println(">> Energy grid points:  $(enGrid.t[1:3])  ...  $(enGrid.t[end-2:end])")
         stepList = Cascade.Step[]
         if  comp.approach  in  [Cascade.AverageSCA(), Cascade.SCA()]
             for  capturedBlock in capturedList
@@ -288,7 +296,7 @@
         # Generate subsequent cascade configurations as well as display and group them together
         wa  = Cascade.generateConfigurationsForRadiativeRecombination(multiplets, comp.scheme, comp.nuclearModel, comp.grid)
         wb1 = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa[1], sa="initial configurations of the RR cascade ")
-        wb2 = Cascade.groupDisplayConfigurationList(comp.nuclearModel.Z, wa[2], sa="final configurations of the RR cascade ")
+        wb2 = Cascade.groupDisplayConfigurationList(37., wa[2], sa="final configurations of the RR cascade ")  # Use Z such that no mean binding energy is computed.
         #
         # Determine first all configuration 'blocks' and from them the individual steps of the cascade
         wc1 = Cascade.generateBlocks(scheme, comp::Cascade.Computation, wb1)

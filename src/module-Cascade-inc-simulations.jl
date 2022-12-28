@@ -1331,9 +1331,17 @@
             for  line  in  lines
                 # Determine cross section of this line
                 cs  = EmProperty(0., 0.)
-                if   simulation.property.finalLevelSelection.active  &&  
-                     !(line.finalLevel.index  in  simulation.property.finalLevelSelection.indices)    continue    end
-                pcs = PhotoRecombination.computeCrossSectionForMultipoles(simulation.property.multipoles, line.channels)
+                if   length(simulation.property.finalConfigurations) > 0
+                    # If finalConfigurations are given, only their contributions are counted and all final levels just
+                    # refer to these configurations
+                    finalConfigurations = Basics.extractNonrelativisticConfigurations(line.finalLevel.basis)
+                    if  !(finalConfigurations[1]  in  simulation.property.finalConfigurations)           continue    end
+                    if   simulation.property.finalLevelSelection.active  &&  
+                        !(line.finalLevel.index  in  simulation.property.finalLevelSelection.indices)    continue    end
+                    @show finalConfigurations
+                else  println("No configuration/level selection.")
+                end 
+                pcs = PhotoRecombination.computeCrossSectionForMultipoles(simulation.property.multipoles, line)
                 cs  = cs + pcs
                 #==
                 # Determine cross section if only one final level contributes; for test purposes
@@ -1343,7 +1351,7 @@
                       cs = EmProperty(wb, wb)
                 else  cs = EmProperty(0., 0.)
                 end  ==#
-                wa = wa + 2 / sqrt(2pi) / temp_au^(3/2) * factor * line.electronEnergy * 
+                wa = wa + 2*2 / sqrt(2pi) / temp_au^(3/2) * factor * line.electronEnergy * 
                           exp(-line.electronEnergy / temp_au ) * line.weight * cs
             end
             push!(alphaRR, wa)

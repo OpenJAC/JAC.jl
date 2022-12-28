@@ -264,8 +264,9 @@ module PhotoRecombination
         
         fOrbital = HydrogenicIon.orbital(subshell, nm, grid)
         omega    = energy - fOrbital.energy
+        @show omega, energy, fOrbital.energy
         #
-        cs = 0.;       maxKappa = 4;        contSettings = Continuum.Settings(false, nrContinuum);   
+        csa = 0.;       maxKappa = 4;        contSettings = Continuum.Settings(false, nrContinuum);   
         jf = Basics.subshell_j(subshell);   lf           = Basics.subshell_l(subshell)
         if   iseven(lf)   symf = LevelSymmetry( jf, Basics.plus )   else   symf = LevelSymmetry( jf, Basics.minus ) end
         @show  energy_eV, nm.Z, omega, energy, gauge, subshell, symf, fOrbital.energy
@@ -283,19 +284,23 @@ module PhotoRecombination
                     cOrbital, phase, normFactor = Continuum.generateOrbitalLocalPotential(energy, 
                                                                            Subshell(101,kappa), potential, contSettings)
                     ##x @show phase, normFactor, multipole, gauge, omega
-                    amplitude = InteractionStrength.MabEmissionJohnsony(multipole, gauge, omega, fOrbital, cOrbital, grid) 
+                    if multipole in  [E1, E2]  localGauge = gauge  elseif  multipole in  [M1, M2]  localGauge = Basics.Magnetic   end
+                    amplitude = InteractionStrength.MabEmissionJohnsony(multipole, localGauge, omega, fOrbital, cOrbital, grid) / 
+                                Defaults.getDefaults("alpha")
+                    @show amplitude,  symc,  localGauge, multipole
                     ## amplitude = InteractionStrength.MbaEmissionCheng(multipole, gauge, omega, fOrbital, cOrbital, grid) 
                     ##x @show  subshell, multipole, Subshell(101,kappa), amplitude, cs
-                    cs = cs + conj(amplitude) * amplitude
+                    csa = csa + conj(amplitude) * amplitude
                 end
             end          
         end
         #
-        cs = 160. * pi^3 * Defaults.getDefaults("alpha")^2 * omega / energy * abs(cs) / (Basics.twice(jf) +1)
+        ## cs = 160. * pi^3 * Defaults.getDefaults("alpha")^2 * omega / energy * abs(cs) / (Basics.twice(jf) +1)
         ## cs = 8 * pi^3 * Defaults.getDefaults("alpha")^3 / omega * abs(cs)
-        cs = Defaults.convertUnits("cross section: from atomic to barn", cs)
+        cs = 8 * pi^3 * Defaults.getDefaults("alpha")^3 * omega / (Basics.twice(jf) +1) / 2. / energy * abs(csa)
+        csBarn = Defaults.convertUnits("cross section: from atomic to barn", cs)
         
-        println("***** RR cross section for energy = $(energy_eV) eV is  $cs  barn")
+        println("***** RR cross section for energy = $(energy_eV) eV is $csa a.u.   $csBarn  barn")
         
         return( cs )
     end
@@ -310,17 +315,19 @@ module PhotoRecombination
         csC = 0.;    csB = 0.
         for channel  in  line.channels
             if  !(channel.multipole  in  multipoles)     continue                 end
-            amplitude = ComplexF64(0.)
+            amplitude = channel.amplitude
+            ##x @show  channel.multipole, channel.symmetry, abs(channel.amplitude)^2
             if       channel.gauge == Basics.Coulomb     csC = csC + abs(amplitude)^2
             elseif   channel.gauge == Basics.Babushkin   csB = csB + abs(amplitude)^2
             elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
             end
         end
-        Ji2 = Basics.twice(line.initialLevel.J)
-        csFactor     = 8 * pi^3 / Defaults.getDefaults("alpha") / line.photonEnergy
-        ## csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 / line.photonEnergy / (Ji2 + 1)
-        ## crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
-        crossSection = EmProperty(csFactor * csC, csFactor * csB)
+        ##x Ji2 = Basics.twice(line.initialLevel.J)
+        ## csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha") * line.photonEnergy / (Basics.twice(line.finalLevel.J)+1) /
+        ##                2. / line.electronEnergy
+        ## crossSection = EmProperty(csFactor * csC, csFactor * csB)
+        csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 * line.photonEnergy / (Basics.twice(line.finalLevel.J)+1) 
+        crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
         
         return( crossSection )
     end
@@ -391,9 +398,12 @@ module PhotoRecombination
             for channel in line.channels
                 newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, line.finalLevel.basis.subshells)
                 newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, newfLevel.basis.subshells)
-                en         = line.electronEnergy;    ieList = findall(x->x==en, energyGrid.t);
-                @show  ie, ieList, en, energyGrid.t 
-                ie         = ieList[1]  
+                en         = line.electronEnergy
+                # Find index of en in energyGrid.t with given accuracy; terminate if nothing is found
+                ie = 0;     
+                for  it = 1:length(energyGrid.t)   if   abs( (energyGrid.t[it]-en)/en ) < 0.0001   ie = it;   break   end   end
+                if  ie == 0   stop("a")     end
+                ##x @show  ie, en, energyGrid.t 
                 cSubsh     = Subshell(100+ie, channel.kappa)
                 newfLevel  = Basics.generateLevelWithExtraSubshell(cSubsh, newfLevel)
                 cOrbital   = cOrbitals[cSubsh];      phase = 0.
@@ -407,12 +417,10 @@ module PhotoRecombination
                 elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
                 end
             end
-            Ji2 = Basics.twice(line.initialLevel.J)
-            csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 * line.photonEnergy / (Ji2 + 1)
-            ## crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
-            crossSection = EmProperty(csFactor * csC, csFactor * csB)
+            csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha")^3 * line.photonEnergy / (Basics.twice(line.finalLevel.J)+1) 
+            crossSection = 1.0 /line.betaGamma2 * EmProperty(csFactor * csC, csFactor * csB)
             newLine      = PhotoRecombination.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, line.betaGamma2, 
-                                                    energyGrid.wt[ie], crossSection, true, newChannels)
+                                                    energyGrid.wt[ie], crossSection, newChannels)
             push!( newLines, newLine)
         end
         # Print all results to screen
@@ -692,7 +700,7 @@ module PhotoRecombination
             returned otherwise.
     """
     function  displayResults(stream::IO, lines::Array{PhotoRecombination.Line,1}, settings::PhotoRecombination.Settings)
-        if  settings.useIonEnergies   nx = 165    else  nx = 141   end
+        if  settings.useIonEnergies   nx = 170    else  nx = 146   end
         println(stream, " ")
         println(stream, "  Photorecombination cross sections:")
         println(stream, "  ")
@@ -747,25 +755,30 @@ module PhotoRecombination
         #
         #
         if  settings.calcTotalCs 
-            nx = 133
+            nx = 143
             println(stream, " ")
             println(stream, "  Total photorecombination cross sections for the intial levels:")
             println(stream, " ")
             println(stream, "  ", TableStrings.hLine(nx))
             sa = "  ";   sb = "  "
             sa = sa * TableStrings.center(18, "i-level"   ; na=0);                       sb = sb * TableStrings.hBlank(20)
-            sa = sa * TableStrings.center(16, "i--J^P "   ; na=3);                       sb = sb * TableStrings.hBlank(19)
-            sa = sa * TableStrings.center(12, "i--Energy "; na=4)               
+            sa = sa * TableStrings.center(12, "i--J^P "   ; na=3);                       sb = sb * TableStrings.hBlank(13)
+            sa = sa * TableStrings.center(12, "i--Energy "; na=3)               
             sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
-            sa = sa * TableStrings.center(12, "omega"     ; na=4)             
+            sa = sa * TableStrings.center(12, "omega"     ; na=5)             
             sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
             sa = sa * TableStrings.center(12, "Energy e_r"; na=3)             
             sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
-            sa = sa * TableStrings.center(10, "Multipoles"; na=5);                         sb = sb * TableStrings.hBlank(15)
-            sa = sa * TableStrings.flushleft(57, "Total cross section"; na=4)  
+            sa = sa * TableStrings.center(10, "Multipoles"; na=17);                      sb = sb * TableStrings.hBlank(15)
+            sa = sa * TableStrings.flushleft(57, "Cou -- Total cross section -- Bab"; na=4)  
+            sb = sb * TableStrings.center(57, TableStrings.inUnits("cross section") * "          " * 
+                                              TableStrings.inUnits("cross section");  na=4)
             println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-            #   
+            #
+            index = Int64[];    eEnergy = Float64[]
             for  line in lines
+                if  line.initialLevel.index  in  index  &&  line.electronEnergy  in  eEnergy   continue  end
+                push!(index, line.initialLevel.index);    push!(eEnergy, line.electronEnergy) 
                 sa  = " ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                 sa = sa * TableStrings.center(17, TableStrings.level(line.initialLevel.index))
                 sa = sa * TableStrings.center(17, string(isym))
@@ -777,8 +790,15 @@ module PhotoRecombination
                 for  ch in line.channels
                     multipoles = push!( multipoles, ch.multipole)
                 end
-                multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
-                sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=3)
+                multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "                              "
+                sa = sa * TableStrings.flushleft(26, mpString[1:26];  na=3)
+                tcs = Basics.EmProperty(0.)
+                for  lineb  in  lines
+                    if  lineb.initialLevel.index == line.initialLevel.index  &&
+                        lineb.electronEnergy     == line.electronEnergy      tcs = tcs + lineb.crossSection   end
+                end
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", tcs.Coulomb))     * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", tcs.Babushkin))   * "    "
                 println(stream, sa);   sa = TableStrings.hBlank(102)
             end
             println(stream, "  ", TableStrings.hLine(nx))
@@ -867,8 +887,8 @@ module PhotoRecombination
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         #   
         println(stream, "  ")
-        sa = "  alpha^DR (T, i; Coulomb gauge):    " 
-        sb = "  alpha^DR (T, i; Babushkin gauge):  " 
+        sa = "  alpha^RR (T, i; Coulomb gauge):    " 
+        sb = "  alpha^RR (T, i; Babushkin gauge):  " 
         for  nt = 1:min(ntemps, 7) 
             sa = sa * @sprintf("%.4e", alphaRR[nt].Coulomb)    * "       "
             sb = sb * @sprintf("%.4e", alphaRR[nt].Babushkin)  * "       "

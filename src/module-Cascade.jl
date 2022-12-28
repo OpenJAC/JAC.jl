@@ -906,7 +906,11 @@ module Cascade
             ... temperatures [K] for which the DR plasma rate coefficieints to be calculated.
         + multipoles          ::Array{EmMultipole}           
             ... Multipoles of the radiation field that are to be included into the excitation processes.
-        + finalLevelSelection ::LevelSelection    ... Specifies the selected final levels, if any.
+        + finalLevelSelection ::LevelSelection    
+            ... Specifies the selected final levels of some given final-state configurations; these final level numbers/
+                symmetries always refer to single configurations.
+        + finalConfigurations ::Array{Configuration,1}
+        
 
     """  
     struct  RrRateCoefficients   <:  Cascade.AbstractSimulationProperty
@@ -914,6 +918,7 @@ module Cascade
         temperatures          ::Array{Float64,1}
         multipoles            ::Array{EmMultipole} 
         finalLevelSelection   ::LevelSelection
+        finalConfigurations   ::Array{Configuration,1}
     end 
 
 
@@ -921,7 +926,7 @@ module Cascade
     `Cascade.RrRateCoefficients()`  ... (simple) constructor for cascade RrRateCoefficients.
     """
     function RrRateCoefficients()
-        RrRateCoefficients(1, Float64[], EmMultipole[], LevelSelection())
+        RrRateCoefficients(1, Float64[], EmMultipole[], LevelSelection(), Configuration[])
     end
 
 
@@ -930,7 +935,8 @@ module Cascade
         println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
         println(io, "temperatures:             $(dist.temperatures)  ")
         println(io, "multipoles:               $(dist.multipoles)  ")
-        println(io, "finalLevelSelection:      $(dist.levelSelection)  ")
+        println(io, "finalLevelSelection:      $(dist.finalLevelSelection)  ")
+        println(io, "finalConfigurations:      $(dist.finalConfigurations)  ")
     end
 
 
