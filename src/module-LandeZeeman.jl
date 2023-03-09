@@ -244,7 +244,10 @@ module LandeZeeman
             amplitudeDeltaN1 = LandeZeeman.amplitude("Delta N^(1) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
         end
         #
-        if  settings.calcLandeJ    LandeJ = 2*(amplitudeN1 + amplitudeDeltaN1) / sqrt(J*(J+1))    end
+        if       J == 0.                LandeJ = 0.
+        elseif   settings.calcLandeJ    LandeJ = 2*(amplitudeN1 + amplitudeDeltaN1) / sqrt(J*(J+1))    
+        end
+        @show J, LandeJ, amplitudeN1, amplitudeDeltaN1
 
         
         newOutcome = LandeZeeman.Outcome( outcome.Jlevel, LandeJ, amplitudeN1, amplitudeDeltaN1, outcome.nuclearI, 

@@ -1072,18 +1072,6 @@ module Cascade
 
 
     """
-    `struct  Cascade.FinalLevelDistribution   <:  Cascade.AbstractSimulationProperty`  
-        ... defines a type for simulating the 'final-level distribution' as it is found after all cascade processes are completed.
-
-        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
-            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
-    """  
-    struct  FinalLevelDistribution   <:  Cascade.AbstractSimulationProperty
-        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
-    end 
-
-
-    """
     `struct  Cascade.ElectronIntensities   <:  Cascade.AbstractSimulationProperty`  
         ... defines a type for simulating the electron-line intensities as function of electron energy.
 
@@ -1116,10 +1104,30 @@ module Cascade
 
 
     """
+    `struct  Cascade.FinalLevelDistribution   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the 'final-level distribution' as it is found after all cascade processes are completed.
+
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+        + leadingConfigs      ::Array{Configuration,1}   
+            ... List of leading configurations whose levels are equally populated, either initially or ....
+        + finalConfigs        ::Array{Configuration,1}   
+            ... List of final configurations whose level population are to be "listed" finally; these configuration
+                only determine the printout but not the propagation of the probabilities. If this list is empty, all 
+                the levels are shown.
+    """  
+    struct  FinalLevelDistribution   <:  Cascade.AbstractSimulationProperty
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+        leadingConfigs        ::Array{Configuration,1}
+        finalConfigs          ::Array{Configuration,1}
+    end 
+
+
+    """
     `Cascade.FinalLevelDistribution()`  ... (simple) constructor for cascade FinalLevelDistribution.
     """
     function FinalLevelDistribution()
-        FinalLevelDistribution([(1, 1.0)])
+        FinalLevelDistribution([(1, 1.0)], Configuration[], Configuration[])
     end
 
 
@@ -1127,6 +1135,8 @@ module Cascade
     #       ... prepares a proper printout of the variable data::Cascade.FinalLevelDistribution.
     function Base.show(io::IO, dist::Cascade.FinalLevelDistribution) 
         println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+        println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
+        println(io, "finalConfigs:             $(dist.finalConfigs)  ")
     end
 
 
@@ -1377,6 +1387,7 @@ module Cascade
         + J            ::AngularJ64                  ... total angular momentum of the level
         + parity       ::Basics.Parity               ... total parity of the level
         + NoElectrons  ::Int64                       ... total number of electrons of the ion to which this level belongs.
+        + majorConfig  ::Configuration               ... major (dominant) configuration of this level.
         + relativeOcc  ::Float64                     ... relative occupation  
         + parents      ::Array{Cascade.LineIndex,1}  ... list of parent lines that (may) populate the level.     
         + daugthers    ::Array{Cascade.LineIndex,1}  ... list of daugther lines that (may) de-populate the level.     
@@ -1386,6 +1397,7 @@ module Cascade
         J              ::AngularJ64 
         parity         ::Basics.Parity 
         NoElectrons    ::Int64 
+        majorConfig    ::Configuration 
         relativeOcc    ::Float64 
         parents        ::Array{Cascade.LineIndex,1} 
         daugthers      ::Array{Cascade.LineIndex,1} 
@@ -1398,6 +1410,7 @@ module Cascade
         println(io, "J:             $(level.J)  ")
         println(io, "parity:        $(level.parity)  ")
         println(io, "NoElectrons:   $(level.NoElectrons)  ")
+        println(io, "majorConfig:   $(level.majorConfig)  ")
         println(io, "relativeOcc:   $(level.relativeOcc)  ")
         println(io, "parents:       $(level.parents)  ")
         println(io, "daugthers:     $(level.daugthers)  ")

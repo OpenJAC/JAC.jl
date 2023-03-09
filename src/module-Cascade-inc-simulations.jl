@@ -144,11 +144,11 @@
 
 
     """
-    `Cascade.displayLevelDistribution(stream::IO, sc::String, levels::Array{Cascade.Level,1})` 
+    `Cascade.displayFinalLevelDistribution(stream::IO, sc::String, levels::Array{Cascade.Level,1}, finalConfigs::Array{Configuration,1})` 
         ... displays the (current or final) level distribution in a neat table. Only those levels with a non-zero 
             occupation are displayed here. Nothing is returned.
     """
-    function displayLevelDistribution(stream::IO, sc::String, levels::Array{Cascade.Level,1})
+    function displayFinalLevelDistribution(stream::IO, sc::String, levels::Array{Cascade.Level,1}, finalConfigs::Array{Configuration,1})
         minElectrons = 1000;   maxElectrons = 0;   energies = zeros(length(levels));    nx = 69
         for  i = 1:length(levels)
             minElectrons = min(minElectrons, levels[i].NoElectrons);   maxElectrons = max(maxElectrons, levels[i].NoElectrons)
@@ -165,7 +165,7 @@
         sa = sa * TableStrings.center( 8, "Lev-No"; na=2)        
         sa = sa * TableStrings.center( 6, "J^P"          ; na=3);               
         sa = sa * TableStrings.center(16, "Energy " * TableStrings.inUnits("energy"); na=5)
-        sa = sa * TableStrings.center(10, "Rel. occ.";                                    na=2)
+        sa = sa * TableStrings.center(10, "Rel. occ.";                                na=2)
         println(stream, sa)
         println(stream, "  ", TableStrings.hLine(nx))
         for n = maxElectrons:-1:minElectrons
@@ -178,7 +178,9 @@
                     sb = sb * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", levels[en].energy))  * "      "
                     sb = sb * @sprintf("%.5e", levels[en].relativeOcc) 
                     sa = "           "
-                    println(stream, sb)
+                    if       length(finalConfigs) == 0                       println(stream, sb)
+                    elseif   levels[en].majorConfig  in  finalConfigs        println(stream, sb)
+                    end
                 end
             end
         end
@@ -479,21 +481,25 @@
         
         for  i = 1:length(data.linesR)
             line = data.linesR[i]
+            major  = Basics.extractLeadingConfiguration(line.initialLevel)
             iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Radiative(), i)] ) 
+                                    major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Radiative(), i)] ) 
             Cascade.pushLevels!(levels, iLevel)  
+            major  = Basics.extractLeadingConfiguration(line.finalLevel)
             fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
+                                    major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
             Cascade.pushLevels!(levels, fLevel)  
         end
 
         for  i = 1:length(data.linesA)
             line = data.linesA[i]
+            major  = Basics.extractLeadingConfiguration(line.initialLevel)
             iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Auger(), i)] ) 
+                                    major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Auger(), i)] ) 
             Cascade.pushLevels!(levels, iLevel)  
+            major  = Basics.extractLeadingConfiguration(line.finalLevel)
             fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Auger(), i)], Cascade.LineIndex[] ) 
+                                    major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Auger(), i)], Cascade.LineIndex[] ) 
             Cascade.pushLevels!(levels, fLevel)  
         end
         
@@ -744,7 +750,7 @@
         elseif  typeof(simulation.property) == Cascade.FinalLevelDistribution  &&   simulation.method == Cascade.ProbPropagation()
                                              # ------------------------------
             levels = Cascade.reviewData(simulation, ascendingOrder=true)
-            wa     = Cascade.simulateLevelDistribution(levels, simulation) 
+            wa     = Cascade.simulateFinalLevelDistribution(levels, simulation) 
             #
         elseif  typeof(simulation.property) == Cascade.PhotonIntensities       &&   simulation.method == Cascade.ProbPropagation()
                                              # -------------------------
@@ -841,7 +847,7 @@
         
         n = 0
         println("\n*  Probability propagation through $(length(levels)) levels of the cascade:")
-        while true
+        while n < 2  ## true ## 
             n = n + 1;    totalProbability = 0.
             print("    $n-th round ... ")
             relativeOcc = zeros(length(levels));    relativeLoss = zeros(length(levels))
@@ -873,8 +879,9 @@
                             elseif  daugther.process == Basics.Photo()         line = daugther.lineSet.linesP[idx]
                             else    error("stop b; process = $(daugther.process) ")
                             end
+                            major    = Basics.extractLeadingConfiguration(line.finalLevel)
                             newLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, 
-                                                      line.finalLevel.basis.NoElectrons, 0., Cascade.LineIndex[], Cascade.LineIndex[] )
+                                                      line.finalLevel.basis.NoElectrons, major, 0., Cascade.LineIndex[], Cascade.LineIndex[] )
                             kk    = Cascade.findLevelIndex(newLevel, levels)
                             relativeOcc[kk] = relativeOcc[kk] + prob * rates[i] / totalRate
                             #
@@ -1114,6 +1121,30 @@
     
 
     """
+    `Cascade.simulateFinalLevelDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
+        ... sorts all levels as given by data and propagates their (occupation) probability until no further changes occur. For this 
+            propagation, it runs through all levels and propagates the probability until no level probability changes anymore. 
+            Nothing is returned.
+    """
+    function simulateFinalLevelDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        # Specify and display the initial (relative) occupation
+        if length(simulation.property.initialOccupations) > 0
+                Cascade.specifyInitialOccupation!(levels, simulation.property.initialOccupations) 
+        else    Cascade.specifyInitialOccupation!(levels, simulation.property.leadingConfigs) 
+        end
+        Cascade.displayRelativeOccupation(stdout, levels)
+        #
+        Cascade.propagateProbability!(levels, collectPhotonIntensities=false)  
+        #
+        finalDist = Cascade.displayFinalLevelDistribution(stdout, simulation.name, levels, simulation.property.finalConfigs)     
+        if  printSummary   Cascade.displayFinalLevelDistribution(iostream, simulation.name, levels, simulation.property.finalConfigs)      end
+
+        return( finalDist )
+    end
+    
+
+    """
     `Cascade.simulateIonDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
         ... sorts all levels as given by data and propagates their (occupation) probability until no further changes occur. For this 
             propagation, it runs through all levels and propagates the probabilty until no level probability changes anymore. The final 
@@ -1311,10 +1342,10 @@
     function simulateRrRateCoefficients(lines::Array{PhotoRecombination.Line,1}, simulation)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         # Check consistency of data
-        isym = LevelSymmetry(lines[1].initialLevel.J, lines[1].initialLevel.parity)
-        for  line  in  lines
-             if  LevelSymmetry(line.initialLevel.J, line.initialLevel.parity) != isym   error("error a")    end
-        end
+        isym = LevelSymmetry(lines[1].initialLevel.J, lines[1].initialLevel.parity);   @show isym
+        ## for  line  in  lines
+        ##     if  LevelSymmetry(line.initialLevel.J, line.initialLevel.parity) != isym   error("error a")    end
+        ## end
         
         # Convert units into cm^3 / s
         factor  = Defaults.convertUnits("length: from atomic to fm", 1.0)^3 * 1.0e-39 * 
@@ -1329,6 +1360,8 @@
             #
             ## @warn "Cross sections not yet properly set."
             for  line  in  lines
+                if  LevelSymmetry(line.initialLevel.J, line.initialLevel.parity) != 
+                    LevelSymmetry(AngularJ64(1), Basics.plus)                                        continue    end
                 # Determine cross section of this line
                 cs  = EmProperty(0., 0.)
                 if   length(simulation.property.finalConfigurations) > 0

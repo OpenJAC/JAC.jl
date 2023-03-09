@@ -264,8 +264,15 @@ module ImpactExcitation
             push!( newChannels, ImpactExcitation.Channel(newChannel.initialKappa, newChannel.finalKappa, newChannel.symmetry, iPhase, fPhase, amplitude) )
         end
         # Calculate the electron-impact excitation strength and cross section
+        ecorr   = abs( line.initialElectronEnergy / (line.finalLevel.energy - line.initialLevel.energy) );  @show  ecorr
+        ##x coll    = 8 * coll * ecorr^0.48
+        coll    = 8 * coll
         cross   = coll
-        newLine = ImpactExcitation.Line( line.initialLevel, line.finalLevel, line.initialElectronEnergy, line.finalElectronEnergy, coll.re, cross.re, newChannels)
+        ki2     = line.initialElectronEnergy / 2. * (1 + Defaults.getDefaults("alpha") / 2. * line.initialElectronEnergy)
+        ##x coll    = 8.0 * coll
+        ##x cross   = 4 * pi * coll / ki2 / (Basics.twice(line.initialLevel.J) + 1)
+        newLine = ImpactExcitation.Line( line.initialLevel, line.finalLevel, line.initialElectronEnergy, line.finalElectronEnergy, 
+                                         coll.re, cross.re, newChannels)
         return( newLine )
     end
 
@@ -324,7 +331,7 @@ module ImpactExcitation
         channels = ImpactExcitation.Channel[];   
         symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
         #
-        for  inKappa = -(settings.maxKappa+1):settings.maxKappa
+        for  inKappa = -settings.maxKappa:settings.maxKappa
             if  inKappa == 0    continue    end
             symtList = AngularMomentum.allowedTotalSymmetries(symi, inKappa)
             for  symt in symtList
@@ -426,12 +433,11 @@ module ImpactExcitation
             returned otherwise.
     """
     function  displayResults(lines::Array{ImpactExcitation.Line,1})
-        nx = 131
+        nx = 161
         println(" ")
         println("  Electron-impact excitation cross sections:")
         println(" ")
         println("  ", TableStrings.hLine(nx))
-        sa = "  ";   sb = "  "
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=3);                                sb = sb * TableStrings.hBlank(22)
@@ -443,11 +449,17 @@ module ImpactExcitation
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
         sa = sa * TableStrings.center(15, "Cross section"; na=3)      
         sb = sb * TableStrings.center(15, TableStrings.inUnits("cross section"); na=3)
-        sa = sa * TableStrings.center(15, "Collision strength"; na=3)      
-        sb = sb * TableStrings.center(15, " ";                  na=3)
+        sa = sa * TableStrings.center(25, "Collision strength   3x"; na=3)      
+        sb = sb * TableStrings.center(25, " ";                       na=3)
         println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
-        #   
+        #
+        sc = "ecorr^0.:  ";   sd = "ecorr^0.25:  ";   se = "ecorr^0.48:  ";   sx = "ecorr:  ";  nc = 0
         for  line in lines
+            if  line.finalLevel.index != nc     nc = line.finalLevel.index;     
+                sc = sc * "\n ";    sd = sd * "\n ";    se = se * "\n ";    sx = sx * "\n "     end
+            ecorr   = abs( line.initialElectronEnergy / (line.finalLevel.energy - line.initialLevel.energy) )
+            ##x coll    = 8 * line.collisionStrength * ecorr^0.48
+            ##x coll = line.collisionStrength
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
@@ -458,9 +470,16 @@ module ImpactExcitation
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.finalElectronEnergy))    * "     "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection))    * "        "
             sa = sa * @sprintf("%.6e", line.collisionStrength)                                                    * "    "
+            sa = sa * @sprintf("%.6e", line.collisionStrength * ecorr^0.25)                                       * "    "
+            sa = sa * @sprintf("%.6e", line.collisionStrength * ecorr^0.48)                                       * "    "
+            sc = sc * @sprintf("%.6e", line.collisionStrength * ecorr^0.00) * ",  "
+            sd = sd * @sprintf("%.6e", line.collisionStrength * ecorr^0.25) * ",  "
+            se = se * @sprintf("%.6e", line.collisionStrength * ecorr^0.48) * ",  "
+            sx = sx * @sprintf("%.6e", ecorr)                               * ",  "
             println(sa)
         end
         println("  ", TableStrings.hLine(nx))
+        println("\n", sx, "\n", sc, "\n", sd, "\n", se)
         #
         return( nothing )
     end
