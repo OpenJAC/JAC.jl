@@ -1018,6 +1018,7 @@ module Basics
     Base.:+(a::EmProperty, b::EmProperty) = EmProperty(a.Coulomb + b.Coulomb, a.Babushkin + b.Babushkin)
     Base.:+(a::EmProperty, b) = EmProperty(a.Coulomb + b, a.Babushkin + b)
     Base.:+(a, b::EmProperty) = b + a
+    Base.:-(a::EmProperty, b::EmProperty) = EmProperty(a.Coulomb - b.Coulomb, a.Babushkin - b.Babushkin)
     Base.:*(a::EmProperty, b::EmProperty) = EmProperty(a.Coulomb * b.Coulomb, a.Babushkin * b.Babushkin)
     Base.:*(a, b::EmProperty) = EmProperty(a * b.Coulomb, a * b.Babushkin)
     Base.:/(a::EmProperty, b::EmProperty) = EmProperty(a.Coulomb / b.Coulomb, a.Babushkin / b.Babushkin)
@@ -1033,6 +1034,41 @@ module Basics
     # `Base.string(property::EmProperty)`  ... provides a String notation for the variable property::EmProperty.
     function Base.string(property::EmProperty)
         sa = "$(property.Coulomb) [Coulomb],  $(property.Babushkin) [Babushkin]"
+        return( sa )
+    end
+
+
+
+    """
+    `struct  ScalarProperty{T}`  
+        ... defines a type to maintain a scalar function dependence f(x) but for different types input and function values.
+
+        + arg         ::Float64    ... Argument of function f(x).
+        + value       ::T          ... Function value f(x).
+    """
+    struct  ScalarProperty{T} 
+        arg           ::Float64
+        value         ::T
+    end 
+
+
+    """
+    `Basics.ScalarProperty(wa::Float64)`  ... constructor for an `constant` instance of ScalarProperty{T}.
+    """
+    function ScalarProperty(wa::Float64)
+        ScalarProperty{T}(wa, 0.)
+    end
+
+
+    # `Base.show(io::IO, property::ScalarProperty)`  ... prepares a proper printout of the variable property::ScalarProperty.
+    function Base.show(io::IO, property::ScalarProperty) 
+        sa = Base.string(property);                print(io, sa)
+    end
+
+
+    # `Base.string(property::ScalarProperty)`  ... provides a String notation for the variable property::ScalarProperty.
+    function Base.string(property::ScalarProperty)
+        sa = "f($(property.arg)) = $(property.value)"
         return( sa )
     end
 
@@ -1602,7 +1638,8 @@ module Basics
     function Base.string(propc::ImpactExcAuto)      return( "ImpactExcAuto" )                      end
     function Base.string(propc::InternalConv)       return( "InternalConv" )                       end
     function Base.string(propc::MultiPhotonDE)      return( "multi-photon excitation & decay" )    end
-    function Base.string(propc::Photo)              return( "Photo" )                              end
+    function Base.string(propc::Photo)              return( "Photo-Ionization" )                   end
+    function Base.string(propc::PhotoExc)           return( "Photo-Excitation" )                   end
     function Base.string(propc::PhotoDouble)        return( "single-photon double ionization" )    end
     function Base.string(propc::PhotoExcFluor)      return( "Photo-Excitation-Fluoresence" )       end
     function Base.string(propc::PhotoExcAuto)       return( "Photo-Excitation-Autoionization" )    end
@@ -1703,6 +1740,7 @@ module Basics
     function generateConfigurations                                 end
     function generateConfigurationsForExcitationScheme              end
     function generateConfigurationsWithElectronCapture              end
+    function generateConfigurationsWithElectronLoss                 end
     function generateLevelWithExtraElectron                         end
     function generateLevelWithExtraSubshell                         end
     function generateLevelWithExtraSubshells                        end

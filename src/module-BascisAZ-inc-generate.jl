@@ -967,6 +967,36 @@
     end
 
 
+
+    """
+    `Basics.generateConfigurationsWithElectronLoss(confs::Array{Configuration,1}, fromShells::Array{Shell,1})`  
+        ... generates a list of non-relativistic configurations for the given (reference) confs and with one removed (ionized) 
+            electron fromShells.
+    """
+    function Basics.generateConfigurationsWithElectronLoss(confs::Array{Configuration,1}, fromShells::Array{Shell,1})
+        newConfList = Configuration[];     NoElectrons = confs[1].NoElectrons - 1
+        # Now remove one (ionized) electron from the fromShells of all configurations in confList
+        for  conf in confs
+            # Take one electron fromShells and `remove' it from conf
+            for  fromShell  in  fromShells
+                newShells = Dict{Shell,Int64}()
+                for  shell  in  keys(conf.shells)
+                    if      shell == fromShell  &&  conf.shells[shell] == 1
+                    elseif  shell == fromShell
+                            newShells = Base.merge( newShells, Dict( shell => conf.shells[shell] - 1))
+                    else    newShells = Base.merge( newShells, Dict( shell => conf.shells[shell]))
+                    end
+                end
+                push!( newConfList, Configuration( newShells, NoElectrons))
+                if  false  println(">> Generate $(Configuration( newShells, NoElectrons)) with electron loss.")   end
+            end
+        end
+        newConfList = unique(newConfList)
+        
+        return( newConfList )
+    end
+
+
     """
     `Basics.generateLevelWithExtraElectron(newOrbital, symt::LevelSymmetry, level::Level)`  
         ... generates a (new) level with one extra electron in subshell newOrbital.subshell and with overall symmetry symt. The function 

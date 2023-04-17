@@ -18,6 +18,10 @@ module Cascade
         
         + struct StepwiseDecayScheme       
             ... to represent a standard decay scheme, starting from the levels of one or several initial multiplets.
+        + struct PhotoAbsorptionScheme    
+            ... to compute photoionization and photoabsortion spectra including the photoabsortion and subsequent electron emission.
+                Typical photoabsorption properties are energy-dependent photoionization cross sections, photoabsorption spectra,
+                PI plasma rate coefficients, and others.
         + struct PhotonIonizationScheme    
             ... to represent a (prior) photoionization part of a cascade for a list of given photon energies.
         + struct PhotonExcitationScheme    
@@ -86,7 +90,7 @@ module Cascade
         sa = "Stepwise decay (scheme) of an atomic cascade with:"
         return( sa )
     end
-
+    
 
     # `Base.show(io::IO, scheme::StepwiseDecayScheme)`  ... prepares a proper printout of the scheme::StepwiseDecayScheme.
     function Base.show(io::IO, scheme::StepwiseDecayScheme)
@@ -98,6 +102,73 @@ module Cascade
         println(io, "decayShells:                $(scheme.decayShells)  ")
         println(io, "shakeFromShells:            $(scheme.shakeFromShells)  ")
         println(io, "shakeToShells:              $(scheme.shakeToShells)  ")
+    end
+
+
+    """
+    `struct  Cascade.PhotoAbsorptionScheme  <:  Cascade.AbstractCascadeScheme`  
+        ... a struct to define and describe a photo-absorption calculation for an atom in some initial state/configuration
+            and for a given range of photon energies, processes and multipoles, etc.
+
+        + processes             ::Array{Basics.AbstractProcess,1} 
+            ... List of the atomic processes that are supported for such a cascade; this list can include 
+                [Auger(), Photo(), PhotoExc(), ...]  
+        + multipoles            ::Array{EmMultipole}           
+            ... Multipoles of the radiation field that are to be included into the excitation/ionization processes.
+        + photonEnergies        ::Array{Float64,1}
+            ... List of photon energies (in user-selected units) for which absorption cross sections/spectra are to be
+                calculated; this describes the list, distribution and resolution of energies.
+        + excitationFromShells  ::Array{Shell,1}    
+            ... List of shells from which photo-excitations are to be considered.
+        + excitationToShells    ::Array{Shell,1}    
+            ... List of shells into which photo-excitations are to be considered, including possibly already occupied shells.
+        + initialLevelSelection ::LevelSelection    
+            ... Specifies the selected initial levels of some given initial-state configurations; these initial level numbers/
+                symmetries always refer to the set of initial configurations.
+        + lValues               ::Array{Int64,1}
+            ... Orbital angular momentum values of the free-electrons, for which partial waves are considered for the RR.
+        + electronEnergyShift   ::Float64                 
+            ... Energy shift for all bound-state energies relative to the levels from the reference configuration; this is realized by 
+                shifting the initial level energies by the negative amount. The shift is taken in the user-defined units.
+    """
+    struct   PhotoAbsorptionScheme  <:  Cascade.AbstractCascadeScheme
+        processes               ::Array{Basics.AbstractProcess,1}    
+        multipoles              ::Array{EmMultipole}  
+        photonEnergies          ::Array{Float64,1}                 
+        excitationFromShells    ::Array{Shell,1}
+        excitationToShells      ::Array{Shell,1}
+        initialLevelSelection   ::LevelSelection 
+        lValues                 ::Array{Int64,1}
+        electronEnergyShift     ::Float64
+    end
+
+
+    """
+    `Cascade.PhotoAbsorptionScheme()`  ... constructor for an 'default' instance of a Cascade.PhotoAbsorptionScheme.
+    """
+    function PhotoAbsorptionScheme()
+        PhotoAbsorptionScheme([Photo()], [E1], [1.0, 3.0, 5.0], Shell[], Shell[], LevelSelection(false), [0], 0. )
+    end
+
+
+    # `Base.string(scheme::PhotoAbsorptionScheme)`  ... provides a String notation for the variable scheme::PhotoAbsorptionScheme.
+    function Base.string(scheme::PhotoAbsorptionScheme)
+        sa = "Photoabsorption (scheme) due to processes:"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, scheme::PhotoAbsorptionScheme)`  ... prepares a proper printout of the scheme::PhotoAbsorptionScheme.
+    function Base.show(io::IO, scheme::PhotoAbsorptionScheme)
+        sa = Base.string(scheme);                print(io, sa, "\n")
+        println(io, "processes:                  $(scheme.processes)  ")
+        println(io, "multipoles:                 $(scheme.multipoles)  ")
+        println(io, "photonEnergies:             $(scheme.photonEnergies)  ")
+        println(io, "excitationFromShells:       $(scheme.excitationFromShells)  ")
+        println(io, "excitationToShells:         $(scheme.excitationToShells)  ")
+        println(io, "initialLevelSelection:      $(scheme.initialLevelSelection)  ")
+        println(io, "lValues:                    $(scheme.lValues )  ")
+        println(io, "electronEnergyShift:        $(scheme.electronEnergyShift)  ")
     end
 
 
@@ -686,6 +757,7 @@ module Cascade
     # `Base.string(comp::Cascade.Computation)`  ... provides a String notation for the variable comp::Cascade.Computation.
     function Base.string(comp::Cascade.Computation)
         if        typeof(comp.scheme) == Cascade.StepwiseDecayScheme            sb = "stepwise decay scheme"
+        elseif    typeof(comp.scheme) == Cascade.PhotoAbsorptionScheme          sb = "photoabsorption scheme"
         elseif    typeof(comp.scheme) == Cascade.PhotonIonizationScheme         sb = "(prior) photo-ionization scheme"
         elseif    typeof(comp.scheme) == Cascade.PhotonExcitationScheme         sb = "photo-excitation scheme"
         elseif    typeof(comp.scheme) == Cascade.DielectronicCaptureScheme      sb = "(di-) electronic capture scheme"
@@ -786,6 +858,32 @@ module Cascade
 
 
     """
+    `struct  Cascade.PhotoIonizationData  <:  Cascade.AbstractData`  
+        ... defines a type for an atomic cascade with photoionization lines. This has been implemented in addition to the 
+            Cascade.PhotoIonData() since the photon energy is provided by the individual lines.
+
+        + linesP         ::Array{PhotoIonization.Line,1}        ... List of photoionization lines.
+    """  
+    struct  PhotoIonizationData  <:  Cascade.AbstractData
+        linesP           ::Array{PhotoIonization.Line,1}
+    end 
+
+
+    """
+    `Cascade.PhotoIonizationData()`  ... (simple) constructor for cascade photo-ionization data.
+    """
+    function PhotoIonizationData()
+        PhotoIonizationData(Array{PhotoIonization.Line,1}[] )
+    end
+
+
+    # `Base.show(io::IO, data::Cascade.PhotoIonizationData)`  ... prepares a proper printout of the variable data::Cascade.PhotoIonizationData.
+    function Base.show(io::IO, data::Cascade.PhotoIonizationData) 
+        println(io, "linesP:                  $(data.linesP)  ")
+    end
+
+
+    """
     `struct  Cascade.ExcitationData  <:  Cascade.AbstractData`  ... defines a type for an atomic cascade, i.e. lists of excitation lines.
 
         + linesE         ::Array{PhotoExcitation.Line,1}        ... List of photoexcitation lines.
@@ -853,9 +951,12 @@ module Cascade
         + struct MeanRelaxationTime         ... simulate the mean relaxation times in which 70%, 80%, of the occupied levels
                                                 decay to the ground configuration.        
         + struct ElectronIntensities        ... simulate the electron-line intensities as function of electron energy.
-        + struct PhotoAbsorption            ... simulate the photoabsorption cross sections for a given set of photo-excitation 
+        + struct PhotoAbsorptionCS          ... simulate the (total) photoabsorption cross sections for a given set of photo-excitation 
                                                 and ionization processes.
+        + struct PhotoResonances            ... simulate the position and strength of photo-resonances for a given set of photo-excitation 
+                                                amplitudes & cross sections (not yet).
         + struct PhotonIntensities          ... simulate the photon-line intensities as function of electron energy. 
+        + struct PiRateCoefficients         ... simulate the PI (plasma) rate coefficients for given plasma temperatures (not yet). 
         + struct TimeBinnedPhotonIntensity  ... simulate the photon-line intensities as function of electron energy 
                                                 in a given time interval (not yet).
     """
@@ -932,6 +1033,50 @@ module Cascade
 
     # `Base.show(io::IO, dist::Cascade.RrRateCoefficients)`  ... prepares a proper printout of the variable data::Cascade.RrRateCoefficients.
     function Base.show(io::IO, dist::Cascade.RrRateCoefficients) 
+        println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
+        println(io, "temperatures:             $(dist.temperatures)  ")
+        println(io, "multipoles:               $(dist.multipoles)  ")
+        println(io, "finalLevelSelection:      $(dist.finalLevelSelection)  ")
+        println(io, "finalConfigurations:      $(dist.finalConfigurations)  ")
+    end
+
+
+    """
+    `struct  Cascade.PiRateCoefficients   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the PI plasma rate coefficients as function of the (free) photon energy distribution and
+            the plasma temperature.
+
+        + initialLevelNo      ::Int64       ... Level No of initial level for which rate coefficients are to be computed.
+        + temperatures        ::Array{Float64,1}
+            ... temperatures [K] for which the DR plasma rate coefficieints to be calculated.
+        + multipoles          ::Array{EmMultipole}           
+            ... Multipoles of the radiation field that are to be included into the photoionization processes.
+        + finalLevelSelection ::LevelSelection    
+            ... Specifies the selected final levels of some given final-state configurations; these final level numbers/
+                symmetries always refer to single configurations.
+        + finalConfigurations ::Array{Configuration,1}
+        
+
+    """  
+    struct  PiRateCoefficients   <:  Cascade.AbstractSimulationProperty
+        initialLevelNo        ::Int64 
+        temperatures          ::Array{Float64,1}
+        multipoles            ::Array{EmMultipole} 
+        finalLevelSelection   ::LevelSelection
+        finalConfigurations   ::Array{Configuration,1}
+    end 
+
+
+    """
+    `Cascade.PiRateCoefficients()`  ... (simple) constructor for cascade PiRateCoefficients.
+    """
+    function PiRateCoefficients()
+        PiRateCoefficients(1, Float64[], EmMultipole[], LevelSelection(), Configuration[])
+    end
+
+
+    # `Base.show(io::IO, dist::Cascade.PiRateCoefficients)`  ... prepares a proper printout of the variable data::Cascade.PiRateCoefficients.
+    function Base.show(io::IO, dist::Cascade.PiRateCoefficients) 
         println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
         println(io, "temperatures:             $(dist.temperatures)  ")
         println(io, "multipoles:               $(dist.multipoles)  ")
@@ -1242,13 +1387,51 @@ module Cascade
         println(io, "initialOccupations:       $(dist.initialOccupations)  ")
         println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
     end
+
+
+    """
+    `struct  Cascade.PhotoAbsorptionCS   <:  Cascade.AbstractSimulationProperty`  
+        ... defines a type for simulating the total photo-absorption cross sections in a given interval of photon energies
+            as well as for a given set of photo-ionization and photo-excitation cross sections
+
+        + includeExcitation   ::Bool             ... True, if photo-excitation lines are to be considered.
+        + photonEnergies      ::Array{Float64,1} ... Photon energies (in user-selected units) for the simulation of photon spectra
+                                                     to describe the interval and resolution of the absorption cross sections.
+        + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+        + leadingConfigs      ::Array{Configuration,1}   
+            ... List of leading configurations whose levels are equally populated, either initially or ....
+    """  
+    struct  PhotoAbsorptionCS   <:  Cascade.AbstractSimulationProperty
+        includeExcitation     ::Bool
+        photonEnergies        ::Array{Float64,1}
+        initialOccupations    ::Array{Tuple{Int64,Float64},1} 
+        leadingConfigs        ::Array{Configuration,1}
+    end 
+
+
+    """
+    `Cascade.PhotoAbsorptionCS()`  ... (simple) constructor for cascade PhotoAbsorptionCS.
+    """
+    function PhotoAbsorptionCS()
+        PhotoAbsorptionCS(false, [1.0],  [(1, 1.0)], Configuration[])
+    end
+
+
+    # `Base.show(io::IO, dist::Cascade.PhotoAbsorptionCS)`  ... prepares a proper printout of the variable data::Cascade.PhotoAbsorptionCS.
+    function Base.show(io::IO, dist::Cascade.Cascade.PhotoAbsorptionCS) 
+        println(io, "includeExcitation:        $(dist.includeExcitation)  ")
+        println(io, "photonEnergies:           $(dist.photonEnergies)  ")
+        println(io, "initialOccupations:       $(dist.initialOccupations)  ")
+        println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
+    end
     
     
-    struct   PhotoAbsorption              <:  AbstractSimulationProperty   end
     struct   DecayPathes                  <:  AbstractSimulationProperty   end
     struct   ElectronCoincidence          <:  AbstractSimulationProperty   end
     struct   TimeBinnedPhotonIntensity    <:  AbstractSimulationProperty   end
     struct   MeanLineWidth                <:  AbstractSimulationProperty   end
+    struct   PhotoResonances              <:  AbstractSimulationProperty   end
 
     
     
@@ -1321,7 +1504,7 @@ module Cascade
     `Cascade.Simulation()`  ... constructor for an 'default' instance of a Cascade.Simulation.
     """
     function Simulation()
-        Simulation("Default cascade simulation", Cascade.PhotoAbsorption(), Cascade.ProbPropagation(), 
+        Simulation("Default cascade simulation", Cascade.PhotoAbsorptionCS(), Cascade.ProbPropagation(), 
                    Cascade.SimulationSettings(), Array{Dict{String,Any},1}[] )
     end
 
@@ -1426,7 +1609,6 @@ module Cascade
         else    return( false )
         end
     end
-
 
     """
     `struct  Cascade.AbsorptionCrossSection`  

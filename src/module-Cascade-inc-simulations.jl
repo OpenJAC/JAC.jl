@@ -302,7 +302,8 @@
         return( nothing )
     end
     
-
+    
+    #==
     """
     `Cascade.displayPhotoAbsorptionSpectrum(stream::IO, crossSections::Array{Cascade.AbsorptionCrossSection,1}, settings::Cascade.SimulationSettings)` 
         ... displays the photoabsorption cross sections a neat table. Nothing is returned.
@@ -339,6 +340,45 @@
             else   sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs.excitationCS.Coulomb))   * "   " 
                    sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs.excitationCS.Babushkin)) * "    "
             end
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+
+        return( nothing )
+    end
+    ==#
+
+    
+    """
+    `Cascade.displayPhotoAbsorptionSpectrum(stream::IO, crossSections::Array{Basics.ScalarProperty{EmProperty},1}, 
+                                            property::Cascade.PhotoAbsorptionCS)` 
+        ... displays the photoabsorption cross sections a neat table. Nothing is returned.
+    """
+    function displayPhotoAbsorptionSpectrum(stream::IO, crossSections::Array{Basics.ScalarProperty{EmProperty},1}, 
+                                            property::Cascade.PhotoAbsorptionCS)
+        nx = 46
+        println(stream, " ")
+        println(stream, "* Absorption cross sections:  ")
+        println(stream, " ")
+        sMinEn = @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", property.photonEnergies[1]))
+        sMaxEn = @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", property.photonEnergies[end]))
+        println(stream, "  Absorption cross sections are determined for photon energies between " * sMinEn * " and "  *
+                        sMaxEn * TableStrings.inUnits("energy") * " as well as for levels \n  with the initial population " *
+                        "$(property.initialOccupations) \n")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  "
+        sa = sa * TableStrings.center(16, "Energy "   * TableStrings.inUnits("energy"); na=5)
+        sa = sa * TableStrings.center(10, "Total CS " * TableStrings.inUnits("cross section"); na=11)
+        println(stream, sa)
+        sa = "                      Coulomb       Babushkin"
+        println(stream, sa)
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        for  cs in  crossSections
+            sa = "     "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", cs.arg)) * "     "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs.value.Coulomb))   * "   " 
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs.value.Babushkin)) * "         "
             println(stream, sa)
         end
         println(stream, "  ", TableStrings.hLine(nx))
@@ -626,6 +666,7 @@
     end
 
 
+    #==  Obsolete, March 2023
     """
     `Cascade.generateAbsorptionCrossSections(excitationData::Array{Cascade.ExcitationData,1}, 
                                              ionizationData::Array{Cascade.PhotoIonData,1}, settings::Cascade.SimulationSettings)` 
@@ -713,8 +754,36 @@
         else  error("stop b")    
         end
     end
+    ==#
 
 
+    """
+    `Cascade.interpolateIonizationCS(photonEnergy::Float64, ionizationCS::Array{Basics.ScalarProperty{EmProperty},1})` 
+        ... interpolates (or extrapolates) the ionization cross sections as defined by ionizationCS for the given photonEnergy.
+            If photonEnergy is outside the photon energies from ionizationCS, simply the cross section from the nearest energy
+            is returned; if photonEnergy lays between two photon energies from ionizationCS, a simple linear interpolation
+            rules is applied here. A cs::Basics.EmProperty is returned.
+    """
+    function interpolateIonizationCS(photonEnergy::Float64, ionizationCS::Array{Basics.ScalarProperty{EmProperty},1})
+        imin = imax = 0
+        for  (i, ionCS)  in  enumerate(ionizationCS)
+           if  ionCS.arg <= photonEnergy   imin = i    end
+        end
+        for  (i, ionCS)  in  enumerate(ionizationCS)
+           if  ionCS.arg >  photonEnergy   imax = i;   break    end
+        end
+        #
+        if       imin == 0  &&  imax == 1        return(ionizationCS[1].value)
+        elseif   imax == 0                       return(ionizationCS[end].value)
+        elseif   imax - imin == 1
+            deltaEnergy = photonEnergy - ionizationCS[imin].arg
+            totalEnergy = ionizationCS[imax].arg - ionizationCS[imin].arg 
+            cs          = ionizationCS[imin].value + deltaEnergy/totalEnergy * (ionizationCS[imax].value - ionizationCS[imin].value)
+            return( cs )
+        else  error("stop b")    
+        end
+    end
+    
 
     """
     `Cascade.perform(simulation::Cascade.Simulation`  
@@ -737,10 +806,13 @@
         
         # First review and display the computation data for this simulation; this enables the reader to check the consistency of data.
         # It also returns the level tree to be used in the simulations
-        if      typeof(simulation.property) == Cascade.PhotoAbsorption
-                                             # -----------------------
-            levels = Cascade.reviewData(simulation, ascendingOrder=false)
-            wa     = Cascade.simulatePhotoAbsorptionSpectrum(levels, simulation) 
+        if      typeof(simulation.property) == Cascade.PhotoAbsorptionCS
+                                             # -------------------------
+            ##x @show simulation.computationData[1]["results"]["photo-ionization line data:"].linesP
+            ##x @show simulation.computationData[1]["results"]["photo-excitation line data:"].linesE
+            linesP = simulation.computationData[1]["results"]["photo-ionization line data:"].linesP
+            linesE = simulation.computationData[1]["results"]["photo-excitation line data:"].linesE
+            wa     = Cascade.simulatePhotoAbsorptionSpectrum(simulation, linesP, linesE) 
             #
         elseif  typeof(simulation.property) == Cascade.IonDistribution         &&   simulation.method == Cascade.ProbPropagation()
                                              # -----------------------
@@ -1252,25 +1324,76 @@
     
 
     """
-    `Cascade.simulatePhotoAbsorptionSpectrum(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
-        ... cycle through all levels and (incident photon) energies to derive the overall photo-absorption spectrum.
-            All absorption cross sections are displayed in a neat table but nothing is returned otherwise.
+    `Cascade.simulatePhotoAbsorptionSpectrum(simulation::Cascade.Simulation, 
+                                             linesP::Array{PhotoIonization.Line,1}, linesE::Array{PhotoExcitation.Line,1})` 
+        ... cycle through all lines and (incident photon) energies to derive the overall photo-absorption spectrum.
+            The procedure interpolates the photoionization and 'adds' the photoexcitation cross sections to obtain the 
+            total photoabsorption CS. A quadratic interpolation is used and the photoionization cross sections are assumed to be
+            'constant' outside of the energy interval, for which photoionization lines and cross sections have been calculated 
+            before. All absorption cross sections are displayed in a neat table and are returned as lists.
     """
-    function simulatePhotoAbsorptionSpectrum(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
+    function simulatePhotoAbsorptionSpectrum(simulation::Cascade.Simulation, 
+                                             linesP::Array{PhotoIonization.Line,1}, linesE::Array{PhotoExcitation.Line,1})
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        crossSections = Cascade.AbsorptionCrossSection[]
-        # Display the initial (relative) occupation and the photon energies for which photo-ionization cross sections are available
-        Cascade.displayRelativeOccupation(stdout, levels, simulation.settings)
-        excitationData = Cascade.extractPhotoExcitationData(simulation.computationData)
-        ionizationData = Cascade.extractPhotoIonizationData(simulation.computationData)
-        photonEnergies = Float64[];   for data  in  ionizationData   push!(photonEnergies, data.photonEnergy)   end
-        println("\n* Photo-ionization data are defined for the photon energies [in a.u.]: \n   $photonEnergies")
-        crossSections = Cascade.generateAbsorptionCrossSections(excitationData, ionizationData, simulation.settings)
+        excCS = Basics.ScalarProperty{EmProperty}[];     ionCS = Basics.ScalarProperty{EmProperty}[]
+        # Collect photoenergies and the associated photoionization cross sections
+        energies = Float64[];    for  line in linesP   push!(energies, line.photonEnergy)     end;
+        energies = unique(energies);    energies = sort(energies);    ##x @show "Ionization: ", energies
+        for  en in energies
+            cs = EmProperty(0.)
+            for  line  in  linesP
+                if  en == line.photonEnergy   cs = cs + line.crossSection   end
+            end
+            push!(ionCS, Basics.ScalarProperty{EmProperty}(en, cs))
+        end
+        ##x @show ionCS
         #
-        Cascade.displayPhotoAbsorptionSpectrum(stdout, crossSections, simulation.settings)
-        if  printSummary   Cascade.displayPhotoAbsorptionSpectrum(iostream, crossSections, simulation.settings)    end
+        # Collect photoenergies and the associated photoexcitation cross sections/strength
+        if  simulation.property.includeExcitation
+            energies = Float64[];    for  line in linesE   push!(energies, line.omega)     end;
+            energies = unique(energies);    energies = sort(energies);    ##x @show "Excitation: ", energies
+            for  en in energies
+                cs = EmProperty(0.)
+                for  line  in  linesE
+                    if  en == line.omega   cs = cs + line.crossSection   end
+                end
+                ##x @show "Excitation contribution:", en, cs
+                push!(excCS, Basics.ScalarProperty{EmProperty}(en, cs) )
+            end
+            @show excCS
+        end
+        #
+        # Interpolate photoionization and 'add' photoexcitation cross sections to obtain the total photoabsorption CS;
+        # generate an energy grid for which cross sections are to be interpolated
+        absEnergies = Float64[];   totalCS = Basics.ScalarProperty{EmProperty}[] 
+        for  en in simulation.property.photonEnergies   push!(absEnergies, Defaults.convertUnits("energy: to atomic", en))     end
+        ##x @show "Absorption: ", absEnergies
+        for  en in absEnergies
+            cs = Cascade.interpolateIonizationCS(en, ionCS)
+            push!(totalCS, Basics.ScalarProperty{EmProperty}(en, cs) )
+        end
+        # Add contribution from the excitation cross section, if required; distribute resonance contribution as rec
+        if  simulation.property.includeExcitation
+            width = 0.0001 / 27.21    # Get from simulation.property
+            for  csv in excCS
+                cs  = Cascade.interpolateIonizationCS(csv.arg, ionCS)
+                ## push!(totalCS, Basics.ScalarProperty{EmProperty}(csv.arg-width/2, cs + 1.0 / width * csv.value))
+                ## push!(totalCS, Basics.ScalarProperty{EmProperty}(csv.arg+width/2, cs + 1.0 / width *csv.value))
+                push!(totalCS, Basics.ScalarProperty{EmProperty}(csv.arg, cs + 1.0 / width *csv.value))
+                ##x @show "Excitation:", csv.arg, cs, 1.0 / width * csv.value
+             end
+        end
+        #
+        # Sort total cs due to ascending energies
+        energies   = Float64[];   for tcs in totalCS    push!(energies, tcs.arg)  end
+        enIndices  = sortperm(energies, rev=false)
+        newTotalCS = Basics.ScalarProperty{EmProperty}[]
+        for i = 1:length(enIndices)   ix = enIndices[i];    push!(newTotalCS, totalCS[ix])    end
+        #
+        Cascade.displayPhotoAbsorptionSpectrum(stdout, newTotalCS, simulation.property)
+        if  printSummary   Cascade.displayPhotoAbsorptionSpectrum(iostream, newTotalCS, simulation.property)    end
 
-        return( nothing )
+        return( newTotalCS )
     end
     
 

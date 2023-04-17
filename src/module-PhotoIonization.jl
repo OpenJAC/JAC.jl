@@ -14,7 +14,7 @@ module PhotoIonization
 
         + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
         + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
-        + photonEnergies          ::Array{Float64,1}             ... List of photon energies.  
+        + photonEnergies          ::Array{Float64,1}             ... List of photon energies [in user-selected units].  
         + electronEnergies        ::Array{Float64,1}             ... List of electron energies; usually only one of these lists are utilized. 
         + calcAnisotropy          ::Bool                         ... True, if the beta anisotropy parameters are to be calculated and false otherwise (o/w). 
         + calcPartialCs           ::Bool                         ... True, if partial cross sections are to be calculated and false otherwise.  
