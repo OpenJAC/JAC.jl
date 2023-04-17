@@ -182,6 +182,7 @@ include("module-Semiempirical.jl")
 
 # Functions/methods for atomic and cascade computations
 include("module-Atomic.jl");            using ..Atomic
+include("module-Empirical.jl");         using ..Empirical
 include("module-Cascade.jl");           using ..Cascade
 
 # Functions/methods for symbolic computations
