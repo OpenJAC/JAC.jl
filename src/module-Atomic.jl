@@ -35,7 +35,7 @@ module Atomic
         + intermediateAsfSettings        ::AsfSettings                     ... Provides the SCF settings for the intermediate-state multiplet.
         + finalConfigs                   ::Array{Configuration,1}          ... A list of final-state configurations.
         + finalAsfSettings               ::AsfSettings                     ... Provides the SCF and CI settings for the final-state multiplet.
-        + processSettings                ::Basics.AbstracProcessSettings   ... Provides the settings for the selected process.
+        + processSettings                ::Basics.AbstractProcessSettings  ... Provides the settings for the selected process.
     """
     struct  Computation
         name                           ::String

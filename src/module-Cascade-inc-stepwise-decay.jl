@@ -123,16 +123,9 @@
     """
     function generateConfigurationsForStepwiseDecay(scheme::Cascade.StepwiseDecayScheme, initialConfigs::Array{Configuration,1})
         initialNo = initialConfigs[1].NoElectrons
-        ##x Determine principal quantum number nmax that occurs in the initial configurations
-        ##x nmax = 0;   
-        ##x for config  in  initialConfigs
-        ##x     for (k,v)  in  config.shells    nmax = max(nmax, k.n)   end
-        ##x end
-        ##x decayShells = Defaults.getDefaults("ordered shell list: non-relativistic", nmax)
-        ##x @show nmax, decayShells
         
         #
-        decayShells = scheme.decayShells;   maxElectronLoss = scheme.maxElectronLoss;    maxElectronLoss = scheme.maxElectronLoss
+        decayShells = scheme.decayShells;   maxElectronLoss = scheme.maxElectronLoss
         # Build configurations with all decayShells 'in between', even if zero occupation
         newConfigs = Configuration[]
         for  conf  in  initialConfigs  
@@ -141,13 +134,35 @@
             push!(newConfigs, Configuration(nshells, conf.NoElectrons))
         end
         newConfigs = Basics.excludeConfigurations(newConfigs, initialNo-maxElectronLoss)
-        ##x @show "a", newConfigs
-        #
+        @show "a", newConfigs
         # Now add all decay configurations
         allConfigs   = copy(newConfigs)
-        decayConfigs = Configuration[];    dConfigs = copy(newConfigs)
+        decayConfigs = Configuration[];    
         #
-        further = true
+        if      scheme.maxElectronLoss == 0
+            # Just move the hole outwards into the decayShells
+            decayConfigs = Cascade.generateConfigurationsWith1OuterHole(allConfigs, decayShells)
+            decayConfigs = unique(decayConfigs)
+            allConfigs   = append!(allConfigs, decayConfigs)
+            return( allConfigs )
+            #
+        elseif  scheme.maxElectronLoss == 1
+            decayConfigs1 = Cascade.generateConfigurationsWith1OuterHole(allConfigs, decayShells)
+            decayConfigs1 = unique(decayConfigs1)
+            decayConfigs2 = Cascade.generateConfigurationsWith2OuterHoles(allConfigs, decayShells)
+            decayConfigs2 = unique(decayConfigs2)
+            decayConfigs3 = Cascade.generateConfigurationsWith1OuterHole(decayConfigs2, decayShells)
+            decayConfigs3 = unique(decayConfigs3)
+            allConfigs    = append!(allConfigs, decayConfigs1, decayConfigs2, decayConfigs3)
+            allConfigs    = unique(allConfigs)
+            return( allConfigs )
+            #
+        else
+            # The general case is quite complex and follows below
+        end        
+        # 
+        # This earlier code for scheme.maxElectronLoss > 1 is highly inefficient if medium and heavy ions are considered.
+        further = true;   dConfigs = copy(newConfigs)
         while  further
             dConfigs = Cascade.generateConfigurationsWith1OuterHole(dConfigs, decayShells)
             if length(dConfigs) > 0     append!(decayConfigs, dConfigs)     else   further = false      end

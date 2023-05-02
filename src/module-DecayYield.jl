@@ -12,13 +12,14 @@ module DecayYield
 
         + approach                 ::String         ... Determines the applied cascade approach for the yields:
                                                         {"AverageSCA", "SCA"}.
-        + printBefore              ::Bool           ... True if a list of selected levels is to be printed before the 
-                                                        actual computations start. 
+        + printBefore              ::Bool           ... True if the selected levels is to be printed before the actual computations start. 
+        + geant4                   ::Bool           ... True, if decay probabilities for the Geant code are to be generated and printed.
         + levelSelection           ::LevelSelection ... Specifies the selected levels, if any.
     """
     struct Settings  <:  AbstractPropertySettings 
         approach                   ::String 
         printBefore                ::Bool   
+        geant4                     ::Bool   
         levelSelection             ::LevelSelection
     end 
 
@@ -28,7 +29,7 @@ module DecayYield
         ... constructor for an `empty` instance of DecayYield.Settings for the computation of fluorescence and Auger yields.
     """
     function Settings()
-        Settings("AverageSCA", false, LevelSelection() )
+        Settings("AverageSCA", false, false, LevelSelection() )
     end
 
 
@@ -36,6 +37,7 @@ module DecayYield
     function Base.show(io::IO, settings::DecayYield.Settings) 
         println(io, "approach:                 $(settings.approach)  ")
         println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "geant4:                   $(settings.geant4)  ")
         println(io, "levelSelection:           $(settings.levelSelection)  ")
     end
 
@@ -77,8 +79,10 @@ module DecayYield
         println(io, "level:                $(outcome.level)  ")
         println(io, "NoPhotonLines:        $(outcome.NoPhotonLines)  ")
         println(io, "NoAugerLines:         $(outcome.NoAugerLines)  ")
-        println(io, "NoPhotonLines:        $(outcome.NoPhotonLines)  ")
-        println(io, "NoPhotonLines:        $(outcome.NoPhotonLines)  ")
+        println(io, "rateR:                $(outcome.rateR)  ")
+        println(io, "rateA:                $(outcome.rateA)  ")
+        println(io, "omegaR:               $(outcome.omegaR)  ")
+        println(io, "omegaA:               $(outcome.omegaA)  ")
     end
 
 
@@ -111,6 +115,7 @@ module DecayYield
         wa = Cascade.Computation(Cascade.Computation(), name="photon lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
                                  scheme=Cascade.StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
                                  approach=cApproach, initialConfigs=initialConfigs)
+        @show wa
         wb = perform(wa, output=true, outputToFile=false);   linesR = wb["decay line data:"].linesR
         println("\nPerform a cascade computation for all (single-electron) Auger decay channels of the levels from the initial configurations:")
         wa = Cascade.Computation(Cascade.Computation(), name="Auger lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
@@ -123,6 +128,10 @@ module DecayYield
         for  outcome in outcomes
             newOutcome = Cascade.computeDecayYieldOutcome(outcome, linesR, linesA, settings)
             push!( newOutcomes, newOutcome)
+            #
+            if settings.geant4
+                Cascade.computeDecayProbabilities(newOutcome, linesR, linesA, settings)
+            end
         end
         # Print all results to screen
         DecayYield.displayResults(stdout, newOutcomes, settings)

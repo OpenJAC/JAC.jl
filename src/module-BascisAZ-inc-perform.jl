@@ -230,6 +230,21 @@
 
 
     """
+    `Basics.perform(comp::Empirical.Computation)`  
+        ... to set-up and perform an empirical computation that starts from a given nuclear model and set of configurations,
+            and which is mainly controlled by its settings. The results are printed to screen but nothing is returned otherwise.
+
+    `Basics.perform(comp::Empirical.Computation; output=true)`   
+        ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the kind
+            and specifications of the empirical computation but can easily accessed by the keys of this dictionary.
+    """
+    function Basics.perform(comp::Empirical.Computation; output::Bool=false)
+        Empirical.perform(comp::Empirical.Computation, output=output)
+    end
+
+
+
+    """
     `Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", configs::Array{Configuration,1}, 
                     initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)` 
         ... to generate from the given initial orbitals a multiplet of single-CSF levels by just using the diagonal 

@@ -22,7 +22,7 @@ module Basics
             oplus,
             Photo, Parity, perform, provide, PathwaySelection,
             Radiative,
-            SolidAngle, Shell, Subshell, subshell_2j,
+            SolidAngle, Shell, ShellSelection, Subshell, subshell_2j,
             tabulate, tools, TensorComp, 
             UseCoulomb, UseBabushkin,
             WeightedCartesian
@@ -677,6 +677,52 @@ module Basics
     struct  Subshell
         n          ::Int64 
         kappa      ::Int64 
+    end
+
+
+    
+    """
+    `struct  Basics.ShellSelection`  
+        ... defines a struct to specify a list of shells by means of different constructors.
+
+        + active       ::Bool                     ... true, if some selection has been made.
+        + shells       ::Array{Shell,1}           ... List of explicitly selected shells.
+        + lSymmetries  ::Array{Int64,1}           ... List of selected l-symmetries
+    """
+    struct  ShellSelection
+        active         ::Bool  
+        shells         ::Array{Shell,1}  
+        lSymmetries    ::Array{Int64,1}
+    end
+
+
+    """
+    `Basics.ShellSelection()`  ... constructor for an inactive ShellSelection.
+    """
+    function  ShellSelection()
+        ShellSelection( false, Shell[], Int64[])    
+    end
+
+
+    """
+    `Basics.ShellSelection(active::Bool; shells::Array{Shell,1}=Shell[], lSymmetries::Array{Int64,1}=Int64[])`  
+        ... constructor for specifying the details of a ShellSelection.
+    """
+    function  ShellSelection(active::Bool; shells::Array{Shell,1}=Shell[], lSymmetries::Array{Int64,1}=Int64[])
+        if  active   ShellSelection( true, shells, lSymmetries)  
+        else         ShellSelection()
+        end
+    end
+
+    function Base.show(io::IO, selection::ShellSelection) 
+        print(io, string(selection) )
+    end
+
+    function Base.string(selection::ShellSelection) 
+        if  selection.active   sa = "ShellSelection:  shells = $(selection.shells);    symmetries = $(selection.lSymmetries)."
+        else                   sa = "Inactive LevelSelection."
+        end
+        return( sa )
     end
 
 
@@ -1511,8 +1557,15 @@ module Basics
         ... defines an abstract type to distinguish between different settings of atomic processes.
     """
     abstract type  AbstractProcessSettings                  end
+
     
-    export  AbstractPropertySettings, AbstractProcessSettings
+    """
+    `abstract type Basics.AbstractEmpiricalSettings` 
+        ... defines an abstract type to distinguish between different settings of empirical processes/computations.
+    """
+    abstract type  AbstractEmpiricalSettings                end
+    
+    export  AbstractPropertySettings, AbstractProcessSettings, AbstractEmpiricalSettings
 
     
     #======================================     Remove abstract idenitfier and only use settings to specify properties and processes
@@ -1727,15 +1780,21 @@ module Basics
     function excludeDoubles                                         end
     function expandOrbital                                          end
     function extractLeadingConfiguration                            end
+    function extractLeadingConfigurationR                           end
     function extractNoOpenShells                                    end
     function extractNonrelativisticShellList                        end
     function extractNonrelativisticConfigurations                   end
     function extractNonrelativisticConfigurationFromCsfR            end
     function extractOpenShellQNfromCsfNR                            end
     function extractOpenShellQNfromCsfR                             end
+    function extractRelativisticConfigurations                      end
+    function extractRelativisticConfigurationFromCsfR               end
     function extractRelativisticSubshellList                        end
+    function extractShellList                                       end
+    function extractShellOccupationDifference                       end
     function extractShellOccupationFromCsfR                         end
-    function generate()                                             end
+    function extractSubshellList                                    end
+    function generate                                               end
     function generateBasis                                          end
     function generateConfigurations                                 end
     function generateConfigurationsForExcitationScheme              end

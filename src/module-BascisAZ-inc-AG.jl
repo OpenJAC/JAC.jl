@@ -813,7 +813,29 @@
         for  (ia, allConf) in  enumerate(allConfs)
             for (ic, csf) in enumerate(level.basis.csfs)
                 if  allConf == Basics.extractNonrelativisticConfigurationFromCsfR(csf, level.basis)     
-                    weights[ia] = weights[ia] + level.mc[ic]
+                    weights[ia] = weights[ia] + level.mc[ic]^2
+                end
+            end
+        end
+        # Determine index of maximum and return the corresponding configuration
+        wx   = findmax(weights)
+        conf = allConfs[ wx[2] ]
+        
+        return( conf )
+    end
+    
+        
+    """
+    `Basics.extractLeadingConfigurationR(level::ManyElectron.Level)`  
+        ... extract the leading relativistic configuration of the given level; a conf::ConfigurationR is returned.
+    """
+    function Basics.extractLeadingConfigurationR(level::ManyElectron.Level)
+        allConfs = Basics.extractRelativisticConfigurations(level.basis)
+        weights  = zeros(length(allConfs))
+        for  (ia, allConf) in  enumerate(allConfs)
+            for (ic, csf) in enumerate(level.basis.csfs)
+                if  allConf == Basics.extractRelativisticConfigurationFromCsfR(csf, level.basis)     
+                    weights[ia] = weights[ia] + level.mc[ic]^2
                 end
             end
         end
@@ -1058,6 +1080,52 @@
 
 
     """
+    `Basics.extractRelativisticConfigurations(basis::Basis)  
+        ... extract all relativistic configurations that contribute to the given set of CSF in basis.csfs. 
+            A confList::Array{ConfigurationR,1} is returned.
+    """
+    function Basics.extractRelativisticConfigurations(basis::Basis)
+        confList  = ConfigurationR[];    subshells = basis.subshells
+        
+        for  csf  in basis.csfs
+            newSubshells = Dict{Subshell,Int64}();    NoElectrons = 0
+            for  (i, subsh) in enumerate(subshells)
+                occ = csf.occupation[i]
+                if   occ > 0  newSubshells = Base.merge( newSubshells, Dict( subsh => occ));     NoElectrons = NoElectrons + occ   end
+            end
+            if    basis.NoElectrons != NoElectrons    error("stop a")
+            else  conf = ConfigurationR(newSubshells, NoElectrons)
+                  if  conf in confList    continue;    else    push!( confList,  conf)    end
+            end
+        end 
+        
+        return( confList )
+    end
+
+
+    """
+    `Basics.extractRelativisticConfigurationFromCsfR(csf::CsfR,  basis::Basis)`  
+        ... extract the nonrelativistic configuration from the given CSF that is defined in basis.csfs. 
+            A conf::Configuration is returned.
+    """
+    function  Basics.extractRelativisticConfigurationFromCsfR(csf::CsfR,  basis::Basis)
+        subshells = basis.subshells
+        
+        newSubshells = Dict{Subshell,Int64}();    NoElectrons = 0
+        for  (i, subsh) in enumerate(subshells)
+            occ = csf.occupation[i]
+            if   occ > 0  newSubshells = Base.merge( newSubshells, Dict( subsh => occ));     NoElectrons = NoElectrons + occ   end
+        end
+        
+        if      basis.NoElectrons != NoElectrons    error("stop a")
+        else    conf = ConfigurationR(newSubshells, NoElectrons)
+        end
+        
+        return( conf )
+    end
+
+
+    """
     `Basics.extractRelativisticSubshellList(confList::Array{Configuration,1})`  
         ... extract all (relativistic) subshells that (will) contribute to the given configuration list, and for which (start) 
             orbitals will be needed in course of the computation. A subshellList::Array{Subshell,1} is returned.
@@ -1151,6 +1219,88 @@
         end
         
         return( subshellList )
+    end
+
+
+    """
+    `Basics.extractShellList(confList::Array{Configuration,1})`  
+        ... extract all (nonrelativistic) shells that (will) contribute to the given configuration list. 
+            A shellList::Array{Shell,1} is returned.
+    """
+    function Basics.extractShellList(confList::Array{Configuration,1})
+        # First extract all shells, then unique this list.
+        shellList = Shell[]
+        
+        for  conf in confList
+            for  (k,v) in conf.shells   push!( shellList, k)    end
+        end
+        
+        shellList = unique(shellList)
+        shellList = sort(shellList)
+        println(">> Generated shell list:  $shellList ")
+        
+        return( shellList )
+    end
+
+
+    """
+    `Basics.extractSubshellList(confList::Array{ConfigurationR,1})`  
+        ... extract all (relativistic) subshells that (will) contribute to the given configuration list. 
+            A subshellList::Array{Subshell,1} is returned.
+    """
+    function Basics.extractSubshellList(confList::Array{ConfigurationR,1})
+        # First extract all shells, then unique this list.
+        subshList = Subshell[]
+        
+        for  conf in confList
+            for  (k,v) in conf.subshells   push!( subshList, k)    end
+        end
+        
+        subshList = unique(subshList)
+        subshList = sort(subshList)
+        println(">> Generated subshell list:  $subshList ")
+        
+        return( subshList )
+    end
+
+
+    """
+    `Basics.extractShellOccupationDifference(confa::Configuration, confb::Configuration)`  
+        ... extract the differences in the occupation of shells: occupation(confa) - occupation(confb).
+            Only those shells are returned for which qa - qb != 0.
+            A list::Array{Tuple(Shell, Int64),1} is returned. 
+    """
+    function Basics.extractShellOccupationDifference(confa::Configuration, confb::Configuration)
+        occList   = Tuple{Shell, Int64}[]
+        shellList = Basics.extractShellList([confa, confb])
+        
+        for shell in shellList
+            if haskey(confa.shells, shell)  qa = confa.shells[shell]   else   qa = 0  end
+            if haskey(confb.shells, shell)  qb = confb.shells[shell]   else   qb = 0  end
+            if qa - qb != 0     push!(occList, (shell, qa - qb) )                     end
+        end
+        
+        return( occList )
+    end
+
+
+    """
+    `Basics.extractShellOccupationDifference(confa::ConfigurationR, confb::ConfigurationR)`  
+        ... extract the differences in the occupation of subshells: occupation(confa) - occupation(confb).
+            Only those subshells are returned for which qa - qb != 0.
+            A list::Array{Tuple(Subshell, Int64),1} is returned. 
+    """
+    function Basics.extractShellOccupationDifference(confa::ConfigurationR, confb::ConfigurationR)
+        occList   = Tuple{Subshell, Int64}[]
+        shList    = Basics.extractSubshellList([confa, confb])
+        
+        for subsh in shList
+            if haskey(confa.subshells, subsh)  qa = confa.subshells[subsh]   else   qa = 0  end
+            if haskey(confb.subshells, subsh)  qb = confb.subshells[subsh]   else   qb = 0  end
+            if qa - qb != 0     push!(occList, (subsh, qa - qb) )                           end
+        end
+        
+        return( occList )
     end
 
 

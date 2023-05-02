@@ -5,110 +5,151 @@
 """
 module ImpactIonization
 
-    using JAC, JAC.ManyElectron, JAC.ImpactExcitation, JAC.AutoIonization
+    using ..Basics, ..ManyElectron, ..Nuclear
+    
+
+    """
+    `abstract type ImpactIonization.AbstractApproximation` 
+        ... defines an abstract and a number of singleton types for the computation of empirical EII cross sections in different 
+            approximations.
+
+      + struct BEBapproximation        
+        ... to calculate the EII cross sections in the binary-encounter-Bethe (BEB) approximation.
+
+      + struct BEDapproximation        
+        ... to calculate the EII cross sections in the binary-encounter-... (BED) approximation.
+
+      + struct MottApproximation        
+        ... to calculate the EII cross sections in the Mott approximation.
+    """
+    abstract type  AbstractApproximation                                      end
+    struct         BEBapproximation               <:  AbstractApproximation   end
+    struct         BEDapproximation               <:  AbstractApproximation   end
+    struct         RelativisticBEBapproximation   <:  AbstractApproximation   end
+    struct         RelativisticBEDapproximation   <:  AbstractApproximation   end
+    
+    export BEBapproximation, BEDapproximation, RelativisticBEBapproximation, RelativisticBEDapproximation
 
 
     """
-    `struct  ImpactIonization.Settings`  ... defines a type for the settings in estimating electron-impact ionization cross sections.
+    `struct  ImpactIonization.Settings  <:  AbstractEmpiricalSettings`  
+        ... defines a type for the settings of empirical electron-impact ionization cross sections.
 
-        + electronEnergies   ::Array{Float64,1}             ... List of impact-energies of the incoming elecgtrons.
-        + calcShellDependent ::Bool                         ... True of shell-dependent cross sections are to be calculated, and false otherwise.
-        + shells             ::Array{Shell,1}               ... List of shells for which shell-dependent cross sections are calculated.
+        + approximation          ::ImpactIonization.AbstractApproximation ... approximation for computing empirical EII cross sections.
+        + impactEnergies         ::Array{Float64,1}                       ... List of impact-energies of the incoming elecgtrons.
+        + finalElectronEnergies  ::Array{Float64,1}                       ... List of final-electron energies.
+        + calcDifferentialCs     ::Bool               ... True if energy-differential cross sections are to be calculated, and false otherwise.
+        + calcPartialCs          ::Bool               ... True if partial (shell-dependent) cross sections are to be calculated, and false otherwise.
+        + calcTotalCs            ::Bool               ... True if total cross sections are to be calculated, and false otherwise.
+        + shellSelection         ::ShellSelection    ... Describe the selected shells, if any.
     """
-    struct Settings
-        electronEnergies     ::Array{Float64,1}
-        calcShellDependent   ::Bool 
-        shells               ::Array{Shell,1} 
+    struct Settings   <:  AbstractEmpiricalSettings
+        approximation            ::ImpactIonization.AbstractApproximation
+        impactEnergies           ::Array{Float64,1}
+        finalElectronEnergies    ::Array{Float64,1} 
+        calcDifferentialCs       ::Bool 
+        calcPartialCs            ::Bool 
+        calcTotalCs              ::Bool 
+        shellSelection           ::ShellSelection
     end 
 
 
     """
-    `JAC.ImpactIonization.Settings()`  ... constructor for the default values of electron-impact ionization cross section estimates.
+    `JAC.ImpactIonization.Settings()`  ... constructor for the default values of empirical electron-impact ionization cross sections.
     """
     function Settings()
-       Settings( Float64[], false, Shell[] )
+       Settings( BEBapproximation(), Float64[], Float64[], false, false, false, ShellSelection() )
     end
 
 
     ## `Base.show(io::IO, settings::ImpactIonization.Settings)`  ... prepares a proper printout of the variable settings::ImpactIonization.Settings.
     function Base.show(io::IO, settings::ImpactIonization.Settings) 
-        println(io, "electronEnergies:       $(settings.electronEnergies)  ")
-        println(io, "calcShellDependent:     $(settings.calcShellDependent)  ")
-        println(io, "shells:                 $(settings.shells)  ")
+        println(io, "approximation:           $(settings.approximation)  ")
+        println(io, "impactEnergies:          $(settings.impactEnergies)  ")
+        println(io, "finalElectronEnergies:   $(settings.finalElectronEnergies)  ")
+        println(io, "calcDifferentialCs:      $(settings.calcDifferentialCs)  ")
+        println(io, "calcPartialCs:           $(settings.calcPartialCs)  ")
+        println(io, "calcTotalCs:             $(settings.calcTotalCs)  ")
+        println(io, "shellSelection:         $(settings.shellSelection)  ")
     end
 
 
     """
-    `struct  ImpactIonization.Channel`  
-        ... defines a type for a electron-impact ionization channel to help characterize the incoming and two outgoing (continuum) 
-            states of many electron-states with (two) free electron
+    `struct  ImpactIonization.CrossSection`  
+        ... defines a type for dealing with (shell-dependent) partial EII cross sections that are based on empirical computations.
 
-        + initialEpsilon   ::Float64            ... energy of the incoming free-electron
-        + finalEpsilon     ::Float64            ... energy of the outgoing free-electron
-        + releasedEpsilon  ::Float64            ... energy of the released free-electron
-        + initialKappa     ::Int64              ... partial-wave of the incoming free electron
-        + finalKappa       ::Int64              ... partial-wave of the outgoing free electron
-        + releasedKappa    ::Int64              ... partial-wave of the released free electron
-        + symmetry         ::LevelSymmetry      ... total angular momentum and parity of the scattering state
-        + initialPhase     ::Float64            ... phase of the incoming partial wave
-        + finalPhase       ::Float64            ... phase of the outgoing partial wave
-        + releasedPhase    ::Float64            ... phase of the released partial wave
-        + amplitude        ::Complex{Float64}   ... Collision amplitude associated with the given channel.
+        + shell             ::Shell             ... shell for which the (differential and partial) cross sections are calculated.
+        + electronEnergies  ::Array{Float64,1}  ... energies of the ionized electron.
+        + differentialCS    ::Array{Float64,1}  ... differential cross sections for this shell.
+        + partialCS         ::Float64           ... differential cross sections for this shell.
     """
-    struct  Channel
-        initialEpsilon     ::Float64
-        finalEpsilon       ::Float64
-        releasedEpsilon    ::Float64
-        initialKappa       ::Int64 
-        finalKappa         ::Int64 
-        releasedKappa      ::Int64 
-        symmetry           ::LevelSymmetry
-        initialPhase       ::Float64
-        finalPhase         ::Float64
-        releasedPhase      ::Float64
-        amplitude          ::Complex{Float64}
-    end
-
-
-    # `Base.show(io::IO, channel::ImpactIonization.Channel)`  ... prepares a proper printout of the variable channel::ImpactIonization.Channel.
-    function Base.show(io::IO, channel::ImpactIonization.Channel) 
-        println(io, "initialEpsilon:     $(channel.initialEpsilon)  ")
-        println(io, "finalEpsilon:       $(channel.finalEpsilon)  ")
-        println(io, "releasedEpsilon:    $(channel.releasedEpsilon)  ")
-        println(io, "initialKappa:       $(channel.initialKappa)  ")
-        println(io, "finalKappa:         $(channel.finalKappa)  ")
-        println(io, "releasedKappa:      $(channel.releasedKappa)  ")
-        println(io, "symmetry:           $(channel.symmetry)  ")
-        println(io, "initialPhase:       $(channel.initialPhase)  ")
-        println(io, "finalPhase:         $(channel.finalPhase)  ")
-        println(io, "releasedPhase:      $(channel.releasedPhase)  ")
-        println(io, "amplitude:          $(channel.amplitude)  ")
-    end
-
-
-    """
-    `struct  ImpactIonization.Line`  ... defines a type for a electron-impact ionization line that may include the definition of channels and 
-                                         their corresponding amplitudes.
-
-        + initialLevel   ::Level          ... initial-(state) level
-        + finalLevel     ::Level          ... final-(state) level
-        + crossSection   ::Float64        ... total cross section of this line
-        + channels       ::Array{ImpactIonization.Line,1}  ... List of Eimex channels of this line.
-    """
-    struct  Line
-        initialLevel     ::Level
-        finalLevel       ::Level
-        crossSection     ::Float64 
-        channels         ::Array{ImpactIonization.Channel,1}
+    struct  CrossSection
+        shell               ::Shell
+        electronEnergies    ::Array{Float64,1}
+        differentialCS      ::Array{Float64,1}
+        partialCS           ::Float64
     end 
 
 
-    # `Base.show(io::IO, line::ImpactIonization.Line)`  ... prepares a proper printout of the variable line::ImpactIonization.Line.
-    function Base.show(io::IO, line::ImpactIonization.Line) 
-        println(io, "initialLevel:     $(line.initialLevel)  ")
-        println(io, "finalLevel:       $(line.finalLevel)  ")
-        println(io, "crossSection:     $(line.crossSection)  ")
-        println(io, "channels:         $(line.channels)  ")
+    # `Base.show(io::IO, line::ImpactIonization.CrossSection)`  ... prepares a proper printout of the variable line::ImpactIonization.CrossSection.
+    function Base.show(io::IO, cs::ImpactIonization.CrossSection) 
+        println(io, "shell:              $(cs.shell)  ")
+        println(io, "electronEnergies:   $(cs.electronEnergies)  ")
+        println(io, "differentialCS:     $(cs.differentialCS)  ")
+        println(io, "partialCS:          $(cs.partialCS)  ")
+    end
+
+
+    """
+    `ImpactIonization.computeCrossSections(basis::Basis, nm::Nuclear.Model, settings::ImpactIonization.Settings)`  
+        ... to compute the EII cross sections for all requested shells of the given multiplett; 
+            a list of crossSections::Array{ImpactIonization.CrossSection,1} is returned.
+    """
+    function  computeCrossSections(basis::Basis, nm::Nuclear.Model, settings::ImpactIonization.Settings)
+        # ... follow the PhotoIonization module
+        # determine cross sections
+        # compute cross sections
+        # display 
+        # return results
+        
+        println("\n\nEnter computeCrossSections()")
+        
+        ImpactIonization.determineCrossSections(basis, settings)
+        # ImpactIonization.displayCrossSections()
+    
+        println("\n\nNow do it, please !!")
+        
+        return( false )
+    end
+
+
+    """
+    `ImpactIonization.determineCrossSections(basis::Basis, settings::ImpactIonization.Settings)`  
+        ... to determine an array of EII cross sections for all requested shells of the given multiplett that need to be calculated in these
+            computations; an Array{ImpactIonization.CrossSection,1} is returned.
+    """
+    function  determineCrossSections(basis::Basis, settings::ImpactIonization.Settings)
+
+        # ... follow the PhotoIonization module ... make some nice tables about the partial and total cross sections
+        # ... use shellSelection in settings
+       
+        println("Enter determineCrossSections()")
+        
+        return( false )
+    end
+
+
+    """
+    `ImpactIonization.displayCrossSections(cs::Array{ImpactIonization.CrossSection,1}, settings::ImpactIonization.Settings)`  
+        ... displays the EII cross sections in a neat tabular form; nothing is returned.
+    """
+    function  displayCrossSections(cs::Array{ImpactIonization.CrossSection,1}, settings::ImpactIonization.Settings)
+    
+        # ... follow the PhotoIonization module ... make some nice tables about the partial and total cross sections
+       
+        println("Enter displayCrossSections()")
+    
+        return( nothing )
     end
 
 end # module

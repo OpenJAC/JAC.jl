@@ -53,7 +53,7 @@ using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, Qu
        HypergeometricFunctions  ## , Interact, GaussQuadrature
 
 export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod, AbstractPotential, AbstractQedModel, AbstractStartOrbitals,
-       AbstractProcessSettings, AbstractPropertySettings, 
+       AbstractProcessSettings, AbstractEmpiricalSettings, AbstractPropertySettings, 
        add, analyze, AlphaX, AlphaVariation, AnapoleMoment, 
        AngularJ64, AngularM64, AngularJ, AngularMomentum, 
        AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AugerInPlasma, AutoIonization, 
@@ -62,7 +62,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        Continuum, CsfR, Coulex, CoulombExcitation, Coulion, CoulombIonization, CoulombBreit, CoulombInteraction, ClebschGordan, 
        CorePolarization,
        diagonalize, Defaults, DecayYield, Details, Dielectronic, Dierec, Djpq, DoubleAutoIonization, DoubleAuger,
-       Eimex, ElectronCapture, ElecCapture, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate, ExpStokes,
+       Eimex, ElectronCapture, ElecCapture, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate, ExpStokes, Empirical,
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, FullCIeigen,
        generate, GreenSettings, GreenChannel, GreenExpansion, getDefaults, Green, Gui,
@@ -85,7 +85,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix, RadiativeOpacity,
        RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
        SchiffMoment, Semiempirical, setDefaults, Shell, SolidAngle, Spectroscopy, SpinAngular, SphericalTensor, 
-       StartFromHydrogenic, StartFromPrevious, StrongField, StrongField2, Subshell,
+       StartFromHydrogenic, StartFromPrevious, StrongField, StrongField2, Subshell, ShellSelection,
        tabulate, TestFrames, Triangle, tools,
        UseCoulomb, UseBabushkin, UseGauge,
        WeightedCartesian, W3j, W6j, W9j,
@@ -177,7 +177,7 @@ include("module-Pulse.jl")
 include("module-StrongField.jl") 
 
 # Functions/methods for semi-empirical estimations
-# include("module-ImpactIonization.jl")
+include("module-ImpactIonization.jl")
 include("module-Semiempirical.jl")
 
 # Functions/methods for atomic and cascade computations
