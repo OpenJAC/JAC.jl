@@ -123,6 +123,12 @@ For reference to (using) this code, please, use the Computer Physics Communicati
      [A&A 656, A163 (2021)](https://doi.org/10.1051/0004-6361/202141673)
 * S. Fritzsche: Level structure and properties of open f-shell elements. [Atoms 10, 7 (2022)](https://doi.org/10.3390/atoms10010007)
 * S. Fritzsche: Photon emission from hollow ions near surfaces. [Atoms 10, 37 (2022)](https://doi.org/10.3390/atoms10020037)
+* S. Fritzsche, B. Böning: Strong-field ionization amplitudes for atomic many-electron targets. [Atoms 10, 70 (2022)](https://doi.org/10.3390/atoms10030070)
+* S. Fritzsche: Application of symmetry-adapted atomic amplitudes. [Atoms 10, 127 (2022)](https://doi.org/10.3390/atoms10040127)
+* S. Fritzsche, A.V. Maiorova & Z.W. Wu: Radiative recombination plasma rate coefficients of multiply-charged ions.
+     [Atoms 11, 50 (2023)](https://doi.org/10.3390/atoms11030050)
+* S. Fritzsche, L.G. Jiao, Y.C. Wang & J.E. Sienkiewicz; Collision strengths of astrophysical interest for multiply charged ions.
+     [Atoms 11, 80 (2023)](https://doi.org/10.3390/atoms11050080)
 
 See also [`CITATION.bib`](CITATION.bib) for the relevant references(s).
 

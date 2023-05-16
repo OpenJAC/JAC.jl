@@ -5,8 +5,19 @@ The following features have been recently implemented and up-loaded into JAC's m
 
 
 
+## 2023
+
+* **Update of UserGuide & Compendium:** Various material has been added to the UserGuide & Compendium. 
+    *(May'23)* 
+* **First design of empirical computations:** A new kind Empirical.Computation() has been established to support
+    electron-impact ionization (EII) cross sections. *(March'23)* 
+
+
+
 ## 2022
 
+* **RR plasma rate coefficients:** A cascade model has been established to automatically compute radiative 
+    recombination (RR) plasma rate coefficients. *(October'22)* 
 * **Two-photon excitation and decay rates:** Use of an appropriate Green function to generate (first) two-photon
     excitation and decay rates. *(May'22)* 
 * **Electron-impact excitation of ions:** The collision strength and electron-impact excitation cross sections
