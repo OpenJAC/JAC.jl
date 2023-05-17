@@ -65,11 +65,12 @@ computations** which can be summarized as follows [(Figure)](Overview-Jac.pdf):
     based on some predefined *(cascade) approach* that enables one to automatically select the state-space of 
     the ions, to choose the atomic processes to be considered for the various steps of the cascade, and to 
     specify perhaps additional     restrictions in order to keep the computations feasible.
-5. **Atomic responses**: With this kind, I wish to support in the future computations that help analyze 
-    the response of atoms to incident beams of light pulses and particles, such as field-induced ionization 
-    processes, high-harmonic generation and several others. For these responses, the detailed structure of 
-    the atoms and ions has often not yet been considered until today but will become relevant as more elaborate 
-    and accurate measurements will become feasible.
+5. **Atomic responses**: With this kind, we partly support computations in intense laser field; they also help 
+    analyze the response of atoms to incident beams of light pulses and particles, such as field-induced 
+    ionization processes, high-harmonic generation and several others. For these responses, the detailed 
+    structure of the atoms and ions has not been considered much until today. A partial-wave formulation of 
+    these strong-field processes enables one to clearly distinguish between contributios due to the atomic target,
+    the Volkov states, or the shape and phase of the incident light.
 6. **Atomic time-evolution of statistical tensors**: We here wish to simulate the population and coherences
     of (atomic) levels using the *Liouville equation*, when atoms and ions are irradiated by (intense) light
     pulses. For these computations, however, we always assume that the level structure of the atoms is kept 
@@ -81,9 +82,10 @@ computations** which can be summarized as follows [(Figure)](Overview-Jac.pdf):
     or *feature transformations* is central for predicting the physical properties and behaviour of atoms and ions; 
     here, we shall provide various of such descriptors useful for atomic physics.
 8. **Semi-empirical estimates** of atomic properties, such as cross sections, stopping powers, asymptotic
-    behaviour, etc. These *estimates* often refer to simple model computations or the use of fit functions.
-    They are only implemented when data are needed but no *ab-initio* computations of the properties are 
-    feasible otherwise.
+    behaviour, etc. An *Empirical.Computation()* is typically based on (more or less) simple model computations 
+    or the use of fit functions. They are only implemented when data are needed but no *ab-initio* computations 
+    of the involved processes appears to be feasible. Examples refer to electron-impact ionization and 
+    charge-exchange processes.
 9. **Symbolic evaluation of expressions from Racah's algebra**: This kind refers to the algebraic transformation
     and simplification of (Racah) expressions, which may generally include any number of Wigner n-j symbols 
     of different kind as well as (various integrals over) the spherical harmonics, the Wigner rotation matrices
@@ -281,15 +283,22 @@ A few further suggestions for extending and improving JAC can be found in sectio
 ## Developers:
 
 * Stephan Fritzsche,  s.fritzsche@gsi.de (U Jena, Germany)
+* Yuan-Cheng Wang (HI Jena, Germany & U Shenyang, China)
 
 
 
 ## Supporters:
 
 * Birger Böning (HI Jena, Germany)
+* Danish F. Dar (U Jena, Germany)
 * Gediminas Gaigalas (U Vilnius, Lithuania)
 * Jiri Hofbrucker (U Jena, Germany)
+* Li-Guang Jiao (HI Jena, Germany & Jilin U Changchun, China)
+* Fang Liu (U Jena, Germany)
+* Anna Maiorova (HI Jena, Germany)
 * Stefan Schippers (U Giessen, Germany)
+* Joseph Sienkiwicz (U Gdansk, Poland)
 * Andrey Surzhykov (U Braunschweig, Germany)
 * Martino Trassinelli (U Sorbonne Paris, France)
 * Andrey Volotka (HI Jena, Germany)
+* Zhongwen Wu (HI Jena, Germany & U Lanzhou, China)
