@@ -37,16 +37,15 @@ using JAC, ..Defaults, ..TestFrames
         @test TestFrames.testModule_MultipoleMoment() 
         ## @test TestFrames.testModule_ParityNonConservation() 
     end
-    ##x close(streamDummy)
 
     @testset "JAC properties" begin
         @test TestFrames.testModule_Einstein()
-        ## @test TestFrames.testModule_Hfs()   
+        @test TestFrames.testModule_Hfs()   
         @test TestFrames.testModule_LandeZeeman() 
         @test TestFrames.testModule_IsotopeShift()   
         @test TestFrames.testModule_AlphaVariation() 
         @test TestFrames.testModule_FormFactor() 
-        ## @test TestFrames.testModule_DecayYield()
+        @test TestFrames.testModule_DecayYield()
         @test TestFrames.testModule_MultipolePolarizibility()
         @test TestFrames.testModule_PlasmaShift() 
     end

@@ -29,7 +29,8 @@
         for j = 1:length(rGrid)
             r = rGrid[j]
             if  n-l-2 >= 0
-                p = 1/n * 2^(l+1) * exp(-r*Z/n) * (r*Z/n)^l * sqrt( Z^3 * factorial(n-l-1) / (n^4*factorial(l+n)) ) * ( (n+l*n-r*Z) * GSL.sf_laguerre_n(n-l-1,2*l+1,2*r*Z/n) - 2*r*Z * GSL.sf_laguerre_n(n-l-2,2+2*l,2*r*Z/n) )
+                p = 1/n * 2^(l+1) * exp(-r*Z/n) * (r*Z/n)^l * sqrt( Z^3 * factorial(n-l-1) / (n^4*factorial(l+n)) ) *
+                    ( (n+l*n-r*Z) * GSL.sf_laguerre_n(n-l-1,2*l+1,2*r*Z/n) - 2*r*Z * GSL.sf_laguerre_n(n-l-2,2+2*l,2*r*Z/n) )
             elseif  n == 1  &&  l == 0
                 p = -2 * exp(-r*Z) * sqrt(Z^3) * (r*Z - 1)
             else # not implemented
@@ -85,7 +86,7 @@
         rvalues = grid.r;      rweights = grid.wr
 
         Pnl = hydrogenPnl( epsiloni, n, l, rvalues )
-        if  typeof(volkov) == FreeVolkov            Pepsplp = VolkovP( epsilonp, lp, rvalues )
+        if      typeof(volkov) == FreeVolkov        Pepsplp = VolkovP( epsilonp, lp, rvalues )
         elseif  typeof(volkov) == CoulombVolkov     Pepsplp = CoulombVolkovP( epsilonp, lp, volkov.Z, rvalues )
         end
 
@@ -105,11 +106,14 @@
         
 
     """
-    `StrongField.computeScalarProdBoundContHydrogenic(Pepsplp::Array{ComplexF64,1}, epsiloni::Float64, n::Int64, l::Int64, rGrid::Radial.Grid)`  
-        ... computes the scalar product of the bound and continuum states in the one-particle picture for hydrogenic initial states
-            where the radial wave function Pepsplp of |epsilonp lp jp> needs to be provided as an argument on the grid rGrid
+    `StrongField.computeScalarProdBoundContHydrogenic(Pepsplp::Array{ComplexF64,1}, epsiloni::Float64, 
+                                                      n::Int64, l::Int64, rGrid::Radial.Grid)`  
+        ... computes the scalar product of the bound and continuum states in the one-particle picture for hydrogenic initial 
+            states, and where the radial wave function Pepsplp of |epsilonp lp jp> needs to be provided as an argument 
+            on the grid rGrid
     """
-    function  computeScalarProdBoundContHydrogenic(Pepsplp::Array{ComplexF64,1}, epsiloni::Float64, n::Int64, l::Int64, rGrid::Radial.Grid)
+    function  computeScalarProdBoundContHydrogenic(Pepsplp::Array{ComplexF64,1}, epsiloni::Float64, 
+                                                   n::Int64, l::Int64, rGrid::Radial.Grid)
         
         if rGrid.meshType != Radial.MeshGL()
             println("StrongField module needs a radial grid of meshType Radial.MeshGL() to perform the radial integrals.")
@@ -228,6 +232,7 @@
         
         return( integral )
     end
+    
 
     """
     `StrongField.pReducedMEHydrogenicUncoupled(epsilonp::Float64, lp::Int64, n::Int64, l::Int64, epsiloni::Float64, 

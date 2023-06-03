@@ -1,4 +1,39 @@
 
+#== Observations at code-review, June 2023
+
+    + It will be desirable to agree about a common style ... which is easy for all three of us (Danish, Kefei, me, Fang ??)
+      to use and follow ... and without destroying/violating the existing pieces.
+    + Lets have a discussion together with (open) module-StrongField.jl, module-StrongField-inc-hydrogenic.jl,
+      module-StrongField-inc-postProcessing.jl, example-Hb.jl 
+      ... to create more understanding for each other ... and, hopefully, to prepare the code for series extensions.
+      
+
+    + The assignment of individual procedures to building blocks of the SFA is often not (really) clear;
+      it might be necessary to establish/improve parts of the JAC manual to make this assignment in
+      names and content more explicit.
+    + Names of procedures are sometimes "cryptic": What is your style of selecting names and name spaces.
+    + The header/description of routines should be improved (though, we have some basis).
+      In particular, each doc-line of a procedure should tell explicit of what::type is returned.
+      This makes it easier to identify the place of a procedure in a given hierarchy, and whether other 
+      procedures exist in different approximations, etc. ... but which lead to the same bulding block.
+    + How much in-line comments are appropriate for a good code ??
+    + Which of this or any analogue code did you realized in your own frame ?? ... At present, I assume you have
+      some dipole/non-dipole codes in the standard expansion ... but not much in the partial-wave decomposition.
+    + Shall we include Kefei into this discussion ?? ... How careful does he deal with codes ?? ...
+    + Angular momenta are treated in JAC as AngularJ64 and AngularM64-type variables. ... How do you treat them ??
+      ... Shall we adopt the code to use internal code with some given definition ... instead of ad-hoc implementations ??
+      Could this be a good starting to get the existing part running (again) ... and to prepare it for re-scattering 
+      amplitudes, etc.
+    + How shall we decide about the plot-features ?? ... Which experiences exist ... and do they belong to such an
+      atomic code ?? ... Should we prepare these plot routines in a more systematic fashion, perhaps with some 
+      astract data types ??
+    + Let's discuss the example in ... include("../examples/example-Hb.jl")
+      and conclude of what would be the right test example to make the code ready for the next steps/improvements.
+==#
+
+
+
+
 """
 `module  JAC.StrongField
     ... a submodel of JAC that contains all methods to set-up and perform strong-field computations. 
@@ -605,11 +640,12 @@ module StrongField
         fVolkovMinus   = Pulse.pulseShapeIntegral(false, envelope, beam, polarization, thetap, phip, energyp, initialEn, 0)
         fVolkovSquared = Pulse.pulseShapeQuadIntegral(envelope, beam, polarization,    thetap, phip, energyp, initialEn, 0)
         
-        ## println("> Pulse-shape integral for a $(string(envelope)) with A0=$(beam.A0), omega=$(beam.omega) [a.u.], cep=$(beam.cep)" * 
-        ##         " and for $(string(polarization)) light are:" )
-        ## println("    F^(Volkov) [+; omega; f^(env); A]   = $fVolkovPlus" )
-        ## println("    F^(Volkov) [-; omega; f^(env); A]   = $fVolkovMinus" )
-        ## println("    F^(quad, Volkov) [f^(env); A]       = $fVolkovSquared" )
+        #== 
+        println("> Pulse-shape integral for a $(string(envelope)) with A0=$(beam.A0), omega=$(beam.omega) [a.u.], cep=$(beam.cep)" * 
+                " and for $(string(polarization)) light are:" )
+        println("    F^(Volkov) [+; omega; f^(env); A]   = $fVolkovPlus" )
+        println("    F^(Volkov) [-; omega; f^(env); A]   = $fVolkovMinus" )
+        println("    F^(quad, Volkov) [f^(env); A]       = $fVolkovSquared" )  ==#
         
         return( (fVolkovPlus, fVolkovMinus, fVolkovSquared) )
     end
@@ -683,7 +719,7 @@ module StrongField
            
         # Determine which spherical SFA amplitudes need to be computed before the actual computation starts
         mjNum = 1; mspNum = 1    # If comp.Average == false
-        mjAverageFactor = 1.     # If comp.Average == false
+        mjAverageFactor   = 1.   # If comp.Average == false
         if( comp.settings.mAverage )
             mjNum = Int(2*j + 1)
             mspNum = 2
@@ -694,7 +730,7 @@ module StrongField
         
         # Generate continuum wave functions for all energies and values of lp that are needed below
         println("")
-        println("Computing continuum wave functions...")
+        println(">> Computing continuum wave functions ...")
         
         energies = Array{Float64}(undef,length(sfaAmplitudes[1,1,:]))
         for  jAmp = 1:length(sfaAmplitudes[1,1,:])  # Get all different energy values
@@ -739,7 +775,7 @@ module StrongField
         end         # end for lp
         
         println("")
-        println("Computing SFA amplitudes...")
+        println(">> Computing SFA amplitudes...")
         println("")
         
         # Compute the requested amplitudes
@@ -767,7 +803,7 @@ module StrongField
                         # Compute the sum over total angular momentum jp
                         for kjp = kjpMin:kjpMax 
                             jp = 1/2 * (2 * kjp + 1)
-                            #Factor in the Wigner-Eckart theorem (CONVENTION that needs to fit the reduced ME!)
+                            # Factor in the Wigner-Eckart theorem (CONVENTION that needs to fit the reduced ME!)
                             KWignerEckart = 1.0/sqrt(2*jp+1) 
                             
                             if comp.settings.hydrogenic
@@ -837,6 +873,7 @@ module StrongField
                 
         return( sfaAmplitudes )
     end
+        
 
     """
     `StrongField.computeSphericalAmplitudesUncoupled(comp::StrongField.Computation)`  
@@ -853,12 +890,13 @@ module StrongField
         defaultSubshell = [sh for (sh,or) in initialOrbitals][1] 
         initialOrbital  = initialOrbitals[defaultSubshell]
         minIonPotential = abs(initialOrbital.energy)
-        for (subshell,orbital) in initialOrbitals
+        for  (subshell,orbital)  in  initialOrbitals
             if   abs(orbital.energy) < minIonPotential
                 initialOrbital  = orbital
                 minIonPotential = abs(orbital.energy)
             end
         end
+        
         
         initialEneV = convertUnits("energy: from atomic to eV", initialOrbital.energy)
         println("")
@@ -868,7 +906,7 @@ module StrongField
         
         ls = LevelSymmetry(initialOrbital.subshell)
         n  = initialOrbital.subshell.n;     l = (ls.J.num+1)/2;    initialEn = initialOrbital.energy
-        if  (sign((-1)^l) == -1  &&  ls.parity == plus::Parity) || (sign((-1)^l) == 1 && ls.parity == minus::Parity)
+        if  (sign((-1)^l) == -1  &&  ls.parity == plus::Parity)  ||  (sign((-1)^l) == 1 &&  ls.parity == minus::Parity)
             l = l - 1
         end
         l = floor(Int,l)
@@ -895,7 +933,7 @@ module StrongField
                 amp = sfaAmplitudes[jm,1,jAmp]
                 thetap        = amp.theta;   phip = amp.phi;     energyp = amp.energy
                 envIntegrals  = StrongField.computePulseShapeIntegrals(comp.envelope, comp.beam, comp.polarization, 
-                                                                        thetap, phip, energyp, initialEn)
+                                                                       thetap, phip, energyp, initialEn)
                 fVolkovPlus, fVolkovMinus, fVolkovSquared = envIntegrals
                 #
                 reducedMEArray = ComplexF64[]
@@ -1054,10 +1092,10 @@ module StrongField
         ENum       = length(observable.energies)
         amplitudes = Array{StrongField.SphericalAmplitude}(undef, miNum, mfNum, ENum)
         
-        for jmi = 1:miNum
-            for jmf = 1:mfNum
-                for jE = 1:ENum 
-                    energy = observable.energies[jE]
+        for  jmi = 1:miNum
+            for  jmf = 1:mfNum
+                for  jE = 1:ENum 
+                    energy                 = observable.energies[jE]
                     amplitudes[jmi,jmf,jE] = SphericalAmplitude(observable.energies[jE], observable.theta, observable.phi, 0.)    
                 end
             end
@@ -1106,8 +1144,8 @@ module StrongField
         phiNum     = length(observable.phis)
         amplitudes = Array{StrongField.SphericalAmplitude}(undef, miNum, mfNum, phiNum)
         
-        for jmi = 1:miNum
-            for jmf = 1:mfNum
+        for  jmi = 1:miNum
+            for  jmf = 1:mfNum
                 for  jphi = 1:phiNum
                     amplitudes[jmi,jmf,jphi] = SphericalAmplitude(observable.energy, observable.theta, observable.phis[jphi], 0.)
                 end
@@ -1129,8 +1167,8 @@ module StrongField
         thetaNum   = length(observable.thetas)
         amplitudes = Array{StrongField.SphericalAmplitude}(undef, miNum, mfNum, thetaNum)
         
-        for jmi = 1:miNum
-            for jmf = 1:mfNum
+        for  jmi = 1:miNum
+            for  jmf = 1:mfNum
                 for  jtheta = 1:thetaNum
                     amplitudes[jmi,jmf,thetaNum] = SphericalAmplitude(observable.energy, observable.thetas[jtheta], observable.phi, 0.)
                 end
@@ -1331,7 +1369,7 @@ module StrongField
             p2p = (px+Apotx)^2+(py+Apoty)^2
             
             #Compute the radial continuum wave function at gridpoint t
-            if  typeof(volkov) == FreeVolkov            Pepsplp = VolkovP( p2p/2, lp, rvalues )
+            if      typeof(volkov) == FreeVolkov        Pepsplp = VolkovP( p2p/2, lp, rvalues )
             elseif  typeof(volkov) == CoulombVolkov     Pepsplp = CoulombVolkovP( p2p/2, lp, volkov.Z, rvalues )
             end
             
@@ -1342,13 +1380,13 @@ module StrongField
                                                            AngularM64(0), AngularJ64(lp), AngularM64(0) )
             
             # Compute Volkov phase at gridpoint t
-            cosIntegral = 0.25 / (omega * (np^2-1)) * 
-                          (  2*sin(phiCep) + 2 * (np^2-1) * sin(phiCep + omega*t) - 
-                          np * ( (1+np)*sin( phiCep + (np-1)/np * omega*t ) + (np-1) * sin( phiCep + (np+1)/np * omega*t )  ) )
+            cosIntegral  = 0.25 / (omega * (np^2-1)) * 
+                           (  2*sin(phiCep) + 2 * (np^2-1) * sin(phiCep + omega*t) - 
+                           np * ( (1+np)*sin( phiCep + (np-1)/np * omega*t ) + (np-1) * sin( phiCep + (np+1)/np * omega*t )  ) )
 
-            sinIntegral = 0.25 / (omega * (np^2-1)) * ( -2*cos(phiCep) - 2 * (np^2-1) * 
-                          cos(phiCep + omega*t) + np * ( (1+np)*cos( phiCep + (np-1)/np * omega*t )   + 
-                          (np-1) * cos( phiCep + (np+1)/np * omega*t )  ) )
+            sinIntegral  = 0.25 / (omega * (np^2-1)) * ( -2*cos(phiCep) - 2 * (np^2-1) * 
+                           cos(phiCep + omega*t) + np * ( (1+np)*cos( phiCep + (np-1)/np * omega*t )   + 
+                           (np-1) * cos( phiCep + (np+1)/np * omega*t )  ) )
 
             cos2Integral = sin(2*phiCep)/omega * ( -6 - np/(np-1) - np/(np+1) + 8*np/(2*np-1) + 8*np/(2*np+1) )  + 
                            12*t + 6/omega * cos(2*omega*t) * sin(2*phiCep) + 6/omega * cos(2*phiCep) * sin(2*omega*t) - 
@@ -1373,8 +1411,8 @@ module StrongField
             expEpsilonVolkov = exp(-im * epsiloni*t) * exp(im * SVolkov)
 
             # Compute the time integral
-            waplus  = waplus  + fE * rIntegral * expEpsilonVolkov * exp(-im * omega * t) * weightst[j]
-            waminus = waminus + fEStar * rIntegral * expEpsilonVolkov * exp(im * omega * t) * weightst[j]
+            waplus  = waplus  + fE     * rIntegral * expEpsilonVolkov * exp(-im * omega * t) * weightst[j]
+            waminus = waminus + fEStar * rIntegral * expEpsilonVolkov * exp(im * omega * t)  * weightst[j]
         end
         
         waplus 	= waplus  * E0 * exp(-im*phiCepMinusPiHalf)

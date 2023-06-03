@@ -40,20 +40,20 @@ module Radial
         + tS         ::Array{Float64,1}  ... radial break points for the B-splines of the small c.
         + ntL        ::Int64             ... number of break points in the t-grid of the large c.
         + ntS        ::Int64             ... number of break points in the t-grid of the small c.
-        + orderL     ::Int64             ... B-spline order of large components of the large c.
-        + orderS     ::Int64             ... B-spline order of small components
-        + nsL        ::Int64             ... number of B-splines for large components
-        + nsS        ::Int64             ... number of B-splines for small components
+        + orderL     ::Int64             ... B-spline order of large components.
+        + orderS     ::Int64             ... B-spline order of small components.
+        + nsL        ::Int64             ... number of B-splines for large components.
+        + nsS        ::Int64             ... number of B-splines for small components.
         + orderGL    ::Int64             
-            ... order of the Gauss-Lengendre integration if mesh == Radial.MeshGL(); this is also
-                equal of how the break points are generated as nth-point from the physical grid points.
+            ... order of the Gauss-Lengedre integration if mesh == Radial.MeshGL(); this order also determines
+                the (number of) break points by taking the orderGL-th point from the physical grid points.
         ** Radial mesh points **
         + meshType   ::Radial.AbstractMesh
-         + r          ::Array{Float64,1}  ... radial grid points
+        + r          ::Array{Float64,1}  ... radial grid points
         + rp         ::Array{Float64,1}  ... derivative of the radial grid at the grid points
         + rpor       ::Array{Float64,1}  ... rp over r
-        + wr         ::Array{Float64,1}  ... integration weights for all grid points, 
-                                             for instance, GL weights.
+        + wr         ::Array{Float64,1}  
+            ... integration weights for all grid points, for instance, GL weights.
     """
     struct  Grid
         rnt          ::Float64
@@ -782,7 +782,11 @@ module Radial
 
         return( SingleElecSpectrum() )
     end
-
+    
+    
+    ###################################################################################################################
+    ###################################################################################################################
+    ###################################################################################################################
 
 
     """
@@ -803,7 +807,6 @@ module Radial
         
         return( mZbar )
     end
-
 
 
     """
@@ -848,5 +851,68 @@ module Radial
         
         return( NoPoints )
     end
+
+
+    """
+    `Radial.generateGrid(grid::Radial.Grid; boxSize::Union{Nothing,Float64}=nothing, 
+                                            maximumFreeElectronEnergy::Union{Nothing,Float64}=nothing, 
+                                            maximumPrincipalQN::Union{Nothing,Int64}=nothing, 
+                                            NoPointsInsideNucleus::Union{Nothing,Int64}=nothing, 
+                                            NoPointsInsideFirstBohrRadius::Union{Nothing,Int64}=nothing)
+                                            
+        ... to generate a grid that fulfills special requirements; th following schemes are supported:
+        
+            boxSize 
+                ... apply a fixed box size (in atomic units) as needed in an average-atom model and elsewhere.
+            maximumFreeElectronEnergy
+                ... provide a maximum free-electron energy (Hartree) and determine the linearized stepsize such,
+                    that 20 points per wavelength are used asymptotically.
+            maximumPrincipalQN
+                ... generate an grid with a rbox-size that is suitable to represent subshell orbitals
+                    with the given n; the value of rbox = 5 * <r_n> is taken, i.e. 5 times the mean hydrogenic 
+                    value (not yet).
+            NoPointsInsideNucleus
+                ... generate a grid (of given type) with the given number inside the nucleus; this affects the values
+                    of rnt and h (not yet).
+            NoPointsInsideFirstBohrRadius
+                ... generate a grid (of given type) with the given number inside the first Bohr radius; this affects 
+                    the values of rnt and h (not yet).
+        
+        Only on of these optional parameters can be selected at a given time. A proper grid::Radial.Grid is returned,
+        along with a short reasoning of what has been selected.
+    """
+    function generateGrid(grid::Radial.Grid; boxSize::Union{Nothing,Float64}=nothing, 
+                                             maximumFreeElectronEnergy::Union{Nothing,Float64}=nothing, 
+                                             maximumPrincipalQN::Union{Nothing,Int64}=nothing, 
+                                             NoPointsInsideNucleus::Union{Nothing,Int64}=nothing, 
+                                             NoPointsInsideFirstBohrRadius::Union{Nothing,Int64}=nothing) 
+        
+        if  typeof(boxSize)                            != Nothing
+            # Apply a fixed box size (in atomic units) as needed in an average-atom model and elsewhere.
+            newGrid = Radial.Grid(grid; rbox=boxSize);    rnt = newGrid.rnt * boxSize / newGrid.tL[end]
+            newGrid = Radial.Grid(newGrid; rnt = rnt)
+            println(">> Generate a new grid with boxSize = $boxSize a.u. and the break points " *
+                    "\n   tL = $(newGrid.tL)   \n   tS = $(newGrid.tS)"  *
+                    "\n>> Note that the last grid point r[end] is always slightly smaller as it refers " *
+                    "to the last GL (zero of) integration along r.")
+            #
+        elseif  typeof(maximumFreeElectronEnergy)      != Nothing
+            wavenb      = sqrt( 2maximumFreeElectronEnergy + maximumFreeElectronEnergy * Defaults.getDefaults("alpha")^2 )
+            wavelgth    = 2pi / wavenb;     hp = wavelgth / 20
+            newGrid     = Radial.Grid(grid; hp=hp)
+            println(">> Generate a new grid for the minium wavelength = $wavelgth a.u. of free electrons and  hp = $hp")
+            #
+        elseif  typeof(maximumPrincipalQN)             != Nothing
+            error("stop a")
+            #
+        elseif  typeof(NoPointsInsideNucleus)          != Nothing
+            error("stop b")
+        elseif  typeof(NoPointsInsideFirstBohrRadius)  != Nothing
+            error("stop c")
+        end
+            
+        return( newGrid )
+    end
+
 
 end # module

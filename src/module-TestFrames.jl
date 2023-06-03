@@ -5,7 +5,8 @@
 """
 module TestFrames
 
-    using Printf, SymEngine, JLD, JAC, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
+    using Printf, SymEngine, JLD, JAC, 
+          ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
     
     export testDummy
 
@@ -488,7 +489,7 @@ module TestFrames
         grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, rbox=10.0)
         wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.),  
                                 configs=[Configuration("1s 2s^2 2p^6")],
-                                propertySettings = [ DecayYield.Settings("SCA", true, LevelSelection() )] )
+                                propertySettings = [ DecayYield.Settings("SCA", true, false, LevelSelection() )] )
         wb = perform(wa)
         ###
         Defaults.setDefaults("print summary: close", "")
@@ -593,7 +594,7 @@ module TestFrames
         println("aaa  ")
         # Make the comparison with approved data
         success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Hfs-b-approved.sum"), 
-                                    joinpath(@__DIR__, "..", "test", "test-Hfs-b-new.sum"), "Level        J^P           Energy", 20) 
+                                    joinpath(@__DIR__, "..", "test", "test-Hfs-b-new.sum"), "Level  J Parity          Hartrees", 20) 
         println("bbb  success = $success")
         testPrint("testModule_Hfs()::", success)
         return(success)  

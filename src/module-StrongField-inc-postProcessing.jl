@@ -4,7 +4,8 @@
 
     """
     `StrongField.plot(comps::Array{StrongField.Computation,1}, results::Array{Dict{String,Any},1}, 
-                       energyScale::String = "atomic", probabilityScaling::String = "linear", dataLabel::String = "StrongFieldData" )`  
+                       energyScale::String = "atomic", probabilityScaling::String = "linear", dataLabel::String = "StrongFieldData" )` 
+                       
         ... generates a graphical representation of the observable (StrongField.SfaEnergyDistribution, 
             StrongField.SfaMomentumDistribution, StrongField.SfaAzimuthalAngularDistribution or 
             StrongField.SfaPolarAngularDistribution) with the results of all computations comps combined in one plot. 
@@ -302,88 +303,3 @@
             if savePlot      savefig(dataLabel * "-initial_radial_wave_function.pdf")    end
     end
     
-
-    #==
-    #if false
-    #    minIonizationPotential = 0.
-        #Extract the initial orbital of the active electron from the many-electron comp.initialLevel and set quantum numbers
-    #    initialOrbitals = initialLevel.basis.orbitals
-        
-        #Find highest lying orbital (smallest ionization potential)
-    #    defaultSubshell = [sh for (sh,or) in initialOrbitals][1] 
-    #    # This is not nice; must be a better way to simply get a default element from a Dict
-    #    o = initialOrbitals[defaultSubshell]
-    #    minIonizationPotential = abs(o.energy)
-    #    for (subshell,orbital) in initialOrbitals
-    #        if   abs(orbital.energy) < minIonizationPotential
-    #            global o = orbital
-    #            global minIonizationPotential = abs(orbital.energy)
-    #        end
-    #    end
-        
-    #    ls = LevelSymmetry(o.subshell)
-    #    n = o.subshell.n;      l = Int((ls.J.num+1)/2);    j = ls.J.num/2;
-    #    
-    #    if  (sign((-1)^l) == -1 && ls.parity == plus::Parity) || (sign((-1)^l) == 1 && ls.parity == minus::Parity)
-    #        l = l - 1
-    #    end
-    #    l = floor(Int,l)
-    #    
-    #    hydrogenP = StrongField.HydrogenPnl( o.energy, n, l, rGrid.r )
-    #    
-    #    Plots.plot(rGrid.r, [o.P hydrogenP], 
-    #                                title = "Radial wave function: n=" * string(n) * ", l=" * string(l) * ", Ip=" * string(round(convertUnits("energy: from atomic to eV", o.energy),digits=2)) * " eV",
-    #                                xlabel = "r (a.u.)",
-    #                                ylabel = "P(r)",
-    #                                markershape = :circle,
-    #                                gridlinewidth = 2,
-    #                                tickfontsize = 10,
-    #                                labelfontsize = 10,
-    #                                labelfontfamily = "Latin Modern Roman",
-    #                                titlefontfamily = "Latin Modern Roman",
-    #                                label = ["JAC" "Hydrogen"]
-    #                              )
-    #    
-    #    savefig("radial_wavefunction.pdf")
-    #    
-    #    writedlm(dataName * "-radial_wavefunction.csv",hcat(rGrid.r,o.P,hydrogenP))
-    #end
-
-    #if false
-    #epsilonp=2*omega
-    #kappa =-1
-    #lp=0
-
-    #nrContinuum = Continuum.gridConsistency(epsilonp, rGrid)
-    #contSettings = Continuum.Settings(false, nrContinuum)
-    #contSettings = Continuum.Settings(false, rGrid.NoPoints)
-
-    #newiLevel = Basics.generateLevelWithSymmetryReducedBasis(initialLevel, initialLevel.basis.subshells)
-    #newfLevel = Basics.generateLevelWithSymmetryReducedBasis(finalLevel, newiLevel.basis.subshells)
-    #newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, kappa), newiLevel)
-    #cOrbital, phase  = Continuum.generateOrbitalForLevel(epsilonp, Subshell(101, kappa), newfLevel, nuclearModel, rGrid, contSettings)
-
-        
-    #Plots.plot( rGrid.r[1:size(cOrbital.P)[1]], real(cOrbital.P * exp(im*phase)), 
-    #                            title = "Radial wave function continuum",
-    #                            xlabel = "r (a.u.)",
-    #                            ylabel = "P(r)",
-    #                            markershape = :circle,
-    #                            gridlinewidth = 2,
-    #                            tickfontsize = 10,
-    #                            labelfontsize = 10,
-    #                            labelfontfamily = "Latin Modern Roman",
-    #                            titlefontfamily = "Latin Modern Roman"
-    #          )
-    #    
-    #    Z=1.0
-    #    cVolkov = StrongField.CoulombVolkovP( epsilonp, lp, Z, rGrid.r )
-    #    Plots.plot!( rGrid.r, real(cVolkov) )
-    #    
-    #    savefig("radial_wavefunction_continuum.pdf")
-
-
-    #end   ==#
-
-
-
