@@ -634,6 +634,78 @@
     end
 
 
+    """
+    `Basics.computePotentialAtomicAverageHS(grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)`  
+        ... to compute a (radial) Hartree-Slater-type potential for the density as modeled by the given set of orbital
+            and their occupation numbers in the atomic-average model; a potential::RadialPotential is returned. 
+            Here, the atomic-average HS potential is defined by
+                                                        
+                                          (2ja-1)                       3  [     3          ]^1/3      r
+                V_HS(r) = = - Sum_a  --------------------  Y0_aa(r)  +  -  [ ---------  rho ]       *  -
+                                     [exp(eps-mu/kT) + 1]               2  [ 4pi^2 r^2      ]          2
+
+            with rho(r) = Sum_a  (2j_a+1) * (Pa^2(r) + Qa^2(r)) / [1 + exp(epsilon-mu)/kT]   ... charge density of all electrons.  
+            An Radial.Potential with V_aa_HS(r)  is returned that is consistent with an effective charge Z(r).
+    """
+    function Basics.computePotentialAtomicAverageHS(grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)
+        npoints = grid.NoPoints;    wx = zeros( npoints );    rho = zeros( npoints )
+        # Sum_a ...
+        for (k,v)  in  orbitals 
+            occa = Basics.twice( Basics.subshell_j(k)) + 1
+            occa = occa /  (exp( (v.energy - mu) /temp ) + 1) 
+            nrho = length(v.P);      rhoaa  = zeros(nrho)
+            for  i = 1:nrho    rhoaa[i] = v.P[i]^2 + v.Q[i]^2    end
+            for  i = 1:nrho    wx[i]    = wx[i]  - occa * RadialIntegrals.Yk_ab(0, grid.r[i], rhoaa, nrho, grid)   end
+            for  i = 1:nrho    rho[i]   = rho[i] + occa * rhoaa[i]     end
+            Yk = RadialIntegrals.Yk_ab(0, grid.r[nrho], rhoaa, nrho, grid)
+            for  i = nrho+1:npoints       wx[i] = wx[i] - occa * Yk    end
+        end
+        ## for  i = 2:npoints     rho[i]   = rho[i] / (4pi * grid.r[i])   end;       rho[1] = 0.
+        for  i = 2:npoints     wx[i]    = wx[i] + (3/2) * (3/(4pi^2 * grid.r[i]^2) * rho[i])^(1/3) * grid.r[i] / 2   end
+        #
+        wc = Radial.Potential("average-atom HS", wx, grid)
+        return( wc )
+    end
+
+
+
+    """
+    `Basics.computePotentialAtomicAverageDFS(grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)`  
+        ... to compute a (radial) average-atom DFS-type potential for  the density as modeled by the given set of orbital
+            and their occupation numbers in the atomic-average model; a potential::RadialPotential is returned. 
+            The atomic-average DFS potential is defined by
+
+                                                                [   3                   ]^(1/3)
+                V_DFS(r) = int_0^infty dr'  rho_t(r') / r_>  -- [-----------   rho_t(r) ]
+                                                                [ 4 pi^2 r^2            ]
+
+            but with the occupation numbers (2j_a+1) / [exp(eps-mu/kT) + 1]
+            with r_> = max(r,r')  and  rho_t(r) = sum_a (Pa^2(r) + Qa^2(r))   ... charge density of all electrons.  
+            An Radial.Potential with -r * V_DFS(r)  is returned to be consistent with an effective charge Z(r).
+    """
+    function Basics.computePotentialAtomicAverageDFS(grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)
+        npoints = grid.NoPoints;    rhot = zeros( npoints );     wb = zeros( npoints );    wx = zeros( npoints )
+        # Compute the charge density with the average-atom occupation numbers
+        for (k,v)  in  orbitals 
+            occ  = Basics.twice( Basics.subshell_j(k)) + 1
+            occ  = occ /  (exp( (v.energy - mu) /temp ) + 1) 
+            nrho = length(v.P)
+            for    i = 1:nrho   rhot[i] = rhot[i] + occ * (v.P[i]^2 + v.Q[i]^2)    end
+        end
+        # Define the integrant and take the integrals
+        for i = 1:npoints
+            for j = 1:npoints    rg = max( grid.r[i],  grid.r[j]);    wx[j] = rhot[j]/rg   end
+            wb[i] = JAC.RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
+            wb[i] = wb[i] - (3 /(4*pi^2 * grid.r[i]^2) * rhot[i])^(1/3)
+        end
+        # Define the potential with regard to Z(r)
+        for i = 2:npoints    wb[i] = - wb[i] * grid.r[i]   end;    wb[1] = 0.
+        #
+        wc = JAC.Radial.Potential("average-atom DFS", wb, grid)
+        return( wc )
+    end
+
+
 
     """
     `Basics.computePotentialCoreHartree(grid::Radial.Grid, level::Level)`  

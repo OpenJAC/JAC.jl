@@ -284,6 +284,14 @@ module Basics
         else    error("stop a")
         end
     end
+    
+    
+    function  Base.:*(p1::Parity, p2::Parity)
+        if      p1 == plus   &&  p2 == plus    return( plus ) 
+        elseif  p1 == minus  &&  p2 == minus   return( plus ) 
+        else                                   return( minus ) 
+        end
+    end
 
 
     """
@@ -1483,6 +1491,8 @@ module Basics
     struct     DFSField             <:  AbstractScField     end
     struct     HSField              <:  AbstractScField     end
     struct     NuclearField         <:  AbstractScField     end
+    struct     AaDFSField           <:  AbstractScField     end   
+    struct     AaHSField            <:  AbstractScField     end   
 
     """
     `struct  Basics.DFSwCPField          <:  AbstractScField`  
@@ -1494,7 +1504,7 @@ module Basics
         corePolarization    ::CorePolarization
     end
 
-    export  AbstractScField, ALField, EOLField, DFSField, DFSwCPField, HSField, NuclearField
+    export  AbstractScField, AaDFSField, AaHSField, ALField, EOLField, DFSField, DFSwCPField, HSField, NuclearField
 
     
     
@@ -1754,6 +1764,8 @@ module Basics
     function computeDiracEnergy                                     end
     function computeMeanSubshellOccupation                          end
     function computeMultipletForGreenApproach                       end
+    function computePotentialAtomicAverageDFS                       end
+    function computePotentialAtomicAverageHS                        end
     function computePotentialCoreHartree                            end
     function computePotentialHartree                                end
     function computePotentialHartreeSlater                          end
@@ -1776,6 +1788,7 @@ module Basics
     function display                                                end
     function displayLevels                                          end
     function displayOrbitalOverlap                                  end
+    function displayOrbitalProperties                               end
     function excludeConfigurations                                  end
     function excludeDoubles                                         end
     function expandOrbital                                          end
@@ -1785,6 +1798,8 @@ module Basics
     function extractNonrelativisticShellList                        end
     function extractNonrelativisticConfigurations                   end
     function extractNonrelativisticConfigurationFromCsfR            end
+    function extractOpenShells                                      end
+    function extractOpenSubshells                                   end
     function extractOpenShellQNfromCsfNR                            end
     function extractOpenShellQNfromCsfR                             end
     function extractRelativisticConfigurations                      end
@@ -1794,10 +1809,12 @@ module Basics
     function extractShellOccupationDifference                       end
     function extractShellOccupationFromCsfR                         end
     function extractSubshellList                                    end
+    function FermiDirac                                             end
     function generate                                               end
     function generateBasis                                          end
     function generateConfigurations                                 end
     function generateConfigurationsForExcitationScheme              end
+    function generateConfigurationsWithAdditionalElectrons          end
     function generateConfigurationsWithElectronCapture              end
     function generateConfigurationsWithElectronLoss                 end
     function generateLevelWithExtraElectron                         end

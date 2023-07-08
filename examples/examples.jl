@@ -95,4 +95,8 @@ println("H)  Tests & development of atomic response computations")
 println("-----------------------------------------------------")
 println("Ha) Tests of the HighHarmonic module to calculate a high-harmonic spectrum in single-electron approximation.")
 println("Hb) Tests of the StrongField module to calculate energy and momentum distributions of photoelectron in SFA.")
+println("")
+println("I)  Tests & development of plasma computations")
+println("-----------------------------------------------------")
+println("Ia) Tests of average-atom computations.")
 

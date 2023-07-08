@@ -133,6 +133,7 @@ module DecayYield
                 Cascade.computeDecayProbabilities(newOutcome, linesR, linesA, settings)
             end
         end
+        #
         # Print all results to screen
         DecayYield.displayResults(stdout, newOutcomes, settings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")

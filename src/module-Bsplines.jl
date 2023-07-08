@@ -618,6 +618,15 @@ module Bsplines
                     alreadyDone[j] = true
                 end
             end
+            #
+            #== Add orbitals for the given kappa if n <= pqnMax and if not yet added before.
+            pqnMin = Basics.subshell_l(sh)
+            for  n = pqnMin:pqnMax
+                if    haskey(newOrbitals, Subshell(n, sh.kappa))     continue
+                else  newOrbitals[Subshell(n, sh.kappa)] = generateOrbitalFromPrimitives(Subshell(n, sh.kappa), w2, primitives, nsL, nsS)
+                      println(">>> Add hydrogenic orbital for $(Subshell(n, sh.kappa)).")
+                end
+            end ==#
         end
         
         ##x Basics.display(stdout, newOrbitals, primitives.grid, longTable=true);   error("stop here")
@@ -837,6 +846,89 @@ module Bsplines
         
         newBasis = Basis(true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, analyzedOrbitals)
         return( newBasis )
+    end
+    
+
+
+    """
+    `Bsplines.solveSelfConsistentAverageAtom(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, 
+                    orbitals::Dict{Subshell, Orbital}, temp::Float64, scField::Basics.AbstractScField; printout::Bool=true)
+        ... solves the self-consistent field for a given local average-atom potential as specified by scField 
+            A (new) set of orbitals::Dict{Subshell, Orbital} is returned.
+    """
+    function solveSelfConsistentAverageAtom(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, 
+                    orbitals::Dict{Subshell, Orbital}, temp::Float64, scField::Basics.AbstractScField; printout::Bool=true)
+        chemMu    = Plasma.determineChemicalPotential(orbitals, temp, nuclearModel)
+        # Extract the kappa's from orbitals
+        kappas = Int64[];     for (k,v)  in  orbitals     push!(kappas, k.kappa)    end;    kappas = unique(kappas)
+        @show kappas
+        
+        Defaults.setDefaults("standard grid", primitives.grid; printout=printout)
+        # Define the storage for the calculations of matrices
+        if  printout    println(">>  for various B-spline matrices:")    end
+        storage  = Dict{Array{Any,1},Array{Float64,2}}()
+        
+        # Set-up the overlap matrix; compute or fetch the diagonal 'overlap' blocks
+        grid = primitives.grid;   nsL = primitives.grid.nsL - 2;    nsS = primitives.grid.nsS - 2
+        wb = zeros( nsL+nsS, nsL+nsS )
+        wb[1:nsL,1:nsL]                 = generateMatrix!(0, "LL-overlap", primitives, nsL, nsS, storage)
+        wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = generateMatrix!(0, "SS-overlap", primitives, nsL, nsS, storage)
+        # Determine the symmetry block of this basis and define storage for the kappa blocks and orbitals from the last iteration
+        bsplineBlock = Dict{Int64,Basics.Eigen}();   previousOrbitals = deepcopy(orbitals)
+        for  kappa  in  kappas           bsplineBlock[kappa]  = Basics.Eigen( zeros(2), [zeros(2), zeros(2)])   end
+        # Determine te nuclear potential once at the beginning
+        nuclearPotential  = Nuclear.nuclearPotential(nuclearModel, grid)
+                
+        # Start the SCF procedure for all symmetries
+        isNotSCF = true;   NoIteration = 0;   accuracyScf = 0.
+        while  isNotSCF
+            NoIteration = NoIteration + 1;   go_on = false 
+            if  NoIteration >  32
+                    println(">> Maximum number of SCF iterations = 32 is reached at accuracy " * 
+                            @sprintf("%.4e", accuracyScf) * " ... computations proceed.")
+                break
+            end
+            if  printout    println("\nIteration $NoIteration for symmetries ... ")    end
+            #
+            for kappa in kappas
+                # (1) Re-compute the local potential
+                if       scField == Basics.AaHSField()     wp = Basics.computePotentialAtomicAverageHS( grid, previousOrbitals, chemMu, temp)
+                elseif   scField == Basics.AaDFSField()    wp = Basics.computePotentialAtomicAverageDFS(grid, previousOrbitals, chemMu, temp)
+                else     error("stop potential")
+                end
+                pot = Basics.add(nuclearPotential, wp)
+                # (2) Set-up the diagonal part of the Hamiltonian matrix
+                wa = Bsplines.setupLocalMatrix(kappa, primitives, nsL, nsS, pot, storage)
+                # (3) Solve the generalized eigenvalue problem
+                wc = Basics.diagonalize("generalized eigenvalues: LinearAlgebra", wa, wb)
+                # (4) Analyse and print information about the convergence of the symmetry blocks and the occupied orbitals
+                wcBlock = Basics.analyzeConvergence(bsplineBlock[kappa], wc)
+                if  wcBlock > 1.0e-6   go_on = true   end     ## accuracyScf
+                for  (k,v)  in  orbitals
+                    if      k.kappa == kappa
+                        newOrbital = generateOrbitalFromPrimitives(k, wc, primitives, nsL, nsS)
+                        wcOrbital  = Basics.analyzeConvergence(previousOrbitals[k], newOrbital)
+                        if  wcOrbital > 1.0e-6   accuracyScf = wcOrbital;   go_on = true   end     ## accuracyScf
+                           sa = "  $k::  en [a.u.] = " * @sprintf("%.7e", newOrbital.energy) * ";   self-cons'cy = "  
+                           sa = sa * @sprintf("%.4e", wcOrbital)   * "  ["
+                           sa = sa * @sprintf("%.4e", wcBlock)             * " for sym-block kappa = $kappa]"
+                           if  printout    println(sa)    end
+                        ## println("  $sh  en [a.u.] = $(newOrbital.energy)   self-consistency = $(wcOrbital), $(wcBlock) [kappa=$kappa] ") 
+                        previousOrbitals[k] = newOrbital
+                    end
+                end
+                # (5) Re-define the bsplineBlock
+                bsplineBlock[kappa] = wc
+            end
+            chemMu              = Plasma.determineChemicalPotential(previousOrbitals, temp, nuclearModel)
+            if  go_on   nothing   else   break   end
+        end
+        
+        
+        
+        analyzedOrbitals = Basics.analyze(previousOrbitals, printout=true)
+        
+        return( analyzedOrbitals )
     end
 
 

@@ -56,7 +56,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        AbstractProcessSettings, AbstractEmpiricalSettings, AbstractPropertySettings, 
        add, analyze, AlphaX, AlphaVariation, AnapoleMoment, 
        AngularJ64, AngularM64, AngularJ, AngularMomentum, 
-       AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AugerInPlasma, AutoIonization, 
+       AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AugerInPlasma, AutoIonization, AverageAtom,
        Basics, Basis, BreitInteraction, Bsplines,
        CartesianVector, CiSettings, CiExpansion, CloseCoupling, compute, convertUnits, Cascade, Compton, Configuration, ConfigurationR, 
        Continuum, CsfR, Coulex, CoulombExcitation, Coulion, CoulombIonization, CoulombBreit, CoulombInteraction, ClebschGordan, 
@@ -182,6 +182,7 @@ include("module-Semiempirical.jl")
 
 # Functions/methods for atomic and cascade computations
 include("module-Atomic.jl");            using ..Atomic
+include("module-Plasma.jl");            using ..Plasma
 include("module-Empirical.jl");         using ..Empirical
 include("module-Cascade.jl");           using ..Cascade
 

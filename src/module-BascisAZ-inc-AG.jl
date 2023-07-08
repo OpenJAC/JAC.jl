@@ -670,6 +670,20 @@
    
 
     """
+    `   + (stream::IO, channels::Array{AtomicState.GreenChannel,1}; N::Int64=10)`  
+        ... display on stream the lowest N level energies of all levels from the (Green) channles in ascending order, and together with the 
+            configuration of most leading term in the level expansion. A neat table is printed but nothing is returned otherwise.
+    """
+    function Basics.displayLevels(stream::IO, channels::Array{AtomicState.GreenChannel,1}; N::Int64=10)
+        multiplets = Multiplet[]
+        for  channel in channels    push!(multiplets, channel.gMultiplet)   end
+        Basics.displayLevels(stream, multiplets)
+        
+        return( nothing )
+    end
+   
+
+    """
     `Basics.displayOrbitalOverlap(stream::IO, leftOrbitals::Dict{Subshell, Orbital}, rightOrbitals::Dict{Subshell, Orbital}, 
                                   grid::Radial.Grid; kappas::Array{Int64,1} = [-1,1,-2])`  
         ... display on stream the overlap of the orbitals from the set of leftOrbs and rightOrbs, and for the given
@@ -699,19 +713,62 @@
         
         return( nothing )
     end
-   
+  
 
     """
-    `   + (stream::IO, channels::Array{AtomicState.GreenChannel,1}; N::Int64=10)`  
-        ... display on stream the lowest N level energies of all levels from the (Green) channles in ascending order, and together with the 
-            configuration of most leading term in the level expansion. A neat table is printed but nothing is returned otherwise.
-    """
-    function Basics.displayLevels(stream::IO, channels::Array{AtomicState.GreenChannel,1}; N::Int64=10)
-        multiplets = Multiplet[]
-        for  channel in channels    push!(multiplets, channel.gMultiplet)   end
-        Basics.displayLevels(stream, multiplets)
+    `Basics.displayOrbitalProperties(stream::IO, orbitals::Dict{Subshell, Orbital}, chemMu::Float64, temp::Float64, 
+                                     nm::Nuclear.Model, grid::Radial.Grid)`  
+        ... displays the orbital properties:
         
-        return( nothing )
+                subshell, energy, Delta energy (wrt Dirac), f(energy; mu, T), occupation No, <r>, <1/r>
+                
+            for all orbitals with occNo > 0.1 in descending order.
+            A neat table is printed and nothing is returned otherwise.
+    """
+    function Basics.displayOrbitalProperties(stream::IO, orbitals::Dict{Subshell, Orbital}, chemMu::Float64, temp::Float64, 
+                                             nm::Nuclear.Model, grid::Radial.Grid)
+        subshells = Subshell[];     ens  = Float64[];     rExps    = Float64[];     rInvs = Float64[];     
+        occNos    = Float64[];      fFDs = Float64[];     deltaEns = Float64[]
+        # Prepare lists of the individual properties for later sorting and printing
+        for  (k,v) in orbitals
+            fFD   = Basics.FermiDirac(v.energy, chemMu, temp)
+            occNo = (Basics.twice(Basics.subshell_j(k)) + 1) * fFD
+            rExp    = RadialIntegrals.rkDiagonal( 1, v, v, grid) 
+            rInv    = RadialIntegrals.rkDiagonal(-1, v, v, grid)
+            enDirac = HydrogenicIon.energy(k, nm.Z)
+            push!(subshells,  k);    push!(ens, v.energy);   push!(rExps, rExp);    push!(rInvs, rInv)     
+            push!(occNos, occNo);    push!(fFDs, fFD);       push!(deltaEns, v.energy - enDirac)
+        end
+        ps = sortperm(ens, lt = isless)
+        
+        nx = 99
+        println(stream, " ")
+        println(stream, "  Orbital properties ordered by occupation numbers for chemical potential" * 
+                        "  mu = $chemMu [Hartree] and temperature = $temp [Hartree]")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(12, "Subshell"   ; na=0);                sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(14, "Energy  "   ; na=0);                sb = sb * TableStrings.center(14, "[Hartree]"  ; na=0)
+        sa = sa * TableStrings.center(14, "Delta en"   ; na=0);                sb = sb * TableStrings.center(14, "[Hartree]"  ; na=0)
+        sa = sa * TableStrings.center(16, "occupation No"    ; na=0);          sb = sb * TableStrings.hBlank(16)
+        sa = sa * TableStrings.center(16, "f^FD (en, mu, T)" ; na=0);          sb = sb * TableStrings.hBlank(16)
+        sa = sa * TableStrings.center(12, "< r >"      ; na=2);                sb = sb * TableStrings.center(12, "  [a_o]"    ; na=2)
+        sa = sa * TableStrings.center(12, "< 1/r >"    ; na=0);                sb = sb * TableStrings.center(12, "  [1/a_o]"  ; na=0)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
+        for  (ip,p)  in  enumerate(ps)
+            sa = "    " * string(subshells[p]) * "   ";                   sa = sa[1:12]
+            sa = sa * "    " * @sprintf("%.4e", ens[p])      * "    ";    sa = sa[1:28]
+            sa = sa * "    " * @sprintf("%.4e", deltaEns[p]) * "    ";    sa = sa[1:44]
+            sa = sa * "  "   * @sprintf("%.4e", occNos[p])   * "    "
+            sa = sa * "  "   * @sprintf("%.4e", fFDs[p])     * "   "
+            sa = sa * "  "   * @sprintf("%.4e", rExps[p])    * " "
+            sa = sa * "  "   * @sprintf("%.4e", rInvs[p])    * "    "
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+        
+        return ( nothing )
     end
 
 
@@ -1035,6 +1092,38 @@
         
         return( conf )
     end
+    
+        
+    """
+    `Basics.extractOpenShells(conf::Configuration)`  
+        ... extract the open (nonrelativistic) shells in conf; a list::Array{Shell,1} is returned.
+    """
+    function Basics.extractOpenShells(conf::Configuration)
+        shells = Shell[]
+        for  (shell, occ)  in conf.shells
+            if      occ == 0  ||  occ == 2*(2*shell.l + 1)
+            else    push!(shells, shell)
+            end
+        end
+        
+        return( shells )        
+    end
+    
+        
+    """
+    `Basics.extractOpenSubshells(conf::ConfigurationR)`  
+        ... extract the open (relativistic) subshells in conf; a list::Array{Subshell,1} is returned.
+    """
+    function Basics.extractOpenSubshells(conf::ConfigurationR)
+        subshells = Subshell[]
+        for  (subsh, occ)  in conf.subshells
+            if      occ == 0  ||  occ == Basics.twice(Basics.subshell_j(subsh)) + 1
+            else    push!(subshells, subsh)
+            end
+        end
+        
+        return( subshells )        
+    end
 
 
     """
@@ -1088,6 +1177,32 @@
         confList  = ConfigurationR[];    subshells = basis.subshells
         
         for  csf  in basis.csfs
+            newSubshells = Dict{Subshell,Int64}();    NoElectrons = 0
+            for  (i, subsh) in enumerate(subshells)
+                occ = csf.occupation[i]
+                if   occ > 0  newSubshells = Base.merge( newSubshells, Dict( subsh => occ));     NoElectrons = NoElectrons + occ   end
+            end
+            if    basis.NoElectrons != NoElectrons    error("stop a")
+            else  conf = ConfigurationR(newSubshells, NoElectrons)
+                  if  conf in confList    continue;    else    push!( confList,  conf)    end
+            end
+        end 
+        
+        return( confList )
+    end
+
+
+    """
+    `Basics.extractRelativisticConfigurations(basis::Basis, totalJ::AngularJ64)  
+        ... extract all relativistic configurations that contribute to the given set of CSF
+            with total angular momentum totalJ::AngularJ64 in basis.csfs. 
+            A confList::Array{ConfigurationR,1} is returned.
+    """
+    function Basics.extractRelativisticConfigurations(basis::Basis, totalJ::AngularJ64)
+        confList  = ConfigurationR[];    subshells = basis.subshells
+        
+        for  csf  in basis.csfs
+            if  csf.J != totalJ     continue    end
             newSubshells = Dict{Subshell,Int64}();    NoElectrons = 0
             for  (i, subsh) in enumerate(subshells)
                 occ = csf.occupation[i]
@@ -1325,4 +1440,16 @@
         end 
         
         return( (shellList, occList) )
+    end
+
+
+    """
+    `Basics.FermiDirac(epsilon::Float64, mu::Float64, temp::Float64)`  
+        ... computes the Fermi-Dirac function f(epsilon, mu; temp) if all parameters are given in atomic
+            (Hartree) units.
+    """
+    function Basics.FermiDirac(epsilon::Float64, mu::Float64, temp::Float64)
+        wa = (epsilon - mu) / temp
+        wa = 1.0 / (exp(wa) + 1.)
+        return( wa )
     end

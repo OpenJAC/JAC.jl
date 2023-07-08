@@ -17,7 +17,7 @@ module Defaults
     # Constants in SI units
     const BOHR_RADIUS_SI                  = 0.529_177_210_67e-10
     const BOLTZMANN_CONSTANT_SI           = 1.380_648_52e-23
-    const ELECTRON_MASS_SI                = 9.109_383_56e-31
+    const ELECTRON_MA_SI                = 9.109_383_56e-31
     const ELEMENTARY_CHARGE_SI            = 1.602_176_620_8e-19
     const HARTREE_ENERGY_SI               = 4.359_744_650e-18
     const PLANCK_CONSTANT_SI              = 6.626_070_040e-34
@@ -83,13 +83,17 @@ module Defaults
     GBL_STRENGTH_UNIT            = "cm^2 eV"
     GBL_TIME_UNIT                = "sec"
 
-    GBL_PRINT_SUMMARY           = false
-    GBL_PRINT_TEST              = false
-    GBL_PRINT_DEBUG             = false
+    GBL_PRINT_DATA               = false
+    GBL_PRINT_SUMMARY            = false
+    GBL_PRINT_TEST               = false
+    GBL_PRINT_DEBUG              = false
     
-    GBL_SUMMARY_IOSTREAM        = nothing
+    GBL_DATA_IOSTREAM            = nothing
+    GBL_DATAX_IOSTREAM           = nothing
+    GBL_DATAY_IOSTREAM           = nothing
+    GBL_SUMMARY_IOSTREAM         = nothing
 
-    GBL_STANDARD_GRID           = Radial.Grid(true, printout=false)        
+    GBL_STANDARD_GRID            = Radial.Grid(true, printout=false)        
 
     #
     # Global variables that are used for internal storage
@@ -112,7 +116,10 @@ module Defaults
         ... to convert a cross section value from the predefined to the atomic cross section unit; a Float64 is returned.
 
     + `("einstein B: from atomic", value::Float64)`  
-        ... to convert a Einstein B coefficient from atomic to the speficied energy units; a Float64 is returned.or
+        ... to convert a Einstein B coefficient from atomic to the speficied energy units; a Float64 is returned.
+
+    + `("density: from [g/cm^3] to atomic", value::Float64)`  
+        ... to convert a mass density from [g/cm^3] to atomic units [u/a_o^3]; a Float64 is returned.
 
     + `("energy-diff. cross section: from atomic to predefined unit", value::Float64)`  or  
       `("energy-diff. cross section: from atomic", value::Float64)`  
@@ -196,8 +203,11 @@ module Defaults
             else    error("stop b")
             end
 
+        elseif   sa in ["density: from [g/cm^3] to atomic"]                 wg = ELECTRON_MASS_U / ELECTRON_MASS_IN_G
+            wcm = 1 / (100 * BOHR_RADIUS_SI);                               return( wg / wcm^3 )  # 
+
         elseif   sa in ["Einstein B: from atomic"]                          return( wa )  # Einstein B not yet properly converted.
-    
+        
         elseif   sa in ["energy-diff. cross section: from atomic to predefined unit", "energy-diff. cross section: from atomic"]
             if      Defaults.getDefaults("unit: energy-diff. cross section") == "a.u."      return( wa )
             elseif  Defaults.getDefaults("unit: energy-diff. cross section") == "barn/eV"   
@@ -406,6 +416,30 @@ module Defaults
             units = ["a.u.", "sec", "fs", "as"]
             !(sb in units)    &&    error("Currently supported time units: $(units)")
             global GBL_TIME_UNIT = sb
+        elseif    sa == "print data: open"
+            global GBL_PRINT_DATA       = true
+            global GBL_DATA_IOSTREAM    = open(sb, "w") 
+            println(GBL_DATA_IOSTREAM, "Data file opened at $( string(now())[1:16] ): \n" *
+                                        "=====================================   \n")
+        elseif    sa == "print data: close"
+            global GBL_PRINT_DATA       = false
+            close(GBL_DATA_IOSTREAM)
+        elseif    sa == "print data-X: open"
+            global GBL_PRINT_DATAX       = true
+            global GBL_DATAX_IOSTREAM    = open(sb, "w") 
+            println(GBL_DATAX_IOSTREAM, "Data file opened at $( string(now())[1:16] ): \n" *
+                                        "=====================================   \n")
+        elseif    sa == "print data-X: close"
+            global GBL_PRINT_DATAX      = false
+            close(GBL_DATAX_IOSTREAM)
+        elseif    sa == "print data-Y: open"
+            global GBL_PRINT_DATAY      = true
+            global GBL_DATAY_IOSTREAM   = open(sb, "w") 
+            println(GBL_DATAY_IOSTREAM, "Data file opened at $( string(now())[1:16] ): \n" *
+                                        "=====================================   \n")
+        elseif    sa == "print data-Y: close"
+            global GBL_PRINT_DATAY      = false
+            close(GBL_DATAY_IOSTREAM)
         elseif    sa == "print summary: open"
             global GBL_PRINT_SUMMARY    = true
             global GBL_SUMMARY_IOSTREAM = open(sb, "w") 
@@ -522,8 +556,8 @@ module Defaults
     """
     function getDefaults(sa::String)
         global GBL_FRAMEWORK, GBL_CONTINUUM, GBL_ENERGY_UNIT, GBL_CROSS_SECTION_UNIT, GBL_RATE_UNIT, GBL_STRENGTH_UNIT, GBL_TIME_UNIT
-        global ELECTRON_MASS_SI, ELECTRON_MASS_U, FINE_STRUCTURE_CONSTANT, GBL_STANDARD_GRID, GBL_SUMMARY_IOSTREAM, GBL_PRINT_SUMMARY, 
-               GBL_TEST_IOSTREAM, GBL_TEST_SUMMARY
+        global ELECTRON_MASS_SI, ELECTRON_MASS_U, FINE_STRUCTURE_CONSTANT, GBL_STANDARD_GRID, 
+               GBL_DATA_IOSTREAM, GBL_DATAX_IOSTREAM, GBL_DATAY_IOSTREAM, GBL_SUMMARY_IOSTREAM, GBL_PRINT_SUMMARY, GBL_TEST_IOSTREAM, GBL_TEST_SUMMARY
 
         if        sa in ["alpha", "fine-structure constant alpha"]          return (FINE_STRUCTURE_CONSTANT)   
         elseif    sa == "electron mass: kg"                                 return (ELECTRON_MASS_SI)   
@@ -540,6 +574,9 @@ module Defaults
         elseif    sa == "unit: time"                                        return (GBL_TIME_UNIT)
         elseif    sa == "standard grid"                                     return (GBL_STANDARD_GRID)
         elseif    sa == "speed of light: c"                                 return (1.0/FINE_STRUCTURE_CONSTANT)
+        elseif    sa == "data flag/stream"                                  return ( (GBL_PRINT_DATA, GBL_DATA_IOSTREAM) )
+        elseif    sa == "data-X flag/stream"                                return ( (GBL_PRINT_DATAX, GBL_DATAX_IOSTREAM) )
+        elseif    sa == "data-Y flag/stream"                                return ( (GBL_PRINT_DATAY, GBL_DATAY_IOSTREAM) )
         elseif    sa == "summary flag/stream"                               return ( (GBL_PRINT_SUMMARY, GBL_SUMMARY_IOSTREAM) )
         elseif    sa == "test flag/stream"                                  return ( (GBL_PRINT_TEST,    JAC.JAC_TEST_IOSTREAM) )
         else      error("Unsupported keystring:: $sa")

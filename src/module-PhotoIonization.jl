@@ -188,6 +188,16 @@ module PhotoIonization
             newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
             cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
+            #
+            #  Additional printout for Kabachnik/Pfeiffer, June 2023
+            printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+            if  printSummary 
+                en = Defaults.convertUnits("energy: from atomic to eV", cOrbital.energy)
+                subsh = string(cOrbital.subshell) * "     "
+                println(iostream, "   channel = $channel ")    
+                println(iostream, "   shell = $(subsh[4:10])  energy = $en eV   phase = $phase  gauge = $(channel.gauge)")     
+            end
+            #
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
             amplitude  = PhotoIonization.amplitude("photoionization", newChannel, line.photonEnergy, newcLevel, newiLevel, grid)
@@ -415,7 +425,7 @@ module PhotoIonization
     """
     function  computeStatisticalTensorUnpolarized(k::Int64, q::Int64, gauge::EmGauge, line::PhotoIonization.Line, 
                                                   settings::PhotoIonization.Settings)
-         wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J   
+        wa = 0.0im;    Ji = line.initialLevel.J;    Jf = line.finalLevel.J   
         kappaList = PhotoIonization.getLineKappas(line);    P1 = settings.stokes.P1;   P2 = settings.stokes.P2;   P3 = settings.stokes.P3
         for  kappa in kappaList
             j = AngularMomentum.kappa_j(kappa)

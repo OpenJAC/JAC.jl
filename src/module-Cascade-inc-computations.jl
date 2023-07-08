@@ -5,33 +5,38 @@
     """
     `Cascade.computeDecayProbabilities(outcome::DecayYield.Outcome, linesR::Array{PhotoEmission.Line,1}, 
                                        linesA::Array{AutoIonization.Line,1}, settings::DecayYield.Settings)` 
-        ... to compute the decay probabilities for all pairs and triple of subshells; these probabilities only depend
-            on the holes in different subshells and average over all final levels that share the same subshell occupation.
+        ... to compute the decay probabilities for all pairs and triples of subshells; these probabilities only depend
+            on the holes in different subshells and are sumed over all final levels that share the same subshell occupation.
             The results are printed in neat tables to screen but nothing is returned otherwise.
     """
     function computeDecayProbabilities(outcome::DecayYield.Outcome, linesR::Array{PhotoEmission.Line,1}, 
                                        linesA::Array{AutoIonization.Line,1}, settings::DecayYield.Settings)
         #
         # Determine the leading configuration and shells of the initial level
-        subshList = Basics.extractRelativisticSubshellList(outcome.level)
-        confs     = Basics.extractNonrelativisticConfigurations(outcome.level.basis)
-        ## @show subshList, confs
+        subshList     = Basics.extractRelativisticSubshellList(outcome.level)
+        relConfigs    = Basics.extractRelativisticConfigurations(outcome.level.basis, outcome.level.J)
+        holeSubshells = Basics.extractOpenSubshells(relConfigs[1]);   holeSubshell = holeSubshells[1]
         #
-        # Initialize and fill dictionaries for collection the radiative and Auger rates;
-        # a 1s hole is assumed initially
+        # Initialize and fill dictionaries for collecting the radiative and Auger rates
+        level = outcome.level;    sym = LevelSymmetry(level.J, level.parity)
         if  subshList[1] != Subshell("1s_1/2")    error("stop a")     end
-        println("\n Probabilities are determined for an initial 1s hole, starting from the configurations \n  $(confs)")
+        println("\n Probabilities are determined for the initial hole $holeSubshell of a level with symmetry $sym " *
+                "and configurations \n  $(relConfigs)")
+        subshEnergies  = Dict{Subshell,Float64}()
         rProbabilities = Dict{Subshell,Float64}()
         aProbabilities = Dict{Tuple{Subshell,Subshell},Float64}()
-        for  (i,subshi) in enumerate(subshList)
-            if i > 1   rProbabilities[subshi] = 0.   end 
-            for  (j,subshj) in enumerate(subshList)
-                if j >= i > 1  aProbabilities[(subshi, subshj)] = 0.   end 
+        for  (i,subshi)  in  enumerate(subshList)
+            subshEnergies[subshi]  = outcome.level.basis.orbitals[subshi].energy
+            rProbabilities[subshi] = 0.
+            for  (j,subshj)  in  enumerate(subshList)
+                if  j >= i  aProbabilities[(subshi, subshj)] = 0.   end 
             end
         end
         #
-        @show rProbabilities
-        @show aProbabilities
+        @show subshList, relConfigs, holeSubshell
+        @show subshEnergies
+        ##x @show rProbabilities
+        ##x @show aProbabilities
         #
         # Calculate the total rate and convert the dictionaries into probabilities
         # First, identify the level key of the given level also in the lists of radiative and Auger lines
@@ -49,21 +54,23 @@
                 # Extract the subshells that make the difference between the initial and final levels; terminate if NO 1s_1/2 occurs
                 confi = Basics.extractLeadingConfigurationR(line.initialLevel)
                 conff = Basics.extractLeadingConfigurationR(line.finalLevel)
-                @show confi, conff, line.photonRate.Babushkin
+                ##x @show confi, conff, line.photonRate.Babushkin
                 occDiffs = Basics.extractShellOccupationDifference(confi, conff);   subshList = Subshell[]
                 for  diff in occDiffs
-                    # 1s_1/2 subshell must differ by -1
-                    if diff[1] == Subshell(1,-1)
+                    # holeSubshell must differ by -1
+                    if diff[1] == holeSubshell
                         if diff[2] == -1     else   error("stop b")    end
                     end
                     if     diff[2] ==  1     push!(subshList, diff[1])                                end       
                     if     diff[2] ==  2     push!(subshList, diff[1]);    push!(subshList, diff[1])  end       
                 end
                 if   length(subshList)  != 1   error("stop c")    end
-                rProbabilities[ subshList[1] ] = rProbabilities[ subshList[1] ] + line.photonRate.Babushkin
+                rProbabilities[ subshList[1] ] = rProbabilities[ subshList[1] ] + 
+                                                 (line.photonRate.Babushkin + line.photonRate.Coulomb) / 2
             end
         end
-        # @show rProbabilities
+        @show rProbabilities
+        #
         for  line in linesA
             if  similarKey == LevelKey( LevelSymmetry(line.initialLevel.J, line.initialLevel.parity), line.initialLevel.index, line.initialLevel.energy, 0.)
                 rateA = rateA + line.totalRate;   NoAugerLines = NoAugerLines + 1    
@@ -73,8 +80,8 @@
                 ##x @show confi, conff
                 occDiffs = Basics.extractShellOccupationDifference(confi, conff);   subshList = Subshell[]
                 for  diff in occDiffs
-                    # 1s_1/2 subshell must differ by -1
-                    if diff[1] == Subshell(1,-1)
+                    # holeSubshell must differ by -1
+                    if diff[1] == holeSubshell
                         if diff[2] == -1     else   error("stop d")    end
                     end
                     if     diff[2] ==  1     push!(subshList, diff[1])                                end       
@@ -84,7 +91,7 @@
                 aProbabilities[ (subshList[1], subshList[2]) ] = aProbabilities[ (subshList[1], subshList[2]) ] + line.totalRate
             end
         end
-        # @show aProbabilities
+        @show aProbabilities
         #
         # Add all rates, convert to probabilities and print these dictionaries into a neat table
         rate = 0.
@@ -96,7 +103,14 @@
         for (k,v) in aProbabilities   aProbabilities[k] = v/rate   end
         #
         Cascade.displayDecayProbabilities(stdout, outcome, rProbabilities, aProbabilities, settings)
-   
+        # Generate an additional output file if printDataX & printDataY = true
+        printDataX, iodataX = Defaults.getDefaults("data-X flag/stream")
+        printDataY, iodataY = Defaults.getDefaults("data-Y flag/stream")
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        if  printSummary  Cascade.displayDecayProbabilities(iostream, outcome, rProbabilities, aProbabilities, settings)  end
+        if  printDataX    Cascade.dumpDecayProbabilities(iodataX, outcome, subshEnergies, rProbabilities, settings)       end
+        if  printDataY    Cascade.dumpDecayProbabilities(iodataY, outcome, subshEnergies, aProbabilities, settings)       end
+            
         return( nothing )
     end
     
@@ -206,26 +220,31 @@
     """
     `Cascade.displayDecayProbabilities(stream::IO, outcome::DecayYield.Outcome, rProbabilities::Dict{Subshell,Float64},
                                        aProbabilities::Dict{Tuple{Subshell,Subshell},Float64}, settings::DecayYield.Settings)`  
-        ... displays the decay probabilities due to the geant4 optional output of DecayYields; this procedure is rather
-            specific in that a 1s hole is initially assumed and that the many-electron rates are brought back
-            to a single-particle shell notation. A neat table is printed but nothing is returned.
+        ... displays the -- radiative and Auger -- decay probabilities in a neat table and a format close to the geant4 input
+            files. However, here the subshells are still displayed in the standard form. If suitable output files are selected,
+            these -- radiative and Auger -- decay probabilities are also dumped independently into two ASCII files by using a
+            format very similar to GEANT4. Overall this procedure is rather specific in that the level of each outcome 
+            is given by a single relativistic configuration and with just a single core hole (subshell). The many-electron rates 
+            are then brought back to a single-particle subshell notation. 
+            A neat table is printed to the given stream but nothing is returned otherwise.
     """
     function displayDecayProbabilities(stream::IO, outcome::DecayYield.Outcome, rProbabilities::Dict{Subshell,Float64},
                                        aProbabilities::Dict{Tuple{Subshell,Subshell},Float64}, settings::DecayYield.Settings)
-        # Extract and sort the list of subshells in rProbabilities and aProbabilities
-        subshList = Subshell[]
-        for (k,v) in rProbabilities   if  k in subshList     else   push!(subshList, k)    end    end
-        for (k,v) in aProbabilities   if  k[1] in subshList  else  push!(subshList, k[1])  end 
-                                      if  k[2] in subshList  else  push!(subshList, k[2])  end 
-        end
-        subshList = sort(subshList)
-        ##x @show subshList
+        
+        #
+        # Determine the leading configuration and shells of the initial level
+        subshList     = Basics.extractRelativisticSubshellList(outcome.level)
+        relConfigs    = Basics.extractRelativisticConfigurations(outcome.level.basis, outcome.level.J)
+        holeSubshells = Basics.extractOpenSubshells(relConfigs[1]);   holeSubshell = holeSubshells[1]
+        @show subshList, relConfigs, holeSubshell
         
         nx = 28
         println(stream, " ")
         println(stream, "  Fluorescence and Auger decay probabilities:")
         println(stream, " ")
-        println(stream, "    + Level: $(outcome.level.index) with symmetry $(LevelSymmetry( outcome.level.J, outcome.level.parity)) ")
+        println(stream, "    + Configuration: $(string(relConfigs[1]))   ")
+        println(stream, "    + Hole subshell: $holeSubshell ")
+        println(stream, "    + Level:         $(outcome.level.index) with symmetry $(LevelSymmetry( outcome.level.J, outcome.level.parity)) ")
         println(stream, "    + $(outcome.NoPhotonLines)           ... number of photon lines. ")
         println(stream, "    + $(outcome.NoAugerLines )           ... number of Auger lines. ")
         if    settings.approach in ["AverageSCA", "SCA"]
@@ -241,6 +260,7 @@
         #
         for subsh in subshList
             if  haskey(rProbabilities, subsh)
+                if  rProbabilities[subsh] == 0.  continue    end
                 sa  = "    $subsh     ";    sa = sa * @sprintf("%.6e", rProbabilities[subsh]);     println(stream, sa )
             end
         end
@@ -254,11 +274,147 @@
         for subsha in subshList
             for subshb in subshList
                 if  haskey(aProbabilities, (subsha, subshb) )
+                    if  aProbabilities[(subsha, subshb)] == 0.  continue    end
                     sa  = "    $subsha    $subshb       ";    sa = sa * @sprintf("%.6e", aProbabilities[(subsha, subshb)]);   println(stream, sa )
                 end
             end
         end
         println(stream, "  ", TableStrings.hLine(nx), "\n")
+
+        return( nothing )
+    end
+   
+
+    """
+    `Cascade.dumpGeant4Index(subsh::Subshell)`  
+        ... returns the (integer) index of subshell in the Geant4 convention; an i::Int64 is returned
+    """
+    function dumpGeant4Index(subsh::Subshell)
+        idx = 0
+        if      subsh == Subshell("1s_1/2")       idx = 1
+        elseif  subsh == Subshell("2s_1/2")       idx = 3
+        elseif  subsh == Subshell("2p_1/2")       idx = 5
+        elseif  subsh == Subshell("2p_3/2")       idx = 6
+            
+        elseif  subsh == Subshell("3s_1/2")       idx = 8
+        elseif  subsh == Subshell("3p_1/2")       idx = 10
+        elseif  subsh == Subshell("3p_3/2")       idx = 11
+        elseif  subsh == Subshell("3d_3/2")       idx = 13
+        elseif  subsh == Subshell("3d_5/2")       idx = 14
+            
+        elseif  subsh == Subshell("4s_1/2")       idx = 16
+        elseif  subsh == Subshell("4p_1/2")       idx = 18
+        elseif  subsh == Subshell("4p_3/2")       idx = 19
+        elseif  subsh == Subshell("4d_3/2")       idx = 21
+        elseif  subsh == Subshell("4d_5/2")       idx = 22
+        elseif  subsh == Subshell("4f_5/2")       idx = 24
+        elseif  subsh == Subshell("4f_7/2")       idx = 25
+            
+        elseif  subsh == Subshell("5s_1/2")       idx = 27
+        elseif  subsh == Subshell("5p_1/2")       idx = 29
+        elseif  subsh == Subshell("5p_3/2")       idx = 30
+        elseif  subsh == Subshell("5d_3/2")       idx = 32
+        elseif  subsh == Subshell("5d_5/2")       idx = 33
+        elseif  subsh == Subshell("5f_5/2")       idx = 35
+        elseif  subsh == Subshell("5f_7/2")       idx = 36
+        elseif  subsh == Subshell("5g_7/2")       idx = 38
+        elseif  subsh == Subshell("5g_9/2")       idx = 39
+            
+        elseif  subsh == Subshell("6s_1/2")       idx = 41
+        elseif  subsh == Subshell("6p_1/2")       idx = 43
+        elseif  subsh == Subshell("6p_3/2")       idx = 44
+        elseif  subsh == Subshell("6d_3/2")       idx = 46
+        elseif  subsh == Subshell("6d_5/2")       idx = 47
+        elseif  subsh == Subshell("6f_5/2")       idx = 49
+        elseif  subsh == Subshell("6f_7/2")       idx = 50
+        elseif  subsh == Subshell("6g_7/2")       idx = 52
+        elseif  subsh == Subshell("6g_9/2")       idx = 53
+        elseif  subsh == Subshell("6h_9/2")       idx = 55
+        elseif  subsh == Subshell("6h_11/2")      idx = 56
+            
+        elseif  subsh == Subshell("7s_1/2")       idx = 58
+        elseif  subsh == Subshell("7p_1/2")       idx = 60
+        elseif  subsh == Subshell("7p_3/2")       idx = 61
+        else    error("stop a; subsh = $subsh")
+        end
+        
+        return( idx )
+    end
+    
+
+    """
+    `Cascade.dumpDecayProbabilities(stream::IO, outcome::DecayYield.Outcome, subshEnergies::Dict{Subshell,Float64},
+                                    rProbabilities::Dict{Subshell,Float64},settings::DecayYield.Settings)`  
+        ... dumps the radiative decay probabilities to a selected data file in geant4 form; this is caused by the 
+            geant4 boolean of the DecayYield.Settings; this procedure is rather specific in that a single relativistic 
+            configuration with a single core hole (subshell) is assumed and that the many-electron rates have been brought back 
+            to a single-particle subshell notation. A neat table is printed to the given stream but nothing is returned otherwise.
+    """
+    function dumpDecayProbabilities(stream::IO, outcome::DecayYield.Outcome, subshEnergies::Dict{Subshell,Float64},
+                                    rProbabilities::Dict{Subshell,Float64},settings::DecayYield.Settings)
+        #
+        # Determine the leading configuration and shells of the initial level
+        subshList     = Basics.extractRelativisticSubshellList(outcome.level)
+        relConfigs    = Basics.extractRelativisticConfigurations(outcome.level.basis, outcome.level.J)
+        holeSubshells = Basics.extractOpenSubshells(relConfigs[1]);   holeSubshell = holeSubshells[1]
+        ##x @show subshList, subshEnergies, relConfigs, holeSubshell
+        
+        # Dump probabilities for the given holeSubshell to the data file
+        idx = Cascade.dumpGeant4Index(holeSubshell)
+        sa  = string(idx) * "              "
+        sa  = sa[1:13] * sa[1:13] * sa[1:13] * "        " * string(holeSubshell);      println(stream, sa)
+        for subsh in subshList
+            if  haskey(rProbabilities, subsh)
+                if  subsh == holeSubshell        continue    end
+                if  rProbabilities[subsh] == 0.  continue    end
+                idy = Cascade.dumpGeant4Index(subsh)
+                sa  = "$idy            ";    sa = sa[1:13] * @sprintf("%.6e", rProbabilities[subsh])
+                en  = Defaults.convertUnits("energy: from atomic to eV", subshEnergies[subsh]) * 1.0e-6 ## energies in MeV
+                sa  = sa * " " * @sprintf("%.6e", abs(en));     println(stream, sa)
+            end
+        end
+        sa  = string(-1) * "              "
+        sa  = sa[1:13] * sa[1:13] * sa[1:13];      println(stream, sa)
+
+        return( nothing )
+    end
+    
+
+    """
+    `Cascade.dumpDecayProbabilities(stream::IO, outcome::DecayYield.Outcome, subshEnergies::Dict{Subshell,Float64},
+                                    aProbabilities::Dict{Tuple{Subshell,Subshell},Float64},settings::DecayYield.Settings)`  
+        ... dumps the Auger decay probabilities to a selected data file in geant4 form; this is caused by the 
+            geant4 boolean of the DecayYield.Settings; this procedure is rather specific in that a single relativistic 
+            configuration with a single core hole (subshell) is assumed and that the many-electron rates have been brought back 
+            to a single-particle subshell notation. A neat table is printed to the given stream but nothing is returned otherwise.
+    """
+    function dumpDecayProbabilities(stream::IO, outcome::DecayYield.Outcome, subshEnergies::Dict{Subshell,Float64},
+                                    aProbabilities::Dict{Tuple{Subshell,Subshell},Float64},settings::DecayYield.Settings)
+        #
+        # Determine the leading configuration and shells of the initial level
+        subshList     = Basics.extractRelativisticSubshellList(outcome.level)
+        relConfigs    = Basics.extractRelativisticConfigurations(outcome.level.basis, outcome.level.J)
+        holeSubshells = Basics.extractOpenSubshells(relConfigs[1]);   holeSubshell = holeSubshells[1]
+        ##x @show subshList, subshEnergies, relConfigs, holeSubshell
+        
+        # Dump probabilities for the given holeSubshell to the data file
+        idx = Cascade.dumpGeant4Index(holeSubshell)
+        sa  = string(idx) * "              "
+        sa  = sa[1:13] * sa[1:13] * sa[1:13] * sa[1:13] * "        " * string(holeSubshell);      println(stream, sa)
+        for subsha in subshList
+            for subshb in subshList
+                if  haskey(aProbabilities, (subsha, subshb) )
+                    if  subsha == holeSubshell  ||  subshb == holeSubshell   continue    end
+                    if  aProbabilities[(subsha, subshb)] == 0.               continue    end
+                    ida = Cascade.dumpGeant4Index(subsha);    idb = Cascade.dumpGeant4Index(subshb)
+                    sa  = "$ida            $idb            ";    sa = sa[1:26] * @sprintf("%.6e", aProbabilities[(subsha, subshb)])
+                    en  = Defaults.convertUnits("energy: from atomic to eV", subshEnergies[subsha]) * 1.0e-6 ## energies in MeV
+                    sa  = sa * " " * @sprintf("%.6e", abs(en));     println(stream, sa)
+                end
+            end
+        end
+        sa  = string(-1) * "              "
+        sa  = sa[1:13] * sa[1:13] * sa[1:13] * sa[1:13];      println(stream, sa)
 
         return( nothing )
     end
