@@ -165,7 +165,7 @@ module PhotoExcitation
         for  channel  in  newChannels
             ##x wa = line.omega / (Basics.twice(channel.multipole.L) + 1) * (alpha * line.omega)^(2*channel.multipole.L - 2)
             wa = 8pi * alpha * line.omega / (Ji2 + 1) * (Jf2 + 1) / 2.
-            @show  channel
+            #x @show  channel
             if      channel.gauge == Basics.Coulomb     oscCoulomb   = oscCoulomb    +  channel.amplitude * conj(channel.amplitude) * wa
             elseif  channel.gauge == Basics.Babushkin   oscBabushkin = oscBabushkin  +  channel.amplitude * conj(channel.amplitude) * wa
             elseif  channel.gauge == Basics.Magnetic    oscBabushkin = oscBabushkin  +  channel.amplitude * conj(channel.amplitude) * wa

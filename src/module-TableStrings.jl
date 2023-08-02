@@ -260,6 +260,19 @@ module TableStrings
 
 
     """
+    `TableStrings.subshellSymmetryTupels(n::Int64, subshellList::Array{Tuple{Subshell,LevelSymmetry},1})`  
+        ... a string of subshell (Symmetry) is returned.
+    """
+    function  subshellSymmetryTupels(n::Int64, subshellList::Array{Tuple{Subshell,LevelSymmetry},1})
+        sa = ""
+        for k in subshellList
+           sa = sa * string(k[1]) * " (" * string(k[2]) * "),  "
+        end
+        return( sa[1:end-3] )
+    end
+
+
+    """
     `TableStrings.symmetries_if()`  ... a string 'J^P --> J^P' is returned
     """
     function  symmetries_if(isym::LevelSymmetry,  fsym::LevelSymmetry)

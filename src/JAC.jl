@@ -68,7 +68,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        generate, GreenSettings, GreenChannel, GreenExpansion, getDefaults, Green, Gui,
        Hfs, HighHarmonic, HFS, HydrogenicIon,
        interpolate, integrate, Integral, ImpactExcAuto, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, 
-       InteractionStrength, InternalConv, InternalConversion, Isotope, IsotopeShift, 
+       InteractionStrength, InternalConv, InternalConversion, InternalRecombination, Isotope, IsotopeShift, 
        Kronecker,
        LandeZeeman, LandeJ,  LandeF, Level, LevelSymmetry, LSjj, LSjjSettings, LevelSelection, LineSelection, 
        ManyElectron, MeanFieldSettings, MeanFieldBasis, minus, Model, modify, MultiPhotonDE, MultiPhotonDeExcitation, MultiPhotonDoubleIon, 
@@ -86,7 +86,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
        SchiffMoment, Semiempirical, setDefaults, Shell, SolidAngle, Spectroscopy, SpinAngular, SphericalTensor, 
        StartFromHydrogenic, StartFromPrevious, StrongField, StrongField2, Subshell, ShellSelection,
-       tabulate, TestFrames, Triangle, tools,
+       tabulate, TestFrames, Triangle, tools, TwoElectronOnePhoton,
        UseCoulomb, UseBabushkin, UseGauge,
        WeightedCartesian, W3j, W6j, W9j,
        Yields, Ylm, 
@@ -161,6 +161,8 @@ include("module-RadiativeAuger.jl")
 include("module-MultiPhotonIonization.jl")
 include("module-MultiPhotonDoubleIon.jl")
 include("module-InternalConversion.jl") 
+include("module-InternalRecombination.jl") 
+include("module-TwoElectronOnePhoton.jl") 
 #= Further processes, not yet included into the code
 include("module-REDA.jl")
 include("module-READI.jl")

@@ -3,12 +3,12 @@
 
 
     """
-    `Cascade.computeSteps(scheme::Cascade.PhotonExcitationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
+    `Cascade.computeSteps(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
         ... computes in turn all the requested transition amplitudes as well as PhotoExcitation.Line's, etc. for all pre-specified 
             excitation steps of the cascade. When compared with standard excitation computations, however, the amount of output is 
             largely reduced and often just printed into the summary file. A set of  data::Cascade.ExcitationData  is returned.
     """
-    function computeSteps(scheme::Cascade.PhotonExcitationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
+    function computeSteps(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
         linesE = PhotoExcitation.Line[]    
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         nt = 0;   st = 0;   previousMeanEn = 0.
@@ -31,34 +31,30 @@
                                                  "giving now rise to a total of $nt $(string(step.process)) decay lines." )   end      
         end
         #
-        data = Cascade.ExcitationData(linesE)
+        ##x data = Cascade.ExcitationData(linesE)
+        return( linesE )
     end
 
 
     """
-    `Cascade.determineSteps(scheme::Cascade.PhotonExcitationScheme, comp::Cascade.Computation, 
+    `Cascade.determineSteps(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Computation, 
                             initialList::Array{Cascade.Block,1}, excitedList::Array{Cascade.Block,1})`  
         ... determines all step::Cascade.Step's that need to be computed for this decay cascade. It cycles through all processes of the given
             decay scheme and selects all pairs of blocks due to the selected cascade approach. It checks that at least on pair of levels
             supports a `photo-excitation' within the step. A stepList::Array{Cascade.Step,1} is returned, and for which subsequently all 
             required transition amplitudes and rates/cross sections are computed.
     """
-    function determineSteps(scheme::Cascade.PhotonExcitationScheme, comp::Cascade.Computation, 
+    function determineSteps(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Computation, 
                             initialList::Array{Cascade.Block,1}, excitedList::Array{Cascade.Block,1})
         stepList = Cascade.Step[]
         if  comp.approach  in  [Cascade.AverageSCA(), Cascade.SCA()]
             for  initialBlock in initialList
                 for  excitedBlock in excitedList
-                    for  process  in  comp.scheme.processes
-                        if      process == Basics.PhotoExc()  
-                            if  initialBlock.NoElectrons == excitedBlock.NoElectrons
-                                settings = PhotoExcitation.Settings([E1], [UseCoulomb, UseBabushkin], false, false, false, false, LineSelection(), 
-                                                                    0., 0., 1.0e6, Basics.ExpStokes() )
-                                push!( stepList, Cascade.Step(process, settings, initialBlock.confs, excitedBlock.confs, 
-                                                                                 initialBlock.multiplet, excitedBlock.multiplet) )
-                            end
-                        else    error("stop a")
-                        end
+                    if  initialBlock.NoElectrons == excitedBlock.NoElectrons
+                        settings = PhotoExcitation.Settings([E1], [UseCoulomb, UseBabushkin], false, false, false, false, LineSelection(), 
+                                                            0., 0., 1.0e6, Basics.ExpStokes() )
+                        push!( stepList, Cascade.Step(Basics.PhotoExc(), settings, initialBlock.confs, excitedBlock.confs, 
+                                                                                   initialBlock.multiplet, excitedBlock.multiplet) )
                     end
                 end
             end
@@ -70,12 +66,12 @@
     
     
     """
-    `Cascade.generateBlocks(scheme::Cascade.PhotonExcitationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)`  
+    `Cascade.generateBlocks(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)`  
         ... generate all block::Cascade.Block's, that need to be computed for this excitation cascade, and compute also the corresponding multiplets.
             The different cascade approches realized different strategies how these block are selected and computed. A blockList::Array{Cascade.Block,1} 
             is returned.
     """
-    function generateBlocks(scheme::Cascade.PhotonExcitationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)
+    function generateBlocks(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)
         blockList = Cascade.Block[]
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
@@ -113,12 +109,12 @@
 
 
     """
-    `Cascade.generateConfigurationsForPhotoexcitation(multiplets::Array{Multiplet,1},  scheme::PhotonExcitationScheme, nm::Nuclear.Model)`  
+    `Cascade.generateConfigurationsForPhotoexcitation(multiplets::Array{Multiplet,1},  scheme::PhotoExcitationScheme, nm::Nuclear.Model)`  
         ... generates all possible (photo-excited) configurations with upto  scheme.NoExcitations of displacements of electron from
             scheme.excitationFromShells  to  scheme.excitationToShells  with regard to the given mutiplets.
             A Tuple(initialConfList::Array{Configuration,1}, confList::Array{Configuration,1}) is returned.
     """
-    function generateConfigurationsForPhotoexcitation(multiplets::Array{Multiplet,1},  scheme::PhotonExcitationScheme, nm::Nuclear.Model)
+    function generateConfigurationsForPhotoexcitation(multiplets::Array{Multiplet,1},  scheme::PhotoExcitationScheme, nm::Nuclear.Model)
         # Determine all (reference) configurations from multiplets and generate the 'excited' configurations due to the specificed excitations
         initialConfList = Configuration[]
         for mp  in  multiplets   
@@ -136,15 +132,18 @@
         println(">>> initial configuration(s) have energies from $minen  to  $maxen  [a.u.].")
         #
         newBlockConfList = Configuration[]
-        for  conf  in  blockConfList    meanEnergy = -Semiempirical.estimate("binding energy", round(Int64, nm.Z), conf) 
-            if  minen + scheme.minPhotonEnergy  <= meanEnergy <= maxen + scheme.maxPhotonEnergy
+        for  conf  in  blockConfList    meanEnergy = -Semiempirical.estimate("binding energy", round(Int64, nm.Z), conf)
+            minEn = 0.2* Defaults.convertUnits("energy: from predefined to atomic unit", scheme.minPhotonEnergy) 
+            maxEn = 5*   Defaults.convertUnits("energy: from predefined to atomic unit", scheme.maxPhotonEnergy) 
+            if  minen + minEn  <= meanEnergy <= maxen + maxEn
                 if      hasPlus  &&  hasMinus                                                                        push!(newBlockConfList, conf)   
                 elseif  M1 in scheme.multipoles  ||  E2 in scheme.multipoles  ||  M2 in scheme.multipoles            push!(newBlockConfList, conf)  
                 elseif  hasPlus  &&  E1 in scheme.multipoles  &&   Basics.determineParity(conf) == Basics.minus      push!(newBlockConfList, conf)  
                 elseif  hasMinus &&  E1 in scheme.multipoles  &&   Basics.determineParity(conf) == Basics.plus       push!(newBlockConfList, conf)  
                 else    println(">>> exclude $conf because of parity reasons.")
                 end
-            else        println(">>> exclude $conf with energy $meanEnergy [a.u.] because of energy reasons.")
+            else        println(">>> exclude $conf with energy $meanEnergy [a.u.] because of energy reasons." *
+                                "\n min=$(minen + minEn) ... max=$(maxen + maxEn) ")
             end
         end
 
@@ -153,17 +152,17 @@
 
 
     """
-    `Cascade.perform(scheme::PhotonExcitationScheme, comp::Cascade.Computation)`  
+    `Cascade.perform(scheme::PhotoExcitationScheme, comp::Cascade.Computation)`  
         ... to set-up and perform a photo-excitation computation that starts from a given set of initial configurations xor initial multiplets
             and comprises (various) photoexcitation processes into configurations with up-to NoExcitations single-electron excitations with 
             regard to the initial multiplets. The results of these excitation are comprised into (output) data::PhotoExcData, while these 
             data are only printed during the generation and nothing is returned.
 
-    `Cascade.perform(scheme::PhotonExcitationScheme, comp::Cascade.Computation; output=true, outputToFile::Bool=true)`   
+    `Cascade.perform(scheme::PhotoExcitationScheme, comp::Cascade.Computation; output=true, outputToFile::Bool=true)`   
         ... to perform the same but to return the complete output in a dictionary that is written to disk and can be used in subsequent
             cascade simulation. The particular output depends on the specifications of the cascade.
     """
-    function perform(scheme::PhotonExcitationScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true)
+    function perform(scheme::PhotoExcitationScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true)
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
@@ -196,22 +195,26 @@
         we = Cascade.determineSteps(scheme, comp, wc1, wc2)
         Cascade.displaySteps(stdout, we, sa="excited ")
         if  printSummary   Cascade.displaySteps(iostream, we, sa="ionizing ")    end      
-        wf   = Cascade.modifySteps(we)
-        data = Cascade.computeSteps(scheme, comp, wf)
+        wf     = Cascade.modifySteps(we)
+        linesE = Cascade.computeSteps(scheme, comp, wf)
+        data   = Cascade.Data[];    push!(data, Cascade.Data{PhotoExcitation.Line}(linesE) )
         if output    
             results = Base.merge( results, Dict("name"                       => comp.name) ) 
             results = Base.merge( results, Dict("cascade scheme"             => comp.scheme) ) 
             results = Base.merge( results, Dict("initial multiplets:"        => multiplets) )    
             results = Base.merge( results, Dict("generated multiplets:"      => gMultiplets) )    
-            results = Base.merge( results, Dict("photo-excited line data:"   => data) )
+            results = Base.merge( results, Dict("photoexcitation lines:"     => linesE) )
+            results = Base.merge( results, Dict("cascade data:"              => data ) )
             #
             #  Write out the result to file to later continue with simulations on the cascade data
-            filename = "zzz-cascade-excitation-computations-" * string(Dates.now())[1:13] * ".jld"
-            println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
-                    "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
-            if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
-                                                 "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
-            JLD2.@save filename results
+            if  outputToFile
+                filename = "zzz-cascade-photoexcitation-computations-" * string(Dates.now())[1:13] * ".jld"
+                println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
+                        "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
+                if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
+                                                    "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
+                JLD2.@save filename results
+            end
         end
         ## return( results )
         return( results )

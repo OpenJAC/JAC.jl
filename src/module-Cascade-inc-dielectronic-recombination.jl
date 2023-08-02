@@ -1,15 +1,15 @@
 
-    # Functions and methods for cheme::Cascade.DielectronicCaptureScheme computations
+    # Functions and methods for cheme::Cascade.DielectronicRecombinationScheme computations
 
 
     """
-    `Cascade.computeSteps(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
+    `Cascade.computeSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
         ... computes in turn all the requested capture & transition amplitudes as well as DielectronicCapture.Line's, AutoIonization.Line's, 
             etc. for all pre-specified decay steps of the cascade. When compared with standard computations of these atomic 
             processes, however, the amount of output is largely reduced and often just printed into the summary file. 
             A set of  data::Cascade.CaptureData  is returned.
     """
-    function computeSteps(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
+    function computeSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
         linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    cOrbitals = Dict{Subshell, Orbital}()
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         nt = 0;   st = 0;   previousMeanEn = 0.
@@ -86,7 +86,7 @@
     end
 
     """
-    `Cascade.determineSteps(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Computation, 
+    `Cascade.determineSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::Cascade.Computation, 
                             initialList::Array{Cascade.Block,1}, captureList::Array{Cascade.Block,1}, decayList::Array{Cascade.Block,1})`  
         ... determines all step::Cascade.Step's that need to be computed for this dielectronic cascade. It considers the autoionization
             between the blocks from the captureList and initialList as well as the radiative stabilization between the blocks from the 
@@ -94,7 +94,7 @@
             `radiative stabilization' within the step. A stepList::Array{Cascade.Step,1} is returned, and for which subsequently all 
             required transition amplitudes and rates/cross sections are computed.
     """
-    function determineSteps(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Computation, 
+    function determineSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::Cascade.Computation, 
                             initialList::Array{Cascade.Block,1}, capturedList::Array{Cascade.Block,1}, decayList::Array{Cascade.Block,1})
         stepList = Cascade.Step[]
         if  comp.approach  in  [Cascade.AverageSCA(), Cascade.SCA()]
@@ -127,12 +127,12 @@
     
     
     """
-    `Cascade.generateBlocks(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)`  
+    `Cascade.generateBlocks(scheme::Cascade.DielectronicRecombinationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)`  
         ... generate all block::Cascade.Block's, that need to be computed for this electron-capture and subsequent stabilization (DR) cascade, 
             and compute also the corresponding multiplets. The different cascade approches realized different strategies how these blocks are 
             selected and computed. A blockList::Array{Cascade.Block,1} is returned.
     """
-    function generateBlocks(scheme::Cascade.DielectronicCaptureScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)
+    function generateBlocks(scheme::Cascade.DielectronicRecombinationScheme, comp::Cascade.Computation, confs::Array{Configuration,1}; printout::Bool=true)
         blockList = Cascade.Block[];    basis = Basis()
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #
@@ -229,7 +229,7 @@
 
 
     """
-    `Cascade.generateConfigurationsForDielectronicCapture(multiplets::Array{Multiplet,1},  scheme::DielectronicCaptureScheme, 
+    `Cascade.generateConfigurationsForDielectronicCapture(multiplets::Array{Multiplet,1},  scheme::DielectronicRecombinationScheme, 
                                                       nm::Nuclear.Model, grid::Radial.Grid)`  
         ... generates all possible doubly-excited configurations due to (dielectronic) electron capture into the given multiplets.
             The number and type of such doubly-generated configurations depend on (1) the maximum (electron) energy for capturing an electron
@@ -238,7 +238,7 @@
             into which electrons excited and/or captured. A Tuple(initialConfList::Array{Configuration,1}, confList::Array{Configuration,1}) 
             is returned.
     """
-    function generateConfigurationsForDielectronicCapture(multiplets::Array{Multiplet,1},  scheme::DielectronicCaptureScheme, 
+    function generateConfigurationsForDielectronicCapture(multiplets::Array{Multiplet,1},  scheme::DielectronicRecombinationScheme, 
                                                       nm::Nuclear.Model, grid::Radial.Grid)
         # Determine all (reference) configurations from multiplets and generate the 'excited' configurations due to the specificed excitations
         initialConfList = Configuration[]
@@ -282,20 +282,20 @@
 
 
     """
-    `Cascade.perform(scheme::DielectronicCaptureScheme, comp::Cascade.Computation)`  
+    `Cascade.perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computation)`  
         ... to set-up and perform a dielectronic-recombination (DR) plasma rate coefficient computation that combines the electron capture
             and the subsequent radiative stabilization steps. Such a computation starts from a given set of initial configurations xor 
             initial multiplets and (1) generates all doubly-excited configurations due to the capture of an electron with a given maximum
             electron energy; (2) selects all electron capture (inverse Auger) and re-autoionization (Auger) steps and (3) selects
-            all steps for radiative stabilization due to given parameters of the scheme::DielectronicCaptureScheme. The results of 
+            all steps for radiative stabilization due to given parameters of the scheme::DielectronicRecombinationScheme. The results of 
             these DR plasma rate computation are comprised into (output) data::ExcitationData, while these data are only printed during 
             the generation and nothing is returned.
 
-    `Cascade.perform(scheme::DielectronicCaptureScheme, comp::Cascade.Computation; output=true, outputToFile::Bool=true)`   
+    `Cascade.perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computation; output=true, outputToFile::Bool=true)`   
         ... to perform the same but to return the complete output in a dictionary that is written to disk and can be used in subsequent
             cascade simulation. The particular output depends on the specifications of the cascade.
     """
-    function perform(scheme::DielectronicCaptureScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true)
+    function perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true)
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         #

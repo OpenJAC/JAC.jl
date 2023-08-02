@@ -59,8 +59,10 @@ println("Dk)  Test of the DoubleAutoIonization module with ASF from an internall
 println("Dl)  Test of the PhotoDoubleIonization module with ASF from an internally generated initial- and final-state multiplet.")
 println("Dm)  Test of the RadiativeAuger module with ASF from an internally generated initial- and final-state multiplet.")
 println("Dn)  Test of the ImpactExcitation module with ASF from an internally generated initial- and final-state multiplet.")
+println("Dp)  Test of the InternalRecombination module with ASF from an internally generated initial and final-state multiplet.")
+println("Dq)  Test of the TwoElectronOnePhoton module with ASF from an internally generated initial and final-state multiplet.")
 #
-println("Dp)  Test of the ImpactExcitationAutoion module with ASF from an internally generated initial-, intermediate and final-state multiplet.")
+println("Dxp)  Test of the ImpactExcitationAutoion module with ASF from an internally generated initial-, intermediate and final-state multiplet.")
 println("Dq)  Test of the RadiativeAuger module with ASF from an internally generated initial- and final-state multiplet.")
 println("Dr)  Test of the MultiPhotonIonization module with ASF from an internally generated initial- and final-state multiplet.")
 println("Ds)  Test of the MultiPhotonDoubleIon module with ASF from an internally generated initial- and final-state multiplet.")

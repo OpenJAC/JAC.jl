@@ -480,10 +480,11 @@
         ... returns the available photoexcitation data.
     """
     function extractPhotoExcitationData(dataDicts::Array{Dict{String,Any},1})
-        photoexcitationData = Cascade.ExcitationData[]
+        photoexcitationData = Cascade.Data[]
         for data  in  dataDicts       results = data["results"]
-            if  haskey(results, "photoexcitation line data:") 
-                push!(photoexcitationData, results["photoexcitation line data:"])   
+            if  haskey(results, "photoexcitation lines:")
+                linesE = results["photoexcitation lines:"]
+                push!(photoexcitationData, Cascade.Data{PhotoExcitation.Line}(linesE))   
             end
         end
         
@@ -497,9 +498,12 @@
         ... returns the available photoionization data.
     """
     function extractPhotoIonizationData(dataDicts::Array{Dict{String,Any},1})
-        photoionizationData = Cascade.PhotoIonData[]
+        photoionizationData = Cascade.Data[]
         for data  in  dataDicts       results = data["results"]
-            if  haskey(results, "photo-ionizing line data:")  photoionizationData = results["photo-ionizing line data:"]    end
+            if  haskey(results, "photoionization lines:")  
+                linesP = results["photoionization lines:"]
+                push!(photoionizationData, Cascade.Data{PhotoIonization.Line}(linesP))  
+            end
         end
         
         return( photoionizationData )
@@ -507,40 +511,72 @@
 
 
     """
-    `Cascade.extractLevels(data::Cascade.DecayData, settings::Cascade.SimulationSettings)` 
+    `Cascade.extractLevels(data::Array{Cascade.Data,1}, settings::Cascade.SimulationSettings)` 
         ... extracts and sorts all levels from the given cascade data into a new levelList::Array{Cascade.Level,1} to simplify the 
             propagation of the probabilities. In this list, every level of the overall cascade just occurs just once, together 
             with its parent lines (which may populate the level) and the daugther lines (to which the pobability may decay). 
             A levelList::Array{Cascade.Level,1} is returned.
     """
-    function extractLevels(data::Cascade.DecayData, settings::Cascade.SimulationSettings)
+    function extractLevels(data::Array{Cascade.Data,1}, settings::Cascade.SimulationSettings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         levels = Cascade.Level[]
         print("> Extract and sort the list of levels for the given decay data ... ")
         if printSummary     print(iostream, "> Extract and sort the list of levels for the given decay data ... ")     end
-        
-        for  i = 1:length(data.linesR)
-            line = data.linesR[i]
-            major  = Basics.extractLeadingConfiguration(line.initialLevel)
-            iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Radiative(), i)] ) 
-            Cascade.pushLevels!(levels, iLevel)  
-            major  = Basics.extractLeadingConfiguration(line.finalLevel)
-            fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
-            Cascade.pushLevels!(levels, fLevel)  
-        end
-
-        for  i = 1:length(data.linesA)
-            line = data.linesA[i]
-            major  = Basics.extractLeadingConfiguration(line.initialLevel)
-            iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                    major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Auger(), i)] ) 
-            Cascade.pushLevels!(levels, iLevel)  
-            major  = Basics.extractLeadingConfiguration(line.finalLevel)
-            fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                    major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Auger(), i)], Cascade.LineIndex[] ) 
-            Cascade.pushLevels!(levels, fLevel)  
+            
+        for cData in data
+            #
+            if  typeof(cData) == Cascade.Data{PhotoEmission.Line}
+                linesR = cData.lines
+                for  (i,line)  in  enumerate(linesR)
+                    major  = Basics.extractLeadingConfiguration(line.initialLevel)
+                    iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
+                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Radiative(), i)] ) 
+                    Cascade.pushLevels!(levels, iLevel)  
+                    major  = Basics.extractLeadingConfiguration(line.finalLevel)
+                    fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
+                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
+                    Cascade.pushLevels!(levels, fLevel)  
+                end
+                #
+            elseif  typeof(cData) == Cascade.Data{AutoIonization.Line}
+                linesA = cData.lines
+                for  (i,line)  in  enumerate(linesA)
+                    major  = Basics.extractLeadingConfiguration(line.initialLevel)
+                    iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
+                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Auger(), i)] ) 
+                    Cascade.pushLevels!(levels, iLevel)  
+                    major  = Basics.extractLeadingConfiguration(line.finalLevel)
+                    fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
+                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Auger(), i)], Cascade.LineIndex[] ) 
+                    Cascade.pushLevels!(levels, fLevel)
+                end
+                #
+            elseif  typeof(cData) == Cascade.Data{PhotoIonization.Line}
+                linesP = cData.lines
+                for  (i,line)  in  enumerate(linesP)
+                    major  = Basics.extractLeadingConfiguration(line.initialLevel)
+                    iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
+                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Photo(), i)] ) 
+                    Cascade.pushLevels!(levels, iLevel)  
+                    major  = Basics.extractLeadingConfiguration(line.finalLevel)
+                    fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
+                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Photo(), i)], Cascade.LineIndex[] ) 
+                    Cascade.pushLevels!(levels, fLevel)
+                end
+                #
+                #
+            elseif  typeof(cData) == Cascade.Data{PhotoExcitation.Line}
+                linesE = cData.lines
+                for  (i,line)  in  enumerate(linesE)
+                    iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
+                                            line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Radiative(), i)] ) 
+                    Cascade.pushLevels!(levels, iLevel)  
+                    fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
+                                            line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
+                    Cascade.pushLevels!(levels, fLevel)  
+                end
+            else  error("stop a")
+            end
         end
         
         # Sort the levels by energy in reversed order
@@ -556,14 +592,15 @@
     end
 
 
+    #==
     """
-    `Cascade.extractLevels(data::Array{Cascade.PhotoIonData,1}, settings::Cascade.SimulationSettings)` 
+    `Cascade.extractLevels(data::Array{Cascade.Data,1}, settings::Cascade.SimulationSettings)` 
         ... extracts and sorts all levels from the given cascade data into a new levelList::Array{Cascade.Level,1} to simplify the 
             propagation of the probabilities. In this list, every level of the overall cascade just occurs just once, together 
             with its parent lines (which may populate the level) and the daugther lines (to which the pobability may decay). 
             A levelList::Array{Cascade.Level,1} is returned.
     """
-    function extractLevels(data::Array{Cascade.PhotoIonData,1}, settings::Cascade.SimulationSettings)
+    function extractLevels(data::Array{Cascade.Data,1}, settings::Cascade.SimulationSettings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream");   found = false
         photonEnergy = settings.initialPhotonEnergy;   newlevels = Cascade.Level[]
         for dataset in data
@@ -576,16 +613,18 @@
         if  !found  error("No proper photo-ionizing data set (Cascade.PhotoIonData) found for the photon energy $photonEnergy ")  end
         return( newlevels )
     end
+    ==#
 
 
+    #==
     """
-    `Cascade.extractLevels(data::Cascade.ExcitationData, settings::Cascade.SimulationSettings)` 
+    `Cascade.extractLevels(data::Array{Cascade.Data,1}, settings::Cascade.SimulationSettings)` 
         ... extracts and sorts all levels from the given cascade data into a new levelList::Array{Cascade.Level,1} to simplify the 
             propagation of the probabilities. In this list, every level of the overall cascade just occurs just once, together 
             with its parent lines (which may populate the level) and the daugther lines (to which the pobability may decay). 
             A levelList::Array{Cascade.Level,1} is returned.
     """
-    function extractLevels(data::Cascade.ExcitationData, settings::Cascade.SimulationSettings)
+    function extractLevels(data::Array{Cascade.Data,1}, settings::Cascade.SimulationSettings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         levels = Cascade.Level[]
         print("> Extract and sort the list of levels for the given excitation data ... ")
@@ -612,16 +651,17 @@
         
         return( newlevels )
     end
+    ==#
 
-
+    #==
     """
-    `Cascade.extractLevels(data::Cascade.PhotoIonData, settings::Cascade.SimulationSettings)` 
+    `Cascade.extractLevels(data::Array{Cascade.Data,1}, settings::Cascade.SimulationSettings)` 
         ... extracts and sorts all levels from the given cascade data into a new levelList::Array{Cascade.Level,1} to simplify the 
             propagation of the probabilities. In this list, every level of the overall cascade just occurs just once, together 
             with its parent lines (which may populate the level) and the daugther lines (to which the pobability may decay). 
             A levelList::Array{Cascade.Level,1} is returned.
     """
-    function extractLevels(data::Cascade.PhotoIonData, settings::Cascade.SimulationSettings)
+    function extractLevels(data::Array{Cascade.Data,1}, settings::Cascade.SimulationSettings)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         levels = Cascade.Level[]
         print("> Extract and sort the list of levels for the given photo-ionization data ... ")
@@ -648,6 +688,7 @@
         
         return( newlevels )
     end
+    ==#
 
 
     """
@@ -1101,12 +1142,12 @@
     
 
     """
-    `Cascade.simulateExpansionOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, name::String, 
+    `Cascade.simulateExpansionOpacities(photoexcitationData::Array{Cascade.Data,1}, name::String, 
                                         property::Cascade.ExpansionOpacities; printout::Bool=true)` 
         ... runs through all excitation lines, sums up their contributions and form a (list of) expansion opacities for the given 
             parameters. Nothing is returned.
     """
-    function simulateExpansionOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, name::String, 
+    function simulateExpansionOpacities(photoexcitationData::Array{Cascade.Data,1}, name::String, 
                                         property::Cascade.ExpansionOpacities; printout::Bool=true)
         #
         function lambda_over_dlambda(opacityDependence::AbstractOpacityDependence, lineOmega::Float64, kT::Float64, depValue::Float64)
@@ -1424,11 +1465,11 @@
     
 
     """
-    `Cascade.simulateRosselandOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, simulation::Cascade.Simulation)` 
+    `Cascade.simulateRosselandOpacities(photoexcitationData::Array{Cascade.Data,1}, simulation::Cascade.Simulation)` 
         ... runs through all excitation lines, sums up their contributions and form a (list of) Rosseland opacities, based on
             the expansion opacities, for the given parameters. Nothing is returned.
     """
-    function simulateRosselandOpacities(photoexcitationData::Array{Cascade.ExcitationData,1}, simulation::Cascade.Simulation)
+    function simulateRosselandOpacities(photoexcitationData::Array{Cascade.Data,1}, simulation::Cascade.Simulation)
         ulist, wlist = FastGaussQuadrature.gausslaguerre(8);            kappaList    = Float64[]
         
         opacityDependence = simulation.property.opacityDependence

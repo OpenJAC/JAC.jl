@@ -151,6 +151,9 @@
             elseif  typeof(computation.processSettings) == ImpactExcitation.Settings 
                 outcome = ImpactExcitation.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("impact-excitation lines:" => outcome) )               end
+            elseif  typeof(computation.processSettings) == InternalRecombination.Settings 
+                outcome = InternalRecombination.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+                if output    results = Base.merge( results, Dict("internal-recombination lines:" => outcome) )               end
                 #
                 #
             elseif  typeof(computation.processSettings) == PairA1P()  
