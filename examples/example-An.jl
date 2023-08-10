@@ -1,17 +1,22 @@
 #
-println("An) Test of a mean-field basis and configuration-interaction (CI) expansion.")
+println("An) Test of a mean-field basis, mean-field multiplet and configuration-interaction (CI) expansion.")
 #
 
 name        = "Oxygen 1s^2 2s^2 2p^4 ground configuration"
 refConfigs  = [Configuration("[He] 2s^2 2p^4")]
 mfSettings  = MeanFieldSettings()
 #
-wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, MeanFieldBasis(mfSettings) )
-println("wa = $wa")
+wa1         = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, MeanFieldBasis(mfSettings) )
+println("wa1 = $wa1")
 
-wb = generate(wa, output=true)
+wb1 = generate(wa1, output=true)
+#
+wa2         = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, MeanFieldMultiplet(mfSettings) )
+println("wa2 = $wa2")
 
-orbitals    = wb["mean-field basis"].orbitals
+wb2 = generate(wa2, output=true)
+
+orbitals    = wb1["mean-field basis"].orbitals
 ciSettings  = CiSettings(CoulombInteraction(), LevelSelection())
 from        = [Shell("2s")]
 #

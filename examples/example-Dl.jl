@@ -7,34 +7,32 @@ setDefaults("method: continuum, Galerkin")           ## setDefaults("method: con
 setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 setDefaults("unit: rate", "a.u.")   
 
-grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
+grid        = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
+quasiShells = Basics.generateShellList(4, 4, 1)
 
-if true
-    # Single-photon 1s^2 photoionization of helium
-    activeShells   = Basics.generateShellList(4, 4, 1)
-    doubleSettings = PhotoDoubleIonization.Settings(EmMultipole[E1], UseGauge[UseCoulomb, UseBabushkin], 
-                                                    [3., 4.],   ## , 4.5, 5., 6., 7., 8., 9.], 
-                                                    activeShells, 1.0, 2, true, 2, LineSelection(true, indexPairs=[(1,0)]) )
-    
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(2.), 
-                            initialConfigs  = [Configuration("1s^2")],
-                            finalConfigs    = [Configuration("1s^0")], 
-                            processSettings = doubleSettings )
-
-    wb = perform(wa)
+if  false
+    # Photo-double ionization of he-like Be: 1s^2   -->  4l + epsilon kappa: Generation of MeanFieldMultiplet
+    name        = "He-like Be"
+    refConfigs  = Basics.generateConfigurationsWithAdditionalElectron([Configuration("1s")], quasiShells)
+    mfSettings  = MeanFieldSettings()
+    #
+    wa          = Representation(name, Nuclear.Model(4.01), Radial.Grid(true), refConfigs, MeanFieldMultiplet(mfSettings) )
+    wb          = generate(wa, output=true)
     #
 elseif true
-    # Single-photon 2p^2 photoionization of neon
-    doubleSettings   = PhotoDoubleIonization.Settings(EmMultipole[E1], UseGauge[UseCoulomb, UseBabushkin], [10., 20., 30.], doubleGreen, 2, 
-                                                      false, true, 2, LineSelection(true, indexPairs=[(1,2)]))
+    # Photo-double ionization of he-like Be: 1s^2   -->  4l + epsilon kappa: Computation of cross sections
+    nMultiplet     = wb["mean-field multiplet"]
+    doubleSettings = PhotoDoubleIonization.Settings(EmMultipole[E1], UseGauge[UseCoulomb, UseBabushkin], quasiShells,
+                                                    [400., 500.], 2, 2, 
+                                                    true, true, LineSelection(true, indexPairs=[(1,0)]), CoulombInteraction(), nMultiplet )
     
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(5.), 
-                            initialConfigs  =[Configuration("1s^2 2s^2")],
-                            finalConfigs    =[Configuration("1s 2s")], 
+    wc = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(4.01), 
+                            initialConfigs  = [Configuration("1s^2")],
+                            finalConfigs    = [Configuration("1s^0")],
                             processSettings = doubleSettings )
 
-    wb = perform(wa)
-    
+    wd = perform(wc)
+    #
 end
 setDefaults("print summary: close", "")
 

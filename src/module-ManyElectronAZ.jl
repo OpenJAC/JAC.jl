@@ -5,9 +5,75 @@
 """
 module ManyElectronAZ
 
-    using Printf, ..Basics, ..Defaults, ..ManyElectron, ..Radial
+    using Printf, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Radial, ..SpinAngular
     
     export provideSubshellStates
+
+
+    """
+    `ManyElectron.matrixElement_Mab(Mp::EmMultipole, gauge::EmGauge, omega::Float64, 
+                                       leftBasis::Basis, r::Int64, rightBasis::Basis, s::Int64, grid::Radial.Grid)`  
+        ... to compute the electron-photon interaction amplitude  
+        
+                    <leftBasis.csfs[r] || O^(Mp, emission) || rightBasis.csfs[s]>
+                    
+            for two CSF r, s as define in the two given bases. An amplitude::ComplexF64 is returned.
+            The procedure assumes that the two bases are defined on the same sequence of subshells and that their orbitals
+            are 'orthogonal' in practice.
+    """
+    function ManyElectron.matrixElement_Mab(Mp::EmMultipole, gauge::EmGauge, omega::Float64, 
+                                            leftBasis::Basis, r::Int64, rightBasis::Basis, s::Int64, grid::Radial.Grid)
+        # Issue a warning if the amplitude is zero due to the given symmetries of the CSFs; this should be tested before
+        me  = 0.
+            
+        subshellList = leftBasis.subshells
+        opa = SpinAngular.OneParticleOperator(Mp.L, plus, true)
+        wa  = SpinAngular.computeCoefficients(opa, leftBasis.csfs[r], rightBasis.csfs[s], subshellList) 
+        for  coeff in wa
+            MabJohnsony = InteractionStrength.MabEmissionJohnsony(Mp, gauge, omega, leftBasis.orbitals[coeff.a],  
+                                                                                   rightBasis.orbitals[coeff.b], grid)
+            ja = Basics.subshell_2j(leftBasis.orbitals[coeff.a].subshell)
+            me = me + coeff.T * MabJohnsony / sqrt( ja + 1) * sqrt( (Basics.twice(leftBasis.csfs[r].J) + 1)) 
+        end
+        
+        return( me )
+    end
+
+
+    """
+    `ManyElectron.matrixElement_Vee(kind::AbstractEeInteraction, leftBasis::Basis, r::Int64, rightBasis::Basis, s::Int64, grid::Radial.Grid)`  
+        ... to compute the V^(e-e) electron-electron interaction amplitude  
+        
+                    < leftBasis.csfs[r] || V^(e-e) || rightBasis.csfs[s] > 
+                    
+            for two CSF r, s as define in the two given bases. An amplitude::ComplexF64 is returned.
+            The procedure assumes that the two bases are defined on the same sequence of subshells and that their orbitals
+            are 'orthogonal' in practice.
+    """
+    function ManyElectron.matrixElement_Vee(kind::AbstractEeInteraction, leftBasis::Basis, r::Int64, rightBasis::Basis, s::Int64, grid::Radial.Grid)
+        # Issue a warning if the amplitude is zero due to the given symmetries of the CSFs; this should be tested before
+        me   = 0.
+        symr = LevelSymmetry(leftBasis.csfs[r].J, leftBasis.csfs[r].parity)
+        syms = LevelSymmetry(rightBasis.csfs[s].J, rightBasis.csfs[s].parity)
+        if  symr != syms   @warn("Zero amplitude because of symmetries: $symr != $syms ");   return( me )    end
+            
+        subshellList = leftBasis.subshells
+        opa = SpinAngular.TwoParticleOperator(0, plus, true)
+        wa  = SpinAngular.computeCoefficients(opa, leftBasis.csfs[r], rightBasis.csfs[s], subshellList) 
+        #
+        for  coeff in wa
+            if   kind in [ CoulombInteraction(), CoulombBreit()]    
+                me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 
+                                         leftBasis.orbitals[coeff.a],  leftBasis.orbitals[coeff.b],
+                                        rightBasis.orbitals[coeff.c], rightBasis.orbitals[coeff.d], grid)   end
+            if   kind in [ BreitInteraction(), CoulombBreit()]    
+                me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, 
+                                         leftBasis.orbitals[coeff.a],  leftBasis.orbitals[coeff.b],
+                                        rightBasis.orbitals[coeff.c], rightBasis.orbitals[coeff.d], grid)   end
+        end
+        
+        return( me )
+    end    
 
 
     """

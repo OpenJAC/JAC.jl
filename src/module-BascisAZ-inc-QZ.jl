@@ -224,7 +224,7 @@
         ... to recast a given radiative rate (Einstein A in atomic units) into a line strength S; 
             a Float64 is returned.
     """
-    function Basics.recast(sa::String, line::Union{Einstein.Line,PhotoEmission.Line}, wa::Float64)
+    function Basics.recast(sa::String, line::Union{Einstein.Line, PhotoEmission.Line, TwoElectronOnePhoton.Line}, wa::Float64)
     
         if       sa == "rate: radiative, to decay width"
             width = Defaults.convertUnits("energy: from atomic", wa)

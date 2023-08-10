@@ -8,7 +8,7 @@ module AtomicState
     ## using Interact
     using ..Basics, ..Radial, ..ManyElectron, ..Nuclear
 
-    export  MeanFieldSettings, MeanFieldBasis, OneElectronSettings, OneElectronSpectrum, CiSettings, CiExpansion, 
+    export  MeanFieldSettings, MeanFieldBasis, MeanFieldMultiplet, OneElectronSettings, OneElectronSpectrum, CiSettings, CiExpansion, 
             RasSettings, RasStep, RasExpansion, GreenSettings, GreenChannel, GreenExpansion, Representation
 
     
@@ -18,6 +18,7 @@ module AtomicState
         
         + struct MeanFieldBasis       ... to represent (and generate) a mean-field basis and, especially, a set of 
                                           (mean-field) orbitals.
+        + struct MeanFieldMultiplet   ... to represent (and generate) a mean-field multiplet, based on (mean-field) orbitals.
         + struct OneElectronSpectrum  ... to represent (and generate) a one-electron spectrum for the mean-field 
                                           potential of refConfigs.
         + struct CiExpansion          ... to represent (and generate) a configuration-interaction representation.
@@ -78,6 +79,31 @@ module AtomicState
 
     # `Base.show(io::IO, basis::MeanFieldBasis)`  ... prepares a proper printout of the basis::MeanFieldBasis.
     function Base.show(io::IO, basis::MeanFieldBasis)
+        sa = Base.string(basis);       print(io, sa, "\n")
+    end
+
+
+    """
+    `struct  AtomicState.MeanFieldMultiplet  <:  AbstractRepresentationType`  
+        ... a struct to represent (and generate) a mean-field orbital basis and multiplet.
+
+        + settings         ::AtomicState.MeanFieldSettings      ... Settings for the given mean-field orbital basis and multiplet.
+    """
+    struct   MeanFieldMultiplet  <:  AbstractRepresentationType
+        settings           ::AtomicState.MeanFieldSettings
+    end
+
+
+    # `Base.string(basis::MeanFieldMultiplet)`  ... provides a String notation for the variable basis::MeanFieldMultiplet.
+    function Base.string(basis::MeanFieldMultiplet)
+        #
+        sa = "Mean-field multiplet for a $(basis.settings.scField) SCF field:"
+        return( sa )
+    end
+
+
+    # `Base.show(io::IO, basis::MeanFieldMultiplet)`  ... prepares a proper printout of the basis::MeanFieldMultiplet.
+    function Base.show(io::IO, basis::MeanFieldMultiplet)
         sa = Base.string(basis);       print(io, sa, "\n")
     end
 

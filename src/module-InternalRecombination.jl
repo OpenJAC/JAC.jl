@@ -21,6 +21,17 @@ module InternalRecombination
         + operator              ::AbstractEeInteraction   
             ... Electron-interaction operator that is to be used for evaluating the internal-recombination amplitudes; 
                 allowed values are: CoulombInteraction(), BreitInteraction(), ...
+        
+        The internal recombination (stabilization) is described by the following internal transitions:
+
+            A^q+: [Ne] 3s (10s + 10p + 10d + ...)  --> [Ne] 3d (4s + 4p + 4d + ...) 
+            
+        due to some (plasma-type) broadening of "widths" to make the resonance condition of the dielectronic interaction
+        possible. In this process, the rydbergShells describe the (10s + 10p + 10d + ...) hollow-atom Rydberg occupation which
+        is coupled "configuration-wise" to the initial N-electron level, from which it "recombines" to a doubly-exited 
+        (N-1) electron level of type 3d (4s + 4p + 4d + ...), or similar. These doubly-excited levels quickly "stabilizes"
+        radiatively. The process can be characterized either by a "capture rate" (nominal Auger rate) or 
+        "dielectronic strength", analogue to the dielectronic recombination.
     """
     struct Settings  <:  AbstractProcessSettings
         rydbergShells           ::Array{Shell,1}
@@ -135,13 +146,55 @@ module InternalRecombination
 
 
     """
-    `InternalRecombination.computeAmplitudesProperties(line::InternalRecombination.Line, nm::Nuclear.Model, grid::Radial.Grid, 
+    `InternalRecombination.amplitude(operator::AbstractEeInteraction, finalLevel::Level, rydbergLevel::Level, grid::Radial.Grid; 
+                                     display::Bool=true, printout::Bool=false)
+        ... to compute the internal-recombination amplitude  
+        
+                    <alpha_f J_f || V^(e-e) || (alpha_i J_i, n kappa) J_t>
+                
+            A value::ComplexF64 is returned and the amplitude value printed to screen, if display=true.
+    """
+    function amplitude(operator::AbstractEeInteraction, finalLevel::Level, rydbergLevel::Level, grid::Radial.Grid; 
+                       display::Bool=true, printout::Bool=false)
+        #
+        if  finalLevel.basis.subshells != rydbergLevel.basis.subshells  error("stop a")     end
+        if  finalLevel.J               != rydbergLevel.J                error("stop b")     end
+        fLevel = finalLevel;    iLevel = rydbergLevel
+        
+        nf = length(fLevel.basis.csfs);    symf = LevelSymmetry(fLevel.J, fLevel.parity)
+        ni = length(iLevel.basis.csfs);    symi = LevelSymmetry(iLevel.J, iLevel.parity)
+        
+        if  printout   printstyled("Compute internal-stabilization amplitude for the transition [$(rydbergLevel.index)-$(finalLevel.index)] ... ", 
+                                   color=:light_green)    end
+        amplitude = ComplexF64(0.)
+        #
+        for  r = 1:nf
+            for  s = 1:ni
+                #
+                #    <alpha_f J_f || V^(e-e) || (alpha_i J_i, n kappa) J_t>
+                Vee       = ManyElectron.matrixElement_Vee(operator, fLevel.basis, r, iLevel.basis, s, grid)
+                amplitude = amplitude + fLevel.mc[r] * Vee * iLevel.mc[s]
+            end
+        end
+        if  printout   printstyled("done. \n", color=:light_green)    end
+        
+        if  display  
+            println("    < level=$(finalLevel.index) [J=$symf)] ||" * " IR^($operator) ||" * " $(rydbergLevel.index) [$symi)] >  = $amplitude  ")
+        end
+        
+        return( amplitude )
+    end
+
+
+    """
+    `InternalRecombination.computeAmplitudesProperties(line::InternalRecombination.Line, nm::Nuclear.Model, 
+                                                       rydbergOrbitals::Dict{Subshell, Orbital}, grid::Radial.Grid, 
                                                        settings::InternalRecombination.Settings; printout::Bool=true)` 
         ... to compute all amplitudes and properties of the given line; a line::InternalRecombination.Line is returned 
             for which the amplitudes and properties are now evaluated.
     """
-    function computeAmplitudesProperties(line::InternalRecombination.Line, nm::Nuclear.Model, grid::Radial.Grid, 
-                                         settings::InternalRecombination.Settings; printout::Bool=true) 
+    function computeAmplitudesProperties(line::InternalRecombination.Line, nm::Nuclear.Model, rydbergOrbitals::Dict{Subshell, Orbital}, 
+                                         grid::Radial.Grid, settings::InternalRecombination.Settings; printout::Bool=true) 
         newChannels = InternalRecombination.Channel[];   rateZ = 0.;   rate = 0.;   gHalf = settings.gamma / 2.
         # Define a common subshell list for both multiplets
         subshellList = Basics.generate("subshells: ordered list for two bases", line.finalLevel.basis, line.initialLevel.basis)
@@ -152,9 +205,8 @@ module InternalRecombination
             newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, subshellList)
             newfLevel = Basics.generateLevelWithExtraSubshell(channel.subshell, newfLevel)
             # Generate Rydberg orbital in the field of the initial core
-            ## newrLevel = Basics.generateLevelWithExtraElectron(rOrbital, channel.symmetry, newiLevel)
-            ## amplitude = InternalRecombination.amplitude(settings.operator, newfLevel, newrLevel, grid, printout=printout)
-            amplitude = Complex(1.)
+            newrLevel = Basics.generateLevelWithExtraElectron(rydbergOrbitals[channel.subshell], channel.symmetry, newiLevel)
+            amplitude = InternalRecombination.amplitude(settings.operator, newfLevel, newrLevel, grid, printout=printout)
             # Apply energy dominator + gamma
             factorZ   = gHalf / ( (line.initialLevel.energy - line.finalLevel.energy)^2 + gHalf^2 )
             factor    = gHalf / ( line.deltaEnergy^2 + gHalf^2 )
@@ -181,13 +233,18 @@ module InternalRecombination
         printstyled("InternalRecombination.computeLines(): The computation of internal-recombination rates starts now ... \n", color=:light_green)
         printstyled("---------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
+        # Generate orbitals for all rydberg-subshells
+        rydbergSubshells = Basics.generateSubshellList(settings.rydbergShells)
+        meanPot          = Basics.computePotentialDFS(grid, initialMultiplet.levels[1].basis)
+        rydbergOrbitals  = Basics.generateOrbitalsForPotential(grid, meanPot, rydbergSubshells)
+        #
         lines = InternalRecombination.determineLines(finalMultiplet, initialMultiplet, settings)
         # Display all selected lines before the computations start
         if  settings.printBefore    InternalRecombination.displayLines(lines)    end  
         # Calculate all amplitudes and requested properties
         newLines = InternalRecombination.Line[]
         for  line in lines
-            newLine = InternalRecombination.computeAmplitudesProperties(line, nm, grid, settings) 
+            newLine = InternalRecombination.computeAmplitudesProperties(line, nm, rydbergOrbitals, grid, settings) 
             push!( newLines, newLine)
         end
         # Print all results to screen
@@ -214,7 +271,7 @@ module InternalRecombination
         subshells = Basics.generateSubshellList(settings.rydbergShells)
         for  subsh in subshells
             tSymmetries = AngularMomentum.allowedTotalSymmetries(symi, subsh.kappa)
-            @show symi, subsh.kappa, tSymmetries
+            ##x @show symi, subsh.kappa, tSymmetries
             for  symt in tSymmetries
                 if  symt != symf      continue    end
                 push!(channels, InternalRecombination.Channel(subsh, symt, Complex(0.)) )
@@ -274,8 +331,9 @@ module InternalRecombination
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
             sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
-            sa = sa * @sprintf("%.7e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "    "
-            sa = sa * @sprintf("%.7e", Defaults.convertUnits("energy: from atomic", line.deltaEnergy))          * "    "
+            sa = sa * @sprintf("%.7e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * " "
+            sb = "      " * @sprintf("%.7e", Defaults.convertUnits("energy: from atomic", line.deltaEnergy))
+            sa = sa * sb[end-16:end] * "    "
             subshellSymmetryList = Tuple{Subshell,LevelSymmetry}[]
             for  channel in line.channels
                 push!( subshellSymmetryList, (channel.subshell, channel.symmetry) )
@@ -304,12 +362,12 @@ module InternalRecombination
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
-        sa = sa * TableStrings.center(12, "Energy"   ; na=2);               
-        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=2)
+        sa = sa * TableStrings.center(12, "Energy  " ; na=2);               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=3)
         sa = sa * TableStrings.center(12, "Delta energy"   ; na=2);               
         sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=2)
-        sa = sa * TableStrings.center(14, "Rate (dE=0.)"   ; na=2);       
-        sb = sb * TableStrings.center(14, TableStrings.inUnits("rate");  na=2)
+        sa = sa * TableStrings.center(14, "Rate (dE=0.)"   ; na=0);       
+        sb = sb * TableStrings.center(14, TableStrings.inUnits("rate");  na=1)
         sa = sa * TableStrings.center(15, "Rate"           ; na=2);                           
         sb = sb * TableStrings.center(14, TableStrings.inUnits("rate");  na=2)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
@@ -321,8 +379,8 @@ module InternalRecombination
             sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=2)
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "  "
             sx = "     " * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.deltaEnergy))
-            sa = sa * sx[end-13:end]                                                                            * "  "
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("rate: from atomic", line.rateZ))                  * "  "
+            sa = sa * sx[end-13:end]                                                                            * "   "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("rate: from atomic", line.rateZ))                  * "    "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("rate: from atomic", line.rate))                   * "  "
             println(stream, sa)
         end
@@ -350,8 +408,8 @@ module InternalRecombination
         sa = sa * TableStrings.center( 6, "J^P";     na=2);                         sb = sb * TableStrings.hBlank( 8)
         sa = sa * TableStrings.center(12, "Energy";  na=2);               
         sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
-        sa = sa * TableStrings.center(18, "Total rate (dE=0.)"; na=0);       
-        sb = sb * TableStrings.center(18, TableStrings.inUnits("rate");  na=0)
+        sa = sa * TableStrings.center(18, "Total rate (dE=0.)"; na=3);       
+        sb = sb * TableStrings.center(18, TableStrings.inUnits("rate");  na=3)
         sa = sa * TableStrings.center(12, "Total rate"; na=2);                           
         sb = sb * TableStrings.center(12, TableStrings.inUnits("rate");  na=2)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
@@ -366,10 +424,11 @@ module InternalRecombination
                     total  = total  + lines[j].rate 
                 end
             end
-            sa  = "       ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
-            sa = sa * string(line.initialLevel.index) * "         " * string(isym)                              * "    "
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "    "
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("rate: from atomic", totalZ))                      * "    "
+            isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+            sa = "      " * string(line.initialLevel.index);   sb = "            " * string(isym)
+            sa = sa[end-6:end] * sb[end-10:end] * "  "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy))  * "     "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("rate: from atomic", totalZ))                      * "      "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("rate: from atomic", total))                       * "    "
             println(stream, sa)
         end

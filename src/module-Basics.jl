@@ -1814,6 +1814,7 @@ module Basics
     function generateBasis                                          end
     function generateConfigurations                                 end
     function generateConfigurationsForExcitationScheme              end
+    function generateConfigurationsWithAdditionalElectron           end
     function generateConfigurationsWithAdditionalElectrons          end
     function generateConfigurationsWithElectronCapture              end
     function generateConfigurationsWithElectronLoss                 end

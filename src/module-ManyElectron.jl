@@ -8,7 +8,8 @@ module ManyElectron
     using  ..Basics, ..Defaults,  ..Radial
     export Configuration, ConfigurationR, AsfSettings, CsfR, Basis, Level, Multiplet, 
            AbstractQedModel, NoneQed, QedPetersburg, QedSydney, LSjjSettings,
-           AbstractConfigurationRestriction, RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation
+           AbstractConfigurationRestriction, RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, 
+           RequestMinimumOccupation, RequestMaximumOccupation
 
     
     
@@ -983,7 +984,7 @@ module ManyElectron
     `struct  ManyElectron.Multiplet`  
         ... defines a type for an ordered list of atomic levels; has only the default constructor.
     
-    	  + name  	 ::String	         ... A name associated to the multiplet.
+    	  + name  	 ::String	        ... A name associated to the multiplet.
     	  + levels	 ::Array{Level,1}   ... A list of levels (pointers).
     """
     struct  Multiplet
@@ -1020,6 +1021,25 @@ module ManyElectron
     end
     
     
+    """
+    `ManyElectron.Multiplet(multiplet::Multiplet, subshells::Array{Subshell,1})`  
+        ... constructor to re-expand a given Multiplet with regard to an extended subshell list; this expansion does not change
+            the CSF basis nor the mixing coeffients but makes sure that the occupation and other quantum numbers are properly
+            expanded. An error message is issued if the sequence of the subshells does not allow such a simple re-expansion.
+            A newMultiplet::Multiplet is returned.
+    """
+    function Multiplet(multiplet::Multiplet, subshells::Array{Subshell,1})
+        basis = Basis(multiplet.levels[1].basis, subshells)
+        newLevels = Level[]
+        for  level  in  multiplet.levels
+            push!( newLevels, Level(level.J, level.M, level.parity, level.index, level.energy, 
+                                    level.relativeOcc, level.hasStateRep, basis, level.mc) )
+        end
+
+        Multiplet(multiplet.name, newLevels) 
+    end
+    
+    
     # `Base.show(io::IO, multiplet::Multiplet)`  ... prepares a proper printout of the variable multiplet::Multiplet.
     function Base.show(io::IO, multiplet::Multiplet) 
         println(io, "name:        $(multiplet.name)  ")
@@ -1028,6 +1048,8 @@ module ManyElectron
     
     
     # Functions/methods that are later added to the module ManyElectron
+    function matrixElement_Mab                                      end
+    function matrixElement_Vee                                      end
     function provideSubshellStates                                  end
     
 end # module

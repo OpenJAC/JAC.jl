@@ -47,6 +47,35 @@
 
 
     """
+    `Basics.generate(repType::AtomicState.MeanFieldMultiplet, representation::AtomicState.Representation)`  
+        ... to generate a mean-field basis (representation) for a set of reference configurations; all relevant intermediate 
+            and final results are printed to screen (stdout). Nothing is returned.
+
+    `Basics.generate(repType::AtomicState.MeanFieldMultiplet, representation::AtomicState.Representation; output=true)`  
+        ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
+            specifications of the representation but can easily accessed by the keys of this dictionary.
+    """
+    function Basics.generate(repType::AtomicState.MeanFieldMultiplet, rep::AtomicState.Representation; output::Bool=false)
+        if  output    results = Dict{String, Any}()    else    results = nothing    end
+        nModel    = rep.nuclearModel
+
+        # The asfSettings only define the SCF part and are partly derived from the MeanFieldSettings
+        asfSettings = AsfSettings(AsfSettings(); scField=repType.settings.scField) 
+        
+        basis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+        multiplet  = Basics.performCI(basis, nModel, rep.grid, asfSettings; printout=true)
+        if output    
+            results = Base.merge( results, Dict("mean-field basis" => basis) )          
+            results = Base.merge( results, Dict("mean-field multiplet" => multiplet) )          
+        end
+        
+        return( results )
+    end
+
+
+
+
+    """
     `Basics.generate(repType::AtomicState.OneElectronSpectrum, representation::AtomicState.Representation)`  
         ... to generate a one-electron spectrum for the atomic potential from the (given) levels, based on a set of reference 
             configurations as well as for given settings. Relevant intermediate and final results are printed to screen (stdout). 
@@ -931,6 +960,32 @@
         nafter      = length(newConfList)
         println(">> Number of generated configurations for $exScheme is: $nbefore (before) and $nafter (after).")
 
+        return( newConfList )
+    end
+
+
+
+    """
+    `Basics.generateConfigurationsWithAdditionalElectron(confs::Array{Configuration,1}, addShells::Array{Shell,1})`  
+        ... generates a list of non-relativistic configurations for the given (reference) confs and with one additional electron
+            from the given addShells. A list of possible newConfs::Array{Configuration,1} is returned.
+    """
+    function Basics.generateConfigurationsWithAdditionalElectron(confs::Array{Configuration,1}, addShells::Array{Shell,1})
+        newConfList = Configuration[];     NoElectrons = confs[1].NoElectrons + 1
+        #
+        for  conf in confs
+            for  ashell in addShells
+                shells = copy(conf.shells);    addConf = true
+                if  haskey(shells, ashell)  
+                    if  shells[ashell] + 1 > 4*ashell.l + 2     addConf = false     end    
+                        shells[ashell] = shells[ashell] + 1
+                else    shells[ashell] = 1
+                end
+                if  addConf   push!(newConfList, Configuration(shells, NoElectrons))    end 
+            end
+        end 
+        newConfList = unique(newConfList)
+        
         return( newConfList )
     end
 

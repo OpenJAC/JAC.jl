@@ -8,7 +8,7 @@ module Cascade
 
     using Dates, JLD2, Printf, FastGaussQuadrature,
           ..AngularMomentum, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
-          ..DecayYield, ..Dielectronic, ..ElectronCapture, ..Radial, ..ManyElectron, ..Nuclear, 
+          ..DecayYield, ..Dielectronic, ..ElectronCapture, ..ImpactExcitation, ..Radial, ..ManyElectron, ..Nuclear, 
           ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..PhotoRecombination, 
           ..Semiempirical, ..TableStrings
 
@@ -420,22 +420,46 @@ module Cascade
     `struct  Cascade.ImpactExcitationScheme  <:  Cascade.AbstractCascadeScheme`  
             ... to compute the (direct) electron-impact excitation spectrum for a list of impact energies (not yet).
 
-        + processes             ::Array{Basics.AbstractProcess,1} 
+        + processes              ::Array{Basics.AbstractProcess,1} 
             ... List of the atomic processes that are supported and should be included into the cascade.
-        + electronEnergies      ::Array{Float64,1}                
+        + fromShells             ::Array{Shell,1}    
+            ... List of shells from which impact-excitations are to be considered.
+        + toShells               ::Array{Shell,1}    
+            ... List of shells into which impact-excitations are to be considered, including possibly already occupied shells.
+        + electronEnergies       ::Array{Float64,1}                
             ... List of electron energies for which this electron-impact excitation scheme is to be calculated.
+        + lValues                ::Array{Int64,1}
+            ... Orbital angular momentum values of the free-electrons, for which partial waves are considered for the RR.
+        + NoFreeElectronEnergies ::Int64             
+            ... Number of free-electron energies that a chosen for a Gauss-Laguerre integration.
+        + maxFreeElectronEnergy  ::Float64             
+            ... Maximum free-electron energies [in a.u.] that restrict the energy of free-electron orbitals; this maximum energy has to 
+                be derived from the maximum temperature for which RR plasma coefficients need to be obtained and is typically set to 
+                about 5x T_e,max.
+        + electronEnergyShift    ::Float64                 
+            ... Energy shift for all bound-state energies relative to the levels from the reference configuration; this is realized by 
+                shifting the initial level energies by the negative amount. The shift is taken in the user-defined units.
+                
+        Either a list of electronEnergies or the NoFreeElectronEnergies can be specified; the program terminates, if "non-zero"
+        entries appears for these two subfields.
     """
     struct   ImpactExcitationScheme  <:  Cascade.AbstractCascadeScheme
         processes               ::Array{Basics.AbstractProcess,1}
+        fromShells              ::Array{Shell,1}
+        toShells                ::Array{Shell,1}
         electronEnergies        ::Array{Float64,1}
+        lValues                 ::Array{Int64,1}
+        NoFreeElectronEnergies  ::Int64 
+        maxFreeElectronEnergy   ::Float64 
+        electronEnergyShift     ::Float64    
     end
 
-
+    
     """
     `Cascade.ImpactExcitationScheme()`  ... constructor for an 'default' instance of a Cascade.ImpactExcitationScheme.
     """
     function ImpactExcitationScheme()
-        ImpactExcitationScheme([Eimex], Float64[] )
+        ImpactExcitationScheme([Eimex], Shell[], Shell[], Float64[], Int64[], 0, 0., 0. )
     end
 
 
@@ -450,7 +474,17 @@ module Cascade
     function Base.show(io::IO, scheme::ImpactExcitationScheme)
         sa = Base.string(scheme);                 print(io, sa, "\n")
         println(io, "processes:                   $(scheme.processes)  ")
+        println(io, "fromShells:                  $(scheme.fromShells)  ")
+        println(io, "toShells:                    $(scheme.toShells)  ")
         println(io, "electronEnergies:            $(scheme.electronEnergies)  ")
+        println(io, "lValues:                     $(scheme.lValues)  ")
+        println(io, "NoFreeElectronEnergies:      $(scheme.NoFreeElectronEnergies)  ")
+        println(io, "maxFreeElectronEnergy:       $(scheme.maxFreeElectronEnergy)  ")
+        println(io, "electronEnergyShift:         $(scheme.electronEnergyShift)  ")
+        
+        if  scheme.NoFreeElectronEnergies != 0   &&   length(scheme.electronEnergies) != 0   
+            error("Either electronEnergies  <OR>  NoFreeElectronEnergies can be specified explicitly.")
+        end
     end
 
 
@@ -1128,6 +1162,8 @@ module Cascade
     include("module-Cascade-inc-electron-ionization.jl")
     include("module-Cascade-inc-expansion-opacity.jl")
     include("module-Cascade-inc-hollow-ion.jl")
+    include("module-Cascade-inc-impact-excitation.jl")
+    include("module-Cascade-inc-impact-ionization.jl")
     include("module-Cascade-inc-photoabsorption.jl")
     include("module-Cascade-inc-photoexcitation.jl")
     include("module-Cascade-inc-photoionization.jl")

@@ -219,6 +219,7 @@ module PhotoIonization
         crossSection = EmProperty(csFactor * csC, csFactor * csB)
         newLine = PhotoIonization.Line( line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, 
                                         crossSection, newChannels)
+
         return( newLine )
     end
 
@@ -267,6 +268,8 @@ module PhotoIonization
     """
     function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                            settings::PhotoIonization.Settings; output::Bool=true)
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        
         println("")
         printstyled("PhotoIonization.computeLines(): The computation of photo-ionization and properties starts now ... \n", color=:light_green)
         printstyled("------------------------------------------------------------------------------------------------- \n", color=:light_green)
@@ -284,10 +287,12 @@ module PhotoIonization
                     "for the photon energy $(Defaults.convertUnits("energy: from atomic", line.photonEnergy)) " * Defaults.GBL_ENERGY_UNIT)
             newLine = PhotoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings) 
             push!( newLines, newLine)
+            # Additional printout for each line, if required ... due to collaboration with Kabachnik/Pfeiffer, June 2023
+            if  true  && printSummary   PhotoIonization.displayResultsDetailed(stdout,   newLine, settings)     
+                                        PhotoIonization.displayResultsDetailed(iostream, newLine, settings)  end
         end
         # Print all results to screen
         PhotoIonization.displayResults(stdout, newLines, settings)
-        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         if  printSummary   PhotoIonization.displayResults(iostream, newLines, settings)     end
         #
         if    output    return( newLines )
@@ -738,6 +743,49 @@ module PhotoIonization
             println(stream, "  ", TableStrings.hLine(nx))
         end
         #
+        return( nothing )
+    end
+
+
+    """
+    `PhotoIonization.displayResultsDetailed(stream::IO, line::PhotoIonization.Line, settings::PhotoIonization.Settings)`  
+        ... to list the detailed results, energies, etc. for the given line. A neat table is printed but nothing 
+            is returned otherwise.
+    """
+    function  displayResultsDetailed(stream::IO, line::PhotoIonization.Line, settings::PhotoIonization.Settings)
+        symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity)
+        symf = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity)
+        sa   = "\n  Results for PI line from the transition  $(line.initialLevel.index) -  $(line.finalLevel.index):  " *
+               "  $symi  - $symf "
+        
+        println(stream, sa, "\n  ", TableStrings.hLine(length(sa)-3))
+        println(stream, "\n  Photon energy       = " * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.photonEnergy)) *
+                          "  " * TableStrings.inUnits("energy") )
+        println(stream,   "  Electron energy     = " * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) *
+                          "  " * TableStrings.inUnits("energy") )
+        println(stream,   "  Total cross section = " * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Coulomb)) *
+                          "  " * TableStrings.inUnits("cross section") * " (Coulomb gauge)" )
+        println(stream,   "                        " * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin)) *
+                          "  " * TableStrings.inUnits("cross section") * " (Babushkin gauge)" )
+        println(stream, "\n  Kappa    Total J^P  Mp     Gauge               Amplitude          Real-Amplitude  Cross section (b)   Phase " *
+                        "\n  " * TableStrings.hLine(112) )
+                    
+        for  channel in line.channels 
+            Ji2 = Basics.twice(line.initialLevel.J)
+            csFactor = 4 * pi^3 / Defaults.getDefaults("alpha") / line.photonEnergy
+            # csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.photonEnergy / (2*(Ji2 + 1))
+            cs = csFactor * abs(channel.amplitude)^2
+            sg = string(channel.gauge) * "      "
+            sk = "    " * string(channel.kappa)
+            sb = "    " * @sprintf("%.4e", channel.amplitude.re)
+            sc = "    " * @sprintf("%.4e", channel.amplitude.im)
+            sp = "    " * @sprintf("%.4e", channel.phase)
+            sa = " " * sk[end-3:end] * "          " * string(channel.symmetry) * "    " * string(channel.multipole) * "     " * sg[1:11] * 
+                 sb[end-12:end] * sc[end-12:end] * "    " * @sprintf("%.4e", abs(channel.amplitude)) *
+                 "       " * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs)) * "   " * sp[end-12:end]
+            println(stream, sa) 
+        end
+        
         return( nothing )
     end
 
