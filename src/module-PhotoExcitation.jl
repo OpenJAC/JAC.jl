@@ -340,6 +340,83 @@ module PhotoExcitation
 
 
     """
+    `PhotoExcitation.displayLineData(stream::IO, lines::Array{PhotoExcitation.Line,1})`  
+        ... to display the calculated data, ordered by the initial levels and the photon energies involved.
+            Neat tables of all initial levels and photon energies as well as all associated total cross sections are printed
+            but nothing is returned otherwise.
+    """
+    function  displayLineData(stream::IO, lines::Array{PhotoExcitation.Line,1})
+        # Extract and display all initial levels by their total energy and symmetry
+        energies = Float64[]
+        for  line  in  lines    push!(energies, line.initialLevel.energy)  end     
+        energies = unique(energies);    energies = sort(energies)
+        println(stream, "\n  Initial levels, available in the given photoexcitation line data:")
+        println(stream, "\n  ", TableStrings.hLine(42))
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(10, "Level"; na=2);                              sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                              sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(12, "Level energy"   ; na=3);               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=3)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(42))
+        for  energy in energies
+            isNew = true
+            for  line in lines
+                if  line.initialLevel.energy == energy  &&  isNew
+                    sa  = "  ";    sym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity )
+                    sa = sa * TableStrings.center(10, TableStrings.level(line.initialLevel.index); na=2)
+                    sa = sa * TableStrings.center(10, string(sym); na=4)
+                    sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy)) * "    "
+                    println(stream, sa);   isNew = false
+                end
+            end
+        end
+        #
+        # Extract and display photon energies for which line data are available
+        omegas = Float64[]
+        for  line  in  lines    push!(omegas, line.omega)   end;    
+        omegas = unique(omegas);    omegas = sort(omegas)
+        sa  = "    ";   
+        for   omega in omegas  sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", omega)) * "   "      end
+        #
+        println(stream, "\n  Photon energies $(TableStrings.inUnits("energy")) for which given photoexcitation line data are given:")
+        println(stream, "\n" * sa)
+        #
+        # Extract and display total cross sections, ordered by the initial levels and photon energies, for which line data are available
+        println(stream, "\n  Initial level, photon energies and total cross sections for given photoexcitation line data: \n")
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(10, "Level"; na=2);                              sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                              sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(12, "Omega"   ; na=3);               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(26, "Cou--Total CS--Bab"   ; na=5);               
+        sb = sb * TableStrings.center(26,TableStrings.inUnits("cross section"); na=5)
+        sa = sa * TableStrings.center(20, "Shell excitations"; na=3);               
+        sb = sb * TableStrings.center(20, "from  ==>  to";  na=5)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(75))
+        wLine = lines[1]
+        for  energy in energies
+            for  omega in omegas
+                cs = Basics.EmProperty(0.)
+                for  line in lines
+                    if  line.initialLevel.energy == energy  &&   line.omega == omega     cs = cs + line.crossSection
+                        wLine = line   end
+                end
+                sa  = "  ";    sym = LevelSymmetry( wLine.initialLevel.J, wLine.initialLevel.parity )
+                sa = sa * TableStrings.center(10, TableStrings.level(wLine.initialLevel.index); na=2)
+                sa = sa * TableStrings.center(10, string(sym); na=4)
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", omega)) * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", cs.Coulomb))   * "  " *
+                          @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", cs.Babushkin)) * "     "
+                println(stream, sa)
+            end
+        end
+        
+        
+        return( nothing )
+    end
+
+
+    """
     `PhotoExcitation.displayLines(lines::Array{PhotoExcitation.Line,1})`  
         ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all 
             selected transitions and energies is printed but nothing is returned otherwise.

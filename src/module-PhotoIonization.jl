@@ -533,6 +533,84 @@ module PhotoIonization
 
 
     """
+    `PhotoIonization.displayLineData(stream::IO, lines::Array{PhotoIonization.Line,1})`  
+        ... to display the calculated data, ordered by the initial levels and the photon energies involved.
+            Neat tables of all initial levels and photon energies as well as all associated cross sections are printed
+            but nothing is returned otherwise.
+    """
+    function  displayLineData(stream::IO, lines::Array{PhotoIonization.Line,1})
+        # Extract and display all initial levels by their total energy and symmetry
+        energies = Float64[]
+        for  line  in  lines    push!(energies, line.initialLevel.energy)  end     
+        energies = unique(energies);    energies = sort(energies)
+        println(stream, "\n  Initial levels, available in the given photoionization line data:")
+        println(stream, "\n  ", TableStrings.hLine(42))
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(10, "Level"; na=2);                              sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                              sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(12, "Level energy"   ; na=3);               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=3)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(42))
+        for  energy in energies
+            isNew = true
+            for  line in lines
+                if  line.initialLevel.energy == energy  &&  isNew
+                    sa  = "  ";    sym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity )
+                    sa = sa * TableStrings.center(10, TableStrings.level(line.initialLevel.index); na=2)
+                    sa = sa * TableStrings.center(10, string(sym); na=4)
+                    sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialLevel.energy)) * "    "
+                    println(stream, sa);   isNew = false
+                end
+            end
+        end
+        #
+        # Extract and display photon energies for which line data are available
+        omegas = Float64[]
+        for  line  in  lines    push!(omegas, line.photonEnergy)   end;    
+        omegas = unique(omegas);    omegas = sort(omegas)
+        sa  = "    ";   
+        for   omega in omegas  sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", omega)) * "   "      end
+        #
+        println(stream, "\n  Photon energies $(TableStrings.inUnits("energy")) for which given photoionization line data are given:")
+        println(stream, "\n" * sa)
+        #
+        # Extract and display total cross sections, ordered by the initial levels and photon energies, for which line data are available
+        println(stream, "\n  Initial level, photon energies and total cross sections for given photoionization line data: \n")
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(10, "Level"; na=2);                              sb = sb * TableStrings.hBlank(12)
+        sa = sa * TableStrings.center(10, "J^P";   na=4);                              sb = sb * TableStrings.hBlank(14)
+        sa = sa * TableStrings.center(12, "Omega"   ; na=3);               
+        sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=3)
+        sa = sa * TableStrings.center(26, "Cou--Total CS--Bab"   ; na=5);               
+        sb = sb * TableStrings.center(26,TableStrings.inUnits("cross section"); na=5)
+        sa = sa * TableStrings.center(18, "Electron energies"   ; na=3);               
+        sb = sb * TableStrings.center(18,TableStrings.inUnits("energy"); na=3)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(107))
+        wLine = lines[1]
+        for  energy in energies
+            for  omega in omegas
+                cs = Basics.EmProperty(0.);   electronEnergies = Float64[]
+                for  line in lines
+                    if  line.initialLevel.energy == energy  &&   line.photonEnergy == omega     cs = cs + line.crossSection
+                        push!(electronEnergies, line.electronEnergy); wLine = line   end
+                end
+                sa  = "  ";    sym = LevelSymmetry( wLine.initialLevel.J, wLine.initialLevel.parity )
+                sa = sa * TableStrings.center(10, TableStrings.level(wLine.initialLevel.index); na=2)
+                sa = sa * TableStrings.center(10, string(sym); na=4)
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", omega)) * "    "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", cs.Coulomb))   * "  " *
+                          @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", cs.Babushkin)) * "     "
+                for en in electronEnergies  sa = sa * @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", en)) * "  " end
+                println(stream, sa)
+            end
+        end
+        
+        
+        return( nothing )
+    end
+
+
+    """
     `PhotoIonization.displayLines(lines::Array{PhotoIonization.Line,1})`  
         ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all selected 
             transitions and energies is printed but nothing is returned otherwise.
@@ -755,18 +833,40 @@ module PhotoIonization
     function  displayResultsDetailed(stream::IO, line::PhotoIonization.Line, settings::PhotoIonization.Settings)
         symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity)
         symf = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity)
+        aeffC = ComplexF64(0.);     aeffB = ComplexF64(0.);    
+        beffC = Float64(0.);        beffB = Float64(0.);       deffC = Float64(0.);     deffB = Float64(0.)
+        for  channel in line.channels   
+            if      channel.gauge == Basics.Coulomb     aeffC = aeffC + channel.amplitude
+                                                        beffC = beffC + abs(channel.amplitude)^2
+                                                        deffC = deffC + abs(channel.amplitude)^2 * angle(channel.amplitude)
+            elseif  channel.gauge == Basics.Babushkin   aeffB = aeffB + channel.amplitude  
+                                                        beffB = beffB + abs(channel.amplitude)^2
+                                                        deffB = deffB + abs(channel.amplitude)^2 * angle(channel.amplitude)
+            else
+            end
+        end
+        deffC = deffC / beffC;    deffB = deffB / beffB  
+        #
         sa   = "\n  Results for PI line from the transition  $(line.initialLevel.index) -  $(line.finalLevel.index):  " *
                "  $symi  - $symf "
         
         println(stream, sa, "\n  ", TableStrings.hLine(length(sa)-3))
-        println(stream, "\n  Photon energy       = " * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.photonEnergy)) *
+        println(stream, "\n  Photon energy               = " * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.photonEnergy)) *
                           "  " * TableStrings.inUnits("energy") )
-        println(stream,   "  Electron energy     = " * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) *
+        println(stream,   "  Electron energy             = " * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) *
                           "  " * TableStrings.inUnits("energy") )
-        println(stream,   "  Total cross section = " * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Coulomb)) *
+        println(stream,   "  Total cross section         = " * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Coulomb)) *
                           "  " * TableStrings.inUnits("cross section") * " (Coulomb gauge)" )
-        println(stream,   "                        " * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin)) *
+        println(stream,   "                                " * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin)) *
                           "  " * TableStrings.inUnits("cross section") * " (Babushkin gauge)" )
+        println(stream,   "  A^eff (Re, Im, abs, phi)    = " * @sprintf("%.4e", aeffC.re) * "   " * @sprintf("%.4e", aeffC.im) * "   " * 
+                                                               @sprintf("%.4e", abs(aeffC)) * "   " * @sprintf("%.4e", angle(aeffC)) * "  (Coulomb gauge)" )
+        println(stream,   "                              = " * @sprintf("%.4e", aeffB.re) * "   " * @sprintf("%.4e", aeffB.im) * "   " * 
+                                                               @sprintf("%.4e", abs(aeffB)) * "   " * @sprintf("%.4e", angle(aeffB)) * "  (Babushkin gauge)" )
+        println(stream,   "  A^r_eff, del_eff (coherent) = " * @sprintf("%.4e", abs(aeffC)) * "   " * @sprintf("%.4e", angle(aeffC)) * "  (Coulomb gauge)" )
+        println(stream,   "                              = " * @sprintf("%.4e", abs(aeffB)) * "   " * @sprintf("%.4e", angle(aeffB)) * "  (Babushkin gauge)" )
+        println(stream,   "  A^r_eff, del_eff (non-coh)  = " * @sprintf("%.4e", beffC)      * "   " * @sprintf("%.4e", deffC)        * "  (Coulomb gauge)" )
+        println(stream,   "                              = " * @sprintf("%.4e", beffB)      * "   " * @sprintf("%.4e", deffB)        * "  (Babushkin gauge)" )
         println(stream, "\n  Kappa    Total J^P  Mp     Gauge               Amplitude          Real-Amplitude  Cross section (b)   Phase " *
                         "\n  " * TableStrings.hLine(112) )
                     
@@ -787,6 +887,95 @@ module PhotoIonization
         end
         
         return( nothing )
+    end
+
+
+    """
+    `PhotoIonization.extractPhotonEnergies(lines::Array{PhotoIonization.Line,1})`  
+        ... to extract all photon energies for which photoionization data and cross sections are provided by lines;
+            an list of energies::Array{Float64,1} is returned.
+    """
+    function  extractPhotonEnergies(lines::Array{PhotoIonization.Line,1})
+        pEnergies = Float64[]
+        for  line  in  lines    push!(pEnergies, line.photonEnergy)  end     
+        pEnergies = unique(pEnergies)
+        pEnergies = sort(pEnergies)
+        
+        return( pEnergies )
+    end
+
+
+    """
+    `PhotoIonization.extractLines(lines::Array{PhotoIonization.Line,1}, omega::Float64)`  
+        ... to extract from lines all those that refer to the given omega;
+            a reduced list rLines::Array{PhotoIonization.Line,1} is returned.
+    """
+    function  extractLines(lines::Array{PhotoIonization.Line,1}, omega::Float64)
+        rLines = PhotoIonization.Line[]
+        for  line  in  lines    
+            if  line.photonEnergy == omega   push!(rLines, line)  end  
+        end
+        
+        return( rLines )
+    end
+
+
+    """
+    `PhotoIonization.extractCrossSections(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)`  
+        ... to extract from lines the total PI cross section that refer to the given omega and initial level;
+            a cross section cs::EmProperty is returned.
+    """
+    function  extractCrossSections(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)
+        cs = Basics.EmProperty(0.)
+        for  line  in  lines    
+            if  line.initialLevel == initialLevel  &&  line.photonEnergy == omega   cs = cs + line.crossSection    end  
+        end
+        
+        return( cs )
+    end
+
+
+    """
+    `PhotoIonization.extractCrossSection(lines::Array{PhotoIonization.Line,1}, omega::Float64, shell::Shell, initialLevel)`  
+        ... to extract from lines the total PI cross section that refer to the given omega and initial level and to 
+            to the ionization of an electron from shell; a cross section cs::EmProperty is returned.
+    """
+    function  extractCrossSection(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)
+        cs = Basics.EmProperty(0.)
+        for  line  in  lines    
+            if  line.initialLevel == initialLevel  &&  line.photonEnergy == omega 
+                # Now determined of whether the photoionization refers to the given shell
+                confi     = extractLeadingConfiguration(line.initialLevel)
+                conff     = extractLeadingConfiguration(line.finalLevel)
+                shellOccs = Basics.extractShellOccupationDifference(confi::Configuration, conff::Configuration)
+                if  length(shellOccs) > 1  ||  shellOccs[1][2] < 0      error("stop a")   end
+                if  shellOccs[1][1] == shell   cs = cs + line.crossSection      end  
+            end  
+        end
+        
+        return( cs )
+    end
+
+
+    """
+    `PhotoIonization.interpolateCrossSection(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)`  
+        ... to interpolate (or extrapolate) from lines the total PI cross section for any (non-given) omega and 
+            for initial level. The procedure applies a linear interpolation/extrapolation by just using the 
+            cross sections from the two nearest (given) omega points; a cross section cs::EmProperty is returned.
+    """
+    function  interpolateCrossSection(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)
+        # First determine for which omegas cross sections are available and which associated cross sections
+        # are to be applied in the interpolation
+        omegas     = PhotoIonization.extractPhotonEnergies(lines)
+        oms, diffs = Basics.determineNearestPoints(omega, 2, omegas);      om1 = oms[1];   om2 = oms[2]
+        diff1      = diffs[1];     diff2 = diffs[2]    
+        cs1        = PhotoIonization.extractCrossSection(lines, om1)
+        cs2        = PhotoIonization.extractCrossSection(lines, om2)
+        # Interpolate/extrapolate linearly with the cross section data for the two omegas
+        wm         = (cs2 - cs1) / (om2 - om1)
+        cs         = cs1  +  wm * diff1
+        
+        return( cs )
     end
 
 

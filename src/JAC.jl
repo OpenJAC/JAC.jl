@@ -50,7 +50,7 @@
 module JAC
 
 using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, QuadGK, GSL, JLD2, SymEngine, 
-       HypergeometricFunctions  ## , Interact, GaussQuadrature
+       HypergeometricFunctions, Cubature  ## , Interact, GaussQuadrature
 
 export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod, AbstractPotential, AbstractQedModel, AbstractStartOrbitals,
        AbstractProcessSettings, AbstractEmpiricalSettings, AbstractPropertySettings, 

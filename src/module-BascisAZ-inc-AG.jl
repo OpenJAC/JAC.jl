@@ -214,7 +214,6 @@
     end
 
 
-
     """
     `Basics.determineMeanEnergy(multiplet::Multiplet)`  
         ... to determine the mean energy of a given multiplet. A value::Float64 is returned.
@@ -229,6 +228,27 @@
         if false  println(">>> mean energy of $(nlev)-level multiplet is:  $meanEnergy  [a.u.]")   end
         
         return( meanEnergy )
+    end
+
+
+    """
+    `Basics.determineNearestPoints(x0::Float64, n::Int64, values::Array{Float64,1})`  
+        ... to determine the n points in values that are nearest to x0;  
+            two (short) arrays ws::Array{Float64,1}, diffs::Array{Float64,1} of length  n   are returned that contain the 
+            nearest values and differences (value - x0) from x0. An error message is issued of n > length(values).
+    """
+    function Basics.determineNearestPoints(x0::Float64, n::Int64, values::Array{Float64,1})
+        if  n > length(values)   error("stop a")    end
+        ws = zeros(n);      diffs = zeros(n)
+        dabs = Float64[];     for  v in values   push!(dabs, abs(v-x0))   end
+        for  i=1:n 
+            ix = findmin(dabs)[2];    ws[i] = values[ix];    diffs[i] = values[ix] - x0
+            dabs[ix] = 1.0e99
+        end
+        
+        if  length(unique(ws)) != n   error("stop a")    end 
+        
+        return( ws, diffs )
     end
 
 

@@ -636,7 +636,8 @@ module Cascade
                 shifting the initial level energies by the negative amount. The shift is taken in the user-defined units.
         + minCrossSection       ::Float64                 
             ... minimum cross section (in user-selected units) for which contributions are accounted for in the list of
-                photoionization lines.
+                photoionization lines. This may seriously restrict the amount of data that is prepared for the subsequent simulation 
+                of photoabsorption spectra.
     """
     struct   PhotoExcitationScheme  <:  Cascade.AbstractCascadeScheme
         multipoles              ::Array{EmMultipole}  
@@ -693,7 +694,7 @@ module Cascade
         + photonEnergies        ::Array{Float64,1}
             ... List of photon energies (in user-selected units) for which absorption cross sections/spectra are to be
                 calculated; this describes the list, distribution and resolution of energies. It is checked that either
-                photonEnergies or electronEnergies are given only
+                photonEnergies or electronEnergies are given only.
         + electronEnergies       ::Array{Float64,1}
             ... List of electron energies (in user-selected units) for which absorption cross sections/spectra are to be
                 calculated; this describes the list, distribution and resolution of energies.

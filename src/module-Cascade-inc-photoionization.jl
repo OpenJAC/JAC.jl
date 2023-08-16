@@ -1,6 +1,5 @@
 
-    # Functions and methods for cascade computation
-
+    # Functions and methods for photoionization (cascade) computations
 
     """
     `Cascade.computeSteps(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 

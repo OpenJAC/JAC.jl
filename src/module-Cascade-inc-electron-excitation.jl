@@ -1,7 +1,6 @@
 
     # Functions and methods for scheme::Cascade.ElectronExcitationSchem computations
-
-
+    
     """
     `Cascade.perform(scheme::ElectronExcitationScheme, comp::Cascade.Computation)`  
         ... to set-up and perform an electron-excitation cascade computation that accounts for the direct and resonant part. 

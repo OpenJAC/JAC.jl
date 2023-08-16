@@ -620,38 +620,44 @@
 
 
     """
-    `struct  Cascade.PhotoAbsorptionCS   <:  Cascade.AbstractSimulationProperty`  
+    `struct  Cascade.PhotoAbsorptionSpectrum   <:  Cascade.AbstractSimulationProperty`  
         ... defines a type for simulating the total photo-absorption cross sections in a given interval of photon energies
             as well as for a given set of photo-ionization and photo-excitation cross sections
 
         + includeExcitation   ::Bool             ... True, if photo-excitation lines are to be considered.
         + photonEnergies      ::Array{Float64,1} ... Photon energies (in user-selected units) for the simulation of photon spectra
                                                      to describe the interval and resolution of the absorption cross sections.
+        + shells              ::Array{Shell,1}   
+            ... Shells that should be included for a partial absorption cross sections; a cross section contribution is considered,
+                if the occupation of one of these shells is lowered in the leading configurations.
         + initialOccupations  ::Array{Tuple{Int64,Float64},1}   
-            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population.
+            ... List of one or several (tupels of) levels in the overall cascade tree together with their relative population;
+                at least one of these tuples must be given.
         + leadingConfigs      ::Array{Configuration,1}   
             ... List of leading configurations whose levels are equally populated, either initially or ....
     """  
-    struct  PhotoAbsorptionCS   <:  Cascade.AbstractSimulationProperty
+    struct  PhotoAbsorptionSpectrum   <:  Cascade.AbstractSimulationProperty
         includeExcitation     ::Bool
         photonEnergies        ::Array{Float64,1}
+        shells                ::Array{Shell,1}
         initialOccupations    ::Array{Tuple{Int64,Float64},1} 
         leadingConfigs        ::Array{Configuration,1}
     end 
 
 
     """
-    `Cascade.PhotoAbsorptionCS()`  ... (simple) constructor for cascade PhotoAbsorptionCS.
+    `Cascade.PhotoAbsorptionSpectrum()`  ... (simple) constructor for cascade PhotoAbsorptionSpectrum.
     """
-    function PhotoAbsorptionCS()
-        PhotoAbsorptionCS(false, [1.0],  [(1, 1.0)], Configuration[])
+    function PhotoAbsorptionSpectrum()
+        PhotoAbsorptionSpectrum(false, [1.0],  Shell[], [(1, 1.0)], Configuration[])
     end
 
 
-    # `Base.show(io::IO, dist::Cascade.PhotoAbsorptionCS)`  ... prepares a proper printout of the variable data::Cascade.PhotoAbsorptionCS.
-    function Base.show(io::IO, dist::Cascade.Cascade.PhotoAbsorptionCS) 
+    # `Base.show(io::IO, dist::Cascade.PhotoAbsorptionSpectrum)`  ... prepares a proper printout of the variable data::Cascade.PhotoAbsorptionSpectrum.
+    function Base.show(io::IO, dist::Cascade.Cascade.PhotoAbsorptionSpectrum) 
         println(io, "includeExcitation:        $(dist.includeExcitation)  ")
         println(io, "photonEnergies:           $(dist.photonEnergies)  ")
+        println(io, "shells:                   $(dist.shells)  ")
         println(io, "initialOccupations:       $(dist.initialOccupations)  ")
         println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
     end
@@ -734,7 +740,7 @@
     `Cascade.Simulation()`  ... constructor for an 'default' instance of a Cascade.Simulation.
     """
     function Simulation()
-        Simulation("Default cascade simulation", Cascade.PhotoAbsorptionCS(), Cascade.ProbPropagation(), 
+        Simulation("Default cascade simulation", Cascade.PhotoAbsorptionSpectrum(), Cascade.ProbPropagation(), 
                    Cascade.SimulationSettings(), Array{Dict{String,Any},1}[] )
     end
 
