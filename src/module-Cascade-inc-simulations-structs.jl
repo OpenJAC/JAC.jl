@@ -199,11 +199,20 @@
             ... (total) energy shifts that apply to all resonances when alpha^(DR) is computed.
         + temperatures        ::Array{Float64,1}
             ... temperatures [K] for which the DR plasma rate coefficieints to be calculated.
+        + nDetailed           ::Int64       
+            ... principal quantum of the `last' shell for which Auger and radiatiative amplitudes have been calculated
+                by the Cascade.Computation; all contributions of this shell are scaled for nDetailed < n <= nMax
+                also for higher shells by a simple scaling rule.
+        + nMax                ::Int64 
+            ... Maximum n (principal quantum number), for which contributions are scaled; NO scaling is taken
+                into account for nMax <= nDetailed.
     """  
     struct  DrRateCoefficients   <:  Cascade.AbstractSimulationProperty
         initialLevelNo        ::Int64 
         electronEnergyShift   ::Float64 
         temperatures          ::Array{Float64,1}
+        nDetailed             ::Int64 
+        nMax                  ::Int64 
     end 
 
 
@@ -211,7 +220,7 @@
     `Cascade.DrRateCoefficients()`  ... (simple) constructor for cascade DrRateCoefficients.
     """
     function DrRateCoefficients()
-        DrRateCoefficients(1, 0.,  Float64[])
+        DrRateCoefficients(1, 0.,  Float64[], 0, 0)
     end
 
 
@@ -220,6 +229,8 @@
         println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
         println(io, "electronEnergyShift:      $(dist.electronEnergyShift)  ")
         println(io, "temperatures:             $(dist.temperatures)  ")
+        println(io, "nDetailed:                $(dist.nDetailed)  ")
+        println(io, "nMax:                     $(dist.nMax)  ")
     end
 
 
@@ -624,7 +635,10 @@
         ... defines a type for simulating the total photo-absorption cross sections in a given interval of photon energies
             as well as for a given set of photo-ionization and photo-excitation cross sections
 
+        + includeIonization   ::Bool             ... True, if photo-ionization cross sections are to be considered.
         + includeExcitation   ::Bool             ... True, if photo-excitation lines are to be considered.
+        + resonanceWidth      ::Float64          ... Widths of the resonances (user-defined units)
+        + csScaling           ::Float64          ... Scaling factor do enhance the strengths of resonances (default=1.0)
         + photonEnergies      ::Array{Float64,1} ... Photon energies (in user-selected units) for the simulation of photon spectra
                                                      to describe the interval and resolution of the absorption cross sections.
         + shells              ::Array{Shell,1}   
@@ -637,7 +651,10 @@
             ... List of leading configurations whose levels are equally populated, either initially or ....
     """  
     struct  PhotoAbsorptionSpectrum   <:  Cascade.AbstractSimulationProperty
+        includeIonization     ::Bool
         includeExcitation     ::Bool
+        resonanceWidth        ::Float64
+        csScaling             ::Float64
         photonEnergies        ::Array{Float64,1}
         shells                ::Array{Shell,1}
         initialOccupations    ::Array{Tuple{Int64,Float64},1} 
@@ -649,13 +666,16 @@
     `Cascade.PhotoAbsorptionSpectrum()`  ... (simple) constructor for cascade PhotoAbsorptionSpectrum.
     """
     function PhotoAbsorptionSpectrum()
-        PhotoAbsorptionSpectrum(false, [1.0],  Shell[], [(1, 1.0)], Configuration[])
+        PhotoAbsorptionSpectrum(true, false, 0.1, 1., [1.0],  Shell[], [(1, 1.0)], Configuration[])
     end
 
 
     # `Base.show(io::IO, dist::Cascade.PhotoAbsorptionSpectrum)`  ... prepares a proper printout of the variable data::Cascade.PhotoAbsorptionSpectrum.
     function Base.show(io::IO, dist::Cascade.Cascade.PhotoAbsorptionSpectrum) 
+        println(io, "includeIonization:        $(dist.includeIonization)  ")
         println(io, "includeExcitation:        $(dist.includeExcitation)  ")
+        println(io, "resonanceWidth:           $(dist.resonanceWidth)  ")
+        println(io, "csScaling:                $(dist.csScaling)  ")
         println(io, "photonEnergies:           $(dist.photonEnergies)  ")
         println(io, "shells:                   $(dist.shells)  ")
         println(io, "initialOccupations:       $(dist.initialOccupations)  ")

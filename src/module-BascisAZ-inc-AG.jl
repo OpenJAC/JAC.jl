@@ -964,6 +964,20 @@
     
         
     """
+    `Basics.extractMeanEnergy(pqn::Int64, basis::Basis)`  
+        ... extracts the mean orbital energy of all orbitals with principal quantum number pqn; an en::Float64 [Hartree] is returned.
+            This value has a physical meaning only for sufficiently large pqn (Rydberg orbitals).
+    """
+    function Basics.extractMeanEnergy(pqn::Int64, basis::Basis)
+        en = 0.;  nn = 0
+        for  (k,v)  in basis.orbitals
+            if  k.n == pqn   en = en + v.energy;   nn = nn + 1    end 
+        end 
+        return( en/nn )
+    end
+    
+        
+    """
     `Basics.extractNoOpenShells(conf::Configuration)`  
         ... determine the number of open (nonrelativistic) shells in conf; a singleton of type AbstractOpenShell is returned.
     """

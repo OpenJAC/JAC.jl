@@ -11,7 +11,7 @@
         + multipole1     ::EmMultipole            ... Multipole M1.
         + multipole2     ::EmMultipole            ... Multipole M2.
         + gauge          ::EmGauge                ... Gauge for dealing with the (coupled) radiation field.
-        + Jsym           ::LevelSymmetry          ... Symmetry of the Green function channel used in the summation.
+        + Jsym           ::LevelSymmetry          ... Symmetry of the Green function channel/multiplet used in the summation.
         + amplitude      ::Complex{Float64}       ... reduced two-photon absorption amplitude U^(K, 2gamma, absorption) (..)
                                                       associated with the given channel.
     """
@@ -78,10 +78,10 @@
         newChannels = MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic[]
         for channel in line.channels
             amplitude = MultiPhotonDeExcitation.computeReducedAmplitudeAbsorption(channel.K, line.finalLevel, channel.multipole2, 
-                                            channel.Jsym, channel.omega, channel.multipole1, line.initialLevel, channel.gauge, grid, settings.green)
+                             channel.Jsym, channel.omega, channel.multipole1, line.initialLevel, channel.gauge, grid, settings.gMultiplet)
             @show channel, amplitude
-            push!( newChannels, MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic(channel.K, channel.omega, channel.multipole1, channel.multipole2, 
-                                                                                          channel.gauge, channel.Jsym, amplitude) )
+            push!( newChannels, MultiPhotonDeExcitation.Channel_2pAbsorptionMonochromatic(channel.K, channel.omega, 
+                                     channel.multipole1, channel.multipole2, channel.gauge, channel.Jsym, amplitude) )
         end
         line = MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic( line.initialLevel, line.finalLevel, line.omega, 
                                                                        EmProperty(0.), EmProperty(0.), EmProperty(0.), EmProperty(0.), newChannels)
@@ -192,29 +192,25 @@
     """
     `MultiPhotonDeExcitation.computeReducedAmplitudeAbsorption(K::AngularJ64, finalLevel::Level, multipole2::EmMultipole, Jsym::LevelSymmetry, 
                                                                                  omega::Float64, multipole1::EmMultipole, initialLevel::Level,
-                                                                 gauge::EmGauge, grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})`  
+                                                                 gauge::EmGauge, grid::Radial.Grid, gMultiplet::Multiplet)`  
         ... to compute the reduced amplitude U^{K, 2gamma emission} (K, Jf, multipole2, Jsym, omega, multipole1, Ji) by means of the
-            given Green function channels. An amplitude::Complex{Float64} is returned.
+            given Green function/multiplet channels. An amplitude::Complex{Float64} is returned.
     """
     function computeReducedAmplitudeAbsorption(K::AngularJ64, finalLevel::Level, multipole2::EmMultipole, Jsym::LevelSymmetry, 
                                                                 omega::Float64, multipole1::EmMultipole, initialLevel::Level,
-                                                                gauge::EmGauge, grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})
+                                                                gauge::EmGauge, grid::Radial.Grid, gMultiplet::Multiplet)
         U = Complex(0.);    found = false
-        for channel in greenChannels
-            if  Jsym == channel.symmetry
-                found = true
-                for (i, nuLevel) in enumerate(channel.gMultiplet.levels)
-                    U = U + PhotoEmission.amplitude("absorption", multipole2, gauge, omega, finalLevel, nuLevel, grid, display=false) *
-                            PhotoEmission.amplitude("absorption", multipole1, gauge, omega, nuLevel, initialLevel, grid, display=false) / 
-                            (initialLevel.energy + omega - nuLevel.energy)
-                end
+        for nuLevel in gMultiplet.levels
+            if  Jsym == LevelSymmetry(nuLevel.J, nuLevel.parity)          found = true
+                U = U + PhotoEmission.amplitude("absorption", multipole2, gauge, omega, finalLevel, nuLevel, grid, display=false) *
+                        PhotoEmission.amplitude("absorption", multipole1, gauge, omega, nuLevel, initialLevel, grid, display=false) / 
+                        (initialLevel.energy + omega - nuLevel.energy)
             end
         end 
         
         if    found                                
               U = U * AngularMomentum.Wigner_6j(initialLevel.J, finalLevel.J, K, AngularJ64(multipole2.L), AngularJ64(multipole1.L), Jsym.J)
-              ##x println(" ")
-        else  println("No Green function cannel found for amplitude U^{K, 2gamma absorption} (K, Jf, multipole2, Jsym = $Jsym, omega, multipole1, Ji) ")
+        else  println("No Green function level found for amplitude U^{K, 2gamma absorption} (K, Jf, multipole2, Jsym = $Jsym, omega, multipole1, Ji) ")
         end 
         
         return( U )
@@ -440,7 +436,7 @@
         for  iLevel  in  initialMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
                 if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
-                    omega    = (fLevel.energy - iLevel.energy) / 2.
+                    omega    = (fLevel.energy - iLevel.energy + settings.energyShift) / 2.
                     channels = MultiPhotonDeExcitation.determineChannels_2pAbsorptionMonochromatic(omega, fLevel, iLevel, settings) 
                     push!( lines, MultiPhotonDeExcitation.Line_2pAbsorptionMonochromatic(iLevel, fLevel, omega,
                                                EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), EmProperty(0., 0.), channels) )

@@ -219,23 +219,25 @@ module MultiPhotonDeExcitation
         ... defines a type for the settings in estimating multi-photon excitation and decay rates.
 
         + process           ::MultiPhotonDeExcitation.AbstractMultiPhotonProcess      ... considered multi-photon process.
-        + multipoles        ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
-        + gauges            ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
-        + green             ::Array{AtomicState.GreenChannel,1}    
-                              ... Green function channels for these multi-photon calculations which need to be generated independently.
-        + NoEnergySharings  ::Int64                        ... Number of energy sharings that are used for all emission lines in the 
-                                                               computations for each line.
-        + printBefore       ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-        + lineSelection     ::LineSelection                ... Specifies the selected levels, if any.
-
+        + multipoles        ::Array{EmMultipole}      ... Specifies the multipoles of the radiation field that are to be included.
+        + gauges            ::Array{UseGauge}         ... Specifies the gauges to be included into the computations.
+        + gMultiplet        ::Multiplet               ... Mean-field multiplet of intermediate levels in the computations.
+        + NoEnergySharings  ::Int64                        
+            ... Number of energy sharings that are used for all emission lines in the computations for each line.
+        + printBefore       ::Bool                    ... True, if all energies and lines are printed before their evaluation.
+        + energyShift       ::Float64                 ... Additional energy shift between all initial- and final-state levels.
+        + lineSelection     ::LineSelection           ... Specifies the selected levels, if any.
+        ## + green             ::Array{AtomicState.GreenChannel,1}    
+        ##                       ... Green function channels for these multi-photon calculations which need to be generated independently.
     """
     struct Settings  <:  AbstractProcessSettings 
         process             ::MultiPhotonDeExcitation.AbstractMultiPhotonProcess
         multipoles          ::Array{EmMultipole}
         gauges              ::Array{UseGauge}
-        green               ::Array{AtomicState.GreenChannel,1}
+        gMultiplet          ::Multiplet
         NoEnergySharings    ::Int64
-        printBefore         ::Bool  
+        printBefore         ::Bool 
+        energyShift         ::Float64
         lineSelection       ::LineSelection   
     end 
 
@@ -244,7 +246,7 @@ module MultiPhotonDeExcitation
     `MultiPhotonDeExcitation.Settings()`  ... constructor for the default values of multi-photon excitation and decay rates.
     """
     function Settings()
-        Settings( TwoPhotonEmission(), EmMultipole[], UseGauge[], AtomicState.GreenExpansion(), false, LineSelection() )
+        Settings( TwoPhotonEmission(), EmMultipole[], UseGauge[], Multiplet(), false, 0., LineSelection() )
     end
 
 
@@ -254,10 +256,10 @@ module MultiPhotonDeExcitation
         println(io, "process:                  $(settings.process)  ")
         println(io, "multipoles:               $(settings.multipoles)  ")
         println(io, "gauges:                   $(settings.gauges)  ")
-        print(io,   "green:                     (settings.green)  ... with symmetries:   ")
-        for channel in settings.green  print(io, "   $(channel.symmetry)")  end;   println(io, " ")
+        println(io, "gMultiplet:               $(settings.gMultiplet)  ")
         println(io, "NoEnergySharings:         $(settings.NoEnergySharings)  ")
         println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "energyShift:              $(settings.energyShift)  ")
         println(io, "lineSelection:            $(settings.lineSelection)  ")
     end
     

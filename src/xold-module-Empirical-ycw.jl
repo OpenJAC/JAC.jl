@@ -95,16 +95,18 @@ module Empirical
         if  output    results = Dict{String, Any}()    else    results = nothing    end
         nm          = computation.nuclearModel
         asfSettings = AsfSettings()
+        @show typeof(computation.settings), typeof(computation.settings)  in  [ImpactIonization.Settings]
         
         if typeof(computation.settings)  in  [ImpactIonization.Settings]
             # Generate an SCF basis for the given configurations to extract the one-particle energies for all shells
             basis  = Basics.performSCF(computation.configs, nm, computation.grid, asfSettings)
+            grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
         else
             error("stop a")
         end
         
         if typeof(computation.settings) == ImpactIonization.Settings
-            outcome = ImpactIonization.computeCrossSections(basis, computation.grid, nm, computation.settings)        
+            outcome = ImpactIonization.computeCrossSections(basis, grid, nm, computation.settings)        
             if output    results = Base.merge( results, Dict("EII cross sections:" => outcome) )           end
             #
         else

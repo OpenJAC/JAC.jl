@@ -293,6 +293,7 @@ module PhotoIonization
         end
         # Print all results to screen
         PhotoIonization.displayResults(stdout, newLines, settings)
+        PhotoIonization.displayTimeDelay(stdout, newLines, settings)
         if  printSummary   PhotoIonization.displayResults(iostream, newLines, settings)     end
         #
         if    output    return( newLines )
@@ -586,6 +587,9 @@ module PhotoIonization
         sa = sa * TableStrings.center(18, "Electron energies"   ; na=3);               
         sb = sb * TableStrings.center(18,TableStrings.inUnits("energy"); na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(107))
+        #
+        if  length(lines) == 0    println("  >>> No photoionization data in lines here ... return ");    return(nothing)    end 
+        #
         wLine = lines[1]
         for  energy in energies
             for  omega in omegas
@@ -689,7 +693,8 @@ module PhotoIonization
         sb = sb * TableStrings.center(30, TableStrings.inUnits("cross section") * "          " * 
                                               TableStrings.inUnits("cross section"); na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
-        #   
+        # 
+        wx = 1.0 ## wx = 1.0  (Schippers, August'23; wx = 2.0)
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                          fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
@@ -705,14 +710,21 @@ module PhotoIonization
             end
             multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles) * "          "
             sa = sa * TableStrings.flushleft(11, mpString[1:10];  na=2)
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Coulomb))     * "    "
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin))   * "                 "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", wx * line.crossSection.Coulomb))     * "    "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", wx * line.crossSection.Babushkin))   * "                 "
             ##x sa = sa * @sprintf("%.6e", line.crossSection.Coulomb)     * "    "
             ##x sa = sa * @sprintf("%.6e", line.crossSection.Babushkin)   * "    "
             println(stream, sa)
         end
         println(stream, "  ", TableStrings.hLine(nx))
         #
+        #==
+        # Print, if useful, the sum of all cross sections (Schippers, August'23)
+        tcs = Basics.EmProperty(0.);    for  line in lines   tcs = tcs + line.crossSection   end 
+        sa = repeat(" ", 102)
+        sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", wx * tcs.Coulomb))     * "    "
+        sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", wx * tcs.Babushkin))   * "                 "
+        println(stream, sa)  ==#
         #
         if  settings.calcPartialCs  
             nx = 144 
@@ -838,10 +850,12 @@ module PhotoIonization
         for  channel in line.channels   
             if      channel.gauge == Basics.Coulomb     aeffC = aeffC + channel.amplitude
                                                         beffC = beffC + abs(channel.amplitude)^2
-                                                        deffC = deffC + abs(channel.amplitude)^2 * angle(channel.amplitude)
+                                                        deffC = deffC + abs(channel.amplitude)^2 * atan(channel.amplitude.im, channel.amplitude.re)
+                                                        ## deffC = deffC + abs(channel.amplitude)^2 * angle(channel.amplitude)
             elseif  channel.gauge == Basics.Babushkin   aeffB = aeffB + channel.amplitude  
                                                         beffB = beffB + abs(channel.amplitude)^2
-                                                        deffB = deffB + abs(channel.amplitude)^2 * angle(channel.amplitude)
+                                                        deffB = deffB + abs(channel.amplitude)^2 * atan(channel.amplitude.im, channel.amplitude.re)
+                                                        ## deffB = deffB + abs(channel.amplitude)^2 * angle(channel.amplitude)
             else
             end
         end
@@ -859,15 +873,15 @@ module PhotoIonization
                           "  " * TableStrings.inUnits("cross section") * " (Coulomb gauge)" )
         println(stream,   "                                " * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", line.crossSection.Babushkin)) *
                           "  " * TableStrings.inUnits("cross section") * " (Babushkin gauge)" )
-        println(stream,   "  A^eff (Re, Im, abs, phi)    = " * @sprintf("%.4e", aeffC.re) * "   " * @sprintf("%.4e", aeffC.im) * "   " * 
+        println(stream,   "  A^eff (Re, Im, abs, phi)    = " * @sprintf("%.4e", aeffC.re)   * "   " * @sprintf("%.4e", aeffC.im) * "   " * 
                                                                @sprintf("%.4e", abs(aeffC)) * "   " * @sprintf("%.4e", angle(aeffC)) * "  (Coulomb gauge)" )
-        println(stream,   "                              = " * @sprintf("%.4e", aeffB.re) * "   " * @sprintf("%.4e", aeffB.im) * "   " * 
+        println(stream,   "                              = " * @sprintf("%.4e", aeffB.re)   * "   " * @sprintf("%.4e", aeffB.im) * "   " * 
                                                                @sprintf("%.4e", abs(aeffB)) * "   " * @sprintf("%.4e", angle(aeffB)) * "  (Babushkin gauge)" )
-        println(stream,   "  A^r_eff, del_eff (coherent) = " * @sprintf("%.4e", abs(aeffC)) * "   " * @sprintf("%.4e", angle(aeffC)) * "  (Coulomb gauge)" )
-        println(stream,   "                              = " * @sprintf("%.4e", abs(aeffB)) * "   " * @sprintf("%.4e", angle(aeffB)) * "  (Babushkin gauge)" )
-        println(stream,   "  A^r_eff, del_eff (non-coh)  = " * @sprintf("%.4e", beffC)      * "   " * @sprintf("%.4e", deffC)        * "  (Coulomb gauge)" )
-        println(stream,   "                              = " * @sprintf("%.4e", beffB)      * "   " * @sprintf("%.4e", deffB)        * "  (Babushkin gauge)" )
-        println(stream, "\n  Kappa    Total J^P  Mp     Gauge               Amplitude          Real-Amplitude  Cross section (b)   Phase " *
+        println(stream,   "  A^r_eff, del_eff (non-coh)  = " * @sprintf("%.4e", sqrt(beffC))* "   " * @sprintf("%.4e", deffC)        * "  (Coulomb gauge)" )
+        println(stream,   "                              = " * @sprintf("%.4e", sqrt(beffB))* "   " * @sprintf("%.4e", deffB)        * "  (Babushkin gauge)" )
+        println(stream,   "  A^r_eff, del_eff (coherent) = " * @sprintf("%.4e", abs(aeffC)) * "   " * @sprintf("%.4e", atan(aeffC.im, aeffC.re)) * "  (Coulomb gauge)" )
+        println(stream,   "                              = " * @sprintf("%.4e", abs(aeffB)) * "   " * @sprintf("%.4e", atan(aeffB.im, aeffB.re)) * "  (Babushkin gauge)" )
+        println(stream, "\n  Kappa    Total J^P  Mp     Gauge               Amplitude          Real-Amplitude  Cross section (b)   Phase    atan()" *
                         "\n  " * TableStrings.hLine(112) )
                     
         for  channel in line.channels 
@@ -880,14 +894,87 @@ module PhotoIonization
             sb = "    " * @sprintf("%.4e", channel.amplitude.re)
             sc = "    " * @sprintf("%.4e", channel.amplitude.im)
             sp = "    " * @sprintf("%.4e", channel.phase)
+            sx = "    " * @sprintf("%.4e", atan(channel.amplitude.im, channel.amplitude.re) )
             sa = " " * sk[end-3:end] * "          " * string(channel.symmetry) * "    " * string(channel.multipole) * "     " * sg[1:11] * 
                  sb[end-12:end] * sc[end-12:end] * "    " * @sprintf("%.4e", abs(channel.amplitude)) *
-                 "       " * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs)) * "   " * sp[end-12:end]
+                 "       " * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs)) * "   " * sp[end-12:end] * 
+                 "       " * sx[end-12:end]
             println(stream, sa) 
         end
         
         return( nothing )
     end
+
+
+    """
+    `PhotoIonization.displayTimeDelay(stream::IO, lines::Array{PhotoIonization.Line,1}, settings::PhotoIonization.Settings)`  
+        ... to display the time delay for "two" lines which just refer to two neighbored energies but to the same initial
+            and final level. The procedure terminates if more than two PhotoIonization.Lines occur or if they are not
+            identical with regard the number, coupling and gauges of the channels. A neat table is printed but nothing 
+            is returned otherwise.
+    """
+    function  displayTimeDelay(stream::IO, lines::Array{PhotoIonization.Line,1}, settings::PhotoIonization.Settings)
+        if        length(lines) != 2                                                        error("stop a")
+        elseif    length(lines[1].channels)  !=  length(lines[1].channels)                  error("stop b")
+        elseif    !(0 <= lines[2].electronEnergy - lines[1].electronEnergy <= 0.1)          error("stop c")
+        elseif    LevelSymmetry(lines[1].initialLevel.J, lines[1].initialLevel.parity) != 
+                  LevelSymmetry(lines[2].initialLevel.J, lines[2].initialLevel.parity)      error("stop d")
+        elseif    LevelSymmetry(lines[1].finalLevel.J, lines[1].finalLevel.parity) != 
+                  LevelSymmetry(lines[2].finalLevel.J, lines[2].finalLevel.parity)          error("stop e")
+        end 
+        #
+        deltaTau = lines[2].electronEnergy - lines[1].electronEnergy;   
+        meanTauNC = ComplexF64(0.);   meanTauNB = ComplexF64(0.);    meanTauNxC = ComplexF64(0.);   meanTauNxB = ComplexF64(0.); 
+        meanTauDC = ComplexF64(0.);   meanTauDB = ComplexF64(0.);    meanTauDxC = ComplexF64(0.);   meanTauDxB = ComplexF64(0.);     
+        for  ch = 1:length(lines[1].channels)
+            w1 = abs(lines[1].channels[ch].amplitude) * exp(-im*lines[1].channels[ch].phase) 
+            w2 = abs(lines[1].channels[ch].amplitude) * exp(-im*lines[2].channels[ch].phase) 
+            if      lines[1].channels[ch].gauge != lines[2].channels[ch].gauge   ||
+                    lines[1].channels[ch].kappa != lines[2].channels[ch].kappa              error("stop f") 
+            elseif  lines[1].channels[ch].gauge == Basics.Coulomb     
+                    meanTauNC  = meanTauNC  + conj(lines[1].channels[ch].amplitude) / deltaTau *
+                                              abs(lines[1].channels[ch].amplitude) *
+                                              exp(im*( angle(lines[2].channels[ch].amplitude) - angle(lines[1].channels[ch].amplitude) ) )
+                    meanTauDC  = meanTauDC  + conj(lines[1].channels[ch].amplitude) * lines[1].channels[ch].amplitude 
+                    meanTauNxC = meanTauNxC + conj(w1) /  deltaTau * (w2 - w1)
+                    meanTauDxC = meanTauDxC + conj(w1) * w1
+            elseif  lines[1].channels[ch].gauge == Basics.Babushkin    
+                    meanTauNB  = meanTauNB  + conj(lines[1].channels[ch].amplitude) / deltaTau *
+                                              abs(lines[1].channels[ch].amplitude) *
+                                              exp(im*( angle(lines[2].channels[ch].amplitude) - angle(lines[1].channels[ch].amplitude) ) )
+                                                  ## (lines[2].channels[ch].amplitude - lines[1].channels[ch].amplitude )
+                    meanTauDB  = meanTauDB  + conj(lines[1].channels[ch].amplitude) * lines[1].channels[ch].amplitude 
+                    meanTauNxB = meanTauNxB + conj(w1) /  deltaTau * (w2 - w1)
+                    meanTauDxB = meanTauDxB + conj(w1) * w1
+            else
+            end
+        end
+        @show "\naa", meanTauNC, meanTauDC, meanTauNB, meanTauDB
+        @show "\nbb", meanTauNxC, meanTauDxC, meanTauNxB, meanTauDxB
+        meanTauC  = -im * meanTauNC / meanTauDC;        meanTauB  = -im * meanTauNB / meanTauDB
+        meanTauxC = -im * meanTauNxC / meanTauDxC;      meanTauxB = -im * meanTauNxB / meanTauDxB
+        #
+        ## For second energy
+        ## meanTauxC = meanTauxC - 0.15;   meanTauxB = meanTauxB - 0.15
+        #
+        symi = LevelSymmetry(lines[1].initialLevel.J, lines[1].initialLevel.parity)
+        symf = LevelSymmetry(lines[1].finalLevel.J, lines[1].finalLevel.parity)
+        sa   = "\n  Mean time delay of the transition  $(lines[1].initialLevel.index) -  $(lines[1].finalLevel.index):  " *
+               "  $symi  - $symf "
+        
+        println(stream, sa, "\n  ", TableStrings.hLine(length(sa)-3))
+        println(stream, "\n  Electron energies   = " * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", lines[1].electronEnergy)) * "   " *
+                                                       @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", lines[2].electronEnergy)) *
+                          "  " * TableStrings.inUnits("energy") )
+        ## println(stream,   "  < tau(E) >          = " * @sprintf("%.4e", meanTauC.re)   * "   " * @sprintf("%.4e", meanTauC.im) * "   " * "  (Coulomb gauge)" )
+        ## println(stream,   "                      = " * @sprintf("%.4e", meanTauB.re)   * "   " * @sprintf("%.4e", meanTauB.im) * "   " * "  (Babushkin gauge)" )
+        println(stream,   "  < tau(E) ... >      = " * @sprintf("%.4e", meanTauxC.re)   * "   " * @sprintf("%.4e", meanTauxC.im) * "   " * "  (Coulomb gauge)" )
+        println(stream,   "  abs(A_s)*e^-i*phi_s = " * @sprintf("%.4e", meanTauxB.re)   * "   " * @sprintf("%.4e", meanTauxB.im) * "   " * "  (Babushkin gauge)" )
+                          
+        
+        return( nothing )
+    end
+
 
 
     """
@@ -913,7 +1000,7 @@ module PhotoIonization
     function  extractLines(lines::Array{PhotoIonization.Line,1}, omega::Float64)
         rLines = PhotoIonization.Line[]
         for  line  in  lines    
-            if  line.photonEnergy == omega   push!(rLines, line)  end  
+            if  line.photonEnergy == omega   @show  "aa", omega;    push!(rLines, line)  end  
         end
         
         return( rLines )
@@ -921,16 +1008,19 @@ module PhotoIonization
 
 
     """
-    `PhotoIonization.extractCrossSections(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)`  
+    `PhotoIonization.extractCrossSection(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)`  
         ... to extract from lines the total PI cross section that refer to the given omega and initial level;
             a cross section cs::EmProperty is returned.
     """
-    function  extractCrossSections(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)
+    function  extractCrossSection(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)
         cs = Basics.EmProperty(0.)
         for  line  in  lines    
-            if  line.initialLevel == initialLevel  &&  line.photonEnergy == omega   cs = cs + line.crossSection    end  
+            if  line.initialLevel.index == initialLevel.index  &&  line.initialLevel.energy == initialLevel.energy  &&  
+                line.photonEnergy       == omega 
+                cs = cs + line.crossSection
+            end  
         end
-        
+       
         return( cs )
     end
 
@@ -940,13 +1030,14 @@ module PhotoIonization
         ... to extract from lines the total PI cross section that refer to the given omega and initial level and to 
             to the ionization of an electron from shell; a cross section cs::EmProperty is returned.
     """
-    function  extractCrossSection(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)
+    function  extractCrossSection(lines::Array{PhotoIonization.Line,1}, omega::Float64, shell::Shell, initialLevel)
         cs = Basics.EmProperty(0.)
         for  line  in  lines    
-            if  line.initialLevel == initialLevel  &&  line.photonEnergy == omega 
+            if  line.initialLevel.index == initialLevel.index  &&  line.initialLevel.energy == initialLevel.energy  &&  
+                line.photonEnergy       == omega 
                 # Now determined of whether the photoionization refers to the given shell
-                confi     = extractLeadingConfiguration(line.initialLevel)
-                conff     = extractLeadingConfiguration(line.finalLevel)
+                confi     = Basics.extractLeadingConfiguration(line.initialLevel)
+                conff     = Basics.extractLeadingConfiguration(line.finalLevel)
                 shellOccs = Basics.extractShellOccupationDifference(confi::Configuration, conff::Configuration)
                 if  length(shellOccs) > 1  ||  shellOccs[1][2] < 0      error("stop a")   end
                 if  shellOccs[1][1] == shell   cs = cs + line.crossSection      end  
@@ -959,21 +1050,28 @@ module PhotoIonization
 
     """
     `PhotoIonization.interpolateCrossSection(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)`  
-        ... to interpolate (or extrapolate) from lines the total PI cross section for any (non-given) omega and 
-            for initial level. The procedure applies a linear interpolation/extrapolation by just using the 
+        ... to interpolate (or extrapolate) from lines the total PI cross section for any given omega and 
+            initial level. The procedure applies a linear interpolation/extrapolation by just using the 
             cross sections from the two nearest (given) omega points; a cross section cs::EmProperty is returned.
     """
     function  interpolateCrossSection(lines::Array{PhotoIonization.Line,1}, omega::Float64, initialLevel)
         # First determine for which omegas cross sections are available and which associated cross sections
         # are to be applied in the interpolation
         omegas     = PhotoIonization.extractPhotonEnergies(lines)
-        oms, diffs = Basics.determineNearestPoints(omega, 2, omegas);      om1 = oms[1];   om2 = oms[2]
-        diff1      = diffs[1];     diff2 = diffs[2]    
-        cs1        = PhotoIonization.extractCrossSection(lines, om1)
-        cs2        = PhotoIonization.extractCrossSection(lines, om2)
+        oms, diffs = Basics.determineNearestPoints(omega, 2, omegas)
+        if  oms[1] < oms[2]     om1 = oms[1];   om2 = oms[2];   diff = - diffs[1]  
+        else                    om1 = oms[2];   om2 = oms[1];   diff = - diffs[2] 
+        end
+        cs1        = PhotoIonization.extractCrossSection(lines, om1, initialLevel)
+        cs2        = PhotoIonization.extractCrossSection(lines, om2, initialLevel)
+        if  omega < om1  &&  omega < om2   ||  omega > om1  &&  omega > om2
+            @warn("No extrapolation of cross sections; cs = 0.");       
+            return( Basics.EmProperty(0.) )
+        end
         # Interpolate/extrapolate linearly with the cross section data for the two omegas
-        wm         = (cs2 - cs1) / (om2 - om1)
-        cs         = cs1  +  wm * diff1
+        wm         = 1 / (om2 - om1) * (cs2 - cs1)
+        cs         = cs1  +  diff * wm
+        ## @show om1, om2, diff, cs1.Coulomb, cs2.Coulomb, cs.Coulomb
         
         return( cs )
     end

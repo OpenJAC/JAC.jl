@@ -4,15 +4,36 @@ setDefaults("print summary: open", "zzz-MultiPhotonDeExcitation.sum")
 setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
                                                      ## setDefaults("method: normalization, Ong-Russek") 
 setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
-setDefaults("unit: rate", "a.u.")   
+setDefaults("unit: energy", "A")   
+setDefaults("unit: cross section", "barn")   
 setDefaults("unit: rate", "1/s")   
 
 ## grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
 grid = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 5.0e-2, rbox = 10.0)
-name = "two-photon absorption or emission of lithium-like xenon"
+name = "two-photon absorption or emission of xenon"
 
 if  false
-    # Green function for two-photon absorption or emission of hydrogen-like xenon
+    # Two-photon absorption of Xe: [Xe] --> [Xe] (5p^-1) 6p: Generation of MeanFieldMultiplet
+    name        = "[Xe] (5p^-1) 6s"
+    refConfigs  = [Configuration("[Kr] 4d^10 5s^2 5p^5 6s"), Configuration("[Kr] 4d^10 5s^2 5p^5 5d")]
+    mfSettings  = MeanFieldSettings()
+    #
+    wa          = Representation(name, Nuclear.Model(54.01), Radial.Grid(true), refConfigs, MeanFieldMultiplet(mfSettings) )
+    wb          = generate(wa, output=true)
+elseif  true
+    # Two-photon absorption of Xe: [Xe] --> [Xe] (5p^-1) 6p: Calculation of absorption cross sections
+    nMultiplet  = wb["mean-field multiplet"]
+    tpaSettings = MultiPhotonDeExcitation.Settings(MultiPhotonDeExcitation.TwoPhotonAbsorptionMonochromatic(), 
+                                                   [E1], [UseCoulomb,JAC.UseBabushkin], nMultiplet, 4,  true, 0.015,
+                                                   LineSelection(true, [(1,2), (1,5), (1,6)], Tuple{LevelSymmetry,LevelSymmetry}[]) )
+    wc = Atomic.Computation(Atomic.Computation(), name="two-photon absorption", grid=grid, nuclearModel=Nuclear.Model(54.01), 
+                            initialConfigs = [Configuration("[Kr] 4d^10 5s^2 5p^6")],
+                            finalConfigs   = [Configuration("[Kr] 4d^10 5s^2 5p^5 6p")],  
+                            processSettings= tpaSettings )
+    ## @show wc
+    wd = perform(wc)
+elseif  false
+    # Green function for two-photon absorption or emission of hydrogen-like xenon; this is no longer used (August 2023)
     ## refConfigs       = [Configuration("1s^2 2p")]
     refConfigs       = [Configuration("2p")]
     levelSymmetries  = [LevelSymmetry(1//2, Basics.minus), LevelSymmetry(3//2, Basics.minus)]

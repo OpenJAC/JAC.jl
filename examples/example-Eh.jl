@@ -12,7 +12,7 @@ if  false
     # this includes the direct and excitation+autoionization scheme
     setDefaults("print summary: open", "photoabsorption-cascade.sum")
     name    = "Photoabsorption of neon-like Mg"
-    pScheme = Cascade.PhotoAbsorptionScheme([E1, M1], [en for en = 25.0:50.0:300.0], Float64[], 
+    pScheme = Cascade.PhotoAbsorptionScheme([E1, M1], [en for en = 50.0:50.0:300.0], Float64[], 
                                             [Shell("2s"), Shell("2p")], Shell[Shell("3s"), Shell("3p")], 
                                             LevelSelection(false),  [0, 1], true, true, 0., 1000. )
     wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(12.), grid=grid, scheme=pScheme,
@@ -26,10 +26,10 @@ elseif  true
     # Simulation of the (total) photoabsorption cross sections
     setDefaults("print summary: open", "photoabsorption-simulation.sum")
 
-    data     = [JLD.load("zzz-cascade-photoabsorption-computations-2023-08-12T20.jld")]
+    data     = [JLD.load("zzz-cascade-photoabsorption-computations-2023-08-18T20.jld")]
     name     = "Simulation of total photoabsorption CS for neon-like Mg"
-    energies = [en for en = 25.0:50.0:300.0]
-    property = Cascade.PhotoAbsorptionSpectrum(false, energies,  Shell[], [(1,1.0)], Configuration[])
+    energies = [en for en = 30.0:1.0:350.0]
+    property = Cascade.PhotoAbsorptionSpectrum(false, true, 0.1, 0.01, energies,  Shell[], [(1,1.0)], Configuration[])
     settings = Cascade.SimulationSettings(false, false, 0.)
     wc   = Cascade.Simulation(Cascade.Simulation(), name=name, 
                               property=property, settings=settings, computationData=data )

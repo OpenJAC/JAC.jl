@@ -301,6 +301,44 @@
 
         return( nothing )
     end
+
+    
+    """
+    `Cascade.displayPhotoAbsorptionSpectrum(stream::IO, pEnergies::Array{Float64,1}, crossSections::Array{EmProperty,1},
+                                            property::Cascade.PhotoAbsorptionSpectrum)` 
+        ... displays the photoabsorption cross sections a neat table. Nothing is returned.
+    """
+    function displayPhotoAbsorptionSpectrum(stream::IO, pEnergies::Array{Float64,1}, crossSections::Array{EmProperty,1},
+                                            property::Cascade.PhotoAbsorptionSpectrum)
+        # Photon energies enter via the property
+        if  length(pEnergies) != length(crossSections)  error("stop a")    end
+        #
+        nx = 46
+        println(stream, " ")
+        println(stream, "* Absorption cross sections:  ")
+        println(stream, " ")
+        println(stream, "  Absorption cross sections are determined for the given photon energies and for levels \n  with the" *
+                        " initial population $(property.initialOccupations) \n")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  "
+        sa = sa * TableStrings.center(16, "Energy "   * TableStrings.inUnits("energy"); na=7)
+        sa = sa * TableStrings.center(10, "Total CS " * TableStrings.inUnits("cross section"); na=11)
+        println(stream, sa)
+        sa = "                      Coulomb       Babushkin"
+        println(stream, sa)
+        println(stream, "  ", TableStrings.hLine(nx))
+        #
+        for  (i, cs)  in  enumerate(crossSections)
+            sa = "     "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", pEnergies[i]))        * "     "
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs.Coulomb))   * "   " 
+            sa = sa * @sprintf("%.4e", Defaults.convertUnits("cross section: from atomic", cs.Babushkin)) * "         "
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+
+        return( nothing )
+    end
     
     
     #==
@@ -346,7 +384,6 @@
 
         return( nothing )
     end
-    ==#
 
     
     """
@@ -385,6 +422,7 @@
 
         return( nothing )
     end
+    ==#
     
 
     """
@@ -861,7 +899,13 @@
             PhotoIonization.displayLineData(stdout, linesP)
             PhotoExcitation.displayLineData(stdout, linesE)
             #
-            wa     = Cascade.simulatePhotoAbsorptionSpectrum(simulation, linesP, linesE) 
+            wa     = Cascade.simulatePhotoAbsorptionSpectrum(simulation, linesP, linesE)
+            waC    = Float64[];   waB = Float64[]
+            for cs in wa[2]  push!(waC, cs.Coulomb);  push!(waB, cs.Babushkin)      end
+            #
+            if  output    results = Base.merge( results, Dict("photonEnergies:"           => wa[1]) ) 
+                          results = Base.merge( results, Dict("crossSections(Coulomb):"   => waC) )     
+                          results = Base.merge( results, Dict("crossSections(Babushkin):" => waB) )     end
             #
         elseif  typeof(simulation.property) == Cascade.IonDistribution         &&   simulation.method == Cascade.ProbPropagation()
                                              # -----------------------
@@ -1138,7 +1182,57 @@
                 push!(resonances, newResonance)
                 @show augerRate, photonRate, strength
             end
-        end 
+        end
+        
+        # Add contributions for the high-n shell if requested; in this case, each level and its daugthers are 
+        # tested for having an orbital with principal quantum number nDetailed. If this is the case, scaled resonances
+        # are added for all n = nDetailed+1 : nMax, ie. resonances with scaled energies and rates.
+        # At present, a simple (nDetailed/n)^beta with beta = 1.1 is applied
+        beta = 1.1
+        if  simulation.property.nDetailed < simulation.property.nMax
+            @warn("This feature nDetailed < nMax has been implemented but never tested; first check the individual n-contributions." * 
+                  "i.e. the nEnergy and nStrength below ... and how they contribute.")
+            for  level in levels
+                for daugther in level.daugthers
+                    if  daugther.process != Basics.Auger();                            continue   end
+                    aLine   = daugther.lineSet.linesA[daugther.index]
+                    if  aLine.finalLevel.index != simulation.property.initialLevelNo   continue   end
+                    #
+                    dJ      = aLine.initialLevel.J;         iJ      = aLine.finalLevel.J
+                    dM      = aLine.initialLevel.M;         iM      = aLine.finalLevel.M
+                    dParity = aLine.initialLevel.parity;    iParity = aLine.finalLevel.parity
+                    dIndex  = aLine.initialLevel.index;     iIndex  = aLine.finalLevel.index
+                    dEnergy = aLine.initialLevel.energy;    iEnergy = aLine.finalLevel.energy
+                    # Determine of whether the initial level has an electron with principal quantum number nDetailed
+                    # scale the contribution if the basis has such a subshell for all n > nDetailed
+                    if  !hasSubshell(simulation.property.nDetailed, aLine.initialLevel.basis.subshells)  continue   end
+                    captureRate = aLine.totalRate
+                    augerRate   = Cascade.computeTotalAugerRate(level)
+                    photonRate  = Cascade.computeTotalPhotonRate(level)
+                    strength    = Basics.EmProperty(0.)
+                    #
+                    wa          = Defaults.convertUnits("kinetic energy to wave number: atomic units", en)
+                    wa          = pi*pi / (wa*wa) * captureRate  * 2 * # factor 2 is not really clear.
+                                  ((Basics.twice(dJ) + 1) / (Basics.twice(iJ) + 1)) /
+                                  (augerRate + photonRate.Babushkin)
+                    strength     = EmProperty(wa * photonRate.Coulomb, wa * photonRate.Babushkin)
+                    #
+                    Zeff         = sqrt( 2*simulation.property.nDetailed^2 * 
+                                         Basics.extractMeanEnergy(simulation.property.nDetailed, aLine.initialLevel.basis) )
+                    for  n = simulation.property.nDetailed+1:simulation.property.nMax
+                        nEnergy     = dEnergy - Zeff^2 / 2 * (1/n^2 - 1/simulation.property.nDetailed^2)
+                        nStrength   = (simulation.property.nDetailed / n)^beta * strength
+                        iLevel      = ManyElectron.Level(iJ, iM, iParity, iIndex, iEnergy, 0., false, ManyElectron.Basis(), Float64[])
+                        dLevel      = ManyElectron.Level(dJ, dM, dParity, nIndex, dEnergy, 0., false, ManyElectron.Basis(), Float64[])
+                        es          = Defaults.convertUnits("energy: to atomic", simulation.property.electronEnergyShift)
+                        en          = dLevel.energy-iLevel.energy + es;    if  en < 0.  continue   end
+                        newResonance = Dielectronic.Resonance(iLevel, dLevel, en, nFactor * nStrength, 0., augerRate, photonRate)
+                        push!(resonances, newResonance)
+                        @show n, augerRate, photonRate, nStrength
+                    end
+                end
+            end
+        end
         
         # Printout the resonance strength
         settings = Dielectronic.Settings(Dielectronic.Settings(), calcRateAlpha=true, temperatures=simulation.property.temperatures)
@@ -1375,30 +1469,39 @@
                                              linesP::Array{PhotoIonization.Line,1}, linesE::Array{PhotoExcitation.Line,1})` 
         ... cycle through all lines and (incident photon) energies to derive the overall photo-absorption spectrum.
             The procedure interpolates the photoionization and 'adds' the photoexcitation cross sections to obtain the 
-            total photoabsorption CS. A linear interpolation is used and the photoionization cross sections are linearly
-            extrapolated outside of the energy interval, for which photoionization lines and cross sections have been 
-            calculated before. It is also assumed that the same initial levels (indices) appear in the photoionization
-            and photoexcitation lines.
+            total photoabsorption CS. A linear interpolation is used inside of the energy interval, for which photoionization 
+            lines and cross sections have been calculated before. No extrapolation of cross sections is done here.
+            It is also assumed that the same initial levels (indices) appear in the photoionization and photoexcitation lines.
+            Moreover, energy units must be one of "eV", "Kayser", "Hartree"].
             All absorption cross sections are displayed in a neat table and are returned as lists.
     """
     function simulatePhotoAbsorptionSpectrum(simulation::Cascade.Simulation, 
                                              linesP::Array{PhotoIonization.Line,1}, linesE::Array{PhotoExcitation.Line,1})
-        ##x function  getWeight(index::Int64, occTuples::Array{Tuple{Int64,Float64},1})
-        ##x     for   occ in occTuples   if  index == occ[1]    return( occ[2] )    end     end 
-        ##x     error("stop a")
-        ##x end
+        if  !(getDefaults("unit: energy") in ["eV", "Kayser", "Hartree"])   
+            error("\nFor a photo-absorption spectrum, the energy units must be one of eV, Kayser, Hartree;  units = " *
+                  getDefaults("unit: energy") )             
+        end
         #
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-        paProperty = simulation.property;   pEnergies = paProperty.photonEnergies;      crossSections = Basics.EmProperty[]
+        paProperty = simulation.property;   pEnergies = Float64[];      crossSections = Basics.EmProperty[]
+        for  en in paProperty.photonEnergies    push!(pEnergies, Defaults.convertUnits("energy: to atomic", en))    end
         
         # First determine and display all initial levels, which contribute to the partial or total photoabsorption cs
         initialLevels  = ManyElectron.Level[];   initialWeights = Float64[]
         initialIndices = Int64[];   for tp in paProperty.initialOccupations     push!(initialIndices, tp[1])  end
         for  occ in  paProperty.initialOccupations
+            notYet = true
             for  line  in  linesP       
-                if  occ[1] == line.initialLevel.index   
+                if  occ[1] == line.initialLevel.index   &&   notYet   
                     push!(initialLevels, line.initialLevel);   push!(initialWeights, occ[2])  
-                    break 
+                    notYet = false 
+                end
+            end  
+            #
+            for  line  in  linesE       
+                if  occ[1] == line.initialLevel.index   &&   notYet   
+                    push!(initialLevels, line.initialLevel);   push!(initialWeights, occ[2])  
+                    notYet = false 
                 end
             end    
         end
@@ -1421,28 +1524,56 @@
             println(stdout, sa)
         end
         
-        # Collect cross section data for all photon energies and initial levels involved
-        for  pEnergy  in pEnergies
-            cs = Basics.EmProperty(0.)
-            for  (i, initialLevel)  in  enumerate(initialLevels)
-                if  length(paProperty.shells) != 0
-                    error("aa: not yet implemented")
-                else
-                    cs = cs + initialWeights[i] * PhotoIonization.extractCrossSections(linesP, pEnergy, initialLevel)
-                    @show  pEnergy, cs
-                    if  paProperty.includeExcitation
-                        error("bb: not yet implemented")
+        println(stdout, "\n  Number of photoionization lines = $(length(linesP)) " *
+                        "\n  Number of photoexcitation lines = $(length(linesE)) \n ")
+        
+        # Define an empty array of proper size
+        for pEnergy  in pEnergies     push!(crossSections, Basics.EmProperty(0.))    end
+        
+        # Collect photoionization cross section data for all photon energies and initial levels involved
+        if  paProperty.includeIonization
+            for  (p, pEnergy)  in  enumerate(pEnergies)
+                cs = Basics.EmProperty(0.)
+                for  (i, initialLevel)  in  enumerate(initialLevels)
+                    if  length(paProperty.shells) != 0
+                        # Add cross section data only if they refer to shells
+                        error("aa: not yet implemented")
+                    else
+                        cs = cs + initialWeights[i] * PhotoIonization.interpolateCrossSection(linesP, pEnergy, initialLevel)
                     end 
                 end 
-            end 
-            push!(crossSections, cs)
+                crossSections[p] = crossSections[p] + cs
+            end
         end
         
+        # Add, if requested, all photoexitation cross section data for all photon energies and initial levels involved
+        gam    = Defaults.convertUnits("energy: to atomic", paProperty.resonanceWidth)
+        ##x @show paProperty.includeExcitation, gam
+        ##x @show pEnergies, initialLevels
+        
+        if  paProperty.includeExcitation
+            for  (p, pEnergy)  in  enumerate(pEnergies)
+                cs = Basics.EmProperty(0.)
+                for  (i, initialLevel)  in  enumerate(initialLevels)
+                    if  length(paProperty.shells) != 0
+                        # Add cross section data only if they refer to shells
+                        error("bb: not yet implemented")
+                    else
+                        ##x @show pEnergy, gam, PhotoExcitation.estimateCrossSection(linesE, pEnergy, gam, initialLevel)
+                        cs = cs + initialWeights[i] * paProperty.csScaling * 
+                                  PhotoExcitation.estimateCrossSection(linesE, pEnergy, gam, initialLevel)
+                    end 
+                end 
+                crossSections[p] = crossSections[p] + cs
+            end
+        end        
+        
+        
         # Display the total or partial cross sections in tabular form
-        Cascade.displayPhotoAbsorptionSpectrum(stdout, crossSections, simulation.property)
-        if  printSummary   Cascade.displayPhotoAbsorptionSpectrum(iostream, crossSections, simulation.property)    end
+        Cascade.displayPhotoAbsorptionSpectrum(stdout, pEnergies, crossSections, paProperty)
+        if  printSummary   Cascade.displayPhotoAbsorptionSpectrum(iostream, pEnergies, crossSections, paProperty)    end
 
-        return( crossSections )
+        return( pEnergies, crossSections )
     end    
     
     

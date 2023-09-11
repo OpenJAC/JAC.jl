@@ -108,6 +108,9 @@ module Defaults
     + `("cross section: from atomic to predefined unit", value::Float64)`  or  `("cross section: from atomic", value::Float64)`  
         ... to convert an cross section value from atomic to the predefined cross section unit; a Float64 is returned.
 
+    + `("cross section: from barn to atomic unit", value::Float64)` 
+        ... to convert an cross section value from barn atomic section unit; a Float64 is returned.
+
     + `("cross section: from atomic to barn", value::Float64)`  or  `("cross section: from atomic to Mbarn", value::Float64)`  or
       `("cross section: from atomic to Hz", value::Float64)`  or  `("energy: from atomic to Angstrom", value::Float64)` 
         ... to convert an energy value from atomic to the speficied cross section unit; a Float64 is returned.
@@ -202,6 +205,8 @@ module Defaults
             elseif  Defaults.getDefaults("unit: cross section") == "Mbarn"  return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN * 1.0e6 )
             else    error("stop b")
             end
+
+        elseif   sa in ["cross section: from barn to atomic unit"]          return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN )
 
         elseif   sa in ["density: from [g/cm^3] to atomic"]                 wg = ELECTRON_MASS_U / ELECTRON_MASS_IN_G
             wcm = 1 / (100 * BOHR_RADIUS_SI);                               return( wg / wcm^3 )  # 

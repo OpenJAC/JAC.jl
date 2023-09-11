@@ -1795,6 +1795,7 @@ module Basics
     function expandOrbital                                          end
     function extractLeadingConfiguration                            end
     function extractLeadingConfigurationR                           end
+    function extractMeanEnergy                                      end
     function extractNoOpenShells                                    end
     function extractNonrelativisticShellList                        end
     function extractNonrelativisticConfigurations                   end
@@ -1831,6 +1832,7 @@ module Basics
     function generateSubshellList                                   end
     function generateSpectrumLorentzian                             end
     function generateSpectrumGaussian                               end
+    function hasSubshell                                            end
     function integrate                                              end
     function integrateOnGridNewtonCotes                             end
     function integrateOnGridSimpsonRule                             end

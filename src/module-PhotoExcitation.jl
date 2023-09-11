@@ -393,6 +393,9 @@ module PhotoExcitation
         sa = sa * TableStrings.center(20, "Shell excitations"; na=3);               
         sb = sb * TableStrings.center(20, "from  ==>  to";  na=5)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(75))
+        #
+        if  length(lines) == 0    println("  >>> No photoexcitation data in lines here ... return ");    return(nothing)    end 
+        #
         wLine = lines[1]
         for  energy in energies
             for  omega in omegas
@@ -638,6 +641,39 @@ module PhotoExcitation
         #
         return( nothing )
     end
+
+
+    """
+    `PhotoExcitation.estimateCrossSection(lines::Array{PhotoExcitation.Line,1}, omega::Float64, gamma::Float64, initialLevel)`  
+        ... to estimate from lines the total PE cross section for any omega and for initial level. 
+            The procedure assumes a Gaussian line shape for each PhotoExcitation.Line with widths gamma and distributes
+            the (total cross section according to the line shape within [E_r - 10*gamma, E_r + 10*gamma].
+            Other line shapes can be readily implemented; a cross section cs::EmProperty is returned.
+    """
+    function  estimateCrossSection(lines::Array{PhotoExcitation.Line,1}, omega::Float64, gamma::Float64, initialLevel)
+        function gaussianDistribution(omega::Float64, Er::Float64, gamma::Float64, gf::Basics.EmProperty)
+            # Return zero if outside of interval
+            if abs(Er - omega) > 10 * gamma    return(Basics.EmProperty(0.))   end
+            # Account for the factor to bring 109.7617 Mb / eV first back to atomic units
+            factor = 109.7617 * Defaults.convertUnits("cross section: from barn to atomic unit", 1.0e6) / 
+                                Defaults.convertUnits("energy: from eV to atomic", 1.0)
+            wa = (Er - omega)^2  +  gamma^2/4
+            wa = factor * gamma / (2pi) / wa
+            return( wa * gf )
+        end
+            
+        cs = Basics.EmProperty(0.)
+        for  line  in  lines
+            if  line.initialLevel.index == initialLevel.index  &&  line.initialLevel.energy == initialLevel.energy  
+                cs = cs + gaussianDistribution(omega, line.omega, gamma, line.oscStrength)   
+            end  
+        end
+        
+        ##x if  cs != Basics.EmProperty(0.)   @show  omega, gamma, cs    end
+        
+        return( cs )
+    end
+
 
 end # module
 

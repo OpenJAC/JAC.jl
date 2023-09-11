@@ -2,6 +2,17 @@
     export isless
 
     """
+    `Basics.hasSubshell(pqn::Int64, subshells::Array{Subshell,1})`  
+        ... returns true if one (or more) of subshells has the principal quantum number pqn, and false otherwise.
+            A value::Bool is returned
+    """
+    function Basics.hasSubshell(pqn::Int64, subshells::Array{Subshell,1})
+        for  subsh in subshells   if  subsh.n == pqn   return( true)  end   end
+        return( false )    
+    end
+
+
+    """
     `Basics.interpolateOnGridGrasp92((F::Array{Float64,1}, oldGrid::Radial.Grid), (G::Void, newGrid::Radial.Grid) )`  
         ... to interpolate the (radial) function F from the oldgrid to newgrid, by a call to the Grasp92 Fortran procedures; 
             an function G::Array{Float64,1} is returned. **Not yet implemented !**    
