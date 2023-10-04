@@ -81,7 +81,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, 
        PhotoIonAuto, PhotoIonFluor, PhotoDouble, PhotoIonization, PhotoDoubleIonization, PhotoIonizationFluores, PhotoIonizationAutoion, 
        PhotoRecombination, PlasmaShift, Plasma, Polarity, Pulse,
-       QedPetersburg, QedSydney,
+       QedPetersburg, QedSydney, 
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RAuger, RasSettings, RasStep, 
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix, RadiativeOpacity,
        RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,

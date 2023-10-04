@@ -166,7 +166,8 @@ module PhotoIonization
         #-----------------------------------
             amplitude = PhotoEmission.amplitude("absorption", channel.multipole, channel.gauge, omega, continuumLevel, initialLevel, grid, 
                                                 display=false, printout=false)
-            amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
+            ## amplitude = im^Basics.subshell_l(Subshell(101, channel.kappa)) * exp( -im*channel.phase ) * amplitude
+            amplitude = exp( -im*channel.phase ) * amplitude
         else    error("stop b")
         end
         
@@ -925,10 +926,14 @@ module PhotoIonization
         #
         deltaTau = lines[2].electronEnergy - lines[1].electronEnergy;   
         meanTauNC = ComplexF64(0.);   meanTauNB = ComplexF64(0.);    meanTauNxC = ComplexF64(0.);   meanTauNxB = ComplexF64(0.); 
-        meanTauDC = ComplexF64(0.);   meanTauDB = ComplexF64(0.);    meanTauDxC = ComplexF64(0.);   meanTauDxB = ComplexF64(0.);     
+        meanTauDC = ComplexF64(0.);   meanTauDB = ComplexF64(0.);    meanTauDxC = ComplexF64(0.);   meanTauDxB = ComplexF64(0.); 
+        #==
+        # Calculate non-coherent amplitudes
         for  ch = 1:length(lines[1].channels)
-            w1 = abs(lines[1].channels[ch].amplitude) * exp(-im*lines[1].channels[ch].phase) 
-            w2 = abs(lines[1].channels[ch].amplitude) * exp(-im*lines[2].channels[ch].phase) 
+            phase1 = lines[1].channels[ch].phase # + lines[1].channels[ch].kappa
+            phase2 = lines[2].channels[ch].phase # + lines[2].channels[ch].kappa
+            w1 = abs(lines[1].channels[ch].amplitude) * exp(-im*phase1)
+            w2 = abs(lines[1].channels[ch].amplitude) * exp(-im*phase2)
             if      lines[1].channels[ch].gauge != lines[2].channels[ch].gauge   ||
                     lines[1].channels[ch].kappa != lines[2].channels[ch].kappa              error("stop f") 
             elseif  lines[1].channels[ch].gauge == Basics.Coulomb     
@@ -955,7 +960,38 @@ module PhotoIonization
         meanTauxC = -im * meanTauNxC / meanTauDxC;      meanTauxB = -im * meanTauNxB / meanTauDxB
         #
         ## For second energy
-        ## meanTauxC = meanTauxC - 0.15;   meanTauxB = meanTauxB - 0.15
+        ## meanTauxC = meanTauxC;   meanTauxB = meanTauxB   ==#
+        #  
+        # Calculate coherent amplitudes
+        amplitude1C = ComplexF64(0.);   amplitude2C = ComplexF64(0.)
+        amplitude1B = ComplexF64(0.);   amplitude2B = ComplexF64(0.)
+        for  ch = 1:length(lines[1].channels)
+            if      lines[1].channels[ch].gauge != lines[2].channels[ch].gauge   ||
+                    lines[1].channels[ch].kappa != lines[2].channels[ch].kappa              error("stop f") 
+            elseif  lines[1].channels[ch].gauge == Basics.Coulomb
+                ## if  abs( angle(lines[1].channels[ch].amplitude) )  < 1.45  &&  abs( angle(lines[1].channels[ch].kappa) )  != 3
+                if abs(lines[1].channels[ch].amplitude - lines[2].channels[ch].amplitude)  >  1.0e-4
+                    amplitude1C = amplitude1C + lines[1].channels[ch].amplitude
+                    amplitude2C = amplitude2C - lines[2].channels[ch].amplitude
+                else
+                    amplitude1C = amplitude1C + lines[1].channels[ch].amplitude
+                    amplitude2C = amplitude2C + lines[2].channels[ch].amplitude
+                end
+            elseif  lines[1].channels[ch].gauge == Basics.Babushkin     
+                ## if  abs( angle(lines[1].channels[ch].amplitude) )  < 1.45  &&  abs( angle(lines[1].channels[ch].kappa) )  != 3
+                if abs(lines[1].channels[ch].amplitude - lines[2].channels[ch].amplitude)  >  1.0e-4
+                    amplitude1B = amplitude1B + lines[1].channels[ch].amplitude
+                    amplitude2B = amplitude2B - lines[2].channels[ch].amplitude
+                else
+                    amplitude1B = amplitude1B + lines[1].channels[ch].amplitude
+                    amplitude2B = amplitude2B + lines[2].channels[ch].amplitude
+                end
+            else
+            end
+        end
+        #
+        delta_deffC = angle(amplitude2C) - angle(amplitude1C);      meanTauyC = delta_deffC / deltaTau 
+        delta_deffB = angle(amplitude2B) - angle(amplitude1B);      meanTauyB = delta_deffB / deltaTau
         #
         symi = LevelSymmetry(lines[1].initialLevel.J, lines[1].initialLevel.parity)
         symf = LevelSymmetry(lines[1].finalLevel.J, lines[1].finalLevel.parity)
@@ -966,10 +1002,12 @@ module PhotoIonization
         println(stream, "\n  Electron energies   = " * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", lines[1].electronEnergy)) * "   " *
                                                        @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", lines[2].electronEnergy)) *
                           "  " * TableStrings.inUnits("energy") )
-        ## println(stream,   "  < tau(E) >          = " * @sprintf("%.4e", meanTauC.re)   * "   " * @sprintf("%.4e", meanTauC.im) * "   " * "  (Coulomb gauge)" )
-        ## println(stream,   "                      = " * @sprintf("%.4e", meanTauB.re)   * "   " * @sprintf("%.4e", meanTauB.im) * "   " * "  (Babushkin gauge)" )
-        println(stream,   "  < tau(E) ... >      = " * @sprintf("%.4e", meanTauxC.re)   * "   " * @sprintf("%.4e", meanTauxC.im) * "   " * "  (Coulomb gauge)" )
-        println(stream,   "  abs(A_s)*e^-i*phi_s = " * @sprintf("%.4e", meanTauxB.re)   * "   " * @sprintf("%.4e", meanTauxB.im) * "   " * "  (Babushkin gauge)" )
+        ##x println(stream,   "  < tau(E) >          = " * @sprintf("%.4e", meanTauC.re)   * "   " * @sprintf("%.4e", meanTauC.im) * "   " * "  (Coulomb gauge)" )
+        ##x println(stream,   "                      = " * @sprintf("%.4e", meanTauB.re)   * "   " * @sprintf("%.4e", meanTauB.im) * "   " * "  (Babushkin gauge)" )
+        ##  println(stream,   "  < tau(E) ... >      = " * @sprintf("%.4e", meanTauxC.re)   * "   " * @sprintf("%.4e", meanTauxC.im) * "   " * "  (Coulomb gauge)" )
+        ##  println(stream,   "  abs(A_s)*e^-i*phi_s = " * @sprintf("%.4e", meanTauxB.re)   * "   " * @sprintf("%.4e", meanTauxB.im) * "   " * "  (Babushkin gauge)" )
+        println(stream,   "  < tau(E) ... >      = " * @sprintf("%.4e", meanTauyC)   * "   " * "  (Coulomb gauge)" )
+        println(stream,   "  d delta_eff/dE      = " * @sprintf("%.4e", meanTauyB)   * "   " * "  (Babushkin gauge)" )
                           
         
         return( nothing )

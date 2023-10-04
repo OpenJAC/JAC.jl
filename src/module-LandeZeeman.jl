@@ -35,11 +35,13 @@ module LandeZeeman
         + F                      ::AngularJ64        ... F-value
         + M                      ::AngularM64        ... M_F-value
         + energy                 ::Float64           ... energy of this sublevel
+        + c2Coeff                ::Float64           ... quadratic-Zeeman shift C_2 coefficient of this level
     """
     struct SublevelF
         F                        ::AngularJ64
         M                        ::AngularM64
         energy                   ::Float64
+        c2Coeff                  ::Float64
     end 
 
 
@@ -58,13 +60,10 @@ module LandeZeeman
         + amplitudeN1            ::Complex{Float64}  ... N1 amplitude
         + amplitudeDeltaN1       ::Complex{Float64}  ... Delta-N1 amplitude
         + nuclearI               ::AngularJ64        ... nuclear spin
-        + hasJsublevels          ::Bool              ... True, if information about the magnetic sublevels are provided and false otherwise.
-        + Jsublevels             ::Array{LandeZeeman.SublevelJ,1}   ... List of the magnetic fine-structure sublevels and data with 
-                                                                        well-defined J-value 
-        + hasFsublevels          ::Bool              ... True, if information about the magnetic hyperfine sublevels are provided and 
-                                                         false otherwise.
-        + Fsublevels             ::Array{LandeZeeman.SublevelF,1}   ... List of the magnetic hyperfine sublevels and data with 
-                                                                        well-defined F-value 
+        + Jsublevels             ::Array{LandeZeeman.SublevelJ,1}   
+            ... List of the magnetic fine-structure sublevels and data with well-defined J-value 
+        + Fsublevels             ::Array{LandeZeeman.SublevelF,1}   
+            ... List of the magnetic hyperfine sublevels and data with well-defined F-value 
     """
     struct Outcome 
         Jlevel                   ::Level
@@ -72,9 +71,7 @@ module LandeZeeman
         amplitudeN1              ::Complex{Float64}
         amplitudeDeltaN1         ::Complex{Float64}
         nuclearI                 ::AngularJ64
-        hasJsublevels            ::Bool
         Jsublevels               ::Array{LandeZeeman.SublevelJ,1}
-        hasFsublevels            ::Bool
         Fsublevels               ::Array{LandeZeeman.SublevelF,1}
     end 
 
@@ -83,7 +80,7 @@ module LandeZeeman
     `LandeZeeman.Outcome()`  ... constructor for an `empty` instance of LandeZeeman.Outcome.
     """
     function Outcome()
-        Outcome(Level(), 0., 0., 0., AngularJ64(0), false, SublevelJ[],  false, SublevelF[])
+        Outcome(Level(), 0., 0., 0., AngularJ64(0), SublevelJ[],  SublevelF[])
     end
 
 
@@ -94,9 +91,7 @@ module LandeZeeman
         println(io, "amplitudeN1:      $(outcome.amplitudeN1)  ")
         println(io, "amplitudeDeltaN1: $(outcome.amplitudeDeltaN1)  ")
         println(io, "nuclearI:         $(outcome.nuclearI)  ")
-        println(io, "hasJsublevels:    $(outcome.hasJsublevels)  ")
-        println(io, "Fsublevels:       $(outcome.Fsublevels)  ")
-        println(io, "hasFsublevels:    $(outcome.hasFsublevels)  ")
+        println(io, "Jsublevels:       $(outcome.Jsublevels)  ")
         println(io, "Fsublevels:       $(outcome.Fsublevels)  ")
     end
 
@@ -109,21 +104,25 @@ module LandeZeeman
         + calcLandeJ             ::Bool              ... True if Lande-J factors are to be calculated.
         + calcLandeF             ::Bool              ... True if Lande-F factors are to be calculated.
         + calcZeeman             ::Bool              ... True if Zeeman splittings are to be calculated.
+        + calcQZScoeff           ::Bool              ... True if the quadratic-Zeeman shift coefficients are to be calculated.
         + includeSchwinger       ::Bool              ... True if Schwinger's QED correction ``\\Delta N^(1)`` is to be included, 
                                                          and false otherwise.
-        + BField                 ::Float64           ... Strength of the magnetic field in [Tesla]
         + printBefore            ::Bool              ... True if a list of selected levels is printed before the actual computations start. 
+        + BField                 ::Float64           ... Strength of the magnetic field in [Tesla]
         + levelSelection         ::LevelSelection    ... Specifies the selected levels, if any.
+        + gMultiplet             ::Multiplet         ... Mean-field multiplet of intermediate levels for second-order coefficients.
     """
     struct Settings  <:  AbstractPropertySettings 
         calcLandeJ               ::Bool
         calcLandeF               ::Bool
         calcZeeman               ::Bool
+        calcQZScoeff             ::Bool
         includeSchwinger         ::Bool
         BField                   ::Float64
         printBefore              ::Bool 
         levelSelection           ::LevelSelection
-     end 
+        gMultiplet               ::Multiplet  
+    end 
 
 
     """
@@ -131,7 +130,7 @@ module LandeZeeman
         ... constructor for an `empty` instance of ZeemanSettings for the computation of isotope M and F parameters.
      """
      function Settings()
-         Settings(false, false, false, false, 0., false, LevelSelection() )
+         Settings(false, false, false, false, false, false, 0., LevelSelection(), Multiplet() )
     end
 
 
@@ -141,9 +140,10 @@ module LandeZeeman
         println(io, "calcLandeF:               $(settings.calcLandeF)  ")
         println(io, "calcZeeman:               $(settings.calcZeeman)  ")
         println(io, "includeSchwinger:         $(settings.includeSchwinger)  ")
-        println(io, "BField:                   $(settings.BField)  ")
         println(io, "printBefore:              $(settings.printBefore)  ")
+        println(io, "BField:                   $(settings.BField)  ")
         println(io, "levelSelection:           $(settings.levelSelection)  ")
+        println(io, "gMultiplet:               $(settings.gMultiplet)  ")
     end
 
 
@@ -248,11 +248,37 @@ module LandeZeeman
         elseif   settings.calcLandeJ    LandeJ = 2*(amplitudeN1 + amplitudeDeltaN1) / sqrt(J*(J+1))    
         end
         @show J, LandeJ, amplitudeN1, amplitudeDeltaN1
+        
+        # Jan, here your computations should be implemented
+        if  settings.calcQZScoeff
+            newFsublevels = LandeZeeman.SublevelF[]
+            for  Fsub in outcome.Fsublevels
+                # I'm not sure which arguments you will need ... but you should have them all by what comes in here.
+                c2 = LandeZeeman.computeQuadraticZeemanC2(Fsub, outcome.Fsublevels, grid, settings)
+                ## push!(newFsublevels, LandeZeeman.Fsublevels(..., c2) )
+            end
+        end
 
         
         newOutcome = LandeZeeman.Outcome( outcome.Jlevel, LandeJ, amplitudeN1, amplitudeDeltaN1, outcome.nuclearI, 
-                                          outcome.hasJsublevels, outcome.Jsublevels, outcome.hasFsublevels, outcome.Fsublevels)
+                                          outcome.Jsublevels, outcome.Fsublevels)
         return( newOutcome )
+    end
+
+
+
+    """
+    `LandeZeeman.computeQuadraticZeemanC2(Fsub::SublevelF, Fsublevels::Array{SublevelF,1}, grid::Radial.Grid, settings::LandeZeeman.Settings)`  
+        ... to compute all quadratic-Zeeman shift C2 coefficients; an c2::Float64 is returned for the given hyperfine level
+            Fsub.
+    """
+    function  computeQuadraticZeemanC2(Fsub::SublevelF, Fsublevels::Array{SublevelF,1}, grid::Radial.Grid, settings::LandeZeeman.Settings)
+        c2 = 0.
+        println(">>> Calculate another C_2 coefficients ... not yet !")
+        
+        # Jan, now implement your formula please.
+        
+        return( c2 )
     end
 
 
@@ -266,7 +292,7 @@ module LandeZeeman
         printstyled("LandeZeeman.computeOutcomes(): The computation of the Zeeman amplitudes and Lande factors starts now ... \n", color=:light_green)
         printstyled("-------------------------------------------------------------------------------------------------------- \n", color=:light_green)
         println("")
-        outcomes = LandeZeeman.determineOutcomes(multiplet, settings)
+        outcomes = LandeZeeman.determineOutcomes(multiplet, nm, settings)
         # Display all selected levels before the computations start
         if  settings.printBefore    LandeZeeman.displayOutcomes(outcomes)    end
         # Calculate all amplitudes and requested properties
@@ -287,21 +313,25 @@ module LandeZeeman
 
 
     """
-    `LandeZeeman.determineOutcomes(multiplet::Multiplet, settings::LandeZeeman.Settings)`  
+    `LandeZeeman.determineOutcomes(multiplet::Multiplet, nm::Nuclear.Model, settings::LandeZeeman.Settings)`  
         ... to determine a list of Outcomes's for the computation of Lande factors and/or Zeeman splittings for 
             levels from the given multiplet. It takes into account the particular selections and settings. 
             An Array{LandeZeeman.Outcome,1} is returned. Apart from the level specification, all physical properties are 
             still set to zero during the initialization process.
     """
-    function  determineOutcomes(multiplet::Multiplet, settings::LandeZeeman.Settings) 
+    function  determineOutcomes(multiplet::Multiplet, nm::Nuclear.Model, settings::LandeZeeman.Settings) 
         # Define values that depend on the requested computations
-        nuclearI = AngularJ64(0);    hasJsublevels = false;    Jsublevels = LandeZeeman.SublevelJ[]
-                                     hasFsublevels = false;    Fsublevels = LandeZeeman.SublevelF[]
-
-        outcomes = LandeZeeman.Outcome[]
+        outcomes   = LandeZeeman.Outcome[]
         for  level  in  multiplet.levels
             if  Basics.selectLevel(level, settings.levelSelection)
-                push!( outcomes, LandeZeeman.Outcome(level, 0., 0., 0., nuclearI, hasJsublevels, Jsublevels, hasFsublevels, Fsublevels) )
+                Jsublevels = LandeZeeman.SublevelJ[];   Mvalues = AngularMomentum.m_values(level.J) 
+                Fsublevels = LandeZeeman.SublevelF[];   Fvalues = Basics.oplus(nm.spinI, level.J)
+                for  M in Mvalues   push!(Jsublevels, LandeZeeman.SublevelJ(M, 0.) )    end
+                for  F in Fvalues 
+                    MFvalues = AngularMomentum.m_values(F)
+                    for  MF in MFvalues     push!(Fsublevels, LandeZeeman.SublevelF(F, MF, 0., 0.) )    end 
+                end
+                push!( outcomes, LandeZeeman.Outcome(level, 0., 0., 0., nm.spinI, Jsublevels, Fsublevels) )
             end
         end
         return( outcomes )
@@ -415,12 +445,26 @@ module LandeZeeman
             println(stream, "  ", TableStrings.hLine(nx))
         end
         #
+        #
         if  settings.calcZeeman
             nx = 135
             println(stream, " ")
             println(stream, "  Zeeman splittings of (hyper-) fine-structure levels:")
             println(stream, " ")
             println(stream, "  ", TableStrings.hLine(nx))
+            println(stream, "  Here, we should display the Zeeman splittings of (hyper-) fine-structure levels. ")
+            println(stream, "  ", TableStrings.hLine(nx))
+        end
+        #
+        #
+        if  settings.calcQZScoeff
+            # Jan, now implement 1-2 tables about your desired output please.
+            nx = 135
+            println(stream, " ")
+            println(stream, "  Quadratic Zeeman shift C_2 coefficients for (hyper-) fine-structure levels:")
+            println(stream, " ")
+            println(stream, "  ", TableStrings.hLine(nx))
+            println(stream, "  Jan, now implement 1-2 tables about your desired output please. ")
             println(stream, "  ", TableStrings.hLine(nx))
         end
         #
