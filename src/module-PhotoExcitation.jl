@@ -184,7 +184,8 @@ module PhotoExcitation
             end
         end
         oscFactor    = (Ji2 + 1) / (Jf2 + 1) / 2. * Defaults.getDefaults("speed of light: c")^3 / line.omega^2
-        csFactor     = 2 * pi^3 * Defaults.getDefaults("alpha") / (line.omega * (Ji2 + 1))
+        ## oscFactor    = oscFactor / (Jf2 + 1)                                                            ## Schippers (Oct. 2023)
+        csFactor     = 2 * pi^3 * Defaults.getDefaults("alpha") / (line.omega * (Ji2 + 1)) ## / (Jf2 + 1)  ## Schippers (Oct. 2023)
         oscStrength  = EmProperty(oscFactor*oscCoulomb, oscFactor*oscBabushkin)
         crossSection = EmProperty(csFactor*csCoulomb, csFactor*csBabushkin)
         staTensor    = TensorComp[]

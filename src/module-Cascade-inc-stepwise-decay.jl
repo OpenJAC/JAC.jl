@@ -68,7 +68,7 @@
                                                  "giving now rise to a total of $nt $(string(step.process)) decay lines." )   end      
         end
         #
-        data = Cascade.DecayData(linesR, linesA)
+        data = ( Cascade.Data{PhotoEmission.Line}(linesR), Cascade.Data{AutoIonization.Line}(linesA) )
     end
 
 

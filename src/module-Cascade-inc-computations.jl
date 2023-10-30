@@ -126,9 +126,11 @@
                                       linesA::Array{AutoIonization.Line,1}, settings::DecayYield.Settings)
         # Identify the level key of the given level also in the lists of radiative and Auger lines
         level = outcome.level;    levelKey = LevelKey( LevelSymmetry(level.J, level.parity), level.index, level.energy, 0.)
+        @show levelKey
         similarKey = LevelKey();  rateR = 0.;    rateA = 0.;   NoPhotonLines = 0;   NoAugerLines = 0
         for  line in linesR
             compareKey = LevelKey( LevelSymmetry(line.initialLevel.J, line.initialLevel.parity), line.initialLevel.index, line.initialLevel.energy, 0.)
+            @show compareKey
             if   Basics.isSimilar(levelKey, compareKey, 1.0e-3)    println("** compareKey = $compareKey");   similarKey = deepcopy(compareKey)    end
         end
         if   similarKey == LevelKey()    error("No similar level found !")   end
@@ -369,7 +371,8 @@
                 if  rProbabilities[subsh] == 0.  continue    end
                 idy = Cascade.dumpGeant4Index(subsh)
                 sa  = "$idy            ";    sa = sa[1:13] * @sprintf("%.6e", rProbabilities[subsh])
-                en  = Defaults.convertUnits("energy: from atomic to eV", subshEnergies[subsh]) * 1.0e-6 ## energies in MeV
+                en  = subshEnergies[holeSubshell] - subshEnergies[subsh]
+                en  = Defaults.convertUnits("energy: from atomic to eV", en) * 1.0e-6 ## energies in MeV
                 sa  = sa * " " * @sprintf("%.6e", abs(en));     println(stream, sa)
             end
         end
@@ -408,7 +411,8 @@
                     if  aProbabilities[(subsha, subshb)] == 0.               continue    end
                     ida = Cascade.dumpGeant4Index(subsha);    idb = Cascade.dumpGeant4Index(subshb)
                     sa  = "$ida            $idb            ";    sa = sa[1:26] * @sprintf("%.6e", aProbabilities[(subsha, subshb)])
-                    en  = Defaults.convertUnits("energy: from atomic to eV", subshEnergies[subsha]) * 1.0e-6 ## energies in MeV
+                    en  = subshEnergies[holeSubshell] - subshEnergies[subsha] - subshEnergies[subshb]
+                    en  = Defaults.convertUnits("energy: from atomic to eV", en) * 1.0e-6 ## energies in MeV
                     sa  = sa * " " * @sprintf("%.6e", abs(en));     println(stream, sa)
                 end
             end

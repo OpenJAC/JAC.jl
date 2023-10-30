@@ -294,7 +294,7 @@ module PhotoIonization
         end
         # Print all results to screen
         PhotoIonization.displayResults(stdout, newLines, settings)
-        PhotoIonization.displayTimeDelay(stdout, newLines, settings)
+        ## PhotoIonization.displayTimeDelay(stdout, newLines, settings)
         if  printSummary   PhotoIonization.displayResults(iostream, newLines, settings)     end
         #
         if    output    return( newLines )
@@ -695,7 +695,7 @@ module PhotoIonization
                                               TableStrings.inUnits("cross section"); na=3)
         println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
         # 
-        wx = 1.0 ## wx = 1.0  (Schippers, August'23; wx = 2.0)
+        wx = 1.0 ## wx = 1.0  (Schippers, August'23; wx = 2.0; wx = pi/2)
         for  line in lines
             sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                          fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)

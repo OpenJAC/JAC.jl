@@ -115,13 +115,12 @@ module DecayYield
         wa = Cascade.Computation(Cascade.Computation(), name="photon lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
                                  scheme=Cascade.StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
                                  approach=cApproach, initialConfigs=initialConfigs)
-        @show wa
-        wb = perform(wa, output=true, outputToFile=false);   linesR = wb["decay line data:"].linesR
+        wb = perform(wa, output=true, outputToFile=false);   linesR = wb["decay line data:"][1].lines
         println("\nPerform a cascade computation for all (single-electron) Auger decay channels of the levels from the initial configurations:")
         wa = Cascade.Computation(Cascade.Computation(), name="Auger lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
                                  scheme=Cascade.StepwiseDecayScheme([Auger()], 1, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
                                  approach=cApproach, initialConfigs=initialConfigs)
-        wb = perform(wa, output=true, outputToFile=false);   linesA = wb["decay line data:"].linesA
+        wb = perform(wa, output=true, outputToFile=false);   linesA = wb["decay line data:"][2].lines
         #
         # Calculate all amplitudes and requested properties
         newOutcomes = DecayYield.Outcome[]
