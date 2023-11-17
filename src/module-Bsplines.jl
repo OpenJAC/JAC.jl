@@ -852,13 +852,16 @@ module Bsplines
 
     """
     `Bsplines.solveSelfConsistentAverageAtom(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, 
-                    orbitals::Dict{Subshell, Orbital}, temp::Float64, scField::Basics.AbstractScField; printout::Bool=true)
+                    orbitals::Dict{Subshell, Orbital}, temp::Float64, radiusWS::Float64, scField::Basics.AbstractScField; 
+                    printout::Bool=true)
         ... solves the self-consistent field for a given local average-atom potential as specified by scField 
             A (new) set of orbitals::Dict{Subshell, Orbital} is returned.
     """
     function solveSelfConsistentAverageAtom(primitives::Bsplines.Primitives, nuclearModel::Nuclear.Model, 
-                    orbitals::Dict{Subshell, Orbital}, temp::Float64, scField::Basics.AbstractScField; printout::Bool=true)
-        chemMu    = Plasma.determineChemicalPotential(orbitals, temp, nuclearModel)
+                    orbitals::Dict{Subshell, Orbital}, temp::Float64, radiusWS::Float64, scField::Basics.AbstractScField; 
+                    printout::Bool=true)
+        chemMu    = Plasma.determineChemicalPotential(orbitals, temp, radiusWS, nuclearModel, primitives.grid)
+        @show chemMu
         # Extract the kappa's from orbitals
         kappas = Int64[];     for (k,v)  in  orbitals     push!(kappas, k.kappa)    end;    kappas = unique(kappas)
         @show kappas
@@ -920,7 +923,7 @@ module Bsplines
                 # (5) Re-define the bsplineBlock
                 bsplineBlock[kappa] = wc
             end
-            chemMu              = Plasma.determineChemicalPotential(previousOrbitals, temp, nuclearModel)
+            chemMu              = Plasma.determineChemicalPotential(previousOrbitals, temp, radiusWS, nuclearModel, primitives.grid)
             if  go_on   nothing   else   break   end
         end
         

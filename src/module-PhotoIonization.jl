@@ -190,14 +190,14 @@ module PhotoIonization
             newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
             cOrbital, phase  = Continuum.generateOrbitalForLevel(line.electronEnergy, Subshell(101, channel.kappa), newfLevel, nm, grid, contSettings)
             #
-            #  Additional printout for Kabachnik/Pfeiffer, June 2023
+            #==  Additional printout for Kabachnik/Pfeiffer, June 2023
             printSummary, iostream = Defaults.getDefaults("summary flag/stream")
             if  printSummary 
                 en = Defaults.convertUnits("energy: from atomic to eV", cOrbital.energy)
                 subsh = string(cOrbital.subshell) * "     "
                 println(iostream, "   channel = $channel ")    
                 println(iostream, "   shell = $(subsh[4:10])  energy = $en eV   phase = $phase  gauge = $(channel.gauge)")     
-            end
+            end ==#
             #
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phase, 0.)
@@ -288,14 +288,15 @@ module PhotoIonization
                     "for the photon energy $(Defaults.convertUnits("energy: from atomic", line.photonEnergy)) " * Defaults.GBL_ENERGY_UNIT)
             newLine = PhotoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings) 
             push!( newLines, newLine)
-            # Additional printout for each line, if required ... due to collaboration with Kabachnik/Pfeiffer, June 2023
+            #== Additional printout for each line, if required ... due to collaboration with Kabachnik/Pfeiffer, June 2023
             if  true  && printSummary   PhotoIonization.displayResultsDetailed(stdout,   newLine, settings)     
-                                        PhotoIonization.displayResultsDetailed(iostream, newLine, settings)  end
+                                        PhotoIonization.displayResultsDetailed(iostream, newLine, settings)  end  ==#
         end
         # Print all results to screen
         PhotoIonization.displayResults(stdout, newLines, settings)
-        ## PhotoIonization.displayTimeDelay(stdout, newLines, settings)
-        if  printSummary   PhotoIonization.displayResults(iostream, newLines, settings)     end
+        PhotoIonization.displayTimeDelay(stdout, newLines, settings)
+        if  printSummary   PhotoIonization.displayResults(iostream, newLines, settings)     
+                           PhotoIonization.displayTimeDelay(iostream, newLines, settings)    end
         #
         if    output    return( newLines )
         else            return( nothing )
@@ -476,12 +477,13 @@ module PhotoIonization
         symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
         if  Basics.UseCoulomb  in  settings.gauges   gaugeM = Basics.UseCoulomb    else   gaugeM = Basics.UseBabushkin    end
         for  mp in settings.multipoles
-            for  gauge in settings.gauges
+            ### for  gauge in settings.gauges
                 symList = AngularMomentum.allowedMultipoleSymmetries(symi, mp)
                 ##x println("mp = $mp   symi = $symi   symList = $symList")
                 for  symt in symList
                     kappaList = AngularMomentum.allowedKappaSymmetries(symt, symf)
                     for  kappa in kappaList
+            for  gauge in settings.gauges
                         # Include further restrictions if appropriate
                         if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
                             push!(channels, PhotoIonization.Channel(mp, Basics.Coulomb,   kappa, symt, 0., Complex(0.)) )
@@ -963,35 +965,36 @@ module PhotoIonization
         ## meanTauxC = meanTauxC;   meanTauxB = meanTauxB   ==#
         #  
         # Calculate coherent amplitudes
-        amplitude1C = ComplexF64(0.);   amplitude2C = ComplexF64(0.)
-        amplitude1B = ComplexF64(0.);   amplitude2B = ComplexF64(0.)
-        for  ch = 1:length(lines[1].channels)
+        amplitude1C = ComplexF64(3.0e-6);   amplitude2C = ComplexF64(0.)
+        amplitude1B = ComplexF64(0.);       amplitude2B = ComplexF64(0.)
+        for  ch = 5:6 ## length(lines[1].channels)
             if      lines[1].channels[ch].gauge != lines[2].channels[ch].gauge   ||
                     lines[1].channels[ch].kappa != lines[2].channels[ch].kappa              error("stop f") 
             elseif  lines[1].channels[ch].gauge == Basics.Coulomb
                 ## if  abs( angle(lines[1].channels[ch].amplitude) )  < 1.45  &&  abs( angle(lines[1].channels[ch].kappa) )  != 3
-                if abs(lines[1].channels[ch].amplitude - lines[2].channels[ch].amplitude)  >  1.0e-4
-                    amplitude1C = amplitude1C + lines[1].channels[ch].amplitude
-                    amplitude2C = amplitude2C - lines[2].channels[ch].amplitude
-                else
+                ## if abs(lines[1].channels[ch].amplitude - lines[2].channels[ch].amplitude)  >  1.0e-4
+                ##     amplitude1C = amplitude1C + lines[1].channels[ch].amplitude
+                ##     amplitude2C = amplitude2C - lines[2].channels[ch].amplitude
+                ## else
                     amplitude1C = amplitude1C + lines[1].channels[ch].amplitude
                     amplitude2C = amplitude2C + lines[2].channels[ch].amplitude
-                end
+                ## end
             elseif  lines[1].channels[ch].gauge == Basics.Babushkin     
                 ## if  abs( angle(lines[1].channels[ch].amplitude) )  < 1.45  &&  abs( angle(lines[1].channels[ch].kappa) )  != 3
-                if abs(lines[1].channels[ch].amplitude - lines[2].channels[ch].amplitude)  >  1.0e-4
-                    amplitude1B = amplitude1B + lines[1].channels[ch].amplitude
-                    amplitude2B = amplitude2B - lines[2].channels[ch].amplitude
-                else
+                ## if abs(lines[1].channels[ch].amplitude - lines[2].channels[ch].amplitude)  >  1.0e-4
+                ##     amplitude1B = amplitude1B + lines[1].channels[ch].amplitude
+                ##     amplitude2B = amplitude2B - lines[2].channels[ch].amplitude
+                ## else
                     amplitude1B = amplitude1B + lines[1].channels[ch].amplitude
                     amplitude2B = amplitude2B + lines[2].channels[ch].amplitude
-                end
+                ## end
             else
             end
         end
         #
-        delta_deffC = angle(amplitude2C) - angle(amplitude1C);      meanTauyC = delta_deffC / deltaTau 
-        delta_deffB = angle(amplitude2B) - angle(amplitude1B);      meanTauyB = delta_deffB / deltaTau
+        @show amplitude2C, amplitude2B
+        delta_deffC = angle(amplitude2C) - angle(amplitude1C);      meanTauyC = abs(delta_deffC) / deltaTau / 300.
+        delta_deffB = angle(amplitude2B) - angle(amplitude1B);      meanTauyB = abs(delta_deffB) / deltaTau / 300.
         #
         symi = LevelSymmetry(lines[1].initialLevel.J, lines[1].initialLevel.parity)
         symf = LevelSymmetry(lines[1].finalLevel.J, lines[1].finalLevel.parity)

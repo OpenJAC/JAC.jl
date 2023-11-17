@@ -418,6 +418,8 @@
                               grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)
         if  printout    println("\n... in perform['computation: mutiplet from orbitals, no CI, CSF diagonal'] ...")    end
         
+        if  settings.eeInteractionCI == DiagonalCoulomb()   error("Not yet implemented.")   end
+        
         # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
         relconfList = ConfigurationR[]
         for  conf in configs

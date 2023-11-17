@@ -864,6 +864,9 @@ module Radial
         
             boxSize 
                 ... apply a fixed box size (in atomic units) as needed in an average-atom model and elsewhere.
+            boxSizeWithZeroWeights 
+                ... apply a fixed box size (in atomic units) as needed in an average-atom model and elsewhere.
+                    Here, a standard grid is used but with all weights w [r] = 0 for r > boxSize.
             maximumFreeElectronEnergy
                 ... provide a maximum free-electron energy (Hartree) and determine the linearized stepsize such,
                     that 20 points per wavelength are used asymptotically.
@@ -882,6 +885,7 @@ module Radial
         along with a short reasoning of what has been selected.
     """
     function generateGrid(grid::Radial.Grid; boxSize::Union{Nothing,Float64}=nothing, 
+                                             boxSizeWithZeroWeights::Union{Nothing,Float64}=nothing,
                                              maximumFreeElectronEnergy::Union{Nothing,Float64}=nothing, 
                                              maximumPrincipalQN::Union{Nothing,Int64}=nothing, 
                                              NoPointsInsideNucleus::Union{Nothing,Int64}=nothing, 
@@ -895,6 +899,28 @@ module Radial
                     "\n   tL = $(newGrid.tL)   \n   tS = $(newGrid.tS)"  *
                     "\n>> Note that the last grid point r[end] is always slightly smaller as it refers " *
                     "to the last GL (zero of) integration along r.")
+            #
+        elseif  typeof(boxSizeWithZeroWeights)         != Nothing
+            # Apply a fixed box size (in atomic units) as needed in an average-atom model and elsewhere.
+            # All (integration) weight are set to zero for r > boxSizeWithZeroWeights.
+            # First determine true boxsize
+            boxSize = 0.;   for  t in grid.tL  if  t < boxSizeWithZeroWeights   boxSize = t   end   end
+            println(">>  Generate a new grid with zero weights for boxSize = $boxSize a.u.; " * 
+                    "\n    modify the (grid) parameters of the given grid to bring boxSize closer to boxSizeWithZeroWeights.")
+            wr = Float64[];   R = 0.;   iR = 0    
+            for  (ir, r)  in  enumerate(grid.r)   
+                if  r > boxSize      push!(wr, 0.)
+                else                 push!(wr, grid.wr[ir]);   R = r;   iR = ir
+                end 
+            end
+            ## println(">>> wr = $wr   ... just to see the number of zero weights for the new grid. \n")
+            newGrid = Radial.Grid(grid.rnt, grid.h, grid.hp, grid.NoPoints, grid.tL, grid.tS, grid.ntL, grid.ntS, 
+                                  grid.orderL, grid.orderS, grid.nsL, grid.nsS, grid.orderGL, grid.meshType,
+                                  grid.r, grid.rp, grid.rpor, wr)
+            println(">> Generate a new grid with boxSize = $boxSize a.u. and with all weight grid.wr[j] = 0 " * 
+                    "for r_j > boxSizeWithZeroWeights (j > $iR)" *
+                    "\n>> Note that the last non-zero weight at R = $R grid point r[end] is always slightly smaller than " *
+                    "\n   boxSize = $boxSize as it refers to the last GL (zero of) integration point.")
             #
         elseif  typeof(maximumFreeElectronEnergy)      != Nothing
             wavenb      = sqrt( 2maximumFreeElectronEnergy + maximumFreeElectronEnergy * Defaults.getDefaults("alpha")^2 )

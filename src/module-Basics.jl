@@ -1512,16 +1512,18 @@ module Basics
     `abstract type Basics.AbstractEeInteraction` 
         ... defines an abstract and a number of singleton types for specifying the electron-electron interaction.
 
+        + struct DiagonalCoulomb      ... to represent the Coulomb part of the e-e interaction for just diagonal ME.        
         + struct CoulombInteraction   ... to represent the Coulomb part of the electron-electron interaction.        
         + struct BreitInteraction     ... to represent the Breit part of the electron-electron interaction.        
         + struct CoulombBreit         ... to represent the Coulomb+Breit part of the electron-electron interaction.        
     """
     abstract type  AbstractEeInteraction                          end
+    struct     DiagonalCoulomb      <:  AbstractEeInteraction     end
     struct     CoulombInteraction   <:  AbstractEeInteraction     end
     struct     BreitInteraction     <:  AbstractEeInteraction     end
     struct     CoulombBreit         <:  AbstractEeInteraction     end
     
-    export  AbstractEeInteraction, CoulombInteraction, BreitInteraction, CoulombBreit
+    export  AbstractEeInteraction, DiagonalCoulomb, CoulombInteraction, BreitInteraction, CoulombBreit
 
     
     #==
@@ -1567,8 +1569,8 @@ module Basics
         ... defines an abstract type to distinguish between different settings of atomic processes.
     """
     abstract type  AbstractProcessSettings                  end
+    struct   NoProcessSettings  <: AbstractProcessSettings  end
 
-    
     """
     `abstract type Basics.AbstractEmpiricalSettings` 
         ... defines an abstract type to distinguish between different settings of empirical processes/computations.

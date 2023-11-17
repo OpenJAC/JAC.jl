@@ -736,7 +736,7 @@
   
 
     """
-    `Basics.displayOrbitalProperties(stream::IO, orbitals::Dict{Subshell, Orbital}, chemMu::Float64, temp::Float64, 
+    `Basics.displayOrbitalProperties(stream::IO, orbitals::Dict{Subshell, Orbital}, chemMu::Float64, temp::Float64, radiusWR::Float64, 
                                      nm::Nuclear.Model, grid::Radial.Grid)`  
         ... displays the orbital properties:
         
@@ -745,17 +745,18 @@
             for all orbitals with occNo > 0.1 in descending order.
             A neat table is printed and nothing is returned otherwise.
     """
-    function Basics.displayOrbitalProperties(stream::IO, orbitals::Dict{Subshell, Orbital}, chemMu::Float64, temp::Float64, 
+    function Basics.displayOrbitalProperties(stream::IO, orbitals::Dict{Subshell, Orbital}, chemMu::Float64, temp::Float64, radiusWR::Float64, 
                                              nm::Nuclear.Model, grid::Radial.Grid)
         subshells = Subshell[];     ens  = Float64[];     rExps    = Float64[];     rInvs = Float64[];     
-        occNos    = Float64[];      fFDs = Float64[];     deltaEns = Float64[]
+        occNos    = Float64[];      fFDs = Float64[];     deltaEns = Float64[];     totalOcc = 0.
         # Prepare lists of the individual properties for later sorting and printing
         for  (k,v) in orbitals
-            fFD   = Basics.FermiDirac(v.energy, chemMu, temp)
-            occNo = (Basics.twice(Basics.subshell_j(k)) + 1) * fFD
-            rExp    = RadialIntegrals.rkDiagonal( 1, v, v, grid) 
-            rInv    = RadialIntegrals.rkDiagonal(-1, v, v, grid)
-            enDirac = HydrogenicIon.energy(k, nm.Z)
+            fFD      = Basics.FermiDirac(v.energy, chemMu, temp)
+            occNo    = (Basics.twice(Basics.subshell_j(k)) + 1) * fFD
+            rExp     = RadialIntegrals.rkDiagonal( 1, v, v, grid) 
+            rInv     = RadialIntegrals.rkDiagonal(-1, v, v, grid)
+            enDirac  = HydrogenicIon.energy(k, nm.Z)
+            totalOcc = totalOcc + occNo
             push!(subshells,  k);    push!(ens, v.energy);   push!(rExps, rExp);    push!(rInvs, rInv)     
             push!(occNos, occNo);    push!(fFDs, fFD);       push!(deltaEns, v.energy - enDirac)
         end
@@ -764,12 +765,12 @@
         nx = 99
         println(stream, " ")
         println(stream, "  Orbital properties ordered by occupation numbers for chemical potential" * 
-                        "  mu = $chemMu [Hartree] and temperature = $temp [Hartree]")
+                        "  mu = $chemMu [Hartree], \n  temperature = $temp [Hartree] and R^WS = $radiusWR [a_o]")
         println(stream, " ")
         println(stream, "  ", TableStrings.hLine(nx))
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(12, "Subshell"   ; na=0);                sb = sb * TableStrings.hBlank(12)
-        sa = sa * TableStrings.center(14, "Energy  "   ; na=0);                sb = sb * TableStrings.center(14, "[Hartree]"  ; na=0)
+        sa = sa * TableStrings.center(14, "Energy   "  ; na=0);                sb = sb * TableStrings.center(14, "[Hartree] " ; na=0)
         sa = sa * TableStrings.center(14, "Delta en"   ; na=0);                sb = sb * TableStrings.center(14, "[Hartree]"  ; na=0)
         sa = sa * TableStrings.center(16, "occupation No"    ; na=0);          sb = sb * TableStrings.hBlank(16)
         sa = sa * TableStrings.center(16, "f^FD (en, mu, T)" ; na=0);          sb = sb * TableStrings.hBlank(16)
@@ -786,6 +787,7 @@
             sa = sa * "  "   * @sprintf("%.4e", rInvs[p])    * "    "
             println(stream, sa)
         end
+        println(stream, "    total                                     " * @sprintf("%.4e", totalOcc))
         println(stream, "  ", TableStrings.hLine(nx))
         
         return ( nothing )

@@ -372,7 +372,7 @@ module PhotoEmission
                            PhotoEmission.displayLifetimes(iostream, newLines, settings)
         end
         #
-        if    output    return( lines )
+        if    output    return( newLines )
         else            return( nothing )
         end
     end

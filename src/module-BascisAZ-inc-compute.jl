@@ -104,6 +104,8 @@
         ##x print(">> performCI() ... ")
         for  r = 1:n
             for  s = 1:n
+                #
+                if  settings.eeInteractionCI == DiagonalCoulomb()  &&  r != s    continue    end
                 # Calculate the spin-angular coefficients
                 if  Defaults.saRatip()
                     waR = compute("angular coefficients: e-e, Ratip2013", basis.csfs[idx_csf[r]], basis.csfs[idx_csf[s]])
@@ -135,7 +137,7 @@
                 end
 
                 for  coeff in wa[2]
-                    if  settings.eeInteractionCI in [CoulombInteraction(), CoulombBreit()]
+                    if  settings.eeInteractionCI in [DiagonalCoulomb(), CoulombInteraction(), CoulombBreit()]
                         me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                      basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)
                     elseif  false
@@ -163,7 +165,7 @@
                                                                                       basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)
                     end
                 end
-                 matrix[r,s] = me
+                matrix[r,s] = me
             end
         end 
         if printout    println("   ... done.")    end
@@ -640,7 +642,7 @@
             and their occupation numbers in the atomic-average model; a potential::RadialPotential is returned. 
             Here, the atomic-average HS potential is defined by
                                                         
-                                          (2ja-1)                       3  [     3          ]^1/3      r
+                                          (2ja+1)                       3  [     3          ]^1/3      r
                 V_HS(r) = = - Sum_a  --------------------  Y0_aa(r)  +  -  [ ---------  rho ]       *  -
                                      [exp(eps-mu/kT) + 1]               2  [ 4pi^2 r^2      ]          2
 
@@ -652,7 +654,8 @@
         # Sum_a ...
         for (k,v)  in  orbitals 
             occa = Basics.twice( Basics.subshell_j(k)) + 1
-            occa = occa /  (exp( (v.energy - mu) /temp ) + 1) 
+            ##x occa = occa /  (exp( (v.energy - mu) /temp ) + 1) 
+            occa = occa * Basics.FermiDirac(v.energy, mu, temp)
             nrho = length(v.P);      rhoaa  = zeros(nrho)
             for  i = 1:nrho    rhoaa[i] = v.P[i]^2 + v.Q[i]^2    end
             for  i = 1:nrho    wx[i]    = wx[i]  - occa * RadialIntegrals.Yk_ab(0, grid.r[i], rhoaa, nrho, grid)   end
@@ -688,7 +691,8 @@
         # Compute the charge density with the average-atom occupation numbers
         for (k,v)  in  orbitals 
             occ  = Basics.twice( Basics.subshell_j(k)) + 1
-            occ  = occ /  (exp( (v.energy - mu) /temp ) + 1) 
+            ##x occ  = occ /  (exp( (v.energy - mu) /temp ) + 1) 
+            occ  = occ * Basics.FermiDirac(v.energy, mu, temp)
             nrho = length(v.P)
             for    i = 1:nrho   rhot[i] = rhot[i] + occ * (v.P[i]^2 + v.Q[i]^2)    end
         end
@@ -700,6 +704,7 @@
         end
         # Define the potential with regard to Z(r)
         for i = 2:npoints    wb[i] = - wb[i] * grid.r[i]   end;    wb[1] = 0.
+        ##x wb = 0.99 * wb
         #
         wc = JAC.Radial.Potential("average-atom DFS", wb, grid)
         return( wc )

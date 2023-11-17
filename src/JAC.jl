@@ -61,7 +61,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        CartesianVector, CiSettings, CiExpansion, CloseCoupling, compute, convertUnits, Cascade, Compton, Configuration, ConfigurationR, 
        Continuum, CsfR, Coulex, CoulombExcitation, Coulion, CoulombIonization, CoulombBreit, CoulombInteraction, ClebschGordan, 
        CorePolarization,
-       diagonalize, Defaults, DecayYield, Details, Dielectronic, Dierec, Djpq, DoubleAutoIonization, DoubleAuger,
+       diagonalize, Defaults, DecayYield, Details, Dielectronic, Dierec, Djpq, DoubleAutoIonization, DoubleAuger, DiagonalCoulomb,
        Eimex, ElectronCapture, ElecCapture, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate, ExpStokes, Empirical,
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, FullCIeigen,

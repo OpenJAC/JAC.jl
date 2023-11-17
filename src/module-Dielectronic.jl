@@ -577,6 +577,7 @@ module Dielectronic
             end
         end
         println("  ", TableStrings.hLine(nx))
+        println("\n>> A total of $(length(pathways)) dielectronic-recombination pathways will be calculated. \n")
         #
         return( nothing )
     end

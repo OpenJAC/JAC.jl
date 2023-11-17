@@ -53,6 +53,7 @@ module ManyElectronAZ
     function ManyElectron.matrixElement_Vee(kind::AbstractEeInteraction, leftBasis::Basis, r::Int64, rightBasis::Basis, s::Int64, grid::Radial.Grid)
         # Issue a warning if the amplitude is zero due to the given symmetries of the CSFs; this should be tested before
         me   = 0.
+        if  kind == DiagonalCoulomb()    return(me)     end
         symr = LevelSymmetry(leftBasis.csfs[r].J, leftBasis.csfs[r].parity)
         syms = LevelSymmetry(rightBasis.csfs[s].J, rightBasis.csfs[s].parity)
         if  symr != syms   @warn("Zero amplitude because of symmetries: $symr != $syms ");   return( me )    end
@@ -62,7 +63,7 @@ module ManyElectronAZ
         wa  = SpinAngular.computeCoefficients(opa, leftBasis.csfs[r], rightBasis.csfs[s], subshellList) 
         #
         for  coeff in wa
-            if   kind in [ CoulombInteraction(), CoulombBreit()]    
+            if   kind in [ DiagonalCoulomb(), CoulombInteraction(), CoulombBreit()]    
                 me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 
                                          leftBasis.orbitals[coeff.a],  leftBasis.orbitals[coeff.b],
                                         rightBasis.orbitals[coeff.c], rightBasis.orbitals[coeff.d], grid)   end

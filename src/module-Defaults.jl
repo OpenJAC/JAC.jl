@@ -209,7 +209,7 @@ module Defaults
         elseif   sa in ["cross section: from barn to atomic unit"]          return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN )
 
         elseif   sa in ["density: from [g/cm^3] to atomic"]                 wg = ELECTRON_MASS_U / ELECTRON_MASS_IN_G
-            wcm = 1 / (100 * BOHR_RADIUS_SI);                               return( wg / wcm^3 )  # 
+            wcm = 1 / (100 * BOHR_RADIUS_SI);                               return( wa * wg / wcm^3 )  # 
 
         elseif   sa in ["Einstein B: from atomic"]                          return( wa )  # Einstein B not yet properly converted.
         

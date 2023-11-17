@@ -6,7 +6,8 @@
 """
 module Plasma
 
-    using ..Basics, ..Bsplines, ..Defaults, ..Radial, ..ManyElectron, ..Nuclear
+    using Printf, ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals, 
+          ..TableStrings
     using ..FormFactor, ..PhotoEmission, ..PhotoIonization, ..AutoIonization
 
     
@@ -24,14 +25,26 @@ module Plasma
     `struct  Plasma.AverageAtomScheme  <:  Plasma.AbstractPlasmaScheme`  
         ... a struct to perform an average-atom computation.
 
-        + nMax          ::Int64            ... maximum principal quantum number for the subshells of the AA model.
-        + lMax          ::Int64            ... maximum orbital quantum number for the subshells of the AA model.
-        + scField       ::AbstractScField  ... maximum orbital quantum number for the subshells of the AA model.
+        + nMax                  ::Int64                ... maximum principal quantum number for the subshells of the AA model.
+        + lMax                  ::Int64                ... maximum orbital quantum number for the subshells of the AA model.
+        + scField               ::AbstractScField      ... maximum orbital quantum number for the subshells of the AA model.
+        + calcPhotoionizationCs ::Bool                 ... True, if photoionization cross sections are to be calculated.
+        + calcFormFactor        ::Bool                 ... True, if the form factor need to be calculated.
+        + calcScatteringFactor  ::Bool                 ... True, if scattering factor need to be calculated.
+        + piSubshells           ::Array{Subshell,1}    ... Bound subshells to be included into the photoionization cross sections.
+        + omegas                ::Array{Float64,1}     ... energies for the photoionization & scattering factors [in a.u.].
+        + qValues               ::Array{Float64,1}     ... q-values for calculating the form factor [in a.u.].
     """
     struct   AverageAtomScheme  <:  Plasma.AbstractPlasmaScheme
-        nMax            ::Int64
-        lMax            ::Int64
-        scField         ::AbstractScField
+        nMax                    ::Int64
+        lMax                    ::Int64
+        scField                 ::AbstractScField
+        calcPhotoionizationCs   ::Bool          
+        calcFormFactor          ::Bool             
+        calcScatteringFactor    ::Bool              
+        piSubshells             ::Array{Subshell,1} 
+        omegas                  ::Array{Float64,1} 
+        qValues                 ::Array{Float64,1} 
     end  
 
 
@@ -39,7 +52,7 @@ module Plasma
     `Plasma.AverageAtomScheme()`  ... constructor for an 'default' instance of a Plasma.AverageAtomScheme.
     """
     function AverageAtomScheme()
-        AverageAtomScheme( 1, 0, Basics.AaHSField() )
+        AverageAtomScheme( 1, 0, Basics.AaHSField(), false, false, false, Subshell[], Float64[], Float64[] )
     end
 
 
@@ -53,10 +66,16 @@ module Plasma
     # `Base.show(io::IO, scheme::AverageAtomScheme)`  ... prepares a proper printout of the scheme::AverageAtomScheme.
     function Base.show(io::IO, scheme::AverageAtomScheme)
         sa = Base.string(scheme);                print(io, sa)
-        println(io, "\nscField:                    $(scheme.scField)  ")
+        println(io, "\nscField:                  $(scheme.scField)  ")
+        println(io, "calcPhotoionizationCs:      $(scheme.calcPhotoionizationCs)  ")
+        println(io, "calcFormFactor:             $(scheme.calcFormFactor)  ")
+        println(io, "calcScatteringFactor:       $(scheme.calcScatteringFactor)  ")
+        println(io, "piSubshells:                $(scheme.piSubshells)  ")
+        println(io, "omegas:                     $(scheme.scField)  ")
+        println(io, "qValues:                    $(scheme.qValues)  ")
     end
-    
 
+    
     """
     `struct  Plasma.Settings`  ... defines a type for the details and parameters of computing photoionization lines.
 
@@ -138,7 +157,7 @@ module Plasma
     """
     function Computation()
         Computation(AverageAtomScheme(), Nuclear.Model(1.), Radial.Grid(), Configuration[], AsfSettings(), Multiplet(), Multiplet(), 
-                    PhotoEmission.Settings(), Plasma.Settings() )
+                    Basics.NoProcessSettings(), Plasma.Settings() )
     end
 
     
@@ -284,6 +303,35 @@ module Plasma
         Defaults.warn(ResetWarnings())
         return( results )
     end  ==#
+
+    
+    """
+    `struct  Plasma.PartialWaveData`  
+        ... defines a type to collect for partial-waves (kappa) cross sections, rates, etc. at different energies
+
+        + kappa    ::Int64                            ... kappa
+        + pairs    ::Vector{Tuple{Float64, Float64}}  
+            ... vector of pairs, for instance (energy, cs), to later combine data in a proper manner.
+    """
+    struct PartialWaveData 
+        kappa     ::Int64      
+        pairs     ::Vector{Tuple{Float64, Float64}}  
+    end 
+
+
+    """
+    `Plasma.PartialWaveData()`  ... constructor for the default values of Plasma.PartialWaveData set
+    """
+    function PartialWaveData()
+        PartialWaveData( -1, Tuple{Float64, Float64}[] )
+    end
+
+
+    # `Base.show(io::IO, data::Plasma.PartialWaveData)`  ... prepares a proper printout of the variable settings::Plasma.PartialWaveData.
+    function Base.show(io::IO, data::Plasma.PartialWaveData) 
+        println(io, "kappa:          $(data.kappa)  ")
+        println(io, "pairs:          $(data.pairs)  ")
+    end
 
    
     
