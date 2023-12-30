@@ -6,7 +6,7 @@
 """
 module Continuum
 
-    using  GSL, Printf, SpecialFunctions
+    using  GSL, Printf, SpecialFunctions, DelimitedFiles
     using  ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear
 
 
@@ -62,8 +62,18 @@ module Continuum
             cOrbital, phase = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
         elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussekNorm()
             cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
+        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  AlokNorm()
+            cOrbital, phase = Continuum.normalizeOrbitalAlok(cOrbital, pot, settings)
         else    error("stop b")
         end
+
+        #=open("continuum.txt","w") do file
+            write(file,"energy $energy , n $(sh.n), kappa $(sh.kappa), phase $phase ")
+            write(file,"potential")
+            writedlm(file, pot.Zr)
+            write(file,"radial grid")
+            writedlm(file, pot.grid.r)
+        end=#
         
         return( cOrbital, phase )
     end
@@ -415,5 +425,170 @@ module Continuum
 
         return( newOrbital, phi, normF )
     end
+
+
+    """
+    `Continuum.normalizeOrbitalAlok(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)`   
+        ... to normalize the given continuum orbital with regard to a (asymptotic) wave function as per Salvat Code. 
+            The orbitasl are normalized to unit amplitude.
+            An ( orbital::Orbital, (δ + Δ)::Float64, N::Float64 ) is returned.
+    """
+    function normalizeOrbitalAlok(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)
+        mtp = size( cOrbital.P, 1)  ;             energy = cOrbital.energy;      
+        kappa = cOrbital.subshell.kappa  ;        l = Basics.subshell_l(cOrbital.subshell) 
+        Zbar = -Radial.determineZbar(pot)  ; 
+        α = Defaults.getDefaults("alpha")  ;      wc = 1/α
+        q  = sqrt( energy * (energy + 2 * wc^2) ) / wc  ;    x  = q * pot.grid.r[mtp]
+
+        if abs(Zbar) > 0.1
+            println("Normalization with Coulomb functions")
+            λ  = sqrt(kappa^2 - Zbar^2 / wc^2)  ; λm1 = λ - 1.0
+            η  = Zbar * α * (energy + wc^2) / sqrt( energy * (energy + 2 * wc^2) ) 
+        
+            xTP = η + sqrt(η^2 + λ*(λ+1.0))
+            if x < xTP println("the kr is less than the Coulomb turning point") end
+        
+            Δ = angle(SpecialFunctions.gamma(λm1 + 1 + im * η))
+            if Δ >= 0.0 Δ = mod(Δ, 2pi) else Δ = -mod(-Δ, 2pi) end
+
+        
+            θ  = x - λm1*pi/2 - η*log(2x) + Δ                               #Eq 7.3
+            if θ > 1e4   θ = mod(θ, 2pi) end
+        
+            hgfλ = twoFzero(im*η - λm1, im*η + λm1 + 1, im*2*x)
+            hgfλm1 = twoFzero(im*η - λm1 + 1, im*η + λm1 + 2, im*2*x)
+            hgfλm1 = im * hgfλm1 * (im*η - λm1) * (im*η + λm1 + 1) / ( 2.0 * x^2 )
+        
+            GiFλm1 = hgfλ * exp(im*θ)  ;   GPiFPλm1 = ( hgfλm1 + im *(1.0 - η/x) * hgfλ ) * exp(im*θ)
+            gm_1 = GiFλm1.re ; fm_1 = GiFλm1.im   ;   gpm_1 = GPiFPλm1.re ; fpm_1 = GPiFPλm1.im
+        
+            f = λ * ((λ/x + η/λ)*fm_1 - fpm_1) / sqrt(λ^2 + η^2)
+            g = λ * ((λ/x + η/λ)*gm_1 - gpm_1) / sqrt(λ^2 + η^2)
+        
+            N  =  ( α^2 * Zbar^2 * (energy + 2 * wc^2)^2 + (kappa + λ)^2 * wc^2 * q^2 )^(-0.5) / λ
+            if Zbar < 0.0 N = -N end
+        
+            fu = N * ( (kappa + λ) * sqrt(λ^2 + η^2) * wc * q * f + α * Zbar * (λ * wc^2 - kappa * (energy + wc^2)) * fm_1 )
+            gu = N * ( (kappa + λ) * sqrt(λ^2 + η^2) * wc * q * g + α * Zbar * (λ * wc^2 - kappa * (energy + wc^2)) * gm_1 )
+        
+            fl = -N * ( α * Zbar * sqrt(λ^2 + η^2) * wc * q * f + (kappa + λ) * (λ * wc^2 - kappa * (energy + wc^2)) * fm_1 )
+            gl = -N * ( α * Zbar * sqrt(λ^2 + η^2) * wc * q * g + (kappa + λ) * (λ * wc^2 - kappa * (energy + wc^2)) * gm_1 )
+        
+            fup = -kappa * fu / pot.grid.r[mtp] + fl * (energy + pot.Zr[mtp]/pot.grid.r[mtp] + 2.0 * wc^2 ) / wc
+            gup = -kappa * gu / pot.grid.r[mtp] + gl * (energy + pot.Zr[mtp]/pot.grid.r[mtp] + 2.0 * wc^2 ) / wc
+        else
+            
+            println("Normalization with Bessel functions")
+
+            if kappa < 0 ksign = 1 else ksign = -1 end
+
+            fu =  x * SpecialFunctions.sphericalbesselj(l, x)
+            gu = -x * SpecialFunctions.sphericalbessely(l, x)
+            fl = -sqrt(energy / ( energy + 2*wc^2 )) * ksign * x * SpecialFunctions.sphericalbesselj(l + ksign, x)
+            gl =  sqrt(energy / ( energy + 2*wc^2 )) * ksign * x * SpecialFunctions.sphericalbessely(l + ksign, x)
+
+            Δ = 0.0
+        end
+
+        fup = -kappa * fu / pot.grid.r[mtp] + fl * (energy + pot.Zr[mtp]/pot.grid.r[mtp] + 2.0 * wc^2 ) / wc
+        gup = -kappa * gu / pot.grid.r[mtp] + gl * (energy + pot.Zr[mtp]/pot.grid.r[mtp] + 2.0 * wc^2 ) / wc
+    
+        P = cOrbital.P[mtp]    ;   Pprime = cOrbital.Pprime[mtp]
+
+        δ = angle((P*gup - Pprime*gu) + im*(Pprime*fu - P*fup))
+        if  ( abs(δ) > pi/2 )   δ = δ * ( 1.0 - pi/abs(δ))     end
+
+        if  ( abs(P) > 1e-10 )  N = ( cos(δ) * fu + sin(δ) * gu ) / P else N = ( cos(δ) * fup + sin(δ) * gup ) / Pprime    end
+
+    
+        P = N .* cOrbital.P  ;   Q = N .* cOrbital.Q  ;   Pprime = N .* cOrbital.Pprime  ;   Qprime = N .* cOrbital.Qprime  ;   
+        newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
+                              P, Q, Pprime, Qprime, cOrbital.grid)
+
+        println("iPhase = ", δ, " cPhase= ", Δ)
+
+        return( newOrbital, δ + Δ, N )
+    end
+
+
+    """
+    `function twoFzero(CA::ComplexF64, CB::ComplexF64, CZ::ComplexF64)`
+        ... Calculates the Hypergeometric function 2F0(CA,CB;1/CZ) hypergeometric asymptotic series.
+            Taken from Radial package by Salvat et al.
+            A ComplexF64 value is returned.  
+    """
+    function twoFzero(CA::ComplexF64, CB::ComplexF64, CZ::ComplexF64)
+
+        EPS=1.0E-16; ACCUR=0.5E-15; NTERM=75
+
+        RRP=1.0
+        RRN=0.0
+        RIP=0.0
+        RIN=0.0
+        CDF=1.0 + 0.0im
+        ERR2=0.0
+        ERR3=1.0
+        AR=0.0
+        AF=0.0
+        CF=0.0 + 0.0im
+
+        for I = 1 : NTERM
+            J=I-1
+            CDF=CDF*(CA+J)*(CB+J)/(I*CZ)
+            ERR1=ERR2
+            ERR2=ERR3
+            ERR3=abs(CDF)
+            if (ERR1 > ERR2 && ERR2 < ERR3) break end
+            AR=CDF.re
+            if(AR > 0.0) 
+            RRP=RRP+AR
+            else
+            RRN=RRN+AR
+            end
+            AI=(-im*CDF).re
+            if(AI > 0.0) 
+            RIP=RIP+AI
+            else
+            RIN=RIN+AI
+            end
+            CF=complex(RRP+RRN,RIP+RIN)
+            AF=abs(CF)
+            if(AF > 1.0e25) 
+            CF=0.0 + 0im
+            ERR=1.0
+            break
+            end
+            if(ERR3 < 1.0e-25*AF || ERR3 < EPS) 
+            ERR=EPS
+            break
+            end    
+        end
+
+        # ****  Round off error.
+
+        TR=abs(RRP+RRN)
+        if(TR > 1.0e-25) 
+        ERRR=(RRP-RRN)*ACCUR/TR
+        else
+        ERRR=1.0e0
+        end
+        TI=abs(RIP+RIN)
+        if(TI > 1.0e-25) 
+        ERRI=(RIP-RIN)*ACCUR/TI
+        else
+        ERRI=1.0
+        end
+
+        #  ****  ... and truncation error.
+        if(AF > 1.0e-25) 
+        ERR=max(ERRR,ERRI)+ERR2/AF
+        else
+        ERR=max(ERRR,ERRI)
+        end
+
+        return CF
+
+    end
+
 
 end # module

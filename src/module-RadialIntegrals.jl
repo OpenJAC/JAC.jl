@@ -263,7 +263,7 @@ module  RadialIntegrals
                 wd = - alphaZ * (b.subshell.kappa - 1) * (a.Q[i] * b.P[i]  +  b.Q[i] * a.P[i]) / (grid.r[i]^2)
                 wa = wa + (wb + wc + wd) * grid.wr[i]   
             end
-            return( wa )
+            return( wa / 2. )
         else
             error("stop b")
         end

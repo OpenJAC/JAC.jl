@@ -179,7 +179,24 @@ module TableStrings
         sa = "";   wa = String[]
         for k in kappaList
            sh = Subshell(9, k[1])
-           sa = sa * string(sh)[2:end] * " (" * string(k[2]) * ", " * string(k[3])[1:3] * "; " * string(k[4])* "),  "
+           sa = sa * string(sh)[2:end] * " (" * string(k[2]) * ", " * string(k[3])[1:3] * "; " * string(k[4]) * "),  "
+           if  length(sa) + 15 > n    push!(wa, sa[1:end-3]);    sa = ""    end
+        end
+        if  sa != ""    push!(wa, sa[1:end-3])    end
+        return( wa )
+    end
+
+
+    """
+    `TableStrings.kappaMultipoleSymmetryPhaseTupels(n::Int64, kappaList::Array{Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry,Float64},1})` 
+        ... a list of Strings with maximal length n is returned; each string in this list comprises a number of 
+            'shell (multipole, gauge, symmetry, phase)' descriptors.
+    """
+    function  kappaMultipoleSymmetryPhaseTupels(n::Int64, kappaList::Array{Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry,Float64},1})
+        sa = "";   wa = String[]
+        for k in kappaList
+           sh = Subshell(9, k[1])
+           sa = sa * string(sh)[2:end] * " (" * string(k[2]) * ", " * string(k[3])[1:3] * "; " * string(k[4]) * "; " * @sprintf("%.4e", k[5]) * "),  "
            if  length(sa) + 15 > n    push!(wa, sa[1:end-3]);    sa = ""    end
         end
         if  sa != ""    push!(wa, sa[1:end-3])    end

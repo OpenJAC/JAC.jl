@@ -6,8 +6,56 @@
 """
 module Dielectronic
 
-    using Printf, ..AngularMomentum, ..AutoIonization, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, 
-                  ..PhotoEmission, ..Radial, ..TableStrings
+    using Printf, SpecialFunctions,
+          ..AngularMomentum, ..AutoIonization, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, 
+          ..PhotoEmission, ..Radial, ..TableStrings
+
+    
+    """
+    `abstract type Dielectronic.AbstractCorrections` 
+        ... defines an abstract type to distinguish different types of corrections to the decay rates and strength; see also:
+        
+        + struct Dielectronic.NoCorrections  
+            ... don't apply any additional correction to the resonance strengths.
+        + struct Dielectronic.HydrogenicCorrections  
+            ... to add for missing final decay levels the photon decay rates for non-relativistic hydrogenic ions;
+                this improves the total photon rate as well as the resonance strength.
+
+    """
+    abstract type  AbstractCorrections       end
+
+    
+    """
+    `struct  Dielectronic.NoCorrections          <:  Dielectronic.AbstractCorrections`  
+        ... don't apply any additional correction to the resonance strengths.
+    """
+    struct   NoCorrections                       <:  Dielectronic.AbstractCorrections   end
+    
+    
+    """
+    `struct  Dielectronic.HydrogenicCorrections  <:  Dielectronic.AbstractCorrections`  
+        ... to add for missing final decay levels the photon decay rates for non-relativistic hydrogenic ions;
+            this improves the total photon rate as well as the resonance strength.
+
+        + n0              ::Int64   
+            ... principal quantum number n < n0, for which hydrogenic photon rates are taken into account.             
+        + effectiveZ      ::Float64      ... effective charge Z_eff for the hydrogenic correction.
+        + energyScaling   ::Float64      ... scaling factor to modify the non-relativistic energies.
+    """
+    struct   HydrogenicCorrections               <:  Dielectronic.AbstractCorrections
+        n0                ::Int64   
+        effectiveZ        ::Float64
+        energyScaling     ::Float64
+    end
+
+
+    # `Base.show(io::IO, corr::HydrogenicCorrections)`  ... prepares a proper printout of the corr::HydrogenicCorrections.
+    function Base.show(io::IO, corr::HydrogenicCorrections)
+        println(io, "n0:              $(corr.n0)  ")
+        println(io, "effectiveZ:      $(corr.effectiveZ)  ")
+        println(io, "energyScaling:   $(corr.energyScaling)  ")
+    end     
+    
 
     """
     `struct  Dielectronic.Settings  <:  AbstractProcessSettings`  
@@ -26,10 +74,14 @@ module Dielectronic
                                                            the resonance to the final levels.
         + mimimumPhotonEnergy   ::Float64              ... minimum transition energy for which photon transitions are 
                                                            included into the evaluation.
-        + temperatures          ::Array{Float64,1}
+        + temperatures          ::Array{Float64,1}     
+            ... list of temperatures for which plasma rate coefficients are displayed; however, these rate coefficients
+                only include the contributions from those pathsways that are calculated here explicitly.
+        + corrections           ::Dielectronic.AbstractCorrections
+            ... Specify, if appropriate, the inclusion of additional corrections to the rates and DR strengths.
         + augerOperator         ::AbstractEeInteraction 
-          ... Auger operator that is to be used for evaluating the Auger amplitude's; the allowed values are: 
-              CoulombInteraction(), BreitInteration(), CoulombBreit().
+            ... Auger operator that is to be used for evaluating the Auger amplitude's; the allowed values are: 
+                CoulombInteraction(), BreitInteration(), CoulombBreit().
     """
     struct Settings  <:  AbstractProcessSettings 
         multipoles              ::Array{EmMultipole,1}
@@ -41,6 +93,7 @@ module Dielectronic
         photonEnergyShift       ::Float64
         mimimumPhotonEnergy     ::Float64
         temperatures            ::Array{Float64,1}
+        corrections             ::Dielectronic.AbstractCorrections
         augerOperator           ::AbstractEeInteraction
     end 
 
@@ -50,7 +103,8 @@ module Dielectronic
         ... constructor for the default values of dielectronic recombination pathway computations.
     """
     function Settings()
-        Settings([E1], UseGauge[], false, false, PathwaySelection(), 0., 0., 0., Float64[], CoulombInteraction())
+        Settings([E1], UseGauge[], false, false, PathwaySelection(), 0., 0., 0., Float64[], Dielectronic.NoCorrections(),
+                 CoulombInteraction())
     end
 
 
@@ -59,7 +113,7 @@ module Dielectronic
     
             multipoles=..,           gauges=..,                  calcRateAlpha=..,           printBefore=..,
             pathwaySelection=..,     electronEnergyShift=..,     photonEnergyShift=..,       mimimumPhotonEnergy=..,     
-            temperatures=..,         augerOperator=..)
+            temperatures=..,         corrections=..,             augerOperator=..)
                         
         ... constructor for modifying the given Dielectronic.Settings by 'overwriting' the previously selected parameters.
     """
@@ -68,7 +122,8 @@ module Dielectronic
         calcRateAlpha::Union{Nothing,Bool}=nothing,                                     printBefore::Union{Nothing,Bool}=nothing, 
         pathwaySelection::Union{Nothing,PathwaySelection}=nothing,                      electronEnergyShift::Union{Nothing,Float64}=nothing,
         photonEnergyShift::Union{Nothing,Float64}=nothing,                              mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,
-        temperatures::Union{Nothing,Array{Float64,1}}=nothing,           augerOperator::Union{Nothing,AbstractEeInteraction}=nothing)
+        temperatures::Union{Nothing,Array{Float64,1}}=nothing,                          corrections::Union{Nothing,AbstractCorrections}=nothing,
+        augerOperator::Union{Nothing,AbstractEeInteraction}=nothing)
         
         if  multipoles          == nothing   multipolesx          = set.multipoles            else  multipolesx          = multipoles           end 
         if  gauges              == nothing   gaugesx              = set.gauges                else  gaugesx              = gauges               end 
@@ -79,10 +134,11 @@ module Dielectronic
         if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift     else  photonEnergyShiftx   = photonEnergyShift    end 
         if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy   else  mimimumPhotonEnergyx = mimimumPhotonEnergy  end 
         if  temperatures        == nothing   temperaturesx        = set.temperatures          else  temperaturesx        = temperatures         end 
+        if  corrections         == nothing   correctionsx         = set.corrections           else  correctionsx         = corrections          end 
         if  augerOperator       == nothing   augerOperatorx       = set.augerOperator         else  augerOperatorx       = augerOperator        end 
 
         Settings( multipolesx, gaugesx, calcRateAlphax, printBeforex, pathwaySelectionx, electronEnergyShiftx, 
-                  photonEnergyShiftx, mimimumPhotonEnergyx, temperaturesx, augerOperatorx )
+                  photonEnergyShiftx, mimimumPhotonEnergyx, temperaturesx, correctionx, augerOperatorx )
     end
 
 
@@ -97,6 +153,7 @@ module Dielectronic
         println(io, "photonEnergyShift:          $(settings.photonEnergyShift)  ")
         println(io, "mimimumPhotonEnergy:        $(settings.mimimumPhotonEnergy)  ")
         println(io, "temperatures:               $(settings.temperatures)  ")
+        println(io, "corrections:                $(settings.corrections)  ")
         println(io, "augerOperator:              $(settings.augerOperator)  ")
     end
 
@@ -451,12 +508,102 @@ module Dielectronic
             for  (idx, idxxTuple)  in  enumerate(idxTuples)
                 if idxTuple[2] == idxxTuple[2]   augerRate = captureRates[idx]   end
             end
+            # Correct the photon rate if requested
+            if  typeof(settings.corrections) == Dielectronic.HydrogenicCorrections
+                println(">>> Add hydrogenic corrections from n0 = $(settings.corrections.n0) upwards")
+                n0            = settings.corrections.n0
+                Zeff          = settings.corrections.effectiveZ
+                # Determine ni, li for the given resonance
+                rydbergSubshs = Basics.extractRydbergSubshellList(nLevel, n0, 1.0e-1)
+                rydbergShells = Basics.extractNonrelativisticShellList(rydbergSubshs)
+                if  length(rydbergShells) == 1  rShell = rydbergShells[1];   ni = rShell.n;   li = rShell.l
+                else   error("Inappropriate number of Rydberg shells = $rydbergShells ")
+                end
+                # Compute and add hydrogenic rates A(ni,li --> n0 <= n = ni-1, li +- 1)
+                hydrogenicRate = 0.
+                for  nf = n0:ni-1
+                    hydrogenicRate = hydrogenicRate + computeHydrogenicRate(ni, li, nf, li-1, Zeff) + 
+                                                      computeHydrogenicRate(ni, li, nf, li+1, Zeff)
+                end
+                photonRate = photonRate + hydrogenicRate * settings.corrections.energyScaling
+                println(">>> Total photon rate & total hydrogenic rate for A($ni, $li;  -> ...) = $photonRate, " * 
+                        "$(hydrogenicRate * settings.corrections.energyScaling)")
+
+            end
             
             resonanceStrength = reducedStrength / (augerRate + photonRate)
             push!( resonances, Dielectronic.Resonance( iLevel, nLevel, resonanceEnergy, resonanceStrength, captureRate, augerRate, photonRate) )
         end
         
         return( resonances )
+    end
+    
+    
+    """
+    `Dielectronic.computeHydrogenicRate(ni::Int64, li::Int64, nf::Int64, lf::Int64,  Zeff::Float64)`
+        ... to compute the nonrelativistic electric-dipole rate for the transition from shell ni,li --> nf,lf of a
+            hydrogenic ion with effective charge Zeff. The recursion formulas by Infeld an Hull (1951) are used
+            together with the absorption oscillator strength. This makes the overall formulation/computation rather
+            obscure, unfortunately. Uses SpecialFunctions.logfactioial. A rate::Float64 [a.u.] is returned.
+            This procedure has been worked out by Stefan Schippers (2023).
+    """
+    function  computeHydrogenicRate(ni::Int64, li::Int64, nf::Int64, lf::Int64,  Zeff::Float64)
+        # Compute A(n,l) coeffient in the recursion formulas
+        function computeA(n::Int64, l::Int64)
+            A = 0.0
+            if n>l  &&  n*l > 0     A = sqrt( (n+l) * (n-l)) / (n*l)     end
+            return ( A )
+        end
+        # Compute I(n,l; n',l') integral in the recursion formulas
+        function computeI(n::Int64, l::Int64, np::Int64, lp::Int64)
+            wi = 0.0
+            #@show wi, n,l,np,lp
+            if       l>=n  ||  l<0  || lp>n  ||  lp>=np  ||  lp<0  || abs(l-lp)!=1    wi = 0.0
+            elseif   l == lp-1
+                if  lp == n
+                    wi = (n+2)*log(4*n*np)+(np-n-2)*log(np-n)-(np+n+2)*log(np+n) + 
+                         0.5 * ( SpecialFunctions.logfactorial(np+n) - SpecialFunctions.logfactorial(np-n-1) -
+                                 SpecialFunctions.logfactorial(2*n-1) )
+                    wi = 0.25* exp(wi)
+                else
+                    wi = (2*lp+1)   * computeA(np, lp+1) * computeI(n,lp, np,lp+1) + computeA(n, lp+1) * computeI(n,lp+1, np,lp)
+                    wi = wi / (2*lp * computeA(n, lp))
+                end
+            elseif   l == lp+1
+                wi = computeA(np, l+1) * computeI(n,l, np,l+1) + (2*l+1) * computeA(n, l+1) * computeI(n,l+1, np,l)
+                wi = wi / (2*l * computeA(np, l))
+            else
+                error("Unexpected set of quantum number n=$n l=$l  np=$np  lp=$lp ")
+            end
+            return ( wi )
+        end
+        # Compute absorption oscillator strength
+        function computeOsc(n::Int64, l::Int64, np::Int64, lp::Int64)
+            # This oscillator strength is used in absorption
+            wx = 0.0
+            #@show wx, n, l, np, lp
+            if       l == lp+1   wx = (1/n^2 - 1/np^2) * (lp+1) / (2*(lp+1) +1) * computeI(n,lp+1, np,lp)^2
+            elseif   l == lp-1   wx = (1/n^2 - 1/np^2) *  lp    / (2*(lp-1) +1) * computeI(n,lp-1, np,lp)^2
+            else     error("stop a")
+            end
+            return( wx / 3.0 )
+        end
+        #
+        rate = 0.0;
+        if  abs(li-lf)!=1  ||  ni <= nf  ||  li >= ni  ||  li<0  ||  lf >= nf  ||  lf<0   return( rate )   
+        elseif  nf > 40    error("Don't use a recursive scheme ... but make a new implementation for ni = $ni ")
+        end
+        #
+        if      lf == (li + 1)     rate = (2*(li+1) + 1) / (2*li+1) * computeOsc(nf, li+1, ni, li)
+        elseif  lf == (li - 1)     rate = (2*(li-1) + 1) / (2*li+1) * computeOsc(nf, li-1, ni, li)
+        else    error("stop b")
+        end
+        ##x alpha = 137.036
+        ##x rate = rate * Zeff^4 / (2.0*alpha^3) * (1/nf^2 - 1/ni^2)^2
+        rate = rate * Zeff^4 / 2.0 * Defaults.getDefaults("alpha")^3 * (1/nf^2 - 1/ni^2)^2
+        ## println(">>>> Hydrogenic rate for A($ni, $li;  -> $nf, $lf) = $rate")
+
+        return( rate )
     end
 
 

@@ -6,7 +6,9 @@
 module ImpactExcitation 
 
     using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, 
-                  ..Nuclear, ..Radial, ..SpinAngular, ..TableStrings
+                  ..Nuclear, ..Radial, ..SpinAngular, ..TableStrings, ..RadialIntegrals, ..Radial, ..PhotoEmission,
+                  DelimitedFiles, Dates, Plots, GSL
+                  
 
     """
     `struct  ImpactExcitationSettings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing electron-impact excitation lines.
@@ -99,6 +101,7 @@ module ImpactExcitation
         + crossSection           ::Float64       ... total cross section of this line
         + collisionStrength      ::Float64       ... total collision strength of this line
         + channels               ::Array{ImpactExcitation.Channel,1}  ... List of ImpactExcitation channels of this line.
+        + isConverged            ::Bool          ... convergence of calculation
     """
     struct  Line
         initialLevel             ::Level
@@ -108,6 +111,7 @@ module ImpactExcitation
         crossSection             ::Float64 
         collisionStrength        ::Float64 
         channels                 ::Array{ImpactExcitation.Channel,1}
+        isConverged              ::Bool
     end 
 
 
@@ -115,7 +119,7 @@ module ImpactExcitation
     `ImpactExcitation.Line()`  ... 'empty' constructor for an electron-impact excitation line between a specified initial and final level.
     """
     function Line()
-        Line(Level(), Level(), 0., 0., 0., 0., ImpactExcitation.Channel[] )
+        Line(Level(), Level(), 0., 0., 0., 0., ImpactExcitation.Channel[], false )
     end
 
 
@@ -124,7 +128,7 @@ module ImpactExcitation
         ... constructor for an electron-impact excitation line between a specified initial and final level.
     """
     function Line(initialLevel::Level, finalLevel::Level, crossSection::Float64)
-        Line(initialLevel, finalLevel, 0., 0., crossSection, 0., ImpactExcitation.Channel[] )
+        Line(initialLevel, finalLevel, 0., 0., crossSection, 0., ImpactExcitation.Channel[], false )
     end
 
 
@@ -155,7 +159,7 @@ module ImpactExcitation
         if  printout  printstyled("Compute ($kind) e-e matrix of dimension $nf x $ni in the final- and initial-state (continuum) bases " *
                                   "for the transition [$(cInitialLevel.index)- ...] " * 
                                   "and for partial waves $(string(fPartial)[2:end]),  $(string(iPartial)[2:end])... ", color=:light_green)    end
-        matrix = zeros(ComplexF64, nf, ni)
+        matrix = zeros(Float64, nf, ni)
         #
         ##x @show cInitialLevel.basis.subshells
         ##x @show cFinalLevel.basis.subshells
@@ -171,13 +175,18 @@ module ImpactExcitation
         #--------------------------------------------------------------------------
             for  r = 1:nf
                 for  s = 1:ni
+                    #if ( fLevel.mc[r] == 0.0 && iLevel.mc[s] == 0.0 ) continue end
                     if  iLevel.basis.csfs[s].J != iLevel.J  ||  iLevel.basis.csfs[s].parity != iLevel.parity      continue    end 
                     subshellList = fLevel.basis.subshells
-                    opa  = SpinAngular.TwoParticleOperator(0, plus, true)
-                    wa   = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList)
+                    op2  = SpinAngular.TwoParticleOperator(0, plus, true)
+                    wa   = SpinAngular.computeCoefficients(op2, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList)
                     #
                     me = 0.
+
                     for  coeff in wa
+                        # Comment below to include exchange in account
+                        if ( (coeff.c.n == 101) && (coeff.nu > 40) )  continue end
+
                         if   kind in [ CoulombInteraction(), CoulombBreit()]    
                             me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 
                                                     fLevel.basis.orbitals[coeff.a], fLevel.basis.orbitals[coeff.b],
@@ -192,7 +201,7 @@ module ImpactExcitation
             end 
             if  printout  printstyled("done. \n", color=:light_green)    end
             amplitude = transpose(fLevel.mc) * matrix * iLevel.mc 
-            amplitude = im^Basics.subshell_l(Subshell(102, channel.finalKappa))   * exp( -im*channel.finalPhase )   * 
+            amplitude = im^( -1.0 * Basics.subshell_l(Subshell(102, channel.finalKappa)) )   * exp(  im*channel.finalPhase )   * 
                         im^Basics.subshell_l(Subshell(101, channel.initialKappa)) * exp(  im*channel.initialPhase ) * amplitude
             @show amplitude
             #
@@ -215,7 +224,9 @@ module ImpactExcitation
     """
     function  computeAmplitudesProperties(line::ImpactExcitation.Line, nm::Nuclear.Model, grid::Radial.Grid, 
                                           settings::ImpactExcitation.Settings; printout::Bool=true)
-        newChannels = ImpactExcitation.Channel[];   contSettings = Continuum.Settings(false, grid.NoPoints-50);   cross = 0.;   coll = 0.
+        newChannels = ImpactExcitation.Channel[];   
+        contSettings = Continuum.Settings(false, grid.NoPoints-5);   cross = 0.;   coll = 0.; isConverged = false
+        conv = 0.; conv0 = 0. ; n = 0
         
         # Define a common subshell list for both multiplets
         subshellList = Basics.generate("subshells: ordered list for two bases", line.finalLevel.basis, line.initialLevel.basis)
@@ -224,55 +235,92 @@ module ImpactExcitation
         # First determine a common set of continuum orbitals for the incoming and outgoing electron
         ciOrbitals = Dict{Subshell, Orbital}();     ciPhases = Dict{Subshell, Float64}()
         cfOrbitals = Dict{Subshell, Orbital}();     cfPhases = Dict{Subshell, Float64}()
-        for channel in line.channels
-            # Generate the continuum orbitals if they were not yet generated before
-            iSubshell  = Subshell(101, channel.initialKappa)
-            if  !haskey(ciOrbitals, iSubshell)
-                newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
-                ciOrbital, iPhase     = Continuum.generateOrbitalForLevel(line.initialElectronEnergy, iSubshell, newiLevel, nm, grid, contSettings)
-                ciOrbitals[iSubshell] = ciOrbital;      ciPhases[iSubshell] = iPhase
+        #
+        symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity);    symf = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity) 
+        #
+        kappa = 1
+        while kappa <= settings.maxKappa
+            for  inKappa = -kappa:kappa
+                if  inKappa == 0    continue    end
+                insymtList = AngularMomentum.allowedTotalSymmetries(symi, inKappa)
+                for  outKappa = -(kappa):kappa
+                    if  outKappa == 0  || ( abs(inKappa) < kappa && abs(outKappa) < kappa )  continue    end
+                    outsymtList = AngularMomentum.allowedTotalSymmetries(symf, outKappa)
+                    for  symt in insymtList
+                        if symt in outsymtList
+                            channel = ImpactExcitation.Channel( inKappa, outKappa, symt, 0., 0.,Complex(0.))
+                            # Generate the continuum orbitals if they were not yet generated before
+                            iSubshell  = Subshell(101, channel.initialKappa)
+                            if  !haskey(ciOrbitals, iSubshell) 
+                                newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
+                                ciOrbital, iPhase     = Continuum.generateOrbitalForLevel(line.initialElectronEnergy, iSubshell, newiLevel, nm, grid, contSettings)
+                                ciOrbitals[iSubshell] = ciOrbital;      ciPhases[iSubshell] = iPhase
+                                println("\n Initial channel")
+                            end
+                            
+                            fSubshell  = Subshell(102, channel.finalKappa)
+                            if  !haskey(cfOrbitals, fSubshell)
+                                newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel,   subshellList)
+                                cfOrbital, fPhase     = Continuum.generateOrbitalForLevel(line.finalElectronEnergy,   fSubshell, newfLevel, nm, grid, contSettings)
+                                cfOrbitals[fSubshell] = cfOrbital;      cfPhases[fSubshell] = fPhase
+                                println("\n Final channel")
+                            end
+                        #end
+                        
+                        #for channel in line.channels
+                            # Generate two continuum orbitals
+                            newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
+                            newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel,   subshellList)
+                            iSubshell  = Subshell(101, channel.initialKappa)
+                            fSubshell  = Subshell(102, channel.finalKappa)
+                            ciOrbital  = ciOrbitals[iSubshell];     iPhase = ciPhases[iSubshell]
+                            cfOrbital  = cfOrbitals[fSubshell];     fPhase = cfPhases[fSubshell]
+                            newiLevel = Basics.generateLevelWithExtraElectron(ciOrbital, channel.symmetry, newiLevel)
+                            newiLevel = Basics.generateLevelWithExtraSubshell(fSubshell,   newiLevel)
+                            newfLevel = Basics.generateLevelWithExtraSubshell(iSubshell, newfLevel)
+                            newfLevel = Basics.generateLevelWithExtraElectron(cfOrbital, channel.symmetry, newfLevel)
+                            newChannel = ImpactExcitation.Channel(channel.initialKappa, channel.finalKappa, channel.symmetry, iPhase, fPhase, 0.)
+                            #
+                            amplitude  = ImpactExcitation.amplitude(settings.operator, newChannel, newfLevel, newiLevel, grid, printout=printout)
+
+                            coll       = coll + AngularMomentum.bracket([channel.symmetry.J]) * ( conj(amplitude) * amplitude ).re
+
+                            conv += (conj(amplitude) * amplitude).re
+
+                            push!( newChannels, ImpactExcitation.Channel(newChannel.initialKappa, newChannel.finalKappa, newChannel.symmetry, iPhase, fPhase, amplitude) )
+                        end
+                    end
+                end
             end
             
-            fSubshell  = Subshell(102, channel.finalKappa)
-            if  !haskey(cfOrbitals, fSubshell)
-                newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel,   subshellList)
-                cfOrbital, fPhase     = Continuum.generateOrbitalForLevel(line.finalElectronEnergy,   fSubshell, newfLevel, nm, grid, contSettings)
-                cfOrbitals[fSubshell] = cfOrbital;      cfPhases[fSubshell] = fPhase
+            # Checking convergence
+            if abs(conv - conv0)/conv < 1e-5 
+                # printstyled("\nConvergence Achieved "; bold=true, underline=true, color=:light_red); 
+                if n == 10 
+                    isConverged = true; 
+                    # printstyled("\nConvergence Achieved "; bold=true, underline=true, color=:light_red); break
+                    break 
+                end
+                n += 1
             end
+            conv0 = conv
+            kappa += 1
         end
-        
-        for channel in line.channels
-            # Generate two continuum orbitals
-            newiLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, subshellList)
-            newfLevel  = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel,   subshellList)
-            iSubshell  = Subshell(101, channel.initialKappa)
-            fSubshell  = Subshell(102, channel.finalKappa)
-            ciOrbital  = ciOrbitals[iSubshell];     iPhase = ciPhases[iSubshell]
-            cfOrbital  = cfOrbitals[fSubshell];     fPhase = cfPhases[fSubshell]
-            ##x ciOrbital, iPhase  = Continuum.generateOrbitalForLevel(line.initialElectronEnergy, iSubshell, newiLevel, nm, grid, contSettings)
-            ##x cfOrbital, fPhase  = Continuum.generateOrbitalForLevel(line.finalElectronEnergy,   fSubshell, newfLevel, nm, grid, contSettings)
-            newiLevel = Basics.generateLevelWithExtraElectron(ciOrbital, channel.symmetry, newiLevel)
-            newiLevel = Basics.generateLevelWithExtraSubshell(fSubshell,   newiLevel)
-            newfLevel = Basics.generateLevelWithExtraSubshell(iSubshell, newfLevel)
-            newfLevel = Basics.generateLevelWithExtraElectron(cfOrbital, channel.symmetry, newfLevel)
-            ##x @show newiLevel.basis.subshells
-            ##x @show newfLevel.basis.subshells
-            newChannel = ImpactExcitation.Channel(channel.initialKappa, channel.finalKappa, channel.symmetry, iPhase, fPhase, 0.)
-            #
-            amplitude  = ImpactExcitation.amplitude(settings.operator, newChannel, newfLevel, newiLevel, grid, printout=printout)
-            coll       = coll + AngularMomentum.bracket([channel.symmetry.J]) * conj(amplitude) * amplitude
-            push!( newChannels, ImpactExcitation.Channel(newChannel.initialKappa, newChannel.finalKappa, newChannel.symmetry, iPhase, fPhase, amplitude) )
-        end
-        # Calculate the electron-impact excitation strength and cross section
-        ecorr   = abs( line.initialElectronEnergy / (line.finalLevel.energy - line.initialLevel.energy) );  @show  ecorr
-        ##x coll    = 8 * coll * ecorr^0.48
-        coll    = 8 * coll
-        cross   = coll
-        ki2     = line.initialElectronEnergy / 2. * (1 + Defaults.getDefaults("alpha") / 2. * line.initialElectronEnergy)
-        ##x coll    = 8.0 * coll
-        ##x cross   = 4 * pi * coll / ki2 / (Basics.twice(line.initialLevel.J) + 1)
-        newLine = ImpactExcitation.Line( line.initialLevel, line.finalLevel, line.initialElectronEnergy, line.finalElectronEnergy, 
-                                         coll.re, cross.re, newChannels)
+
+        wc = Defaults.getDefaults("speed of light: c")
+
+        qa = sqrt( (line.initialElectronEnergy/wc)^2 + 2*line.initialElectronEnergy )
+        qb = sqrt( (line.finalElectronEnergy/wc)^2 + 2*line.finalElectronEnergy )
+
+        initialEnergy = sqrt( (qa*wc)^2 + wc^4 );    finalEnergy = sqrt( (qb*wc)^2 + wc^4 )
+
+        N = 4 * sqrt( (initialEnergy + wc^2) * ( finalEnergy + wc^2 ) / ( initialEnergy * finalEnergy ) ) / qa / qb
+
+        coll = coll * N 
+        cross = coll * pi / ( (qa^2) * (Basics.twice(line.initialLevel.J) + 1) )
+
+        newLine = ImpactExcitation.Line( line.initialLevel, line.finalLevel, line.initialElectronEnergy, line.finalElectronEnergy, cross, coll, newChannels, isConverged)
+        displayLineICS(newLine)
         return( newLine )
     end
 
@@ -294,16 +342,15 @@ module ImpactExcitation
         # Display all selected lines before the computations start
         if  settings.printBefore    ImpactExcitation.displayLines(lines)    end
         # Calculate all amplitudes and requested properties
-        newLines = ImpactExcitation.Line[]
-        for  line in lines
-            newLine = ImpactExcitation.computeAmplitudesProperties(line, nm, grid, settings) 
-            push!( newLines, newLine)
+        newLines = lines
+        for l = 1:length(lines)
+            newLines[l] = ImpactExcitation.computeAmplitudesProperties(lines[l], nm, grid, settings)
         end
         # Print all results to screen
         ImpactExcitation.displayResults(newLines)
         #
-        if    output    return( newLines )
-        else            return( nothing )
+        if    output    return( newLines );
+        else            return( nothing );
         end
     end
 
@@ -361,8 +408,10 @@ module ImpactExcitation
                         initialElectronEnergy  = Defaults.convertUnits("energy: to atomic", en)
                         finalElectronEnergy    = initialElectronEnergy - (fLevel.energy - iLevel.energy) + energyShift
                         if  finalElectronEnergy < 0    continue   end  
-                        channels = ImpactExcitation.determineChannels(fLevel, iLevel, settings) 
-                        push!( lines, ImpactExcitation.Line(iLevel, fLevel, initialElectronEnergy, finalElectronEnergy, 0., 0., channels) )
+                        #channels = ImpactExcitation.determineChannels(fLevel, iLevel, settings) 
+                        channels = ImpactExcitation.Channel[]
+                        # order channels as per Kappa to check convergence
+                        push!( lines, ImpactExcitation.Line(iLevel, fLevel, initialElectronEnergy, finalElectronEnergy, 0., 0., channels, false) )
                     end
                 end
             end
@@ -433,11 +482,12 @@ module ImpactExcitation
             returned otherwise.
     """
     function  displayResults(lines::Array{ImpactExcitation.Line,1})
-        nx = 161
+        nx = 142
         println(" ")
         println("  Electron-impact excitation cross sections:")
         println(" ")
         println("  ", TableStrings.hLine(nx))
+        sa = "  ";   sb = "  "
         sa = "  ";   sb = "  "
         sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
         sa = sa * TableStrings.center(18, "i--J^P--f"; na=3);                                sb = sb * TableStrings.hBlank(22)
@@ -448,18 +498,19 @@ module ImpactExcitation
         sa = sa * TableStrings.center(12, "Energy e_out"; na=3);              
         sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=3)
         sa = sa * TableStrings.center(15, "Cross section"; na=3)      
-        sb = sb * TableStrings.center(15, TableStrings.inUnits("cross section"); na=3)
-        sa = sa * TableStrings.center(25, "Collision strength   3x"; na=3)      
-        sb = sb * TableStrings.center(25, " ";                       na=3)
+        #sb = sb * TableStrings.center(15, TableStrings.inUnits("cross section")*"*1E-8"; na=3)
+        sb = sb * TableStrings.center(15, "10^(-20) m^2"; na=3)
+        sa = sa * TableStrings.center(15, "Collision strength"; na=3)      
+        sb = sb * TableStrings.center(15, " ";                  na=3)
+        sa = sa * TableStrings.center(15, "Convergence"; na=3)      
+        sb = sb * TableStrings.center(15, " ";                  na=3)
         println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
         #
+        #
+        sc = "ecorr^0.:  ";   sd = "ecorr^0.25:  ";   se = "ecorr^0.48:  ";   sx = "ecorr:  ";  nc = 0
+        #   
         sc = "ecorr^0.:  ";   sd = "ecorr^0.25:  ";   se = "ecorr^0.48:  ";   sx = "ecorr:  ";  nc = 0
         for  line in lines
-            if  line.finalLevel.index != nc     nc = line.finalLevel.index;     
-                sc = sc * "\n ";    sd = sd * "\n ";    se = se * "\n ";    sx = sx * "\n "     end
-            ecorr   = abs( line.initialElectronEnergy / (line.finalLevel.energy - line.initialLevel.energy) )
-            ##x coll    = 8 * line.collisionStrength * ecorr^0.48
-            ##x coll = line.collisionStrength
             sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                            fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
             sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
@@ -468,20 +519,41 @@ module ImpactExcitation
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                          * "    "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialElectronEnergy))  * "    "
             sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.finalElectronEnergy))    * "     "
-            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection))    * "        "
-            sa = sa * @sprintf("%.6e", line.collisionStrength)                                                    * "    "
-            sa = sa * @sprintf("%.6e", line.collisionStrength * ecorr^0.25)                                       * "    "
-            sa = sa * @sprintf("%.6e", line.collisionStrength * ecorr^0.48)                                       * "    "
-            sc = sc * @sprintf("%.6e", line.collisionStrength * ecorr^0.00) * ",  "
-            sd = sd * @sprintf("%.6e", line.collisionStrength * ecorr^0.25) * ",  "
-            se = se * @sprintf("%.6e", line.collisionStrength * ecorr^0.48) * ",  "
-            sx = sx * @sprintf("%.6e", ecorr)                               * ",  "
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection)*1e-8)    * "        "
+            sa = sa * @sprintf("%.6e", line.collisionStrength)                                                    * "          "
+            sa = sa * @sprintf("%s", string(line.isConverged))                                                    * "    "
             println(sa)
         end
         println("  ", TableStrings.hLine(nx))
-        println("\n", sx, "\n", sc, "\n", sd, "\n", se)
         #
         return( nothing )
     end
+
+
+    """
+    Displays a single line cross section output
+    """
+    function displayLineICS(line::ImpactExcitation.Line)
+        nx = 142
+        println(" ")
+        println("  Electron-impact excitation cross sections:")
+        println(" ")
+        println("  ", TableStrings.hLine(nx))
+        sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
+        fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+        sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
+        sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
+        en = line.finalLevel.energy - line.initialLevel.energy
+        sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                          * "    "
+        sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.initialElectronEnergy))  * "    "
+        sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.finalElectronEnergy))    * "     "
+        sa = sa * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", line.crossSection)*1e-8)    * "        "
+        sa = sa * @sprintf("%.6e", line.collisionStrength)                                                    * "          "
+        sa = sa * @sprintf("%s", string(line.isConverged))                                                    * "    "
+        println(sa)
+        println("  ", TableStrings.hLine(nx))
+        return( nothing )
+    end
+
 
 end # module

@@ -608,9 +608,13 @@ module Basics
     `Basics.shellNotation(l::Int64)`  ... returns the corresponding spectroscopy letter for a given orbital angular quantum number l.
     """
     function shellNotation(l::Int64)
-        !(0 <= l <= 25)      &&   error("Orbital QN 0 <= l <= 25; l = $l")
+ 	    !(0 <= l <= 21)      &&   return (string(l))
         wa = [ "s", "p", "d", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "q", "r", "t", "u", "v", "w", "x", "y", "z"]
-        return( wa[l+1] )   
+        return( wa[l+1] )  
+        #
+        ##x !(0 <= l <= 25)      &&   error("Orbital QN 0 <= l <= 25; l = $l")
+        ##x wa = [ "s", "p", "d", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "q", "r", "t", "u", "v", "w", "x", "y", "z"]
+        ##x return( wa[l+1] )   
     end
 
 
@@ -1393,13 +1397,15 @@ module Basics
         + PureSineNorm       ... normalize with regard to an (asymtotic) pure sine funtion, sin(kr).
         + CoulombSineNorm    ... normalize with regard to an (asymtotic) Coulombic-sine funtion, sin(kr + ...).
         + OngRussekNorm      ... normalize by following Ong & Russek (1973).
+        + AlokNorm           ... normalize following Salvats Radial code
     """
     abstract type  ContinuumNormalization                          end
     struct     PureSineNorm         <:  ContinuumNormalization     end
     struct     CoulombSineNorm      <:  ContinuumNormalization     end
     struct     OngRussekNorm        <:  ContinuumNormalization     end
+    struct     AlokNorm             <:  ContinuumNormalization     end
 
-    export  AbstractContinuumNormalization,   PureSineNorm,   CoulombSineNorm,   OngRussekNorm
+    export  AbstractContinuumNormalization,   PureSineNorm,   CoulombSineNorm,   OngRussekNorm,   AlokNorm
 
     
     """
@@ -1809,6 +1815,7 @@ module Basics
     function extractRelativisticConfigurations                      end
     function extractRelativisticConfigurationFromCsfR               end
     function extractRelativisticSubshellList                        end
+    function extractRydbergSubshellList                             end
     function extractShellList                                       end
     function extractShellOccupationDifference                       end
     function extractShellOccupationFromCsfR                         end

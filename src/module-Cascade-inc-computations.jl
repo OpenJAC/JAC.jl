@@ -41,12 +41,12 @@
         # Calculate the total rate and convert the dictionaries into probabilities
         # First, identify the level key of the given level also in the lists of radiative and Auger lines
         level = outcome.level;    levelKey = LevelKey( LevelSymmetry(level.J, level.parity), level.index, level.energy, 0.)
-        similarKey = LevelKey();  rateR = 0.;    rateA = 0.;   NoPhotonLines = 0;   NoAugerLines = 0
+        similarKey = LevelKey();  rateR = Basics.EmProperty(0.);    rateA = 0.;   NoPhotonLines = 0;   NoAugerLines = 0
         for  line in linesR
             compareKey = LevelKey( LevelSymmetry(line.initialLevel.J, line.initialLevel.parity), line.initialLevel.index, line.initialLevel.energy, 0.)
             if   Basics.isSimilar(levelKey, compareKey, 1.0e-3)    println("** compareKey = $compareKey");   similarKey = deepcopy(compareKey)    end
         end
-        if   similarKey == LevelKey()    error("No similar level found !")   end
+        if   similarKey == LevelKey()    @warn("No similar level found !")   end
         
         for  line in linesR
             if  similarKey == LevelKey( LevelSymmetry(line.initialLevel.J, line.initialLevel.parity), line.initialLevel.index, line.initialLevel.energy, 0.)
@@ -99,8 +99,8 @@
         for (k,v) in aProbabilities   rate = rate + v   end
         @show outcome.rateR + outcome.rateA, rate
         #
-        for (k,v) in rProbabilities   rProbabilities[k] = v/rate   end
-        for (k,v) in aProbabilities   aProbabilities[k] = v/rate   end
+        for (k,v) in rProbabilities   rProbabilities[k] = v/(rate + 1.0e-20)   end
+        for (k,v) in aProbabilities   aProbabilities[k] = v/(rate + 1.0e-20)   end
         #
         Cascade.displayDecayProbabilities(stdout, outcome, rProbabilities, aProbabilities, settings)
         # Generate an additional output file if printDataX & printDataY = true
@@ -127,13 +127,13 @@
         # Identify the level key of the given level also in the lists of radiative and Auger lines
         level = outcome.level;    levelKey = LevelKey( LevelSymmetry(level.J, level.parity), level.index, level.energy, 0.)
         @show levelKey
-        similarKey = LevelKey();  rateR = 0.;    rateA = 0.;   NoPhotonLines = 0;   NoAugerLines = 0
+        similarKey = LevelKey();  rateR = Basics.EmProperty(0.);    rateA = 0.;   NoPhotonLines = 0;   NoAugerLines = 0
         for  line in linesR
             compareKey = LevelKey( LevelSymmetry(line.initialLevel.J, line.initialLevel.parity), line.initialLevel.index, line.initialLevel.energy, 0.)
             @show compareKey
             if   Basics.isSimilar(levelKey, compareKey, 1.0e-3)    println("** compareKey = $compareKey");   similarKey = deepcopy(compareKey)    end
         end
-        if   similarKey == LevelKey()    error("No similar level found !")   end
+        if   similarKey == LevelKey()    @warn("No similar level found !")   end
         
         for  line in linesR
             if  similarKey == LevelKey( LevelSymmetry(line.initialLevel.J, line.initialLevel.parity), line.initialLevel.index, line.initialLevel.energy, 0.)
@@ -146,7 +146,7 @@
             end
         end
         
-        omegaR     = rateR / (rateR + rateA);   omegaA = rateA / (rateR + rateA)
+        omegaR     = rateR / (rateR + rateA + 1.0e-20);   omegaA = rateA / (rateR + rateA + 1.0e-20)  # add 1.0e-20 to avoid division by 0.
         newOutcome = DecayYield.Outcome(level, NoPhotonLines, NoAugerLines, rateR, rateA, omegaR, omegaA)
         return( newOutcome )
     end

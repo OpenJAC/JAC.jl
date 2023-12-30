@@ -568,11 +568,13 @@
                 for  (i,line)  in  enumerate(linesR)
                     major  = Basics.extractLeadingConfiguration(line.initialLevel)
                     iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Radiative(), i)] ) 
+                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[],
+                                            [ Cascade.LineIndex(linesR, Basics.Radiative(), i)] ) 
                     Cascade.pushLevels!(levels, iLevel)  
                     major  = Basics.extractLeadingConfiguration(line.finalLevel)
                     fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
+                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(linesR, Basics.Radiative(), i)], 
+                                            Cascade.LineIndex[] ) 
                     Cascade.pushLevels!(levels, fLevel)  
                 end
                 #
@@ -581,11 +583,12 @@
                 for  (i,line)  in  enumerate(linesA)
                     major  = Basics.extractLeadingConfiguration(line.initialLevel)
                     iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Auger(), i)] ) 
+                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], 
+                                            [ Cascade.LineIndex(linesA, Basics.Auger(), i)] ) 
                     Cascade.pushLevels!(levels, iLevel)  
                     major  = Basics.extractLeadingConfiguration(line.finalLevel)
                     fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Auger(), i)], Cascade.LineIndex[] ) 
+                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(linesA, Basics.Auger(), i)], Cascade.LineIndex[] ) 
                     Cascade.pushLevels!(levels, fLevel)
                 end
                 #
@@ -594,11 +597,11 @@
                 for  (i,line)  in  enumerate(linesP)
                     major  = Basics.extractLeadingConfiguration(line.initialLevel)
                     iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Photo(), i)] ) 
+                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(linesP, Basics.Photo(), i)] ) 
                     Cascade.pushLevels!(levels, iLevel)  
                     major  = Basics.extractLeadingConfiguration(line.finalLevel)
                     fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Photo(), i)], Cascade.LineIndex[] ) 
+                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(linesP, Basics.Photo(), i)], Cascade.LineIndex[] ) 
                     Cascade.pushLevels!(levels, fLevel)
                 end
                 #
@@ -607,10 +610,10 @@
                 linesE = cData.lines
                 for  (i,line)  in  enumerate(linesE)
                     iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                            line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(data, Basics.Radiative(), i)] ) 
+                                            line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(linesE, Basics.Radiative(), i)] ) 
                     Cascade.pushLevels!(levels, iLevel)  
                     fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                            line.finalLevel.relativeOcc, [ Cascade.LineIndex(data, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
+                                            line.finalLevel.relativeOcc, [ Cascade.LineIndex(linesE, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
                     Cascade.pushLevels!(levels, fLevel)  
                 end
             else  error("stop a")
@@ -1012,7 +1015,7 @@
         
         n = 0
         println("\n*  Probability propagation through $(length(levels)) levels of the cascade:")
-        while n < 2  ## true ## 
+        while true ## n < 2  ## 
             n = n + 1;    totalProbability = 0.
             print("    $n-th round ... ")
             relativeOcc = zeros(length(levels));    relativeLoss = zeros(length(levels))
@@ -1025,9 +1028,9 @@
                     prob  = level.relativeOcc;   rates = zeros(length(level.daugthers))
                     for  (i,daugther) in  enumerate(level.daugthers)
                         idx = daugther.index
-                        if      daugther.process == Basics.Radiative()     rates[i] = daugther.lineSet.linesR[idx].photonRate.Coulomb
-                        elseif  daugther.process == Basics.Auger()         rates[i] = daugther.lineSet.linesA[idx].totalRate
-                        elseif  daugther.process == Basics.Photo()         rates[i] = daugther.lineSet.linesP[idx].crossSection.Coulomb
+                        if      daugther.process == Basics.Radiative()     rates[i] = daugther.lines[idx].photonRate.Coulomb
+                        elseif  daugther.process == Basics.Auger()         rates[i] = daugther.lines[idx].totalRate
+                        elseif  daugther.process == Basics.Photo()         rates[i] = daugther.lines[idx].crossSection.Coulomb
                         else    error("stop a; process = $(daugther.process) ")
                         end
                         ##x @show daugther.process, rates[i]
@@ -1039,9 +1042,9 @@
                         # Shift the relative occupation to the 'daugther' levels due to the different ionization and decay pathes
                         for  (i,daugther) in  enumerate(level.daugthers)
                             idx = daugther.index
-                            if      daugther.process == Basics.Radiative()     line = daugther.lineSet.linesR[idx]
-                            elseif  daugther.process == Basics.Auger()         line = daugther.lineSet.linesA[idx]
-                            elseif  daugther.process == Basics.Photo()         line = daugther.lineSet.linesP[idx]
+                            if      daugther.process == Basics.Radiative()     line = daugther.lines[idx]
+                            elseif  daugther.process == Basics.Auger()         line = daugther.lines[idx]
+                            elseif  daugther.process == Basics.Photo()         line = daugther.lines[idx]
                             else    error("stop b; process = $(daugther.process) ")
                             end
                             major    = Basics.extractLeadingConfiguration(line.finalLevel)
@@ -1120,12 +1123,19 @@
                 Cascade.displayLevels(iostream, gMultiplets, sa="generated ")        
             end
             #
+            if      haskey(results, "cascade data:")             lineData = results["cascade data:"]
+            else    error("stop a")
+            end
+            
+            @show typeof(lineData)
+            
+            #==
             if      haskey(results,"decay line data:")                          lineData = results["decay line data:"]
             elseif  haskey(results,"photo-ionizing line data:")                 lineData = results["photo-ionizing line data:"]
             elseif  haskey(results,"photo-excited line data:")                  lineData = results["photo-excited line data:"]
             elseif  haskey(results,"hollow-ion line data:")                     lineData = results["hollow-ion line data:"]
             else    error("stop a")
-            end
+            end ==#
             levels = Cascade.extractLevels(lineData, settings)
             allLevels = Cascade.addLevels(allLevels, levels)
         end

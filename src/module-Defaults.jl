@@ -71,6 +71,7 @@ module Defaults
     # Global settings that can be (re-) defined by the user.
     GBL_FRAMEWORK                = "relativistic"
     GBL_CONT_SOLUTION            = BsplineGalerkin()         ###  ContBessel(), ContSine(), AsymptoticCoulomb(), NonrelativisticCoulomb(), BsplineGalerkin()
+    ##x GBL_CONT_NORMALIZATION       = AlokNorm()                ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm(), AlokNorm()
     GBL_CONT_NORMALIZATION       = PureSineNorm()            ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm()
     GBL_QED_HYDROGENIC_LAMBDAC   = [1.0,  1.0,  1.0,  1.0,  1.0]
     GBL_QED_NUCLEAR_CHARGE       = 0.1
@@ -391,6 +392,7 @@ module Defaults
         elseif    sa == "method: normalization, pure sine"                   GBL_CONT_NORMALIZATION  = PureSineNorm()   
         elseif    sa == "method: normalization, pure Coulomb"                GBL_CONT_NORMALIZATION  = CoulombSineNorm()  
         elseif    sa == "method: normalization, Ong-Russek"                  GBL_CONT_NORMALIZATION  = OngRussekNorm()
+        elseif    sa == "method: normalization, Alok"                        GBL_CONT_NORMALIZATION  = AlokNorm()
         else      error("Unsupported keystring:: $sa")
         end
         nothing

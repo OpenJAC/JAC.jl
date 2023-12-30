@@ -935,14 +935,15 @@
         level = Level()
         if length(cLevel.parents) > 0   
             parent = cLevel.parents[1]
-            if      parent.process == Basics.Auger()       level = parent.lineSet.linesA[parent.index].finalLevel
-            elseif  parent.process == Basics.Radiative()   level = parent.lineSet.linesR[parent.index].finalLevel
+            if      parent.process == Basics.Auger()       level = parent.lines[parent.index].finalLevel
+            elseif  parent.process == Basics.Radiative()   level = parent.lines[parent.index].finalLevel
             else    error("stop a")
             end
         elseif length(cLevel.daugthers) > 0   
             daugth = cLevel.daugthers[1]
-            if      daugth.process == Basics.Auger()       level = daugth.lineSet.linesA[daugth.index].initialLevel
-            elseif  daugth.process == Basics.Radiative()   level = daugth.lineSet.linesR[daugth.index].initialLevel
+            ##x @show typeof(daugth.lines[daugth.index])
+            if      daugth.process == Basics.Auger()       level = daugth.lines[daugth.index].initialLevel
+            elseif  daugth.process == Basics.Radiative()   level = daugth.lines[daugth.index].initialLevel
             else    error("stop b")
             end
         else        error("stop c")
@@ -1370,6 +1371,30 @@
         end
         
         return( subshellList )
+    end
+
+
+    """
+    `Basics.extractRydbergSubshellList(level::Level, n0::Int64, wx::Float64)`  
+        ... extract all (relativistic) Rydberg subshells with principal quantum number n > n0, which are occupied 
+            in the given level in CSF with weigth > wx. A subshellList::Array{Subshell,1} is returned.
+    """
+    function Basics.extractRydbergSubshellList(level::Level, n0::Int64, wx::Float64)
+        # Only consider CSF in the basis with non-zero mixing coefficients
+        reducedSubshells = Subshell[]
+
+        for (i, coeff) in enumerate(level.mc)
+            if  coeff*coeff  >  wx
+                ##x @show  i, coeff*coeff
+                redSubshells     = Basics.extractRelativisticSubshellList(level.basis.csfs[i], level.basis.subshells)
+                reducedSubshells = append!(reducedSubshells, redSubshells)
+            end
+        end
+        reducedSubshells = unique(reducedSubshells)
+        rydbergSubshells = Subshell[]
+        for  subsh  in  reducedSubshells   if  subsh.n > n0   push!(rydbergSubshells, subsh)   end    end
+        
+        return( rydbergSubshells )
     end
 
 

@@ -68,7 +68,7 @@
                                                  "giving now rise to a total of $nt $(string(step.process)) decay lines." )   end      
         end
         #
-        data = ( Cascade.Data{PhotoEmission.Line}(linesR), Cascade.Data{AutoIonization.Line}(linesA) )
+        data = [ Cascade.Data{PhotoEmission.Line}(linesR), Cascade.Data{AutoIonization.Line}(linesA) ]
     end
 
 
@@ -261,12 +261,15 @@
         if  printSummary   Cascade.displaySteps(iostream, wd, sa="decay ")    end      
         we   = Cascade.modifySteps(wd)
         @time data = Cascade.computeSteps(scheme, comp, we)
+        @show typeof(data)
         if output    
             results = Base.merge( results, Dict("name"                  => comp.name) ) 
             results = Base.merge( results, Dict("cascade scheme"        => comp.scheme) ) 
             results = Base.merge( results, Dict("initial multiplets:"   => multiplets) )    
-            results = Base.merge( results, Dict("generated multiplets:" => gMultiplets) )    
-            results = Base.merge( results, Dict("decay line data:"      => data) )
+            results = Base.merge( results, Dict("generated multiplets:" => gMultiplets) ) 
+            results = Base.merge( results, Dict("photoemission lines:"  => data[1].lines) ) 
+            results = Base.merge( results, Dict("autoionization lines:" => data[2].lines) ) 
+            results = Base.merge( results, Dict("cascade data:"         => data) )
             #
             #  Write out the result to file to later continue with simulations on the cascade data
             if outputToFile
