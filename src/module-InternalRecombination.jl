@@ -424,6 +424,7 @@ module InternalRecombination
                     total  = total  + lines[j].rate 
                 end
             end
+            totalZ = 2.2e3 * totalZ;    total = 2.2e3 * total
             isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
             sa = "      " * string(line.initialLevel.index);   sb = "            " * string(isym)
             sa = sa[end-6:end] * sb[end-10:end] * "  "

@@ -14,6 +14,9 @@ module AutoIonization
 
         + calcAnisotropy      ::Bool               ... True, if the intrinsic alpha_2,4 angular parameters are to be 
                                                        calculated, and false otherwise.
+        + calcTeAuger         ::Bool               
+            ... True, if contributions of the two-electron Auger transitions are to be calculated, and false otherwise;
+                this flag requires a proper (resonant) Green function that supports the TEA transitions.
         + printBefore         ::Bool               ... True, if all energies and lines are printed before their evaluation.
         + lineSelection       ::LineSelection      ... Specifies the selected levels, if any.
         + augerEnergyShift    ::Float64            ... An overall energy shift for all Auger (free-electron) energies.
@@ -23,9 +26,13 @@ module AutoIonization
         + operator            ::AbstractEeInteraction   
             ... Auger operator that is to be used for evaluating the Auger amplitudes; allowed values are: 
                 CoulombInteraction(), BreitInteraction(), ...
+        + gMultiplet              ::Multiplet      
+            ... Mean-field multiplet of intermediate levels in the computations, sometimes referred to as
+                (resonant) Green function.
     """
     struct Settings  <:  AbstractProcessSettings
         calcAnisotropy        ::Bool         
+        calcTeAuger           ::Bool               
         printBefore           ::Bool 
         lineSelection         ::LineSelection 
         augerEnergyShift      ::Float64
@@ -33,6 +40,7 @@ module AutoIonization
         maxAugerEnergy        ::Float64
         maxKappa              ::Int64
         operator              ::AbstractEeInteraction 
+        gMultiplet            ::Multiplet      
     end 
 
 
@@ -40,25 +48,29 @@ module AutoIonization
     `AutoIonization.Settings()`  ... constructor for the default values of AutoIonization line computations
     """
     function Settings()
-        Settings(false, false, LineSelection(), 0., 0., 10e5, 100, CoulombInteraction())
+        Settings(false, false, false, LineSelection(), 0., 0., 10e5, 100, CoulombInteraction(), Multiplet())
     end
 
 
     """
     `AutoIonization.Settings(set::AutoIonization.Settings;`
     
-            calcAnisotropy=..,      printBefore=..,             augerEnergyShift=.., 
-            minAugerEnergy=..,      maxAugerEnergy=..,          maxKappa=..,            operator=..)
+            calcAnisotropy=..,      calcTeAuger..,              printBefore=..,         augerEnergyShift=.., 
+            minAugerEnergy=..,      maxAugerEnergy=..,          maxKappa=..,            operator=..,
+            gMultiplet=.. )
                         
         ... constructor for modifying the given AutoIonization.Settings by 'overwriting' the previously selected parameters.
     """
     function Settings(set::AutoIonization.Settings;    
-        calcAnisotropy::Union{Nothing,Bool}=nothing,            printBefore::Union{Nothing,Bool}=nothing, 
-        lineSelection::Union{Nothing,LineSelection}=nothing,    augerEnergyShift::Union{Nothing,Float64}=nothing, 
+        calcAnisotropy::Union{Nothing,Bool}=nothing,            calcTeAuger::Union{Nothing,Bool}=nothing,     
+        printBefore::Union{Nothing,Bool}=nothing,               lineSelection::Union{Nothing,LineSelection}=nothing,    
+        augerEnergyShift::Union{Nothing,Float64}=nothing,       
         minAugerEnergy::Union{Nothing,Float64}=nothing,         maxAugerEnergy::Union{Nothing,Float64}=nothing,
-        maxKappa::Union{Nothing,Int64}=nothing,                 operator::Union{Nothing,String}=nothing)  
+        maxKappa::Union{Nothing,Int64}=nothing,                 operator::Union{Nothing,String}=nothing,
+        gMultiplet::Union{Nothing,Multiplet}=nothing)  
         
         if  calcAnisotropy   == nothing   calcAnisotropyx    = set.calcAnisotropy    else  calcAnisotropyx    = calcAnisotropy    end 
+        if  calcTeAuger      == nothing   calcTeAugerx       = set.calcTeAuger       else  calcTeAugerx       = calcTeAuger       end 
         if  printBefore      == nothing   printBeforex       = set.printBefore       else  printBeforex       = printBefore       end 
         if  lineSelection    == nothing   lineSelectionx     = set.lineSelection     else  lineSelectionx     = lineSelection     end 
         if  augerEnergyShift == nothing   augerEnergyShiftx  = set.augerEnergyShift  else  augerEnergyShiftx  = augerEnergyShift  end 
@@ -66,14 +78,17 @@ module AutoIonization
         if  maxAugerEnergy   == nothing   maxAugerEnergyx    = set.maxAugerEnergy    else  maxAugerEnergyx    = maxAugerEnergy    end 
         if  maxKappa         == nothing   maxKappax          = set.maxKappa          else  maxKappax          = maxKappa          end 
         if  operator         == nothing   operatorx          = set.operator          else  operatorx          = operator          end 
+        if  gMultiplet       == nothing   gMultipletx        = set.gMultiplet        else  gMultipletx        = gMultiplet        end 
 
-        Settings( calcAnisotropyx, printBeforex, lineSelectionx, augerEnergyShiftx, minAugerEnergyx, maxAugerEnergyx, maxKappax, operatorx)
+        Settings( calcAnisotropyx, calcTeAugerx, printBeforex, lineSelectionx, augerEnergyShiftx, 
+                  minAugerEnergyx, maxAugerEnergyx, maxKappax, operatorx, gMultipletx)
     end
 
 
     # `Base.show(io::IO, settings::AutoIonization.Settings)`  ... prepares a proper printout of the variable settings::AutoIonization.Settings.
     function Base.show(io::IO, settings::AutoIonization.Settings) 
         println(io, "calcAnisotropy:                $(settings.calcAnisotropy)  ")
+        println(io, "calcTeAuger:                   $(settings.calcTeAuger)  ")
         println(io, "printBefore:                   $(settings.printBefore)  ")
         println(io, "lineSelection:                 $(settings.lineSelection)  ")
         println(io, "augerEnergyShift:              $(settings.augerEnergyShift)  ")
@@ -81,6 +96,7 @@ module AutoIonization
         println(io, "maxAugerEnergy:                $(settings.maxAugerEnergy)  ")
         println(io, "maxKappa:                      $(settings.maxKappa)  ")
         println(io, "operator:                      $(settings.operator)  ")
+        println(io, "gMultiplet.name:               $(settings.gMultiplet.name)  ")
     end
 
 
@@ -249,8 +265,8 @@ module AutoIonization
         ... to compute all amplitudes and properties of the given line; a line::AutoIonization.Line is returned for which the amplitudes 
             and properties are now evaluated.
     """
-    function computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, settings::AutoIonization.Settings; 
-                                         printout::Bool=true) 
+    function computeAmplitudesProperties(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
+                                         settings::AutoIonization.Settings; printout::Bool=true) 
         newChannels = AutoIonization.Channel[];   contSettings = Continuum.Settings(false, nrContinuum);   rate = 0.
         # Define a common subshell list for both multiplets
         subshellList = Basics.generate("subshells: ordered list for two bases", line.finalLevel.basis, line.initialLevel.basis)
@@ -264,7 +280,18 @@ module AutoIonization
             newcLevel  = Basics.generateLevelWithExtraElectron(cOrbital, channel.symmetry, newfLevel)
             newChannel = AutoIonization.Channel(channel.kappa, channel.symmetry, phase, 0.)
             amplitude  = AutoIonization.amplitude(settings.operator, newChannel, newcLevel, newiLevel, grid, printout=printout)
-            rate       = rate + conj(amplitude) * amplitude
+            # Calculate two-electron Auger (TEA) contributions if requested; write an extra note if the amplitude is non-zero
+            if  settings.calcTeAuger
+                if  amplitude != ComplexF64(0.)     warn(">>> TEA contributions start from non-zero amplitude = $amplitude")    end
+                symc = channel.symmetry;    symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity)
+                println(">>> Normal Auger for ($symi --> $symc) transition with amplitude = $amplitude")    
+                amp = ComplexF64(0.);               
+                amp = AutoIonization.computeTeaAmplitude(settings.operator, newChannel, newcLevel, settings.gMultiplet, 
+                                                         newiLevel, grid, printout=printout)
+                amplitude  = amplitude + amp
+            end
+            #            
+            rate = rate + conj(amplitude) * amplitude
             push!( newChannels, AutoIonization.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )
         end
         totalRate = 2pi* rate;   angularAlpha = 0.
@@ -527,7 +554,81 @@ module AutoIonization
         end
     end
 
+    
+    """
+    `AutoIonization.computeTeaAmplitude(kind::AbstractEeInteraction, channel::AutoIonization.Channel, continuumLevel::Level, 
+                                        gMultiplet::Multiplet, initialLevel::Level, grid::Radial.Grid; printout::Bool=true)`  
+        ... to compute the kind in  CoulombInteraction(), BreitInteraction(), CoulombBreit() total Auger amplitude 
+            for the two-electron Auger transitions via the gMultiplet as the resonant Green function:
+            
+            <(alpha_f J_f, kappa) J_i || O^(TEA, kind) || alpha_i J_i> 
+            
+                      <(alpha_f J_f, kappa) J_i || O^(Auger, kind) || alpha_in J_n> <J_n || O^(e-e, kind) || alpha_i J_i>
+                    = ---------------------------------------------------------------------------------------------------
+                                                                      E_i  -  E_n
+                                                                      
+            due to the interelectronic interaction as well as the given initial, intermediate (gMultiplet), and final 
+            (continuum) levels and the given kind of interaction. A value::ComplexF64 is returned.
+    """
+    function computeTeaAmplitude(kind::AbstractEeInteraction, channel::AutoIonization.Channel, continuumLevel::Level, 
+                                 gMultiplet::Multiplet, initialLevel::Level, grid::Radial.Grid; printout::Bool=true)
+        #
+        # Always ensure the same subshell list for all initial, intermediate and final (continuum) levels
+        subshells  = Basics.merge(initialLevel.basis.subshells, continuumLevel.basis.subshells)
+        @show  initialLevel.basis.subshells, continuumLevel.basis.subshells, subshells
+        iLevel     = Level(initialLevel, subshells)
+        fLevel     = Level(continuumLevel, subshells)
+        nMultiplet = Multiplet(gMultiplet, subshells)
+        
+        nf = length(fLevel.basis.csfs);    symf = LevelSymmetry(fLevel.J, fLevel.parity)
+        ni = length(iLevel.basis.csfs);    symi = LevelSymmetry(iLevel.J, iLevel.parity);    eni = iLevel.energy
+        nn = length(nMultiplet.levels[1].basis.csfs)
+        
+        if  printout   printstyled("Compute two-electron Auger amplitude for the transition [$(iLevel.index)-$(fLevel.index)] ... \n", 
+                                   color=:light_green)    end
+        amplitude = ComplexF64(0.)
+        #
+        for  nLevel in nMultiplet.levels
+            amp  = ComplexF64(0.)
+            symn = LevelSymmetry(nLevel.J, nLevel.parity);    enn = nLevel.energy
+            if  symf != symn  ||  symn != symi     continue    end
+            #
+            for  r = 1:nf
+                symr = LevelSymmetry(fLevel.basis.csfs[r].J, fLevel.basis.csfs[r].parity);      if  symr != symf    continue    end
+                for  s = 1:ni
+                    syms = LevelSymmetry(iLevel.basis.csfs[s].J, iLevel.basis.csfs[s].parity);  if  syms != symi    continue    end
+                    #
+                    #   Compute <alpha_f J_i || V^(e-e) || alpha_n J_i> <alpha_n J_i || V^(e-e) || alpha_i J_i>
+                    for  t = 1:nn
+                        if  nLevel.mc[t] == 0.  continue    end
+                        Vee = ManyElectron.matrixElement_Vee(kind, nLevel.basis, t, iLevel.basis, s, grid)
+                        Vae = ManyElectron.matrixElement_Vee(kind, fLevel.basis, r, nLevel.basis, t, grid)
+                        amp = amp + fLevel.mc[r] * Vae * nLevel.mc[t]^2 * Vee * iLevel.mc[s] / (eni - enn) / 4.
+                        ##x @show  t, eni, (eni - enn), amp
+                    end
+                end
+            end
+            # Display the amplitude for nLevel, if desired
+            if  true   
+                println(">>>> TEA amplitude < fLevel=$(continuumLevel.index) [J=$(continuumLevel.J)$(string(continuumLevel.parity))] ||" *
+                        " { nLevel=$(nLevel.index) [J=$(nLevel.J)$(string(nLevel.parity))] } ||" *
+                        " iLevel=$(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $(amp.re)  " *
+                        " with  Delta E=$(eni - enn)")    
+            end
+            amplitude = amplitude + amp
+        end
+        # if  printout   printstyled("done. \n", color=:light_green)    end
+        
+        if  printout  
+            println(">>>  Total TEA amplitude < fLevel=$(continuumLevel.index) [J=$(continuumLevel.J)$(string(continuumLevel.parity))] ||" *
+                    " TAE^($kind) ||" *
+                    " iLevel=$(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+        end
+        
+        return( amplitude )
+     end
 
+    
     """
     `AutoIonization.determineChannels(finalLevel::Level, initialLevel::Level, settings::AutoIonization.Settings)`  
         ... to determine a list of Auger Channel for a transitions from the initial to final level and by taking into account the particular 

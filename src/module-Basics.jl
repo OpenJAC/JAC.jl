@@ -8,7 +8,7 @@
 """
 module Basics
 
-    using Printf
+    using Printf, QuadGK
 
     export  AbstractScField, AbstractPotential, AbstractLevelProperty, AbstractProcess, 
             add, analyze, AngularJ, AngularJ64, AngularM, 
@@ -1391,6 +1391,244 @@ module Basics
 
     
     """
+    `abstract type Basics.AbstractFieldValue` 
+        ... to specify and deal with the function values of different physical fields, such as f(x), f(x,y,z), 
+            f(rho,phi), f(r,theta,phi), and for both, scalar and vector fields. Often, such field values are the outcome
+            of some computation which can be used for integration, display, etc.
+          
+        + struct Cartesian2DFieldValue{Type}     ... to specify a field value of type T in terms of x, y.
+        + struct Cartesian3DFieldValue{Type}     ... to specify a field value of type T in terms of x, y, z.
+        + struct PolarFieldValue{Type}           ... to specify a field value of type T in terms of rho, phi.
+        + struct SphericalFieldValue{Type}       ... to specify a field value of type T in terms of r, theta, phi.
+        
+    """
+    abstract type  AbstractFieldValue               end
+
+
+    """
+    `struct  Basics.Cartesian2DFieldValue{Type}   <: Basics.AbstractFieldValue`  
+        ... to specify a scalar field value of type Type in terms of x, y.
+
+        + x       ::Float64       ... x-coordinate.
+        + y       ::Float64       ... y-coordinate.
+        + val     ::Type          ... field value of type Type.
+    """
+    struct  Cartesian2DFieldValue{Type}        <: Basics.AbstractFieldValue
+        x         ::Float64
+        y         ::Float64
+        val       ::Type 
+    end 
+    
+
+    # `Base.show(io::IO, value::Cartesian2DFieldValue{Type})`  ... prepares a proper printout of the variable value::Cartesian2DFieldValue{Type}.
+    function Base.show(io::IO, value::Cartesian2DFieldValue{Type}) 
+        sa = "Cartesian 2D field value f(x,y) = f($(value.x),$(value.y)) = $(value.val)";                print(io, sa)
+    end
+
+
+    """
+    `struct  Basics.PolarFieldValue{Type}     <: Basics.AbstractFieldValue`  
+        ... to specify a field value of type Type in terms of rho, phi.
+
+        + rho     ::Float64       ... rho-coordinate.
+        + phi     ::Float64       ... phi-coordinate.
+        + val     ::Type          ... field value of type Type.
+    """
+    struct  PolarFieldValue{Type}             <: Basics.AbstractFieldValue
+        rho       ::Float64
+        phi       ::Float64
+        val       ::Type 
+    end 
+    
+
+    # `Base.show(io::IO, value::PolarFieldValue{Type})`  ... prepares a proper printout of the variable value::PolarFieldValue{Type}.
+    function Base.show(io::IO, value::PolarFieldValue{Type}) 
+        sa = "Polar field value f(rho,phi) = f($(value.rho),$(value.phi)) = $(value.val)";                print(io, sa)
+    end    
+
+
+    """
+    `struct  Basics.SphericalFieldValue{Type}     <: Basics.AbstractFieldValue`  
+        ... to specify a field value of type Type in terms of r, theta, phi.
+
+        + r       ::Float64       ... r-coordinate.
+        + theta   ::Float64       ... theta-coordinate.
+        + phi     ::Float64       ... phi-coordinate.
+        + val     ::Type          ... field value of type Type.
+    """
+    struct  SphericalFieldValue{Type}             <: Basics.AbstractFieldValue
+        r         ::Float64
+        theta     ::Float64
+        phi       ::Float64
+        val       ::Type 
+    end 
+    
+
+    # `Base.show(io::IO, value::SphericalFieldValue{Type})`  ... prepares a proper printout of the variable value::SphericalFieldValue{Type}.
+    function Base.show(io::IO, value::SphericalFieldValue{Type}) 
+        sa = "Spherical field value f(r,theta,phi) = f($(value.r),$(value.theta),$(value.phi)) = $(value.val)";       print(io, sa)
+    end
+    
+
+    
+    """
+    `abstract type Basics.AbstractMesh` 
+        ... to specify different mesh types in terms of their basic parameters; these meshes can be used, for example,
+            for integration or for defining the representation of observables. 
+         
+          
+        + struct Cartesian2DMesh    ... to specify a 2D Cartesian mesh in terms of x and y.
+        + struct GLegenreMesh       ... to specify a Gauss-Legendre mesh in terms of [a,b] and number of zeros.
+        + struct LinearMesh         ... to specify a linear mesh in terms of [a,b] and number of points.
+        + struct PolarMesh          ... to specify a 2D mesh for rho and phi.
+        + struct SphercialMesh      ... to specify a 3D mesh in terms of r, theta, phi.
+        
+    """
+    abstract type  AbstractMesh                     end
+
+
+    """
+    `struct  Basics.Cartesian2DMesh   <: Basics.AbstractMesh`  
+        ... to specify a 2D Cartesian mesh in terms of x and y.
+
+        + xMesh       ::Basics.AbstractMesh       ... mesh for the x-coordinate.
+        + yMesh       ::Basics.AbstractMesh       ... mesh for the y-coordinate.
+    """
+    struct  Cartesian2DMesh   <: Basics.AbstractMesh
+        xMesh         ::Basics.AbstractMesh
+        yMesh         ::Basics.AbstractMesh
+    end 
+    
+
+    # `Base.show(io::IO, cMesh::Cartesian2DMesh)`  ... prepares a proper printout of the variable cMesh::Cartesian2DMesh.
+    function Base.show(io::IO, cMesh::Cartesian2DMesh) 
+        sa = "2D Cartesian mesh with xMesh = $(cMesh.xMesh) and yMesh = $(cMesh.yMesh)";   print(io, sa)
+    end
+
+
+    """
+    `struct  Basics.GLegenreMesh   <: Basics.AbstractMesh`  
+        ... to specify a Gauss-Legendre mesh in terms of [a,b] and number of zeros.
+
+        + a           ::Float64       ... mesh as defined in the interval [a,b].
+        + b           ::Float64
+        + NoZeros     ::Int64         ... Number of GL zeros of the mesh.
+    """
+    struct  GLegenreMesh   <: Basics.AbstractMesh
+        a             ::Float64
+        b             ::Float64
+        NoZeros       ::Int64 
+    end 
+
+
+    """
+    `Basics.GLegenreMesh()`  ... constructor for the default settings of GLegenreMesh.
+    """
+    function GLegenreMesh()
+        GLegenreMesh( 0., 1.0, 4)
+    end
+    
+
+    # `Base.show(io::IO, glMesh::GLegenreMesh)`  ... prepares a proper printout of the variable glMesh::GLegenreMesh.
+    function Base.show(io::IO, glMesh::GLegenreMesh) 
+        sa = "Gauss-Legendre mesh for the interval  [a,b] = [$(glMesh.a),$(glMesh.b)]  and with $(glMesh.NoZeros) zeros."
+        print(io, sa)
+    end
+
+
+    """
+    `struct  Basics.LinearMesh   <: Basics.AbstractMesh`  
+        ... to specify a linear mesh in terms of [a,b] and number of mesh points.
+
+        + a           ::Float64       ... mesh as defined in the interval [a,b].
+        + b           ::Float64
+        + NoPoints    ::Int64         ... Number of mesh points, including a, b.
+    """
+    struct  LinearMesh   <: Basics.AbstractMesh
+        a             ::Float64
+        b             ::Float64
+        NoPoints      ::Int64 
+    end 
+
+
+    """
+    `Basics.LinearMesh()`  ... constructor for the default settings of LinearMesh.
+    """
+    function LinearMesh()
+        GLegenreMesh( 0., 1.0, 10)
+    end
+    
+
+    # `Base.show(io::IO, lMesh::LinearMesh)`  ... prepares a proper printout of the variable lMesh::LinearMesh.
+    function Base.show(io::IO, lMesh::LinearMesh) 
+        sa = "Linear mesh for the interval  [a,b] = [$(glMesh.a),$(glMesh.b)]  and with $(lMesh.NoPoints) points."
+        print(io, sa)
+    end
+
+
+    """
+    `struct  Basics.PolarMesh   <: Basics.AbstractMesh`  
+        ... to specify a 2D polar mesh in terms of rho and phi.
+
+        + rhoMesh     ::Basics.AbstractMesh       ... mesh for the rho-coordinate.
+        + phiMesh     ::Basics.AbstractMesh       ... mesh for the phi-coordinate.
+    """
+    struct  PolarMesh   <: Basics.AbstractMesh
+        rhoMesh       ::Basics.AbstractMesh
+        phiMesh       ::Basics.AbstractMesh
+    end 
+
+
+    """
+    `Basics.PolarMesh()`  ... constructor for the default settings of PolarMesh.
+    """
+    function PolarMesh()
+        PolarMesh( Basics.GLegenreMesh(0.0, 1.0, 12), Basics.GLegenreMesh(0.0, 2pi, 12))
+    end
+    
+
+    # `Base.show(io::IO, pMesh::PolarMesh)`  ... prepares a proper printout of the variable pMesh::PolarMesh.
+    function Base.show(io::IO, pMesh::PolarMesh) 
+        sa = "2D polar mesh with  rhoMesh::$(typeof(pMesh.rhoMesh))  and  phiMesh::$(typeof(pMesh.phiMesh))";     print(io, sa)
+    end
+
+
+    """
+    `struct  Basics.SphericalMesh   <: Basics.AbstractMesh`  
+        ... to specify a 3D polar mesh in terms of r, theta and phi.
+
+        + rMesh       ::Basics.AbstractMesh         ... mesh for the r-coordinate.
+        + thetaMesh   ::Basics.AbstractMesh         ... mesh for the theta-coordinate.
+        + phiMesh     ::Basics.AbstractMesh         ... mesh for the phi-coordinate.
+    """
+    struct  SphericalMesh   <: Basics.AbstractMesh
+        rMesh         ::Basics.AbstractMesh
+        thetaMesh     ::Basics.AbstractMesh
+        phiMesh       ::Basics.AbstractMesh
+    end 
+
+
+    """
+    `Basics.SphericalMesh()`  ... constructor for the default settings of Spherical.
+    """
+    function SphericalMesh()
+        SphericalMesh( Basics.GLegenreMesh(0., 1.0, 12), Basics.GLegenreMesh(0., pi, 8), Basics.GLegenreMesh(0., 2pi, 12) )
+    end
+    
+
+    # `Base.show(io::IO, sMesh::SphericalMesh)`  ... prepares a proper printout of the variable sMesh::SphericalMesh.
+    function Base.show(io::IO, sMesh::SphericalMesh) 
+        sa = "3D spherical mesh with  rMesh::$(typeof(sMesh.rMesh)),  thetaMesh::$(typeof(sMesh.thetaMesh))  and  " * 
+             "phiMesh::$(typeof(sMesh.phiMesh))"
+        print(io, sa)
+    end
+    
+    
+    
+    
+
+    
+    """
     `abstract type Basics.AbstractContinuumNormalization` 
         ... defines an abstract and a number of singleton types for dealing with the normalization of continuum orbitals.
 
@@ -1489,6 +1727,10 @@ module Basics
         + struct DFSField         ... to represent an mean Dirac-Fock-Slater field.        
         + struct DFSwCPField      ... to represent an mean Dirac-Fock-Slater with core-polarization field.        
         + struct HSField          ... to represent an mean Hartree-Slater field.        
+        + struct EHField          ... to represent an mean extended-Hartree field.        
+        + struct KSField          ... to represent an mean Kohn-Sham field.        
+        + struct HartreeField     ... to represent an mean Hartree field.        
+        + struct CHField          ... to represent an mean core-Hartree field.        
         + struct NuclearField     ... to represent a pure nuclear (potential) field.        
     """
     abstract type  AbstractScField                          end
@@ -1496,6 +1738,10 @@ module Basics
     struct     EOLField             <:  AbstractScField     end
     struct     DFSField             <:  AbstractScField     end
     struct     HSField              <:  AbstractScField     end
+    struct     EHField              <:  AbstractScField     end
+    struct     KSField              <:  AbstractScField     end
+    struct     HartreeField         <:  AbstractScField     end
+    struct     CHField              <:  AbstractScField     end 
     struct     NuclearField         <:  AbstractScField     end
     struct     AaDFSField           <:  AbstractScField     end   
     struct     AaHSField            <:  AbstractScField     end   
@@ -1767,20 +2013,13 @@ module Basics
     function addZerosToCsfR                                         end
     function analyze                                                end
     function analyzeConvergence                                     end
+    function analyzeGrid                                            end
     function compute                                                end
     function computeDensity                                         end
     function computeDiracEnergy                                     end
     function computeMeanSubshellOccupation                          end
     function computeMultipletForGreenApproach                       end
-    function computePotentialAtomicAverageDFS                       end
-    function computePotentialAtomicAverageHS                        end
-    function computePotentialCoreHartree                            end
-    function computePotentialHartree                                end
-    function computePotentialHartreeSlater                          end
-    function computePotentialKohnSham                               end
-    function computePotentialDFS                                    end
-    function computePotentialDFSwCP                                 end
-    function computePotentialExtendedHartree                        end
+    function computePotential                                       end
     function computeScfCoefficients                                 end
     function determineEnergySharings                                end
     function determineHoleShells                                    end
@@ -1796,6 +2035,9 @@ module Basics
     function diracDelta                                             end
     function display                                                end
     function displayLevels                                          end
+    function displayMeanEnergies                                    end
+    function displayMeshes                                          end
+    function displayOpenShells                                      end
     function displayOrbitalOverlap                                  end
     function displayOrbitalProperties                               end
     function excludeConfigurations                                  end
@@ -1829,11 +2071,13 @@ module Basics
     function generateConfigurationsWithAdditionalElectrons          end
     function generateConfigurationsWithElectronCapture              end
     function generateConfigurationsWithElectronLoss                 end
+    function generateFieldCoordinates                               end
     function generateLevelWithExtraElectron                         end
     function generateLevelWithExtraSubshell                         end
     function generateLevelWithExtraSubshells                        end
     function generateLevelWithExtraTwoElectrons                     end
     function generateLevelWithSymmetryReducedBasis                  end
+    function generateMeshCoordinates                                end
     function generateOrbitalsForBasis                               end
     function generateOrbitalsForPotential                           end
     function generateOrbitalSuperposition                           end

@@ -276,31 +276,14 @@
     end
 
 
-
+    #==
     """
-    `Basics.compute("radial potential: core-Hartree", grid::Radial.Grid, level::Level)`  
-        ... to compute a (radial) core-Hartree potential from the given list of orbitals; cf. Basics.computePotentialCoreHartree. 
+    `Basics.compute(scField::Basics.AbstractScField, grid::Radial.Grid, level::Level)`  
+        ... to compute a (radial) SCF potential of type scField::AbstractScField from the given list of orbitals. 
             A potential::RadialPotential is returned. 
-
-    `Basics.compute("radial potential: Kohn-Sham", grid::Radial.Grid, level::Level)`  
-        ... to compute a (radial) Kohn-Sham potential from the given list of orbitals; cf. Basics.computePotentialKohnSham. 
-            A potential::RadialPotential is returned.
-
-    `Basics.compute("radial potential: Dirac-Fock-Slater", grid::Radial.Grid, level::Level)`  
-        ... to compute a (radial) Dirac-Fock-Slater potential from the given list of orbitals; this potential is rather simple but 
-            includes some undesired self-interaction and exhibits an asymptotic behaviour. Cf. Basics.computePotentialDFS. 
-            A potential::RadialPotential is returned.
-
-    `Basics.compute("radial potential: Dirac-Fock-Slater", grid::Radial.Grid, basis::Basis)`  
-        ... to compute a (radial) Dirac-Fock-Slater potential but for mean occupation of the given basis. Cf. Basics.computePotentialDFS. 
-            A potential::RadialPotential is returned.
-
-    `Basics.compute("radial potential: extended Hartree", grid::Radial.Grid, level::Level)`  
-        ... to compute a (radial) extended Hartree potential from the given list of orbitals; it is a local potential that is based on 
-            direct and exchange coefficients as obtained from the configuration-averaged energy. Cf. Basics.computePotentialExtendedHartree. 
-            A potential::RadialPotential is returned.
     """
-    function Basics.compute(sa::String, grid::Radial.Grid, level::Level)
+    function Basics.compute(scField::Basics.AbstractScField, grid::Radial.Grid, level::Level)
+        
         if      sa == "radial potential: core-Hartree"               wa = Basics.computePotentialCoreHartree(grid, level)
         elseif  sa == "radial potential: Hartree"                    wa = Basics.computePotentialHartree(grid, level)
         elseif  sa == "radial potential: Hartree-Slater"             wa = Basics.computePotentialHartreeSlater(grid, level)
@@ -319,8 +302,7 @@
         end
 
         return( wa )
-    end
-
+    end  ==#
 
 
     """
@@ -637,7 +619,7 @@
 
 
     """
-    `Basics.computePotentialAtomicAverageHS(grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)`  
+    `Basics.computePotential(scField::Basics.AaHSField, grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)`  
         ... to compute a (radial) Hartree-Slater-type potential for the density as modeled by the given set of orbital
             and their occupation numbers in the atomic-average model; a potential::RadialPotential is returned. 
             Here, the atomic-average HS potential is defined by
@@ -649,7 +631,7 @@
             with rho(r) = Sum_a  (2j_a+1) * (Pa^2(r) + Qa^2(r)) / [1 + exp(epsilon-mu)/kT]   ... charge density of all electrons.  
             An Radial.Potential with V_aa_HS(r)  is returned that is consistent with an effective charge Z(r).
     """
-    function Basics.computePotentialAtomicAverageHS(grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)
+    function Basics.computePotential(scField::Basics.AaHSField, grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)
         npoints = grid.NoPoints;    wx = zeros( npoints );    rho = zeros( npoints )
         # Sum_a ...
         for (k,v)  in  orbitals 
@@ -673,7 +655,7 @@
 
 
     """
-    `Basics.computePotentialAtomicAverageDFS(grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)`  
+    `Basics.computePotential(scField::Basics.AaDFSField, grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)`  
         ... to compute a (radial) average-atom DFS-type potential for  the density as modeled by the given set of orbital
             and their occupation numbers in the atomic-average model; a potential::RadialPotential is returned. 
             The atomic-average DFS potential is defined by
@@ -686,7 +668,7 @@
             with r_> = max(r,r')  and  rho_t(r) = sum_a (Pa^2(r) + Qa^2(r))   ... charge density of all electrons.  
             An Radial.Potential with -r * V_DFS(r)  is returned to be consistent with an effective charge Z(r).
     """
-    function Basics.computePotentialAtomicAverageDFS(grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)
+    function Basics.computePotential(scField::Basics.AaDFSField, grid::Radial.Grid, orbitals::Dict{Subshell, Orbital}, mu::Float64, temp::Float64)
         npoints = grid.NoPoints;    rhot = zeros( npoints );     wb = zeros( npoints );    wx = zeros( npoints )
         # Compute the charge density with the average-atom occupation numbers
         for (k,v)  in  orbitals 
@@ -713,7 +695,7 @@
 
 
     """
-    `Basics.computePotentialCoreHartree(grid::Radial.Grid, level::Level)`  
+    `Basics.computePotential(scField::Basics.CHField, grid::Radial.Grid, level::Level)`  
         ... to compute a (radial) core-Hartree potential for the given level; a potential::RadialPotential is returned. 
             The core-Hartree potential is defined by
 
@@ -722,7 +704,7 @@
             with r_> = max(r,r')  and  rho_c(r) =  sum_a (Pa^2(r) + Qa^2(r)) the charge density of the core-electrons.  
             An Radial.Potential with -r * V_CH(r)  is returned to be consistent with an effective charge Z(r).
     """
-    function Basics.computePotentialCoreHartree(grid::Radial.Grid, level::Level)
+    function Basics.computePotential(scField::Basics.CHField, grid::Radial.Grid, level::Level)
         basis = level.basis;    npoints = grid.NoPoints
         println("coreSubshells = $(basis.coreSubshells);    subshells = $(basis.subshells)")
         rhoc = zeros( npoints );    wx = zeros( npoints );    wb = zeros( npoints )
@@ -749,7 +731,7 @@
 
 
     """
-    `Basics.computePotentialHartree(grid::Radial.Grid, level::Level)`  
+    `Basics.computePotential(scField::Basics.HartreeField, grid::Radial.Grid, level::Level)`  
         ... to compute a (radial) Hartree potential for the given level; a potential::RadialPotential is returned. 
             Here, the Hartree potential is simply defined by
 
@@ -757,7 +739,7 @@
 
             An Radial.Potential with V_H(r)  is returned that is consistent with an effective charge Z(r).
     """
-    function Basics.computePotentialHartree(grid::Radial.Grid, level::Level)
+    function Basics.computePotential(scField::Basics.HartreeField, grid::Radial.Grid, level::Level)
         basis = level.basis;    npoints = grid.NoPoints;    wx = zeros( npoints )
         # Sum_a ...
         for  a in basis.subshells
@@ -775,7 +757,7 @@
 
 
     """
-    `Basics.computePotentialHartreeSlater(grid::Radial.Grid, level::Level)`  
+    `Basics.computePotential(scField::Basics.HSField, grid::Radial.Grid, level::Level)`  
         ... to compute a (radial) Hartree-Slater potential for the given level; a potential::RadialPotential is returned. 
             Here, the Hartree-Slater potential is defined by
                                                         
@@ -786,7 +768,7 @@
             with rho(r) = Sum_a  q_a^bar * (Pa^2(r) + Qa^2(r))   ... charge density of all electrons.  
             An Radial.Potential with V_HS(r)  is returned that is consistent with an effective charge Z(r).
     """
-    function Basics.computePotentialHartreeSlater(grid::Radial.Grid, level::Level)
+    function Basics.computePotential(scField::Basics.HSField, grid::Radial.Grid, level::Level)
         basis = level.basis;    npoints = grid.NoPoints;    wx = zeros( npoints );    rho = zeros( npoints )
         # Sum_a ...
         for  a in basis.subshells
@@ -808,7 +790,7 @@
 
 
     """
-    `Basics.computePotentialKohnSham(grid::Radial.Grid, level::Level)`  
+    `Basics.computePotential(scField::Basics.KSField, grid::Radial.Grid, level::Level)`  
         ... to compute a (radial) Kohn-Sham potential for the given level; a potential::RadialPotential is returned. 
             The Kohn-Sham potential is defined by
 
@@ -819,7 +801,7 @@
             with r_> = max(r,r')  and  rho_t(r) = sum_a (Pa^2(r) + Qa^2(r))   ... charge density of all electrons.  
             An Radial.Potential with -r * V_KS(r)  is returned to be consistent with an effective charge Z(r).
     """
-    function Basics.computePotentialKohnSham(grid::Radial.Grid, level::Level)
+    function Basics.computePotential(scField::Basics.KSField, grid::Radial.Grid, level::Level)
         basis = level.basis;       npoints = grid.NoPoints
         rhot = zeros( npoints );   wb = zeros( npoints );   wx = zeros( npoints )
         # Compute the charge density of the core orbitals for the given level
@@ -845,7 +827,7 @@
 
 
     """
-    `Basics.computePotentialDFS(grid::Radial.Grid, level::Level)`  
+    `Basics.computePotential(scField::Basics.DFSField, grid::Radial.Grid, level::Level)`  
         ... to compute a (radial) Dirac-Fock-Slater potential for the given level; a potential::RadialPotential is returned. 
             The Dirac-Fock-Slater potential is defined by
 
@@ -856,7 +838,7 @@
             with r_> = max(r,r')  and  rho_t(r) = sum_a (Pa^2(r) + Qa^2(r))   ... charge density of all electrons.  
             An Radial.Potential with -r * V_DFS(r)  is returned to be consistent with an effective charge Z(r).
     """
-    function Basics.computePotentialDFS(grid::Radial.Grid, level::Level)
+    function Basics.computePotential(scField::Basics.DFSField, grid::Radial.Grid, level::Level)
         basis = level.basis;    npoints = grid.NoPoints
         rhot = zeros( npoints );    wb = zeros( npoints );    wx = zeros( npoints )
         # Compute the charge density of the core orbitals for the given level
@@ -867,11 +849,13 @@
             for    i = 1:nrho   rhot[i] = rhot[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
         end
         # Define the integrant and take the integrals
+        println(">>>>> wy = 1.0 * DFS potential");     wy = 1.0
         for i = 1:npoints
             for j = 1:npoints    rg = max( grid.r[i],  grid.r[j]);    wx[j] = rhot[j]/rg   end
             wb[i] = JAC.RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
-            wb[i] = wb[i] - (3 /(4*pi^2 * grid.r[i]^2) * rhot[i])^(1/3)
+            wb[i] = wb[i] - (3 /(4*pi^2 * grid.r[i]^2) * rhot[i])^(1/3) * wy
         end
+        ## wb = 1.02 * wb
         # Define the potential with regard to Z(r)
         for i = 2:npoints    wb[i] = - wb[i] * grid.r[i]   end;    wb[1] = 0.
         #
@@ -882,10 +866,10 @@
 
 
     """
-    `Basics.computePotentialDFS(grid::Radial.Grid, basis::Basis)`  
+    `Basics.computePotential(scField::Basics.DFSField, grid::Radial.Grid, basis::Basis)`  
         ... to compute the same but for the mean occupation of the orbitals in the given basis.
     """
-    function Basics.computePotentialDFS(grid::Radial.Grid, basis::Basis)
+    function Basics.computePotential(scField::Basics.DFSField, grid::Radial.Grid, basis::Basis)
         npoints = grid.NoPoints
         rhot = zeros( npoints );    wb = zeros( npoints );    wx = zeros( npoints )
         # Compute the charge density of the core orbitals for the given level
@@ -910,7 +894,7 @@
 
 
     """
-    `Basics.computePotentialDFSwCP(kappa::Int64, cp::CorePolarization, grid::Radial.Grid, level::Level)`  
+    `Basics.computePotential(scField::Basics.DFSwCPField, kappa::Int64, cp::CorePolarization, grid::Radial.Grid, level::Level)`  
         ... to compute a (radial) Dirac-Fock-Slater potential for the given level; 
             a potential::RadialPotential is returned. The Dirac-Fock-Slater potential with core-polarization is defined by
                                                
@@ -923,7 +907,7 @@
             and where alpha_d is the core-polarizibility and r_c the core radius.
             An Radial.Potential with -r * V_DFS(r)  is returned to be consistent with an effective charge Z(r).
     """
-    function Basics.computePotentialDFSwCP(kappa::Int64, cp::CorePolarization, grid::Radial.Grid, level::Level)
+    function Basics.computePotential(scField::Basics.DFSwCPField, kappa::Int64, cp::CorePolarization, grid::Radial.Grid, level::Level)
         basis = level.basis;    npoints = grid.NoPoints
         rhot = zeros( npoints );    wb = zeros( npoints );    wx = zeros( npoints )
         # Compute the charge density of the core orbitals for the given level
@@ -960,12 +944,12 @@
 
 
     """
-    `Basics.computePotentialExtendedHartree(grid::Radial.Grid, level::Level)`  
+    `Basics.computePotential(scField::Basics.EHField, grid::Radial.Grid, level::Level)`  
         ... to compute a (radial) extended-Hartree potential for the given level; a potential::RadialPotential is returned. 
             The extended-Hartreepotential is defined by Gu (2008, Eq.(8)) and is based on the Y^k_ab (r) function and various 
             direct and exchange coefficients as the arise from average energy of the configuration.
     """
-    function Basics.computePotentialExtendedHartree(grid::Radial.Grid, level::Level)
+    function Basics.computePotential(scField::Basics.EHField, grid::Radial.Grid, level::Level)
         basis = level.basis;    npoints = grid.NoPoints
         rhoab = zeros( npoints );    wx = zeros( npoints );    wg = zeros( npoints )
         # First term Sum_ab ...

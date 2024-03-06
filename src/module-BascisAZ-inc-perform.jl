@@ -157,6 +157,12 @@
             elseif  typeof(computation.processSettings) == TwoElectronOnePhoton.Settings 
                 outcome = TwoElectronOnePhoton.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("two-electron-one-photon lines:" => outcome) )         end
+            elseif  typeof(computation.processSettings) == ParticleScattering.Settings 
+                outcome = ParticleScattering.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+                if output    results = Base.merge( results, Dict("particle-scattering lines:" => outcome) )         end
+            elseif  typeof(computation.processSettings) == BeamPhotoExcitation.Settings 
+                outcome = BeamPhotoExcitation.computeOutcomes(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+                if output    results = Base.merge( results, Dict("beam-assisted photo-excitation:" => outcome) )         end
                 #
                 #
             elseif  typeof(computation.processSettings) == PairA1P()  

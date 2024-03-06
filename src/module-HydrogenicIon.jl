@@ -197,5 +197,25 @@ module HydrogenicIon
         error("HydrogenicIon.radialOrbital() Not yet implemented.")
         return( orb )
     end
+
+
+    """
+    `HydrogenicIon.rkExpectation(srk::String, sh::Shell, Z::Float64)`
+        ... to compute the (non-relativistic) r^k expectation value for the shell sh of an ion with charge Z;
+            a value::Float64 [in a_o^k] is returned. The string can takes values srk = ["r", "r^2", "1/r"]
+    """
+    function rkExpectation(srk::String, sh::Shell, Z::Float64)
+        n = sh.n;   l = sh.l
+        if  srk     == "r^2"
+            value   = (5n^2 + 1 - 3*l*(l+1)) * n^2 / (2*Z^2) 
+        elseif  srk == "r"
+            value   = (3n^2 - l*(l+1)) / (2*Z)
+        elseif  srk == "1/r"
+            value   = Z / n^2
+        else    error("stop a")
+        end
+        
+        return( value )
+    end
     
 end # module

@@ -10,80 +10,6 @@
             A set of  data::Cascade.DecayData  is returned.
     """
     function computeSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
-        linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    cOrbitals = Dict{Subshell, Orbital}()    
-        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-                                                         
-        nt = 0;   st = 0;   previousMeanEn = 0.
-        for  step  in  stepList
-            st = st + 1
-            nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels)
-            println("\n  $st) Perform $(string(step.process)) amplitude computations for up to $nc decay lines (without selection rules): ")
-            if  printSummary   println(iostream, "\n* $st) Perform $(string(step.process)) amplitude computations for " *
-                                                 "up to $nc decay lines (without selection rules): ")   end 
-                                                 
-            if      step.process == Basics.Auger()  &&   comp.approach == Cascade.AverageSCA()
-                # First determine the `mean' free-electron energy for this Auger block and calculate a common set of continuum orbital
-                meanEn = 0.;    NoEn = 0
-                for  p = 1:length(step.initialMultiplet.levels),  q = 1:length(step.finalMultiplet.levels)
-                    en = step.initialMultiplet.levels[p].energy - step.finalMultiplet.levels[q].energy
-                    if  en > 0.1    meanEn = meanEn + en;    NoEn = NoEn + 1    end
-                end
-                if  NoEn > 0     meanEn = meanEn/ NoEn     else     meanEn = 0.1    end
-                if  abs(meanEn - previousMeanEn) / meanEn  < 0.15   # no new continuum orbitals
-                    println(">> No new continum orbitals are generated for $(keys(cOrbitals)) and for the energy $meanEn ")
-                else
-                    previousMeanEn = meanEn;    cOrbitals = Dict{Subshell, Orbital}()
-                    for kappa = -step.settings.maxKappa-1:step.settings.maxKappa        if   kappa == 0     continue    end
-                        sh           = Subshell(101, kappa);     nrContinuum = Continuum.gridConsistency(meanEn, comp.grid)
-                        contSettings = Continuum.Settings(false, nrContinuum);   
-                        npot         = Nuclear.nuclearPotential(comp.nuclearModel, comp.grid)
-                        ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
-                        ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
-                        ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
-                        ## wp           = Basics.compute("radial potential: Dirac-Fock-Slater", comp.grid, step.finalMultiplet.levels[1].basis)
-                        wp           = Basics.computePotentialDFS(comp.grid, step.finalMultiplet.levels[1])
-                        pot          = Basics.add(npot, wp)
-                        cOrbital, phase, normF  = Continuum.generateOrbitalLocalPotential(meanEn, sh, pot, contSettings)
-                        cOrbitals[sh] = cOrbital
-                    end
-                    println(">> Generate continum orbitals in DFS potential for $(keys(cOrbitals)) and for the energy $meanEn ")
-                end
-          
-                newLines = AutoIonization.computeLinesFromOrbitals(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
-                                                                   step.settings, cOrbitals, output=true, printout=false) 
-                append!(linesA, newLines);    nt = length(linesA)
-            elseif  step.process == Basics.Auger() 
-                # Compute continuum orbitals independently for all transitions in the given block.
-                newLines = AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
-                                                              step.settings, output=true, printout=false) 
-                append!(linesA, newLines);    nt = length(linesA)
-            elseif  step.process == Basics.Radiative()
-                newLines = PhotoEmission.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
-                                                             step.settings, output=true, printout=false) 
-                append!(linesR, newLines);    nt = length(linesR)
-            else   error("Unsupported atomic process for cascade computations.")
-            end
-            println("     Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, giving now rise " *
-                    "to a total of $nt $(string(step.process)) decay lines." )
-            if  printSummary   println(iostream, "\n*    Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, " *
-                                                 "giving now rise to a total of $nt $(string(step.process)) decay lines." )   end      
-        end
-        #
-        data = [ Cascade.Data{PhotoEmission.Line}(linesR), Cascade.Data{AutoIonization.Line}(linesA) ]
-    end
-
-
-    #=====================================================  
-        ... Beginning of Aloka's part ... for parallel computing via multiprocessing and multithreading
-        
-    """
-    `Cascade.computeSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
-        ... computes in turn all the requested transition amplitudes as well as PhotoEmission.Line's, AutoIonization.Line's, 
-            etc. for all pre-specified decay steps of the cascade. When compared with standard computations of these atomic 
-            processes, however, the amount of output is largely reduced and often just printed into the summary file. 
-            A set of  data::Cascade.DecayData  is returned.
-    """
-    function computeSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
         #linesA = AutoIonization.Line[];    #linesR = PhotoEmission.Line[];    cOrbitals = Dict{Subshell, Orbital}()    
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
 
@@ -182,9 +108,79 @@
         cOrbitals = Dict{Subshell, Orbital}()
         return newLines
     end
-    ... End of Aloka's part   ===============================================================#  
-    
-    
+
+
+    #====================================================================================================================================
+    """
+    `Cascade.computeSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
+        ... computes in turn all the requested transition amplitudes as well as PhotoEmission.Line's, AutoIonization.Line's, 
+            etc. for all pre-specified decay steps of the cascade. When compared with standard computations of these atomic 
+            processes, however, the amount of output is largely reduced and often just printed into the summary file. 
+            A set of  data::Cascade.DecayData  is returned.
+    """
+    function computeStepsOld(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
+        linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    #cOrbitals = Dict{Subshell, Orbital}()    
+        printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+        nt = 0;   st = 0;   previousMeanEn = 0.
+        for  step  in  stepList
+            #st = st + 1
+            nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels)
+            println("\n  $st) Perform $(string(step.process)) amplitude computations for up to $nc decay lines (without selection rules): ")
+            if  printSummary   println(iostream, "\n* $st) Perform $(string(step.process)) amplitude computations for " *
+                                                 "up to $nc decay lines (without selection rules): ")   end 
+                                                 
+            if      step.process == Basics.Auger()  &&   comp.approach == Cascade.AverageSCA()
+                # First determine the `mean' free-electron energy for this Auger block and calculate a common set of continuum orbital
+                meanEn = 0.;    NoEn = 0
+                for  p = 1:length(step.initialMultiplet.levels),  q = 1:length(step.finalMultiplet.levels)
+                    en = step.initialMultiplet.levels[p].energy - step.finalMultiplet.levels[q].energy
+                    if  en > 0.1    meanEn = meanEn + en;    NoEn = NoEn + 1    end
+                end
+                if  NoEn > 0     meanEn = meanEn/ NoEn     else     meanEn = 0.1    end
+                #if  abs(meanEn - previousMeanEn) / meanEn  < 0.15   # no new continuum orbitals
+                #    println(">> No new continum orbitals are generated for $(keys(cOrbitals)) and for the energy $meanEn ")
+                #else
+                    previousMeanEn = meanEn;    cOrbitals = Dict{Subshell, Orbital}()
+                    for kappa = -step.settings.maxKappa-1:step.settings.maxKappa        if   kappa == 0     continue    end
+                        sh           = Subshell(101, kappa);     nrContinuum = Continuum.gridConsistency(meanEn, comp.grid)
+                        contSettings = Continuum.Settings(false, nrContinuum);   
+                        npot         = Nuclear.nuclearPotential(comp.nuclearModel, comp.grid)
+                        ## wp1 = compute("radial potential: core-Hartree", grid, wLevel)
+                        ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
+                        ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
+                        ## wp           = Basics.compute("radial potential: Dirac-Fock-Slater", comp.grid, step.finalMultiplet.levels[1].basis)
+                        wp           = Basics.computePotentialDFS(comp.grid, step.finalMultiplet.levels[1])
+                        pot          = Basics.add(npot, wp)
+                        cOrbital, phase, normF  = Continuum.generateOrbitalLocalPotential(meanEn, sh, pot, contSettings)
+                        cOrbitals[sh] = cOrbital
+                    end
+                    println(">> Generate continum orbitals in DFS potential for $(keys(cOrbitals)) and for the energy $meanEn ")
+                #end
+          
+                newLines = AutoIonization.computeLinesFromOrbitals(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
+                                                                   step.settings, cOrbitals, output=true, printout=false) 
+                append!(linesA, newLines);    nt = length(linesA)
+            elseif  step.process == Basics.Auger() 
+                # Compute continuum orbitals independently for all transitions in the given block.
+                newLines = AutoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
+                                                              step.settings, output=true, printout=false) 
+                append!(linesA, newLines);    nt = length(linesA)
+            elseif  step.process == Basics.Radiative()
+                newLines = PhotoEmission.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.grid, 
+                                                             step.settings, output=true, printout=false) 
+                append!(linesR, newLines);    nt = length(linesR)
+            else   error("Unsupported atomic process for cascade computations.")
+            end
+            println("     Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, giving now rise " *
+                    "to a total of $nt $(string(step.process)) decay lines." )
+            if  printSummary   println(iostream, "\n*    Step $st:: A total of $(length(newLines)) $(string(step.process)) lines are calculated, " *
+                                                 "giving now rise to a total of $nt $(string(step.process)) decay lines." )   end      
+        end
+        #
+        data = ( Cascade.Data{PhotoEmission.Line}(linesR), Cascade.Data{AutoIonization.Line}(linesA) )
+    end
+    ====================================================================================================================================================#
+
     """
     `Cascade.determineSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, blockList::Array{Cascade.Block,1})`  
         ... determines all step::Cascade.Step's that need to be computed for this decay cascade. It cycles through all processes of the given
@@ -206,6 +202,7 @@
                         if      process == Basics.Radiative()   
                             if  a == b   ||   maxEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons
+                                #if blockList[a].NoElectrons >= 53 continue end
                                 settings = PhotoEmission.Settings([E1], [UseBabushkin,UseCoulomb], false, false, CorePolarization(), LineSelection(), 0., 0., 1.0e6)
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
@@ -213,6 +210,7 @@
                         elseif  process == Basics.Auger()       
                             if  a == b   ||   maxEn < 0.    continue   end
                             if  blockList[a].NoElectrons == blockList[b].NoElectrons + 1
+                                #if blockList[a].NoElectrons > 53 continue end
                                 settings = AutoIonization.Settings(false, false, LineSelection(), 0., 0., 1.0e6, 3, CoulombInteraction())
                                 push!( stepList, Cascade.Step(process, settings, blockList[a].confs, blockList[b].confs, 
                                                               blockList[a].multiplet, blockList[b].multiplet) )
@@ -374,19 +372,16 @@
         if  printSummary   Cascade.displaySteps(iostream, wd, sa="decay ")    end      
         we   = Cascade.modifySteps(wd)
         @time data = Cascade.computeSteps(scheme, comp, we)
-        @show typeof(data)
         if output    
             results = Base.merge( results, Dict("name"                  => comp.name) ) 
             results = Base.merge( results, Dict("cascade scheme"        => comp.scheme) ) 
             results = Base.merge( results, Dict("initial multiplets:"   => multiplets) )    
-            results = Base.merge( results, Dict("generated multiplets:" => gMultiplets) ) 
-            results = Base.merge( results, Dict("photoemission lines:"  => data[1].lines) ) 
-            results = Base.merge( results, Dict("autoionization lines:" => data[2].lines) ) 
-            results = Base.merge( results, Dict("cascade data:"         => data) )
+            results = Base.merge( results, Dict("generated multiplets:" => gMultiplets) )    
+            results = Base.merge( results, Dict("decay line data:"      => data) )
             #
             #  Write out the result to file to later continue with simulations on the cascade data
             if outputToFile
-                filename = "zzz-cascade-decay-computations-" * string(Dates.now())[1:13] * ".jld"
+                filename = "zzz-cascade-decay-computations-" * string(Dates.now())[1:13] * "-" * string(Dates.now())[15:16] * ".jld"
                 println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
                         "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
                 if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *

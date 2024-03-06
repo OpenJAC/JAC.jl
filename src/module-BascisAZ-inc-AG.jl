@@ -159,6 +159,48 @@
         return( wa )
     end
 
+
+
+        
+    """
+    `Basics.analyzeGrid(shells::Array{Shell,1}, nm::Nuclear.Model, grid::Radial.Grid)`  
+        ... to analyze the representation of hydrogenic orbitals from shells for the given nuclear charge and grid.
+            The procedure orders the shells, tabulates their (hydrogenic) energy in the given grid and compares them
+            with the exact solution. Nothing is returned otherwise..
+    """
+    function Basics.analyzeGrid(shells::Array{Shell,1}, nm::Nuclear.Model, grid::Radial.Grid)
+        subshells = Basics.generateSubshellList(shells::Array{Shell,1})
+        ns = length(subshells);    sortedSubshells = sort(subshells);    isCalculated = falses(ns)
+        sortedLines = String[];    for n = 1:ns   push!(sortedLines, "aa")   end
+        #
+        # Calculate the hydrogenic orbitals for all requested shells and take over the results for this shell
+        # as well as all other shells of the same symmetry
+        wa = Bsplines.generatePrimitives(grid)
+        wb = Bsplines.generateOrbitalsHydrogenic(wa, nm, subshells, printout=true) 
+        #
+        # Print the table in a neat format
+        nx = 67
+        println("  ", TableStrings.hLine(nx))
+        sa = "  ";      
+        sa = sa * TableStrings.center(10, "Subshell";         na=3)
+        sa = sa * TableStrings.center(17, "Energies [a.u.]";  na=2)
+        sa = sa * TableStrings.center(17, "Dirac-E  [a.u.]";  na=2)
+        sa = sa * TableStrings.center(17, "Delta-E / |E|";    na=2)
+        println(sa)
+        #
+        for subsh in subshells
+            sa = "" *  TableStrings.flushright(10, string(subsh); na=6)
+            en = Basics.computeDiracEnergy(subsh, nm.Z)
+            sa = sa * @sprintf("%.8e", wb[subsh].energy)                 * "    "
+            sa = sa * @sprintf("%.8e", en)                               * "    "
+            sa = sa * @sprintf("%.8e", (wb[subsh].energy-en)/abs(en))
+            println(sa)
+        end
+        println("  ", TableStrings.hLine(nx))
+        
+        return( nothing )
+    end
+
         
 
     """
@@ -658,17 +700,19 @@
    
 
     """
-    `Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1}; N::Int64=10)`  
+    `Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1}; N::Int64=10, E0::Float64=0.)`  
         ... display on stream the level energies of the N lowest levels in ascending order, and together with the configuration 
-            of most leading term in the level expansion. A neat table is printed but nothing is returned otherwise.
+            of most leading term in the level expansion. All level energies refer to the lowest + E0 [Hartree], which enables 
+            one to refer to any level as the (total) 0. energy.  A neat table is printed but nothing is returned otherwise.
     """
-    function Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1}; N::Int64=10)
+    function Basics.displayLevels(stream::IO, multiplets::Array{Multiplet,1}; N::Int64=10, E0::Float64=0.)
         allLevels = Level[];    nx = 104
         for  multiplet  in multiplets
             for  level in  multiplet.levels   push!(allLevels, level)      end
         end
+        println(stream, ">>> Total number of levels is $(length(allLevels))  in all multiplets together. \n´")
         sortedLevels = Base.sort( allLevels, lt=Base.isless)
-        energy0      = sortedLevels[1].energy
+        energy0      = sortedLevels[1].energy + E0
         println(stream, "  ", TableStrings.hLine(nx))
         println(stream, "    J Parity   No. electrons    Energy " * TableStrings.inUnits("energy") * "        Leading configuration") 
         println(stream, "  ", TableStrings.hLine(nx))
@@ -701,6 +745,107 @@
         
         return( nothing )
     end
+   
+
+    """
+    `Basics.displayMeanEnergies(stream::IO, multiplets::Array{Multiplet,1}; N::Int64=10, E0::Float64=0.)`  
+        ... display on stream the mean energy as well as the minimum and maximum energy of all levels from the 
+            same (leading) configuration. All these energies are taken with regard to the lowest level energy
+            or are shifted by lowest + E0 [Hartree], which enables one to shift the zero energy to any position.
+            These mean, min and max energies are listed together with the corresponding configuration.
+            A neat table is printed but nothing is returned otherwise.
+    """
+    function Basics.displayMeanEnergies(stream::IO, multiplets::Array{Multiplet,1}; N::Int64=10, E0::Float64=0.)
+        # Combine all levels into a single list
+        allLevels = Level[]
+        for  multiplet  in multiplets
+            for  level in  multiplet.levels   push!(allLevels, level)      end
+        end
+        println(stream, "\n>> Total number of levels is $(length(allLevels))  in all multiplets together.")
+        sortedLevels = Base.sort( allLevels, lt=Base.isless)
+        energy0      = sortedLevels[1].energy + E0
+        # Now determine and compare the leading configuration for all levels
+        nall = length(sortedLevels);    notConsideredYet = trues(nall)
+        leadingConfigs = Configuration[]
+        for  (n, level)  in  enumerate(sortedLevels)
+            mc2  = level.mc .* level.mc;   index = findmax(mc2)[2]
+            conf = Basics.extractNonrelativisticConfigurationFromCsfR(level.basis.csfs[index],  level.basis)
+            push!(leadingConfigs, conf)
+        end
+        #
+        configs = Configuration[];   meanEnergies = Float64[];   minEnergies = Float64[];   maxEnergies = Float64[];   noLevels = Int64[]
+        emin = emax = emean = 0.
+        for  (na, aLevel)  in  enumerate(sortedLevels)
+            if  notConsideredYet[na]     
+                notConsideredYet[na] = false;    selectedConf = leadingConfigs[na];   
+                emin = 1.0e10;   emax = -1.0e10;    ne = 1;   emean = aLevel.energy
+                # Now compare with those levels, which were not yet considered
+                for  (nb, bLevel)  in  enumerate(sortedLevels)
+                    if  notConsideredYet[nb]   &&   selectedConf == leadingConfigs[nb]
+                        notConsideredYet[nb] = false;      emean = emean + bLevel.energy
+                        emin = min(emin, bLevel.energy);   emax  = max(emax, bLevel.energy);    ne = ne + 1
+                    end
+                end
+                push!(minEnergies, emin);      push!(maxEnergies, emax);    push!(meanEnergies, emean / ne)
+                push!(configs, selectedConf);  push!(noLevels, ne)
+            end 
+        end
+        #
+        nx = 150
+        println(stream, ">> All energies are shown in:  " * TableStrings.inUnits("energy") * "\n") 
+        println(stream, "  ", TableStrings.hLine(nx))
+        println(stream, "    No. e's    mean En        min En    ...    max En     No. Levels    Leading configuration") 
+        println(stream, "  ", TableStrings.hLine(nx))
+        for  (n, nconf)  in  enumerate(configs)
+            if  n > N   break   end
+            #
+            sa = " " * 
+            TableStrings.flushright( 8, string(nconf.NoElectrons)) * "   " *
+            TableStrings.flushright(12, @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", meanEnergies[n] - energy0))) * "   "  *
+            TableStrings.flushright(12, @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", minEnergies[n]  - energy0))) * " ... " *
+            TableStrings.flushright(12, @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", maxEnergies[n]  - energy0))) * "  " *
+            TableStrings.flushright( 8, string( noLevels[n] )) * "      " *  
+            TableStrings.flushleft(64, string(nconf)) 
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+        
+        return( nothing )
+    end
+   
+
+    """
+    `Basics.displayOpenShells(stream::IO, confList::Array{Configuration,1})`  
+        ... displays on stream the open configurations, separated by comma, as single string. Nothing is returned otherwise.
+    """
+    function Basics.displayOpenShells(stream::IO, confList::Array{Configuration,1})
+        shells     = Basics.extractShellList(confList);   isFull = true
+        openShells = Shell[]
+        for  shell in shells
+            isFull = true;    maxOcc = 2 * (2*shell.l + 1)
+            for conf  in  confList                
+                if    haskey(conf.shells, shell)  &&  conf.shells[shell] == maxOcc
+                else  isFull = false
+                end 
+            end 
+            if  !isFull   push!(openShells, shell)   end
+        end 
+        # Collect the open-shell occupation in a string
+        sa = "Open-shell configurations:  "
+        for  conf  in  confList
+            for  shell in openShells
+                if      haskey(conf.shells, shell)  &&  conf.shells[shell] == 0
+                elseif  haskey(conf.shells, shell)  &&  conf.shells[shell] == 1    sa = sa * string(shell) * " "
+                elseif  haskey(conf.shells, shell)  occ = conf.shells[shell];      sa = sa * string(shell) * "^$occ "
+                end 
+            end 
+            sa = sa[1:end-1] * ",  "
+        end 
+        sa = sa[1:end-3]
+        println(stream, sa)
+        
+        return(nothing)
+    end 
    
 
     """

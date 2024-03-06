@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage[a4paper,margin=0.7in,landscape]{geometry}
+\usepackage{pdflscape}
+\usepackage{multirow}
+
+\title{La Cascade Ion Distribution Results}
+
+\begin{document}
+
+\maketitle
+
+\begin{table}[h]
+\centering
+%\caption{Ion distribution results}
+    \begin{tabular}{cccccccc}
+    \hline
+    \multirow{2}{*}{\textbf{No. Electrons}} & \multirow{2}{*}{Charge state} & \multicolumn{5}{c}{Relative Ion Occupation}   \\ \cline{3-8}
+                           &                       & Experiment*  & Model A   & Model B  & Model C & Model D  & Model E     \\ \hline
+    53                     & 4+                    & 0.04         & 3.46E-2   & 5.41E-3  & 5.41E-3 & 5.41E-3  & 5.41E-3     \\
+    52                     & 5+                    & 0.1          & 4.72E-1   & 3.01E-1  & 1.36E-1 & 1.36E-1  & 1.36E-1     \\
+    51                     & 6+                    & 0.28         & 4.66E-1   & 6.42E-1  & 5.96E-1 & 4.18E-9  & 1.38E-7     \\
+    50                     & 7+                    & 0.35         & 2.65E-2   & 5.05E-2  & 2.61E-1 & 8.51e-1  & 8.48E-1     \\
+    49                     & 8+                    & 0.17         & 1.12E-4   & 2.93E-4  & 3.42E-3 & 7.25E-3  & 1.03E-2     \\
+    48                     & 9+                    & 0.04         & 1.23E-8   & 3.01E-8  & 7.00E-7 & 1.04E-6  & 6.03E-7     \\  \hline    
+    \end{tabular}
+    \\ $^*$Approximate values are considered from the plot at around 900 eV 
+\end{table}
+
+
+\begin{itemize}
+    \item We have considered all the ionic states from La$^{2+}$ to La$^{10+}$ for cascade calculation. Only for comparison purposes, we have shown the La$^{4+}$ to La$^{9+}$ in the above table.
+    \item Considering Average Single Configuration Approach, a total of 68241 blocks are generated for all these ionic states of La (La$^{2+}$ to La$^{10+}$).
+    \item 138504 steps are generated between all these blocks. Among these 51997 Autoionization and 86507 Radiative emissions steps.
+    \item For each Autoionization step, we have considered up to 5000 lines, and 3000 lines for each Radiative emission step.
+    \item Model A is without any shift in energies.
+    \item Model B is with the energy shifts as per the NIST energies.
+    \item Model C is with the energy shifts as -4.2 for levels with 50 electrons.
+    \item Model D is with the energy shifts as -4.25 for levels with 50 electrons.
+    \item Model E is the same as model D but we selected lines randomly in autoionization and radiative emissions.
+\end{itemize}
+
+\end{document}
+

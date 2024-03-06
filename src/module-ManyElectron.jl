@@ -8,8 +8,8 @@ module ManyElectron
     using  ..Basics, ..Defaults,  ..Radial
     export Configuration, ConfigurationR, AsfSettings, CsfR, Basis, Level, Multiplet, 
            AbstractQedModel, NoneQed, QedPetersburg, QedSydney, LSjjSettings,
-           AbstractConfigurationRestriction, RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, 
-           RequestMinimumOccupation, RequestMaximumOccupation
+           AbstractConfigurationRestriction, RestrictMaximumDisplacements, RestrictNoElectronsTo, RestrictParity, 
+           RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation
 
     
     
@@ -31,141 +31,6 @@ module ManyElectron
     struct         QedPetersburg  <:  AbstractQedModel   end
     struct         QedSydney      <:  AbstractQedModel   end
     struct         NoneQed        <:  AbstractQedModel   end
-
-    
-    
-    """
-    `abstract type ManyElectron.AbstractConfigurationRestriction` 
-        ... defines an abstract types for dealing with restrictions that need to be applied to a list of configurations.
-            Typically, a loop through is made through all given restrictions and all configurations are tested to obey all
-            these restrictions. Two contradicting restrictions, for instance RestrictParity(plus) & RestrictParity(minus),
-            therefore leads zero configurations in all cases. It remains the reponsibility of the user to make sure that
-            the given restrictions are consistent with what is to be achieved. The given set of restrictions can be easily
-            extended if this need arises by the users.
-
-        + RestrictNoElectronsTo(..)    ... to restrict the total number of electron in high subshells.
-        + RestrictParity(..)           ... to restrict to configurations with a given parity.
-        + RestrictToShellDoubles(..)   ... to allow only double occupations in high subshells.
-        + RequestMinimumOccupation(..) ... to request a minimum occupation in a given set of shells.
-        + RequestMaximumOccupation(..) ... to request a maximum occupation in a given set of shells.
-    """
-    abstract type  AbstractConfigurationRestriction      end
-
-
-    """
-    `struct  ManyElectron.RestrictNoElectronsTo  <: AbstractConfigurationRestriction`   
-        ... restrict the number of electron in all shells with principal quantum number n >= nmin or orbital angular momentum l >= lmin 
-            to a total of ne electrons.
-
-        + ne            ::Int64     ... maximum number of (allowed) electrons in the specicied higher subshells.
-        + nmin          ::Int64     ... principal quantum number nmin.
-        + lmin          ::Int64     ... orbital angular momentum lmin.
-    """
-    struct   RestrictNoElectronsTo  <: AbstractConfigurationRestriction
-        ne              ::Int64
-        nmin            ::Int64
-        lmin            ::Int64
-    end
-
-
-    function Base.string(res::RestrictNoElectronsTo)
-        sa = "Restrict to configurations with a maximum of $(res.ne) electrons in shells with n >= $(res.nmin) & l >= $(res.lmin)."
-        return( sa )
-    end
-
-    function Base.show(io::IO, res::RestrictNoElectronsTo)
-        sa = string(res);       print(io, sa)
-    end
-
-
-    """
-    `struct  ManyElectron.RestrictParity  <: AbstractConfigurationRestriction`   
-        ... restrict to configurations with a given parity.
-
-        + parity        ::Basics.Parity   ... given parity.
-    """
-    struct   RestrictParity  <: AbstractConfigurationRestriction
-        parity          ::Basics.Parity
-    end
-
-
-    function Base.string(res::RestrictParity)
-        sa = "Restrict to configurations with parity $(res.parity)."
-        return( sa )
-    end
-
-    function Base.show(io::IO, res::RestrictParity)
-        sa = string(res);       print(io, sa)
-    end
-
-
-    """
-    `struct  ManyElectron.RestrictToShellDoubles  <: AbstractConfigurationRestriction`   
-        ... restrict to a double electron occupation in all shells with principal quantum number n >= nmin or orbital angular momentum l >= lmin. 
-
-        + nmin          ::Int64     ... principal quantum number nmin.
-        + lmin          ::Int64     ... orbital angular momentum lmin.
-    """
-    struct   RestrictToShellDoubles  <: AbstractConfigurationRestriction
-        nmin            ::Int64
-        lmin            ::Int64
-    end
-
-
-    function Base.string(res::RestrictToShellDoubles)
-        sa = "Restrict to configurations with a double electron occupation in shells with n >= $(res.nmin) & l >= $(res.lmin)."
-        return( sa )
-    end
-
-    function Base.show(io::IO, res::RestrictToShellDoubles)
-        sa = string(res);       print(io, sa)
-    end
-
-
-    """
-    `struct  ManyElectron.RequestMinimumOccupation  <: AbstractConfigurationRestriction`   
-        ... request a minimum occupation ne in the given (list of) shells. 
-
-        + ne            ::Int64           ... minimum electron occupation.
-        + shells        ::Array{Shell,1}  ... list of shells.
-    """
-    struct   RequestMinimumOccupation  <: AbstractConfigurationRestriction
-        ne              ::Int64 
-        shells          ::Array{Shell,1}
-    end
-
-
-    function Base.string(res::RequestMinimumOccupation)
-        sa = "Request a minimum occupation of $(res.ne) electron in the (list of) shells $(res.shells)."
-        return( sa )
-    end
-
-    function Base.show(io::IO, res::RequestMinimumOccupation)
-        sa = string(res);       print(io, sa)
-    end
-
-
-    """
-    `struct  ManyElectron.RequestMaximumOccupation  <: AbstractConfigurationRestriction`   
-        ... request a maximum occupation ne in the given (list of) shells. 
-
-        + ne            ::Int64           ... maximum electron occupation.
-        + shells        ::Array{Shell,1}  ... list of shells.
-    """
-    struct   RequestMaximumOccupation  <: AbstractConfigurationRestriction
-        ne              ::Int64 
-        shells          ::Array{Shell,1}
-    end
-
-
-    function Base.string(res::RequestMaximumOccupation)
-        sa = "Request a maximum occupation of $(res.ne) electron in the (list of) shells $(res.shells)."
-        return( sa )
-    end
-
-    function Base.show(io::IO, res::RequestMaximumOccupation)
-        sa = string(res);       print(io, sa)
-    end
 
     
 
@@ -662,6 +527,171 @@ module ManyElectron
     	
     	  return( true )
     end
+    
+    
+    """
+    `abstract type ManyElectron.AbstractConfigurationRestriction` 
+        ... defines an abstract types for dealing with restrictions that need to be applied to a list of configurations.
+            Typically, a loop through is made through all given restrictions and all configurations are tested to obey all
+            these restrictions. Two contradicting restrictions, for instance RestrictParity(plus) & RestrictParity(minus),
+            therefore leads zero configurations in all cases. It remains the reponsibility of the user to make sure that
+            the given restrictions are consistent with what is to be achieved. The given set of restrictions can be easily
+            extended if this need arises by the users.
+
+        + RestrictMaximumDisplacements(..)  ... to restrict the maximum replacements wrt a (2nd) configuration.
+        + RestrictNoElectronsTo(..)         ... to restrict the total number of electron in high subshells.
+        + RestrictParity(..)                ... to restrict to configurations with a given parity.
+        + RestrictToShellDoubles(..)        ... to allow only double occupations in high subshells.
+        + RequestMinimumOccupation(..)      ... to request a minimum occupation in a given set of shells.
+        + RequestMaximumOccupation(..)      ... to request a maximum occupation in a given set of shells.
+    """
+    abstract type  AbstractConfigurationRestriction      end
+
+
+    """
+    `struct  ManyElectron.RestrictMaximumDisplacements  <: AbstractConfigurationRestriction`   
+        ... restrict the maximum replacements w.r.t. (another) given configuration, which can have a different number of electrons.
+            A "displacement" is simply defined as the difference of occuation numbers. This restriction is useful to determine allowed
+            configurations in a second-order treatment of atomic processes. An odd number of displacement naturally arise for all 
+            configurations which differ by one or three electrons from the reference configurations. Several restrictions of this
+            type can be formulated but are treated separately.
+
+        + conf          ::Configuration   ... configuration w.r.t. which displacements are taken.
+        + maxDisplace   ::Int64           ... maximum number of displacements >= 0.
+    """
+    struct   RestrictMaximumDisplacements  <: AbstractConfigurationRestriction
+        conf            ::Configuration
+        maxDisplace     ::Int64
+    end
+
+
+    function Base.string(res::RestrictMaximumDisplacements)
+        sa = "Restrict to configurations with maximum $(res.maxDisplace) displacements w.r.t. $(res.conf)."
+        return( sa )
+    end
+
+    function Base.show(io::IO, res::RestrictMaximumDisplacements)
+        sa = string(res);       print(io, sa)
+    end
+
+
+    """
+    `struct  ManyElectron.RestrictNoElectronsTo  <: AbstractConfigurationRestriction`   
+        ... restrict the number of electron in all shells with principal quantum number n >= nmin or orbital angular momentum l >= lmin 
+            to a total of ne electrons.
+
+        + ne            ::Int64     ... maximum number of (allowed) electrons in the specicied higher subshells.
+        + nmin          ::Int64     ... principal quantum number nmin.
+        + lmin          ::Int64     ... orbital angular momentum lmin.
+    """
+    struct   RestrictNoElectronsTo  <: AbstractConfigurationRestriction
+        ne              ::Int64
+        nmin            ::Int64
+        lmin            ::Int64
+    end
+
+
+    function Base.string(res::RestrictNoElectronsTo)
+        sa = "Restrict to configurations with a maximum of $(res.ne) electrons in shells with n >= $(res.nmin) & l >= $(res.lmin)."
+        return( sa )
+    end
+
+    function Base.show(io::IO, res::RestrictNoElectronsTo)
+        sa = string(res);       print(io, sa)
+    end
+
+
+    """
+    `struct  ManyElectron.RestrictParity  <: AbstractConfigurationRestriction`   
+        ... restrict to configurations with a given parity.
+
+        + parity        ::Basics.Parity   ... given parity.
+    """
+    struct   RestrictParity  <: AbstractConfigurationRestriction
+        parity          ::Basics.Parity
+    end
+
+
+    function Base.string(res::RestrictParity)
+        sa = "Restrict to configurations with parity $(res.parity)."
+        return( sa )
+    end
+
+    function Base.show(io::IO, res::RestrictParity)
+        sa = string(res);       print(io, sa)
+    end
+
+
+    """
+    `struct  ManyElectron.RestrictToShellDoubles  <: AbstractConfigurationRestriction`   
+        ... restrict to a double electron occupation in all shells with principal quantum number n >= nmin or orbital angular momentum l >= lmin. 
+
+        + nmin          ::Int64     ... principal quantum number nmin.
+        + lmin          ::Int64     ... orbital angular momentum lmin.
+    """
+    struct   RestrictToShellDoubles  <: AbstractConfigurationRestriction
+        nmin            ::Int64
+        lmin            ::Int64
+    end
+
+
+    function Base.string(res::RestrictToShellDoubles)
+        sa = "Restrict to configurations with a double electron occupation in shells with n >= $(res.nmin) & l >= $(res.lmin)."
+        return( sa )
+    end
+
+    function Base.show(io::IO, res::RestrictToShellDoubles)
+        sa = string(res);       print(io, sa)
+    end
+
+
+    """
+    `struct  ManyElectron.RequestMinimumOccupation  <: AbstractConfigurationRestriction`   
+        ... request a minimum occupation ne in the given (list of) shells. 
+
+        + ne            ::Int64           ... minimum electron occupation.
+        + shells        ::Array{Shell,1}  ... list of shells.
+    """
+    struct   RequestMinimumOccupation  <: AbstractConfigurationRestriction
+        ne              ::Int64 
+        shells          ::Array{Shell,1}
+    end
+
+
+    function Base.string(res::RequestMinimumOccupation)
+        sa = "Request a minimum occupation of $(res.ne) electron in the (list of) shells $(res.shells)."
+        return( sa )
+    end
+
+    function Base.show(io::IO, res::RequestMinimumOccupation)
+        sa = string(res);       print(io, sa)
+    end
+
+
+    """
+    `struct  ManyElectron.RequestMaximumOccupation  <: AbstractConfigurationRestriction`   
+        ... request a maximum occupation ne in the given (list of) shells. 
+
+        + ne            ::Int64           ... maximum electron occupation.
+        + shells        ::Array{Shell,1}  ... list of shells.
+    """
+    struct   RequestMaximumOccupation  <: AbstractConfigurationRestriction
+        ne              ::Int64 
+        shells          ::Array{Shell,1}
+    end
+
+
+    function Base.string(res::RequestMaximumOccupation)
+        sa = "Request a maximum occupation of $(res.ne) electron in the (list of) shells $(res.shells)."
+        return( sa )
+    end
+
+    function Base.show(io::IO, res::RequestMaximumOccupation)
+        sa = string(res);       print(io, sa)
+    end
+
+
+
     
     
     """

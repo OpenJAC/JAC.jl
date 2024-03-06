@@ -38,8 +38,7 @@ module Continuum
         ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
         ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
         ## wp4 = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
-        ##x wp = compute("radial potential: Kohn-Sham", grid, level)   
-        wp  = Basics.computePotential(Basics.DFSField(), grid, level)   
+        wp = compute("radial potential: Kohn-Sham", grid, level)   
         pot = Basics.add(nuclearPotential, wp)
         Defaults.warn(AddWarning(), "All continuum orbitals are generated in a local (DFS) potential.")  
         
@@ -111,9 +110,6 @@ module Continuum
             cOrbital, phase, normFactor = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
         elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussekNorm()
             cOrbital, phase, normFactor = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
-        elseif  Defaults.GBL_CONT_NORMALIZATION  ==  AlokNorm()
-            cOrbital, phase             = Continuum.normalizeOrbitalAlok(cOrbital, pot, settings)
-            normFactor                  = 1.0
         else    error("stop b")
         end
         #
@@ -444,11 +440,10 @@ module Continuum
         α = Defaults.getDefaults("alpha")  ;      wc = 1/α
         q  = sqrt( energy * (energy + 2 * wc^2) ) / wc  ;    x  = q * pot.grid.r[mtp]
     
-        ## println("r ", pot.grid.r[mtp])
+        println("r ", pot.grid.r[mtp])
     
         if abs(Zbar) > 0.1
-            ## println("Normalization with Coulomb functions")
-            sa = "Normalization with Coulomb functions"
+            println("Normalization with Coulomb functions")
             λ  = sqrt(kappa^2 - Zbar^2 / wc^2)  ; λm1 = λ - 1.0
             η  = Zbar * α * (energy + wc^2) / sqrt( energy * (energy + 2 * wc^2) ) 
     
@@ -496,8 +491,7 @@ module Continuum
     
         else
             
-            ## println("Normalization with Bessel functions")
-            sa = "Normalization with Bessel functions"
+            println("Normalization with Bessel functions")
     
             if kappa < 0 ksign = 1 else ksign = -1 end
     
@@ -526,8 +520,7 @@ module Continuum
         newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                               P, Q, Pprime, Qprime, cOrbital.grid)
         
-        ##x println(">> $sa:   r = $(pot.grid.r[mtp]),   iPhase = ", δ, " cPhase= ", Δ)
-        println(">> $sa:   r = $(pot.grid.r[mtp]),   iPhase = $δ,   cPhase = $Δ ")
+        println("iPhase = ", δ, " cPhase= ", Δ)
     
         return( newOrbital, δ + Δ, N )
     end

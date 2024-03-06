@@ -12,7 +12,7 @@ module Radial
     
     """
     `abstract type Radial.AbstractMesh` 
-        ... defines an abstract (singleton) type for the radial mesh.
+        ... defines an abstract mesh type for the use of the radial mesh
         
         + struct MeshNone       ... if an empty instance of Radial.Grid() need to be used.
         + struct MeshGrasp      ... to use a GRASP-like grid with Newton-Cortes integration rules.

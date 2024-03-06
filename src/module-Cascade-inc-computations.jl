@@ -160,7 +160,8 @@
         rate = 0.
         for daugther in level.daugthers
             if  daugther.process != Basics.Auger();      continue   end
-            aLine   = daugther.lineSet.linesA[daugther.index]
+            ##x aLine   = daugther.lineSet.linesA[daugther.index]
+            aLine   = daugther.lines[daugther.index]
             rate    = rate + aLine.totalRate
         end
         return( rate )
@@ -175,7 +176,8 @@
         rate = Basics.EmProperty(0.)
         for daugther in level.daugthers
             if  daugther.process != Basics.Radiative();      continue   end
-            rLine   = daugther.lineSet.linesR[daugther.index]
+            ##x rLine   = daugther.lineSet.linesR[daugther.index]
+            rLine   = daugther.lines[daugther.index]
             rate    = rate + rLine.photonRate
         end
         
@@ -633,6 +635,8 @@
         for  i = 1:length(shList)
             if   holeShell == shList[i]    i0 = i;    break    end
         end
+        @show conf, holeShell
+        @show shList
         if  i0 == 0   error("stop a")   end
         #
         # Now move the hole 'outwards'

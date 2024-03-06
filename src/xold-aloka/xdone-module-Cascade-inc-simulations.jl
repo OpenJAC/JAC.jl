@@ -25,16 +25,19 @@
                 end
             end
             push!(newlevels, Cascade.Level(levA.energy, levA.J, levA.parity, levA.NoElectrons, levA.majorConfig, 0., parents, daugthers) )
+            #GC.gc()
         end
+        GC.gc()
         
         # Append those levels from levelsB that are not yet appended
         for  (i,levB) in enumerate(levelsB)
             if appendedB[i]
-            else    push!(newlevels, levB);     nnew = nnew + 1
+            else    push!(newlevels, levB);     nnew = nnew + 1; GC.gc()
             end 
         end
         nN = length(newlevels)
         println("> Append $nnew (new) levels to $nA levels results in a total of $nN levels (with $nmod modified levels) in the list.")
+        GC.gc()
         return( newlevels )
     end
     
@@ -568,56 +571,62 @@
                 for  (i,line)  in  enumerate(linesR)
                     major  = Basics.extractLeadingConfiguration(line.initialLevel)
                     iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[],
-                                            [ Cascade.LineIndex(linesR, Basics.Radiative(), i)] ) 
+                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(cData.lines, Basics.Radiative(), i)] ) 
                     Cascade.pushLevels!(levels, iLevel)  
                     major  = Basics.extractLeadingConfiguration(line.finalLevel)
                     fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(linesR, Basics.Radiative(), i)], 
-                                            Cascade.LineIndex[] ) 
+                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(cData.lines, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
                     Cascade.pushLevels!(levels, fLevel)  
+                    GC.gc()
                 end
+                GC.gc()
                 #
             elseif  typeof(cData) == Cascade.Data{AutoIonization.Line}
                 linesA = cData.lines
                 for  (i,line)  in  enumerate(linesA)
                     major  = Basics.extractLeadingConfiguration(line.initialLevel)
                     iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], 
-                                            [ Cascade.LineIndex(linesA, Basics.Auger(), i)] ) 
+                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(cData.lines, Basics.Auger(), i)] ) 
                     Cascade.pushLevels!(levels, iLevel)  
                     major  = Basics.extractLeadingConfiguration(line.finalLevel)
                     fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(linesA, Basics.Auger(), i)], Cascade.LineIndex[] ) 
+                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(cData.lines, Basics.Auger(), i)], Cascade.LineIndex[] ) 
                     Cascade.pushLevels!(levels, fLevel)
+                    GC.gc()
                 end
+                GC.gc()
                 #
             elseif  typeof(cData) == Cascade.Data{PhotoIonization.Line}
                 linesP = cData.lines
                 for  (i,line)  in  enumerate(linesP)
                     major  = Basics.extractLeadingConfiguration(line.initialLevel)
                     iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(linesP, Basics.Photo(), i)] ) 
+                                            major, line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(cData.lines, Basics.Photo(), i)] ) 
                     Cascade.pushLevels!(levels, iLevel)  
                     major  = Basics.extractLeadingConfiguration(line.finalLevel)
                     fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(linesP, Basics.Photo(), i)], Cascade.LineIndex[] ) 
+                                            major, line.finalLevel.relativeOcc, [ Cascade.LineIndex(cData.lines, Basics.Photo(), i)], Cascade.LineIndex[] ) 
                     Cascade.pushLevels!(levels, fLevel)
+                    GC.gc()
                 end
+                GC.gc()
                 #
                 #
             elseif  typeof(cData) == Cascade.Data{PhotoExcitation.Line}
                 linesE = cData.lines
                 for  (i,line)  in  enumerate(linesE)
                     iLevel = Cascade.Level( line.initialLevel.energy, line.initialLevel.J, line.initialLevel.parity, line.initialLevel.basis.NoElectrons,
-                                            line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(linesE, Basics.Radiative(), i)] ) 
+                                            line.initialLevel.relativeOcc, Cascade.LineIndex[], [ Cascade.LineIndex(cData.lines, Basics.Radiative(), i)] ) 
                     Cascade.pushLevels!(levels, iLevel)  
                     fLevel = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, line.finalLevel.basis.NoElectrons,
-                                            line.finalLevel.relativeOcc, [ Cascade.LineIndex(linesE, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
+                                            line.finalLevel.relativeOcc, [ Cascade.LineIndex(cData.lines, Basics.Radiative(), i)], Cascade.LineIndex[] ) 
                     Cascade.pushLevels!(levels, fLevel)  
+                    GC.gc()
                 end
+                GC.gc()
             else  error("stop a")
             end
+            GC.gc()
         end
         
         # Sort the levels by energy in reversed order
@@ -629,6 +638,7 @@
         println("a total of $(length(newlevels)) levels were found.")
         if printSummary     println(iostream, "a total of $(length(newlevels)) levels were found.")     end
         
+        GC.gc()
         return( newlevels )
     end
 
@@ -879,7 +889,13 @@
         ... to perform the same but to return the complete output in a dictionary; the particular output depends on the method and 
             specifications of the cascade but can easily accessed by the keys of this dictionary.
     """
-    function perform(simulation::Cascade.Simulation; output::Bool=false)    
+    function perform(simulation::Cascade.Simulation; output::Bool=false)
+        if  output    results = Dict{String, Any}()    
+            results = Base.merge( results, Dict("name:"         => simulation.name) ) 
+            results = Base.merge( results, Dict("property:"     => simulation.property) )
+        
+        else    results = nothing    end
+        
         # First review and display the computation data for this simulation; this enables the reader to check the consistency of data.
         # It also returns the level tree to be used in the simulations
         if      typeof(simulation.property) == Cascade.PhotoAbsorptionSpectrum
@@ -951,13 +967,6 @@
             #
         else         error("stop b")
         end
-        
-        if  output    results = Dict{String, Any}()    
-            results = Base.merge( results, Dict("name:"         => simulation.name) ) 
-            results = Base.merge( results, Dict("property:"     => simulation.property) )
-            results = Base.merge( results, Dict("data:"         => wa) )
-        
-        else    results = nothing    end
 
         return( results )
     end
@@ -975,8 +984,8 @@
             lossFactor = 0.;    occ = level.relativeOcc
             for  daugther in level.daugthers
                 idx = daugther.index
-                if      daugther.process == Basics.Radiative()     line = daugther.lineSet.linesR[idx];  rate = line.photonRate.Coulomb
-                elseif  daugther.process == Basics.Auger()         line = daugther.lineSet.linesA[idx];  rate = line.totalRate
+                if      daugther.process == Basics.Radiative()     line = daugther.lines[idx];  rate = line.photonRate.Coulomb
+                elseif  daugther.process == Basics.Auger()         line = daugther.lines[idx];  rate = line.totalRate
                 else    error("stop b; process = $(daugther.process) ")
                 end
                 downFactor = (1.0 - exp(-rate*dt));         
@@ -1016,7 +1025,7 @@
         
         n = 0
         println("\n*  Probability propagation through $(length(levels)) levels of the cascade:")
-        while true ## n < 2  ## 
+        while n < 20  ## true ## 
             n = n + 1;    totalProbability = 0.
             print("    $n-th round ... ")
             relativeOcc = zeros(length(levels));    relativeLoss = zeros(length(levels))
@@ -1124,21 +1133,15 @@
                 Cascade.displayLevels(iostream, gMultiplets, sa="generated ")        
             end
             #
-            if      haskey(results, "cascade data:")             lineData = results["cascade data:"]
-            else    error("stop a")
-            end
-            
-            @show typeof(lineData)
-            
-            #==
             if      haskey(results,"decay line data:")                          lineData = results["decay line data:"]
             elseif  haskey(results,"photo-ionizing line data:")                 lineData = results["photo-ionizing line data:"]
             elseif  haskey(results,"photo-excited line data:")                  lineData = results["photo-excited line data:"]
             elseif  haskey(results,"hollow-ion line data:")                     lineData = results["hollow-ion line data:"]
             else    error("stop a")
-            end ==#
+            end
             levels = Cascade.extractLevels(lineData, settings)
             allLevels = Cascade.addLevels(allLevels, levels)
+            GC.gc()
         end
         
         allLevels = Cascade.sortByEnergy(allLevels, ascendingOrder=ascendingOrder)
@@ -1158,14 +1161,12 @@
     function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
         printSummary, iostream = Defaults.getDefaults("summary flag/stream")
         resonances = Dielectronic.Resonance[]
-        rSelection = simulation.property.resonanceSelection
         @show length(levels)
         #
         # Collect the information about all resonances
         for  level in levels
             for daugther in level.daugthers
                 if  daugther.process != Basics.Auger();                            continue   end
-                ##x aLine   = daugther.lineSet.linesA[daugther.index]
                 aLine   = daugther.lines[daugther.index]
                 if  aLine.finalLevel.index != simulation.property.initialLevelNo   continue   end
                 #
@@ -1186,22 +1187,14 @@
                 en          = dLevel.energy-iLevel.energy + es;    if  en < 0.  continue   end
                 #
                 wa          = Defaults.convertUnits("kinetic energy to wave number: atomic units", en)
-                if   augerRate + photonRate.Babushkin == 0.
-                    strength = EmProperty(0.)
-                elseif  Dielectronic.isResonanceToBeExcluded(aLine.initialLevel, aLine.finalLevel, rSelection)
-                    @show Dielectronic.isResonanceToBeExcluded(aLine.initialLevel, aLine.finalLevel, rSelection)
-                    # Set the strength to zero, if the initial (resonance) level of aLine is not selected explicitly
-                    strength = EmProperty(0.)
-                else
-                    wa       = pi*pi / (wa*wa) * captureRate  * 2 * # factor 2 is not really clear.
-                               ((Basics.twice(dJ) + 1) / (Basics.twice(iJ) + 1)) /
-                               (augerRate + photonRate.Babushkin)
-                    strength = EmProperty(wa * photonRate.Coulomb, wa * photonRate.Babushkin)
-                end
+                wa          = pi*pi / (wa*wa) * captureRate  * 2 * # factor 2 is not really clear.
+                              ((Basics.twice(dJ) + 1) / (Basics.twice(iJ) + 1)) /
+                              (augerRate + photonRate.Babushkin)
+                strength     = EmProperty(wa * photonRate.Coulomb, wa * photonRate.Babushkin)
                 newResonance = Dielectronic.Resonance(iLevel, dLevel, en, strength, 0., augerRate, photonRate)
                 ## newResonance = Dielectronic.Resonance(iLevel, dLevel, en, strength, captureRate, augerRate, photonRate)
                 push!(resonances, newResonance)
-                ##x @show augerRate, photonRate, strength
+                @show augerRate, photonRate, strength
             end
         end
         
@@ -1216,7 +1209,7 @@
             for  level in levels
                 for daugther in level.daugthers
                     if  daugther.process != Basics.Auger();                            continue   end
-                    aLine   = daugther.lineSet.linesA[daugther.index]
+                    aLine   = daugther.lines[daugther.index]
                     if  aLine.finalLevel.index != simulation.property.initialLevelNo   continue   end
                     #
                     dJ      = aLine.initialLevel.J;         iJ      = aLine.finalLevel.J
@@ -1259,9 +1252,8 @@
         settings = Dielectronic.Settings(Dielectronic.Settings(), calcRateAlpha=true, temperatures=simulation.property.temperatures)
         Dielectronic.displayResults(stdout, resonances, settings)
         Dielectronic.displayRateCoefficients(stdout, resonances, settings)
-        wb = Dielectronic.extractRateCoefficients(resonances, settings)
 
-        return( wb )
+        return( nothing )
     end
     
 
@@ -1450,12 +1442,12 @@
         for  level in levels
             for daugther in level.daugthers
                 if      daugther.process == Basics.Auger()
-                    aLine  = daugther.lineSet.linesA[daugther.index]
+                    aLine  = daugther.lines[daugther.index]
                     @show aLine.totalRate
                     if  minRate > aLine.totalRate > 0.  minRate = aLine.totalRate   end
                     if  maxRate < aLine.totalRate       maxRate = aLine.totalRate   end
                 elseif  daugther.process == Basics.Radiative()
-                    rLine  = daugther.lineSet.linesR[daugther.index]
+                    rLine  = daugther.lines[daugther.index]
                     @show rLine.photonRate.Coulomb
                     if  minRate > rLine.photonRate.Coulomb > 0.  minRate = rLine.photonRate.Coulomb   end
                     if  maxRate < rLine.photonRate.Coulomb       maxRate = rLine.photonRate.Coulomb   end

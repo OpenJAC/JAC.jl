@@ -57,7 +57,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        add, analyze, AlphaX, AlphaVariation, AnapoleMoment, 
        AngularJ64, AngularM64, AngularJ, AngularMomentum, 
        AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AugerInPlasma, AutoIonization, AverageAtom,
-       Basics, Basis, BreitInteraction, Bsplines,
+       Basics, Basis, Beam, BreitInteraction, Bsplines, BeamPhotoExcitation,
        CartesianVector, CiSettings, CiExpansion, CloseCoupling, compute, convertUnits, Cascade, Compton, Configuration, ConfigurationR, 
        Continuum, CsfR, Coulex, CoulombExcitation, Coulion, CoulombIonization, CoulombBreit, CoulombInteraction, ClebschGordan, 
        CorePolarization,
@@ -76,7 +76,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        MultiPI, MultiPDI, MultiPhotonIonization, MultipoleMoment, MultipolePolarizibility, Multiplet, 
        NoAmplitude, NoProcess, Nuclear, NoneQed, NoProperty, 
        OneElectronSettings, OneElectronSpectrum, Orbital, 
-       PathwaySelection, perform, provide, PairA1P, PairAnnihilation1Photon, PairAnnihilation2Photon, 
+       PathwaySelection, perform, provide, PairA1P, PairAnnihilation1Photon, PairAnnihilation2Photon, ParticleScattering,
        PairProduction, ParityNonConservation, PeriodicTable, Parity, plus,
        Photo, PhotoExc, PhotoExcAuto, PhotoExcFluor, PhotoEmission, PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, 
        PhotoIonAuto, PhotoIonFluor, PhotoDouble, PhotoIonization, PhotoDoubleIonization, PhotoIonizationFluores, PhotoIonizationAutoion, 
@@ -84,7 +84,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        QedPetersburg, QedSydney, 
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RAuger, RasSettings, RasStep, 
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix, RadiativeOpacity,
-       RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
+       RestrictMaximumDisplacements, RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
        SchiffMoment, Semiempirical, setDefaults, Shell, SolidAngle, Spectroscopy, SpinAngular, SphericalTensor, 
        StartFromHydrogenic, StartFromPrevious, StrongField, StrongField2, Subshell, ShellSelection,
        tabulate, TestFrames, Triangle, tools, TwoElectronOnePhoton,
@@ -107,6 +107,7 @@ include("module-AngularMomentum.jl")
 ## include("module-AngularCoefficients-Ratip2013.jl")  ## keep for internal test purposes only
 include("module-SpinAngular.jl");       using ..SpinAngular
 include("module-Bsplines.jl");          using ..Bsplines
+include("module-Beam.jl")
 include("module-Continuum.jl")
 include("module-Details.jl")
 include("module-RadialIntegrals.jl")
@@ -149,6 +150,7 @@ include("module-Dielectronic.jl")
 include("module-PhotoExcitationFluores.jl")
 include("module-PhotoExcitationAutoion.jl")
 include("module-RayleighCompton.jl")
+include("module-ParticleScattering.jl")
 include("module-MultiPhotonDeExcitation.jl")
 include("module-DoubleAutoIonization.jl")
 include("module-PhotoDoubleIonization.jl")
@@ -164,6 +166,7 @@ include("module-MultiPhotonDoubleIon.jl")
 include("module-InternalConversion.jl") 
 include("module-InternalRecombination.jl") 
 include("module-TwoElectronOnePhoton.jl") 
+include("module-BeamPhotoExcitation.jl") 
 #= Further processes, not yet included into the code
 include("module-REDA.jl")
 include("module-READI.jl")
@@ -209,7 +212,7 @@ function __init__()
 end
 
 println("\nWelcome to JAC:  A community approach to the computation of atomic structures, cascades and time evolutions " * 
-        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2023)].")
+        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2024)].")
 
 end
 

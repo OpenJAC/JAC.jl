@@ -138,7 +138,7 @@ module Dielectronic
         if  augerOperator       == nothing   augerOperatorx       = set.augerOperator         else  augerOperatorx       = augerOperator        end 
 
         Settings( multipolesx, gaugesx, calcRateAlphax, printBeforex, pathwaySelectionx, electronEnergyShiftx, 
-                  photonEnergyShiftx, mimimumPhotonEnergyx, temperaturesx, correctionx, augerOperatorx )
+                  photonEnergyShiftx, mimimumPhotonEnergyx, temperaturesx, correctionsx, augerOperatorx )
     end
 
 
@@ -262,6 +262,44 @@ module Dielectronic
         println(io, "augerRate:                  $(resonance.augerRate)  ")
         println(io, "photonRate:                 $(resonance.photonRate)  ")
     end
+
+
+    """
+    `struct  Dielectronic.ResonanceSelection`  
+        ... defines a type for selecting classes of resonances in terms of leading configurations.
+
+        + active          ::Bool              ... initial-(state) level
+        + fromShells      ::Array{Shell,1}    ... List of shells from which excitations are to be considered.
+        + toShells        ::Array{Shell,1}    ... List of shells to which (core-shell) excitations are to be considered.
+        + intoShells      ::Array{Shell,1}    ... List of shells into which electrons are initially placed (captured).
+    """
+    struct  ResonanceSelection
+        active            ::Bool  
+        fromShells        ::Array{Shell,1} 
+        toShells          ::Array{Shell,1} 
+        intoShells        ::Array{Shell,1} 
+    end 
+
+
+    """
+    `Dielectronic.ResonanceSelection()`  
+        ... constructor for an 'empty' instance of a ResonanceSelection()
+    """
+    function ResonanceSelection()
+        ResonanceSelection(false, Shell[], Shell[], Shell[] )
+    end
+
+
+    # `Base.show(io::IO, resonance::Dielectronic.ResonanceSelection)`  ... prepares a proper printout of resonance::Dielectronic.ResonanceSelection.
+    function Base.show(io::IO, rSelection::Dielectronic.ResonanceSelection) 
+        println(io, "active:           $(rSelection.active)  ")
+        println(io, "fromShells:       $(rSelection.fromShells)  ")
+        println(io, "toShells:         $(rSelection.toShells)  ")
+        println(io, "intoShells:       $(rSelection.intoShells)  ")
+    end
+    
+    
+    
 
 
     """
@@ -924,4 +962,66 @@ module Dielectronic
         return( nothing )
     end
 
+
+    """
+    `Dielectronic.extractRateCoefficients(resonances::Array{Dielectronic.Resonance,1}, settings::Dielectronic.Settings)`  
+        ... to extract, if settings.calcRateAlpha, the total DR rate coefficients for all temperatures. 
+            A list of total rate coefficients [cm^3/s] alphaDR::Array{EmProperty,1} is returned.
+    """
+    function  extractRateCoefficients(resonances::Array{Dielectronic.Resonance,1}, settings::Dielectronic.Settings)
+        ntemps = length(settings.temperatures);     alphaDRs = EmProperty[]
+        if  !settings.calcRateAlpha  ||  ntemps == 0     return( EmProperty[] )     end
+        #
+        for  nt = 1:ntemps
+            alphaDRtotal = EmProperty(0.)
+            for  resonance in resonances
+                alphaDR      = Dielectronic.computeRateCoefficient(resonance, settings.temperatures[nt])
+                alphaDRtotal = alphaDRtotal + alphaDR
+            end
+            push!(alphaDRs, alphaDRtotal)
+        end
+        #
+        return( alphaDRs )
+    end
+
+
+    """
+    `Dielectronic.isResonanceToBeExcluded(level::Level, refLevel, rSelection::ResonanceSelection)`  
+        returns true, if level is to be excluded from the valid resonances, and false otherwise.
+        It returns false if the ResonanceSelection() is inactive or if level belongs to the selected resoances.
+        It is true only of ResonanceSelection() is active but the level does not belong to the selected resonances.
+    """
+    function  isResonanceToBeExcluded(level::Level, refLevel, rSelection::ResonanceSelection)
+        wa = false
+        if !rSelection.active    return( wa )
+            # This is the standard case if no additional limitations are specified by the user
+        else
+            # Analyze of whether level belongs to the selected resonances; it determines of whether level has 
+            # electrons in either toShells or intoShells, and if there is one electron less in the fromShells
+            fromwb    = false;    towb    = false;    intowb    = true
+            confList  = Basics.extractNonrelativisticConfigurations(level.basis)
+            occShells = Basics.extractShellList(confList) 
+            for  shell in rSelection.toShells   
+                if  shell in occShells   towb   = true;   break    end
+            end
+            for  shell in occShells   
+                if  !(shell in rSelection.intoShells)   intowb = false;   break    end
+            end
+            # Compare the occupation of the given resonance level with those of the refLevel; there should be (at least)
+            # one electron more in the shells of leadingConfig than in the same shells of level
+            refConfig = Basics.extractLeadingConfiguration(refLevel)
+            levConfig = confList[1];   NoElectrons = 0
+            for  (k,v) in refConfig.shells
+                NoElectrons = NoElectrons + levConfig.shells[k]
+            end
+            @show NoElectrons, refConfig.NoElectrons
+            if  NoElectrons < refConfig.NoElectrons     fromwb = true   end
+            
+            wa = !(fromwb &&  towb  && intowb)
+        end
+            
+        
+        return( wa )
+    end
+    
 end # module

@@ -806,13 +806,15 @@ module Bsplines
                 for i = 1:NoCsf   wmc[i] = wmc[i] / sqrt(wN)   end
                 wLevel = Level( AngularJ64(0), AngularM64(0), Basics.plus, 0, -1., 0., true, wBasis, wmc)
                 # (2) Re-compute the local potential
+                #==
                 if       settings.scField == Basics.HSField()             wp = compute("radial potential: Hartree-Slater",    grid, wLevel)
                 elseif   settings.scField == Basics.DFSField()            wp = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
                 elseif   typeof(settings.scField) == Basics.DFSwCPField   &&  settings.scField.corePolarization.doApply      
                                                                           wp = Basics.computePotentialDFSwCP(kappa, settings.scField.corePolarization, grid, wLevel) 
                 elseif   typeof(settings.scField) == Basics.DFSwCPField   wp = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
                 else     error("stop potential")
-                end
+                end ==#
+                wp  = Basics.computePotential(settings.scField, grid, wLevel)
                 pot = Basics.add(nuclearPotential, wp)
                 # (3) Set-up the diagonal part of the Hamiltonian matrix
                 wa = Bsplines.setupLocalMatrix(kappa, primitives, nsL, nsS, pot, storage)

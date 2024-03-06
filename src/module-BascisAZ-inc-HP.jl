@@ -238,6 +238,18 @@
                 if  sh.n >= restriction.nmin    ||    sh.l >= restriction.lmin    ne = ne + v   end
             end
             if  ne > restriction.ne                                   wa = true   end
+        elseif  typeof(restriction) == RestrictMaximumDisplacements
+            shells = Basics.extractShellList([conf, restriction.conf])
+            dis = 0;   
+            for shell in shells
+                if      haskey(conf.shells, shell)  &&  haskey(restriction.conf.shells, shell)  
+                    dis = dis + abs( conf.shells[shell] - restriction.conf.shells[shell] )
+                elseif  haskey(conf.shells, shell)              dis = dis + abs( conf.shells[shell])
+                elseif  haskey(restriction.conf.shells, shell)  dis = dis + abs( restriction.conf.shells[shell])
+                else    error("stop a")
+                end
+            end
+            if  dis > restriction.maxDisplace                         wa = true   end
         elseif  typeof(restriction) == RestrictParity
             if  Basics.determineParity(conf) != restriction.parity    wa = true   end
         elseif  typeof(restriction) == RestrictToShellDoubles

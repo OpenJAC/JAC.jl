@@ -206,6 +206,7 @@
         + nMax                ::Int64 
             ... Maximum n (principal quantum number), for which contributions are scaled; NO scaling is taken
                 into account for nMax <= nDetailed.
+        + resonanceSelection  ::Dielectronic.ResonanceSelection
     """  
     struct  DrRateCoefficients   <:  Cascade.AbstractSimulationProperty
         initialLevelNo        ::Int64 
@@ -213,6 +214,7 @@
         temperatures          ::Array{Float64,1}
         nDetailed             ::Int64 
         nMax                  ::Int64 
+        resonanceSelection    ::Dielectronic.ResonanceSelection
     end 
 
 
@@ -220,7 +222,7 @@
     `Cascade.DrRateCoefficients()`  ... (simple) constructor for cascade DrRateCoefficients.
     """
     function DrRateCoefficients()
-        DrRateCoefficients(1, 0.,  Float64[], 0, 0)
+        DrRateCoefficients(1, 0.,  Float64[], 0, 0, Dielectronic.ResonanceSelection() )
     end
 
 
@@ -231,6 +233,7 @@
         println(io, "temperatures:             $(dist.temperatures)  ")
         println(io, "nDetailed:                $(dist.nDetailed)  ")
         println(io, "nMax:                     $(dist.nMax)  ")
+        println(io, "resonanceSelection:       $(dist.resonanceSelection)  ")
     end
 
 

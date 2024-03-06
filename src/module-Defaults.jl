@@ -17,7 +17,7 @@ module Defaults
     # Constants in SI units
     const BOHR_RADIUS_SI                  = 0.529_177_210_67e-10
     const BOLTZMANN_CONSTANT_SI           = 1.380_648_52e-23
-    const ELECTRON_MA_SI                = 9.109_383_56e-31
+    const ELECTRON_MA_SI                  = 9.109_383_56e-31
     const ELEMENTARY_CHARGE_SI            = 1.602_176_620_8e-19
     const HARTREE_ENERGY_SI               = 4.359_744_650e-18
     const PLANCK_CONSTANT_SI              = 6.626_070_040e-34
@@ -600,7 +600,8 @@ module Defaults
     """
     function getDefaults(sa::String, n_max::Int64)
     
-        !(1 <= n_max < 10)    &&    error("Unsupported value of n_max = $n_max")
+        ## !(1 <= n_max < 20)    &&    error("Unsupported value of n_max = $n_max")
+        !(1 <= n_max < 12)    &&    error("Unsupported value of n_max = $n_max")
 
         if        sa == "ordered shell list: non-relativistic"
             wa = Shell[]

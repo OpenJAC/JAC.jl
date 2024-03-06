@@ -82,7 +82,7 @@
             println(sa);    if  printSummary   println(iostream, sa)   end 
         end
         #
-        data = Cascade.DecayData(linesR, linesA)
+        data = [ Cascade.Data{PhotoEmission.Line}(linesR), Cascade.Data{AutoIonization.Line}(linesA) ]
     end
 
     """
@@ -366,7 +366,7 @@
             results = Base.merge( results, Dict("cascade scheme"                => comp.scheme) ) 
             results = Base.merge( results, Dict("initial multiplets:"           => multiplets) )    
             results = Base.merge( results, Dict("generated multiplets:"         => gMultiplets) )    
-            results = Base.merge( results, Dict("decay line data:"              => data) )
+            results = Base.merge( results, Dict("cascade data:"                 => data) )
             #
             #  Write out the result to file to later continue with simulations on the cascade data
             filename = "zzz-cascade-dr-rate-computations-" * string(Dates.now())[1:13] * ".jld"

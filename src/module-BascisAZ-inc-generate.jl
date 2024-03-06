@@ -1,4 +1,4 @@
-    
+    using  QuadGK
     export generate
 
 
@@ -514,7 +514,8 @@
 
         !(sa == "shells: ordered list for NR configurations")  &&   error("Unsupported keystring = $sa")
 
-        wa = Defaults.getDefaults("ordered shell list: non-relativistic", 7)
+        wa = Defaults.getDefaults("ordered shell list: non-relativistic", 11)
+        ## wa = Defaults.getDefaults("ordered shell list: non-relativistic", 19)
         for  a in wa
             for  cf in 1:length(confs)
                 ks = keys(confs[cf].shells)
@@ -1080,6 +1081,38 @@
 
 
     """
+    `Basics.generateFieldCoordinates(mesh::Basics.AbstractMesh)`  
+        ... generates a list of field values of proper type due to the specification by the given mesh; 
+            this specification determines both, the number and kind of coordinates as well as the type of the array.
+            A list::Array{...FieldValue{Type},1} is returned.
+    """
+    function Basics.generateFieldCoordinates(mesh::Basics.AbstractMesh)
+        #
+        if      typeof(mesh) == Basics.Cartesian2DMesh
+            fValues = Basics.Cartesian2DFieldValue{Float64}[]
+            xs      = Basics.generateMeshCoordinates(mesh.xMesh)
+            ys      = Basics.generateMeshCoordinates(mesh.yMesh)
+            for  x in xs, y in ys             push!(fValues, Basics.Cartesian2DFieldValue{Float64}(x,y, 0.))     end
+        elseif  typeof(mesh) == Basics.PolarMesh 
+            fValues = Basics.PolarFieldValue{Float64}[]
+            rhos    = Basics.generateMeshCoordinates(mesh.rhoMesh)
+            phis    = Basics.generateMeshCoordinates(mesh.phiMesh)
+            for  rho in rhos, phi in phis     push!(fValues, Basics.PolarFieldValue{Float64}(rho,phi, 0.))       end
+        elseif  typeof(mesh) == Basics.SphericalMesh
+            fValues = Basics.SphericalFieldValue{Float64}[]
+            rs      = Basics.generateMeshCoordinates(mesh.rMesh)
+            thetas  = Basics.generateMeshCoordinates(mesh.thetaMesh)
+            phis    = Basics.generateMeshCoordinates(mesh.phiMesh)
+            for  r in rs, theta in thetas, phi in phis     push!(fValues, Basics.SphericalFieldValue{Float64}(r,theta,phi, 0.))    end
+        else    error("Unknown mesh type: typeof(mesh) = $(typeof(mesh))")
+        end 
+        
+        return( fValues )
+    end
+            
+
+
+    """
     `Basics.generateLevelWithExtraElectron(newOrbital, symt::LevelSymmetry, level::Level)`  
         ... generates a (new) level with one extra electron in subshell newOrbital.subshell and with overall symmetry symt. The function 
             assumes that all CSF in the basis of level have the same symmetry as the level itself, that the new subshell is not yet part 
@@ -1287,6 +1320,33 @@
         newBasis = Basis(true, basis.NoElectrons, deepcopy(basis.subshells), newCsfs, deepcopy(basis.coreSubshells), deepcopy(basis.orbitals))
         newLevel = Level(nLevel.J, nLevel.M, nLevel.parity, nLevel.index, nLevel.energy, nLevel.relativeOcc, true, newBasis, newMc)
         return( newLevel )
+    end
+
+
+    """
+    `Basics.generateMeshCoordinates(mesh::Basics.AbstractMesh)`  
+        ... generates a list of coordinates for the given  (1D)mesh; a list::Array{Float64,1} is returned.
+            Note: No 'weights' for integration are returned in the present form ... though this could be done readily.
+    """
+    ## function Basics.generateMeshCoordinates(mesh::Basics.GLegenreMesh)
+    function Basics.generateMeshCoordinates(mesh::Basics.AbstractMesh)
+        #
+        ## using  QuadGK
+        if      typeof(mesh) == Basics.GLegenreMesh
+            # The weights of the GL coordinates are determined here ... but not returned in the present version.
+            wax  = QuadGK.gauss(mesh.NoZeros);    t = wax[1];     wt = wax[2]        
+            fac1 = 0.5 * ( mesh.b - mesh.a );   fac2 = 0.5 * ( mesh.b + mesh.a )
+            for  j = 1:mesh.NoZeros
+                t[j] = fac1 * t[j] + fac2;    wt[j] = fac1 * wt[j]
+            end
+            coords = t
+        elseif  typeof(mesh) == Basics.LinearMesh 
+            coords = Float64[];    x0 = (mesh.b - mesh.a) / (mesh.NoPoints-1);   x = mesh.a
+            for  i = 1:mesh.NoPoints    x = x + x0;    push!(coords, x)     end
+        else    error("Unknown mesh type for generating coordinates: typeof(mesh) = $(typeof(mesh))")
+        end 
+        
+        return( coords )
     end
     
 
