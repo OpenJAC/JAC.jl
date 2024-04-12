@@ -6,7 +6,7 @@
 module LandeZeeman
 
     using Printf, ..AngularMomentum, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, ..Radial,
-                  ..SpinAngular, ..TableStrings
+                  ..SpinAngular, ..TableStrings, ..Hfs
 
 
     """
@@ -14,16 +14,18 @@ module LandeZeeman
 
         + M                      ::AngularM64        ... M_J-value
         + energy                 ::Float64           ... energy of this sublevel
+        + c2Coeff                ::Float64           ... quadratic-Zeeman shift C_2 coefficient for this level
     """
     struct SublevelJ 
         M                        ::AngularM64
         energy                   ::Float64
+        c2Coeff                  ::Float64
     end 
 
 
     # `Base.show(io::IO, Jsublevel::LandeZeeman.SublevelJ)`  ... prepares a proper printout of the variable Jsublevel::LandeZeeman.SublevelJ.
     function Base.show(io::IO, Jsublevel::LandeZeeman.SublevelJ) 
-        println(io, "Sublevel [M=$(Jsublevel.M); energy = $(Jsublevel.energy)]")
+        println(io, "Sublevel [M=$(Jsublevel.M); energy = $(Jsublevel.energy); C_2 = $(Jsublevel.c2Coeff)]")
     end
 
 
@@ -47,7 +49,7 @@ module LandeZeeman
 
     # `Base.show(io::IO, Fsublevel::LandeZeeman.SublevelF)`  ... prepares a proper printout of the variable Fsublevel::LandeZeeman.SublevelF.
     function Base.show(io::IO, Fsublevel::LandeZeeman.SublevelF) 
-        println(io, "Sublevel [F=$(Fsublevel.F); M=$(Fsublevel.M); energy = $(Fsublevel.energy)]")
+        println(io, "Sublevel [F=$(Fsublevel.F); M=$(Fsublevel.M); energy = $(Fsublevel.energy); C_2 = $(Fsublevel.c2Coeff)]")
     end
 
 
@@ -110,7 +112,7 @@ module LandeZeeman
         + printBefore            ::Bool              ... True if a list of selected levels is printed before the actual computations start. 
         + BField                 ::Float64           ... Strength of the magnetic field in [Tesla]
         + levelSelection         ::LevelSelection    ... Specifies the selected levels, if any.
-        + gMultiplet             ::Multiplet         ... Mean-field multiplet of intermediate levels for second-order coefficients.
+        + gMultiplet             ::LevelSelection    ... Specifies the levels, used as intermediate levels for second-order coefficients.
     """
     struct Settings  <:  AbstractPropertySettings 
         calcLandeJ               ::Bool
@@ -121,7 +123,7 @@ module LandeZeeman
         BField                   ::Float64
         printBefore              ::Bool 
         levelSelection           ::LevelSelection
-        gMultiplet               ::Multiplet  
+        gMultiplet               ::LevelSelection  
     end 
 
 
@@ -130,7 +132,7 @@ module LandeZeeman
         ... constructor for an `empty` instance of ZeemanSettings for the computation of isotope M and F parameters.
      """
      function Settings()
-         Settings(false, false, false, false, false, false, 0., LevelSelection(), Multiplet() )
+         Settings(false, false, false, false, false, false, 0., LevelSelection(), LevelSelection() )
     end
 
 
@@ -185,8 +187,6 @@ module LandeZeeman
                     end
                     #
                     for  coeff in wa
-                        ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
-                        jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = InteractionStrength.zeeman_n1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
                         me = me + coeff.T * tamp  
                     end
@@ -211,8 +211,6 @@ module LandeZeeman
                     end
                     #
                     for  coeff in wa
-                        ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
-                        jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
                         tamp  = InteractionStrength.zeeman_Delta_n1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
                         me = me + coeff.T * tamp  
                     end
@@ -233,10 +231,11 @@ module LandeZeeman
 
     """
     `LandeZeeman.computeAmplitudesProperties(outcome::LandeZeeman.Outcome, grid::Radial.Grid, settings::LandeZeeman.Settings)`  
-        ... to compute all amplitudes and properties of for a given level; an outcome::LandeZeeman.Outcome is returned for 
-            which the amplitudes and all requested properties are now evaluated explicitly.
+        ... to compute all amplitudes and properties of for a given level. The given multiplet containes the intermediate levels used in the computation of
+            second order coefficients; an outcome::LandeZeeman.Outcome is returned for which the amplitudes and all requested properties are now evaluated 
+            explicitly.
     """
-    function  computeAmplitudesProperties(outcome::LandeZeeman.Outcome, grid::Radial.Grid, settings::LandeZeeman.Settings)
+    function  computeAmplitudesProperties(outcome::LandeZeeman.Outcome, multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, settings::LandeZeeman.Settings)
         LandeJ = 0.0;   amplitudeN1 = 0.0;   amplitudeDeltaN1 = 0.0;    J = AngularMomentum.oneJ(outcome.Jlevel.J) 
         amplitudeN1 = LandeZeeman.amplitude("N^(1) amplitude", outcome.Jlevel, outcome.Jlevel, grid)
         #
@@ -249,22 +248,71 @@ module LandeZeeman
         end
         @show J, LandeJ, amplitudeN1, amplitudeDeltaN1
         
-        # Jan, here your computations should be implemented
-        if  settings.calcQZScoeff
+
+        if settings.calcQZScoeff && outcome.nuclearI != AngularJ64(0)
             newFsublevels = LandeZeeman.SublevelF[]
             for  Fsub in outcome.Fsublevels
-                # I'm not sure which arguments you will need ... but you should have them all by what comes in here.
-                c2 = LandeZeeman.computeQuadraticZeemanC2(Fsub, outcome.Fsublevels, grid, settings)
-                ## push!(newFsublevels, LandeZeeman.Fsublevels(..., c2) )
+                c2 = LandeZeeman.computeQuadraticZeemanC2(multiplet, outcome.Jlevel, Fsub, nm, grid, settings)
+                push!(newFsublevels, LandeZeeman.SublevelF(Fsub.F, Fsub.M, 0.0, c2))
             end
+        else
+            newFsublevels = outcome.Fsublevels
         end
 
+        if settings.calcQZScoeff && outcome.nuclearI == AngularJ64(0)
+            newJsublevels = LandeZeeman.SublevelJ[]
+            for Jsub in outcome.Jsublevels
+                c2 = LandeZeeman.computeQuadraticZeemanC2(multiplet, outcome.Jlevel, Jsub, grid, settings)
+                push!(newJsublevels, LandeZeeman.SublevelJ(Jsub.M, 0.0, c2))
+            end
+        else
+            newJsublevels = outcome.Jsublevels
+        end
         
         newOutcome = LandeZeeman.Outcome( outcome.Jlevel, LandeJ, amplitudeN1, amplitudeDeltaN1, outcome.nuclearI, 
-                                          outcome.Jsublevels, outcome.Fsublevels)
+                                          newJsublevels, newFsublevels)
         return( newOutcome )
     end
 
+
+
+    """
+    `LandeZeeman.computeQuadraticZeemanC2(level::Level, Jsub::SublevelJ, grid::Radial.Grid, settings::LandeZeeman.Settings)`  
+        ... to compute the quadratic-Zeeman shift coefficient C2 for the Zeeman sublevel Jsub; A value c2::Float64 is returned for the given level
+            (level, Jsub).
+    """
+    function  computeQuadraticZeemanC2(multiplet::Multiplet, level::Level, Jsub::SublevelJ, grid::Radial.Grid, settings::LandeZeeman.Settings)
+        c2 = 0.
+        println(">>> Calculate C_2 coefficient for level (index=$(level.index), J=$(level.J), M=$(Jsub.M)) ...")
+
+        for ilevel in multiplet.levels
+            if ilevel == level || abs(Jsub.M.num/Jsub.M.den) > Float64(ilevel.J) || !Basics.selectLevel(ilevel, settings.gMultiplet)
+                continue
+            end
+
+            amplitudeN1 = LandeZeeman.amplitude("N^(1) amplitude", ilevel, level, grid)
+            println("       <level=$(level.index) [J=$(level.J)$(string(level.parity))] || N^(1) || " *
+                            "level=$(ilevel.index) [J=$(ilevel.J)$(string(ilevel.parity))] > = $(amplitudeN1)")
+            amplitudeDeltaN1 = 0.
+
+            if settings.includeSchwinger
+                amplitudeDeltaN1 = LandeZeeman.amplitude("Delta N^(1) amplitude", ilevel, level, grid)
+                println("       <level=$(level.index) [J=$(level.J)$(string(level.parity))] || ΔN^(1) || " *
+                            "level=$(ilevel.index) [J=$(ilevel.J)$(string(ilevel.parity))] > = $(amplitudeDeltaN1)")
+            end
+
+            w3jValue = AngularMomentum.Wigner_3j(level.J, AngularJ64(1), ilevel.J, Jsub.M, AngularM64(0), AngularM64(-Jsub.M.num//Jsub.M.den))
+
+            c2 += (2*Float64(ilevel.J) + 1) * w3jValue^2 * (amplitudeN1 + amplitudeDeltaN1)^2 / (level.energy - ilevel.energy)
+        end
+
+        conv = 0.11909076 #Conversion Factor from atomic units to MHz/T^2
+        c2 = conv * c2
+        
+        println("   C_2(level=$(level.index) [J=$(level.J)$(string(level.parity)), M=$(Jsub.M)]) = $(c2) MHz/T^2")
+
+        return( c2 )
+    end
 
 
     """
@@ -272,13 +320,88 @@ module LandeZeeman
         ... to compute all quadratic-Zeeman shift C2 coefficients; an c2::Float64 is returned for the given hyperfine level
             Fsub.
     """
-    function  computeQuadraticZeemanC2(Fsub::SublevelF, Fsublevels::Array{SublevelF,1}, grid::Radial.Grid, settings::LandeZeeman.Settings)
+    function  computeQuadraticZeemanC2(multiplet::Multiplet, level::Level, Fsub::SublevelF, nm::Nuclear.Model, grid::Radial.Grid, settings::LandeZeeman.Settings)
         c2 = 0.
-        println(">>> Calculate another C_2 coefficients ... not yet !")
+
+        println(">>> Calculate C_2 coefficient for level (index=$(level.index), J=$(level.J), I=$(nm.spinI), F=$(Fsub.F), M_F=$(Fsub.M)) ...")
+        println("   >>> Calculate Hyperfine parameters ...")
+
+        #Calculate hyperfine splitting
+        amplitudeT1 = Hfs.amplitude("T^(1) amplitude", level, level, grid, printout=false)
+        amplitudeT2 = Hfs.amplitude("T^(2) amplitude", level, level, grid, printout=false)
+        j = Float64(level.J)
+        i = Float64(nm.spinI)
+        A = nm.mu/i * 1/sqrt(j * (j + 1)) * amplitudeT1
+        B = 2 * nm.Q * sqrt(j*(2*j - 1)/((j + 1)*(2*j + 3))) * amplitudeT2
+        C(f) = Float64(f)*(Float64(f) + 1) - j*(j + 1) - i*(i + 1)
+        EHFS(f) = 1/2 * A * C(f) + B * ( 3/4 * C(f)*(C(f)+1) - i * (i + 1) * j * (j + 1) )/( 2*i * (2*i - 1) * j * (2*j - 1))
+
+        println("   >>> Sum over intermediate states")
+
+        # Sum over hyperfine levels
+        Fvalues = Basics.oplus(nm.spinI, level.J)
+        amplitudeN1 = LandeZeeman.amplitude("N^(1) amplitude", level, level, grid)
+        println("       <level=$(level.index) [J=$(level.J)$(string(level.parity))] || N^(1) || " *
+                        "level=$(level.index) [J=$(level.J)$(string(level.parity))] > = $(amplitudeN1)")
+        amplitudeDeltaN1 = 0.0
+
+        if settings.includeSchwinger
+            amplitudeDeltaN1 = LandeZeeman.amplitude("Delta N^(1) amplitude", level, level, grid)
+            println("       <level=$(level.index) [J=$(level.J)$(string(level.parity))|| ΔN^(1) || " *
+                            "level=$(level.index) [J=$(level.J)$(string(level.parity))] > = $(amplitudeDeltaN1)")
+        end
+
+        for f in Fvalues
+            if f == Fsub.F || abs(Fsub.M.num/Fsub.M.den) > Float64(f)
+                continue 
+            end
+            
+            factor = (2*Float64(Fsub.F) + 1)*(2*j + 1)*(2*Float64(f) + 1)
+            w3jvalue = AngularMomentum.Wigner_3j(Fsub.F, AngularJ64(1), f, Fsub.M, AngularM64(0), AngularM64(-Fsub.M.num//Fsub.M.den))
+            w6jvalue = AngularMomentum.Wigner_6j(level.J, nm.spinI, Fsub.F, f, AngularJ64(1), level.J)
+            deltaE = EHFS(Fsub.F) - EHFS(f)
+
+            c2 += factor * w3jvalue^2 * w6jvalue^2 * (amplitudeN1 + amplitudeDeltaN1)^2 / deltaE
+        end
         
-        # Jan, now implement your formula please.
-        
-        return( c2 )
+
+        # Sum over other intermediate levels
+        for ilevel in multiplet.levels
+            if ilevel == level || !Basics.selectLevel(ilevel, settings.gMultiplet)
+                continue
+            end
+
+            amplitudeN1 = LandeZeeman.amplitude("N^(1) amplitude", ilevel, level, grid)
+            println("       <level=$(level.index) [J=$(level.J)$(string(level.parity))] || N^(1) || " *
+                            "level=$(ilevel.index) [J=$(ilevel.J)$(string(ilevel.parity))] > = $(amplitudeN1)")
+
+            if settings.includeSchwinger
+                amplitudeDeltaN1 = LandeZeeman.amplitude("Delta N^(1) amplitude", ilevel, level, grid)
+                println("       <level=$(level.index) [J=$(level.J)$(string(level.parity))] || ΔN^(1) || " *
+                                "level=$(ilevel.index) [J=$(ilevel.J)$(string(ilevel.parity))] > = $(amplitudeDeltaN1)")
+            end
+
+            deltaE = level.energy - ilevel.energy
+
+            Fvalues = Basics.oplus(ilevel.J, nm.spinI)
+            for f in Fvalues
+                if abs(Fsub.M.num/Fsub.M.den) > Float64(f)
+                    continue
+                end
+                factor = (2*Float64(Fsub.F) + 1)*(2*Float64(ilevel.J) + 1)*(2*Float64(f) + 1)
+                w3jvalue = AngularMomentum.Wigner_3j(Fsub.F, AngularJ64(1), f, Fsub.M, AngularM64(0), AngularM64(-Fsub.M.num//Fsub.M.den))
+                w6jvalue = AngularMomentum.Wigner_6j(level.J, nm.spinI, Fsub.F, f, AngularJ64(1), ilevel.J)
+
+                c2 += factor * w3jvalue^2 * w6jvalue^2 * (amplitudeN1 + amplitudeDeltaN1)^2 / deltaE
+            end
+        end
+
+        conv = 0.11909076 #Conversion Factor from atomic units to MHz/T^2
+        c2 = conv * c2
+
+        println("C_2(level=$(level.index) [J=$(level.J)$(string(level.parity)), I=$(nm.spinI), F=$(Fsub.F), M_F=$(Fsub.M)]) = $(c2) MHz/T^2")
+
+        return ( c2 )
     end
 
 
@@ -298,7 +421,7 @@ module LandeZeeman
         # Calculate all amplitudes and requested properties
         newOutcomes = LandeZeeman.Outcome[]
         for  outcome in outcomes
-            newOutcome = LandeZeeman.computeAmplitudesProperties(outcome, grid, settings) 
+            newOutcome = LandeZeeman.computeAmplitudesProperties(outcome, multiplet, nm, grid, settings) 
             push!( newOutcomes, newOutcome)
         end
         # Print all results to screen
@@ -326,7 +449,7 @@ module LandeZeeman
             if  Basics.selectLevel(level, settings.levelSelection)
                 Jsublevels = LandeZeeman.SublevelJ[];   Mvalues = AngularMomentum.m_values(level.J) 
                 Fsublevels = LandeZeeman.SublevelF[];   Fvalues = Basics.oplus(nm.spinI, level.J)
-                for  M in Mvalues   push!(Jsublevels, LandeZeeman.SublevelJ(M, 0.) )    end
+                for  M in Mvalues   push!(Jsublevels, LandeZeeman.SublevelJ(M, 0., 0.) )    end
                 for  F in Fvalues 
                     MFvalues = AngularMomentum.m_values(F)
                     for  MF in MFvalues     push!(Fsublevels, LandeZeeman.SublevelF(F, MF, 0., 0.) )    end 
@@ -458,14 +581,54 @@ module LandeZeeman
         #
         #
         if  settings.calcQZScoeff
-            # Jan, now implement 1-2 tables about your desired output please.
-            nx = 135
+            nx = 100
             println(stream, " ")
             println(stream, "  Quadratic Zeeman shift C_2 coefficients for (hyper-) fine-structure levels:")
             println(stream, " ")
             println(stream, "  ", TableStrings.hLine(nx))
-            println(stream, "  Jan, now implement 1-2 tables about your desired output please. ")
-            println(stream, "  ", TableStrings.hLine(nx))
+            sa = "  ";   sb = "  "
+            sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
+            sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
+            sa = sa * TableStrings.center(14, "Energy"; na=5)              
+            sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=5)
+
+            if nm.spinI == AngularJ64(0)
+                sa = sa * TableStrings.center(10, "M";   na=4);                             sb = sb * TableStrings.hBlank(14)
+                sa = sa * TableStrings.center(14, "C_2"; na=5)
+                sb = sb * TableStrings.center(14, "[MHz/T^2]"; na=5)
+            else
+                sa = sa * TableStrings.center(10, "F";   na=4);                             sb = sb * TableStrings.hBlank(14)
+                sa = sa * TableStrings.center(10, "M";   na=4);                             sb = sb * TableStrings.hBlank(14)
+                sa = sa * TableStrings.center(14, "C_2"; na=5)
+                sb = sb * TableStrings.center(14, "[MHz/T^2]"; na=5)
+            end    
+            println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
+
+            for outcome in outcomes
+                sa  = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
+                sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
+                sa = sa * TableStrings.center(10, string(sym); na=4)
+                energy = 1.0
+                sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", energy)) * "    "
+                println(stream, sa )
+
+                sc = TableStrings.hBlank(length(sa) + 1)
+                if nm.spinI == AngularJ64(0)
+                    for Jsub in outcome.Jsublevels
+                        sa = sc * TableStrings.center(10, string(Jsub.M); na=4)
+                        sa = sa * @sprintf("%.8e", Jsub.c2Coeff)
+                        println(stream, sa)
+                    end
+                else
+                    for Fsub in outcome.Fsublevels
+                        sa = sc * TableStrings.center(10, string(Fsub.F); na=4)
+                        sa = sa * TableStrings.center(10, string(Fsub.M); na=4)
+                        sa = sa * @sprintf("%.8e", Fsub.c2Coeff)
+                        println(stream, sa)
+                    end
+                end
+                println(stream, "  ", TableStrings.hLine(nx))
+            end
         end
         #
         return( nothing )

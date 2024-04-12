@@ -1736,7 +1736,6 @@ module Basics
     abstract type  AbstractScField                          end
     struct     ALField              <:  AbstractScField     end
     struct     EOLField             <:  AbstractScField     end
-    struct     DFSField             <:  AbstractScField     end
     struct     HSField              <:  AbstractScField     end
     struct     EHField              <:  AbstractScField     end
     struct     KSField              <:  AbstractScField     end
@@ -1746,6 +1745,25 @@ module Basics
     struct     AaDFSField           <:  AbstractScField     end   
     struct     AaHSField            <:  AbstractScField     end   
 
+        
+    """
+    `struct  Basics.DFSField        <:  AbstractScField`  
+        ... defines a type to describe a mean Dirac-Fock-Slater field.
+
+        + strength           ::Float64   ... Strength factor of the DFS potential (default: strength=1.0)
+    """
+    struct     DFSField             <:  AbstractScField     
+        strength             ::Float64 
+    end
+
+    # `Basics.DFSField()`  ... defines the default strength=1.0
+    function DFSField()
+        DFSField(1.0)
+    end
+    
+    
+
+        
     """
     `struct  Basics.DFSwCPField          <:  AbstractScField`  
         ... defines a type to describe a mean Dirac-Fock-Slater field with core-polarization.
@@ -1774,8 +1792,9 @@ module Basics
     struct     CoulombInteraction   <:  AbstractEeInteraction     end
     struct     BreitInteraction     <:  AbstractEeInteraction     end
     struct     CoulombBreit         <:  AbstractEeInteraction     end
+    struct     CoulombGaunt         <:  AbstractEeInteraction     end
     
-    export  AbstractEeInteraction, DiagonalCoulomb, CoulombInteraction, BreitInteraction, CoulombBreit
+    export  AbstractEeInteraction, DiagonalCoulomb, CoulombInteraction, BreitInteraction, CoulombBreit, CoulombGaunt
 
     
     #==

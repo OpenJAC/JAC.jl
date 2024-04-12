@@ -238,5 +238,26 @@ module Beam
         return(wa) 
     end
     
+    
+    """
+    `function  Beam.redefineEnergy(energy::Float64, beam::AbstractBeamType)`   
+        ... to re-define the energy (i.e. the components of the k-vector) in Hartree for a given beam to a well-defined value.
+            A newBeam of the same (concrete) type as beam is returned.
+    """
+    function  redefineEnergy(energy::Float64, beam::AbstractBeamType)
+        k = sqrt(2*energy)
+        #
+        if      typeof(beam) == Beam.PlaneWave
+            if  beam.kx != 0  ||   beam.ky != 0   error("stop a")   end
+            newBeam = Beam.PlaneWave(0., 0., k)
+        elseif  typeof(beam) == Beam.BesselBeam
+            kz = k * beam.openingAngle
+            newBeam = Beam.BesselBeam( beam.mOAM, beam.openingAngle, kz)
+        else    error("stop b")   
+        end
+        
+        return(newBeam)
+    end
+    
 
 end # module

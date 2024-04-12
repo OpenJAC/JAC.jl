@@ -113,7 +113,7 @@ module Defaults
         ... to convert an cross section value from barn atomic section unit; a Float64 is returned.
 
     + `("cross section: from atomic to barn", value::Float64)`  or  `("cross section: from atomic to Mbarn", value::Float64)`  or
-      `("cross section: from atomic to Hz", value::Float64)`  or  `("energy: from atomic to Angstrom", value::Float64)` 
+      `("cross section: from atomic to cm^2", value::Float64)` 
         ... to convert an energy value from atomic to the speficied cross section unit; a Float64 is returned.
 
     + `("cross section: from predefined to atomic unit", value::Float64)`  or  `("cross section: to atomic", value::Float64)`
@@ -194,16 +194,19 @@ module Defaults
             if      Defaults.getDefaults("unit: cross section") == "a.u."   return( wa )
             elseif  Defaults.getDefaults("unit: cross section") == "barn"   return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN )
             elseif  Defaults.getDefaults("unit: cross section") == "Mbarn"  return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 1.0e-6 )
+            elseif  Defaults.getDefaults("unit: cross section") == "cm^2"   return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 1.0e-24 )
             else    error("stop a")
             end
         
         elseif   sa in ["cross section: from atomic to barn"]               return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN )
         elseif   sa in ["cross section: from atomic to Mbarn"]              return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 1.0e-6 )
+        elseif   sa in ["cross section: from atomic to cm^2"]               return( wa * CONVERT_CROSS_SECTION_AU_TO_BARN * 1.0e-24 )
 
         elseif   sa in ["cross section: from predefined to atomic unit", "cross section: to atomic"]
             if      Defaults.getDefaults("unit: cross section") == "a.u."   return( wa )
             elseif  Defaults.getDefaults("unit: cross section") == "barn"   return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN )
             elseif  Defaults.getDefaults("unit: cross section") == "Mbarn"  return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN * 1.0e6 )
+            elseif  Defaults.getDefaults("unit: cross section") == "cm^2"   return( wa / CONVERT_CROSS_SECTION_AU_TO_BARN * 1.0e24 )
             else    error("stop b")
             end
 
@@ -408,7 +411,7 @@ module Defaults
             !(sb in units)    &&    error("Currently supported energy units: $(units)")
             global GBL_ENERGY_UNIT = sb
         elseif    sa == "unit: cross section"
-            units = ["a.u.", "barn", "Mbarn"]
+            units = ["a.u.", "barn", "Mbarn", "cm^2"]
             !(sb in units)    &&    error("Currently supported cross section units: $(units)")
             global GBL_CROSS_SECTION_UNIT = sb
         elseif    sa == "unit: rate"

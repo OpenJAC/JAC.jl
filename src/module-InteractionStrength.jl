@@ -414,14 +414,16 @@ module InteractionStrength
 
 
     """
-    `InteractionStrength.XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid; keep::Bool=false)`  
-        ... computes the the effective Breit interaction strengths X^L_Breit (abcd) for given rank L and orbital functions 
-            a, b, c and d  at the given grid. For keep=true, the procedure looks up the (global) directory GBL_Storage_XL_Coulomb
+    `InteractionStrength.XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid; 
+                                  keep::Bool=false, onlyGaunt::Bool=false)`  
+        ... computes the the effective Breit interaction strengths X^L_Breit (abcd) or Gaunt interaction strengths 
+            X^L_Gaunt (abcd) for given rank L and orbital functions a, b, c and d  at the given grid. 
+            For keep=true, the procedure looks up the (global) directory GBL_Storage_XL_Coulomb
             and returns the corresponding value without re-calculation of the interaction strength; it also 'stores' the calculated
             value if not yet included. For keep=false, the interaction strength is always computed on-fly. A value::Float64 is returned. 
-            At present, only the zero-frequency Breit interaction is taken into account.
+            At present, only the zero-frequency Breit or Gaunt interaction is taken into account.
     """
-    function XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid; keep::Bool=false)
+    function XL_Breit(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid; keep::Bool=false, onlyGaunt::Bool=false)
         global GBL_Storage_XL_Breit
         ja2 = Basics.subshell_2j(a.subshell)
         jb2 = Basics.subshell_2j(b.subshell)
@@ -437,12 +439,12 @@ module InteractionStrength
             if haskey(GBL_Storage_XL_Breit, sa )
                 XL_Breit = GBL_Storage_XL_Breit[sa]
             else
-                xcList   = XL_Breit0_coefficients(L,a,b,c,d)
+                xcList   = XL_Breit0_coefficients(L,a,b,c,d, onlyGaunt=onlyGaunt)
                 XL_Breit = XL_Breit0_densities(xcList, grid)
                 global GBL_Storage_XL_Breit = Base.merge(GBL_Storage_XL_Breit, Dict( sa => XL_Breit))
             end
         else
-            xcList   = XL_Breit0_coefficients(L,a,b,c,d)
+            xcList   = XL_Breit0_coefficients(L,a,b,c,d, onlyGaunt=onlyGaunt)
             XL_Breit = XL_Breit0_densities(xcList, grid)
         end
         #
@@ -463,12 +465,12 @@ module InteractionStrength
 
 
     """
-    `InteractionStrength.XL_Breit0_coefficients(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital)`  
+    `InteractionStrength.XL_Breit0_coefficients(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital; onlyGaunt::Bool=false)`  
         ... evaluates the combinations and pre-coefficients for the zero-frequency Breit interaction  
             X^L_Breit (omega=0.; abcd) for given rank L and orbital functions a, b, c and d. A list of coefficients 
             xcList::Array{XLCoefficient,1} is returned.
     """
-    function XL_Breit0_coefficients(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital)
+    function XL_Breit0_coefficients(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital; onlyGaunt::Bool=false)
         xcList = XLCoefficient[]
         
         la = Basics.subshell_l(a.subshell);    ja2 = Basics.subshell_2j(a.subshell)
@@ -543,6 +545,10 @@ module InteractionStrength
             if  abs(xcc) > 1.0e-10   push!( xcList, XLCoefficient(5, nu, c, b, a, d, xcc) )   end
             if  abs(xcc) > 1.0e-10   push!( xcList, XLCoefficient(5, nu, b, c, d, a, xcc) )   end
         end
+        
+        # Return here if onlyGaunt = true
+        if   onlyGaunt     return( xcList )     end
+        ## if   onlyGaunt     xcList = XLCoefficient[]     end
 
         # Add contributions of the S^k_mu integrals
         if  rem(la+lc+L-1,2) == 1   &&   rem(lb+ld+L+1,2) == 1
@@ -947,12 +953,21 @@ module InteractionStrength
             to an external magnetic field for orbital functions a, b. A value::Float64 is returned.
     """
     function zeeman_Delta_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
-        # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
-        minusa = Subshell(1, -a.subshell.kappa)
-        wa = (Defaults.getDefaults("electron g-factor") - 2) / 2. * (a.subshell.kappa + b.subshell.kappa + 1) * 
-             AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) * RadialIntegrals.rkDiagonal(0, a, b, grid)
-        return( wa )
-    end
+        ka = a.subshell.kappa
+        kb = b.subshell.kappa
+
+        rad = RadialIntegrals.rkDiagonal(0, a.P, b.P, grid) * (ka + kb - 1) + RadialIntegrals.rkDiagonal(0, a.Q, b.Q, grid) * (ka + kb + 1)
+        ang = AngularMomentum.CL_reduced_me_rb(Subshell(1, -ka), 1, b.subshell)
+
+        return ( (Defaults.getDefaults("electron g-factor") - 2)/2 * rad * ang )
+    end    
+    ##x function zeeman_Delta_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
+    ##x     # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
+    ##x     minusa = Subshell(1, -a.subshell.kappa)
+    ##x     wa = (Defaults.getDefaults("electron g-factor") - 2) / 2. * (a.subshell.kappa + b.subshell.kappa + 1) * 
+    ##x          AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) * RadialIntegrals.rkDiagonal(0, a, b, grid)
+    ##x     return( wa )
+    ##x end
 
 
     """
@@ -961,12 +976,22 @@ module InteractionStrength
             orbital functions a, b. A value::Float64 is returned. 
     """
     function zeeman_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
-        # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
-        minusa = Subshell(1, -a.subshell.kappa)
-        wa = - AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) / (2 * Defaults.getDefaults("alpha")) *
-               RadialIntegrals.rkNonDiagonal(1, a, b, grid)
-        return( wa )
+        ka = a.subshell.kappa
+        kb = b.subshell.kappa
+
+        rad = RadialIntegrals.rkNonDiagonal(1, a, b, grid)
+        ang = AngularMomentum.CL_reduced_me_rb(Subshell(1, -ka), 1, b.subshell)
+
+        return ( -rad * ang/(2 * Defaults.getDefaults("alpha")) * (ka + kb) )
     end
+    ##x 
+    ##x function zeeman_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
+    ##x     # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
+    ##x     minusa = Subshell(1, -a.subshell.kappa)
+    ##x     wa = - AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) / (2 * Defaults.getDefaults("alpha")) *
+    ##x            RadialIntegrals.rkNonDiagonal(1, a, b, grid)
+    ##x     return( wa )
+    ##x end
 
 end # module
 

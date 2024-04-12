@@ -132,7 +132,7 @@ module ElectronCapture
     """
     `ElectronCapture.amplitude(kind::String, channel::ElectronCapture.Channel, finalLevel::Level, continuumLevel::Level,
                                grid::Radial.Grid; printout::Bool=true)`  
-        ... to compute the kind in  CoulombInteraction(), BreitInteraction(), CoulombBreit()   ElectronCapture amplitude 
+        ... to compute the kind in  CoulombInteraction(), BreitInteraction(), CoulombBreit(), CoulombGaunt()   ElectronCapture amplitude 
             <alpha_f J_f || O^(capture, kind) || (alpha_i J_i, kappa) J_f> = <(alpha_i J_i, kappa) J_f || O^(Auger, kind) || alpha_f J_f>^*
             due to the interelectronic interaction for the given final and initial level. A value::ComplexF64 is returned.
     """

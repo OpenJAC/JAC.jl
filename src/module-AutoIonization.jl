@@ -163,7 +163,7 @@ module AutoIonization
     """
     `AutoIonization.amplitude(kind::AbstractEeInteraction, channel::AutoIonization.Channel, continuumLevel::Level, initialLevel::Level, 
                               grid::Radial.Grid; printout::Bool=true)`  
-        ... to compute the kind in  CoulombInteraction(), BreitInteraction(), CoulombBreit()   Auger amplitude 
+        ... to compute the kind in  CoulombInteraction(), BreitInteraction(), CoulombBreit(), CoulombGaunt()   Auger amplitude 
             <(alpha_f J_f, kappa) J_i || O^(Auger, kind) || alpha_i J_i>  due to the interelectronic interaction for the given 
             final and initial level. A value::ComplexF64 is returned.
     """
@@ -186,8 +186,8 @@ module AutoIonization
             cLevel    = Level(continuumLevel, subshells)
         end
         #
-        if      kind in [ CoulombInteraction(), BreitInteraction(), CoulombBreit()]        ## pure V^Coulomb interaction
-        #--------------------------------------------------------------------------
+        if      kind in [ CoulombInteraction(), BreitInteraction(), CoulombBreit(), CoulombGaunt()]        ## pure V^Coulomb interaction
+        #------------------------------------------------------------------------------------------
             for  r = 1:nt
                 for  s = 1:ni
                     if  iLevel.basis.csfs[s].J != iLevel.J  ||  iLevel.basis.csfs[s].parity != iLevel.parity      continue    end 
@@ -209,7 +209,7 @@ module AutoIonization
                     #
                     me = 0.
                     for  coeff in wa[2]
-                        if   kind in [ CoulombInteraction(), CoulombBreit()]    
+                        if   kind in [ CoulombInteraction(), CoulombBreit(), CoulombGaunt()]    
                             me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 
                                                     cLevel.basis.orbitals[coeff.a], cLevel.basis.orbitals[coeff.b],
                                                     iLevel.basis.orbitals[coeff.c], iLevel.basis.orbitals[coeff.d], grid)   end
@@ -217,6 +217,10 @@ module AutoIonization
                             me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, 
                                                     cLevel.basis.orbitals[coeff.a], cLevel.basis.orbitals[coeff.b],
                                                     iLevel.basis.orbitals[coeff.c], iLevel.basis.orbitals[coeff.d], grid)   end
+                        if   kind in [ CoulombGaunt()]    
+                            me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, 
+                                                    cLevel.basis.orbitals[coeff.a], cLevel.basis.orbitals[coeff.b],
+                                                    iLevel.basis.orbitals[coeff.c], iLevel.basis.orbitals[coeff.d], grid, onlyGaunt=true)   end
                     end
                     matrix[r,s] = me
                 end
@@ -240,7 +244,7 @@ module AutoIonization
     """
     `AutoIonization.channelAmplitude(kind::String, channel::AutoIonization.Channel, energy::Float64, finalLevel::Level, 
                                      initialLevel::Level, grid::Radial.Grid)`  
-        ... to compute the kind = (CoulombInteraction(), BreitInteraction(), CoulombBreit())   Auger amplitude  
+        ... to compute the kind = (CoulombInteraction(), BreitInteraction(), CoulombBreit(), CoulombGaunt())   Auger amplitude  
             <(alpha_f J_f, kappa) J_i || O^(Auger, kind) || alpha_i J_i>  due to the interelectronic interaction for the given final and 
             initial level. A newChannel::AutoIonization.Channel is returned.
     """

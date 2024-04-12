@@ -137,7 +137,7 @@
                 end
 
                 for  coeff in wa[2]
-                    if  settings.eeInteractionCI in [DiagonalCoulomb(), CoulombInteraction(), CoulombBreit()]
+                    if  settings.eeInteractionCI in [DiagonalCoulomb(), CoulombInteraction(), CoulombBreit(), CoulombGaunt()]
                         me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                      basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)
                     elseif  false
@@ -151,9 +151,12 @@
                                                                                         basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)   
                     end
                                                                                             
-                    if  settings.eeInteractionCI in [BreitInteraction(), CoulombBreit()]
+                    if      settings.eeInteractionCI in [BreitInteraction(), CoulombBreit()]
                         me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
-                                                                                       basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)     
+                                                                                   basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)     
+                    elseif  settings.eeInteractionCI in [CoulombGaunt()]
+                        me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                         basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep, onlyGaunt=true)     
                     elseif  false
                         xl1 = InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                               basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=false)
@@ -849,7 +852,7 @@
             for    i = 1:nrho   rhot[i] = rhot[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
         end
         # Define the integrant and take the integrals
-        println(">>>>> wy = 1.0 * DFS potential");     wy = 1.0
+        println(">>>>> wy = $(scField.strength) * DFS potential");     wy = scField.strength
         for i = 1:npoints
             for j = 1:npoints    rg = max( grid.r[i],  grid.r[j]);    wx[j] = rhot[j]/rg   end
             wb[i] = JAC.RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)

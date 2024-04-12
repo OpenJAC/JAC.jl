@@ -37,13 +37,15 @@ module Dielectronic
         ... to add for missing final decay levels the photon decay rates for non-relativistic hydrogenic ions;
             this improves the total photon rate as well as the resonance strength.
 
-        + n0              ::Int64   
-            ... principal quantum number n < n0, for which hydrogenic photon rates are taken into account.             
+        + nDetailed       ::Int64   
+            ... principal quantum number nDetailed up to which the photon rates are calculated explicitly;
+                for all n-shells with nDetailed < n <= n_ryd-1, hydrogenic photon rates are scaled to account
+                for the radiative decay into these high-n shells.
         + effectiveZ      ::Float64      ... effective charge Z_eff for the hydrogenic correction.
         + energyScaling   ::Float64      ... scaling factor to modify the non-relativistic energies.
     """
     struct   HydrogenicCorrections               <:  Dielectronic.AbstractCorrections
-        n0                ::Int64   
+        nDetailed         ::Int64   
         effectiveZ        ::Float64
         energyScaling     ::Float64
     end
@@ -51,7 +53,7 @@ module Dielectronic
 
     # `Base.show(io::IO, corr::HydrogenicCorrections)`  ... prepares a proper printout of the corr::HydrogenicCorrections.
     function Base.show(io::IO, corr::HydrogenicCorrections)
-        println(io, "n0:              $(corr.n0)  ")
+        println(io, "nDetailed:       $(corr.nDetailed)  ")
         println(io, "effectiveZ:      $(corr.effectiveZ)  ")
         println(io, "energyScaling:   $(corr.energyScaling)  ")
     end     
@@ -81,7 +83,7 @@ module Dielectronic
             ... Specify, if appropriate, the inclusion of additional corrections to the rates and DR strengths.
         + augerOperator         ::AbstractEeInteraction 
             ... Auger operator that is to be used for evaluating the Auger amplitude's; the allowed values are: 
-                CoulombInteraction(), BreitInteration(), CoulombBreit().
+                CoulombInteraction(), BreitInteration(), CoulombBreit(), CoulombGaunt().
     """
     struct Settings  <:  AbstractProcessSettings 
         multipoles              ::Array{EmMultipole,1}
@@ -418,11 +420,12 @@ module Dielectronic
         captureRate     = 2pi * rateA
         wa              = 8.0pi * Defaults.getDefaults("alpha") * pathway.photonEnergy / (Basics.twice(pathway.intermediateLevel.J) + 1) * 
                                                                                          (Basics.twice(pathway.finalLevel.J) + 1)
+        wa              = wa / pi  ## modified for test with Xe^53+ (March/2024)
         photonRate      = EmProperty(wa * rateC, wa * rateB)  
         angularBeta     = EmProperty(-9., -9.)
         #  Factor due to UserGuide
         wa              = Defaults.convertUnits("kinetic energy to wave number: atomic units", pathway.electronEnergy)
-        wa              = pi*pi / (wa*wa) * captureRate  *  2 * # factor 2 is not really clear.
+        wa              = pi*pi / (wa*wa) * captureRate  * ##  2 * # factor 2 is not really clear.
                           ((Basics.twice(pathway.intermediateLevel.J) + 1) / (Basics.twice(pathway.initialLevel.J) + 1))
         #  Factor due to Tu et al. (Plasma Phys., 2016)
         ## wa              = pi*pi / 2. / pathway.electronEnergy * captureRate * 
@@ -548,18 +551,18 @@ module Dielectronic
             end
             # Correct the photon rate if requested
             if  typeof(settings.corrections) == Dielectronic.HydrogenicCorrections
-                println(">>> Add hydrogenic corrections from n0 = $(settings.corrections.n0) upwards")
-                n0            = settings.corrections.n0
+                println(">>> Add hydrogenic corrections from n_low = $(settings.corrections.nDetailed+1) upwards")
+                nDetailed     = settings.corrections.nDetailed
                 Zeff          = settings.corrections.effectiveZ
                 # Determine ni, li for the given resonance
-                rydbergSubshs = Basics.extractRydbergSubshellList(nLevel, n0, 1.0e-1)
+                rydbergSubshs = Basics.extractRydbergSubshellList(nLevel, nDetailed+1, 1.0e-1)
                 rydbergShells = Basics.extractNonrelativisticShellList(rydbergSubshs)
                 if  length(rydbergShells) == 1  rShell = rydbergShells[1];   ni = rShell.n;   li = rShell.l
                 else   error("Inappropriate number of Rydberg shells = $rydbergShells ")
                 end
-                # Compute and add hydrogenic rates A(ni,li --> n0 <= n = ni-1, li +- 1)
+                # Compute and add hydrogenic rates A(ni,li --> nDetailed < n <= ni-1, li +- 1)
                 hydrogenicRate = 0.
-                for  nf = n0:ni-1
+                for  nf = nDetailed+1:ni-1
                     hydrogenicRate = hydrogenicRate + computeHydrogenicRate(ni, li, nf, li-1, Zeff) + 
                                                       computeHydrogenicRate(ni, li, nf, li+1, Zeff)
                 end

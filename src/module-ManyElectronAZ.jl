@@ -63,7 +63,7 @@ module ManyElectronAZ
         wa  = SpinAngular.computeCoefficients(opa, leftBasis.csfs[r], rightBasis.csfs[s], subshellList) 
         #
         for  coeff in wa
-            if   kind in [ DiagonalCoulomb(), CoulombInteraction(), CoulombBreit()]    
+            if   kind in [ DiagonalCoulomb(), CoulombInteraction(), CoulombBreit(), CoulombGaunt()]    
                 me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, 
                                          leftBasis.orbitals[coeff.a],  leftBasis.orbitals[coeff.b],
                                         rightBasis.orbitals[coeff.c], rightBasis.orbitals[coeff.d], grid)   end
@@ -71,6 +71,10 @@ module ManyElectronAZ
                 me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, 
                                          leftBasis.orbitals[coeff.a],  leftBasis.orbitals[coeff.b],
                                         rightBasis.orbitals[coeff.c], rightBasis.orbitals[coeff.d], grid)   end
+            if   kind in [ CoulombGaunt()]    
+                me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, 
+                                         leftBasis.orbitals[coeff.a],  leftBasis.orbitals[coeff.b],
+                                        rightBasis.orbitals[coeff.c], rightBasis.orbitals[coeff.d], grid, onlyGaunt=true)   end
         end
         
         return( me )

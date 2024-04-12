@@ -39,7 +39,8 @@ module Continuum
         ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
         ## wp4 = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
         ##x wp = compute("radial potential: Kohn-Sham", grid, level)   
-        wp  = Basics.computePotential(Basics.DFSField(), grid, level)   
+        ##x wp  = Basics.computePotential(Basics.DFSField(0.70), grid, level)   
+        wp  = Basics.computePotential(Basics.DFSField(0.42), grid, level)   
         pot = Basics.add(nuclearPotential, wp)
         Defaults.warn(AddWarning(), "All continuum orbitals are generated in a local (DFS) potential.")  
         

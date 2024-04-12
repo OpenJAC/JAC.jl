@@ -245,7 +245,7 @@ module PhotoIonization
         else  angularBeta  = EmProperty(0.)
         end
         if    settings.calcTimeDelay
-              coherentDelay, incoherentDelay = PhotoIonization.computeTimeDelays(nChannels, nxChannels, 0.01)
+              coherentDelay, incoherentDelay = PhotoIonization.computeTimeDelays(nChannels, nxChannels, 0.01, line.finalLevel.J)
         else  coherentDelay = EmProperty(0.);     incoherentDelay = EmProperty(0.)
         end
         #
@@ -542,14 +542,15 @@ module PhotoIonization
 
     """
     `PhotoIonization.computeTimeDelays(channels::Array{PhotoIonization.Channel,1}, xchannels::Array{PhotoIonization.Channel,1}, 
-                                       deltaE::Float64)`  
+                                       deltaE::Float64, Jf::AngularJ64)`  
         ... to compute the -- coherent and incoherent -- time delay from the channels as calculated for two neighboured photon 
             energies (deltaE = xE - E). Two tuple of two time delays (coherentDelay::EmProperty, incoherentDelay::EmProperty)
             is returned.
     """
     function  computeTimeDelays(channels::Array{PhotoIonization.Channel,1}, xchannels::Array{PhotoIonization.Channel,1}, 
-                                deltaE::Float64)
+                                deltaE::Float64, Jf::AngularJ64)
         #== Calculate the coherent and incorent time delays separately; start with the coherent delays.
+        # First attempt
         MeffC = MeffCx = MeffB = MeffBx = ComplexF64(0.)
         for  ch in channels
             if       ch.gauge == Basics.Coulomb     MeffC  = MeffC  + ch.amplitude
@@ -562,9 +563,10 @@ module PhotoIonization
             end
         end
         DeffC = angle(MeffC);    DeffCx = angle(MeffCx);    DeffB = angle(MeffB);    DeffBx = angle(MeffBx)
-        coherentDelay = EmProperty( (DeffCx - DeffC) / deltaE,  - (DeffBx - DeffB) / deltaE )  ==#
+        coherentDelay = EmProperty( (DeffCx - DeffC) / deltaE,  - (DeffBx - DeffB) / deltaE )
         #
         # Calculate the coherent time delays
+        # Second attempt
         nomTauC = denTauC = nomTauB = denTauB= ComplexF64(0.)
         for  (ic, ch) in  enumerate(channels)
             @show  "***", ch.gauge, ch.amplitude, xchannels[ic].amplitude, (xchannels[ic].amplitude - ch.amplitude) / deltaE
@@ -576,7 +578,31 @@ module PhotoIonization
                 denTauB = denTauB + conj(ch.amplitude) * ch.amplitude
             end
         end
-        coherentTauC = -im * nomTauC / denTauC / (deltaE)^2;   coherentTauB = im * nomTauB / denTauB
+        @warn "Multiply coherentTauC by 20. for mean energy calibration !!!"
+        coherentTauC = -im * nomTauC / denTauC / deltaE * 20.;   coherentTauB = im * nomTauB / denTauB
+        @show coherentTauC, coherentTauB
+        coherentDelay = EmProperty( coherentTauC.im, coherentTauB.im )    ==#
+        #
+        # Calculate the coherent time delays
+        # Third attempt, explicit derivation by Nikolay, April 2024
+        @warn "l0 = 2 ... for d_3/2, 5/2 splitting"
+        ampC = ampCx = ampB = ampBx = ComplexF64(0.)
+        for  (ic, ch) in  enumerate(channels)
+            j  = AngularMomentum.kappa_j(ch.kappa);   l  = AngularMomentum.kappa_l(ch.kappa);   l0 = AngularJ64(2);   Jc = Jf
+            @show  "***", j, l, l0, Jc
+            @show  "***", ch.gauge, ch.amplitude, xchannels[ic].amplitude, (xchannels[ic].amplitude - ch.amplitude) / deltaE
+            factor = im^( -Basics.twice(l)/2 ) * sqrt(3/(4pi))  * AngularMomentum.phaseFactor([j, +1, l, +1, AngularJ64(1//2)]) *
+                     AngularMomentum.ClebschGordan( l0, AngularM64(0), AngularJ64(1), AngularM64(0), l,  AngularM64(0)) *
+                     sqrt(Basics.twice(j)+1) * AngularMomentum.Wigner_6j(Jc, AngularJ64(1//2), l0, l, AngularJ64(1), j)
+            if       ch.gauge == Basics.Coulomb
+                ampC  = ampC  + factor * ch.amplitude
+                ampCx = ampCx + factor * xchannels[ic].amplitude
+             elseif   ch.gauge == Basics.Babushkin
+                ampB  = ampB  + factor * ch.amplitude
+                ampBx = ampBx + factor * xchannels[ic].amplitude
+            end
+        end
+        coherentTauC = (ampCx - ampC) / deltaE / ampC;   coherentTauB = (ampBx - ampB) / deltaE / ampB
         @show coherentTauC, coherentTauB
         coherentDelay = EmProperty( coherentTauC.im, coherentTauB.im )
         #
@@ -952,9 +978,9 @@ module PhotoIonization
                 en = line.finalLevel.energy - line.initialLevel.energy
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                  * "    "
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "    "
-                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) * "    "
-                sa = sa * @sprintf("%.6e", line.angularBeta.Coulomb)     * "    "
-                sa = sa * @sprintf("%.6e", line.angularBeta.Babushkin)   * "                 "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) * "   "
+                sa = sa * @sprintf("% .6e", line.angularBeta.Coulomb)     * "   "
+                sa = sa * @sprintf("% .6e", line.angularBeta.Babushkin)   * "   "
                 println(stream, sa)
             end
             println(stream, "  ", TableStrings.hLine(nx))
@@ -990,11 +1016,11 @@ module PhotoIonization
                 en = line.finalLevel.energy - line.initialLevel.energy
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en))                  * "    "
                 sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.photonEnergy))   * "    "
-                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) * "    "
-                sa = sa * @sprintf("%.6e", Defaults.convertUnits("time: from atomic", line.coherentDelay.Coulomb))     * "    "
-                sa = sa * @sprintf("%.6e", Defaults.convertUnits("time: from atomic", line.coherentDelay.Babushkin))   * "      "
-                sa = sa * @sprintf("%.6e", Defaults.convertUnits("time: from atomic", line.incoherentDelay.Coulomb))   * "    "
-                sa = sa * @sprintf("%.6e", Defaults.convertUnits("time: from atomic", line.incoherentDelay.Babushkin)) * "      "
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.electronEnergy)) * "   "
+                sa = sa * @sprintf("% .6e", Defaults.convertUnits("time: from atomic", line.coherentDelay.Coulomb))     * "   "
+                sa = sa * @sprintf("% .6e", Defaults.convertUnits("time: from atomic", line.coherentDelay.Babushkin))   * "     "
+                sa = sa * @sprintf("% .6e", Defaults.convertUnits("time: from atomic", line.incoherentDelay.Coulomb))   * "   "
+                sa = sa * @sprintf("% .6e", Defaults.convertUnits("time: from atomic", line.incoherentDelay.Babushkin)) * "     "
                 println(stream, sa)
             end
             println(stream, "  ", TableStrings.hLine(nx))

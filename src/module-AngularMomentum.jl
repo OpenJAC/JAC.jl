@@ -7,7 +7,7 @@
 module AngularMomentum
 
     using SpecialFunctions, ..Basics
-    using GSL: sf_coupling_3j, sf_coupling_6j, sf_coupling_9j
+    using GSL: sf_coupling_3j, sf_coupling_6j, sf_coupling_9j, sf_legendre_sphPlm
 
     
     """
@@ -476,7 +476,7 @@ module AngularMomentum
     """
     function sphericalYlm(l::Int64, m::Int64, theta::Float64, phi::Float64)
         one = 1.0 + 0.0im;    iphi = 0. + phi*im
-        #
+        #==
         if      l < abs(m)              ylm = 0 * one
         elseif  l ==  0  &&   m == 0    ylm = one / (2*sqrt(pi))
         elseif  l ==  1  &&   m ==  1   ylm = - sqrt(3 /(2*pi)) / 2 * sin(theta) * exp(iphi)
@@ -505,7 +505,10 @@ module AngularMomentum
         elseif  l ==  4  &&   m == -4   ylm =  3 * sqrt(5*7/(2*pi)) / 16 * (sin(theta)^4) * exp(-4*iphi)
         else    error("stop a")
             # Further values can be find in /home/fritzsch/fri/rabs-jena/rabs_dirac_orbital.f90
-        end
+        end   ==#
+        
+        ##x @show l,m, cos(theta), iphi
+        ylm = sf_legendre_sphPlm(l, abs(m), cos(theta)) * exp(iphi)
         
         return( ylm )
     end

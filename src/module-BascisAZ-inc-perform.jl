@@ -158,8 +158,8 @@
                 outcome = TwoElectronOnePhoton.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("two-electron-one-photon lines:" => outcome) )         end
             elseif  typeof(computation.processSettings) == ParticleScattering.Settings 
-                outcome = ParticleScattering.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
-                if output    results = Base.merge( results, Dict("particle-scattering lines:" => outcome) )         end
+                outcome = ParticleScattering.computeEvents(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+                if output    results = Base.merge( results, Dict("particle-scattering events:" => outcome) )         end
             elseif  typeof(computation.processSettings) == BeamPhotoExcitation.Settings 
                 outcome = BeamPhotoExcitation.computeOutcomes(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
                 if output    results = Base.merge( results, Dict("beam-assisted photo-excitation:" => outcome) )         end
@@ -494,12 +494,15 @@
             end
 
             for  coeff in wa[2]
-                if  settings.eeInteractionCI in [CoulombInteraction(), CoulombBreit()]
+                if  settings.eeInteractionCI in [CoulombInteraction(), CoulombBreit(), CoulombGaunt()]
                     me = me + coeff.V * InteractionStrength.XL_Coulomb(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
-                                                                                     basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)   end
+                                                                                     basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, keep=keep)        end
                 if  settings.eeInteractionCI in [BreitInteraction(), CoulombBreit()]
                     me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
-                                                                                   basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)     end
+                                                                                   basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid)                     end
+                if  settings.eeInteractionCI in [CoulombGaunt()]
+                    me = me + coeff.V * InteractionStrength.XL_Breit(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
+                                                                                   basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, onlyGaunt=true)     end
             end
             matrix[r,r] = me
         end 

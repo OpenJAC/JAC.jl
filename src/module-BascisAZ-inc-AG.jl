@@ -794,13 +794,14 @@
         nx = 150
         println(stream, ">> All energies are shown in:  " * TableStrings.inUnits("energy") * "\n") 
         println(stream, "  ", TableStrings.hLine(nx))
-        println(stream, "    No. e's    mean En        min En    ...    max En     No. Levels    Leading configuration") 
+        println(stream, "    No. e's  P      mean En        min En    ...    max En     No. Levels    Leading configuration") 
         println(stream, "  ", TableStrings.hLine(nx))
         for  (n, nconf)  in  enumerate(configs)
             if  n > N   break   end
             #
             sa = " " * 
             TableStrings.flushright( 8, string(nconf.NoElectrons)) * "   " *
+            TableStrings.flushright( 2, string( Basics.determineParity(nconf))) * "   " *
             TableStrings.flushright(12, @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", meanEnergies[n] - energy0))) * "   "  *
             TableStrings.flushright(12, @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", minEnergies[n]  - energy0))) * " ... " *
             TableStrings.flushright(12, @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", maxEnergies[n]  - energy0))) * "  " *

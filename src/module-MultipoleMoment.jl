@@ -37,6 +37,61 @@ module MultipoleMoment
     end
 
 
+
+    """
+    `MultipoleMoment.amplitude(K::Integer, level::Level, grid::Radial.Grid, display::Bool=false)`  
+        ... to compute the K-th order (static) electric multipole-moment < alpha J J | Θ^(K) | alpha J J >  
+        for the given level. A value::Float64 is returned.
+    """
+    function amplitude(K::Integer, level::Level, grid::Radial.Grid, display::Bool=false)
+
+        printstyled("Compute multipole moment for level $(level.index) ...", color=:light_green)
+
+        radialParts = Dict()
+        angularParts = Dict()
+        for (sub1, orb1) in level.basis.orbitals, (sub2, orb2) in level.basis.orbitals
+            radialParts[sub1, sub2] = RadialIntegrals.rkDiagonal(K, orb1, orb2, grid)
+            angularParts[sub1, sub2] = AngularMomentum.CL_reduced_me_rb(sub1, K, sub2)
+        end
+
+        moment = 0.0
+        for i=1:length(level.mc), j=1:length(level.mc)
+            if (level.mc[i] == 0 || level.mc[j] == 0)
+                continue
+            end
+
+            if Defaults.saRatip()
+                spinAngularCoeffs = Basics.compute("angular coefficients: 1-p, Grasp92", 0, K, level.basis.csfs[i], level.basis.csfs[j]) 
+            end
+            if Defaults.saGG()
+                operator = SpinAngular.OneParticleOperator(K, plus, true)
+                spinAngularCoeffs = SpinAngular.computeCoefficients(operator, level.basis.csfs[i], level.basis.csfs[j], level.basis.subshells)
+            end
+
+            csfME = 0.0
+            for coeff in spinAngularCoeffs
+                csfME += coeff.T * radialParts[coeff.a, coeff.b] * angularParts[coeff.a, coeff.b]
+            end
+
+            moment += csfME * level.mc[i] * level.mc[j]
+        end
+
+        j = level.J.num/level.J.den
+        wigner3jvalue = AngularMomentum.Wigner_3j(j, K, j, j, 0, -j)
+        moment = moment * (-1)^(2*j - K + 1) * wigner3jvalue * sqrt(2*j+1)
+
+        printstyled("done. \n", color=:light_green)
+
+        if display
+            sa = @sprintf("%.5e", moment)
+            println("   <level=$(level.index) [J=$(level.J)$(string(level.parity)), M=J] | Θ^($(K)) | " *
+                        "level=$(level.index) [J=$(level.J)$(string(level.parity)), M=J] > = " * sa)
+        end
+
+        return( moment )
+    end
+
+
     """
     `MultipoleMoment.dipoleAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Grid; display::Bool=false)`  
          ... to compute the dipole amplitude   <(alpha_f J_f, kappa) J_i || D || alpha_i J_i>  for the given final 

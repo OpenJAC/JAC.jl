@@ -59,7 +59,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AugerInPlasma, AutoIonization, AverageAtom,
        Basics, Basis, Beam, BreitInteraction, Bsplines, BeamPhotoExcitation,
        CartesianVector, CiSettings, CiExpansion, CloseCoupling, compute, convertUnits, Cascade, Compton, Configuration, ConfigurationR, 
-       Continuum, CsfR, Coulex, CoulombExcitation, Coulion, CoulombIonization, CoulombBreit, CoulombInteraction, ClebschGordan, 
+       Continuum, CsfR, Coulex, CoulombExcitation, Coulion, CoulombIonization, CoulombBreit, CoulombGaunt, CoulombInteraction, ClebschGordan, 
        CorePolarization,
        diagonalize, Defaults, DecayYield, Details, Dielectronic, Dierec, Djpq, DoubleAutoIonization, DoubleAuger, DiagonalCoulomb,
        Eimex, ElectronCapture, ElecCapture, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate, ExpStokes, Empirical,
