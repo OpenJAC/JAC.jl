@@ -1,5 +1,5 @@
 #
-println("Hc) Tests of the StrongField module to demonstrate the Coulomb asymmetry in ATI azimuthal angular distributions.")
+println("Ic) Tests of the StrongField module to demonstrate the Coulomb asymmetry in ATI azimuthal angular distributions.")
 
 #Laser pulse
 wavelength      = 800.                             # nm
@@ -18,6 +18,7 @@ beam            = Pulse.PlaneWaveBeam(A0, omega, CEP)
 observable      = StrongField.SfaAzimuthalAngularDistribution(pi/2, 100, 2.21*omega)  # Arguments: theta, number of azimuthal angles, energy
 
 if true
+    # Last successful:  unknown ...
     # Prepare the atomic target
 	asfSettings     = AsfSettings(AsfSettings(), generateScf=true)
 	rGrid           = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 2.0e-2, rbox = 20.0)
@@ -38,10 +39,9 @@ if true
 	                                     configs=refConfigFinal,  asfSettings=asfSettings )
 	AtomicData      = perform(AtomicComp, output=true)
 	finalLevel      = AtomicData["multiplet:"].levels[1]
-end
 
-
-if true
+elseif true
+    # Last successful:  unknown ...
     # Perform the StrongField computation; use a hydrogen-like 1s initial state and FreeVolkov continuum
 	hydrogenic 	    = true
 	hydrogenic1s    = true
@@ -59,11 +59,10 @@ if true
 	sfaSettings     = StrongField.Settings([E1], "VelocityGauge", true, true, hydrogenic, hydrogenic1s, true)
 	SFIComp2	    = StrongField.Computation(observable, nuclearModel, rGrid, initialLevel, finalLevel, beam, envelope, polarization, volkov, sfaSettings)
 	SFIData2        = StrongField.perform(SFIComp2, output=true)
-end
 
-
-if true
+elseif true
+    # Last successful:  unknown ...
     # Export data and plots
-    StrongField.exportData([SFIComp,SFIComp2], [SFIData,SFIData2], "example-Hc")
-    StrongField.plot([SFIComp,SFIComp2], [SFIData,SFIData2], "omega", "linear", "example-Hc")
+    StrongField.exportData([SFIComp,SFIComp2], [SFIData,SFIData2], "example-Ic")
+    StrongField.plot([SFIComp,SFIComp2], [SFIData,SFIData2], "omega", "linear", "example-Ic")
 end

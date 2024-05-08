@@ -1,5 +1,5 @@
 #
-println("Hc) Tests of the StrongField2 module to compute in ATI photoelectron momentum distributions.")
+println("Id) Tests of the StrongField2 module to compute in ATI photoelectron momentum distributions.")
 
 #Laser pulse
 wavelength      = 800.                             # nm
@@ -24,6 +24,7 @@ beam            = Pulse.PlaneWaveBeam(A0, omega, CEP)
 observable      = StrongField2.SfaMomentumDistribution(pi/2, 40, 20, 8*omega)  #Arguments: theta, No azimuthal angles, No energies, maximum energy
 
 if true
+    # Last successful:  unknown ...
     # Preprare the atomic target
 	asfSettings      = AsfSettings(AsfSettings(), generateScf=true)
 	rGrid            = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 2.0e-2, rbox = 20.0)
@@ -44,15 +45,15 @@ if true
 	                                      configs=refConfigFinal,  asfSettings=asfSettings )
 	AtomicData       = perform(AtomicComp, output=true)
 	finalLevel       = AtomicData["multiplet:"].levels[1]
-end
 
-
-if true
+elseif true
+    # Last successful:  unknown ...
     # Perform the StrongField2 computation
 	sfaSettings = StrongField2.Settings([E1], "VelocityGauge", true, true, hydrogenic, hydrogenic1s, mAverage)
 	SFIComp	    = StrongField2.Computation(observable, nuclearModel, rGrid, initialLevel, finalLevel, beam, envelope, polarization, volkov, sfaSettings)
 	SFIData     = StrongField2.perform(SFIComp, output=true)
-    StrongField2.exportData([SFIComp], [SFIData], "example-Hd")
+    StrongField2.exportData([SFIComp], [SFIData], "example-Id")
+    #
 end
 
 

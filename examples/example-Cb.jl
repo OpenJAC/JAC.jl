@@ -1,14 +1,22 @@
-#
+
 println("Cb) Test of the Hfs module for HFS A,B parameters and hyperfine representation with ASF from an internally generated multiplet.")
-#
+
 setDefaults("unit: energy", "Hz")
 setDefaults("print summary: open", "zzz-Hfs.sum")
-wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true), 
-                        nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0), 
-                        configs=[Configuration("[Ne] 3s"), Configuration("[Ne] 3p"), Configuration("[Ne] 3d")],
-                        propertySettings=[ Hfs.Settings(true, true, false, false, false, false, LevelSelection() ) ] )
 
-wb = perform(wa)
+
+if  true
+    # Last successful:  unknown ...
+    # Compute 
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true), 
+                            nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0), 
+                            configs=[Configuration("[Ne] 3s"), Configuration("[Ne] 3p"), Configuration("[Ne] 3d")],
+                            propertySettings=[ Hfs.Settings(true, true, false, false, false, false, LevelSelection() ) ] )
+
+    wb = perform(wa)
+    #
+end
+#
 setDefaults("print summary: close", "")
 
 

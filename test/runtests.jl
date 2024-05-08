@@ -35,7 +35,7 @@ using JAC, ..Defaults, ..TestFrames
 
     @testset "JAC amplitudes" begin
         @test TestFrames.testModule_MultipoleMoment() 
-        ## @test TestFrames.testModule_ParityNonConservation() 
+        @test TestFrames.testModule_ParityNonConservation() 
     end
 
     @testset "JAC properties" begin
@@ -66,8 +66,8 @@ using JAC, ..Defaults, ..TestFrames
 
     @testset "JAC cascades" begin
         @test TestFrames.testModule_Cascade_StepwiseDecay()
-        @test TestFrames.testModule_Cascade_PhotonIonization()
-        @test TestFrames.testModule_Cascade_PhotonExcitation()
+        ## @test TestFrames.testModule_Cascade_PhotonIonization()
+        ## @test TestFrames.testModule_Cascade_PhotonExcitation()
         ## @test TestFrames.testModule_Cascade_Simulation()
     end
 

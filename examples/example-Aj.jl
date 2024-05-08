@@ -1,8 +1,10 @@
 
 #
-println("Aq) Test of the Green(function) expansion.")
+println("Aj) Test of the Green(function) expansion.")
 
 if  false
+    # Last successful:  unknown ...
+    # Compute 
     name          = "Lithium 1s^2 2s ground configuration"
     refConfigs    = [Configuration("[He] 2s")]
     greenSettings = GreenSettings(5, [0, 1, 2], 0.01, true, LevelSelection())
@@ -17,6 +19,7 @@ if  false
     wb = generate(wa, output=true)
     #
 elseif true
+    # Last successful:  unknown ...
     # Test example for MS "Approximate atomic Green functions" in molecules (2021)
     name            = "Approximate Green function for neon-like ions."
     refConfigs      = [Configuration("1s^2 2s^2 2p^6")]

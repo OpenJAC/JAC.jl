@@ -1,13 +1,15 @@
 
-#
-println("Eh) Photoabsorption cascade computations.")
+println("Fh) Photoabsorption cascade computations.")
+
 using JLD
 #
 setDefaults("method: continuum, Galerkin");            setDefaults("method: normalization, pure sine")
 setDefaults("unit: energy", "eV");                     setDefaults("unit: cross section", "barn")
 grid = Radial.Grid(Radial.Grid(false), rnt = 1.0e-5, h = 5.0e-2, hp = 2.0e-2, rbox = 15.0)
-#
+
+
 if  false
+    # Last successful:  unknown ...
     # Calculation of a photoabsorption cascade that is purely based on the photoionization of the target;
     # this includes the direct and excitation+autoionization scheme
     setDefaults("print summary: open", "photoabsorption-cascade.sum")
@@ -23,6 +25,7 @@ if  false
     setDefaults("print summary: close", "")
     #
 elseif  true
+    # Last successful:  unknown ...
     # Simulation of the (total) photoabsorption cross sections
     setDefaults("print summary: open", "photoabsorption-simulation.sum")
 
@@ -36,4 +39,5 @@ elseif  true
     println(wc)
     wd = perform(wc; output=true)
     setDefaults("print summary: close", "")
+    #
 end

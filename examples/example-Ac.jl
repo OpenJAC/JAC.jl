@@ -1,47 +1,24 @@
-
-println("Ac) Test of several radial e-e potentials.")
-
-@warn("\n\n !!! This example does not work properly at present !!! \n\n")
 #
-grid      = JAC.Radial.Grid(true)
-multiplet = JAC.ManyElectron.Multiplet("from Ratip2012", "TestAuger/belike-ground-a-csl.inp",
-                                                         "TestAuger/belike-ground-a-scf.out", "TestAuger/belike-ground-a-relci.mix") 
-level     = multiplet.levels[1]
-basis     = multiplet.levels[1].basis  
-#
-println("\nCompute the core-Hartree potential.")
-w1 = compute("radial potential: core-Hartree", grid, level)
-println(w1)
+println("Ac) Test of the CI part for an internally generated neon multiplet without Breit interaction.")
 
-#
-println("\nCompute the Hartree potential.")
-w2 = compute("radial potential: Hartree", grid, level)
-println(w2)
+if  true
+    # Last successful:  unknown ... need to be adapted
+    # Compute different direct potentials for the charge density of a given level 
+    levelSelection = LevelSelection(true, indices = [1,2, 4,5, 7,8]) 
+                                    ## symmetries = [ LevelSymmetry(1//2,Basics.plus), LevelSymmetry(1//2,Basics.minus),  LevelSymmetry(5//2,Basics.plus)])
+        
+    settings1 = AsfSettings()
+    settings2 = AsfSettings(AsfSettings(), levelSelectionCI = levelSelection, eeInteractionCI=CoulombInteraction(), jjLS = LSjjSettings(false) )
 
-#
-println("\nCompute the Hartree-Slater potential.")
-w3 = compute("radial potential: Hartree-Slater", grid, level)
-println(w3)
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(36.), 
+                            configs=[Configuration("[Ar] 4f^7")], 
+                            ## configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d"), 
+                            ##         Configuration("[Ne] 3s^2 3p^3 3d^4"), Configuration("[Ne] 3s^2 3p^2 3d^3"), ],  #, 
+                            ##         # Configuration("[Ne] 3s^2 3p^2 3d^3"), Configuration("[Ne] 3s 3p^2 3d^4"), Configuration("[Ne] 3p^2 3d^5")], 
+                            asfSettings=settings1 )
 
-# 
-println("\nCompute the Kohn-Sham potential.")
-w4 = compute("radial potential: Kohn-Sham", grid, level)
-println(w4)
-
-# 
-println("\nCompute the Dirac-Fock-Slater potential.")
-w5 = compute("radial potential: Dirac-Fock-Slater", grid, level)
-println(w5)
-error()
-
-# 
-println("\nCompute the extended-Hartree potential.")
-w6 = compute("radial potential: extended-Hartree", grid, level)
-println(w6)
-
-# 
-println("\nDisplay all four potentials together graphically.")
-JAC.plot("radial potential", [w1, w2, w3], grid; N = 260)
+    @time wb = perform(wa)
+end
 
 
 

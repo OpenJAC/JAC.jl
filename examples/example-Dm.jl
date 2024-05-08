@@ -1,36 +1,24 @@
 
-println("Dm) Test of the RadiativeAuger module with ASF from an internally generated initial- and final-state multiplet.")
-#
-setDefaults("print summary: open", "zzz-RadiativeAuger.sum")
-setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
-                                                     ## setDefaults("method: normalization, Ong-Russek") 
-setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
-setDefaults("unit: rate", "a.u.")   
+println("Dm)  Test of the InternalRecombination module with ASF from an internally generated initial and final-state multiplet.")
 
-grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
+setDefaults("print summary: open", "zzz-InternalRecombination.sum")
+setDefaults("unit: energy", "eV")
+setDefaults("unit: rate", "1/s")
 
-if  false
-    # Green function for radiative Auger decay of 1s photoionized neon
-    name             = "radiative Auger decay of 1s photoionized neon"
-    refConfigs       = [Configuration("1s 2s^2 2p^6")]
-    levelSymmetries  = [LevelSymmetry(1//2, Basics.minus), LevelSymmetry(1//2, Basics.plus)]
-    greenSettings    = GreenSettings(3, [0, 1], 0.01, true, LevelSelection())
-    greenRep         = Representation(name, Nuclear.Model(10.), Radial.Grid(true), refConfigs, 
-                                      GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), levelSymmetries, 3, greenSettings) ) 
-    greenOut         = generate(greenRep, output=true)
-    raGreen          = greenOut["Green channels"]
-    
-elseif true
-    # Radiative Auger decay of 1s photoionized neon
-    raSettings = RadiativeAuger.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], raGreen, 2, 3, true, CoulombInteraction(), 
-                                         LineSelection(true, indexPairs=[(1,1), (1,2)]))
+grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.6e-2, rbox = 10.0)
 
-    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(10.), 
-                            initialConfigs=[Configuration("1s 2s^2 2p^6")],
-                            finalConfigs  =[Configuration("1s^2 2s^2 2p^4"), Configuration("1s^2 2s 2p^5"), Configuration("1s^2 2p^6") ], 
-                            process = RAuger(), processSettings = raSettings )
+
+if  true
+    # Last successful:  unknown ...
+    # Internal recombination of Xe: [Ar] 3d (10l + 11l)  -->  [Ar] 4p (4l + 5l)
+    rydbergShells = Basics.generateShellList(6,  6, "p") 
+    irSettings    = InternalRecombination.Settings(rydbergShells, true, 5.0, 0.1, LineSelection(), CoulombInteraction())
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(54.), 
+                            initialConfigs = [Configuration("[Ne] 3d")],
+                            finalConfigs   = [Configuration("[Ne] 4p 5s")],  ## , Configuration("[Ar] 4p 5p"), Configuration("[Ar] 4p 5d")],
+                            processSettings= irSettings )
 
     wb = perform(wa)
+    #
 end
-setDefaults("print summary: close", "")
-
+    

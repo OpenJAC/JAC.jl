@@ -1,13 +1,17 @@
 
-#
-println("Cg) Test of the reduced 1- and 2-particle density matrices & natural orbitals.")
-#
-setDefaults("print summary: open", "zzz-ReducedDensityMatrix.sum")
-wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
-                        configs=[Configuration("[Ne] 3s^2 3p^5")],
-                        propertySettings=[ ReducedDensityMatrix.Settings(true, true, true, true, true, LevelSelection(true, indices=[(2)])) ] )
+println("Cg) Test of the PlasmaShift module with ASF from an internally generated multiplet.")
 
-wb = perform(wa)
-setDefaults("print summary: close", "")
+if  true
+    # Last successful:  unknown ...
+    # Compute 
+    setDefaults("print summary: open", "zzz-PlasmaShift.sum")
+    wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
+                            configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
+                            propertySettings=[ PlasmaShift.Settings(PlasmaShift.DebyeHueckel(), 0.25, 0., 0) ] )
+
+    wb = perform(wa)
+    setDefaults("print summary: close", "")
+    #
+end
 
 

@@ -1,20 +1,25 @@
 #
-println("Ae) Test of the CI part for an internally generated neon multiplet without Breit interaction.")
-#
-levelSelection = LevelSelection(true, indices = [1,2, 4,5, 7,8]) 
-                                ## symmetries = [ LevelSymmetry(1//2,Basics.plus), LevelSymmetry(1//2,Basics.minus),  LevelSymmetry(5//2,Basics.plus)])
-       
-settings1 = AsfSettings()
-settings2 = AsfSettings(AsfSettings(), levelSelectionCI = levelSelection, eeInteractionCI=CoulombInteraction(), jjLS = LSjjSettings(false) )
+println("Ae) Test of the QED model corrections to the level structure of atoms and ions.")
 
-wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(36.), 
-                        configs=[Configuration("[Ar] 4f^7")], 
-                        ## configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d"), 
-                        ##         Configuration("[Ne] 3s^2 3p^3 3d^4"), Configuration("[Ne] 3s^2 3p^2 3d^3"), ],  #, 
-                        ##         # Configuration("[Ne] 3s^2 3p^2 3d^3"), Configuration("[Ne] 3s 3p^2 3d^4"), Configuration("[Ne] 3p^2 3d^5")], 
-                        asfSettings=settings1 )
-
-@time wb = perform(wa)
-
-
-
+##  NoneQed() QedPetersburg() 
+if   true
+    # Last successful:  unknown ... need to be adapted
+    # Compute ...
+    wa = Atomic.Computation(Atomic.Computation(), name="QED estimates for xenon-like Sn", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(50.), 
+                            configs=[Configuration("1s^2 2s^2 2p^6")],  
+                            asfSettings=AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), [1],    
+                                                    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], true, false, QedPetersburg(), LSjjSettings(false),
+                                                    false, [1,2,3,4], false, JAC.LevelSymmetry[] )  )
+    wb = perform(wa)
+    #                                                
+elseif  false
+    # Last successful:  unknown ... need to be adapted
+    # Compute ...
+    wa = Atomic.Computation(Atomic.Computation(), name="QED estimates for hydrogen-like Sn", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(50.), 
+                            configs=[Configuration("1s"), Configuration("2s"), Configuration("2p")],  
+                            asfSettings=AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), [1],    
+                                                    0, 1.0e-6, JAC.Subshell[], JAC.Subshell[], true, false, QedPetersburg(),  LSjjSettings(false),
+                                                    false, [1,2,3,4], false, JAC.LevelSymmetry[] )  )
+    wb = perform(wa)
+    #                                           
+end

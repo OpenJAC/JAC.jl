@@ -1,5 +1,5 @@
 #
-println("At) Test of parallel computing in Julia.")
+println("Al) Test of parallel computing in Julia.")
 using Distributed
 @everywhere using LinearAlgebra
 
@@ -25,6 +25,7 @@ nx = 5000
 # @profile if  false
 @time if false
 # if false
+    # Last successful:  unknown ...
     # Sequential processing
     for  i in 1:10
         wa = rand(nx,nx)
@@ -33,6 +34,7 @@ nx = 5000
     end
 
 elseif true
+    # Last successful:  unknown ...
     # Broadcasting of values and functions
     A = rand(nx,nx);    B = rand(nx,nx);    Cf = Future[]
     @everywhere A, B = $A, $B
@@ -42,10 +44,12 @@ elseif true
     for  i in 1:15     C = fetch(Cf[i]);   println("$i  $(C[1,1])")    end
 
 elseif false
+    # Last successful:  unknown ...
     # Producer-consumer model
     @async foo()
 
 elseif true
+    # Last successful:  unknown ...
     # Distributed calculations
     nx = 1000000000
     @time wc = inside(nx);         println("wc = $wc")   

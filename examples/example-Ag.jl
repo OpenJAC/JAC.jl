@@ -1,25 +1,15 @@
 #
-println("Ag) Test of the QED model corrections to the level structure of atoms and ions.")
-#
-if   true
-wa = Atomic.Computation(Atomic.Computation(), name="QED estimates for xenon-like Sn", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(50.), 
-                        configs=[Configuration("1s^2 2s^2 2p^6")],  
-                        asfSettings=AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), [1],    40, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
-                                                true, false, QedPetersburg(), LSjjSettings(false),
-                                                false, [1,2,3,4], false, JAC.LevelSymmetry[] )  )
-                                                
-elseif  false
-wa = Atomic.Computation(Atomic.Computation(), name="QED estimates for hydrogen-like Sn", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(50.), 
-                        configs=[Configuration("1s"), Configuration("2s"), Configuration("2p")],  
-                        asfSettings=AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), [1],    0, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
-                                                true, false, QedPetersburg(),  LSjjSettings(false),
-                                                false, [1,2,3,4], false, JAC.LevelSymmetry[] )  )
-                                                
+println("Ag) Test of the jj-LS transformation of levels from a given multiplet.")
 
+if  true
+    # Last successful:  unknown 
+    # LS-jj transformation for ... 
+    wa = Atomic.Computation(Atomic.Computation(), name="jj-LS level transformation", grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(26.), 
+                            configs=[Configuration("[Ne] 3s 3p 3d")],  
+                            asfSettings=AsfSettings(true, false, Basics.DFSField(), "hydrogenic", Dict{Subshell, Orbital}(), [1],     0, 1.0e-6, JAC.Subshell[], JAC.Subshell[], 
+                                                    true, false, NoneQed(), LSjjSettings(true),
+                                                    false, [1,2,3,4], false, JAC.LevelSymmetry[] ) )
+    wb = perform(wa)
+    ##                        configs=[Configuration("[Ne] 3s^2 3p^4"), Configuration("[Ne] 3s^2 3d^4")],  , Configuration("1s^2 2s 2p^6")
+    ##                      , Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^5")
 end
-
-wb = perform(wa)
-
-
-# NoneQed() QedPetersburg()
-#  

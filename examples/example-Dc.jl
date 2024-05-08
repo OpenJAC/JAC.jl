@@ -1,11 +1,12 @@
-#
+
 println("Dc) Test of the PhotoIonization module with ASF from an internally generated initial- and final-state multiplet.")
 #
 setDefaults("print summary: open", "zzz-PhotoIonization.sum")
 setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
 setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
-if  false
+if  true
+    # Last successful:  unknown ...
     # Neon subshell cross sections from 10..1000 eV photon energy
     setDefaults("unit: energy", "eV") # then, give photonEnergies in eV
 
@@ -20,8 +21,9 @@ if  false
                               processSettings=photoSettings)
     @show wa
     perform(wa)                                         
-
+    #
 elseif  false
+    # Last successful:  unknown ...
     # Aluminium subshell cross sections from 10..1000 eV photon energy
     setDefaults("unit: energy", "eV") # then, give photonEnergies in eV
 
@@ -40,8 +42,9 @@ elseif  false
                               process = Photo(),  processSettings=photoSettings)
     @show wa
     perform(wa)                                         
-
+    #
 elseif  true
+    # Last successful:  unknown ...
     # Test: 2s and 2p photoionization of neon; cf. Kennedy and Manson (1972)
     setDefaults("unit: energy", "Hartree") 
     photoSettings = PhotoIonization.Settings(PhotoIonization.Settings(), gauges=[UseCoulomb, UseBabushkin], electronEnergies=[1.0, 3.0, 10.0],
@@ -56,8 +59,9 @@ elseif  true
                               processSettings=photoSettings)
     @show wa
     perform(wa)                                         
-
+    #
 elseif  true
+    # Last successful:  unknown ...
     # Test: 2s ... 3p photoionization of argon; cf. Kennedy and Manson (1972)
     setDefaults("unit: energy", "Hartree") 
     photoSettings = PhotoIonization.Settings(PhotoIonization.Settings(), gauges=[UseCoulomb, UseBabushkin], electronEnergies=[1.0, 3.0, 10.0],
@@ -72,8 +76,9 @@ elseif  true
                               processSettings=photoSettings)
     @show wa
     perform(wa)                                         
-
+    #
 elseif  true
+    # Last successful:  unknown ...
     # Xenon 4d subshell cross sections from 70..150 eV photon energy
     setDefaults("unit: energy", "eV") # then, give photonEnergies in eV
 
@@ -89,8 +94,9 @@ elseif  true
                               process = Photo(),  processSettings=photoSettings)
     @show wa
     perform(wa)                                         
-
+    #
 elseif false
+    # Last successful:  unknown ...
     # Test case from FAC/User Guide
     defaultSettings = PhotoIonization.Settings()
     setDefaults("unit: energy", "eV")
@@ -113,8 +119,9 @@ elseif false
                               process = Photo(),  processSettings=photoSettings)
     @show wa
     perform(wa)                                         
-
+    #
 elseif false
+    # Last successful:  unknown ...
     # Test case 
     defaultSettings = PhotoIonization.Settings()
     setDefaults("unit: energy", "eV")
@@ -135,8 +142,9 @@ elseif false
                               finalConfigs  =[Configuration("1s^2 2s^2 2p^5"), Configuration("1s^2 2s 2p^6")], 
                               process = Photo(),  processSettings=photoSettings)
     @show wa
-    perform(wa)                                         
+    perform(wa)    
+    #
 end
-
+#
 setDefaults("print summary: close", "")
 

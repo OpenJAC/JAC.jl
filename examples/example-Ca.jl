@@ -1,11 +1,15 @@
-#
+
 println("Ca) Test of the Einstein module with ASF from an internally generated multiplet.")
-#
+
 setDefaults("print summary: open", "zzz-Einstein.sum")
 setDefaults("unit: energy", "Kayser")
 grid=Radial.Grid(true)
 ## grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5,h = 1.0e-2, hp = 1.0e-2, NoPoints = 2000)
+
+
 if  true
+    # Last successful:  unknown ...
+    # Compute 
     asfSettings   = AsfSettings(AsfSettings(), scField=Basics.DFSField())
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(26.), asfSettings=asfSettings,
                             configs=[Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 4s"), Configuration("[Ne] 3s^2 3p^5")],
@@ -14,6 +18,8 @@ if  true
     wb = perform(wa; output=true)
     #
 elseif  true
+    # Last successful:  unknown ...
+    # Compute 
     ## grid = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 1.0e-2, hp = 0., rbox = 2.0)
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(6.), 
                             configs=[Configuration("1s^2 2s"), Configuration("1s 2s^2"), Configuration("1s 2s 2p"), Configuration("1s 2p^2")],
@@ -23,6 +29,8 @@ elseif  true
     wb = perform(wa; output=true)
     #
 elseif  false
+    # Last successful:  unknown ...
+    # Compute 
     ## grid = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 1.0e-2, hp = 0., rbox = 2.0)
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.), 
                             configs=[Configuration("1s^2 2s^2")],
@@ -35,6 +43,8 @@ elseif  false
     frozenOrbs = wb["multiplet:"].levels[1].basis.orbitals
     #
 elseif  true
+    # Last successful:  unknown ...
+    # Compute 
     ## grid = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 1.0e-2, hp = 0., rbox = 2.0)
     ## asfSettings   = AsfSettings(AsfSettings(), frozenSubshells=[Subshell("1s_1/2"), Subshell("2s_1/2"), Subshell("2p_1/2"), Subshell("2p_3/2"), Subshell("3d_3/2"), Subshell("3d_5/2")],
     ## asfSettings   = AsfSettings(AsfSettings(), frozenSubshells=[Subshell("1s_1/2"), Subshell("2s_1/2")],
@@ -49,4 +59,5 @@ elseif  true
     wb = perform(wa; output=true)
     #
 end
+#
 setDefaults("print summary: close", "")

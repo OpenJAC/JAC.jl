@@ -1,6 +1,6 @@
 
 #
-println("As) Test of spin-angular coefficients.")
+println("Ak) Test of spin-angular coefficients.")
 
 configs = [Configuration("1s^2 2s"), Configuration("1s^2 2p")]
 
@@ -31,6 +31,7 @@ sumSA = 0.;     sumFortran = 0.
 # Profile.clear()
 # @profile if  false
 @time if false
+    # Last successful:  unknown ...
     # Calculate angular coefficients for a scalar one- or two-particle operator
     for  leftCsf in csfList
         for rightCsf in csfList
@@ -47,6 +48,8 @@ sumSA = 0.;     sumFortran = 0.
     @show sumSA, sumFortran
     #
 elseif  false
+    # Last successful:  unknown ...
+    # Compute 
     # Calculate angular coefficients for a nonscalar one- particle operator
     for  leftCsf in csfList
         for rightCsf in csfList
@@ -64,6 +67,8 @@ elseif  false
     @show sumSA, sumFortran
     #
 elseif  false
+    # Last successful:  unknown ...
+    # Compute 
     # Calculate angular coefficients for a nonscalar one- particle operator
     for  leftCsf in csfList
         for rightCsf in csfList
@@ -81,6 +86,8 @@ elseif  false
     @show sumSA, sumFortran
     #
 elseif  true
+    # Last successful:  unknown ...
+    # Compute 
     # Calculate angular coefficients for a scalar two- particle operator
     for  leftCsf in csfList
         for rightCsf in csfList
@@ -97,6 +104,8 @@ elseif  true
     @show sumSA, sumFortran
     #
 elseif  true
+    # Last successful:  unknown ...
+    # Compute 
     N1 = N2 = 0
     # Calculate angular coefficients for a scalar one- or two-particle operator
     op = SpinAngular.TwoParticleOperator(0, plus, true)

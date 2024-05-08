@@ -1,13 +1,15 @@
 #
 println("Da) Test of the PhotoEmission module with ASF from an internally generated initial- and final-state multiplet.")
-#
+
 # setDefaults("unit: rate", "a.u.")
 setDefaults("unit: energy", "Kayser")
 setDefaults("unit: rate", "1/s")
 setDefaults("print summary: open", "zzz-radiative.sum")
 
-if true
 
+if  true
+    # Last successful:  unknown ...
+    # Compute 
     grid = Radial.Grid(true)
     ## grid = Radial.Grid(Radial.Grid(true), rnt = 2.0e-5, h = 1.0e-2, hp = 0., rbox = 5.0)
     setDefaults("standard grid", grid)
@@ -21,8 +23,9 @@ if true
               processSettings = photoSettings ); 
     @show comp
     perform(comp)          
-              
+    #
 elseif false
+    # Last successful:  unknown ...
     # LineSelection(true, indexPairs=[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)])
     wa = Atomic.Computation(Atomic.Computation(), name="xx",  grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(3.),
                             initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p"), Configuration("1s^2 3s"),  
@@ -33,14 +36,18 @@ elseif false
                                             Configuration("1s^2 4p"), Configuration("1s^2 4d")], 
                             processSettings= PhotoEmission.Settings([E1], [UseCoulomb,JAC.UseBabushkin], false, true, LineSelection(), 0., 0., 10000. ) )
     wb = @time( perform(wa) )
+    #
 elseif false
+    # Last successful:  unknown ...
     # LineSelection(true, indexPairs=[(5,0), (7,0), (10,0), (11,0), (12,0), (13,0), (14,0), (15,0), (16,0)])
     wa = Atomic.Computation(Atomic.Computation(), name="xx",  grid=JAC.Radial.Grid(true), nuclearModel=Nuclear.Model(90.),
                             initialConfigs=[Configuration("1s^2 2s 2p")],
                             finalConfigs  =[Configuration("1s^2 2s^2")], 
                             processSettings= PhotoEmission.Settings([E1,M1,E2,M2], [UseCoulomb,JAC.UseBabushkin], false, true, LineSelection(), 0., 0., 10000. ) )
     wb = @time( perform(wa) )
+    #
 elseif false
+    # Last successful:  unknown ...
     # Test: Lifetimes of various helium- and lithium-like ions; cf. Figure 8.1 in section 8.1.a
     grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 20.0)
     grid = Radial.Grid(true)
@@ -50,7 +57,9 @@ elseif false
                             finalConfigs  =[Configuration("1s^2")], 
                             processSettings=pSettings)
     wb = @time( perform(wa) )
+    #
 elseif true 
+    # Last successful:  unknown ...
     # Test: Lifetimes for lithium-like ions; cf. Figure 8.1 in section 8.1.a
     grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 20.0)
     grid = Radial.Grid(true)
@@ -63,6 +72,7 @@ elseif true
     wb = @time( perform(wa) )
     #
 elseif true 
+    # Last successful:  unknown ...
     # Test for Christophe Hoffmeister
     defaultsSettings = PhotoEmission.Settings()
     photoSettings    = PhotoEmission.Settings(defaultsSettings, multipoles=[E1], gauges=[UseCoulomb, UseBabushkin], printBefore=true)
@@ -74,4 +84,5 @@ elseif true
     wb = @time( perform(wa) )
     #
 end
+#
 setDefaults("print summary: close", "")

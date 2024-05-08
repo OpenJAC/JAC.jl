@@ -1,12 +1,13 @@
 #
 println("De) Test of the AutoIonization module with ASF from an internally generated initial- and final-state multiplet.")
-#
+
 setDefaults("print summary: open", "zzz-AutoIonization.sum")
 setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
                                                      ## setDefaults("method: normalization, Ong-Russek") 
 setDefaults("method: normalization, pure sine")      ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
 
 if  true
+    # Last successful:  unknown ...
     # K-LL Auger spectrum of neon: Comparison with PhD and related work
     augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(1,0)]), 0., 1.0e6, 4, CoulombInteraction())
     grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
@@ -18,8 +19,9 @@ if  true
                             processSettings = augerSettings )
 
     wb = perform(wa)
-    
+    #
 elseif  false
+    # Last successful:  unknown ...
     # K-LL Auger spectrum of Be-like neon: Comparison with Bruch (PRA, 1991)
     ## augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(1,0)]), 0., 1.0e6, 4, CoulombInteraction())
     augerSettings = AutoIonization.Settings(false, true, LineSelection(), 0., 1.0e6, 4, CoulombInteraction())
@@ -32,8 +34,9 @@ elseif  false
                             process = Auger(),  processSettings = augerSettings )
 
     wb = perform(wa)
-    
+    #
 elseif  false
+    # Last successful:  unknown ...
     # K-LL Auger spectrum of Ne-like aluminium: Comparison with Fan et al. (PRA, 2018)
     ## augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(1,0)]), 0., 1.0e6, 4, CoulombInteraction())
     augerSettings = AutoIonization.Settings(false, true, LineSelection(), 0., 1.0e6, 4, CoulombInteraction())
@@ -48,8 +51,9 @@ elseif  false
                             process = Auger(),  processSettings = augerSettings )
 
     wb = perform(wa)
-    
+    #
 elseif  true
+    # Last successful:  unknown ...
     # K-LL Auger spectrum of Be-like aluminium: Comparison with Fan et al. (PRA, 2018)
     ## augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(1,0)]), 0., 1.0e6, 4, CoulombInteraction())
     augerSettings = AutoIonization.Settings(false, true, LineSelection(), 0., 1.0e6, 4, CoulombInteraction())
@@ -62,8 +66,9 @@ elseif  true
                             process = Auger(),  processSettings = augerSettings )
 
     wb = perform(wa)
-    
+    #
 elseif  false
+    # Last successful:  unknown ...
     # Resonant L_23 - M_23 M_23 Auger spectrum of argon: Comparison with Chen (PRA, 1991)
     asfSettings   = AsfSettings(AsfSettings(), scField=Basics.HSField())
     augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(2,0), (4,0)]), 0., 1.0e6, 4, CoulombInteraction())
@@ -76,8 +81,9 @@ elseif  false
                             process = Auger(),  processSettings = augerSettings )
 
     wb = perform(wa)
-    
+    #
 elseif  false
+    # Last successful:  unknown ...
     # Resonant M_45 - N_23 N_23 Auger spectrum of krypton: Comparison with Chen (PRA, 1991)
     augerSettings = AutoIonization.Settings(true, true, LineSelection(true, indexPairs=[(4,0), (9,0), (11,0)]), 0., 1.0e6, 4, CoulombInteraction())
     grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.2e-2, rbox = 15.0)
@@ -89,8 +95,9 @@ elseif  false
                             process = Auger(),  processSettings = augerSettings )
 
     wb = perform(wa)
-    
+    #
 end
+#
 setDefaults("print summary: close", "")
 
 
