@@ -369,7 +369,7 @@ end
         amplitudes and properties are now evaluated explicitly.
 """
 function  computeAmplitudesProperties(outcome::Hfs.Outcome, grid::Radial.Grid, settings::Hfs.Settings, im::Hfs.InteractionMatrix)
-    AIoverMu = 0.0;   BoverQ = 0.0;   amplitudeT1 = 0.0;   amplitudeT2 = 0.0;    J = AngularMomentum.oneJ(outcome.Jlevel.J)
+    AIoverMu = BoverQ = amplitudeT1 = amplitudeT2 = 0.;    J = AngularMomentum.oneJ(outcome.Jlevel.J)
     if  settings.calcT1  &&  outcome.Jlevel.J != AngularJ64(0)
         if  im.calcT1   amplitudeT1 = transpose(outcome.Jlevel.mc) * im.matrixT1 * outcome.Jlevel.mc
         else            amplitudeT1 = Hfs.amplitude("T^(1) amplitude", outcome.Jlevel, outcome.Jlevel, grid)

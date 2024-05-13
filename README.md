@@ -213,9 +213,23 @@ This example is discussed also in one of the [tutorials](tutorials/51-compute-Fe
 [cloud](https://mybinder.org/v2/gh/openjac/JAC.jl/master?labpath=tutorials%2F51-compute-Fe-X-spectrum.ipynb).
     
     
+## Further examples
+
+For another (quick) start, you can make use of a large number of *examples* in the corresponding directory. 
+Call include("../examples/examples.jl") at REPL to see which computations and test cases have been considered in the 
+past years and how they can be used for some present task. Later, for instance, simply call
+include("../examples/example-Da.jl")  to invoke such test cases explicitly in some working directory. 
+Since this example directory was originally set-up for tests & development, you can either simply copy the code from 
+some *branch* or need to set the requested branch to *true*. Since these examples have been utilized for development,
+unfortunately, they might not work (run through) immediately. However, they typically provide a good and useful
+*starting point* in order to understand the required input and to prepare short scripts for dealing with different 
+applications of JAC. Because of the (very) large number of potential applications of this toolbox, it has been found 
+difficult (not to say, impossible) to keep all these *examples* up-do-date.
+    
+    
 ## Tutorials
 
-The following IJulia/jupyter notebooks introduce the reader to JAC and demonstrate several features of this toolbox.  
+The following IJulia/jupyter notebooks introduce the reader to JAC and demonstrate several features of this toolbox. ---
 They can be explored statically at GitHub or can be run locally after the software repository has been cloned and installed.
 In order to modify the cell-output of the notebooks and to better print *wide tables*, you can create or modify the file
 ~/.jupyter/custom/custom.css in your home directory and add the line:  div.output_area pre { font-size: 7pt;} .

@@ -51,8 +51,8 @@ end
 """
 function bosonShift(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid::Radial.Grid)
     wa = RadialIntegrals.isotope_boson(a, b, potential, grid) 
-    ### wa = RadialIntegrals.isotope_boson(a, b, potential, grid) 
-    ##x println("**  <$(a.subshell) || h^(boson-field shift) || $(b.subshell)>  = $wa" )
+    ## wa = RadialIntegrals.isotope_boson(a, b, potential, grid) 
+    ## println("**  <$(a.subshell) || h^(boson-field shift) || $(b.subshell)>  = $wa" )
     return( wa )
 end
 
@@ -66,8 +66,6 @@ end
 """
 function fieldShift(a::Orbital, b::Orbital, deltaPotential::Array{Float64,1}, grid::Radial.Grid)
     wa = RadialIntegrals.isotope_field(a, b, deltaPotential, grid) 
-    ### wa = RadialIntegrals.isotope_field(a, b, deltaPotential, grid) 
-    ##x println("**  <$(a.subshell) || h^(field-shift) || $(b.subshell)>  = $wa" )
     return( wa )
 end
 
@@ -80,7 +78,7 @@ end
 function hamiltonian_nms(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial.Grid)
     if  a.subshell.kappa != b.subshell.kappa   return( 0. )   end
     wa = RadialIntegrals.isotope_nms(a, b, nm.Z, grid) / 2
-    ##x println("**  <$(a.subshell) || h^nms || $(b.subshell)>  = $wa" )
+    ## println("**  <$(a.subshell) || h^nms || $(b.subshell)>  = $wa" )
     return( wa )
 end
 
@@ -114,7 +112,7 @@ function hfs_t2(a::Orbital, b::Orbital, grid::Radial.Grid)
     wc =   RadialIntegrals.rkDiagonal(-3, a, b, grid)
     wa =   wb * wc
     #
-    ##x println("**  <$(a.subshell) || t2 || $(b.subshell)>  = $wa   = $wb * $wc" )
+    ## println("**  <$(a.subshell) || t2 || $(b.subshell)>  = $wa   = $wb * $wc" )
     return( wa )
 end
 
@@ -149,7 +147,6 @@ function MbaEmissionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Or
         wa     = -1.0im / sqrt(mp.L*(mp.L+1)) * ChengI * (kapb + kapa) * RadialIntegrals.GrantILplus(mp.L, q, a, b, grid::Radial.Grid)
     #
     elseif   gauge == Basics.Babushkin
-    ##x elseif   gauge in [Basics.Babushkin, Basics.Coulomb ]
         ChengI = AngularMomentum.ChengI(kapa, kapb, AngularJ64(mp.L))
         wr     = (mp.L+1) * RadialIntegrals.GrantJL(mp.L, q, a, b, grid::Radial.Grid)
         wr     = wr +  (kapb-kapa-mp.L-1) * RadialIntegrals.GrantIL0(mp.L+1, q, a, b, grid::Radial.Grid)
@@ -194,7 +191,6 @@ function MbaEmissionJohnsonx(mp::EmMultipole, gauge::EmGauge, omega::Float64, b:
         wr     = - RadialIntegrals.GrantJL(mp.L, q, a, b, grid::Radial.Grid)
         wr     = wr +  (kapb-kapa)/(mp.L+1) * RadialIntegrals.GrantILplus(mp.L+1, q, a, b, grid::Radial.Grid)
         wr     = wr +  RadialIntegrals.GrantILminus(mp.L+1, q, a, b, grid::Radial.Grid)
-        ##x @show JohnsonI, wr, kapa, kapb
         wa     = JohnsonI * wr
     #
     elseif   gauge == Basics.Coulomb
@@ -209,9 +205,6 @@ function MbaEmissionJohnsonx(mp::EmMultipole, gauge::EmGauge, omega::Float64, b:
         wa     = 1.0 / (mp.L+1) * ChengI * wr
     else     error("stop a")
     end
-    ##x Multiply with the multipolarity factors to keep different multipoles on the same footings
-    ##x wa = wa * sqrt( (2mp.L+1)*(mp.L+1)/mp.L )
-    ##x wa = conj(wa)
 
     return( wa )
 end
@@ -249,8 +242,6 @@ function MabEmissionJohnsony(mp::EmMultipole, gauge::EmGauge, omega::Float64, b:
         wa       = JohnsonI * wr
     else     error("stop a")
     end
-    ##x wa = wa * sqrt( (2mp.L+1)*(mp.L+1)/mp.L )
-    ##x wa = conj(wa)
 
     return( wa )
 end
@@ -723,74 +714,6 @@ function matrixL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbita
     return( wm )
 end
 
-#==
-"""
-`InteractionStrength.XS_Coulomb(large::Bool, largep::Bool, coeffs::Array{JAC.AngularCoefficientsRatip2013.AngularVcoeff,1}, 
-                                orbitals::Dict{Subshell, Orbital}, grid::Radial.Grid; exchange::Bool=false)`  
-    ... computes the effective XS_Coulomb interaction function for given components (large, largep) and a set of (Coulomb-like) angular coefficients.
-        The procedures assumes that all coefficients V^K (abcd) fulfill  a==c || a == d, and a error is issued if this is not the case.
-        For the remaining two orbitals b, d (or c), the correct components are added due to boolean selectors.
-        The XS_Coulomb interaction function is defined by
-        
-            S(r) = sum_k  Int ds  U(r,s)  V^k(abcd) b.P(large) cd.P(largep)
-            
-        where b.P(large) refers to b.P of orbital b if large=true and b.Q if large= false, and analogue for cd.P. A Sfunc::Float64[] is returned.
-"""
-function XS_Coulomb(large::Bool, largep::Bool, coeffs::Array{JAC.AngularCoefficientsRatip2013.AngularVcoeff,1}, 
-                    orbitals::Dict{Subshell, Orbital}, grid::Radial.Grid; exchange::Bool=false)
-    function ul(k::Int64, r::Float64, s::Float64) :: Float64
-        if     r <= s    return( r^k/s^(k+1) )
-        elseif r > s     return( s^k/r^(k+1) )
-        end
-    end
-    #
-    Sfunc = zeros( grid.NoPoints );   na = 1
-    for  r = 2:grid.NoPoints
-        # Determine integrant over s
-        ws = zeros( grid.NoPoints )
-        for  coeff in  coeffs
-            a = orbitals[coeff.a];   b = orbitals[coeff.b];   c = orbitals[coeff.c];   d = orbitals[coeff.d];   L = coeff.nu
-            # Determine the weight xc of this coefficient
-            la = Basics.subshell_l(a.subshell);    ja2 = Basics.subshell_2j(a.subshell)
-            lb = Basics.subshell_l(b.subshell);    jb2 = Basics.subshell_2j(b.subshell)
-            lc = Basics.subshell_l(c.subshell);    jc2 = Basics.subshell_2j(c.subshell)
-            ld = Basics.subshell_l(d.subshell);    jd2 = Basics.subshell_2j(d.subshell)
-
-            if  AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
-                rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1      error("stop a")
-            end
-            xc = AngularMomentum.CL_reduced_me(a.subshell, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
-            if   rem(L,2) == 1    xc = - xc    end 
-            # Divide total coefficient by occupation w_a of the considered shell (DF equations vs. energy functional)
-            xc = xc / (ja2 + 1)
-            #
-            ##x if na < 6   na = na + 1;    @show L, coeff.a, coeff.b, coeff.c, coeff.d, coeff.V * xc  end
-            #
-            # Now add the contributions for this coefficient
-            if      coeff.a == coeff.c  &&  large  &&  largep
-                mtp_bd = min(size(b.P, 1), size(d.P, 1));    for  s = 2:mtp_bd   ws[s] = ws[s] + coeff.V * xc * b.P[s] * d.P[s]* ul(L, grid.r[r], grid.r[s])    end 
-            elseif  coeff.a == coeff.c  &&  !(large)  &&  !(largep)
-                mtp_bd = min(size(b.Q, 1), size(d.Q, 1));    for  s = 2:mtp_bd   ws[s] = ws[s] + coeff.V * xc * b.Q[s] * d.Q[s]* ul(L, grid.r[r], grid.r[s])    end 
-            elseif  coeff.a == coeff.d  &&  exchange  &&  large  &&  largep         
-                mtp_bc = min(size(b.P, 1), size(c.P, 1));    for  s = 2:mtp_bc   ws[s] = ws[s] + coeff.V * xc * b.P[s] * c.P[s]* ul(L, grid.r[r], grid.r[s])    end 
-            elseif  coeff.a == coeff.d  &&  exchange  &&  !(large)  &&  largep 
-                mtp_bc = min(size(b.Q, 1), size(c.P, 1));    for  s = 2:mtp_bc   ws[s] = ws[s] + coeff.V * xc * b.Q[s] * c.P[s]* ul(L, grid.r[r], grid.r[s])    end 
-            elseif  coeff.a == coeff.d  &&  exchange  &&  large     &&  !(largep)
-                    mtp_bc = min(size(b.P, 1), size(c.Q, 1));    for  s = 2:mtp_bc   ws[s] = ws[s] + coeff.V * xc * b.P[s] * c.Q[s]* ul(L, grid.r[r], grid.r[s])    end 
-            elseif  coeff.a == coeff.d  &&  exchange  &&  !(large)  &&  !(largep)
-                mtp_bc = min(size(b.Q, 1), size(c.Q, 1));    for  s = 2:mtp_bc   ws[s] = ws[s] + coeff.V * xc * b.Q[s] * c.Q[s]* ul(L, grid.r[r], grid.r[s])    end 
-            elseif  coeff.a == coeff.d  &&  !(exchange)
-            elseif  coeff.a == coeff.c  &&  (large     &&  !(largep)   ||   !(large)  &&  largep)
-            else    @show L, coeff.a, coeff.b, coeff.c, coeff.d, coeff.V * xc
-            end
-        end
-        #
-        for  s = 2:grid.NoPoints   Sfunc[r] = Sfunc[r]  +  ws[s] * grid.wr[s]  end
-    end
-    
-    return( Sfunc )
-end  ==#
-
 
 """
 `InteractionStrength.XL_Coulomb_WO(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, grid::Radial.Grid)`  
@@ -992,13 +915,6 @@ function zeeman_Delta_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
 
     return ( (Defaults.getDefaults("electron g-factor") - 2)/2 * rad * ang )
 end    
-##x function zeeman_Delta_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
-##x     # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
-##x     minusa = Subshell(1, -a.subshell.kappa)
-##x     wa = (Defaults.getDefaults("electron g-factor") - 2) / 2. * (a.subshell.kappa + b.subshell.kappa + 1) * 
-##x          AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) * RadialIntegrals.rkDiagonal(0, a, b, grid)
-##x     return( wa )
-##x end
 
 
 """
@@ -1015,14 +931,7 @@ function zeeman_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
 
     return ( -rad * ang/(2 * Defaults.getDefaults("alpha")) * (ka + kb) )
 end
-##x 
-##x function zeeman_n1(a::Orbital, b::Orbital, grid::Radial.Grid)
-##x     # Use Andersson, Jönson (2008), CPC ... test for the proper definition of the C^L tensors.
-##x     minusa = Subshell(1, -a.subshell.kappa)
-##x     wa = - AngularMomentum.CL_reduced_me(minusa, 1, b.subshell) / (2 * Defaults.getDefaults("alpha")) *
-##x            RadialIntegrals.rkNonDiagonal(1, a, b, grid)
-##x     return( wa )
-##x end
+
 
 end # module
 

@@ -101,7 +101,6 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
     keep = true
     InteractionStrength.XL_Coulomb_reset_storage(keep, printout=false)
     InteractionStrength.XL_Breit_reset_storage(keep, printout=false)
-    ##x print(">> performCI() ... ")
     for  r = 1:n
         for  s = 1:n
             #
@@ -403,12 +402,13 @@ function Basics.computeMultipletForGreenApproach(approach::AtomicState.SingleCSF
     potential = Nuclear.nuclearPotential(nModel, grid)
     ncsf      = length(basis.csfs);    matrix = zeros(Float64, ncsf, ncsf)
     for  (r, csf)  in enumerate(basis.csfs)
-        ##x wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[r])
         # Calculate the spin-angular coefficients
+        #== 
+        wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[r])
         if  Defaults.saRatip()
             waR = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[r])
             wa  = waR       
-        end
+        end  ==#
         if  Defaults.saGG()
             subshellList = basis.subshells
             opa  = SpinAngular.OneParticleOperator(0, plus, true)
@@ -417,12 +417,13 @@ function Basics.computeMultipletForGreenApproach(approach::AtomicState.SingleCSF
             waG2 = SpinAngular.computeCoefficients(opa, basis.csfs[r], basis.csfs[r], subshellList)
             wa   = [waG1, waG2]
         end
+        #==
         if  Defaults.saRatip() && Defaults.saGG() && true
             if  length(waR[1]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[1]) ")    end
             if  length(waG1)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG1 ")        end
             if  length(waR[2]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[2]) ")    end
             if  length(waG2)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG2 ")        end
-        end
+        end  ==#
         #
         me = 0.
         for  coeff in wa[1]
@@ -482,12 +483,7 @@ function Basics.computeMultipletForGreenApproach(approach::AtomicState.CoreSpace
     ncsf      = length(basis.csfs);    matrix = zeros(Float64, ncsf, ncsf)
     for  (r, rcsf)  in enumerate(basis.csfs)
         for  (s, scsf)  in enumerate(basis.csfs)
-            ##x wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[s])
             # Calculate the spin-angular coefficients
-            if  Defaults.saRatip()
-                waR = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[s])
-                wa  = waR       
-            end
             if  Defaults.saGG()
                 subshellList = basis.subshells
                 opa  = SpinAngular.OneParticleOperator(0, plus, true)
@@ -496,12 +492,13 @@ function Basics.computeMultipletForGreenApproach(approach::AtomicState.CoreSpace
                 waG2 = SpinAngular.computeCoefficients(opa, basis.csfs[r], basis.csfs[s], subshellList)
                 wa   = [waG1, waG2]
             end
+            #==
             if  Defaults.saRatip() && Defaults.saGG() && true
                 if  length(waR[1]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[1]) ")    end
                 if  length(waG1)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG1 ")        end
                 if  length(waR[2]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[2]) ")    end
                 if  length(waG2)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG2 ")        end
-            end
+            end  ==#
             #
             me = 0.
             for  coeff in wa[1]
@@ -568,12 +565,7 @@ function Basics.computeMultipletForGreenApproach(approach::AtomicState.DampedSpa
     ncsf      = length(basis.csfs);    matrix = zeros(Float64, ncsf, ncsf);    tau = greenSettings.dampingTau
     for  (r, rcsf)  in enumerate(basis.csfs)
         for  (s, scsf)  in enumerate(basis.csfs)
-            ##x wa = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[s])
             # Calculate the spin-angular coefficients
-            if  Defaults.saRatip()
-                waR = compute("angular coefficients: e-e, Ratip2013", basis.csfs[r], basis.csfs[s])
-                wa  = waR       
-            end
             if  Defaults.saGG()
                 subshellList = basis.subshells
                 opa  = SpinAngular.OneParticleOperator(0, plus, true)
@@ -581,12 +573,6 @@ function Basics.computeMultipletForGreenApproach(approach::AtomicState.DampedSpa
                 opa  = SpinAngular.TwoParticleOperator(0, plus, true)
                 waG2 = SpinAngular.computeCoefficients(opa, basis.csfs[r], basis.csfs[s], subshellList)
                 wa   = [waG1, waG2]
-            end
-            if  Defaults.saRatip() && Defaults.saGG() && true
-                if  length(waR[1]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[1]) ")    end
-                if  length(waG1)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG1 ")        end
-                if  length(waR[2]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[2]) ")    end
-                if  length(waG2)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG2 ")        end
             end
             #
             me = 0.
@@ -640,7 +626,6 @@ function Basics.computePotential(scField::Basics.AaHSField, grid::Radial.Grid, o
     # Sum_a ...
     for (k,v)  in  orbitals 
         occa = Basics.twice( Basics.subshell_j(k)) + 1
-        ##x occa = occa /  (exp( (v.energy - mu) /temp ) + 1) 
         occa = occa * Basics.FermiDirac(v.energy, mu, temp)
         nrho = length(v.P);      rhoaa  = zeros(nrho)
         for  i = 1:nrho    rhoaa[i] = v.P[i]^2 + v.Q[i]^2    end
@@ -677,7 +662,6 @@ function Basics.computePotential(scField::Basics.AaDFSField, grid::Radial.Grid, 
     # Compute the charge density with the average-atom occupation numbers
     for (k,v)  in  orbitals 
         occ  = Basics.twice( Basics.subshell_j(k)) + 1
-        ##x occ  = occ /  (exp( (v.energy - mu) /temp ) + 1) 
         occ  = occ * Basics.FermiDirac(v.energy, mu, temp)
         nrho = length(v.P)
         for    i = 1:nrho   rhot[i] = rhot[i] + occ * (v.P[i]^2 + v.Q[i]^2)    end
@@ -690,7 +674,6 @@ function Basics.computePotential(scField::Basics.AaDFSField, grid::Radial.Grid, 
     end
     # Define the potential with regard to Z(r)
     for i = 2:npoints    wb[i] = - wb[i] * grid.r[i]   end;    wb[1] = 0.
-    ##x wb = 0.99 * wb
     #
     wc = JAC.Radial.Potential("average-atom DFS", wb, grid)
     return( wc )
@@ -853,7 +836,8 @@ function Basics.computePotential(scField::Basics.DFSField, grid::Radial.Grid, le
         for    i = 1:nrho   rhot[i] = rhot[i] + occ * (orb.P[i]^2 + orb.Q[i]^2)    end
     end
     # Define the integrant and take the integrals
-    println(">>>>> wy = $(scField.strength) * DFS potential");     wy = scField.strength
+    ## println(">>>>> wy = $(scField.strength) * DFS potential");     
+    wy = scField.strength
     for i = 1:npoints
         for j = 1:npoints    rg = max( grid.r[i],  grid.r[j]);    wx[j] = rhot[j]/rg   end
         wb[i] = JAC.RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
@@ -1042,12 +1026,7 @@ function Basics.computeScfCoefficients(field::Basics.ALField, basis::Basis, subs
     Vcoeffs = JAC.AngularCoefficientsRatip2013.AngularVcoeff[];   allVcoeffs = JAC.AngularCoefficientsRatip2013.AngularVcoeff[]
     # Compute all angular coefficients for the diagonal matrix elements
     for  csf in basis.csfs
-        ##x wa = Basics.compute("angular coefficients: e-e, Ratip2013", csf, csf)
         # Calculate the spin-angular coefficients
-        if  Defaults.saRatip()
-            waR = compute("angular coefficients: e-e, Ratip2013", csf, csf)
-            wa  = waR       
-        end
         if  Defaults.saGG()
             subshellList = basis.subshells
             opa  = SpinAngular.OneParticleOperator(0, plus, true)
@@ -1056,18 +1035,10 @@ function Basics.computeScfCoefficients(field::Basics.ALField, basis::Basis, subs
             waG2 = SpinAngular.computeCoefficients(opa, csf, csf, subshellList)
             wa   = [waG1, waG2]
         end
-        if  Defaults.saRatip() && Defaults.saGG() && true
-            if  length(waR[1]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[1]) ")    end
-            if  length(waG1)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG1 ")        end
-            if  length(waR[2]) != 0     println(  ">> Angular coeffients from Ratip2013   = $(waR[2]) ")    end
-            if  length(waG2)   != 0     println("\n>> Angular coeffients from SpinAngular = $waG2 ")        end
-        end
         #
         append!(allTcoeffs, wa[1])
         append!(allVcoeffs, wa[2])
     end
-    ##x @show allTcoeffs
-    ##x @show allVcoeffs
     # Determine a list reduced angular that just depend on subshell subsh
     tcoeffs = Tuple{Int64,Subshell,Subshell}[]
     vcoeffs = Tuple{Int64,Subshell,Subshell,Subshell,Subshell}[]

@@ -8,7 +8,7 @@ module AutoIonization
 
 
 using  Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, 
-                ..PlasmaShift, ..Radial, ..SpinAngular, ..TableStrings
+               ..PlasmaShift, ..Radial, ..SpinAngular, ..TableStrings
 
 """
 `struct  Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing Auger lines.
@@ -395,7 +395,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     println("")
     lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    AutoIonization.displayLines(lines)    end  
+    if  settings.printBefore    AutoIonization.displayLines(stdout, lines)    end  
     # Determine maximum energy and check for consistency of the grid
     maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -431,7 +431,7 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
     
     lines = AutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    # if  settings.printBefore    AutoIonization.displayLines(lines)    end  
+    # if  settings.printBefore    AutoIonization.displayLines(stdout, lines)    end  
     # Determine maximum energy and check for consistency of the grid
     maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -522,7 +522,7 @@ function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multip
     augerSettings = AutoIonization.Settings(false, settings.printBefore, settings.lineSelection, 0., 1.0e6, 100, CoulombInteraction())
     lines         = AutoIonization.determineLines(finalMultiplet, initialMultiplet, augerSettings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    AutoIonization.displayLines(lines)    end
+    if  settings.printBefore    AutoIonization.displayLines(stdout, lines)    end
     # Determine maximum energy and check for consistency of the grid
     maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -659,16 +659,16 @@ end
 
 
 """
-`AutoIonization.displayLines(lines::Array{AutoIonization.Line,1})`  
+`AutoIonization.displayLines(stream::IO, lines::Array{AutoIonization.Line,1})`  
     ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all selected 
         transitions and energies is printed but nothing is returned otherwise.
 """
-function  displayLines(lines::Array{AutoIonization.Line,1})
+function  displayLines(stream::IO, lines::Array{AutoIonization.Line,1})
     nx = 150;   noLines = 0;    noChannels = 0
-    println(" ")
-    println("  Selected Auger lines:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected Auger lines:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
     sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                                sb = sb * TableStrings.hBlank(22)
@@ -678,7 +678,7 @@ function  displayLines(lines::Array{AutoIonization.Line,1})
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.flushleft(37, "List of kappas and total symmetries"; na=4)  
     sb = sb * TableStrings.flushleft(37, "partial (total J^P)                "; na=4)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  line in lines
         noLines = noLines + 1;    noChannels = noChannels + length(line.channels)
@@ -693,9 +693,9 @@ function  displayLines(lines::Array{AutoIonization.Line,1})
             push!( kappaSymmetryList, (line.channels[i].kappa, line.channels[i].symmetry) )
         end
         sa = sa * TableStrings.kappaSymmetryTupels(80, kappaSymmetryList)
-        println( sa )
+        println(stream,  sa )
     end
-    println("  ", TableStrings.hLine(nx), "\n\n  A total of $noLines lines with $noChannels Auger channels will be compute. \n")
+    println(stream, "  ", TableStrings.hLine(nx), "\n\n  A total of $noLines lines with $noChannels Auger channels will be compute. \n")
     #
     return( nothing )
 end

@@ -1,5 +1,5 @@
 
-println("Cf) Test of the reduced 1- and 2-particle density matrices & natural orbitals.")
+println("Cf) Apply & test the reduced 1- and 2-particle density matrices & natural orbitals.")
 
 if  true
     # Last successful:  unknown ...

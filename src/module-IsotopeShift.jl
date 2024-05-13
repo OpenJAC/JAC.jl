@@ -129,7 +129,6 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, nm::Nuclear.Mode
             #
             if      kind == "H^(NMS)   amplitude"
             #------------------------------------
-                ##x wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                 subshellList = rLevel.basis.subshells
                 op = SpinAngular.OneParticleOperator(0, plus, true)
                 wa = SpinAngular.computeCoefficients(op, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList)
@@ -142,7 +141,6 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, nm::Nuclear.Mode
             #
             elseif  kind == "H^(SMS,A) amplitude"
             #------------------------------------
-                ##x wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                 subshellList = rLevel.basis.subshells
                 op = SpinAngular.TwoParticleOperator(0, plus, true)
                 wa = SpinAngular.computeCoefficients(op, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList)
@@ -157,7 +155,6 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, nm::Nuclear.Mode
             #
             elseif  kind == "H^(SMS,B) amplitude"
             #------------------------------------
-                ##x wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                 subshellList = rLevel.basis.subshells
                 op = SpinAngular.TwoParticleOperator(0, plus, true)
                 wa = SpinAngular.computeCoefficients(op, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList)
@@ -172,7 +169,6 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, nm::Nuclear.Mode
             #
             elseif  kind == "H^(SMS,C) amplitude"
             #------------------------------------
-                ##x wa = compute("angular coefficients: e-e, Ratip2013", rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                 subshellList = rLevel.basis.subshells
                 op = SpinAngular.TwoParticleOperator(0, plus, true)
                 wa = SpinAngular.computeCoefficients(op, rLevel.basis.csfs[r], sLevel.basis.csfs[s], subshellList)
@@ -263,8 +259,8 @@ end
         which the amplitudes and properties are now evaluated explicitly.
 """
 function  computeAmplitudesProperties(outcome::IsotopeShift.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::IsotopeShift.Settings)
-    amplitudeKnms   = 0.0;   Ksms  = 0.0;    F  = 0.0;    Xboson = 0.0;
-    amplitudeKsmsA  = 0.0;   amplitudeKsmsB  = 0.0;  amplitudeKsmsC  = 0.0;  amplitudeF  = 0.0;
+    amplitudeKnms   = Ksms = F = Xboson = 0.
+    amplitudeKsmsA  = amplitudeKsmsB = amplitudeKsmsC = amplitudeF = 0.
     if  settings.calcNMS
         amplitudeKnms  = IsotopeShift.amplitude("H^(NMS)   amplitude", outcome.level, outcome.level, nm, grid)
     end

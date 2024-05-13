@@ -231,25 +231,20 @@ function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Mu
                     eEnergy = nLevel.energy - iLevel.energy
                     aEnergy = nLevel.energy - fLevel.energy
                     pEnergy = fLevel.energy - iLevel.energy
-                    ##x @show eEnergy, aEnergy
                     if  eEnergy < 0.   ||   aEnergy < 0    continue    end
                     rSettings = PhotoEmission.Settings( settings.multipoles, settings.gauges, false, false, LineSelection(), 0., 0., 0.)
                     eChannels = PhotoEmission.determineChannels(nLevel, iLevel, rSettings) 
-                    ##x @show length(eChannels)
                     aSettings = AutoIonization.Settings( false, false, LineSelection(), 0., 0., settings.maxKappa, CoulombInteraction())
                     aChannels = AutoIonization.determineChannels(fLevel, nLevel, aSettings) 
-                    ##x @show length(aChannels), settings.maxKappa, fLevel.energy, nLevel.energy
                     pSettings = PhotoIonization.Settings( settings.multipoles, settings.gauges, [pEnergy], false, false, false, false, 
                                                             LineSelection(), ExpStokes())
                     pChannels = PhotoIonization.determineChannels(fLevel, iLevel, pSettings) 
-                    ##x @show length(pChannels), settings.maxKappa, fLevel.energy, iLevel.energy
                     push!( pathways, PhotoExcitationAutoion.Pathway(iLevel, nLevel, fLevel, eEnergy, aEnergy, EmProperty(0., 0.), EmProperty(0., 0.), 
                                                                     eChannels, aChannels, pChannels) )
                 end
             end
         end
     end
-    ##x @show length(pathways)
     return( pathways )
 end
 
@@ -286,7 +281,6 @@ function  displayPathways(stream::IO, pathways::Array{PhotoExcitationAutoion.Pat
         kappaMultipoleSymmetryList = Tuple{Int64,EmMultipole,EmGauge,LevelSymmetry}[]
         for  ech in pathway.excitChannels
             for  ach in pathway.augerChannels
-                ##x eChannel = pathway.channels[i].excitationChannel;    aChannel = pathway.channels[i].augerChannel;  
                 push!( kappaMultipoleSymmetryList, (ach.kappa, ech.multipole, ech.gauge, ach.symmetry) )
             end
         end

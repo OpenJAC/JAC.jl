@@ -1,5 +1,5 @@
 
-println("Ck) Test of the DecayYield module with ASF from an internally generated multiplet.")
+println("Ck) Apply & test the DecayYield module with ASF from an internally generated multiplet.")
 
 setDefaults("print summary: open", "zzz-DecayYield.sum")
 

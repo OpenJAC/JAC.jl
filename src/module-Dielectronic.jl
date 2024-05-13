@@ -457,7 +457,7 @@ function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Mult
     #
     pathways = Dielectronic.determinePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, settings)
     # Display all selected pathways before the computations start
-    if  settings.printBefore    Dielectronic.displayPathways(pathways)    end
+    if  settings.printBefore    Dielectronic.displayPathways(stdout, pathways)    end
     # Determine maximum (electron) energy and check for consistency of the grid
     maxEnergy = 0.;   for  pathway in pathways   maxEnergy = max(maxEnergy, pathway.electronEnergy)   end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -725,16 +725,16 @@ end
 
 
 """
-`Dielectronic.displayPathways(pathways::Array{Dielectronic.Pathway,1})`  
+`Dielectronic.displayPathways(stream::IO, pathways::Array{Dielectronic.Pathway,1})`  
     ... to display a list of pathways and channels that have been selected due to the prior settings. A neat table of all selected 
         transitions and energies is printed but nothing is returned otherwise.
 """
-function  displayPathways(pathways::Array{Dielectronic.Pathway,1})
+function  displayPathways(stream::IO, pathways::Array{Dielectronic.Pathway,1})
     nx = 180
-    println(" ")
-    println("  Selected dielectronic-recombination pathways:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected dielectronic-recombination pathways:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "     ";   sb = "     "
     sa = sa * TableStrings.center(23, "Levels"; na=4);            sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=4);          
     sa = sa * TableStrings.center(23, "J^P symmetries"; na=3);    sb = sb * TableStrings.center(23, "i  --  m  --  f"; na=3);
@@ -742,7 +742,7 @@ function  displayPathways(pathways::Array{Dielectronic.Pathway,1})
     sb = sb * TableStrings.center(26, "electron        photon "; na=5)
     sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
     sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  pathway in pathways
         sa  = "  ";    isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
@@ -760,13 +760,13 @@ function  displayPathways(pathways::Array{Dielectronic.Pathway,1})
             end
         end
         wa = TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
-        if  length(wa) > 0    sb = sa * wa[1];    println( sb )    end  
+        if  length(wa) > 0    sb = sa * wa[1];    println(stream,  sb )    end  
         for  i = 2:length(wa)
-            sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
+            sb = TableStrings.hBlank( length(sa) ) * wa[i];    println(stream,  sb )
         end
     end
-    println("  ", TableStrings.hLine(nx))
-    println("\n>> A total of $(length(pathways)) dielectronic-recombination pathways will be calculated. \n")
+    println(stream, "  ", TableStrings.hLine(nx))
+    println(stream, "\n>> A total of $(length(pathways)) dielectronic-recombination pathways will be calculated. \n")
     #
     return( nothing )
 end

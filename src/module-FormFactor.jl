@@ -182,7 +182,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     #
     outcomes = FormFactor.determineOutcomes(multiplet, settings)
     # Display all selected levels before the computations start
-    if  settings.printBefore    FormFactor.displayOutcomes(outcomes)    end
+    if  settings.printBefore    FormFactor.displayOutcomes(stdout, outcomes)    end
     # Calculate all amplitudes and requested properties
     newOutcomes = FormFactor.Outcome[]
     for  outcome in outcomes
@@ -219,23 +219,23 @@ end
 
 
 """
-`FormFactor.displayOutcomes(outcomes::Array{FormFactor.Outcome,1})`  
+`FormFactor.displayOutcomes(stream::IO, outcomes::Array{FormFactor.Outcome,1})`  
     ... to display a list of levels that have been selected for the computations. A small neat table of all 
         selected levels and their energies is printed but nothing is returned otherwise.
 """
-function  displayOutcomes(outcomes::Array{FormFactor.Outcome,1})
+function  displayOutcomes(stream::IO, outcomes::Array{FormFactor.Outcome,1})
     nx = 86
-    println(" ")
-    println("  Selected FormFactor levels:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected FormFactor levels:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(10, "Level"; na=2);                             sb = sb * TableStrings.hBlank(12)
     sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
     sa = sa * TableStrings.center(14, "Energy"; na=4);              
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     sa = sa * "  q-values  ...";                                                      sb = sb * "   [a.u.]"
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #  
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
@@ -246,9 +246,9 @@ function  displayOutcomes(outcomes::Array{FormFactor.Outcome,1})
         if  length(outcome.qValues) >= 2   sa = sa * @sprintf("%.2e", outcome.qValues[2] ) * ",  "   end
         if  length(outcome.qValues) >= 3   sa = sa * @sprintf("%.2e", outcome.qValues[3] ) * ",  "   end
         if  length(outcome.qValues) >  3   sa = sa * "...    "   else   sa = sa * "    "             end
-        println( sa ) 
+        println(stream,  sa ) 
     end
-    println("  ", TableStrings.hLine(nx))
+    println(stream, "  ", TableStrings.hLine(nx))
     #
     return( nothing )
 end

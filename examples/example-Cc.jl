@@ -1,5 +1,5 @@
 
-println("Cc) Test of the IsotopeShift module with ASF from an internally generated multiplet.")
+println("Cc) Apply & test the IsotopeShift module with ASF from an internally generated multiplet.")
 
 if  true
     # Last successful:  unknown ...

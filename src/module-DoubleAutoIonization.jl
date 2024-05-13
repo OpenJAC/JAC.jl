@@ -184,8 +184,6 @@ function amplitude(kind::String, channel::DoubleAutoIonization.ReducedChannel,
                     auChannel = AutoIonization.Channel(channel.kappa1, channel.xSymmetry, channel.phase1, ComplexF64(0.))
                     am_ni     = AutoIonization.amplitude(CoulombInteraction(), auChannel, level, initialLevel, grid; printout=false)
                     auChannel = AutoIonization.Channel(channel.kappa2, symi, channel.phase2, ComplexF64(0.))
-                    ##x @show continuumLevel.basis.csfs[1]
-                    ##x @show level.basis.csfs[1]
                     am_fn     = AutoIonization.amplitude(CoulombInteraction(), auChannel, continuumLevel, level, grid; printout=false)
                     amplitude = amplitude  +  am_fn * am_ni / (eni - level.energy)
                     println(">> DAI for level $nlev  with  am_fn(A) = $am_fn  and  am_ni(A) = $am_ni")
@@ -217,7 +215,6 @@ function  computeAmplitudesProperties(line::DoubleAutoIonization.Line, nm::Nucle
         @show sharing.epsilon1, sharing.epsilon2, sharing.weight
         newChannels = DoubleAutoIonization.ReducedChannel[];    drate = 0.
         for (ich, ch)  in  enumerate(sharing.channels)
-            ##x @show  ich, ch.kappa1, ch.kappa2
             newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
             newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
             # Generate two continuum orbitals as associated with this sharing; these orbitals move each in the potential of the final level
@@ -232,7 +229,6 @@ function  computeAmplitudesProperties(line::DoubleAutoIonization.Line, nm::Nucle
                                                                 ch.energy2, ch.kappa2, phase2, ComplexF64(0.) )
             amplitude  = ComplexF64(0.)
             for  bOrb1  in  bOrbitals1
-                ##x @show bOrb1.subshell, newfLevel.basis.subshells
                 if   bOrb1.subshell  in  newfLevel.basis.subshells        continue    end
                 for  bOrb2  in  bOrbitals2
                     if   bOrb2.subshell  in  newfLevel.basis.subshells    continue    end
@@ -241,7 +237,6 @@ function  computeAmplitudesProperties(line::DoubleAutoIonization.Line, nm::Nucle
                         # Only  subshell_1 < subshell_2  need to be considered since the 'reversed' case is part of another channel 
                         # Perhaps, one needs to multiply with 2 here (??)
                         symf = LevelSymmetry(newfLevel.J, newfLevel.parity) 
-                        ##x @show  symf, bOrb1.subshell, ch.xSymmetry, bOrb2.subshell, symi
                         newcLevel  = Basics.generateLevelWithExtraTwoElectrons(bOrb1, ch.xSymmetry, bOrb2, symi, newfLevel)
                         amplitude  = amplitude + 
                                         DoubleAutoIonization.amplitude("double-Auger", newChannel, newcLevel, settings.green, newiLevel, grid)
@@ -280,7 +275,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     #
     lines = DoubleAutoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    DoubleAutoIonization.displayLines(lines)    end
+    if  settings.printBefore    DoubleAutoIonization.displayLines(stdout, lines)    end
     # Calculate all amplitudes and requested properties
     newLines = DoubleAutoIonization.Line[]
     for  line in lines
@@ -389,24 +384,24 @@ end
 
 
 """
-`DoubleAutoIonization.displayLines(lines::Array{DoubleAutoIonization.Line,1})`  
+`DoubleAutoIonization.displayLines(stream::IO, lines::Array{DoubleAutoIonization.Line,1})`  
     ... to display a list of lines, sharings and channels that have been selected due to the prior settings. A neat table 
         of all selected transitions and energies is printed but nothing is returned otherwise.
 """
-function  displayLines(lines::Array{DoubleAutoIonization.Line,1})
+function  displayLines(stream::IO, lines::Array{DoubleAutoIonization.Line,1})
     #
     # First, print lines and sharings
     nx = 82
-    println(" ")
-    println("  Selected double-Auger lines & sharings:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected double-Auger lines & sharings:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
     sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
     sa = sa * TableStrings.flushleft(54, "Energies (all in )" * TableStrings.inUnits("energy") * ")"; na=5);              
     sb = sb * TableStrings.flushleft(54, "   i -- f       epsilon_1     epsilon_2"; na=5)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -420,24 +415,24 @@ function  displayLines(lines::Array{DoubleAutoIonization.Line,1})
             if  is == 1     sb = sa     else    sb = TableStrings.hBlank( length(sa) )    end
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon1)) * "    "
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon2)) * "    "
-            println( sb )
+            println(stream,  sb )
         end
     end
-    println("  ", TableStrings.hLine(nx))
+    println(stream, "  ", TableStrings.hLine(nx))
     #
     #
     # Second, print lines and channles
     nx = 123
-    println(" ")
-    println("  Selected photo-double ionization lines & channels:   ... channels are shown only for the first sharing")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected photo-double ionization lines & channels:   ... channels are shown only for the first sharing")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
     sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
     sa = sa * TableStrings.flushleft(77, "Channels (all energies in " * TableStrings.inUnits("energy") * ")" ; na=5);              
     sb = sb * TableStrings.flushleft(77, "(epsilon, kappa)_1   -->    J^P_x  -->   (epsilon, kappa)_2   -->  J^P_t = J^P_i"; na=5)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -451,10 +446,10 @@ function  displayLines(lines::Array{DoubleAutoIonization.Line,1})
             sb = sb * sxsym[end-8:end] * "  -->   "
             sb = sb * " (" * @sprintf("%.3e", Defaults.convertUnits("energy: from atomic", ch.energy2)) * ", " * skappa2[end-2:end] * ")    -->     "
             sb = sb * string(isym) 
-            println( sb )
+            println(stream,  sb )
         end
     end
-    println("  ", TableStrings.hLine(nx))
+    println(stream, "  ", TableStrings.hLine(nx))
     #
     return( nothing )
 end

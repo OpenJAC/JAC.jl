@@ -1,5 +1,5 @@
 #
-println("Ba) Tests of the dipole, em multipole and momentum-transfer amplitudes.")
+println("Ba) Apply & test the dipole, em multipole and momentum-transfer amplitudes.")
 
 if  true
     # Last successful:  unknown ...

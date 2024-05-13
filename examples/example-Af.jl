@@ -1,7 +1,7 @@
 using PyPlot: plot
 ## pyplot()
 
-println("Af) Generate and normalize continuum orbitals in a local potential.")
+println("Af) Generate, normalize & test for continuum orbitals in a local potential.")
 
 grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 2.0e-2, rbox = 20.0)
 nuclearZ = 2.0;   noPoints = grid.NoPoints - 100

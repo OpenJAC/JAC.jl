@@ -1,5 +1,5 @@
 #
-println("Ae) Test of the QED model corrections to the level structure of atoms and ions.")
+println("Ae) Apply & test for the QED model corrections to the level structure of atoms and ions.")
 
 ##  NoneQed() QedPetersburg() 
 if   true

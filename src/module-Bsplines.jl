@@ -82,20 +82,16 @@ function generateMatrix!(kappa::Int64, TTp::String, primitives::Bsplines.Primiti
     if  wa != zeros(2,2)        
         return( wa )    
     end
-    ##x @show "generateMatrix!", nsL, nsS
     
     # Now calculate and store the requested matrix
     if      TTp == "LL-overlap"
-        ##x nsL = primitives.grid.nsL - 2;    wa = zeros( nsL, nsL ) 
         wa = zeros( nsL, nsL ) 
-        ##x @show nsL
         for  i = 1:nsL
             for  j = 1:nsL
                 wa[i,j] = JAC.RadialIntegrals.overlap(primitives.bsplinesL[i], primitives.bsplinesL[j], primitives.grid)
             end
         end
     elseif  TTp == "SS-overlap"
-        ##x nsS = primitives.grid.nsS - 2;    wa = zeros( nsS, nsS ) 
         wa = zeros( nsS, nsS ) 
         for  i = 1:nsS
             for  j = 1:nsS
@@ -103,7 +99,6 @@ function generateMatrix!(kappa::Int64, TTp::String, primitives::Bsplines.Primiti
             end
         end
     elseif  TTp == "LS-D_kappa^-"
-        ##x nsL = primitives.grid.nsL - 2;    nsS = primitives.grid.nsS - 2;    wa = zeros( nsL, nsS ) 
         wa = zeros( nsL, nsS ) 
         for  i = 1:nsL
             for  j = 1:nsS
@@ -111,10 +106,7 @@ function generateMatrix!(kappa::Int64, TTp::String, primitives::Bsplines.Primiti
                             JAC.RadialIntegrals.nondiagonalD(-1, kappa, primitives.bsplinesL[i], primitives.bsplinesS[j], primitives.grid)
             end
         end
-        ##x @show "gMatrix!", wa[nsL-3,nsS], wa[nsL-2,nsS], wa[nsL-1,nsS], wa[nsL,nsS]
-        ##x @show "gMatrix!", wa[nsL,nsS-3], wa[nsL,nsS-2], wa[nsL,nsS-1], wa[nsL,nsS]
     elseif  TTp == "SL-D_kappa^+"
-        ##x nsL = primitives.grid.nsL - 2;    nsS = primitives.grid.nsS - 2;    wa = zeros( nsS, nsL ) 
         wa = zeros( nsS, nsL ) 
         for  i = 1:nsS
             for  j = 1:nsL
@@ -122,8 +114,6 @@ function generateMatrix!(kappa::Int64, TTp::String, primitives::Bsplines.Primiti
                             JAC.RadialIntegrals.nondiagonalD( 1, kappa, primitives.bsplinesS[i], primitives.bsplinesL[j], primitives.grid)
             end
         end
-        ##x @show "gMatrix!", wa[nsS,nsL-3], wa[nsS,nsL-2], wa[nsS,nsL-1], wa[nsS,nsL]
-        ##x @show "gMatrix!", wa[nsS-3,nsL], wa[nsS-2,nsL], wa[nsS-1,nsL], wa[nsS,nsL]
     else   println("TTp = $TTp ");    error("stop a")
     end
     
@@ -183,7 +173,6 @@ end
         A (normalized) orbital::Orbital is returned.
 """
 function generateOrbitalFromPrimitives(sh::Subshell, wc::Basics.Eigen, primitives::Bsplines.Primitives, nsL::Int64, nsS::Int64)
-    ##x nsL = primitives.grid.nsL - 2;    nsS = primitives.grid.nsS - 2
     l  = Basics.subshell_l(sh);   ni = nsS + sh.n - l;          if   sh.kappa > 0   ni = ni + 1 - 1  end
     en = wc.values[ni];        if  en < 0.   isBound = true  else   isBound = false           end
     ev = wc.vectors[ni];       if  length(ev) != nsL + nsS    error("stop a")                 end
@@ -293,7 +282,6 @@ function generatePrimitives(grid::Radial.Grid)
             end
         end
         # 
-        ##x @show i, lower, upper
         for  j = lower:upper   bprime[j] = Bsplines.generateSplinePrime(i, grid.orderL, grid.tL, grid.r[j])    end
         
         #== if  i == grid.nsL   
@@ -319,7 +307,6 @@ function generatePrimitives(grid::Radial.Grid)
             end
         end
         # 
-        ##x @show i, lower, upper
         for  j = lower:upper   bprime[j] = Bsplines.generateSplinePrime(i, grid.orderS, grid.tS, grid.r[j])    end
         #
         #== if  i == grid.nsS  
@@ -342,7 +329,6 @@ end
         A value::Float64 is returned.
 """
 function generateSpline(i::Int64, k::Int64, tlist::Array{Float64,1}, r::Float64)
-    ##x if i+k > length(tlist)     @show i, k length(tlist), tlist    end
     if      i == 1   &&   0  ==  r                      return( 1.0 )    
     elseif  k == 1
             if       tlist[i] <  r <= tlist[i+1]        return( 1.0 )   else    return( 0. )    end
@@ -381,64 +367,6 @@ function generateSplinePrime(i::Int64, k::Int64, tlist::Array{Float64,1}, r::Flo
 end
 
 
-#==  new from Chiara (2022)
-"""
-`Bsplines.setupLocalMatrix(kappa::Int64, primitives::Bsplines.Primitives, nsL::Int64, nsS::Int64, 
-                            pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}}) 
-        ...setp-up the local parts of the generalized eigenvalue problem for the symmetry block kappa and the given (local) potential. 
-        The B-spline (basis) functions are defined by primitivesL for the large component and primitivesS for the small one, respectively.
-        Änderung des Vorzeichens in Zeile 170 und 171 zur Übereinstimmung mit oben genannter Quelle und Einbau der neu 
-        implementierten Matrix in Zeile 188.
-        
-"""
-function setupLocalMatrix(kappa::Int64, primitives::Bsplines.Primitives, nsL::Int64, nsS::Int64, 
-                            pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}})
-    ##x nsL = primitives.grid.nsL - 2;     nsS = primitives.grid.nsS - 2
-    wa  = zeros( nsL+nsS, nsL+nsS );   wb  = zeros( nsL+nsS, nsL+nsS )
-    ##x @show "setupLocalMatrix", nsL, nsS, pot.grid.nsL, pot.grid.nsS
-    # (1) Compute or fetch the diagonal 'overlap' blocks
-    wb[1:nsL,1:nsL]                 = generateMatrix!(0, "LL-overlap", primitives, nsL, nsS, storage)
-    wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = generateMatrix!(0, "SS-overlap", primitives, nsL, nsS, storage)
-    # (2) Re-compute the diagonal blocks for the local potential
-    for  i = 1:nsL
-        for  j = 1:nsL   
-            wa[i,j] = JAC.RadialIntegrals.Vlocal(primitives.bsplinesL[i], primitives.bsplinesL[j], pot, primitives.grid)
-        end
-    end
-    for  i = 1:nsS    
-        for  j = 1:nsS    
-            wa[nsL+i,nsL+j] = JAC.RadialIntegrals.Vlocal(primitives.bsplinesS[i], primitives.bsplinesS[j], pot, primitives.grid)
-        end
-    end
-    # (3) Substract the rest mass from the 'SS' block
-    wa[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = wa[nsL+1:nsL+nsS,nsL+1:nsL+nsS] - 2 * Defaults.getDefaults("speed of light: c")^2 * wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS]
-    # (4) Compute or fetch the diagonal 'D_kappa' blocks
-    wa[1:nsL,nsL+1:nsL+nsS] = wa[1:nsL,nsL+1:nsL+nsS] - generateMatrix!(kappa, "LS-D_kappa^-", primitives, nsL, nsS, storage)
-    wa[nsL+1:nsL+nsS,1:nsL] = wa[nsL+1:nsL+nsS,1:nsL] - generateMatrix!(kappa, "SL-D_kappa^+", primitives, nsL, nsS, storage)
-    
-    #=====
-    # Test for 'real-symmetric matrix' ... this is not fullfilled if the last B-spline is included !!
-    nx = 0
-    for  i = 1:nsL+nsS    
-        for  j = i+1:nsL+nsS    
-            if  abs(  (wa[i,j] - wa[j,i])/(wa[i,j] + wa[j,i]) ) > 1.0e-7   nx = nx + 1    
-                @show "setupLocalMatrix", i, j, wa[i,j], wa[j,i] 
-            end
-        end
-    end
-    ny = (nsL+nsS)^2/2 - (nsL+nsS)
-    if  nx > 0    
-        println(">>> setupLocalMatrix:: $nx (from $(ny)) non-symmetric H-matrix integrals for kappa = $kappa with relative deviation > 1.0e-7.")  end
-    =====#
-    
-    ## wc = generatematrix(nsL,nsS, kappa)
-    ## wa = wa + wc
-    
-    return( wa )
-end ==#
-
-
-
 """
 `Bsplines.setupLocalMatrix(kappa::Int64, primitives::Bsplines.Primitives, nsL::Int64, nsS::Int64, 
                             pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}}) 
@@ -447,9 +375,7 @@ end ==#
 """
 function setupLocalMatrix(kappa::Int64, primitives::Bsplines.Primitives, nsL::Int64, nsS::Int64, 
                             pot::Radial.Potential, storage::Dict{Array{Any,1},Array{Float64,2}})
-    ##x nsL = primitives.grid.nsL - 2;     nsS = primitives.grid.nsS - 2
     wa  = zeros( nsL+nsS, nsL+nsS );   wb  = zeros( nsL+nsS, nsL+nsS )
-    ##x @show "setupLocalMatrix", nsL, nsS, pot.grid.nsL, pot.grid.nsS
     # (1) Compute or fetch the diagonal 'overlap' blocks
     wb[1:nsL,1:nsL]                 = generateMatrix!(0, "LL-overlap", primitives, nsL, nsS, storage)
     wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = generateMatrix!(0, "SS-overlap", primitives, nsL, nsS, storage)
@@ -496,12 +422,10 @@ end
 """
 function generateGalerkinMatrix(primitives::Bsplines.Primitives, nsL::Int64, nsS::Int64, energy::Float64, sh::Subshell, pot::Radial.Potential)
 
-    ##x @show "generateGalerkinMatrix", nsL, nsS
     # Define the storage for the calculations of matrices; this is necessary to use the Bsplines.generateMatrix!() function
     println(">> (Re-) Define a storage array for various B-spline matrices:")
     storage  = Dict{Array{Any,1},Array{Float64,2}}()
     # Set-up the overlap matrix
-    ##x nsL = primitives.grid.nsL - 1;    nsS = primitives.grid.nsS - 1;    wb  = zeros( nsL+nsS, nsL+nsS )
     wb  = zeros( nsL+nsS, nsL+nsS )
     wb[1:nsL,1:nsL]                 = generateMatrix!(0, "LL-overlap", primitives, nsL, nsS, storage)
     wb[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = generateMatrix!(0, "SS-overlap", primitives, nsL, nsS, storage)
@@ -607,7 +531,6 @@ function generateOrbitalsHydrogenic(primitives::Bsplines.Primitives, nuclearMode
         ##x w2 = LinearAlgebra.eigen(wa,wb)
         nsi = nsS;    if sh.kappa > 0   nsi = nsi + 1 - 1   end
         if  printout   Basics.tabulateKappaSymmetryEnergiesDirac(sh.kappa, w2.values, nsi, nuclearModel)    end
-        ##x error("aa")
         newOrbitals[sh] = generateOrbitalFromPrimitives(sh, w2, primitives, nsL, nsS)
         alreadyDone[i]  = true
         # Take over orbitals of the same symmetry
@@ -721,12 +644,6 @@ function  solveSelfConsistentALField(primitives::Bsplines.Primitives,
                     bev = bev / sqrt(wx);              wx  = sum(bev.*bev);  ##x @show wx
                     wf  = (Matrix{Float64}(I, nsL+nsS, nsL+nsS) - (wb * bev * transpose(bev))) * wf * 
                             (Matrix{Float64}(I, nsL+nsS, nsL+nsS) - (bev * transpose(bev) * wb))
-                    ##x if  NoIteration  > 2  
-                    ##x     bev = ppreviousBvectors[otherSh];  wx  = sum(bev.*bev);  ##x @show wx
-                    ##x     bev = bev / sqrt(wx);              wx  = sum(bev.*bev);  ##x @show wx
-                    ##x     wf  = (Matrix{Float64}(I, nsL+nsS, nsL+nsS) - (wb * bev * transpose(bev))) * wf * 
-                    ##x           (Matrix{Float64}(I, nsL+nsS, nsL+nsS) - (bev * transpose(bev) * wb))
-                    ##x end
                 end
                 wa = wf
             end
@@ -734,15 +651,12 @@ function  solveSelfConsistentALField(primitives::Bsplines.Primitives,
             wc = Basics.diagonalize("generalized eigenvalues: LinearAlgebra", wa, wb)
             # (6) Analyse and print information about the convergence of the generated orbitals
             newOrbital = generateOrbitalFromPrimitives(sh, wc, primitives)
-            ##x wx = abs(newOrbital.energy) / energy_1s / (sh.n^2);  @show sh, wx 
-            ##x if  NoIteration  > 2  newOrbital = Basics.generateOrbitalSuperposition(previousOrbitals[sh], newOrbital, 0.2, primitives.grid)   end
             wcOrbital  = Basics.analyzeConvergence(previousOrbitals[sh], newOrbital)
             if  wcOrbital > settings.accuracyScf   accuracyScf = wcOrbital;     stopNowIteration = false   end
             sa = "  $sh::  en [a.u.] = " * @sprintf("%.7e", newOrbital.energy) * ";   self-cons'cy = " * @sprintf("%.4e", wcOrbital) 
             if  printout    println(sa)    end
             # (7) Re-define the bsplineBlock as well as the previous orbitals and Bspline vectors
             bsplineBlock[sh.kappa] = wc;    
-            ##x if NoIteration  > 1   ppreviousOrbitals[sh]  = deepcopy(previousOrbitals[sh]);   ppreviousBvectors[sh]  = deepcopy(previousBvectors[sh])    end
             previousOrbitals[sh]   = newOrbital;    
             previousBvectors[sh]   = extractBsplineVector(sh, bsplineBlock[sh.kappa], primitives.grid)
         end

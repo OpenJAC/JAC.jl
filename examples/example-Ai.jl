@@ -1,5 +1,5 @@
 #
-println("Ai) Test of restricted-active-space (RAS) expansion.")
+println("Ai) Apply & test for restricted-active-space (RAS) expansions.")
 
 if  true
     # Last successful:  unknown ...

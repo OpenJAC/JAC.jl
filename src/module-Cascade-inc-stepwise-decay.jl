@@ -282,7 +282,6 @@ function generateConfigurationsForStepwiseDecay(scheme::Cascade.StepwiseDecaySch
     end
     decayConfigs = unique(decayConfigs)
     decayConfigs = Basics.excludeConfigurations(decayConfigs, initialNo-maxElectronLoss)
-    ##x @show "a", decayConfigs
     allConfigs   = append!(allConfigs, decayConfigs)
     dConfigs     = copy(newConfigs)
     #
@@ -293,7 +292,6 @@ function generateConfigurationsForStepwiseDecay(scheme::Cascade.StepwiseDecaySch
     end
     decayConfigs = unique(decayConfigs)
     decayConfigs = Basics.excludeConfigurations(decayConfigs, initialNo-maxElectronLoss)
-    ##x @show "a", decayConfigs
     allConfigs   = append!(allConfigs, decayConfigs)
     dConfigs     = copy(decayConfigs)
     #
@@ -305,22 +303,6 @@ function generateConfigurationsForStepwiseDecay(scheme::Cascade.StepwiseDecaySch
     allConfigs   = append!(allConfigs, decayConfigs)
     allConfigs   = unique(allConfigs)
     allConfigs   = Basics.excludeConfigurations(allConfigs, initialNo-maxElectronLoss)
-    ##x @show "c", allConfigs
-    
-    ##x dConfigs = copy(newConfigs);   append!(dConfigs, decayConfigs)
-    ##x dConfigs = unique(dConfigs)
-    
-    ##x @show length(dConfigs), length(newConfigs)
-    #
-    # Remove obsolete shells and double configurations
-    ##x nconfList = Configuration[];   nshells = Dict{Shell,Int64}();    ne = 0
-    ##x for  conf  in  decayConfigs  
-    ##x     nshells = Dict{Shell,Int64}();      ne = 0
-    ##x     for  (sh,occ) in conf.shells   if  occ > 0     nshells[sh] = occ;  ne = ne + occ    end     end
-    ##x     push!(nconfList, Configuration( nshells, ne))
-    ##x end
-    ##x nconfList = unique(nconfList)
-    ##x @show "d", nconfList
     #
     # Discard configurations with energies higher than initial configurations after electron capture;
     # this may be required for a very large number of configurations (not yet)

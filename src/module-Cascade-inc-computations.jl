@@ -35,8 +35,6 @@ function computeDecayProbabilities(outcome::DecayYield.Outcome, linesR::Array{Ph
     #
     @show subshList, relConfigs, holeSubshell
     @show subshEnergies
-    ##x @show rProbabilities
-    ##x @show aProbabilities
     #
     # Calculate the total rate and convert the dictionaries into probabilities
     # First, identify the level key of the given level also in the lists of radiative and Auger lines
@@ -54,7 +52,6 @@ function computeDecayProbabilities(outcome::DecayYield.Outcome, linesR::Array{Ph
             # Extract the subshells that make the difference between the initial and final levels; terminate if NO 1s_1/2 occurs
             confi = Basics.extractLeadingConfigurationR(line.initialLevel)
             conff = Basics.extractLeadingConfigurationR(line.finalLevel)
-            ##x @show confi, conff, line.photonRate.Babushkin
             occDiffs = Basics.extractShellOccupationDifference(confi, conff);   subshList = Subshell[]
             for  diff in occDiffs
                 # holeSubshell must differ by -1
@@ -77,7 +74,6 @@ function computeDecayProbabilities(outcome::DecayYield.Outcome, linesR::Array{Ph
             # Extract the subshells that make the difference between the initial and final levels; terminate if NO 1s_1/2 occurs
             confi = Basics.extractLeadingConfigurationR(line.initialLevel)
             conff = Basics.extractLeadingConfigurationR(line.finalLevel)
-            ##x @show confi, conff
             occDiffs = Basics.extractShellOccupationDifference(confi, conff);   subshList = Subshell[]
             for  diff in occDiffs
                 # holeSubshell must differ by -1
@@ -160,7 +156,6 @@ function computeTotalAugerRate(level::Cascade.Level)
     rate = 0.
     for daugther in level.daugthers
         if  daugther.process != Basics.Auger();      continue   end
-        ##x aLine   = daugther.lineSet.linesA[daugther.index]
         aLine   = daugther.lines[daugther.index]
         rate    = rate + aLine.totalRate
     end
@@ -176,7 +171,6 @@ function computeTotalPhotonRate(level::Cascade.Level)
     rate = Basics.EmProperty(0.)
     for daugther in level.daugthers
         if  daugther.process != Basics.Radiative();      continue   end
-        ##x rLine   = daugther.lineSet.linesR[daugther.index]
         rLine   = daugther.lines[daugther.index]
         rate    = rate + rLine.photonRate
     end
@@ -361,7 +355,6 @@ function dumpDecayProbabilities(stream::IO, outcome::DecayYield.Outcome, subshEn
     subshList     = Basics.extractRelativisticSubshellList(outcome.level)
     relConfigs    = Basics.extractRelativisticConfigurations(outcome.level.basis, outcome.level.J)
     holeSubshells = Basics.extractOpenSubshells(relConfigs[1]);   holeSubshell = holeSubshells[1]
-    ##x @show subshList, subshEnergies, relConfigs, holeSubshell
     
     # Dump probabilities for the given holeSubshell to the data file
     idx = Cascade.dumpGeant4Index(holeSubshell)
@@ -400,7 +393,6 @@ function dumpDecayProbabilities(stream::IO, outcome::DecayYield.Outcome, subshEn
     subshList     = Basics.extractRelativisticSubshellList(outcome.level)
     relConfigs    = Basics.extractRelativisticConfigurations(outcome.level.basis, outcome.level.J)
     holeSubshells = Basics.extractOpenSubshells(relConfigs[1]);   holeSubshell = holeSubshells[1]
-    ##x @show subshList, subshEnergies, relConfigs, holeSubshell
     
     # Dump probabilities for the given holeSubshell to the data file
     idx = Cascade.dumpGeant4Index(holeSubshell)

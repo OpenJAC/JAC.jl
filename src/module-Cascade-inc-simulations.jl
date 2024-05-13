@@ -502,9 +502,6 @@ function extractOccupation(levels::Array{Cascade.Level,1}, groundConfigs::Array{
     #
     wocc = 0.
     for level in levels
-        ##x @show level
-        ##x conf = Basics.extractLeadingConfiguration(level)
-        ##x @show conf, groundConfigs
         if  Basics.extractLeadingConfiguration(level) in groundConfigs   wocc = wocc + level.relativeOcc     end
     end
 
@@ -748,97 +745,6 @@ function findLevelIndex(level::Cascade.Level, levels::Array{Cascade.Level,1})
 end
 
 
-#==  Obsolete, March 2023
-"""
-`Cascade.generateAbsorptionCrossSections(excitationData::Array{Cascade.ExcitationData,1}, 
-                                            ionizationData::Array{Cascade.PhotoIonData,1}, settings::Cascade.SimulationSettings)` 
-    ... generates a list of photo-absorption cross sections by cycling through all (photo-) excitationData and ionizationData.
-        The photoionization contributions to the absorption cross section is obtained by averaging the photoionization cross sections
-        for the occupation of the given initial levels; for the photoionization contributions to the absorption cross section,
-        the (relative) cross section is taken at neighboured energies of the excitation line of interest, and the associated 
-        ionization contribution is obtained from a linear interpolation of two neighboured photon energies or the (constant)
-        extrapolation of just one neighboured photon energies of the previously determined photoionization cross sections.
-        An list of crossSections::Array{AbsorptionCrossSection,1} is returned which is ordered by energy.
-"""
-function generateAbsorptionCrossSections(excitationData::Array{Cascade.ExcitationData,1}, 
-                                            ionizationData::Array{Cascade.PhotoIonData,1}, settings::Cascade.SimulationSettings)
-    ionizationCS = Cascade.AbsorptionCrossSection[];    excitationCS = Cascade.AbsorptionCrossSection[]
-    # First collect the contributions of the initially occupied levels from the photoionization cross sections, and
-    # weigthed by the relative population; data are collected for all available photon energies as they might be needed for
-    # interpolation
-    for  data  in  ionizationData
-        cs = Basics.EmProperty(0.)
-        for  (levelIdx, occ)  in  settings.initialOccupations
-            for  line  in  data.linesP
-                ##x @show  line.photonEnergy, data.photonEnergy
-                if  abs( (line.photonEnergy - data.photonEnergy)/line.photonEnergy ) > 1.0e-5     error("stop a")      end
-                if  line.initialLevel.index ==  levelIdx            cs = cs + occ * line.crossSection                  end
-            end
-        end
-        push!(ionizationCS, Cascade.AbsorptionCrossSection(data.photonEnergy, Basics.EmProperty(0.), cs))
-    end
-    #
-    # Next determine all excitation cross sections for the requested interval of photon energies; here the photon energies are
-    # simply given by the photon excitation energies, and which must be in the requested interval. There will be one
-    # cross section for each photoexcitation independent of possible blendings.
-    for  data  in  excitationData
-        ics = Basics.EmProperty(0.);   ecs = Basics.EmProperty(0.)
-        for  (levelIdx, occ)  in  settings.initialOccupations
-            for  line  in  data.linesE
-                addEcs = false
-                if  settings.minPhotonEnergy <= line.omega <= settings.maxPhotonEnergy     &&
-                    line.initialLevel.index ==  levelIdx            
-                    ecs = occ * line.crossSection;      addEcs = true 
-                end
-                if  addEcs      ics = Cascade.interpolateIonizationCS(line.omega, ionizationCS)
-                                push!(excitationCS, Cascade.AbsorptionCrossSection(line.omega, ecs, ics))
-                end
-            end
-        end
-    end
-    
-    # Append those (pure) ionization cross sections which belong the requested interval
-    for  cs in  ionizationCS
-        if  settings.minPhotonEnergy <= cs.photonEnergy <= settings.maxPhotonEnergy     push!(excitationCS, cs)     end
-    end
-    sortedCS = Base.sort( excitationCS , lt=Base.isless)
-    return( sortedCS )
-end
-
-
-
-"""
-`Cascade.interpolateIonizationCS(photonEnergy::Float64, ionizationCS::Array{Cascade.AbsorptionCrossSection,1})` 
-    ... interpolates (or extrapolates) the ionization cross sections as defined by ionizationCS for the given photonEnergy.
-        If photonEnergy is outside the photon energies from ionizationCS, simply the cross section from the nearest energy
-        is returned; if photonEnergy lays between two photon energies from ionizationCS, a simple linear interpolation
-        rules is applied here. A cs::Basics.EmProperty is returned.
-"""
-function interpolateIonizationCS(photonEnergy::Float64, ionizationCS::Array{Cascade.AbsorptionCrossSection,1})
-    imin = imax = 0
-    for  (i, ionCS)  in  enumerate(ionizationCS)
-        if  ionCS.photonEnergy <= photonEnergy   imin = i    end
-    end
-    for  (i, ionCS)  in  enumerate(ionizationCS)
-        if  ionCS.photonEnergy >  photonEnergy   imax = i;   break    end
-    end
-    #
-    if       imin == 0  &&  imax == 1        return(ionizationCS[1].ionizationCS)
-    elseif   imax == 0                       return(ionizationCS[end].ionizationCS)
-    elseif   imax - imin == 1
-        deltaEnergy = photonEnergy - ionizationCS[imin].photonEnergy
-        totalEnergy = ionizationCS[imax].photonEnergy - ionizationCS[imin].photonEnergy  
-        csCou       = ionizationCS[imin].ionizationCS.Coulomb + 
-                        deltaEnergy/totalEnergy * (ionizationCS[imax].ionizationCS.Coulomb - ionizationCS[imin].ionizationCS.Coulomb)
-        csBab       = ionizationCS[imin].ionizationCS.Babushkin + 
-                        deltaEnergy/totalEnergy * (ionizationCS[imax].ionizationCS.Babushkin - ionizationCS[imin].ionizationCS.Babushkin)
-        return( EmProperty(csCou, csBab) )
-    else  error("stop b")    
-    end
-end
-==#
-
-
 """
 `Cascade.interpolateIonizationCS(photonEnergy::Float64, ionizationCS::Array{Basics.ScalarProperty{EmProperty},1})` 
     ... interpolates (or extrapolates) the ionization cross sections as defined by ionizationCS for the given photonEnergy.
@@ -980,7 +886,6 @@ function propagateOccupationInTime!(levels::Array{Cascade.Level,1}, dt::Float64)
             else    error("stop b; process = $(daugther.process) ")
             end
             downFactor = (1.0 - exp(-rate*dt));         
-            ##x @show downFactor, occ
             newLevel   = Cascade.Level( line.finalLevel.energy, line.finalLevel.J, line.finalLevel.parity, 
                                         line.finalLevel.basis.NoElectrons, 0., Cascade.LineIndex[], Cascade.LineIndex[] )
             kk         = Cascade.findLevelIndex(newLevel, levels)
@@ -989,12 +894,9 @@ function propagateOccupationInTime!(levels::Array{Cascade.Level,1}, dt::Float64)
             end
             relativeOcc[kk] = relativeOcc[kk] + downFactor * occ;   down = down + downFactor * occ
         end
-        ##x @show lossFactor
         levels[i].relativeOcc = levels[i].relativeOcc - lossFactor * occ;   loss = loss + lossFactor * occ
     end
     for i = 1:length(levels)  levels[i].relativeOcc = levels[i].relativeOcc + relativeOcc[i]    end
-    ##x @show down, loss
-    ##x @show relativeOcc
     
     return( nothing )
 end
@@ -1021,7 +923,6 @@ function propagateProbability!(levels::Array{Cascade.Level,1};
         print("    $n-th round ... ")
         relativeOcc = zeros(length(levels));    relativeLoss = zeros(length(levels))
         for  level in levels
-            ##x @show level.relativeOcc, length(level.daugthers)
             if   level.relativeOcc > 0.   && length(level.daugthers) > 0
                 # A level with relative occupation > 0 has still 'daugther' levels; collect all excitation/decay rates for this level
                 # Here, an excitation cross section is formally treated as a rate as it is assumed that the initial levels of
@@ -1034,7 +935,6 @@ function propagateProbability!(levels::Array{Cascade.Level,1};
                     elseif  daugther.process == Basics.Photo()         rates[i] = daugther.lines[idx].crossSection.Coulomb
                     else    error("stop a; process = $(daugther.process) ")
                     end
-                    ##x @show daugther.process, rates[i]
                 end
                 totalRate = sum(rates)
                 if      totalRate <  0.    error("stop b")
@@ -1165,7 +1065,6 @@ function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::
     for  level in levels
         for daugther in level.daugthers
             if  daugther.process != Basics.Auger();                            continue   end
-            ##x aLine   = daugther.lineSet.linesA[daugther.index]
             aLine   = daugther.lines[daugther.index]
             if  aLine.finalLevel.index != simulation.property.initialLevelNo   continue   end
             #
@@ -1176,7 +1075,6 @@ function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::
             dEnergy = aLine.initialLevel.energy;    iEnergy = aLine.finalLevel.energy
             captureRate = aLine.totalRate
             augerRate   = Cascade.computeTotalAugerRate(level)
-            ##x @show level.energy, captureRate, augerRate
             photonRate  = Cascade.computeTotalPhotonRate(level)
             strength    = Basics.EmProperty(0.)
             #
@@ -1201,7 +1099,6 @@ function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::
             newResonance = Dielectronic.Resonance(iLevel, dLevel, en, strength, 0., augerRate, photonRate)
             ## newResonance = Dielectronic.Resonance(iLevel, dLevel, en, strength, captureRate, augerRate, photonRate)
             push!(resonances, newResonance)
-            ##x @show augerRate, photonRate, strength
         end
     end
     
@@ -1414,7 +1311,7 @@ end
 function simulateLevelDistribution(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     #
-    Cascade.propagateProbability!(levels)   ##x , simulation.cascadeData)
+    Cascade.propagateProbability!(levels)   
     #
     if  typeof(simulation.property) == Cascade.IonDistribution   
         Cascade.displayIonDistribution(stdout, simulation.name, levels)     
@@ -1570,8 +1467,6 @@ function simulatePhotoAbsorptionSpectrum(simulation::Cascade.Simulation,
     
     # Add, if requested, all photoexitation cross section data for all photon energies and initial levels involved
     gam    = Defaults.convertUnits("energy: to atomic", paProperty.resonanceWidth)
-    ##x @show paProperty.includeExcitation, gam
-    ##x @show pEnergies, initialLevels
     
     if  paProperty.includeExcitation
         for  (p, pEnergy)  in  enumerate(pEnergies)
@@ -1581,7 +1476,6 @@ function simulatePhotoAbsorptionSpectrum(simulation::Cascade.Simulation,
                     # Add cross section data only if they refer to shells
                     error("bb: not yet implemented")
                 else
-                    ##x @show pEnergy, gam, PhotoExcitation.estimateCrossSection(linesE, pEnergy, gam, initialLevel)
                     cs = cs + initialWeights[i] * paProperty.csScaling * 
                                 PhotoExcitation.estimateCrossSection(linesE, pEnergy, gam, initialLevel)
                 end 
@@ -1597,83 +1491,6 @@ function simulatePhotoAbsorptionSpectrum(simulation::Cascade.Simulation,
 
     return( pEnergies, crossSections )
 end    
-
-
-#==   This is an old and rather intransparent version; taken out August 2023
-"""
-`Cascade.simulatePhotoAbsorptionSpectrum(simulation::Cascade.Simulation, 
-                                            linesP::Array{PhotoIonization.Line,1}, linesE::Array{PhotoExcitation.Line,1})` 
-    ... cycle through all lines and (incident photon) energies to derive the overall photo-absorption spectrum.
-        The procedure interpolates the photoionization and 'adds' the photoexcitation cross sections to obtain the 
-        total photoabsorption CS. A quadratic interpolation is used and the photoionization cross sections are assumed to be
-        'constant' outside of the energy interval, for which photoionization lines and cross sections have been calculated 
-        before. All absorption cross sections are displayed in a neat table and are returned as lists.
-"""
-function simulatePhotoAbsorptionSpectrum(simulation::Cascade.Simulation, 
-                                            linesP::Array{PhotoIonization.Line,1}, linesE::Array{PhotoExcitation.Line,1})
-    printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    paProperty = simulation.property
-    
-    excCS = Basics.ScalarProperty{EmProperty}[];     ionCS = Basics.ScalarProperty{EmProperty}[]
-    # Collect photoenergies and the associated photoionization cross sections
-    energies = Float64[];    for  line in linesP   push!(energies, line.photonEnergy)     end;
-    energies = unique(energies);    energies = sort(energies);    ##x @show "Ionization: ", energies
-    for  en in energies
-        cs = EmProperty(0.)
-        for  line  in  linesP
-            if  en == line.photonEnergy   cs = cs + line.crossSection   end
-        end
-        push!(ionCS, Basics.ScalarProperty{EmProperty}(en, cs))
-    end
-    ##x @show ionCS
-    #
-    # Collect photoenergies and the associated photoexcitation cross sections/strength
-    if  simulation.property.includeExcitation
-        energies = Float64[];    for  line in linesE   push!(energies, line.omega)     end;
-        energies = unique(energies);    energies = sort(energies);    ##x @show "Excitation: ", energies
-        for  en in energies
-            cs = EmProperty(0.)
-            for  line  in  linesE
-                if  en == line.omega   cs = cs + line.crossSection   end
-            end
-            ##x @show "Excitation contribution:", en, cs
-            push!(excCS, Basics.ScalarProperty{EmProperty}(en, cs) )
-        end
-        @show excCS
-    end
-    #
-    # Interpolate photoionization and 'add' photoexcitation cross sections to obtain the total photoabsorption CS;
-    # generate an energy grid for which cross sections are to be interpolated
-    absEnergies = Float64[];   totalCS = Basics.ScalarProperty{EmProperty}[] 
-    for  en in simulation.property.photonEnergies   push!(absEnergies, Defaults.convertUnits("energy: to atomic", en))     end
-    ##x @show "Absorption: ", absEnergies
-    for  en in absEnergies
-        cs = Cascade.interpolateIonizationCS(en, ionCS)
-        push!(totalCS, Basics.ScalarProperty{EmProperty}(en, cs) )
-    end
-    # Add contribution from the excitation cross section, if required; distribute resonance contribution as rec
-    if  simulation.property.includeExcitation
-        width = 0.0001 / 27.21    # Get from simulation.property
-        for  csv in excCS
-            cs  = Cascade.interpolateIonizationCS(csv.arg, ionCS)
-            ## push!(totalCS, Basics.ScalarProperty{EmProperty}(csv.arg-width/2, cs + 1.0 / width * csv.value))
-            ## push!(totalCS, Basics.ScalarProperty{EmProperty}(csv.arg+width/2, cs + 1.0 / width *csv.value))
-            push!(totalCS, Basics.ScalarProperty{EmProperty}(csv.arg, cs + 1.0 / width *csv.value))
-            ##x @show "Excitation:", csv.arg, cs, 1.0 / width * csv.value
-            end
-    end
-    #
-    # Sort total cs due to ascending energies
-    energies   = Float64[];   for tcs in totalCS    push!(energies, tcs.arg)  end
-    enIndices  = sortperm(energies, rev=false)
-    newTotalCS = Basics.ScalarProperty{EmProperty}[]
-    for i = 1:length(enIndices)   ix = enIndices[i];    push!(newTotalCS, totalCS[ix])    end
-    #
-    Cascade.displayPhotoAbsorptionSpectrum(stdout, newTotalCS, simulation.property)
-    if  printSummary   Cascade.displayPhotoAbsorptionSpectrum(iostream, newTotalCS, simulation.property)    end
-
-    return( newTotalCS )
-end   ==#
 
 
 """
@@ -1817,11 +1634,6 @@ function sortByEnergy(levels::Array{Cascade.Level,1}; ascendingOrder::Bool=false
     newlevels = Cascade.Level[]
     for i = 1:length(enIndices)   ix = enIndices[i];    push!(newlevels, levels[ix])    end
     
-    ##x # Assign the relative occupation of the levels in this list due to the given settings
-    ##x for  pair  in  settings.initialOccupations
-    ##x     newlevels[pair[1]].relativeOcc = pair[2]
-    ##x end
-
     println("> Sort a total of $(length(newlevels)) levels, and to which all level numbers refer below. " *
             "Here all charged states are considered together in the overall cascade.")
     if printSummary     
@@ -1885,21 +1697,18 @@ function truncateEnergiesIntensities(energiesInts::Array{Tuple{Float64,Float64},
     for  enInt in energiesInts
         if  minPhotonEnergy <= enInt[1] <= maxPhotonEnergy    push!(w1EnergiesInts, enInt);     push!(we, enInt[1])   end
     end
-    ##x @show we
     # Add contributions with equal energies contributions
     w2EnergiesInts = Tuple{Float64,Float64}[];  wasConsidered = falses(length(we))
     for  (en, enInt) in  enumerate(w1EnergiesInts)
         if      wasConsidered[en]   continue
         else    
             wa = findall(isequal(enInt[1]), we);    tInt = 0. 
-            ##x @show en, wa
             for  a in wa
                 tInt = tInt + w1EnergiesInts[a][2];     wasConsidered[a] = true
             end
             push!(w2EnergiesInts, (enInt[1], tInt))
         end
     end
-    ##x @show wasConsidered
     # Finally, omit all small contributions
     newEnergiesInts = Tuple{Float64,Float64}[]
     for  enInt in w2EnergiesInts

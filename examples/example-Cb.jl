@@ -1,5 +1,5 @@
 
-println("Cb) Test of the Hfs module for HFS A,B parameters and hyperfine representation with ASF from an internally generated multiplet.")
+println("Cb) Apply & test the Hfs module for HFS A,B parameters and hyperfine representation with ASF from an internally generated multiplet.")
 
 setDefaults("unit: energy", "Hz")
 setDefaults("print summary: open", "zzz-Hfs.sum")

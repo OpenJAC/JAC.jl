@@ -1,6 +1,6 @@
 
 #
-println("Aj) Test of the Green(function) expansion.")
+println("Aj) Apply & test for a Green (-function) expansion.")
 
 if  false
     # Last successful:  unknown ...

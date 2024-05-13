@@ -3,8 +3,8 @@ println("Ga) Symbolic evaluation by means of special values & recursion relation
 #
 using SymEngine
 
-if      false    
-    # Last successful:  unknown ...
+if      false   
+    # Last successful:  13May2024
     # Use recursion relations for Wigner 3j symbols
     ja  = Basic(:ja);    jb = Basic(:jb);    jc = Basic(:jc);    ma = Basic(:ma);    mb = Basic(:mb);    mc = Basic(:mc)
     w3j = W3j(ja, jb, jc, ma, mb, mc)
@@ -13,8 +13,8 @@ if      false
     ## wa  = RacahAlgebra.recursionW3j(w3j, RacahAlgebra.RecursionW3jHalfStep())
     ## wa  = RacahAlgebra.recursionW3j(w3j, RacahAlgebra.RecursionW3jLouck())
     #
-elseif  false    
-    # Last successful:  unknown ...
+elseif  false 
+    # Last successful:  13May2024
     # Look for special value for Wigner 3j symbol 
     j   = Basic(:j);     m = Basic(:m)
     w3j = W3j(j+3//2, j, 3//2, m, -m-3//2, 3//2)
@@ -22,8 +22,8 @@ elseif  false
     rex = RacahAlgebra.equivalentForm(w3j);     @show rex
     RacahAlgebra.evaluate(rex, special=true)
     #
-elseif  false    
-    # Last successful:  unknown ...
+elseif  true    
+    # Last successful:  13May2024
     # Look for special value for Wigner 6j symbol 
     a   = Basic(:a);     b  = Basic(:b);    c  = Basic(:c)
     w6j = W6j( a, b, c, 2, c-2, b-2)

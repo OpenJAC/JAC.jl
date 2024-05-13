@@ -1,5 +1,5 @@
 
-println("Ch) Test of the DecayYield module with ASF from an internally generated multiplet.")
+println("Ch) Apply & test the RadiativeOpacity module with ASF from an internally generated multiplet.")
 
 if  true
     # Last successful:  unknown ...

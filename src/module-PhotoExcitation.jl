@@ -45,7 +45,7 @@ end
 `PhotoExcitation.Settings()`  ... 'empty' constructor for the default values of photo-excitation line computations
 """
 function Settings()
-    Settings(EmMultipole[], UseGauge[], false, false, false, false, LineSelection(), 0., 0., 0., Basics.ExpStokes())
+    Settings(EmMultipole[], UseGauge[], false, false, false, false, LineSelection(), 0., 0., 1.0e6, Basics.ExpStokes())
 end
 
 
@@ -222,7 +222,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, g
     println("")
     lines = PhotoExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    PhotoExcitation.displayLines(lines)    end
+    if  settings.printBefore    PhotoExcitation.displayLines(stdout, lines)    end
     # Calculate all amplitudes and requested properties
     newLines = PhotoExcitation.Line[]
     for  line in lines
@@ -254,7 +254,7 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
     lines = PhotoExcitation.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    # if  settings.printBefore    PhotoExcitation.displayLines(lines)    end
+    # if  settings.printBefore    PhotoExcitation.displayLines(stdout, lines)    end
     # Calculate all amplitudes and requested properties
     newLines = PhotoExcitation.Line[]
     for  (i,line)  in  enumerate(lines)
@@ -421,23 +421,23 @@ end
 
 
 """
-`PhotoExcitation.displayLines(lines::Array{PhotoExcitation.Line,1})`  
+`PhotoExcitation.displayLines(stream::IO, lines::Array{PhotoExcitation.Line,1})`  
     ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all 
         selected transitions and energies is printed but nothing is returned otherwise.
 """
-function  displayLines(lines::Array{PhotoExcitation.Line,1})
+function  displayLines(stream::IO, lines::Array{PhotoExcitation.Line,1})
     nx = 120
-    println(" ")
-    println("  Selected photo-excitation lines:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected photo-excitation lines:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
     sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
     sa = sa * TableStrings.center(14, "Energy"; na=4);              
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.flushleft(30, "List of multipoles"; na=4);             sb = sb * TableStrings.hBlank(34)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  line in lines
         sa  = "";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -451,9 +451,9 @@ function  displayLines(lines::Array{PhotoExcitation.Line,1})
         end
         ##x println("PhotoExcitation.diplayLines-ad: mpGaugeList = ", mpGaugeList)
         sa = sa * TableStrings.multipoleGaugeTupels(50, mpGaugeList)
-        println( sa )
+        println(stream, sa )
     end
-    println("  ", TableStrings.hLine(nx))
+    println(stream, "  ", TableStrings.hLine(nx))
     #
     return( nothing )
 end

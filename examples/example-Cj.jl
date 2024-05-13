@@ -1,5 +1,5 @@
 
-println("Cj) Test of the MultipolePolarizibility module with ASF from an internally generated multiplet.")
+println("Cj) Apply & test the MultipolePolarizibility module with ASF from an internally generated multiplet.")
 
 if  true
     # Last successful:  unknown ...

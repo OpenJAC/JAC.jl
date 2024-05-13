@@ -1,5 +1,5 @@
 
-println("Aa) Test of several radial e-e potentials.")
+println("Aa) Apply & test several radial e-e potentials.")
 
 if  true
     # Last successful:  unknown ... need to be adapted

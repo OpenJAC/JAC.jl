@@ -1,5 +1,5 @@
 
-println("Ca) Test of the Einstein module with ASF from an internally generated multiplet.")
+println("Ca) Apply & test the Einstein module with ASF from an internally generated multiplet.")
 
 setDefaults("print summary: open", "zzz-Einstein.sum")
 setDefaults("unit: energy", "Kayser")

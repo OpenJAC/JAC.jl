@@ -1,5 +1,5 @@
 #
-println("Ad) Test of the frequency-independent Breit interaction for an internally generated chlorine-like multiplet.")
+println("Ad) Apply & test for the frequency-independent Breit interaction for an internally generated neon multiplet.")
 
 if  true
     # Last successful:  unknown ... need to be adapted

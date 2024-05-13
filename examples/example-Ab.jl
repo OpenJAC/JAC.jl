@@ -1,5 +1,5 @@
 #
-println("Ab) Tests towards a SCF field: B-spline primitives and one-particle spectra in a local potential.")
+println("Ab) Apply & test the  a SCF field: B-spline primitives and one-particle spectra in a local potential.")
 #
 
 if  false

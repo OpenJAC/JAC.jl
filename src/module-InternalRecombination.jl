@@ -241,7 +241,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     #
     lines = InternalRecombination.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    InternalRecombination.displayLines(lines)    end  
+    if  settings.printBefore    InternalRecombination.displayLines(stdout, lines)    end  
     # Calculate all amplitudes and requested properties
     newLines = InternalRecombination.Line[]
     for  line in lines
@@ -306,16 +306,16 @@ end
 
 
 """
-`InternalRecombination.displayLines(lines::Array{InternalRecombination.Line,1})`  
+`InternalRecombination.displayLines(stream::IO, lines::Array{InternalRecombination.Line,1})`  
     ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all selected 
         transitions and energies is printed but nothing is returned otherwise.
 """
-function  displayLines(lines::Array{InternalRecombination.Line,1})
+function  displayLines(stream::IO, lines::Array{InternalRecombination.Line,1})
     nx = 150
-    println(" ")
-    println("  Selected internal-recombination lines:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected internal-recombination lines:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
     sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                                sb = sb * TableStrings.hBlank(22)
@@ -325,7 +325,7 @@ function  displayLines(lines::Array{InternalRecombination.Line,1})
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.flushleft(37, "List of subshells and total symmetries"; na=4)  
     sb = sb * TableStrings.flushleft(37, "subshell (total J^P)                  "; na=4)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -340,9 +340,9 @@ function  displayLines(lines::Array{InternalRecombination.Line,1})
             push!( subshellSymmetryList, (channel.subshell, channel.symmetry) )
         end
         sa = sa * TableStrings.subshellSymmetryTupels(80, subshellSymmetryList)
-        println( sa )
+        println(stream,  sa )
     end
-    println("  ", TableStrings.hLine(nx), "\n")
+    println(stream, "  ", TableStrings.hLine(nx), "\n")
     #
     return( nothing )
 end

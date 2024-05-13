@@ -1,5 +1,5 @@
 
-println("Dh) Test of the MultiPhotonDeExcitation module with ASF from an internally generated initial- and final-state multiplet.")
+println("Dh) Apply & test the MultiPhotonDeExcitation module with ASF from an internally generated initial- and final-state multiplet.")
 
 setDefaults("print summary: open", "zzz-MultiPhotonDeExcitation.sum")
 setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
@@ -12,6 +12,7 @@ setDefaults("unit: rate", "1/s")
 ## grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
 grid = Radial.Grid(Radial.Grid(true), rnt = 4.0e-6, h = 5.0e-2, rbox = 10.0)
 name = "two-photon absorption or emission of xenon"
+    
 
 if  true
     # Last successful:  unknown ...

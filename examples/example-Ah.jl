@@ -1,5 +1,5 @@
 #
-println("Ah) Test of a mean-field basis, mean-field multiplet and configuration-interaction (CI) expansion.")
+println("Ah) Apply & test a mean-field basis, mean-field multiplets as well as a configuration-interaction (CI) expansions.")
 
 if  true
     # Last successful:  unknown ...

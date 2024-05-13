@@ -135,7 +135,6 @@ function  computeAmplitudesProperties(pathway::PhotoExcitationFluores.Pathway, g
         amplitude   = PhotoEmission.amplitude("emission", fChannel.multipole, fChannel.gauge, pathway.fluorEnergy, 
                                                 pathway.finalLevel, pathway.intermediateLevel, grid)
         push!( newfChannels, PhotoEmission.Channel( fChannel.multipole, fChannel.gauge, amplitude))
-        ##x @show  "aa", amplitude
     end
     crossSection = EmProperty(-1., -1.)
     pathway = PhotoExcitationFluores.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, pathway.excitEnergy, 
@@ -171,11 +170,6 @@ function  computePhotonDm(pathway::PhotoExcitationFluores.Pathway, settings::Pho
                                                     AngularMomentum.ClebschGordan(L, lambda, Lp, -lambdap, k, -qp)                            * 
                                                     AngularMomentum.Wigner_6j(L, Lp, k, Je, Je, Jf)                                           *
                                                     ch.amplitude * conj(chp.amplitude)
-                            ##x @show rho_kq, ch.amplitude, chp.amplitude
-                            ##x @show AngularMomentum.Wigner_DFunction(k,-q,qp, solidAngle.phi, solidAngle.theta, 0.0)
-                            ##x @show im^(Lp + pp  - L - p) * lambda^p * lambdap^pp * sqrt((2L+1)*(2Lp+1))
-                            ##x @show AngularMomentum.ClebschGordan(L, lambda, Lp, -lambdap, k, -qp)  
-                            ##x @show AngularMomentum.Wigner_6j(L, Lp, k, Je, Je, Jf)
                         end
                     end
                 end
@@ -220,9 +214,7 @@ function  computePathways(finalMultiplet::Multiplet, intermediateMultiplet::Mult
     if  settings.printBefore    PhotoExcitationFluores.displayPathways(stdout, pathways, settings)    end
     # Calculate all amplitudes and requested properties
     newPathways = PhotoExcitationFluores.Pathway[]
-    ##x println("computePathways: NO-pathwayS = $(length(pathways)) ")
     for  pathway in pathways
-        ##x println("computePathways: pathway = $pathway ")
         newPathway = PhotoExcitationFluores.computeAmplitudesProperties(pathway, grid, settings) 
         push!( newPathways, newPathway)
     end

@@ -205,7 +205,7 @@ end
 function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                         settings::PhotoIonization.Settings; printout::Bool=false)
     nChannels    = PhotoIonization.Channel[];   nxChannels    = PhotoIonization.Channel[];   
-    contSettings = Continuum.Settings(false, nrContinuum);      csC = 0.;    csB = 0.;    dtC = 0.;    dtB = 0.
+    contSettings = Continuum.Settings(false, nrContinuum);      csC = csB = dtC = dtB = 0.
     for channel in line.channels
         newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
         newfLevel = Basics.generateLevelWithSymmetryReducedBasis(line.finalLevel, newiLevel.basis.subshells)
@@ -263,7 +263,7 @@ end
         a line::PhotoIonization.Line is returned for which the amplitudes and properties are now evaluated.
 """
 function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, settings::PlasmaShift.PhotoSettings)
-    newChannels = PhotoIonization.Channel[];;   contSettings = Continuum.Settings(false, grid.NoPoints-50);    csC = 0.;    csB = 0.
+    newChannels = PhotoIonization.Channel[];;   contSettings = Continuum.Settings(false, grid.NoPoints-50);    csC = csB = 0.
     for channel in line.channels
         newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
         newiLevel = Basics.generateLevelWithExtraSubshell(Subshell(101, channel.kappa), newiLevel)
@@ -299,7 +299,7 @@ end
         These (gauge-dependent) beta parameters are set to -9., if no amplitudes are calculated for the given gauge.
 """
 function  computeAngularBeta(iLevel::Level, fLevel::Level, channels::Array{PhotoIonization.Channel,1})
-    wnC = 0.;    wnB = 0.;    waC = 0.;    waB = 0.
+    wnC = wnB = waC = waB = 0.
     for  ch in channels    
         if  ch.multipole != E1   continue    end      # These beta parameters are valid only in E1 approximation
         if       ch.gauge == Basics.Coulomb     wnC = wnC + conj(ch.amplitude) * ch.amplitude   
@@ -352,7 +352,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     println("")
     lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    PhotoIonization.displayLines(lines)    end
+    if  settings.printBefore    PhotoIonization.displayLines(stdout, lines)    end
     # Determine maximum energy and check for consistency of the grid
     maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -391,7 +391,7 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
     
     lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    # if  settings.printBefore    PhotoIonization.displayLines(lines)    end  
+    # if  settings.printBefore    PhotoIonization.displayLines(stdout, lines)    end  
     # Determine maximum energy and check for consistency of the grid
     maxEnergy = 0.;   for  en in settings.photonEnergies     maxEnergy = max(maxEnergy, Defaults.convertUnits("energy: to atomic", en))   end
                         for  en in settings.electronEnergies   maxEnergy = max(maxEnergy, Defaults.convertUnits("energy: to atomic", en))   end
@@ -433,7 +433,7 @@ function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multip
     
     lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, photoSettings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    PhotoIonization.displayLines(lines)    end
+    if  settings.printBefore    PhotoIonization.displayLines(stdout, lines)    end
     # Calculate all amplitudes and requested properties
     newLines = PhotoIonization.Line[]
     for  line in lines
@@ -674,7 +674,8 @@ end
         is returned. Apart from the level specification, all physical properties are set to zero during the initialization process.
 """
 function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::PhotoIonization.Settings)
-    lines = PhotoIonization.Line[]
+    lines    = PhotoIonization.Line[]
+    shift_au = Defaults.convertUnits("energy: to atomic", settings.freeElectronShift)
     for  iLevel  in  initialMultiplet.levels
         for  fLevel  in  finalMultiplet.levels
             if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
@@ -682,7 +683,6 @@ function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet,
                 for  omega in settings.photonEnergies
                     # Photon energies are still in 'pre-defined' units; convert to Hartree
                     omega_au = Defaults.convertUnits("energy: to atomic", omega)
-                    shift_au = Defaults.convertUnits("energy: to atomic", settings.freeElectronShift)
                     energy   = omega_au - (fLevel.energy - iLevel.energy) + shift_au
                     if  energy < 0.    continue   end  
                     channels = PhotoIonization.determineChannels(fLevel, iLevel, settings) 
@@ -693,12 +693,11 @@ function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet,
                 for  en in settings.electronEnergies
                     # Electron energies are still in 'pre-defined' units; convert to Hartree
                     energy_au = Defaults.convertUnits("energy: to atomic", en) + shift_au
-                    shift_au  = Defaults.convertUnits("energy: to atomic", settings.freeElectronShift)
                     omega     = energy_au + (fLevel.energy - iLevel.energy)
                     if  energy_au < 0.    continue   end  
                     channels = PhotoIonization.determineChannels(fLevel, iLevel, settings) 
                     push!( lines, PhotoIonization.Line(iLevel, fLevel, energy_au, omega, EmProperty(0.), EmProperty(0.), 
-                                                        EmProperty(0.), channels) )
+                                                        EmProperty(0.), EmProperty(0.), channels) )
                 end
             end
         end
@@ -789,16 +788,16 @@ end
 
 
 """
-`PhotoIonization.displayLines(lines::Array{PhotoIonization.Line,1})`  
+`PhotoIonization.displayLines(stream::IO, lines::Array{PhotoIonization.Line,1})`  
     ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all selected 
         transitions and energies is printed but nothing is returned otherwise.
 """
-function  displayLines(lines::Array{PhotoIonization.Line,1})
+function  displayLines(stream::IO, lines::Array{PhotoIonization.Line,1})
     nx = 175
-    println(" ")
-    println("  Selected photoionization lines:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected photoionization lines:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"   ; na=0);                       sb = sb * TableStrings.hBlank(18)
     sa = sa * TableStrings.center(18, "i--J^P--f"   ; na=2);                       sb = sb * TableStrings.hBlank(20)
@@ -810,7 +809,7 @@ function  displayLines(lines::Array{PhotoIonization.Line,1})
     sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
     sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     nchannels = 0
     for  line in lines
@@ -830,13 +829,13 @@ function  displayLines(lines::Array{PhotoIonization.Line,1})
         end
         ##x println("PhotoIonization-diplayLines-ad: kappaMultipoleSymmetryList = ", kappaMultipoleSymmetryList)
         wa = TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
-        sb = sa * wa[1];    println( sb )  
+        sb = sa * wa[1];    println(stream,  sb )  
         for  i = 2:length(wa)
-            sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
+            sb = TableStrings.hBlank( length(sa) ) * wa[i];    println(stream,  sb )
         end
     end
-    println("  ", TableStrings.hLine(nx), "\n")
-    println("  A total of $nchannels channels need to be calculated. \n")
+    println(stream, "  ", TableStrings.hLine(nx), "\n")
+    println(stream, "  A total of $nchannels channels need to be calculated. \n")
     #
     return( nothing )
 end

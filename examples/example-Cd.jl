@@ -1,5 +1,5 @@
 
-println("Cd) Test of the LandeZeeman module with ASF from an internally generated multiplet.")
+println("Cd) Apply & test the LandeZeeman module with ASF from an internally generated multiplet.")
 
 if  true
     # Last successful:  unknown ...

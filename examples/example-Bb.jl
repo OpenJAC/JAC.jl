@@ -1,6 +1,6 @@
 
 #
-println("Bb) Tests of the parity non-conservation, Schiff moment and anapole moment amplitudes.")
+println("Bb) Apply & test the parity non-conservation, Schiff moment and anapole moment amplitudes.")
 
 if  true
     # Last successful:  unknown ...

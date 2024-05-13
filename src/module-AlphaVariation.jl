@@ -81,7 +81,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Nuclear.Model, grid::
     #
     outcomes = AlphaVariation.determineOutcomes(multiplet, settings)
     # Display all selected levels before the computations start
-    if  settings.printBefore    AlphaVariation.displayOutcomes(outcomes)    end
+    if  settings.printBefore    AlphaVariation.displayOutcomes(stdout,outcomes)    end
     # Calculate all amplitudes and requested properties
     newOutcomes = AlphaVariation.Outcome[]
     for  outcome in outcomes
@@ -118,10 +118,10 @@ end
 
 
 """
-`AlphaVariation.displayOutcomes(outcomes::Array{AlphaVariation.Outcome,1})`  ... to display a list of levels that have been selected 
+`AlphaVariation.displayOutcomes(stream::IO, outcomes::Array{AlphaVariation.Outcome,1})`  ... to display a list of levels that have been selected 
         for the computations. A small neat table of all selected levels and their energies is printed but nothing is returned otherwise.
 """
-function  displayOutcomes(outcomes::Array{AlphaVariation.Outcome,1})
+function  displayOutcomes(stream::IO, outcomes::Array{AlphaVariation.Outcome,1})
     nx = 43
     println(" ")
     println("  Selected AlphaVariation levels:")
@@ -132,16 +132,16 @@ function  displayOutcomes(outcomes::Array{AlphaVariation.Outcome,1})
     sa = sa * TableStrings.center(10, "J^P";   na=4);                             sb = sb * TableStrings.hBlank(14)
     sa = sa * TableStrings.center(14, "Energy"; na=4);              
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #  
     for  outcome in outcomes
         sa  = "  ";    sym = LevelSymmetry( outcome.level.J, outcome.level.parity)
         sa = sa * TableStrings.center(10, TableStrings.level(outcome.level.index); na=2)
         sa = sa * TableStrings.center(10, string(sym); na=4)
         sa = sa * @sprintf("%.8e", Defaults.convertUnits("energy: from atomic", outcome.level.energy)) * "    "
-        println( sa )
+        println(stream,  sa )
     end
-    println("  ", TableStrings.hLine(nx))
+    println(stream, "  ", TableStrings.hLine(nx))
     #
     return( nothing )
 end

@@ -1,5 +1,5 @@
 
-println("Ce) Test of the FormFactor module with ASF from an internally generated multiplet.")
+println("Ce) Apply & test the FormFactor module with ASF from an internally generated multiplet.")
 
 if  true
     # Last successful:  unknown ...

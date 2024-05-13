@@ -76,7 +76,7 @@ function Settings(set::PhotoEmission.Settings;
     if  maximumPhotonEnergy == nothing   maximumPhotonEnergyx = set.maximumPhotonEnergy     else  maximumPhotonEnergyx = maximumPhotonEnergy   end 
     
     Settings( multipolesx, gaugesx, calcAnisotropyx, printBeforex, corePolarizationx, lineSelectionx, 
-                photonEnergyShiftx, mimimumPhotonEnergyx, maximumPhotonEnergyx)
+              photonEnergyShiftx, mimimumPhotonEnergyx, maximumPhotonEnergyx)
 end
 
 
@@ -299,7 +299,7 @@ end
 """
 function  computeAmplitudesProperties(line::PhotoEmission.Line, grid::Radial.Grid, settings::PhotoEmission.Settings; printout::Bool=true)
     global JAC_counter
-    newChannels = PhotoEmission.Channel[];    rateC = 0.;    rateB = 0.
+    newChannels = PhotoEmission.Channel[];    rateC = rateB = 0.
     for channel in line.channels
         #
         if  settings.corePolarization.doApply
@@ -316,9 +316,6 @@ function  computeAmplitudesProperties(line::PhotoEmission.Line, grid::Radial.Gri
         end
         #
         push!( newChannels, PhotoEmission.Channel( channel.multipole, channel.gauge, amplitude) )
-        ##x # Multiply with the multipolarity factors to keep different multipoles on the same footings
-        ##x mp        = channel.multipole
-        ##x amplitude = amplitude * sqrt( (2mp.L+1)*(mp.L+1)/mp.L )
         #
         if       channel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2
         elseif   channel.gauge == Basics.Babushkin   rateB = rateB + abs(amplitude)^2
@@ -327,8 +324,6 @@ function  computeAmplitudesProperties(line::PhotoEmission.Line, grid::Radial.Gri
     end
     #     
     # Calculate the photonrate and angular beta if requested 
-    ##x wa = 2.0pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) 
-    ##x                                         * (Basics.twice(line.finalLevel.J) + 1)
     wa = 8pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.J) + 1) 
     photonrate  = EmProperty(wa * rateC, wa * rateB)    
     angularBeta = EmProperty(-9., -9.)
@@ -352,10 +347,9 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, g
     printstyled("PhotoEmission.computeLines(): The computation of the transition amplitudes and properties starts now ... \n", color=:light_green)
     printstyled("-------------------------------------------------------------------------------------------------------- \n", color=:light_green)
     println("")
-    ##x println("basis = $(finalMultiplet.levels[1].basis) ")
     lines = PhotoEmission.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    PhotoEmission.displayLines(lines)    end
+    if  settings.printBefore    PhotoEmission.displayLines(stdout, lines)    end
     # Calculate all amplitudes and requested properties
     newLines = PhotoEmission.Line[]
     for  line in lines
@@ -369,8 +363,8 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, g
     #
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     if  printSummary   PhotoEmission.displayRates(iostream, newLines, settings)       
-                        PhotoEmission.displayAnisotropies(stdout, newLines, settings)
-                        PhotoEmission.displayLifetimes(iostream, newLines, settings)
+                       PhotoEmission.displayAnisotropies(stdout, newLines, settings)
+                       PhotoEmission.displayLifetimes(iostream, newLines, settings)
     end
     #
     if    output    return( newLines )
@@ -393,7 +387,7 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
     lines = PhotoEmission.determineLines(finalMultiplet, initialMultiplet, settings)
     ## Display all selected lines before the computations start
-    ## if  settings.printBefore    PhotoEmission.displayLines(lines)    end
+    ## if  settings.printBefore    PhotoEmission.displayLines(stdout, lines)    end
     # Calculate all amplitudes and requested properties
     newLines = PhotoEmission.Line[]
     for  (i,line)  in  enumerate(lines)
@@ -490,8 +484,8 @@ function  displayAnisotropies(stream::IO, lines::Array{PhotoEmission.Line,1}, se
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  line in lines
-        f2Coulomb   = 0.0im;    f2Babushkin   = 0.0im;    f4Coulomb = 0.0im;    f4Babushkin = 0.0im;   mpList = EmMultipole[]
-        normCoulomb = 0.;       normBabushkin = 0.
+        f2Coulomb   = f2Babushkin =f4Coulomb = f4Babushkin = 0.0im;   mpList = EmMultipole[]
+        normCoulomb = normBabushkin = 0.
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
                         fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
         sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
@@ -587,7 +581,7 @@ function  displayLifetimes(stream::IO, lines::Array{PhotoEmission.Line,1}, setti
     # Determine the lifetime (in a.u.) of the selected initial levels
     irates = Basics.EmProperty[]
     for  ii in  ilevels
-        waCoulomb = 0.;    waBabushkin = 0.
+        waCoulomb = waBabushkin = 0.
         for  i = 1:length(lines)
             ##x @show  ii, lines[i].initialLevel.index
             if   lines[i].initialLevel.index == ii    
@@ -635,23 +629,23 @@ end
 
 
 """
-`PhotoEmission.displayLines(lines::Array{PhotoEmission.Line,1})`  
+`PhotoEmission.displayLines(stream::IO, lines::Array{PhotoEmission.Line,1})`  
     ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all 
         selected transitions and energies is printed but nothing is returned otherwise.
 """
-function  displayLines(lines::Array{PhotoEmission.Line,1})
+function  displayLines(stream::IO, lines::Array{PhotoEmission.Line,1})
     nx = 95
-    println(" ")
-    println("  Selected radiative lines:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected radiative lines:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
     sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
     sa = sa * TableStrings.center(14, "Energy"; na=4);              
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.flushleft(30, "List of multipoles"; na=4);             sb = sb * TableStrings.hBlank(34)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -664,10 +658,10 @@ function  displayLines(lines::Array{PhotoEmission.Line,1})
             push!( mpGaugeList, (line.channels[i].multipole, line.channels[i].gauge) )
         end
         sa = sa * TableStrings.multipoleGaugeTupels(50, mpGaugeList)
-        println( sa )
+        println(stream,  sa )
     end
-    println("  ", TableStrings.hLine(nx))
-    println(" ")
+    println(stream, "  ", TableStrings.hLine(nx))
+    println(stream, " ")
     #
     return( nothing )
 end

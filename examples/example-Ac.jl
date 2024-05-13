@@ -1,5 +1,5 @@
 #
-println("Ac) Test of the CI part for an internally generated neon multiplet without Breit interaction.")
+println("Ac) Apply & test the CI part for an internally generated neon multiplet without Breit interaction.")
 
 if  true
     # Last successful:  unknown ... need to be adapted

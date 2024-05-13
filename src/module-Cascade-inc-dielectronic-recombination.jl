@@ -12,7 +12,7 @@
 function computeSteps(scheme::Cascade.DielectronicRecombinationScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})
     linesA = AutoIonization.Line[];    linesR = PhotoEmission.Line[];    cOrbitals = Dict{Subshell, Orbital}()
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    nt = 0;   st = 0;   previousMeanEn = 0.
+    nt = st = 0;   previousMeanEn = 0.
     for  step  in  stepList
         st = st + 1
         nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels)

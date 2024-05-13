@@ -165,7 +165,7 @@ function  computeLines(multiplet::Multiplet, grid::Radial.Grid, settings::Einste
     println("")
     lines = Einstein.determineLines(multiplet, settings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    Einstein.displayLines(lines)    end
+    if  settings.printBefore    Einstein.displayLines(stdout, lines)    end
     # Calculate all amplitudes and requested properties
     newLines = Einstein.Line[]
     for  line in lines
@@ -191,7 +191,7 @@ end
 """
 function  computeAmplitudesProperties(line::Einstein.Line, grid::Radial.Grid, settings::Einstein.Settings)
     global JAC_counter
-    newChannels = Einstein.Channel[];    rateC = 0.;    rateB = 0.
+    newChannels = Einstein.Channel[];    rateC = rateB = 0.
     for channel in line.channels
         #
         amplitude = PhotoEmission.amplitude("emission", channel.multipole, channel.gauge, line.omega, line.finalLevel, line.initialLevel, grid)
@@ -307,7 +307,7 @@ function  displayLifetimes(stream::IO, lines::Array{Einstein.Line,1})
     # Determine the lifetime (in a.u.) of the selected initial levels
     irates = Basics.EmProperty[]
     for  ii in  ilevels
-        waCoulomb = 0.;    waBabushkin = 0.
+        waCoulomb = waBabushkin = 0.
         for  i = 1:length(lines)
             if   lines[i].initialLevel.index == ii    
                 waCoulomb   = waCoulomb   + lines[i].photonRate.Coulomb
@@ -353,23 +353,23 @@ end
 
 
 """
-`Einstein.displayLines(lines::Array{Einstein.Line,1})`  
+`Einstein.displayLines(stream::IO, lines::Array{Einstein.Line,1})`  
     ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of 
         all selected transitions and energies is printed but nothing is returned otherwise.
 """
-function  displayLines(lines::Array{Einstein.Line,1})
+function  displayLines(stream::IO, lines::Array{Einstein.Line,1})
     nx = 115
-    println(" ")
-    println("  Selected Einstein lines:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected Einstein lines:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
     sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
     sa = sa * TableStrings.center(14, "Energy"; na=4);              
     sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
     sa = sa * TableStrings.flushleft(30, "List of multipoles"; na=4);             sb = sb * TableStrings.hBlank(34)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -382,10 +382,10 @@ function  displayLines(lines::Array{Einstein.Line,1})
             push!( mpGaugeList, (line.channels[i].multipole, line.channels[i].gauge) )
         end
         sa = sa * TableStrings.multipoleGaugeTupels(50, mpGaugeList)
-        println( sa )
+        println(stream,  sa )
     end
-    println("  ", TableStrings.hLine(nx))
-    println(" ")
+    println(stream, "  ", TableStrings.hLine(nx))
+    println(stream, " ")
     #
     return( nothing )
 end

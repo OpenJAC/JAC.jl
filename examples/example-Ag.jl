@@ -1,5 +1,5 @@
 #
-println("Ag) Test of the jj-LS transformation of levels from a given multiplet.")
+println("Ag) Apply & test the jj-LS transformation of levels from a given multiplet.")
 
 if  true
     # Last successful:  unknown 

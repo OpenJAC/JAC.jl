@@ -327,9 +327,6 @@ function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nucl
         push!(newSharings, PhotoDoubleIonization.Sharing(sharing.omega, sharing.epsilon1, sharing.epsilon2, sharing.weight, dcs, newChannels) )
     end
     Ji2 = Basics.twice(line.initialLevel.J)
-    ##x csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") * line.photonEnergy / (2*(Ji2 + 1))
-    ##x csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
-    ##x csFactor     = 4 * pi^2 / Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
     csFactor     = 8 * pi^3 / Defaults.getDefaults("alpha") / line.photonEnergy
     csFactor     = csFactor / 2.   # Not fully clear, arises likely from the Rydberg normalization
     ##  Correct for energy normalization 
@@ -361,7 +358,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     #
     lines = PhotoDoubleIonization.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    PhotoDoubleIonization.displayLines(lines)    end
+    if  settings.printBefore    PhotoDoubleIonization.displayLines(stdout, lines)    end
     # Determine maximum energy and check for consistency of the grid
     maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -439,7 +436,6 @@ function determineSharingsAndChannels(finalLevel::Level, initialLevel::Level, om
                         kappaList = AngularMomentum.allowedKappaSymmetries(symt, symx)
                         for  kappa in kappaList
                             for  gauge in settings.gauges
-                                ##x @show symx, mp, gauge, tSymmetries, symt, kappaList, kappa
                                 # Include further restrictions if appropriate
                                 if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
                                     push!(channels, PhotoDoubleIonization.Channel(mp, Basics.Coulomb,   subsh, symx, kappa, symt, 0., Complex(0.)) )
@@ -461,24 +457,24 @@ end
 
 
 """
-`PhotoDoubleIonization.displayLines(lines::Array{PhotoDoubleIonization.Line,1})`  
+`PhotoDoubleIonization.displayLines(iostream::IO, lines::Array{PhotoDoubleIonization.Line,1})`  
     ... to display a list of lines, sharings and channels that have been selected due to the prior settings. A neat table 
         of all selected transitions and energies is printed but nothing is returned otherwise.
 """
-function  displayLines(lines::Array{PhotoDoubleIonization.Line,1})
+function  displayLines(iostream::IO, lines::Array{PhotoDoubleIonization.Line,1})
     #
     # First, print lines and sharings
     nx = 94
-    println(" ")
-    println("  Selected photo-double ionization lines & sharings:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected photo-double ionization lines & sharings:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
     sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
     sa = sa * TableStrings.flushleft(54, "Energies (all in )" * TableStrings.inUnits("energy") * ")"; na=5);              
     sb = sb * TableStrings.flushleft(54, "  i -- f         omega        epsilon_1    epsilon_2"; na=5)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -493,28 +489,28 @@ function  displayLines(lines::Array{PhotoDoubleIonization.Line,1})
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.omega))    * "    "
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon1)) * "   "
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon2)) * "   "
-            println( sb )
+            println(stream,  sb )
         end
     end
-    println("  ", TableStrings.hLine(nx))
+    println(stream, "  ", TableStrings.hLine(nx))
     #
     #
     # Second, print lines and channles
     nx = 130
-    println(" ")
-    println("  Selected photo-double ionization lines & channels:   ... channels are shown only for the first sharing")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected photo-double ionization lines & channels:   ... channels are shown only for the first sharing")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"; na=0);                         sb = sb * TableStrings.hBlank(18)
     sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
     sa = sa * TableStrings.flushleft(100, "Channels (all energies in " * TableStrings.inUnits("energy") * ")" ; na=5);              
     sb = sb * TableStrings.flushleft(100, "Multipole  Gauge      quasi-Subshell   J^P_x   kappa   -->    J^P_t"; na=5)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #
     for  line in lines
         sa  = "";      isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
-                        fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
+                       fsym = LevelSymmetry( line.finalLevel.J,   line.finalLevel.parity)
         sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=2)
         sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
         for (ic, ch) in enumerate(line.sharings[1].channels)
@@ -523,10 +519,10 @@ function  displayLines(lines::Array{PhotoDoubleIonization.Line,1})
             sb = sb * string(ch.quasiSubshell) * "       " * string(ch.xSymmetry) * "   "
             sb = sb * string(Subshell(1,ch.kappa))[end-4:end] * "   -->    "
             sb = sb * string(ch.tSymmetry)
-            println( sb )
+            println(stream,  sb )
         end
     end
-    println("  ", TableStrings.hLine(nx))
+    println(stream, "  ", TableStrings.hLine(nx))
     #
     return( nothing )
 end

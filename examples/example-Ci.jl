@@ -1,5 +1,5 @@
 
-println("Ci) Test of the AlphaVariation module with ASF from an internally generated multiplet.")
+println("Ci) Apply & test the AlphaVariation module with ASF from an internally generated multiplet.")
 
 if  true
     # Last successful:  unknown ...

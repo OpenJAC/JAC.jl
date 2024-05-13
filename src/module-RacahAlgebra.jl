@@ -294,7 +294,6 @@ end
 
 # `Base.show(io::IO, y::Ylm)`  ... prepares a proper printout of the variable  ylm::Ylm.
 function Base.show(io::IO, y::Ylm)
-    ##x if  y.star   sa = "^*"      else   sa = ""    end
     print(io, "Y_{$(y.l), $(y.m)} ($(y.theta), $(y.phi))")
 end
 
@@ -338,7 +337,6 @@ end
 
 # `Base.show(io::IO, d::Djpq)`  ... prepares a proper printout of the variable  d::Djpq.
 function Base.show(io::IO, d::Djpq)
-    ##x if  y.star   sa = "^*"      else   sa = ""    end
     print(io, "d^($(d.j))_{$(d.p), $(d.q)} ($(d.beta))")
 end
 
@@ -686,7 +684,6 @@ end
 function equivalentForm(rex::RacahAlgebra.RacahExpression; regge::Bool=false)
     newRex = rex;   newPhase = newRex.phase;    newW3js  = W3j[] 
     # Generate random equivalent forms of all Wigner 3j symbols
-    ##x println("$(newRex)   $(newRex.w3js)")
     for (iaW3j, aW3j)  in  enumerate(newRex.w3js)
         xaRex    = RacahAlgebra.equivalentForm(aW3j, regge=regge)
         newPhase = newPhase + xaRex.phase
@@ -796,11 +793,8 @@ function  evaluate(rx::RacahExpression; special::Bool=false)
             end
         end
     else
-        ##x newrex = rex
-        ##x @show "evaluate:", rex
         newrex = RacahExpression( rex.summations, rex.integrals, RacahAlgebra.purifyPhase(rex.phase), rex.weight, 
                                     rex.deltas, rex.triangles, rex.w3js, rex.w6js, rex.w9js, rex.ylms, rex.djpqs )
-        ##x @show "evaluate:", newrex
         while true
             cont = false
             wa = RacahAlgebra.sumRulesForTwoW6jOneW9j(newrex);       if    wa[1]  newrex = wa[2];   cont = true  end

@@ -11,7 +11,7 @@ using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Hydrogenic
                 ..ManyElectron, ..PhotoEmission, ..Radial, ..Nuclear, ..TableStrings
 
 """
-`struct  Settings  <:  AbstractProcessSettings` ... defines a type for the details and parameters of computing photo recombination lines.
+`struct  PhotoRecombination.Settings  <:  AbstractProcessSettings` ... defines a type for the details and parameters of computing photo recombination lines.
 
     + multipoles          ::Array{EmMultipole}  ... Multipoles of the radiation field that are to be included.
     + gauges              ::Array{UseGauge}     ... Gauges to be included into the computations.
@@ -39,6 +39,40 @@ struct Settings  <:  AbstractProcessSettings
     maxKappa              ::Int64 
     lineSelection         ::LineSelection 
 end 
+
+
+"""
+`PhotoRecombination.Settings(set::PhotoRecombination..Settings;`
+
+        multipoles=..,          gauges=..,              electronEnergies=..,          ionEnergies=..,     
+        useIonEnergies=..,      calcTotalCs..,          calcAnisotropy=..,            calcTensors=..,             
+        printBefore=..,         maxKappa=..,            lineSelection=..)
+                    
+    ... constructor for modifying the given PhotoRecombination..Settings by 'overwriting' the previously selected parameters.
+"""
+function Settings(set::PhotoRecombination.Settings;    
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
+    electronEnergies::Union{Nothing,Array{Float64,1}}=nothing,              ionEnergies::Union{Nothing,Array{Float64,1}}=nothing,       
+    useIonEnergies::Union{Nothing,Bool}=nothing,                            calcTotalCs::Union{Nothing,Bool}=nothing, 
+    calcAnisotropy::Union{Nothing,Bool}=nothing,                            calcTensors::Union{Nothing,Bool}=nothing,   
+    printBefore::Union{Nothing,Bool}=nothing,                               maxKappa::Union{Nothing,Int64}=nothing, 
+    lineSelection::Union{Nothing,LineSelection}=nothing)  
+    
+    if  multipoles        == nothing   multipolesx        = set.multipoles        else  multipolesx        = multipoles         end 
+    if  gauges            == nothing   gaugesx            = set.gauges            else  gaugesx            = gauges             end 
+    if  electronEnergies  == nothing   electronEnergiesx  = set.electronEnergies  else  electronEnergiesx  = electronEnergies   end 
+    if  ionEnergies       == nothing   ionEnergiesx       = set.ionEnergies       else  ionEnergiesx       = ionEnergies        end 
+    if  useIonEnergies    == nothing   useIonEnergiesx    = set.useIonEnergies    else  useIonEnergiesx    = useIonEnergies     end 
+    if  calcTotalCs       == nothing   calcTotalCsx       = set.calcTotalCs       else  calcTotalCsx       = calcTotalCs        end 
+    if  calcAnisotropy    == nothing   calcAnisotropyx    = set.calcAnisotropy    else  calcAnisotropyx    = calcAnisotropy     end 
+    if  calcTensors       == nothing   calcTensorsx       = set.calcTensors       else  calcTensorsx       = calcTensors        end 
+    if  printBefore       == nothing   printBeforex       = set.printBefore       else  printBeforex       = printBefore        end 
+    if  maxKappa          == nothing   maxKappax          = set.maxKappa          else  maxKappax          = maxKappa           end 
+    if  lineSelection     == nothing   lineSelectionx     = set.lineSelection     else  lineSelectionx     = lineSelection      end 
+
+    Settings( multipolesx, gaugesx, electronEnergiesx, ionEnergiesx, useIonEnergiesx, calcTotalCsx, calcAnisotropyx, 
+              calcTensorsx, printBeforex, maxKappax, lineSelectionx)
+end
 
 
 """
@@ -278,19 +312,16 @@ function computeCrossSectionBareIon(energy_eV::Float64, subshell::Subshell, mult
             if  kappa == 0    continue    end
             jc = AngularMomentum.kappa_j(kappa);   lc = Basics.subshell_l(Subshell(101,kappa))
             if  iseven(lc)   symc = LevelSymmetry( jc, Basics.plus )   else   symc = LevelSymmetry( jc, Basics.minus ) end
-            ##x @show symf, multipole, symc, AngularMomentum.isAllowedMultipole(symf, multipole, symc)
             # Determine whether a non-zero amplitude is possible for the given multipole
             if  AngularMomentum.isAllowedMultipole(symf, multipole, symc)
                 # Generate continuum orbital for given energy and kappa
                 cOrbital, phase, normFactor = Continuum.generateOrbitalLocalPotential(energy, 
                                                                         Subshell(101,kappa), potential, contSettings)
-                ##x @show phase, normFactor, multipole, gauge, omega
                 if multipole in  [E1, E2]  localGauge = gauge  elseif  multipole in  [M1, M2]  localGauge = Basics.Magnetic   end
                 amplitude = InteractionStrength.MabEmissionJohnsony(multipole, localGauge, omega, fOrbital, cOrbital, grid) / 
                             Defaults.getDefaults("alpha")
                 @show amplitude,  symc,  localGauge, multipole
                 ## amplitude = InteractionStrength.MbaEmissionCheng(multipole, gauge, omega, fOrbital, cOrbital, grid) 
-                ##x @show  subshell, multipole, Subshell(101,kappa), amplitude, cs
                 csa = csa + conj(amplitude) * amplitude
             end
         end          
@@ -317,13 +348,11 @@ function computeCrossSectionForMultipoles(multipoles::Array{EmMultipole,1}, line
     for channel  in  line.channels
         if  !(channel.multipole  in  multipoles)     continue                 end
         amplitude = channel.amplitude
-        ##x @show  channel.multipole, channel.symmetry, abs(channel.amplitude)^2
         if       channel.gauge == Basics.Coulomb     csC = csC + abs(amplitude)^2
         elseif   channel.gauge == Basics.Babushkin   csB = csB + abs(amplitude)^2
         elseif   channel.gauge == Basics.Magnetic    csB = csB + abs(amplitude)^2;   csC = csC + abs(amplitude)^2
         end
     end
-    ##x Ji2 = Basics.twice(line.initialLevel.J)
     ## csFactor     = 8 * pi^3 * Defaults.getDefaults("alpha") * line.photonEnergy / (Basics.twice(line.finalLevel.J)+1) /
     ##                2. / line.electronEnergy
     ## crossSection = EmProperty(csFactor * csC, csFactor * csB)
@@ -351,7 +380,7 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     #
     lines = PhotoRecombination.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    PhotoRecombination.displayLines(lines)    end
+    if  settings.printBefore    PhotoRecombination.displayLines(stdout, lines)    end
     # Determine maximum energy and check for consistency of the grid
     maxEnergy = 0.;   for  line in lines   maxEnergy = max(maxEnergy, line.electronEnergy)   end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
@@ -389,7 +418,7 @@ function  computeLinesWithContinuumOrbital(finalMultiplet::Multiplet, initialMul
     #
     lines = PhotoRecombination.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
-    if  settings.printBefore    PhotoRecombination.displayLines(lines)    end
+    if  settings.printBefore    PhotoRecombination.displayLines(stdout, lines)    end
     # Determine maximum energy and check for consistency of the grid
     newLines = PhotoRecombination.Line[]
     for  (i,line)  in  enumerate(lines)
@@ -404,7 +433,6 @@ function  computeLinesWithContinuumOrbital(finalMultiplet::Multiplet, initialMul
             ie = 0;     
             for  it = 1:length(energyGrid.t)   if   abs( (energyGrid.t[it]-en)/en ) < 0.0001   ie = it;   break   end   end
             if  ie == 0   stop("a")     end
-            ##x @show  ie, en, energyGrid.t 
             cSubsh     = Subshell(100+ie, channel.kappa)
             newfLevel  = Basics.generateLevelWithExtraSubshell(cSubsh, newfLevel)
             cOrbital   = cOrbitals[cSubsh];      phase = 0.
@@ -643,16 +671,16 @@ end
 
 
 """
-`PhotoRecombination.displayLines(lines::Array{PhotoRecombination.Line,1})`  
+`PhotoRecombination.displayLines(stream::IO, lines::Array{PhotoRecombination.Line,1})`  
     ... to display a list of lines and channels that have been selected due to the prior settings. A neat table of all selected 
         transitions and energies is printed but nothing is returned otherwise.
 """
-function  displayLines(lines::Array{PhotoRecombination.Line,1})
+function  displayLines(stream::IO, lines::Array{PhotoRecombination.Line,1})
     nx = 181
-    println(" ")
-    println("  Selected photorecombination lines:")
-    println(" ")
-    println("  ", TableStrings.hLine(nx))
+    println(stream, " ")
+    println(stream, "  Selected photorecombination lines:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(18, "i-level-f"; na=2);                                sb = sb * TableStrings.hBlank(20)
     sa = sa * TableStrings.center(18, "i--J^P--f"; na=4);                                sb = sb * TableStrings.hBlank(22)
@@ -666,7 +694,7 @@ function  displayLines(lines::Array{PhotoRecombination.Line,1})
     sb = sb * TableStrings.center( 7, "gamma^2"; na=2)
     sa = sa * TableStrings.flushleft(57, "List of multipoles, gauges, kappas and total symmetries"; na=4)  
     sb = sb * TableStrings.flushleft(57, "partial (multipole, gauge, total J^P)                  "; na=4)
-    println(sa);    println(sb);    println("  ", TableStrings.hLine(nx)) 
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  line in lines
         sa  = "  ";    isym = LevelSymmetry( line.initialLevel.J, line.initialLevel.parity)
@@ -684,12 +712,12 @@ function  displayLines(lines::Array{PhotoRecombination.Line,1})
                                                 line.channels[i].symmetry) )
         end
         wa = TableStrings.kappaMultipoleSymmetryTupels(85, kappaMultipoleSymmetryList)
-        if  length(wa) > 0  sb = sa * wa[1]   else    sb = sa    end;    println( sb )  
+        if  length(wa) > 0  sb = sa * wa[1]   else    sb = sa    end;    println(stream,  sb )  
         for  i = 2:length(wa)
-            sb = TableStrings.hBlank( length(sa) ) * wa[i];    println( sb )
+            sb = TableStrings.hBlank( length(sa) ) * wa[i];    println(stream,  sb )
         end
     end
-    println("  ", TableStrings.hLine(nx), "\n")
+    println(stream, "  ", TableStrings.hLine(nx), "\n")
     #
     return( nothing )
 end

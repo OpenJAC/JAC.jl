@@ -1,5 +1,5 @@
 
-println("Cg) Test of the PlasmaShift module with ASF from an internally generated multiplet.")
+println("Cg) Apply & test the PlasmaShift module with ASF from an internally generated multiplet.")
 
 if  true
     # Last successful:  unknown ...

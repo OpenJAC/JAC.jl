@@ -1,5 +1,5 @@
 #
-println("Al) Test of parallel computing in Julia.")
+println("Al) Apply & test for parallel computating methods/techniques with Julia.")
 using Distributed
 @everywhere using LinearAlgebra
 

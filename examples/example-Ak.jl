@@ -1,6 +1,6 @@
 
 #
-println("Ak) Test of spin-angular coefficients.")
+println("Ak) Apply & test the computation of spin-angular coefficients.")
 
 configs = [Configuration("1s^2 2s"), Configuration("1s^2 2p")]
 
