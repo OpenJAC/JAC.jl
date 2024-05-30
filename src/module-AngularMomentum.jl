@@ -7,7 +7,7 @@
 module AngularMomentum
 
 
-using  SpecialFunctions, ..Basics
+using  SpecialFunctions, WignerSymbols, ..Basics
 using  GSL: sf_coupling_3j, sf_coupling_6j, sf_coupling_9j, sf_legendre_sphPlm
 
 
@@ -207,6 +207,7 @@ function ChengI(kapa::Int64, kapb::Int64, L::AngularJ64)
 end
 
 
+#======================================================================================================================
 """
 `AngularMomentum.ClebschGordan(ja, ma, jb, mb, Jab, Mab)`  
     ... calculates the Clebsch-Gordan coefficient  <ja, ma, jb, mb; Jab, Mab> for given quantum numbers by 
@@ -217,6 +218,19 @@ function ClebschGordan(ja, ma, jb, mb, Jab, Mab)
     pp  = (Basics.twice(ja) - Basics.twice(jb) + Basics.twice(Jab))/2
     cg  = (-1)^pp * sqrt(Basics.twice(Jab) + 1) * sf_coupling_3j(Basics.twice(ja), Basics.twice(jb), Basics.twice(Jab),
                                                                     Basics.twice(ma), Basics.twice(mb), Basics.twice(mab))
+    return( cg )
+end
+=======================================================================================================================#
+
+"""
+`AngularMomentum.ClebschGordan(ja, ma, jb, mb, Jab, Mab)`  
+    ... calculates the Clebsch-Gordan coefficient  <ja, ma, jb, mb; Jab, Mab> for given quantum numbers by 
+        a proper call to a Wigner 3-j symbol. A value::Float64 is returned.
+"""
+function ClebschGordan(ja, ma, jb, mb, Jab, Mab)
+    mab = - Basics.twice(Mab) / 2
+    pp  = (Basics.twice(ja) - Basics.twice(jb) + Basics.twice(Jab))/2
+    cg  = (-1)^pp * sqrt(Basics.twice(Jab) + 1) * AngularMomentum.Wigner_3j(ja, jb, Jab, ma, mb, mab)
     return( cg )
 end
 
@@ -588,7 +602,7 @@ function Wigner_dmatrix(jj, mmp, mm, beta::Float64)
     return( factor*wa )
 end
 
-
+#==================================================================================================================================
 """
 `AngularMomentum.Wigner_3j(a, b, c, m_a, m_b, m_c)`  
     ... calculates the value of a Wigner 3-j symbol for given quantum numbers as displayed in many texts on the theory of 
@@ -598,6 +612,18 @@ end
 function Wigner_3j(a, b, c, m_a, m_b, m_c)
     sf_coupling_3j(Basics.twice(a),   Basics.twice(b),   Basics.twice(c),
                     Basics.twice(m_a), Basics.twice(m_b), Basics.twice(m_c))
+end
+==================================================================================================================================#
+
+"""
+`AngularMomentum.Wigner_3j(a, b, c, m_a, m_b, m_c)`  
+    ... calculates the value of a Wigner 3-j symbol for given quantum numbers as displayed in many texts on the theory of 
+        angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, p. 142); 
+        it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
+"""
+function Wigner_3j(a, b, c, m_a, m_b, m_c)
+    WignerSymbols.wigner3j(Basics.twice(a)/2.0,   Basics.twice(b)/2.0,   Basics.twice(c)/2.0,
+                          Basics.twice(m_a)/2.0, Basics.twice(m_b)/2.0, Basics.twice(m_c)/2.0)
 end
 
 
@@ -646,7 +672,7 @@ function Wigner_3j_old(a::AngularJ64, b::AngularJ64, c::AngularJ64, m_a::Angular
     return( w3j )
 end
 
-
+#==================================================================================================================================
 """
 `AngularMomentum.Wigner_6j(a, b, c, d, e, f)`  
     ... calculates the value of a Wigner 6-j symbol for given quantum numbers as displayed in many texts on the theory of 
@@ -657,7 +683,18 @@ function Wigner_6j(a, b, c, d, e, f)
     sf_coupling_6j(Basics.twice(a), Basics.twice(b), Basics.twice(c),
                     Basics.twice(d), Basics.twice(e), Basics.twice(f))
 end
+==================================================================================================================================#
 
+"""
+`AngularMomentum.Wigner_6j(a, b, c, d, e, f)`  
+    ... calculates the value of a Wigner 6-j symbol for given quantum numbers as displayed in many texts on the theory of 
+        angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, p. 142); 
+        it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
+"""
+function Wigner_6j(a, b, c, d, e, f)
+    WignerSymbols.wigner6j(Basics.twice(a)/2.0, Basics.twice(b)/2.0, Basics.twice(c)/2.0,
+                            Basics.twice(d)/2.0, Basics.twice(e)/2.0, Basics.twice(f)/2.0)
+end
 
 """
 `AngularMomentum.Wigner_6j_old(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ64, e::AngularJ64, f::AngularJ64)`  
@@ -707,6 +744,7 @@ function Wigner_6j_old(a::AngularJ64, b::AngularJ64, c::AngularJ64, d::AngularJ6
 end
 
 
+#======================================================================================================================================
 """
 `AngularMomentum.Wigner_9j(a, b, c, d, e, f, g, h, i)`  
     ... calculates the value of a Wigner 3-j symbol for given quantum numbers as displayed in many texts on the theory of 
@@ -718,6 +756,49 @@ function Wigner_9j(a, b, c, d, e, f, g, h, i)
                     Basics.twice(d), Basics.twice(e), Basics.twice(f),
                     Basics.twice(g), Basics.twice(h), Basics.twice(i))
 end
+======================================================================================================================================#
+
+
+    """
+    `AngularMomentum.Wigner_9j(a, b, c, d, e, f, g, h, i)`  
+        ... calculates the value of a Wigner 3-j symbol for given quantum numbers as displayed in many texts on the theory of 
+            angular momentum (see R. D. Cowan, The Theory of Atomic Structure and Spectra; University of California Press, 1981, p. 142); 
+            it calls the corresponding function from the GNU Scientific Library. A value::Float64 is returned.
+    """
+    function Wigner_9j( j11, j12, j13, j21, j22, j23, j31, j32, j33 )
+        j11 = Basics.twice(j11) ;   j12 = Basics.twice(j12)   ;   j13 = Basics.twice(j13)
+        j21 = Basics.twice(j21) ;   j22 = Basics.twice(j22)   ;   j23 = Basics.twice(j23)
+        j31 = Basics.twice(j31) ;   j32 = Basics.twice(j32)   ;   j33 = Basics.twice(j33)
+     
+        kmin1 = abs(j11 - j33)  ;   kmin2 = abs(j32 - j21)    ;    kmin3 = abs(j23 - j12)
+        kmax1 = j11 + j33       ;   kmax2 = j32 + j21         ;    kmax3 = j23 + j12
+     
+        if (kmin2 > kmin1) kmin1 = kmin2 end
+        if (kmin3 > kmin1) kmin1 = kmin3 end
+        if (kmax2 < kmax1) kmax1 = kmax2 end
+        if (kmax3 < kmax1) kmax1 = kmax3 end
+     
+        kmin1 = kmin1 + 1
+        kmax1 = kmax1 + 1
+     
+        nineJ = 0.0
+     
+        if (kmin1 > kmax1) return( nineJ ) end
+     
+        for k1 = kmin1:2:kmax1
+           k = k1 - 1
+           s1 = WignerSymbols.wigner6j(j11/2, j21/2, j31/2, j32/2, j33/2, k/2)
+           s2 = WignerSymbols.wigner6j(j12/2, j22/2, j32/2, j21/2, k/2, j23/2)
+           s3 = WignerSymbols.wigner6j(j13/2, j23/2, j33/2, k/2, j11/2, j12/2)
+     
+           p = (k+1) * (-1)^k
+     
+           nineJ += p * s1 * s2 * s3
+        end
+     
+        return( nineJ )
+    end
+
 
 
 """

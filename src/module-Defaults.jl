@@ -71,9 +71,10 @@ end
 #
 # Global settings that can be (re-) defined by the user.
 GBL_FRAMEWORK                = "relativistic"
+GBL_CONT_POTENTIAL           = Basics.DFSField(0.42)
 GBL_CONT_SOLUTION            = BsplineGalerkin()         ###  ContBessel(), ContSine(), AsymptoticCoulomb(), NonrelativisticCoulomb(), BsplineGalerkin()
-##x GBL_CONT_NORMALIZATION       = AlokNorm()                ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm(), AlokNorm()
-GBL_CONT_NORMALIZATION       = PureSineNorm()            ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm()
+GBL_CONT_NORMALIZATION       = AlokNorm()                ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm(), AlokNorm()
+##x GBL_CONT_NORMALIZATION       = PureSineNorm()            ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm()
 GBL_QED_HYDROGENIC_LAMBDAC   = [1.0,  1.0,  1.0,  1.0,  1.0]
 GBL_QED_NUCLEAR_CHARGE       = 0.1
 GBL_WARNINGS                 = String[]
@@ -505,6 +506,23 @@ function setDefaults(sa::String, grid::Radial.Grid; printout::Bool=true)
     if        sa == "standard grid"
         if  printout    println("(Re-) Define the standard grid with $(grid.NoPoints) grid points.")    end
         GBL_STANDARD_GRID = grid
+    else
+    error("Unsupported keystring:: $sa")
+    end
+
+    nothing
+end
+
+
+"""
++ `("continuum: potential", scField::Basics.AbstractScField)`  
+    ... to (re-) define the potential that is applied for the generation of the continuum orbitals.
+"""
+function setDefaults(sa::String, scField::Basics.AbstractScField)
+    global GBL_CONT_POTENTIAL
+
+    if        sa == "continuum: SCF potential"
+        GBL_CONT_POTENTIAL = scField
     else
     error("Unsupported keystring:: $sa")
     end
