@@ -8,8 +8,8 @@ module Atomic
 
 
 ## using Interact
-using   ..Basics, ..Radial, ..ManyElectron, ..Nuclear
-using   ..Einstein, ..Hfs, ..IsotopeShift, ..PlasmaShift, ..LandeZeeman, ..AlphaVariation, ..FormFactor, ..DecayYield,
+using  ..Basics, ..Radial, ..ManyElectron, ..Nuclear
+using  ..Einstein, ..Hfs, ..IsotopeShift, ..LandeZeeman, ..AlphaVariation, ..FormFactor, ..DecayYield,
        ..MultipolePolarizibility, ..PhotoEmission, ..PhotoIonization, ..PhotoExcitation, ..PhotoRecombination, 
        ..AutoIonization, ..DoubleAutoIonization, ..Dielectronic, ..ImpactExcitation, ..CoulombExcitation, ..CoulombIonization,
        ..PhotoDoubleIonization, ..PhotoExcitationFluores, ..PhotoExcitationAutoion, ..RayleighCompton, ..MultiPhotonDeExcitation,
@@ -196,8 +196,8 @@ function Base.show(io::IO, comp::Atomic.Computation)
         println(io, "hfsSettings:                  \n$(comp.hfsSettings)  ")                end
     if  Isotope in comp.properties    &&  comp.isotopeSettings  != IsotopeShift.Settings()
         println(io, "isotopeSettings:              \n$(comp.isotopeSettings)  ")            end
-    if  Plasma in comp.properties     &&  comp.plasmaSettings   != PlasmaShift.Settings()
-        println(io, "plasmaSettings:               \n$(comp.plasmaSettings)  ")             end
+    ##x if  Plasma in comp.properties     &&  comp.plasmaSettings   != PlasmaShift.Settings()
+    ##x     println(io, "plasmaSettings:               \n$(comp.plasmaSettings)  ")             end
     if  Polarity in comp.properties   &&  comp.polaritySettings != MultipolePolarizibility.Settings()
         println(io, "polaritySettings:             \n$(comp.polaritySettings)  ")           end
     if  Yields in comp.properties     &&  comp.yieldSettings    != DecayYield.Settings()

@@ -8,7 +8,7 @@ module AutoIonization
 
 
 using  Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, 
-               ..PlasmaShift, ..Radial, ..SpinAngular, ..TableStrings
+               ..Radial, ..SpinAngular, ..TableStrings
 
 """
 `struct  Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing Auger lines.
@@ -98,6 +98,47 @@ function Base.show(io::IO, settings::AutoIonization.Settings)
     println(io, "maxKappa:                      $(settings.maxKappa)  ")
     println(io, "operator:                      $(settings.operator)  ")
     println(io, "gMultiplet.name:               $(settings.gMultiplet.name)  ")
+end
+
+
+"""
+`struct  AutoIonization.PlasmaSettings  <:  AbstractProcessSettings`  
+    ... defines a type for the details and parameters of computing Auger rates with plasma interactions.
+
+    + plasmaModel         ::AbstractPlasmaModel    ... Specify a particular plasma model, e.g. ion-sphere, debye.
+    + lambdaDebye         ::Float64                ... The lambda parameter of different plasma models.
+    + ionSphereR0         ::Float64                ... The effective radius of the ion-sphere model.
+    + NoBoundElectrons    ::Int64                  ... Effective number of bound electrons.
+    + printBefore         ::Bool                   ... True, if all energies and lines are printed before their 
+                                                        evaluation.
+    + lineSelection       ::LineSelection          ... Specifies the selected levels, if any.
+"""
+struct PlasmaSettings  <:  AbstractProcessSettings 
+    plasmaModel           ::AbstractPlasmaModel
+    lambdaDebye           ::Float64 
+    ionSphereR0           ::Float64
+    NoBoundElectrons      ::Int64
+    printBefore           ::Bool 
+    lineSelection         ::LineSelection
+end 
+
+
+"""
+`AutoIonization.PlasmaSettings()`  ... constructor for a standard instance of AutoIonization.PlasmaSettings.
+"""
+function PlasmaSettings()
+    PlasmaSettings(DebyeHueckel(), 0.25, 0., 0, true, LineSelection() )
+end
+
+
+# `Base.show(io::IO, settings::AutoIonization.PlasmaSettings)`  ... prepares a proper printout of the settings::AutoIonization.PlasmaSettings.
+function Base.show(io::IO, settings::AutoIonization.PlasmaSettings)
+    println(io, "plasmaModel:             $(settings.plasmaModel)  ")
+    println(io, "lambdaDebye:             $(settings.lambdaDebye)  ")
+    println(io, "ionSphereR0:             $(settings.ionSphereR0)  ")
+    println(io, "NoBoundElectrons:        $(settings.NoBoundElectrons)  ")
+    println(io, "printBefore:             $(settings.printBefore)  ")
+    println(io, "lineSelection:           $(settings.lineSelection)  ")
 end
 
 
@@ -308,12 +349,12 @@ end
 
 """
 `AutoIonization.computeAmplitudesPropertiesPlasma(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
-                                                    settings::PlasmaShift.AugerSettings; printout::Bool=true)`  
+                                                  settings::AutoIonization.PlasmaSettings; printout::Bool=true)`  
     ... to compute all amplitudes and properties of the given line but for the given plasma model; a line::AutoIonization.Line is returned 
         for which the amplitudes and properties are now evaluated.
 """
 function computeAmplitudesPropertiesPlasma(line::AutoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
-                                            settings::PlasmaShift.AugerSettings; printout::Bool=true) 
+                                           settings::AutoIonization.PlasmaSettings; printout::Bool=true) 
     newChannels = AutoIonization.Channel[];   contSettings = Continuum.Settings(false, nrContinuum);   rate = 0.
     for channel in line.channels
         newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel, line.initialLevel.basis.subshells)
@@ -509,12 +550,12 @@ end
 
 """
 `AutoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                                    settings::PlasmaShift.AugerSettings; output=true)`  
+                                   settings::AutoIonization.PlasmaSettings; output=true)`  
     ... to compute the Auger transition amplitudes and all properties as requested by the given settings. A list of 
         lines::Array{AutoIonization.Lines} is returned.
 """
 function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                                settings::PlasmaShift.AugerSettings; output=true)
+                             settings::AutoIonization.PlasmaSettings; output=true)
     println("")
     printstyled("AutoIonization.computeLinesPlasma(): The computation of Auger rates starts now ... \n", color=:light_green)
     printstyled("---------------------------------------------------------------------------------- \n", color=:light_green)

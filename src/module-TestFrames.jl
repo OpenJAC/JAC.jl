@@ -768,7 +768,7 @@ function testModule_ParityNonConservation(; short::Bool=true)
 end
 
 
-
+#==
 """
 `TestFrames.testModule_PlasmaShift(; short::Bool=true)`  ... tests on module PlasmaShift.
 """
@@ -788,7 +788,7 @@ function testModule_PlasmaShift(; short::Bool=true)
                                 joinpath(@__DIR__, "..", "test", "test-PlasmaShift-new.sum"), "Plasma screening", 3) 
     testPrint("testModule_PlasmaShift()::", success)
     return(success)  
-end
+end  ==#
 
 
 

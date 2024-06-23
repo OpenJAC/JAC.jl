@@ -1,5 +1,5 @@
 #
-println("Ia) Tests of average-atom computations.")
+println("Ja) Apply & test the average-atom computations.")
 
 if  true
     # Last successful:  unknown ...

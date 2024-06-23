@@ -158,6 +158,48 @@ function Base.string(property::EmProperty)
     return( sa )
 end
 
+
+#################################################################################################################################
+#################################################################################################################################
+
+
+"""
+`struct  Basics.IsotopicFraction`  
+    ... defines a type to deal with different -- individual or averaged -- isotopic fractions in a computation.
+
+    + Z        ::Float64    ... nuclear charge
+    + A        ::Float64    ... (mean) mass number of the isotope/isotopic mixture.
+    + x        ::Float64    ... fraction 0 <= x <=1 of the given isotope/isotopic mixture.
+"""
+struct  IsotopicFraction 
+    Z          ::Float64
+    A          ::Float64
+    x          ::Float64 
+end
+
+export IsotopicFraction
+
+
+"""
+`Basics.IsotopicFraction()`  ... constructor for an `empty` instance of IsotopicFraction.
+"""
+function IsotopicFraction()
+    IsotopicFraction(0., 0., 0.)
+end
+
+
+# `Base.show(io::IO, frac::IsotopicFraction)`  ... prepares a proper printout of the variable frac::IsotopicFraction.
+function Base.show(io::IO, frac::IsotopicFraction) 
+    sa = Base.string(frac);                print(io, sa)
+end
+
+
+# `Base.string(frac::IsotopicFraction)`  ... provides a String notation for the variable frac::IsotopicFraction.
+function Base.string(frac::IsotopicFraction)
+    sa = "Isotopic fraction (Z=$(frac.Z), A=$(frac.A), x=$(frac.x))"
+    return( sa )
+end
+
 #################################################################################################################################
 #################################################################################################################################
 

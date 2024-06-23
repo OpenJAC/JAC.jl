@@ -174,10 +174,10 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
 end
 
 
-
+#==
 """
 `Basics.compute("matrix: CI for plasma, J^P symmetry", JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
-                                                        settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
+                                                       settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
     ... to compute the CI matrix for a given J^P symmetry block of basis and by making use of the nuclear model and the grid; 
         a matrix::Array{Float64,2} is returned.
 """
@@ -248,7 +248,7 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
     if printout    println("   ... done.")    end
 
     return( matrix )
-end
+end   ==#
 
 
 

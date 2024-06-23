@@ -6,17 +6,21 @@
 """
 module Plasma
 
-using Printf, ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals, 
-        ..TableStrings
-using ..FormFactor, ..PhotoEmission, ..PhotoIonization, ..AutoIonization
+using  Printf 
+using  ..AtomicState, ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals, 
+       ..Semiempirical, ..TableStrings, ..FormFactor, ..PhotoEmission, ..PhotoIonization, ..AutoIonization
 
 
 """
 `abstract type Plasma.AbstractPlasmaScheme` 
     ... defines an abstract type to distinguish different kinds of plasma computations; see also:
     
-    + struct AverageAtomScheme       
+    + struct AverageAtomScheme    
         ... to perform an average-atom computation.
+    + struct LineShiftScheme    
+        ... to compute the energy shifts and properties of atomic/ionic lines in some selected plasma model.
+    + struct SahaBoltzmannScheme    
+        ... to compute thermodynamic properties of a Saha-Boltzmann LTE mixture.
 """
 abstract type  AbstractPlasmaScheme       end
 
@@ -77,14 +81,112 @@ end
 
 
 """
+`struct  Plasma.LineShiftScheme  <:  Plasma.AbstractPlasmaScheme`  
+    ... defines a type for the details and parameters of computing level energies with plasma interactions.
+
+    + plasmaModel      ::AbstractPlasmaModel        ... Specify a particular plasma model, e.g. ion-sphere, debye.
+    + lambdaDebye      ::Float64                    ... The lambda parameter of different plasma models.
+    + ionSphereR0      ::Float64                    ... The effective radius of the ion-sphere model.
+    + NoBoundElectrons ::Int64                      ... Effective number of bound electrons.
+"""
+struct LineShiftScheme  <:  Plasma.AbstractPlasmaScheme
+    plasmaModel        ::AbstractPlasmaModel
+    lambdaDebye        ::Float64 
+    ionSphereR0        ::Float64
+    NoBoundElectrons   ::Int64
+end 
+
+
+"""
+`Plasma.LineShiftScheme()`  ... constructor for a standard instance of Plasma.LineShiftScheme.
+"""
+function LineShiftScheme()
+    LineShiftScheme(DebyeHueckel(), 0.25, 0., 0)
+end
+
+
+# `Base.show(io::IO, scheme::Plasma.LineShiftScheme)`  ... prepares a proper printout of the scheme::Plasma.LineShiftScheme.
+function Base.show(io::IO, scheme::Plasma.LineShiftScheme)
+    println(io, "plasmaModel:            $(scheme.plasmaModel)  ")
+    println(io, "lambdaDebye:            $(scheme.lambdaDebye)  ")
+    println(io, "ionSphereR0:            $(scheme.ionSphereR0)  ")
+    println(io, "NoBoundElectrons:       $(scheme.NoBoundElectrons)  ")
+end
+
+
+"""
+`struct  Plasma.SahaBoltzmannScheme  <:  Plasma.AbstractPlasmaScheme`  
+    ... a struct to thermodynamic properties of a Saha-Boltzmann LTE mixture..
+
+    + calcLTE               ::Bool                 ... True, if the Saha-Boltzmann equilibrium densities should be calculated.         
+    + maxNoIonLevels        ::Int64                ... (maximum) No of ionic levels for any charge state of the ions in the mixture.
+    + NoChargeStates        ::Int64                
+        ... No of the ions in the ionic mixture that are taken to be into account. These charge states are `centered' around those 
+            charge state with an ionisation potential that is closest to kT.
+    + NoExcitations         ::Int64                
+        ... No of excitations (S, D, T) that are taken into account with regard to the reference (ground) configuration of the ions.
+            This number is taken as a second qualifier to characterize the quality of the ionic-level data. Usually, NoExcitations = 1,2.
+    + upperShellNo         ::Int64                
+        ... upper-most princicpal quantum number n for which orbitals are taken into account into the ionic-level computations;
+            this is often chosen upperShellNo= 4..8.
+    + isotopicMixture      ::Array{Basics.IsotopicFraction,1}   
+        ... List of (non-normlized) isotopic fractions that form the requested mixture; the fractions will first be renormalized
+            to 1 in course of the Saha-Boltzmann LTE computations.
+    + isotopeFilenames      ::Array{String,1}     
+        ... set of files names from which the ionic-level data can be read in for the different isotopes (Z,A) in the mixture.
+    
+"""
+struct  SahaBoltzmannScheme  <:  Plasma.AbstractPlasmaScheme
+    calcLTE                 ::Bool        
+    maxNoIonLevels          ::Int64 
+    NoChargeStates          ::Int64                
+    NoExcitations           ::Int64                
+    upperShellNo            ::Int64                
+    isotopicMixture         ::Array{Basics.IsotopicFraction,1}   
+    isotopeFilenames        ::Array{String,1}     
+end  
+
+
+"""
+`Plasma.SahaBoltzmannScheme()`  ... constructor for an 'default' instance of a Plasma.SahaBoltzmannScheme.
+"""
+function SahaBoltzmannScheme()
+    SahaBoltzmannScheme( false, 0., 0., 0., 0., IsotopicFraction[], String[] )
+end
+
+
+# `Base.string(scheme::SahaBoltzmannScheme)`  ... provides a String notation for the variable scheme::SahaBoltzmannScheme.
+function Base.string(scheme::SahaBoltzmannScheme)
+    sa = "Saha-Boltzmann computation with of an ionic mixture:"
+    return( sa )
+end
+
+
+# `Base.show(io::IO, scheme::SahaBoltzmannScheme)`  ... prepares a proper printout of the scheme::SahaBoltzmannScheme.
+function Base.show(io::IO, scheme::SahaBoltzmannScheme)
+    sa = Base.string(scheme);             println(io, sa)
+    println(io, "calcLTE:           $(scheme.calcLTE)  ")
+    println(io, "maxNoIonLevels:    $(scheme.maxNoIonLevels)  ")
+    println(io, "NoChargeStates:    $(scheme.NoChargeStates)  ")
+    println(io, "NoExcitations:     $(scheme.NoExcitations)  ")
+    println(io, "upperShellNo:      $(scheme.upperShellNo)  ")
+    println(io, "isotopicMixture:   $(scheme.isotopicMixture)  ")
+    println(io, "isotopeFilenames:  $(scheme.isotopeFilenames)  ")
+end
+
+
+"""
 `struct  Plasma.Settings`  ... defines a type for the details and parameters of computing photoionization lines.
 
     + temperature               ::Float64     ... Plasma temperature in [K].
     + density                   ::Float64     ... Plasma density in [g/cm^3].
+    + useNumberDensity          ::Bool    
+        ... true, if the density above is taken as (total ion) number density ni, and false otherwise.
 """
 struct Settings 
     temperature                 ::Float64     
     density                     ::Float64 
+    useNumberDensity            ::Bool     
 end 
 
 
@@ -92,24 +194,26 @@ end
 `Plasma.Settings()`  ... constructor for the default values of plasma computations
 """
 function Settings()
-    Settings(0., 0.)
+    Settings(0., 0., false)
 end
 
 
 """
 `Plasma.Settings(set::Plasma.Settings;`
 
-        temperature=..,         density=..)
+        temperature=..,         density=..,         useNumberDensity =..)
                     
     ... constructor for modifying the given Plasma.Settings by 'overwriting' the previously selected parameters.
 """
 function Settings(set::Plasma.Settings;    
-    temperature::Union{Nothing,Float64}=nothing,                            density::Union{Nothing,Float64}=nothing)  
+    temperature::Union{Nothing,Float64}=nothing,                            density::Union{Nothing,Float64}=nothing,
+    useNumberDensity::Union{Nothing,Bool}=nothing)  
     
     if  temperature      == nothing   temperaturex      = set.temperature        else  temperaturex      = temperature       end 
     if  density          == nothing   densityx          = set.density            else  densityx          = density           end 
+    if  useNumberDensity == nothing   useNumberDensityx = set.useNumberDensity   else  useNumberDensityx = useNumberDensity  end 
 
-    Settings( temperaturex, densityx )
+    Settings( temperaturex, densityx, useNumberDensityx )
 end
 
 
@@ -117,6 +221,7 @@ end
 function Base.show(io::IO, settings::Plasma.Settings) 
     println(io, "temperature:               $(settings.temperature)  ")
     println(io, "density:                   $(settings.density)  ")
+    println(io, "useNumberDensity:          $(settings.useNumberDensity)  ")
 end
 
 
@@ -336,6 +441,8 @@ end
 
 
 include("module-Plasma-inc-average-atom.jl")
+include("module-Plasma-inc-line-shifts.jl")
+include("module-Plasma-inc-saha-boltzmann-mixture.jl")
 
 
 end # module

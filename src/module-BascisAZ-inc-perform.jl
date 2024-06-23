@@ -66,25 +66,25 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
                 outcome = ReducedDensityMatrix.computeOutcomes(multiplet, nModel, computation.grid, settings)         
                 if output    results = Base.merge( results, Dict("RDM outcomes:" => outcome) )         end
                 #
-            elseif  typeof(settings) == PlasmaShift.Settings 
-                outcome = PlasmaShift.computeOutcomes(multiplet, nModel, computation.grid, computation.asfSettings, settings)         
-                if output    results = Base.merge( results, Dict("Plasma shift outcomes:" => outcome) )            end
+            #xx elseif  typeof(settings) == PlasmaShift.Settings 
+            #xx     outcome = PlasmaShift.computeOutcomes(multiplet, nModel, computation.grid, computation.asfSettings, settings)         
+            #xx     if output    results = Base.merge( results, Dict("Plasma shift outcomes:" => outcome) )            end
             end
         end
     
     # Evaluate processes that need special SCF and CI procedures
-    elseif  typeof(computation.processSettings)  in [PlasmaShift.AugerSettings, PlasmaShift.PhotoSettings]
+    elseif  typeof(computation.processSettings)  in [AutoIonization.PlasmaSettings, PhotoIonization.PlasmaSettings]
         pSettings        = computation.processSettings
-        plasmaSettings   = PlasmaShift.Settings(pSettings.plasmaModel, pSettings.lambdaDebye, pSettings.ionSphereR0, pSettings.NoBoundElectrons)
+        plasmaSettings   = Plasma.Settings(pSettings.plasmaModel, pSettings.lambdaDebye, pSettings.ionSphereR0, pSettings.NoBoundElectrons)
         initialBasis     = Basics.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
         initialMultiplet = perform("computation: CI for plasma",  initialBasis, nModel, computation.grid, computation.initialAsfSettings, plasmaSettings)
         finalBasis       = Basics.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
         finalMultiplet   = perform("computation: CI for plasma",  finalBasis, nModel, computation.grid, computation.finalAsfSettings, plasmaSettings)
         #
-        if      typeof(computation.processSettings)  == PlasmaShift.AugerSettings
+        if      typeof(computation.processSettings)  == Plasma.AugerSettings
             outcome = AutoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("AutoIonization lines in plasma:" => outcome) )         end
-        elseif  typeof(computation.processSettings)  == PlasmaShift.PhotoSettings
+        elseif  typeof(computation.processSettings)  == Plasma.PhotoSettings
             outcome = PhotoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("Photo lines in plasma:" => outcome) )                  end
         else
@@ -290,16 +290,16 @@ end
 
 """
 `Basics.perform("computation: CI for plasma", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
-    settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
+    settings::AsfSettings, plasmaScheme::Plasma.AbstractPlasmaScheme; printout::Bool=true)`  
     ... to  set-up and diagonalize from the given (SCF) basis the configuration-interaction matrix and to derive and
         display the level structure of the corresponding multiplet due to the given settings. Here, the CI matrix
         includes the modifications of the Hamiltonian due to the given plasmaSettings; a multiplet::Multiplet is returned.   
 """
 function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
-                settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)
+                settings::AsfSettings, plasmaScheme::Plasma.AbstractPlasmaScheme; printout::Bool=true)
     !(sa == "computation: CI for plasma")   &&   error("Unsupported keystring = $sa")
     return( Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
-                                settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout=printout) )
+                                settings::AsfSettings, plasmaSettings::Plasma.Settings; printout=printout) )
 end
                 
 
@@ -615,13 +615,13 @@ end
 
 """
 `Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings, 
-                    plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
+                  plasmaSettings::Plasma.Settings; printout::Bool=true)`  
     ... to  set-up and diagonalize from the given (SCF) basis the configuration-interaction matrix and to derive and
         display the level structure of the corresponding multiplet due to the given settings. Here, the CI matrix
         includes the modifications of the Hamiltonian due to the given plasmaSettings; a multiplet::Multiplet is returned.   
 """
 function Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
-                            settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)
+                          settings::AsfSettings, plasmaSettings::Plasma.Settings; printout::Bool=true)
     
     # Determine the J^P symmetry blocks
     symmetries = Dict{LevelSymmetry,Int64}()

@@ -626,6 +626,41 @@ export  AbstractMesh, Cartesian2DMesh, GLegenreMesh, LinearMesh, PolarMesh, Sphe
 
 
 """
+`abstract type Basics.AbstractPlasmaModel` 
+    ... defines an abstract and a number of singleton types for the the (allowed) plasma models.
+
+    + NoPlasmaModel      ... No plasma model defined.
+    + DebyeHueckel       ... Debye-Hueckel plasma model.
+    + IonSphere          ... Ion-sphere (not yet supported).
+"""
+abstract type  AbstractPlasmaModel                      end
+struct         NoPlasmaModel  <:  AbstractPlasmaModel   end
+struct         DebyeHueckel   <:  AbstractPlasmaModel   end
+struct         IonSphere      <:  AbstractPlasmaModel   end
+
+
+# `Base.show(io::IO, model::AbstractPlasmaModel)`  ... prepares a proper printout of the variable model::AbstractPlasmaModel.
+function Base.show(io::IO, model::AbstractPlasmaModel) 
+    print(io, string(model) )
+end
+
+
+# `Base.string(model::AbstractPlasmaModel)`  ... provides a proper printout of the variable model::AbstractPlasmaModel.
+function Base.string(model::AbstractPlasmaModel) 
+    if       model == NoPlasmaModel()     return("No plasma model")
+    elseif   model == DebyeHueckel()      return("Debye-Hueckel model")
+    elseif   model == DebeyBox()          return("Debey-box model")
+    elseif   model == IonSphere()         return("Ion-sphere model")
+    else     error("stop a")
+    end
+end 
+
+export  AbstractPlasmaModel, NoPlasmaModel, DebyeHueckel, DebeyBox, IonSphere
+
+#################################################################################################################################
+#################################################################################################################################
+
+"""
 `abstract type Basics.AbstractPolarization` 
     ... defines an abstract type to comprise various polarizations of light and electron beams.
 

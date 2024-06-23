@@ -53,7 +53,7 @@ using  Dates, Printf,  LinearAlgebra, IJulia, SpecialFunctions, FortranFiles, Qu
        HypergeometricFunctions, Cubature  ## , Interact, GaussQuadrature
 
 export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod, AbstractPotential, AbstractQedModel, AbstractStartOrbitals,
-       AbstractProcessSettings, AbstractEmpiricalSettings, AbstractPropertySettings, 
+       AbstractProcessSettings, AbstractEmpiricalSettings, AbstractPlasmaModel, AbstractPropertySettings, 
        add, AlphaX, AlphaVariation, analyze, AnapoleMoment, 
        AngularJ64, AngularM64, AngularJ, AngularMomentum, 
        AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AugerInPlasma, AutoIonization, AverageAtom,
@@ -68,7 +68,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        generate, GreenSettings, GreenChannel, GreenExpansion, getDefaults, Green, Gui,
        Hfs, HighHarmonic, HFS, HydrogenicIon,
        interpolate, integrate, Integral, ImpactExcAuto, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, 
-       InteractionStrength, InternalConv, InternalConversion, InternalRecombination, Isotope, IsotopeShift, 
+       InteractionStrength, InternalConv, InternalConversion, InternalRecombination, Isotope, IsotopeShift, IsotopicFraction, 
        Kronecker,
        LandeF, LandeJ, LandeZeeman, Level, LevelSelection, LevelSymmetry, LineSelection, LSjj, LSjjSettings, 
        ManyElectron, MeanFieldSettings, MeanFieldBasis, MeanFieldMultiplet, minus, Model, modify, 
@@ -81,7 +81,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        Photo, PhotoDouble, PhotoDoubleIonization, PhotoEmission, PhotoExc, PhotoExcAuto, PhotoExcFluor, 
        PhotoExcitation, PhotoExcitationAutoion, PhotoExcitationFluores, PhotoIonAuto, PhotoIonFluor, PhotoIonization, 
        PhotoIonizationAutoion, PhotoIonizationFluores, PhotoRecombination,   
-       Plasma, PlasmaShift, plus, Polarity, provide, Pulse,
+       Plasma, plus, Polarity, provide, Pulse,
        QedPetersburg, QedSydney, 
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RAuger, RasSettings, RasStep, 
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix, RadiativeOpacity,
@@ -134,7 +134,6 @@ include("module-IsotopeShift.jl")
 include("module-LandeZeeman.jl")
 include("module-FormFactor.jl")
 include("module-ReducedDensityMatrix.jl")
-include("module-PlasmaShift.jl")
 include("module-AlphaVariation.jl")
 include("module-DecayYield.jl")
 include("module-RadiativeOpacity.jl")

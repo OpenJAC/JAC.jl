@@ -117,7 +117,7 @@ end
 """
 function estimate(sa::String, Z::Int64, sh::Subshell)
     if     sa == "binding energy"
-        wa = PeriodicTable.store_Williams2000(Z)
+        wa = PeriodicTable.bindingEnergies_Williams2000(Z)
         if      sh == Subshell("1s_1/2")    wb = wa[1]
         elseif  sh == Subshell("2s_1/2")    wb = wa[2]
         elseif  sh == Subshell("2p_1/2")    wb = wa[3]

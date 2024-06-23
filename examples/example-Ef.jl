@@ -12,7 +12,7 @@ if  true
     wa   = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(10.), 
                             initialConfigs=[Configuration("1s 2s^2 2p^6")],
                             finalConfigs  =[Configuration("1s^2 2s^2 2p^4"), Configuration("1s^2 2s 2p^5"), Configuration("1s^2 2p^6")], 
-                            processSettings = PlasmaShift.AugerSettings(PlasmaShift.DebyeHueckel(), 0.25, 0., 0, true, LineSelection() ) )
+                            processSettings = AutoIonization.PlasmaSettings(Basics.DebyeHueckel(), 0.25, 0., 0, true, LineSelection() ) )
 
     wb = perform(wa)
     #

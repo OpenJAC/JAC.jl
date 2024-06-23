@@ -9,7 +9,7 @@ using  Printf,  LinearAlgebra, GaussQuadrature, JAC, ..AlphaVariation, ..Angular
                 ..Basics, ..Bsplines, ..Cascade, ..Continuum, ..DecayYield, ..Defaults, ..Dielectronic, 
                 ..Einstein, ..FormFactor, ..Hfs, ..HydrogenicIon, ..InteractionStrength, ..InteractionStrengthQED, 
                 ..IsotopeShift, ..LandeZeeman, ..LSjj, ..ManyElectron, ..MultipolePolarizibility, ..Nuclear, 
-                ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..PlasmaShift, 
+                ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, 
                 ..Radial, ..RadialIntegrals, ..TableStrings
 
 

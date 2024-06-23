@@ -489,9 +489,6 @@ Following the Julia's standard conventions, all types (struct) are named in Came
 + LandeZeeman.sublevelF        ... specifies a magnetic hyperfine sublevel with well-defined F, M_f.
 + LandeZeeman.Outcome          ... (results of the) Lande factors and Zeeman splittings for a single level.
 + LandeZeeman.Settings         ... settings for the Lande factors and Zeeman splitting in an external magnetic field.
-+ PlasmaShift.PlasmaModel      ... Model for dealing with the plasma environment.
-+ PlasmaShift.Outcome          ... (results of the) plasma shifts and energies for a single level.
-+ PlasmaShift.Settings         ... settings for including plasma interactions into the CI matrix.
 
 
 ### `Data types for calculating (time-independent) atomic processes`

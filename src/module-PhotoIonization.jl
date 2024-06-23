@@ -8,7 +8,7 @@ module PhotoIonization
 
 
 using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Radial, ..Nuclear, ..ManyElectron, ..PhotoEmission, 
-              ..PlasmaShift, ..TableStrings
+              ..TableStrings
 
 """
 `struct  PhotoIonization.Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing photoionization lines.
@@ -100,6 +100,55 @@ function Base.show(io::IO, settings::PhotoIonization.Settings)
     println(io, "lineSelection:            $(settings.lineSelection)  ")
     println(io, "stokes:                   $(settings.stokes)  ")
     println(io, "freeElectronShift:        $(settings.freeElectronShift)  ")
+end
+
+
+"""
+`struct  PhotoIonization.PlasmaSettings  <:  Basics.AbstractProcessSettings`  
+    ... defines a type for the details and parameters of computing photoionization rates with plasma interactions.
+
+    + plasmaModel            ::AbstractPlasmaModel           ... Specify a particular plasma model, e.g. ion-sphere, debye.
+    + lambdaDebye            ::Float64                       ... The lambda parameter of different plasma models.
+    + ionSphereR0            ::Float64                       ... The effective radius of the ion-sphere model.
+    + NoBoundElectrons       ::Int64                         ... Effective number of bound electrons.
+    + multipoles             ::Array{Basics.EmMultipole}     ... Specifies the multipoles of the radiation field that are to be included.
+    + gauges                 ::Array{Basics.UseGauge}        ... Specifies the gauges to be included into the computations.
+    + photonEnergies         ::Array{Float64,1}              ... List of photon energies.  
+    + printBefore            ::Bool                          ... True, if all energies and lines are printed before their evaluation.
+    + lineSelection          ::LineSelection                 ... Specifies the selected levels, if any.
+"""
+struct PlasmaSettings  <:  AbstractProcessSettings 
+    plasmaModel              ::AbstractPlasmaModel
+    lambdaDebye              ::Float64 
+    ionSphereR0              ::Float64
+    NoBoundElectrons         ::Int64
+    multipoles               ::Array{Basics.EmMultipole}
+    gauges                   ::Array{Basics.UseGauge}  
+    photonEnergies           ::Array{Float64,1} 
+    printBefore              ::Bool 
+    lineSelection            ::LineSelection
+end 
+
+
+"""
+`PhotoIonization.PlasmaSettings()`  ... constructor for a standard instance of PhotoIonization.PlasmaSettings.
+"""
+function PlasmaSettings()
+    PlasmaSettings(DebyeHueckel(), 0.25, 0., 0, [E1], [Basics.UseCoulomb], Float64[], true, LineSelection() )
+end
+
+
+# `Base.show(io::IO, settings::PhotoIonization.PlasmaSettings)`  ... prepares a proper printout of the settings::PhotoIonization.PlasmaSettings.
+function Base.show(io::IO, settings::PhotoIonization.PlasmaSettings)
+    println(io, "plasmaModel:             $(settings.plasmaModel)  ")
+    println(io, "lambdaDebye:             $(settings.lambdaDebye)  ")
+    println(io, "ionSphereR0:             $(settings.ionSphereR0)  ")
+    println(io, "NoBoundElectrons:        $(settings.NoBoundElectrons)  ")
+    println(io, "multipoles:              $(settings.multipoles)  ")
+    println(io, "gauges:                  $(settings.gauges)  ")
+    println(io, "photonEnergies:          $(settings.photonEnergies)  ")
+    println(io, "printBefore:             $(settings.printBefore)  ")
+    println(io, "lineSelection:           $(settings.lineSelection)  ")
 end
 
 
@@ -258,11 +307,11 @@ end
 
 """
 `PhotoIonization.computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, 
-                                                        settings::PlasmaShift.PhotoSettings)`  
+                                                   settings::PhotoIonization.PlasmaSettings)`  
     ... to compute all amplitudes and properties of the given line but for the given plasma model; 
         a line::PhotoIonization.Line is returned for which the amplitudes and properties are now evaluated.
 """
-function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, settings::PlasmaShift.PhotoSettings)
+function  computeAmplitudesPropertiesPlasma(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, settings::PhotoIonization.PlasmaSettings)
     newChannels = PhotoIonization.Channel[];;   contSettings = Continuum.Settings(false, grid.NoPoints-50);    csC = csB = 0.
     for channel in line.channels
         newiLevel = Basics.generateLevelWithSymmetryReducedBasis(line.initialLevel)
@@ -418,12 +467,12 @@ end
 
 """
 `PhotoIonization.computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                                        settings::PlasmaShift.PhotoSettings; output::Bool=true)`  
+                                    settings::PhotoIonization.PlasmaSettings; output::Bool=true)`  
     ... to compute the photoIonization transition amplitudes and all properties as requested by the given settings. 
         A list of lines::Array{PhotoIonization.Lines} is returned.
 """
 function  computeLinesPlasma(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                                settings::PlasmaShift.PhotoSettings; output::Bool=true)
+                                settings::PhotoIonization.PlasmaSettings; output::Bool=true)
     println("")
     printstyled("PhotoIonization.computeLinesPlasma(): The computation of photo-ionization cross sections starts now ... \n", color=:light_green)
     printstyled("------------------------------------------------------------------------------------------------------- \n", color=:light_green)

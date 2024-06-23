@@ -27,18 +27,21 @@ struct   InelasticElectronNR    <:  ParticleScattering.AbstractProcessType    en
     
 
 """
-`struct  ElasticElectronNR      <:  ParticleScattering.AbstractProcessType`  
+`struct  ParticleScattering.ElasticElectronNR      <:  ParticleScattering.AbstractProcessType`  
     ... to model the elastic electron scattering and to compute different cross sections.
 
     + calcd2SigmaHeadon       ::Bool       ... to compute the double-differential (head-on) scattering cross sections.
     + calcd2SigmaBorn         ::Bool       ... to compute the double-differential (Born) scattering cross sections.
     + calcd2SigmaMacroscopic  ::Bool       ... to compute the double-differential (macroscopic) scattering cross sections
                                                by integrating over all impact parameters.
+    + calcBdependentAmps      ::Bool       ... to compute the impact-parameter b-dependent scattering amplitudes for a 
+                                               given set of b-Vectors.
 """
 struct ElasticElectronNR      <:  ParticleScattering.AbstractProcessType
     calcd2SigmaHeadon         ::Bool
     calcd2SigmaBorn           ::Bool
     calcd2SigmaMacroscopic    ::Bool
+    calcBdependentAmps        ::Bool
 end 
 
 
@@ -46,14 +49,14 @@ end
 `ParticleScattering.ElasticElectronNR()`  ... constructor for the default ParticleScattering.ElasticElectronNR.
 """
 function ElasticElectronNR()
-    ElasticElectronNR(true, false, false)
+    ElasticElectronNR(true, false, false, false)
 end
 
 
 # `Base.show(io::IO, proc::ParticleScattering.ElasticElectronNR)`  ... printout of the variable pw::ParticleScattering.ElasticElectronNR.
 function Base.show(io::IO, proc::ParticleScattering.ElasticElectronNR) 
     print(io, "ElasticElectronNR[calcd2SigmaHeadon=$(proc.calcd2SigmaHeadon),  calcd2SigmaBorn=$(proc.calcd2SigmaBorn),  " * 
-              "calcd2SigmaMacroscopic=$(proc.calcd2SigmaMacroscopic)]")
+              "calcd2SigmaMacroscopic=$(proc.calcd2SigmaMacroscopic),  calcBdependentAmps=$(proc.calcBdependentAmps)]")
 end
     
 
@@ -68,6 +71,8 @@ end
     + impactEnergies      ::Array{Float64,1}
     + polarThetas         ::Array{Float64,1}
     + polarPhis           ::Array{Float64,1}
+    + bVectors            ::Vector{Vector{Float64}}
+        ... Provides a list of 2d cartesian vectors for the impact parameter (vector) b.
     + printBefore         ::Bool               ... True, if all energies and events are printed before their evaluation.
     + lineSelection       ::LineSelection      ... Specifies the selected levels, if any.
     + epsPartialWave      ::Float64            
@@ -81,6 +86,7 @@ struct Settings  <:  AbstractProcessSettings
     impactEnergies        ::Array{Float64,1}
     polarThetas           ::Array{Float64,1}
     polarPhis             ::Array{Float64,1}
+    bVectors              ::Vector{Vector{Float64}}
     printBefore           ::Bool 
     lineSelection         ::LineSelection 
     epsPartialWave        ::Float64
@@ -91,7 +97,7 @@ end
 `ParticleScattering.Settings()`  ... constructor for the default ParticleScattering.Settings.
 """
 function Settings()
-    Settings(ElasticElectron(), PlaneWave(), LinearX(), Float64[], Float64[], Float64[], false, LineSelection(), 2)
+    Settings(ElasticElectron(), PlaneWave(), LinearX(), Float64[], Float64[], Float64[], Vector{Float64}[], false, LineSelection(), 2)
 end
 
 
@@ -99,7 +105,7 @@ end
 `ParticleScattering.Settings(set::ParticleScattering.Settings;`
 
         processType=..,         beamType=..,                polarization=..,          
-        impactEnergies=..,      polarThetas=..,             polarPhis=.., 
+        impactEnergies=..,      polarThetas=..,             polarPhis=..,           bVectors=..,
         printBefore=..,         lineSelection=..,           epsPartialWave=.. )
                     
     ... constructor for modifying the given ParticleScattering.Settings by 'overwriting' the previously selected parameters.
@@ -109,7 +115,8 @@ function Settings(set::ParticleScattering.Settings;
     beamType::Union{Nothing,Beam.AbstractBeamType}=nothing,
     polarization::Union{Nothing,Basics.AbstractPolarization}=nothing,
     impactEnergies::Union{Nothing,Array{Float64,1}}=nothing,    polarThetas::Union{Nothing,Array{Float64,1}}=nothing,
-    polarPhis::Union{Nothing,Array{Float64,1}}=nothing,         printBefore::Union{Nothing,Bool}=nothing, 
+    polarPhis::Union{Nothing,Array{Float64,1}}=nothing,         bVectors::Union{Nothing,Vector{Vector{Float64}}}=nothing, 
+    printBefore::Union{Nothing,Bool}=nothing, 
     lineSelection::Union{Nothing,LineSelection}=nothing,        epsPartialWave::Union{Nothing,Float64}=nothing)  
     
     if  processTypey   == nothing   processTypex    = set.processType       else  processTypex    = processType       end
@@ -118,12 +125,13 @@ function Settings(set::ParticleScattering.Settings;
     if  impactEnergies == nothing   impactEnergiesx = set.impactEnergies    else  impactEnergiesx = impactEnergies    end
     if  polarThetas    == nothing   polarThetasx    = set.polarThetas       else  polarThetasx    = polarThetas       end
     if  polarPhis      == nothing   polarPhisx      = set.polarPhis         else  polarPhisx      = polarPhis         end
+    if  bVectors       == nothing   bVectorsx       = set.bVectors          else  bVectorsx       = bVectors          end
     if  printBefore    == nothing   printBeforex    = set.printBefore       else  printBeforex    = printBefore       end 
     if  lineSelection  == nothing   lineSelectionx  = set.lineSelection     else  lineSelectionx  = lineSelection     end 
     if  epsPartialWave == nothing   epsPartialWavex = set.epsPartialWave    else  epsPartialWavex = epsPartialWave    end
 
-    Settings( processTypex, beamTypex, polarizationx, impactEnergiesx, polarThetasx, polarPhisx, printBeforex, 
-                lineSelectionx, epsPartialWavex )
+    Settings( processTypex, beamTypex, polarizationx, impactEnergiesx, polarThetasx, polarPhisx, bVectorsx, 
+              printBeforex, lineSelectionx, epsPartialWavex )
 end
 
 
@@ -136,6 +144,7 @@ function Base.show(io::IO, settings::ParticleScattering.Settings)
     println(io, "impactEnergies :       $(settings.impactEnergies )  ")
     println(io, "polarThetas:           $(settings.polarThetas)  ")
     println(io, "polarPhis:             $(settings.polarPhis)  ")
+    println(io, "bVectors:              $(settings.bVectors)  ")
     println(io, "printBefore:           $(settings.printBefore)  ")
     println(io, "lineSelection:         $(settings.lineSelection)  ")
     println(io, "epsPartialWave:        $(settings.epsPartialWave)  ")
@@ -283,6 +292,36 @@ end
 
 
 """
+`ParticleScattering.amplitude(processType::ElasticElectronNR, beamType::Beam.BesselBeam, nu::Int64,  
+                              l::Int64, lPhase::Float64, theta::Float64, phi::Float64, grid::Radial.Grid)`
+    ... to compute the partial-wave (l) amplitude for the nonrelativistic elastic electron scattering of Bessel beam 
+        at given theta and phi as well as at given impact parameter (b, phib). An  amplitude::ComplexF64 is returned.
+"""
+function amplitude(processType::ElasticElectronNR, beamType::Beam.BesselBeam, nu::Int64,  
+                   l::Int64, lPhase::Float64, theta::Float64, phi::Float64, grid::Radial.Grid)
+    
+    amplitude = ComplexF64(0.)
+    #
+    if  l >= abs(beamType.mOAM + nu)
+        # Only partial amplitudes with l >= abs(mOAM) are nonzero
+        wa        = GSL.sf_legendre_Plm(l, abs(beamType.mOAM + nu), cos(beamType.openingAngle));   wc = 1.0
+        if   beamType.mOAM + nu < 0
+            m  = abs(beamType.mOAM + nu)
+            wc = (-1)^m * factorial(big(l-m)) / factorial(big(l+m))     
+            wc = Float64(wc)
+        end
+        wb        = exp( im*lPhase ) * (-1.)^(beamType.mOAM+nu)           *
+                    sqrt( (2*l + 1) * factorial( big(l - beamType.mOAM - nu) ) / (4*pi * factorial( big(l + beamType.mOAM - nu) ) ) ) * 
+                    wa * wc * AngularMomentum.sphericalYlm(l, beamType.mOAM+nu, theta, phi) * sin(lPhase)
+        amplitude = amplitude + ComplexF64(wb)
+    end
+    ##x @show processType, beamType, l, amplitude, typeof(amplitude)
+    
+    return( amplitude )
+end
+
+
+"""
 `ParticleScattering.computeAmplitudesProperties(processType::ElasticElectronNR, event::ParticleScattering.EventNR, 
                                                 nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                                 settings::ParticleScattering.Settings; printout::Bool=true)` 
@@ -294,10 +333,10 @@ function computeAmplitudesProperties(processType::ElasticElectronNR, event::Part
                                      grid::Radial.Grid, nrContinuum::Int64, settings::ParticleScattering.Settings; printout::Bool=true) 
     newPws   = ParticleScattering.PartialWaveNR[];   contSettings = Continuum.Settings(false, nrContinuum)
     d2SigmaHeadon = 0.;   d2SigmaBorn = 0.;   d2SigmaMacros = 0.
-    amp1 = amp2 = amp3 = amp4 = amp5 = amp6 = amp7 = amp8 = 1.0e6;   maxamp = 0.
     
     if  processType.calcd2SigmaHeadon
         # Compute the head-on scattering cross sections
+        amp1 = amp2 = amp3 = amp4 = amp5 = amp6 = amp7 = amp8 = 1.0e6;   maxamp = 0.
         totalAmp = ComplexF64(0.)
         for  l = 0:1000
             @show  l, amp1, amp2, amp3, amp4, amp5, amp6, amp7, maxamp, settings.epsPartialWave
@@ -318,6 +357,7 @@ function computeAmplitudesProperties(processType::ElasticElectronNR, event::Part
     if  processType.calcd2SigmaBorn
         # Compute the macroscopic scattering cross sections, integrated over all impact parameters
         println("\n\n>> Compute (Born) double-differential cross sections. ... \n\n")
+        amp1 = amp2 = amp3 = amp4 = amp5 = amp6 = amp7 = amp8 = 1.0e6;   maxamp = 0.
         totalAmp = ComplexF64(0.);   k = event.beamType.kz / cos(event.beamType.openingAngle)
         for  l = 0:1000
             @show  l, amp1, amp2, amp3, amp4, amp5, amp6, amp7, maxamp, settings.epsPartialWave
@@ -346,6 +386,46 @@ function computeAmplitudesProperties(processType::ElasticElectronNR, event::Part
     if  processType.calcd2SigmaMacroscopic
         # Compute the macroscopic scattering cross sections, integrated over all impact parameters
         d2SigmaMacros = ParticleScattering.crossSectionMacroscopic(event.processType, event.beamType, newPws, event.theta, event.phi, grid)        
+    end
+    
+    if  processType.calcBdependentAmps
+        # Compute b-vector dependent scattering amplitudes; they are generated an printed in a neat table but not (yet)
+        # brought to the final outcome of the event. ... Compute the head-on scattering amplitudes
+        nb = length(settings.bVectors)
+        wb = NamedTuple{(:bx, :by, :b, :phib, :amp), Tuple{Float64, Float64, Float64, Float64, ComplexF64}}[]
+        #
+        for  bVector in settings.bVectors
+            bx, by   = bVector;   b = sqrt(bx^2 + by^2);   phib = angle(bx + by*im)
+            k        = event.beamType.kz / cos(event.beamType.openingAngle)
+            krho     = k * sin(event.beamType.openingAngle)
+            nuAmp    = ComplexF64(0.)
+            for  nu = -5:5
+                amp1 = amp2 = amp3 = amp4 = 1.0e6;    lAmp = ComplexF64(0.)
+                for  l = 0:1000
+                    @show  l, amp1, amp2, amp3, amp4, settings.epsPartialWave
+                    kappa      = -l - 1;    
+                    cOrbital, lPhase  = Continuum.generateOrbitalForLevel(event.impactEnergy, Subshell(101, kappa), event.finalLevel, 
+                                                                          nm, grid, contSettings)
+                    amp  = ParticleScattering.amplitude(event.processType, event.beamType, nu, l, lPhase, event.theta, event.phi, grid)
+                    lAmp = lAmp + amp
+                    amp1 = amp2;   amp2 = amp3;   amp3 = amp4;   amp4 = abs(amp)^2
+                    if  l > 5  &&  (amp1 + amp2 + amp3 + amp4) < settings.epsPartialWave    break     end
+                end
+                @show nu, krho*b, lAmp
+                nuAmp = nuAmp + (-1.0im)^nu * GSL.sf_bessel_Jnu(nu, krho*b) * exp( - im*nu+phib )
+            end
+            nuAmp = nuAmp * 2 * (-1.0im)^event.beamType.mOAM / k 
+            println("******* nuAmp = $nuAmp ")
+
+            push!(wb, (bx=bx, by=by, b=b, phib=phib, amp=nuAmp) )
+        end
+        #
+        sym = LevelSymmetry(event.initialLevel.J, event.initialLevel.parity)
+        println("\n > Compute b-vector dependent scattering amplitudes for $nb impact parameters with ..." *
+                "\n      J^P = " * string(sym)                    * "             ... initial level "      *
+                "\n      " * @sprintf("%.6e", event.impactEnergy) * "    ... impact energy [Hartree]  \n" )
+        #
+        ParticleScattering.displayBdependentAmplitudes(stdout, wb)
     end
     
     newEvent = ParticleScattering.EventNR(event.processType, event.beamType, event.initialLevel, event.finalLevel, event.impactEnergy, 
@@ -404,13 +484,37 @@ end
 """
 function crossSectionMacroscopic(processType::ElasticElectronNR, beamType::Beam.BesselBeam, 
                                  pws::Array{ParticleScattering.PartialWaveNR,1}, theta::Float64, phi::Float64, grid::Radial.Grid)
+    #
+    function Theta(l::Int64, m::Int64, theta::Float64)
+        println(">>>>> l = $l,  m = $m, theta = $theta ")
+        if  abs(m) > l   wx =  ComplexF64(0.) 
+        elseif  m >= 0   wx = (-1.0)^m * sqrt( (2*l+1) * factorial(big(l-m)) / (2 * factorial(big(l+m)) ) ) * 
+                              GSL.sf_legendre_Plm(l, m, cos(theta))
+        else             wx = (-1.0)^abs(m) * Theta(l, abs(m), theta)
+        end
+        return( wx )
+    end
+    #
     d2SigmaMacros = 0.
     #
     println(">> Compute (macroscopic) double-differential cross sections based on $(length(pws)) partial waves.")
     #
     wb = 0.;   k = beamType.kz / cos(beamType.openingAngle);   kperp = k * sin(beamType.openingAngle)
     #
-    for  nu = -5:50
+    wa = ComplexF64(0.)
+    for  pwa in pws,    pwb in pws
+        for  m = -pwa.l:pwa.l 
+            wa = wa + exp( im*(pwa.phase - pwb.phase) ) * sin(pwa.phase) * sin(pwb.phase) * 
+                      Theta(pwa.l, m, theta) * Theta(pwb.l, m, theta) * 
+                      Theta(pwa.l, m, beamType.openingAngle) * Theta(pwb.l, m, beamType.openingAngle) 
+        end
+    end
+    #
+    wa = Float64( wa.re )
+    d2SigmaMacros = 16 * pi^2 * wa / (k * beamType.kz) 
+    #
+    #==  First attempt to calculate macroscopic cross sections ... which should not be m-dependent !!
+    for  nu = -10:50
         wa = ComplexF64(0.)
         for  pw in pws 
             l = pw.l;   lPhase = pw.phase
@@ -428,12 +532,13 @@ function crossSectionMacroscopic(processType::ElasticElectronNR, beamType::Beam.
                 wa = wa + ComplexF64(wx)
             end
         end
-        wb = wb + 2 / k * abs(wa)
-        @show nu, wb, 2 / k * abs(wa)
+        wb = wb + 4 / k^2 * abs(wa)^2
+        @show nu, wb, 4 / k^2 * abs(wa)^2
     end
     #
-    d2SigmaMacros = wb / kperp
+    d2SigmaMacros = wb / kperp ==#
     
+    println(">>>> d2SigmaMacros = $d2SigmaMacros ")
     
     return( d2SigmaMacros )
 end
@@ -463,6 +568,38 @@ function  determineEventsNR(finalMultiplet::Multiplet, initialMultiplet::Multipl
         end
     end
     return( events )
+end
+            
+
+"""
+`ParticleScattering.displayBdependentAmplitudes(stream::IO, 
+                    wb::Array{NamedTuple{(:bx, :by, :b, :phib, :amp), Tuple{Float64, Float64, Float64, Float64, ComplexF64}},1})`  
+    ... to display a a neat table of impact-parameter dependent amplitudes; nothing is returned otherwise.
+"""
+function  displayBdependentAmplitudes(stream::IO, 
+                 wb::Array{NamedTuple{(:bx, :by, :b, :phib, :amp), Tuple{Float64, Float64, Float64, Float64, ComplexF64}},1})
+    nx = 90
+    println(stream, " ")
+    println(stream, "  Selected b-dependent scattering amplitudes:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
+    sa = "  ";   sb = "  "
+    sa = sa * TableStrings.center(12, "b_x [a_o]"; na=2);                                sb = sb * TableStrings.hBlank(22)
+    sa = sa * TableStrings.center(12, "b_y [a_o]"; na=2);                                sb = sb * TableStrings.hBlank(22)
+    sa = sa * TableStrings.center(12, " b [a_o] "; na=2);                                sb = sb * TableStrings.hBlank(22)
+    sa = sa * TableStrings.center(12, "  phi_b  "; na=2);                                sb = sb * TableStrings.hBlank(22)
+    sa = sa * TableStrings.center(30, "(complex) amplitude"; na=2);                      sb = sb * TableStrings.hBlank(20)
+    println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx)) 
+    #   
+    for  w in wb
+        sa  = "    " * @sprintf("%.3e", w.bx) * "     " * @sprintf("%.3e", w.by)   * "     "
+        sa  = sa     * @sprintf("%.3e", w.b)  * "     " * @sprintf("%.3e", w.phib) * "     "
+        sa  = sa     * @sprintf("%.8e", w.amp.re)  * "  " * @sprintf("%.8e", w.amp.im) * "  "
+        println(stream, sa)
+    end
+    println(stream, "  ", TableStrings.hLine(nx), "\n")
+    #
+    return( nothing )
 end
 
 
@@ -530,8 +667,9 @@ function  displayAmplitudes(stream::IO, processType::ElasticElectronNR, events::
     #
     nsa = 0
     for  event in events
+        if  length(event.partialWaves) == 0     continue    end
         sa  = "  ";    isym = LevelSymmetry( event.initialLevel.J, event.initialLevel.parity)
-                        fsym = LevelSymmetry( event.finalLevel.J,   event.finalLevel.parity)
+                       fsym = LevelSymmetry( event.finalLevel.J,   event.finalLevel.parity)
         sa = sa * TableStrings.center(18, string(typeof(event.beamType)); na=1 ) 
         sa = sa * TableStrings.center(18, TableStrings.levels_if(event.initialLevel.index, event.finalLevel.index); na=1)
         sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=3)

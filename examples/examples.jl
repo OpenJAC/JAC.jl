@@ -130,7 +130,9 @@ elseif  char == 'I'
 elseif  char == 'J'
     println("J)  Examples, tests & development of plasma computations")
     println("--------------------------------------------------------")
-    println("Ja) Tests of average-atom computations.")
+    println("Ja) Apply & test the average-atom computations.")
+    println("Jb) Apply & test the line-shift computations.")
+    println("Jc) Apply & test the Saha-Boltzmann computations for an ionic mixture in LTE.")
     #
 elseif  char == 'Q'
     return( nothing )
