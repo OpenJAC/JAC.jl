@@ -10,8 +10,8 @@ if  true
     rho         = 2.0e-5      # number density
     temp_au     = Defaults.convertUnits("energy: from eV to atomic", 200.)
     settings    = Plasma.Settings(temp_au, rho, true)
-    ionMixture  = [IsotopicFraction(6., 12.2, 1.0)]
-    scheme      = Plasma.SahaBoltzmannScheme(true, 10, 3, 1, 4, ionMixture, String[])
+    ionMixture  = [IsotopicFraction(6., 12.2, 1.0)]  ## , IsotopicFraction(9., 20.2, 0.4)
+    scheme      = Plasma.SahaBoltzmannScheme(true, 10, 3, 1, 4, ionMixture, ["IonicLevelDataZ6A12.jld"]) ##  , "IonicLevelDataZ9A20.jld"
     
     wa          = Plasma.Computation(Plasma.Computation(), scheme=scheme, grid=grid, settings=settings)
     @show wa

@@ -111,13 +111,16 @@ end
 
 
 """
-`Semiempirical.estimate("binding energy", Z::Float64, sh::Subshell)`   
-    ... to provide the binding energy of a subshell electron, taken from a semi-empirical tabulations by Williams et al., 
-        https://userweb.jlab.org/~gwyn/ebindene.html. A energy::Float64 in  Hartree is returned.
+`Semiempirical.estimate("binding energy", Z::Int64, sh::Subshell; useLarkins::Bool=false)`   
+    ... to provide the binding energy of a subshell electron, taken from a semi-empirical tabulations by Williams et al. (2000), 
+        https://userweb.jlab.org/~gwyn/ebindene.html or Larkins (1977). A energy::Float64 in  Hartree is returned.
 """
-function estimate(sa::String, Z::Int64, sh::Subshell)
+function estimate(sa::String, Z::Int64, sh::Subshell; useLarkins::Bool=false)
     if     sa == "binding energy"
-        wa = PeriodicTable.bindingEnergies_Williams2000(Z)
+        if    useLarkins          wa = PeriodicTable.bindingEnergies_Larkins1977(Z)
+        else                      wa = PeriodicTable.bindingEnergies_Williams2000(Z)
+        end 
+        #
         if      sh == Subshell("1s_1/2")    wb = wa[1]
         elseif  sh == Subshell("2s_1/2")    wb = wa[2]
         elseif  sh == Subshell("2p_1/2")    wb = wa[3]
