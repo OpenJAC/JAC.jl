@@ -4,17 +4,20 @@ println("Jc) Apply & test the Saha-Boltzmann computations for an ionic mixture i
 grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.6e-2, rbox = 10.0)
 
 if  true
-    # Last successful:  15Jun2024
-    # Compute the ...
+    # Last successful:  10Jul2024
+    # Compute the Saha-Boltzmann equilibrium densities for a mixture of Carbon ions
     nm          = Nuclear.Model(6.0)
     rho         = 2.0e-5      # number density
     temp_au     = Defaults.convertUnits("energy: from eV to atomic", 200.)
     settings    = Plasma.Settings(temp_au, rho, true)
     ionMixture  = [IsotopicFraction(6., 12.2, 1.0)]  ## , IsotopicFraction(9., 20.2, 0.4)
-    scheme      = Plasma.SahaBoltzmannScheme(true, 10, 3, 1, 4, ionMixture, ["IonicLevelDataZ6A12.jld"]) ##  , "IonicLevelDataZ9A20.jld"
+    scheme      = Plasma.SahaBoltzmannScheme(true, 10, 3, 1, 4, ionMixture, ["IonicLevelDataZ6A12RobinA.jld"])
     
     wa          = Plasma.Computation(Plasma.Computation(), scheme=scheme, grid=grid, settings=settings)
     @show wa
     wb          = perform(wa, output=true)
     
 end
+
+# Filenames generated
+# "IonicLevelDataZ6A12.jld", "IonicLevelDataZ9A20.jld"

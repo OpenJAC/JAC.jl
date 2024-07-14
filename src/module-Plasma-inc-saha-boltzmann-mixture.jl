@@ -60,9 +60,9 @@ end
 
 """
 `struct  Plasma.IsotopeClass`  
-    ... a struct to comprise the (necessary) information about a single ionic charge state in Saha-Boltzmann computations.
+    ... a struct to comprise the (necessary) information about a single isotopic fraction in Saha-Boltzmann computations.
 
-    + isotopicDensity    ::Float64                    ... (number) density n (Z,A) of all ions of this class.
+    + isotopicDensity    ::Float64                    ... (number) density n (Z,A) of all ions of this isotope class.
     + Lambda             ::Float64                    ... thermal length Lambda of the given isotope.
     + dominantEnergy     ::Float64                    
         ... energy of the "dominant" ion level of this isotope; this depends on energy and help improve convergence
@@ -203,7 +203,7 @@ function computeIonLevelNumberDensity(temp::Float64, q::Int64, ionLevel::IonicLe
                                       isoDensity::Float64, chemMuE::Float64, dominantEnergy::Float64)
     beta     = 1 / temp;   wa =  -beta * (chemMuE * q + ionLevel.energy - dominantEnergy) / pfIonClass
     nDensity = isoDensity + ionLevel.g * exp( -beta * (chemMuE * q + ionLevel.energy - dominantEnergy) / pfIonClass )
-    @show wa, chemMuE, isoDensity, pfIonClass, nDensity
+    ## @show wa, chemMuE, isoDensity, pfIonClass, nDensity
     return ( nDensity )
 end
 
@@ -220,7 +220,7 @@ function computeMeanIsotopeChargeState(isoClass::IsotopeClass)
         end
     end
     
-    return ( nDensity / isoClass.nDensity )
+    return ( nDensity / isoClass.isotopicDensity )
 end
 
 
@@ -301,7 +301,7 @@ function determineInitialIonDensitiesPropterties(scheme::Plasma.SahaBoltzmannSch
     # Initial the isotope class data
     isotopicDensity = ionDensity * isoClass.isotopicFraction.x
     Lambda          = Plasma.thermalLength(temp, isoClass.isotopicFraction)
-    dominantEnergy  = -5*temp   ## Plasma.computeDominantIsotopeEnergy(isoClass)
+    dominantEnergy  = -2*temp   ## Plasma.computeDominantIsotopeEnergy(isoClass)
     
     for  ionClass  in  isoClass.ionClasses
         # Initial the ion level data; first compute the partition function of the ionic class
@@ -350,7 +350,9 @@ end
 
 """
 `Plasma.displayIsotopeClasses(stream::IO, isoClasses::Array{IsotopeClass,1})`  
-    ... to list ... . A neat table is printed but nothing is returned otherwise.
+    ... list all basic information about the ionic mixture, i.e. the isotopic fractions, the thermal length, 
+        the isotopic density as well as the number of charge states and ionic levels involved into the computations.
+        A neat table is printed but nothing is returned otherwise.
 """
 function  displayIsotopeClasses(stream::IO, isoClasses::Array{IsotopeClass,1})
     nx = 105
@@ -395,6 +397,82 @@ end
 
 
 """
+`Plasma.displaySahaBoltzmannEquilibrium(stream::IO, isoClasses::Array{IsotopeClass,1}; printLevelDensities::Bool=false)`  
+    ... list some basic information about the ionic mixture, along with the charge states and the ionic densities;
+        it also prints the ionic level number densities if this is required.
+        A neat table is printed but nothing is returned otherwise.
+"""
+function  displaySahaBoltzmannEquilibrium(stream::IO, isoClasses::Array{IsotopeClass,1}; printLevelDensities::Bool=true)
+    nx = 115
+    println(stream, " ")
+    println(stream, "  Saha-Boltzmann equilibrium of the ionic mixture:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
+    sa = "  ";   sb = "  "
+    sa = sa * TableStrings.center(22, "Isotope (Z, A, x)"   ; na=2);                       sb = sb * TableStrings.hBlank(24)
+    sa = sa * TableStrings.center(18, "Lambda (T,A)"        ; na=2);                       sb = sb * TableStrings.hBlank(20)
+    sa = sa * TableStrings.center(10, "n (Z,A)"             ; na=2);                       sb = sb * TableStrings.hBlank(12)
+    sa = sa * TableStrings.center(10, "Dominant E"          ; na=2);                       
+    sb = sb * TableStrings.center(10, " [Hartree]"          ; na=2)
+    sa = sa * TableStrings.center(10, "No (ions)"           ; na=2);                       sb = sb * TableStrings.hBlank(12)
+    sa = sa * TableStrings.center(30, "q    Energy     g    nDensity"    ; na=2);             sb = sb * TableStrings.hBlank(18)
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+    #   
+    for  isoClass in isoClasses
+        sa  = "";    sc  = "                 ";    
+        sc = sc * string(round(isoClass.isotopicFraction.Z, digits=2)) * ", "
+        sc = sc * string(round(isoClass.isotopicFraction.A, digits=2)) * ", "
+        sc = sc * string(round(isoClass.isotopicFraction.x, digits=2))
+        sa = sa * sc[end-20:end]                                * "         "
+        sa = sa * @sprintf("% .2e", isoClass.Lambda)             * "       "
+        sa = sa * @sprintf("% .2e", isoClass.isotopicDensity)    * "   "
+        sa = sa * @sprintf("% .4e", isoClass.dominantEnergy)     * "   "
+        sc = "      " * string(length(isoClass.ionClasses))
+        sa = sa * sc[end-4:end] * "   "    
+        sb = repeat(" ", length(sa))
+        println(stream, sa)
+        for  ionClass  in  isoClass.ionClasses   
+            sc = "         " * string(ionClass.q);                     sb = sb * sc[end-4:end] * "  " 
+            println(stream, sb);    
+            sb = repeat(" ", length(sa))
+            sd = repeat(" ", length(sb)) * "       "   
+            if  printLevelDensities
+                for  ionLevel in ionClass.ionLevels
+                    se = sd *  @sprintf("% .3e", ionLevel.energy) * " " * @sprintf("% 3.0f", ionLevel.g) * 
+                                                                    " " * @sprintf("% .3e", ionLevel.nDensity)
+                    println(stream, se)
+                end
+            end
+        end
+    end
+    println(stream, "  ", TableStrings.hLine(nx)) 
+     
+    return( nothing )
+end
+
+
+"""
+`Plasma.displayThermodynamicProperties(stream::IO, temp::Float64, totalIonDensity::Float64, isoClasses::Array{IsotopeClass,1})`  
+    ... evaluates, converts units and displays the thermodynamic properties of the ionic mixture, based on the given 
+        isotopic-class data. A neat table is printed but nothing is returned otherwise.
+"""
+function  displayThermodynamicProperties(stream::IO, temp::Float64, totalIonDensity::Float64, isoClasses::Array{IsotopeClass,1})
+    #
+    pressure   = Plasma.pressure(temp, totalIonDensity, isoClasses)
+    internalEn = Plasma.internalEnergyDensity(temp, totalIonDensity, isoClasses)
+    freeEn     = Plasma.freeEnergyDensity(temp, totalIonDensity, isoClasses)
+    #
+    println(stream, "\n  Thermodynamic properties of the ionic mixture: \n")
+    println(stream, "  + pressure:          " * @sprintf("%.4e", pressure)     * " [a.u.]")
+    println(stream, "  + internal energy:   " * @sprintf("%.4e", internalEn)   * " [a.u.]")
+    println(stream, "  + free-energy:       " * @sprintf("%.4e", freeEn)       * " [a.u.]")
+     
+    return( nothing )
+end
+
+
+
+"""
 `Plasma.freeEnergyDensity(temp::Float64, totalIonDensity::Float64, isoClasses::Array{IsotopeClass,1})`  
     ... computes the internal energy density u(T) of an isotopic mixture at temperature T; a 
         u::Float64 is returned.
@@ -406,7 +484,7 @@ function freeEnergyDensity(temp::Float64, totalIonDensity::Float64, isoClasses::
     for  isoClass  in  isoClasses
         Lambda = isoClass.Lambda 
         for  ionClass in isoClass.ionClasses
-            for  ionLevel in ionClass.ionicLevels 
+            for  ionLevel in ionClass.ionLevels 
                 br = ionLevel.g / (ionLevel.density * Lambda^3)
                 wf = wf - ionLevel.density * temp * (log(br) - beta * ionLevel.energy + 1.0)   
             end
@@ -431,12 +509,12 @@ function internalEnergyDensity(temp::Float64, totalIonDensity::Float64, isoClass
     for  isoClass  in  isoClasses
         qbar = isoClass.isotopicFraction.x * Plasma.computeMeanIsotopeChargeState(isoClass)
         for  ionClass in isoClass.ionClasses
-            for  ionLevel in ionClass.ionicLevels    wa = wa + ionLevel.density * ionLevel.energy   end
+            for  ionLevel in ionClass.ionLevels    wa = wa + ionLevel.density * ionLevel.energy   end
         end
     end
     wu = 3/2 * totalIonDensity * temp * (1. + qbar) + wa
     
-    println(">>>> Internal energy density u(T) = $wr")
+    println(">>>> Internal energy density u(T) = $wu")
         
     return ( wu )
 end
@@ -473,16 +551,18 @@ function  perform(scheme::Plasma.SahaBoltzmannScheme, computation::Plasma.Comput
     for  isoClass  in  isoClasses
         newIsoClass = Plasma.readEvaluateIonLevelData(scheme, isoClass, computation.grid)
         newIsoClass = Plasma.determineInitialIonDensitiesPropterties(scheme, computation.settings.temperature, totalIonDensity, newIsoClass)
-        @show newIsoClass
+        ##x @show newIsoClass
         push!(newIsoClasses, newIsoClass)  
     end
 
     Plasma.displayIsotopeClasses(stdout, newIsoClasses)
     # Solve for the equilibrium densities
-    newIsoClasses = Plasma.solveSahaBoltzmannEquilibrium(temp::Float64, isoClasses::Array{IsotopeClass,1})
+    newIsoClasses = Plasma.solveSahaBoltzmannEquilibrium(computation.settings.temperature, newIsoClasses)
     # Display equilibrium densities and thermodynamic properties of the given mixture
-    # Plasma.displayResults(stdout, newIsoClasses)    
-    println("Saha-Boltzmann LTE computation complete ...")
+    Plasma.displaySahaBoltzmannEquilibrium(stdout, newIsoClasses)    
+    Plasma.displayThermodynamicProperties(stdout, computation.settings.temperature, totalIonDensity, isoClasses)   
+    
+    println("\n> Saha-Boltzmann LTE computation complete ...")
     
     Defaults.warn(PrintWarnings())
     Defaults.warn(ResetWarnings())
@@ -494,13 +574,13 @@ end
 `Plasma.pressure(temp::Float64, totalIonDensity::Float64, isoClasses::Array{IsotopeClass,1})`  
     ... computes the pressure of an isotopic mixture at temperature T; a pressure::Float64 is returned.
 """
-function pressure(temp::Float64, isoClasses::Array{IsotopeClass,1})
+function pressure(temp::Float64, totalIonDensity::Float64, isoClasses::Array{IsotopeClass,1})
     pressure = 0.;      wp = 0.;   qbar = 0.
     # Compute (if desired) the pressure from the level population explicitly ... for comparison
     if true
         for  isoClass  in  isoClasses
             for  ionClass in isoClass.ionClasses
-                for  ionLevel in ionClass.ionicLevels    wp = wp + ionLevel.density * temp   end
+                for  ionLevel in ionClass.ionLevels    wp = wp + ionLevel.density * temp   end
             end
         end
         wp = wp + Plasma.computeElectronNumberDensity(temp, isoClasses) * temp
@@ -525,16 +605,18 @@ end
         A newIsoClasses::Array{IsotopeClass,1} with the proper number densities is returned.
 """
 function solveSahaBoltzmannEquilibrium(temp::Float64, isoClasses::Array{IsotopeClass,1})
-    noIteration = 0;   isNotConverged = true;    oldIsoClasses = deepcopy(isoClasses)
+    noIteration   = 0;   isNotConverged = true;     newIsoClasses = Plasma.IsotopeClass[]
+    oldIsoClasses = deepcopy(isoClasses)
     while  isNotConverged
         noIteration = noIteration + 1
-        println("> Saha-Boltzmann interaction $noIteration ... \n  ----------------------------------")
+        println("\n> Saha-Boltzmann iteration $noIteration ... \n  ------------------------------")
         #
         ne            = Plasma.computeElectronNumberDensity(temp, oldIsoClasses)
         chemMuE       = Plasma.computeElectronChemicalPotential(temp, ne) 
         newIsoClasses = Plasma.IsotopeClass[]
         for  isoClass  in  oldIsoClasses
             dominantEnergy = Plasma.computeDominantIsotopeEnergy(isoClass)
+            newIonClasses  = Plasma.IonicClass[]
             for  ionClass  in  isoClass.ionClasses
                 pfIonClass   = Plasma.computeIonClassPartitionFunction(temp,ionClass, chemMuE, dominantEnergy) 
                 groundEnergy = 0.
@@ -552,14 +634,16 @@ function solveSahaBoltzmannEquilibrium(temp::Float64, isoClasses::Array{IsotopeC
             push!(newIsoClasses, newIsoClass)
         end
         # Determine and report about convergence
-        if    isNotConverged   oldIsoClasses = deepcopy(newIisoClasses)   
-        else  break
+        ne     = Plasma.computeElectronNumberDensity(temp, newIsoClasses)
+        betamu = Plasma.computeElectronChemicalPotential(temp, ne) 
+        println(">> betamu = $betamu ")
+        #
+        if     isNotConverged  &&  noIteration < 20   oldIsoClasses = deepcopy(newIsoClasses)
+        else   break
         end
     end
-    # Report about final results of the Saha-Boltzmann equilibrium
-    # ...
     
-    return( newIisoClasses )
+    return( newIsoClasses )
     
 end
 
@@ -662,6 +746,21 @@ function readEvaluateIonLevelData(filename::String, isoClass::IsotopeClass, NoEx
                                           isoClass.isotopicFraction, newIonClasses)
         found       = true
         println(">>> Ion-level data are found in $filename  for $(chargeStates)+." )
+        #
+    elseif  true  # Use this branch to read-in external data that were generated for test purposes
+        for  ionClass in isoClass.ionClasses
+            qkey = "q" * string(ionClass.q) * "Levels"
+            if   haskey(isoData, qkey)  push!(newIonClasses, isoData[qkey] )
+                                        push!(chargeStates,  ionClass.q)
+            else                        push!(newIonClasses, ionClass)
+            end
+        end
+        #
+        newIsoClass = Plasma.IsotopeClass(isoClass.isotopicDensity, isoClass.Lambda, isoClass.dominantEnergy, 
+                                          isoClass.isotopicFraction, newIonClasses)
+        found       = true
+        println(">>> Ion-level data are found in $filename  for $(chargeStates)+. \n" )
+        #
     else
         println(">>> No ion-level data found in $filename." )
     end
@@ -803,6 +902,76 @@ function writeIonLevelData(filename::String, isoClass::IsotopeClass, NoExcitatio
     # Open the file and dump the directory
     println(">>> Save ion level data to file  $filename")
     JLD2.@save filename isoData
+    
+    return ( nothing )
+end
+
+
+"""
+`Plasma.writeIonLevelDataRobin(filenameRobin::String, filenameJac::String)`  
+    ... reads-in ion-level data from filenameRobin (in tabular form) and writes a proper isoData file
+        for the given isotope class to filenameJac. Nothing is returned.
+"""
+function writeIonLevelDataRobin(filenameRobin::String, filenameJac::String)
+    # Generate a proper dictionary to be printed out; Z and A must be commuicated and set explicitly
+    wZ = 6.0;   wA = 12.2
+    isoData = Dict{String, Any}();     ionClasses = Plasma.IonicClass[]
+    isoData["Z"]              =  trunc(wZ, digits=3)
+    isoData["A"]              =  trunc(wA, digits=3)
+    isoData["NoExcitations"]  =  0            
+    isoData["upperShellNo"]   =  6  
+    # The given data look suitable to be used; now construct a newIsoClass to be printed out
+    f = open(filenameRobin)
+    readline(f);    readline(f)  # Jump over the header
+    
+    sLines = String[]
+    while  !eof(f)
+        push!(sLines, readline(f))
+    end
+    @show  length(sLines), sLines[1]
+    
+    # Test that all data are read-in properly
+    #== for  sLine  in sLines
+        nele = Base.parse(Int64,   strip(sLine[17:20]) );   q = round(Int, wZ) - nele
+        en   = Base.parse(Float64, strip(sLine[33:52]) )
+        g    = Base.parse(Int64,   strip(sLine[54:57]) )
+        @show nele, q, en, g
+    end
+    error("Check the test !!")  ==#
+
+    # Determine all q in the data set
+    qs = Int64[]
+    for  sLine  in sLines
+        nele = Base.parse(Int64,   strip(sLine[17:20]) );   q = round(Int, wZ) - nele
+        push!(qs, q)
+    end
+    qs = unique(qs)
+    println(">> Charge state in the input file are: $qs ")
+    
+    # Create an IonClass for each q
+    for  q  in qs
+        ionLevels = Plasma.IonicLevel[];  groundEnergy = 1.0e6
+        for  sLine  in sLines
+            nele = Base.parse(Int64,   strip(sLine[17:20]) );   qx = round(Int, wZ) - nele
+            if  qx == q
+                en   = Base.parse(Float64, strip(sLine[33:52]) )
+                g    = Base.parse(Int64,   strip(sLine[54:57]) )
+                push!(ionLevels, Plasma.IonicLevel(en, g, 0.) )
+                if  en < groundEnergy   groundEnergy = en   end
+            end
+        end
+        push!(ionClasses, Plasma.IonicClass(q, groundEnergy, ionLevels) )
+    end
+    println(">> Number of ionic classes in the input file is: $(length(ionClasses)) ")
+    
+    for  ionClass in ionClasses
+        qkey = "q" * string(ionClass.q) * "Levels"
+        isoData[qkey]         = ionClass
+    end
+    
+    # Open the file and dump the directory
+    println(">> Save ion level data to file  $filenameJac")
+    JLD2.@save filenameJac isoData
     
     return ( nothing )
 end
