@@ -674,7 +674,7 @@ function warn(wa::AbstractWarning)
         #
     elseif    wa == ResetWarnings()
         ## @warn("Reset global array GBL_WARNINGS.")
-        printstyled("Constants.warn():  Reset global array GBL_WARNINGS.", color=:light_magenta)
+        ## printstyled("Constants.warn():  Reset global array GBL_WARNINGS.", color=:light_magenta)
         GBL_WARNINGS = String[]
     else      error("Unsupported Warnings:: $wa")
     end

@@ -7,6 +7,7 @@ Task:  Evaluate symbolically the recoupling coefficient for the (recoupling of) 
        This input has been adapted from ../examples/example-Ga.jl
 ==#
 
+import Pkg; Pkg.add("SymEngine")          ## This could be commented out after first use in any new local environment.
 using SymEngine
 
 j1   = Basic(:j1);    j2 = Basic(:j2);    j3 = Basic(:j3);    J12 = Basic(:J12);    J23 = Basic(:J23);    J = Basic(:J)
