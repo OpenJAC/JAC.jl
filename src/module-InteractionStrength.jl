@@ -33,6 +33,20 @@ end
 
 
 """
+`InteractionStrength.bosonShift(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid::Radial.Grid)`  
+    ... computes the  <a|| h^(boson-field) ||b>  reduced matrix element of the boson-field shift Hamiltonian for orbital 
+        functions a, b. This boson-field shift Hamiltonian just refers to the effective potential of the given 
+        isotope due to the (assumed) boson mass. A value::Float64 is returned.  
+"""
+function bosonShift(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid::Radial.Grid)
+    wa = RadialIntegrals.isotope_boson(a, b, potential, grid) 
+    ## wa = RadialIntegrals.isotope_boson(a, b, potential, grid) 
+    ## println("**  <$(a.subshell) || h^(boson-field shift) || $(b.subshell)>  = $wa" )
+    return( wa )
+end
+
+
+"""
 `InteractionStrength.dipole(a::Orbital, b::Orbital, grid::Radial.Grid)`  
     ... computes the  <a|| d ||b>  reduced matrix element of the dipole operator for orbital functions a, b. 
         A value::Float64 is returned. 
@@ -44,15 +58,13 @@ end
 
 
 """
-`InteractionStrength.bosonShift(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid::Radial.Grid)`  
-    ... computes the  <a|| h^(boson-field) ||b>  reduced matrix element of the boson-field shift Hamiltonian for orbital 
-        functions a, b. This boson-field shift Hamiltonian just refers to the effective potential of the given 
-        isotope due to the (assumed) boson mass. A value::Float64 is returned.  
+`InteractionStrength.eMultipole(k::Int64, a::Orbital, b::Orbital, grid::Radial.Grid)`  
+    ... computes the  <a|| t^(Ek) ||b>  reduced matrix element of the dipole operator for orbital functions a, b. 
+        A value::Float64 is returned. 
 """
-function bosonShift(a::Orbital, b::Orbital, potential::Array{Float64,1}, grid::Radial.Grid)
-    wa = RadialIntegrals.isotope_boson(a, b, potential, grid) 
-    ## wa = RadialIntegrals.isotope_boson(a, b, potential, grid) 
-    ## println("**  <$(a.subshell) || h^(boson-field shift) || $(b.subshell)>  = $wa" )
+function eMultipole(k::Int64, a::Orbital, b::Orbital, grid::Radial.Grid)
+    wa = AngularMomentum.CL_reduced_me_rb(a.subshell, k, b.subshell) * RadialIntegrals.rkDiagonal(k, a, b, grid)
+    ##x @show RadialIntegrals.rkDiagonal(k, a, b, grid), AngularMomentum.CL_reduced_me_rb(a.subshell, k, b.subshell)
     return( wa )
 end
 

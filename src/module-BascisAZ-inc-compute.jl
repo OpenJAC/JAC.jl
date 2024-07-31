@@ -174,16 +174,14 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
 end
 
 
-#==
 """
-`Basics.compute("matrix: CI for plasma, J^P symmetry", JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
-                                                       settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)`  
+`Basics.compute(JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
+                settings::AsfSettings, plasmaModel::Basics.AbstractPlasmaModel; printout::Bool=true)`  
     ... to compute the CI matrix for a given J^P symmetry block of basis and by making use of the nuclear model and the grid; 
         a matrix::Array{Float64,2} is returned.
 """
-function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
-                            settings::AsfSettings, plasmaSettings::PlasmaShift.Settings; printout::Bool=true)    
-    !(sa == "matrix: CI for plasma, J^P symmetry")   &&   error("Not supported keystring")
+function Basics.compute(JP::LevelSymmetry, basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid,
+                        settings::AsfSettings, plasmaModel::Basics.AbstractPlasmaModel; printout::Bool=true)    
 
     # Determine the dimension of the CI matrix and the indices of the CSF with J^P symmetry in the basis
     idx_csf = Int64[]
@@ -197,11 +195,11 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
     if  settings.qedModel != NoneQed()   error("No QED estimates supported for plasma computations; use qedModel=NoneQed()  in the asfSettings.")   end   
     
     # Now distinguis the CI matrix for different plasma models
-    if  plasmaSettings.plasmaModel == PlasmaShift.DebyeHueckel()
+    if  typeof(plasmaModel) == Basics.DebyeHueckel
         if printout    print("Compute DebyeHueckel-CI matrix of dimension $n x $n for the symmetry $(string(JP.J))^$(string(JP.parity)) ...")    end
 
         # Generate an effective nuclear charge Z(r) for a screened Debye-Hueckel potential on the given grid
-        potential = Nuclear.nuclearPotentialDH(nuclearModel, grid, plasmaSettings.lambdaDebye)
+        potential = Nuclear.nuclearPotentialDH(nuclearModel, grid, 1/plasmaModel.debyeLength)
 
         matrix = zeros(Float64, n, n)
         for  r = 1:n
@@ -236,7 +234,7 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
                     if  typeof(settings.eeInteractionCI)  in  [CoulombInteraction, CoulombBreit]
                         me = me + coeff.V * InteractionStrength.XL_Coulomb_DH(coeff.nu, basis.orbitals[coeff.a], basis.orbitals[coeff.b],
                                                                                         basis.orbitals[coeff.c], basis.orbitals[coeff.d], grid, 
-                                                                                        plasmaSettings.lambdaDebye)   end
+                                                                                        1/plasmaModel.debyeLength)   end
                 end
                 matrix[r,s] = me
             end
@@ -248,7 +246,7 @@ function Basics.compute(sa::String, JP::LevelSymmetry, basis::Basis, nuclearMode
     if printout    println("   ... done.")    end
 
     return( matrix )
-end   ==#
+end
 
 
 

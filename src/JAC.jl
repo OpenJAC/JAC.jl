@@ -53,7 +53,7 @@ using  Dates, Printf,  LinearAlgebra, SpecialFunctions, QuadGK, Cubature, GSL, J
        HypergeometricFunctions  ## , Interact, GaussQuadrature, IJulia, FortranFiles
 
 export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod, AbstractPotential, AbstractQedModel, AbstractStartOrbitals,
-       AbstractProcessSettings, AbstractEmpiricalSettings, AbstractPlasmaModel, AbstractPropertySettings, 
+       AbstractProcessSettings, AbstractEmpiricalSettings, AbstractPlasmaModel, AbstractPropertySettings, AbstractLineShiftSettings,
        add, AlphaX, AlphaVariation, analyze, AnapoleMoment, 
        AngularJ64, AngularM64, AngularJ, AngularMomentum, 
        AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AugerInPlasma, AutoIonization, AverageAtom,
@@ -86,7 +86,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RAuger, RasSettings, RasStep, 
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix, RadiativeOpacity,
        RestrictMaximumDisplacements, RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
-       SchiffMoment, Semiempirical, setDefaults, Shell, ShellSelection, SolidAngle, Spectroscopy, SphericalTensor, SpinAngular, 
+       SchiffMoment, Semiempirical, setDefaults, Shell, ShellSelection, SolidAngle, Spectroscopy, SphericalTensor, SpinAngular, StarkShift,
        StartFromHydrogenic, StartFromPrevious, StrongField, StrongField2, Subshell,
        tabulate, TestFrames, tools, Triangle, TwoElectronOnePhoton,
        UseBabushkin, UseCoulomb, UseGauge,
@@ -132,6 +132,7 @@ include("module-Einstein.jl")
 include("module-Hfs.jl")
 include("module-IsotopeShift.jl")
 include("module-LandeZeeman.jl")
+include("module-StarkShift.jl")
 include("module-FormFactor.jl")
 include("module-ReducedDensityMatrix.jl")
 include("module-AlphaVariation.jl")

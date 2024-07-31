@@ -7,7 +7,8 @@
 module Semiempirical
 
 
-using ..Basics, ..Defaults, ..ManyElectron, ..PeriodicTable    ## ..ImpactIonization
+using Printf, 
+      ..Basics, ..Defaults, ..ManyElectron, ..PeriodicTable, ..TableStrings    ## ..ImpactIonization
 
 
 """
@@ -179,6 +180,79 @@ function estimate(sa::String, Z::Int64, conf::Configuration)
     wb = Defaults.convertUnits("energy: from eV to atomic", wb)
     # 
     return( wb )
+end
+
+
+
+"""
+`Semiempirical.estimateBindingEnergies(Z::Float64, coreConf::Configuration, nRange::UnitRange{Int64})`  
+    ... to estimate the binding energies of the high-n shells with n = nRange for a (multiply-charged) 
+        ion with nuclear charge Z and core configuration coreConfiguration.
+        A list of energies::Array{Float64} [in Hartree] is returned.
+"""
+function estimateBindingEnergies(Z::Float64, coreConf::Configuration, nRange::UnitRange{Int64})
+    energies = Float64[];    effZs = Float64[];    Ne = coreConf.NoElectrons
+    # Terminate if  nRange.start  <=  nMaxCore,  i.e. if any core-shell has a higher n-value
+    nMaxCore = 0;     for (k,v) in coreConf.shells   if  k.n > nMaxCore   nMaxCore = k.n    end    end
+    if  nRange.start  <=  nMaxCore   error("Unsupported n-values:  nMin = $(nRange.start)  <=  nMaxCore = $nMaxCore")    end
+    
+    # Compute an effective Zeff for each n separately (later by considering the (mean) overlap with the core-shell electrons) 
+    sn = "";    sZ = "";    se = "";    su = "";    
+    for  n = nRange
+        effZ = Z - Ne * (1 - 0.5/n^2.2)
+        eb   = -effZ^2/(2*n^2)
+        push!(energies, eb );     eu = Defaults.convertUnits("energy: from atomic", eb) 
+        sx = "           " * string(n);                   sn = sn * sx[end-10:end]
+        sx = "           " * @sprintf("% 2.2f", effZ);    sZ = sZ * sx[end-10:end]
+        sx = "           " * @sprintf("% 0.2e", eb);      se = se * sx[end-10:end]
+        sx = "           " * @sprintf("% 0.2e", eu);      su = su * sx[end-10:end]
+    end
+    
+    sa = TableStrings.inUnits("energy")
+    println("  Estimated high-n binding energies for Z = $Z and the given core configuration $coreConf: \n\n" *
+            "    n                   = " * sn *"\n" *
+            "    Zeff                = " * sZ *"\n" * 
+            "    epsilon_b [Hartree] = " * se *"\n" *
+            "    epsilon_b $sa      = "  * su *"\n"    )
+    
+    return( energies )
+end
+
+
+
+"""
+`Semiempirical.estimateBindingEnergies(Z::Float64, coreConf::Configuration, nRange::UnitRange{Int64}, l::Int64)`  
+    ... to estimate the binding energies of the high-n shells with n = nRange and orbital angular momentum l
+        for a (multiply-charged) ion with nuclear charge Z and core configuration coreConfiguration.
+        A list of energies::Array{Float64} [in Hartree] is returned.
+"""
+function estimateBindingEnergies(Z::Float64, coreConf::Configuration, nRange::UnitRange{Int64}, l::Int64)
+    energies = Float64[];    effZs = Float64[];    Ne = coreConf.NoElectrons
+    # Terminate if  nRange.start  <=  nMaxCore,  i.e. if any core-shell has a higher n-value
+    nMaxCore = 0;     for (k,v) in coreConf.shells   if  k.n > nMaxCore   nMaxCore = k.n    end    end
+    if  nRange.start  <=  nMaxCore   error("Unsupported n-values:  nMin = $(nRange.start)  <=  nMaxCore = $nMaxCore")    end
+    if  l > nRange.start - 1         error("Unsupported l-value:   l = $l  >  nMin = $(nRange.start) - 1")               end
+    
+    # Compute an effective Zeff for each n separately (later by considering the (mean) overlap with the core-shell electrons) 
+    sn = "";    sZ = "";    se = "";    su = "";    
+    for  n = nRange
+        effZ = Z - Ne * (1 - 0.5/n^2.2) * (1 - 0.1 * Ne / n /  (l+1) )
+        eb   = -effZ^2/(2*n^2);     eu = Defaults.convertUnits("energy: from atomic", eb)
+        push!(energies, eb ) 
+        sx = "           " * string(n);                   sn = sn * sx[end-10:end]
+        sx = "           " * @sprintf("% 2.2f", effZ);    sZ = sZ * sx[end-10:end]
+        sx = "           " * @sprintf("% 0.2e", eb);      se = se * sx[end-10:end]
+        sx = "           " * @sprintf("% 0.2e", eu);      su = su * sx[end-10:end]
+    end
+    
+    sa = TableStrings.inUnits("energy")
+    println("  Estimated (n, l=$l) binding energies for Z = $Z and the given core configuration $coreConf: \n\n" *
+            "    n                   = " * sn *"\n" *
+            "    Zeff                = " * sZ *"\n" * 
+            "    epsilon_b [Hartree] = " * se *"\n" *
+            "    epsilon_b $sa      = "  * su *"\n"    )
+    
+    return( energies )
 end
 
 

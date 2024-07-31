@@ -46,11 +46,10 @@ elseif  char == 'C'
     println("Cd) Apply & test the LandeZeeman module with ASF from an internally generated multiplet.")
     println("Ce) Apply & test the FormFactor module with ASF from an internally generated multiplet.")
     println("Cf) Apply & test the reduced 1- and 2-particle density matrices & natural orbitals.")
-    println("Cg) Apply & test the PlasmaShift module with ASF from an internally generated multiplet.")
+    println("Cg) Apply & test the DecayYield module with ASF from an internally generated multiplet.")
     println("Ch) Apply & test the RadiativeOpacity module with ASF from an internally generated multiplet.")
     println("Ci) Apply & test the AlphaVariation module with ASF from an internally generated multiplet.")
     println("Cj) Apply & test the MultipolePolarizibility module with ASF from an internally generated multiplet.")
-    println("Ck) Apply & test the DecayYield module with ASF from an internally generated multiplet.")
     #
 elseif  char == 'D'
     println("D)  Examples, tests & development of basic atomic processes")

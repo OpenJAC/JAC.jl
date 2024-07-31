@@ -92,8 +92,23 @@ end
 function  perform(scheme::Plasma.LineShiftScheme, computation::Plasma.Computation; output::Bool=true)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
         
-    println(" ")
-
+    nm = computation.nuclearModel
+        
+    # Use computation.grid, computation.nuclearModel, scheme.initialConfigs, scheme.finalConfigs, scheme.settings, 
+    initialBasis     = Basics.performSCF(scheme.initialConfigs, nm, computation.grid, computation.asfSettings)
+    initialMultiplet = Basics.performCI(initialBasis, nm, computation.grid, computation.asfSettings, scheme.plasmaModel)
+    finalBasis       = Basics.performSCF(scheme.finalConfigs, nm, computation.grid, computation.asfSettings)
+    finalMultiplet   = Basics.performCI(finalBasis, nm, computation.grid, computation.asfSettings, scheme.plasmaModel)
+    #
+    if      typeof(scheme.settings)  == AutoIonization.PlasmaSettings
+        outcome = AutoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nm, computation.grid, scheme.settings) 
+        if output    results = Base.merge( results, Dict("AutoIonization lines in plasma:" => outcome) )         end
+    elseif  typeof(scheme.settings)  == PhotoIonization.PlasmaSettings
+        outcome = PhotoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nm, computation.grid, scheme.settingss) 
+        if output    results = Base.merge( results, Dict("Photo lines in plasma:" => outcome) )                  end
+    else
+        error("stop a")
+    end
     
     println("Line-Shift computation complete ...")
     

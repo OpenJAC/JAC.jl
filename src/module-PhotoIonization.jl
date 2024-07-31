@@ -104,24 +104,16 @@ end
 
 
 """
-`struct  PhotoIonization.PlasmaSettings  <:  Basics.AbstractProcessSettings`  
+`struct  PhotoIonization.PlasmaSettings  <:  Basics.AbstractLineShiftSettings`  
     ... defines a type for the details and parameters of computing photoionization rates with plasma interactions.
 
-    + plasmaModel            ::AbstractPlasmaModel           ... Specify a particular plasma model, e.g. ion-sphere, debye.
-    + lambdaDebye            ::Float64                       ... The lambda parameter of different plasma models.
-    + ionSphereR0            ::Float64                       ... The effective radius of the ion-sphere model.
-    + NoBoundElectrons       ::Int64                         ... Effective number of bound electrons.
     + multipoles             ::Array{Basics.EmMultipole}     ... Specifies the multipoles of the radiation field that are to be included.
     + gauges                 ::Array{Basics.UseGauge}        ... Specifies the gauges to be included into the computations.
     + photonEnergies         ::Array{Float64,1}              ... List of photon energies.  
     + printBefore            ::Bool                          ... True, if all energies and lines are printed before their evaluation.
     + lineSelection          ::LineSelection                 ... Specifies the selected levels, if any.
 """
-struct PlasmaSettings  <:  AbstractProcessSettings 
-    plasmaModel              ::AbstractPlasmaModel
-    lambdaDebye              ::Float64 
-    ionSphereR0              ::Float64
-    NoBoundElectrons         ::Int64
+struct PlasmaSettings  <:  Basics.AbstractLineShiftSettings 
     multipoles               ::Array{Basics.EmMultipole}
     gauges                   ::Array{Basics.UseGauge}  
     photonEnergies           ::Array{Float64,1} 
@@ -134,16 +126,12 @@ end
 `PhotoIonization.PlasmaSettings()`  ... constructor for a standard instance of PhotoIonization.PlasmaSettings.
 """
 function PlasmaSettings()
-    PlasmaSettings(DebyeHueckel(), 0.25, 0., 0, [E1], [Basics.UseCoulomb], Float64[], true, LineSelection() )
+    PlasmaSettings([E1], [Basics.UseCoulomb], Float64[], true, LineSelection() )
 end
 
 
 # `Base.show(io::IO, settings::PhotoIonization.PlasmaSettings)`  ... prepares a proper printout of the settings::PhotoIonization.PlasmaSettings.
 function Base.show(io::IO, settings::PhotoIonization.PlasmaSettings)
-    println(io, "plasmaModel:             $(settings.plasmaModel)  ")
-    println(io, "lambdaDebye:             $(settings.lambdaDebye)  ")
-    println(io, "ionSphereR0:             $(settings.ionSphereR0)  ")
-    println(io, "NoBoundElectrons:        $(settings.NoBoundElectrons)  ")
     println(io, "multipoles:              $(settings.multipoles)  ")
     println(io, "gauges:                  $(settings.gauges)  ")
     println(io, "photonEnergies:          $(settings.photonEnergies)  ")

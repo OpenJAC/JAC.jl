@@ -41,6 +41,10 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
                 outcome = LandeZeeman.computeOutcomes(multiplet, nModel,  computation.grid, settings)      
                 if output    results = Base.merge( results, Dict("Zeeman parameter outcomes:" => outcome) )       end
                 #
+            elseif  typeof(settings) == StarkShift.Settings 
+                outcome = StarkShift.computeOutcomes(multiplet, nModel,  computation.grid, settings)      
+                if output    results = Base.merge( results, Dict("Stark-shift outcomes:" => outcome) )            end
+                #
             elseif  typeof(settings) == IsotopeShift.Settings 
                 outcome = IsotopeShift.computeOutcomes(multiplet, nModel, computation.grid, settings)         
                 if output    results = Base.merge( results, Dict("Isotope parameter outcomes:" => outcome) )      end
@@ -72,7 +76,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             end
         end
     
-    # Evaluate processes that need special SCF and CI procedures
+    #== Evaluate processes that need special SCF and CI procedures
     elseif  typeof(computation.processSettings)  in [AutoIonization.PlasmaSettings, PhotoIonization.PlasmaSettings]
         pSettings        = computation.processSettings
         plasmaSettings   = Plasma.Settings(pSettings.plasmaModel, pSettings.lambdaDebye, pSettings.ionSphereR0, pSettings.NoBoundElectrons)
@@ -89,7 +93,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             if output    results = Base.merge( results, Dict("Photo lines in plasma:" => outcome) )                  end
         else
             error("stop a")
-        end
+        end  ==#
         
     else
         initialBasis     = Basics.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
@@ -288,6 +292,7 @@ function Basics.perform(sa::String, configs::Array{Configuration,1}, initalOrbit
 end
 
 
+#== 17Jul2024
 """
 `Basics.perform("computation: CI for plasma", basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
     settings::AsfSettings, plasmaScheme::Plasma.AbstractPlasmaScheme; printout::Bool=true)`  
@@ -300,7 +305,7 @@ function Basics.perform(sa::String, basis::Basis, nuclearModel::Nuclear.Model, g
     !(sa == "computation: CI for plasma")   &&   error("Unsupported keystring = $sa")
     return( Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
                                 settings::AsfSettings, plasmaSettings::Plasma.Settings; printout=printout) )
-end
+end   ==#
                 
 
 
@@ -533,7 +538,7 @@ function Basics.performCI(configs::Array{Configuration,1}, initalOrbitals::Dict{
         Basics.tabulate(stdout, "multiplet: energy of each level relative to lowest level", mp, levelNos)
     end
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    if  printSummary     
+    if  printSummary  &&  printout    
         Basics.tabulate(iostream, "multiplet: energies", mp, levelNos)
         Basics.tabulate(iostream, "multiplet: energy relative to immediately lower level",    mp, levelNos)
         Basics.tabulate(iostream, "multiplet: energy of each level relative to lowest level", mp, levelNos)
@@ -615,13 +620,13 @@ end
 
 """
 `Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings, 
-                  plasmaSettings::Plasma.Settings; printout::Bool=true)`  
+                  plasmaModel::Basics.AbstractPlasmaModel; printout::Bool=true)`  
     ... to  set-up and diagonalize from the given (SCF) basis the configuration-interaction matrix and to derive and
         display the level structure of the corresponding multiplet due to the given settings. Here, the CI matrix
         includes the modifications of the Hamiltonian due to the given plasmaSettings; a multiplet::Multiplet is returned.   
 """
 function Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, 
-                          settings::AsfSettings, plasmaSettings::Plasma.Settings; printout::Bool=true)
+                          settings::AsfSettings, plasmaModel::Basics.AbstractPlasmaModel; printout::Bool=true)
     
     # Determine the J^P symmetry blocks
     symmetries = Dict{LevelSymmetry,Int64}()
@@ -640,7 +645,8 @@ function Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radia
     # plasmaSettings, diagonalize it and append a Multiplet for this block
     multiplets = Multiplet[]
     for  (sym,v) in  symmetries
-        matrix = compute("matrix: CI for plasma, J^P symmetry", sym, basis, nuclearModel, grid, settings, plasmaSettings; printout=printout)
+        ## matrix = compute("matrix: CI for plasma, J^P symmetry", sym, basis, nuclearModel, grid, settings, plasmaSettings; printout=printout)
+        matrix = compute(sym, basis, nuclearModel, grid, settings, plasmaModel; printout=printout)
         eigen  = Basics.diagonalize("matrix: LinearAlgebra", matrix)
         levels = Level[]
         for  ev = 1:length(eigen.values)

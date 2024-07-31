@@ -84,16 +84,18 @@ end
 `struct  Plasma.LineShiftScheme  <:  Plasma.AbstractPlasmaScheme`  
     ... defines a type for the details and parameters of computing level energies with plasma interactions.
 
-    + plasmaModel      ::AbstractPlasmaModel        ... Specify a particular plasma model, e.g. ion-sphere, debye.
-    + lambdaDebye      ::Float64                    ... The lambda parameter of different plasma models.
-    + ionSphereR0      ::Float64                    ... The effective radius of the ion-sphere model.
-    + NoBoundElectrons ::Int64                      ... Effective number of bound electrons.
+    + plasmaModel      ::AbstractPlasmaModel          ... Specify a particular plasma model, e.g. ion-sphere, Debye.
+    + initialConfigs   ::Array{Configuration,1}       ... List of one or several configurations that define the initial-state multiplet.
+    + finalConfigs     ::Array{Configuration,1}       ... List of one or several configurations that define the final-state multiplet.
+    + settings         ::AbstractLineShiftSettings    ... Specify the process and settings for which line-shifts need to be computed.
+    ## + NoBoundElectrons ::Int64                      ... Effective number of bound electrons.
 """
 struct LineShiftScheme  <:  Plasma.AbstractPlasmaScheme
     plasmaModel        ::AbstractPlasmaModel
-    lambdaDebye        ::Float64 
-    ionSphereR0        ::Float64
-    NoBoundElectrons   ::Int64
+    initialConfigs     ::Array{Configuration,1}
+    finalConfigs       ::Array{Configuration,1}
+    settings           ::AbstractLineShiftSettings    
+    ## NoBoundElectrons   ::Int64
 end 
 
 
@@ -101,16 +103,16 @@ end
 `Plasma.LineShiftScheme()`  ... constructor for a standard instance of Plasma.LineShiftScheme.
 """
 function LineShiftScheme()
-    LineShiftScheme(DebyeHueckel(), 0.25, 0., 0)
+    LineShiftScheme( Basics.NoPlasmaModel(), Configuration[], Configuration[], Basics.NoLineShiftSettings() )
 end
 
 
 # `Base.show(io::IO, scheme::Plasma.LineShiftScheme)`  ... prepares a proper printout of the scheme::Plasma.LineShiftScheme.
 function Base.show(io::IO, scheme::Plasma.LineShiftScheme)
     println(io, "plasmaModel:            $(scheme.plasmaModel)  ")
-    println(io, "lambdaDebye:            $(scheme.lambdaDebye)  ")
-    println(io, "ionSphereR0:            $(scheme.ionSphereR0)  ")
-    println(io, "NoBoundElectrons:       $(scheme.NoBoundElectrons)  ")
+    println(io, "initialConfigs:         $(scheme.initialConfigs)  ")
+    println(io, "finalConfigs:           $(scheme.finalConfigs)  ")
+    println(io, "settings:               $(scheme.settings)  ")
 end
 
 
@@ -119,6 +121,7 @@ end
     ... a struct to thermodynamic properties of a Saha-Boltzmann LTE mixture..
 
     + calcLTE               ::Bool                 ... True, if the Saha-Boltzmann equilibrium densities should be calculated.         
+    + printIonLevels        ::Bool                 ... True, for printing detailed information about all ionic levels.         
     + maxNoIonLevels        ::Int64                ... (maximum) No of ionic levels for any charge state of the ions in the mixture.
     + NoChargeStates        ::Int64                
         ... No of the ions in the ionic mixture that are taken to be into account. These charge states are `centered' around those 
@@ -138,6 +141,7 @@ end
 """
 struct  SahaBoltzmannScheme  <:  Plasma.AbstractPlasmaScheme
     calcLTE                 ::Bool        
+    printIonLevels          ::Bool         
     maxNoIonLevels          ::Int64 
     NoChargeStates          ::Int64                
     NoExcitations           ::Int64                
@@ -151,7 +155,7 @@ end
 `Plasma.SahaBoltzmannScheme()`  ... constructor for an 'default' instance of a Plasma.SahaBoltzmannScheme.
 """
 function SahaBoltzmannScheme()
-    SahaBoltzmannScheme( false, 0., 0., 0., 0., IsotopicFraction[], String[] )
+    SahaBoltzmannScheme( false, false, 0., 0., 0., 0., IsotopicFraction[], String[] )
 end
 
 
@@ -166,6 +170,7 @@ end
 function Base.show(io::IO, scheme::SahaBoltzmannScheme)
     sa = Base.string(scheme);             println(io, sa)
     println(io, "calcLTE:           $(scheme.calcLTE)  ")
+    println(io, "printIonLevels:    $(scheme.printIonLevels)  ")
     println(io, "maxNoIonLevels:    $(scheme.maxNoIonLevels)  ")
     println(io, "NoChargeStates:    $(scheme.NoChargeStates)  ")
     println(io, "NoExcitations:     $(scheme.NoExcitations)  ")
@@ -237,11 +242,6 @@ end
     + refConfigs                     ::Array{Configuration,1}          ... A list of non-relativistic configurations.
     + asfSettings                    ::AsfSettings                     
         ... Provides the settings for the SCF process (under plasma conditions) and the associated CI calculations.
-    + initialMultiplet               ::Multiplet                       ... An initial multiplet for plasma processes.
-    + finalMultiplet                 ::Multiplet                       ... A final multiplet for plasma processes.
-    + processSettings                ::Basics.AbstractProcessSettings  
-        ... Provides the settings for the selected process; they are the same as in the atomic case ... but might
-            include plasma-specific extensions.
     + settings                       ::Plasma.Settings                 ... communicates the properties of the plasma
 """
 struct  Computation
@@ -250,9 +250,6 @@ struct  Computation
     grid                             ::Radial.Grid
     refConfigs                       ::Array{Configuration,1}
     asfSettings                      ::AsfSettings                     
-    initialMultiplet                 ::Multiplet 
-    finalMultiplet                   ::Multiplet  
-    processSettings                  ::Basics.AbstractProcessSettings  
     settings                         ::Plasma.Settings
 end 
 
@@ -261,8 +258,7 @@ end
 `Plasma.Computation()`  ... constructor for an 'empty' instance::Plasma.Computation.
 """
 function Computation()
-    Computation(AverageAtomScheme(), Nuclear.Model(1.), Radial.Grid(), Configuration[], AsfSettings(), Multiplet(), Multiplet(), 
-                Basics.NoProcessSettings(), Plasma.Settings() )
+    Computation(AverageAtomScheme(), Nuclear.Model(1.), Radial.Grid(), Configuration[], AsfSettings(), Plasma.Settings() )
 end
 
 
@@ -270,7 +266,7 @@ end
 `Plasma.Computation(comp::Plasma.Computation;`
 
     scheme=..,                  nuclearModel=..,            grid=..,                refConfigs=..,              asfSettings=..,     
-    initialMultiplet=..,        finalMultiplet=..,      processSettings=..,         settings=..,
+    settings=..,
     printout::Bool=false)
                     
     ... constructor for modifying the given Plasma.Computation by 'overwriting' the previously selected parameters.
@@ -279,23 +275,18 @@ function Computation(comp::Plasma.Computation;
     scheme::Union{Nothing,Plasma.AbstractPlasmaScheme}=nothing,                  
     nuclearModel::Union{Nothing,Nuclear.Model}=nothing,                         grid::Union{Nothing,Radial.Grid}=nothing,      
     refConfigs::Union{Nothing,Array{Configuration,1}}=nothing,                  asfSettings::Union{Nothing,AsfSettings}=nothing, 
-    initialMultiplet::Union{Nothing,Multiplet}=nothing,                         finalMultiplet::Union{Nothing,Multiplet}=nothing, 
-    processSettings::Union{Nothing,Any}=nothing,                                settings::Union{Nothing,Plasma.Settings}=nothing, 
+    settings::Union{Nothing,Plasma.Settings}=nothing, 
     printout::Bool=false)
     
-    if  scheme                  == nothing  schemex                  = comp.scheme                  else  schemex                  = scheme                   end 
-    if  nuclearModel            == nothing  nuclearModelx            = comp.nuclearModel            else  nuclearModelx            = nuclearModel             end 
-    if  grid                    == nothing  gridx                    = comp.grid                    else  gridx                    = grid                     end 
-    if  refConfigs              == nothing  refConfigsx              = comp.refConfigs              else  refConfigsx              = refConfigs               end 
-    if  asfSettings             == nothing  asfSettingsx             = comp.asfSettings             else  asfSettingsx             = asfSettings              end 
-    if  initialMultiplet        == nothing  initialMultipletx        = comp.initialMultiplet        else  initialMultipletx        = initialMultiplet         end 
-    if  finalMultiplet          == nothing  finalMultipletx          = comp.finalMultiplet          else  finalMultipletx          = finalMultiplet           end 
-    if  processSettings         == nothing  prsx                     = comp.processSettings         else  prsx                     = processSettings          end 
-    if  settings                == nothing  settingsx                = comp.settings                else  settingsx                = settings                 end 
+    if  scheme           == nothing  schemex            = comp.scheme            else  schemex                  = scheme                   end 
+    if  nuclearModel     == nothing  nuclearModelx      = comp.nuclearModel      else  nuclearModelx            = nuclearModel             end 
+    if  grid             == nothing  gridx              = comp.grid              else  gridx                    = grid                     end 
+    if  refConfigs       == nothing  refConfigsx        = comp.refConfigs        else  refConfigsx              = refConfigs               end 
+    if  asfSettings      == nothing  asfSettingsx       = comp.asfSettings       else  asfSettingsx             = asfSettings              end 
+    if  settings         == nothing  settingsx          = comp.settings          else  settingsx                = settings                 end 
     
     
-    cp = Computation(schemex, nuclearModelx, gridx, refConfigsx, asfSettingsx, initialMultipletx, finalMultipletx,  
-                        prsx, settingsx) 
+    cp = Computation(schemex, nuclearModelx, gridx, refConfigsx, asfSettingsx, settingsx) 
                         
     if printout  Base.show(cp)      end
     return( cp )
@@ -321,13 +312,6 @@ end
 # `Base.string(comp::Plasma.Computation)`  ... provides a String notation for the variable comp::Plasma.Computation.
 function Base.string(comp::Plasma.Computation)
     sa = "Plasma computation:  for Z = $(comp.nuclearModel.Z), "
-    if  comp.processSettings != Nothing   
-        sa = sa * "for the plasma scheme   \n$(comp.scheme)"
-        sa = sa * "\nreference configs       $(comp.refConfigs) "
-        sa = sa * "\ninital multiplet        $(comp.initialMultiplet.name) "
-        sa = sa * "\nfinal multiplet         $(comp.finalMultiplet.name) "
-        sa = sa * "\nprocess settings        $(typeof(comp.processSettings)) " ##   with \n$(comp.processSettings) "
-    end
     return( sa )
 end
 
@@ -337,12 +321,6 @@ function Base.show(io::IO, comp::Plasma.Computation)
     sa = Base.string(comp);             print(io, sa, "\n")
     println(io, "nuclearModel:          $(comp.nuclearModel)  ")
     println(io, "grid:                  $(comp.grid)  ")
-    #
-    # For the computation of some given atomic process
-    if  comp.processSettings != Nothing
-    println(io, "processSettings:              \n$(comp.processSettings)  ")
-    #
-    end
 end
 
 #==  ... This can be used to establish other Plasma.AbstractPlasmaScheme's

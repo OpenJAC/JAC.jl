@@ -635,8 +635,7 @@ export  AbstractMesh, Cartesian2DMesh, GLegenreMesh, LinearMesh, PolarMesh, Sphe
 """
 abstract type  AbstractPlasmaModel                      end
 struct         NoPlasmaModel  <:  AbstractPlasmaModel   end
-struct         DebyeHueckel   <:  AbstractPlasmaModel   end
-struct         IonSphere      <:  AbstractPlasmaModel   end
+struct         DebyeBox       <:  AbstractPlasmaModel   end
 
 
 # `Base.show(io::IO, model::AbstractPlasmaModel)`  ... prepares a proper printout of the variable model::AbstractPlasmaModel.
@@ -648,14 +647,95 @@ end
 # `Base.string(model::AbstractPlasmaModel)`  ... provides a proper printout of the variable model::AbstractPlasmaModel.
 function Base.string(model::AbstractPlasmaModel) 
     if       model == NoPlasmaModel()     return("No plasma model")
-    elseif   model == DebyeHueckel()      return("Debye-Hueckel model")
-    elseif   model == DebeyBox()          return("Debey-box model")
-    elseif   model == IonSphere()         return("Ion-sphere model")
+    elseif   model == DebyeBox()          return("Debye-box model")
     else     error("stop a")
     end
 end 
 
+
+"""
+`struct  Basics.DebyeHueckel   <:  AbstractPlasmaModel`  
+    ... to specify (the parameters of) a Debye-Hückel potential.
+
+    + debyeLength  ::Float64               ... the Debye length D [a_o].
+    + radius       ::Float64               ... the Debye radius R_D [a_o].
+"""
+struct  DebyeHueckel   <:  AbstractPlasmaModel
+    debyeLength   ::Float64
+    debyeRadius   ::Float64
+end 
+
+
+"""
+`Basics.DebyeHueckel()`  ... constructor for the default settings of Basics.DebyeHueckel().
+"""
+function DebyeHueckel()
+    DebyeHueckel( 0.1, 0. )
+end
+
+
+# `Base.show(io::IO, model::DebyeHueckel)`  ... prepares a proper printout of the variable model::DebyeHueckel.
+function Base.show(io::IO, model::DebyeHueckel) 
+    sa = "Debye-Hueckel plasma model with Debye length D = $(model.debyeLength) a_o and radius R_D = $(model.debyeRadius) a_o."
+    print(io, sa)
+end
+
+
+"""
+`struct  Basics.IonSphere   <:  AbstractPlasmaModel`  
+    ... to specify (the parameters of) a ion-sphere potential.
+
+    + radius      ::Float64               ... the ion-sphere radius R [a_o].
+"""
+struct  IonSphere           <:  AbstractPlasmaModel
+    radius        ::Float64
+end 
+
+
+"""
+`Basics.IonSphere()`  ... constructor for the default settings of Basics.IonSphere().
+"""
+function IonSphere()
+    IonSphere( 0.9 )
+end
+
+
+# `Base.show(io::IO, model::IonSphere)`  ... prepares a proper printout of the variable model::IonSphere.
+function Base.show(io::IO, model::IonSphere) 
+    sa = "Ion-sphere plasma model with (Wigner-Seitz radius) R = $(model.radius) a_o."
+    print(io, sa)
+end
+
 export  AbstractPlasmaModel, NoPlasmaModel, DebyeHueckel, DebeyBox, IonSphere
+
+#################################################################################################################################
+#################################################################################################################################
+
+
+"""
+`abstract type Basics.AbstractLineShiftSettings` 
+    ... defines an abstract and a number of singleton types for the the (allowed) plasma models.
+
+    + Basics.NoLineShiftSettings         ... No line-shift settings are defined.
+    + AutoIonization.PlasmaSettings      ... Settings for Auger-line computations.
+    + PhotoIonization.PlasmaSettings     ... Settings for photoionization-line computations.
+"""
+abstract type  AbstractLineShiftSettings                end
+
+# `Base.show(io::IO, settings::AbstractLineShiftSettings)`  ... prepares a proper printout of the variable settings::AbstractLineShiftSettings.
+function Base.show(io::IO, settings::AbstractLineShiftSettings) 
+    print(io, string(settings) )
+end
+
+
+# `Base.string(settings::AbstractLineShiftSettings)`  ... provides a proper printout of the variable settings::AbstractLineShiftSettings.
+function Base.string(settings::AbstractLineShiftSettings) 
+    if       typeof(settings) == Basics.NoLineShiftSettings        return("No line-shift settings.")
+    else     return("Plasma settings for $(typeof(settings)) computations.")
+    end
+end 
+
+export  AbstractLineShiftSettings, NoLineShiftSettings
 
 #################################################################################################################################
 #################################################################################################################################
