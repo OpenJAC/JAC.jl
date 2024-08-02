@@ -10,26 +10,26 @@ using   Distributed, FastGaussQuadrature, GSL, SpecialFunctions, Printf,
         ..Nuclear, ..Radial, ..SpinAngular, ..TableStrings, ..RadialIntegrals
                 
 
-"""
-`struct ImpactExcitation.RateSettings`             ... Defines a type for the details for calculating the excitation rate coefficients
-                                                        or effective collision strengths
-    + maxElectronEnergy       ::Int64              ... Maximum energy of initial electron ( maxElectronEnergy * Excitation threshold)
-    + NoFreeElectronEnergy    ::Int64              ... Number of electron energies at which cross sections to be calculated
-    + temperatures            ::Array{Float64, 1}  ... Electron temperatures [K] for the rate coefficients or eff. collision strengths
-"""
-struct RateSettings
-    maxElectronEnergy       ::Int64
-    NoFreeElectronEnergy    ::Int64
-    temperatures            ::Array{Float64, 1}
-end
+# """
+# `struct ImpactExcitation.RateSettings`             ... Defines a type for the details for calculating the excitation rate coefficients
+#                                                         or effective collision strengths
+    # + maxElectronEnergy       ::Int64              ... Maximum energy of initial electron ( maxElectronEnergy * Excitation threshold)
+    # + NoFreeElectronEnergy    ::Int64              ... Number of electron energies at which cross sections to be calculated
+    # + temperatures            ::Array{Float64, 1}  ... Electron temperatures [K] for the rate coefficients or eff. collision strengths
+# """
+# struct RateSettings
+    # maxElectronEnergy       ::Int64
+    # NoFreeElectronEnergy    ::Int64
+    # temperatures            ::Array{Float64, 1}
+# end
 
 
-"""
-`ImpactExcitation.RateSettings()`  ... constructor for the default values of electron-impact excitation line computations.
-"""
-function RateSettings()
-    RateSettings( 30, 6, [5e4, 1e5, 2e5, 3e5, 5e5, 7e5, 1e6])
-end
+# """
+# `ImpactExcitation.RateSettings()`  ... constructor for the default values of electron-impact excitation line computations.
+# """
+# function RateSettings()
+#     RateSettings( 30, 6, [5e4, 1e5, 2e5, 3e5, 5e5, 7e5, 1e6])
+# end
 
 
 """
@@ -37,7 +37,7 @@ end
                                                     effective collision strengths calculations
     + initialLevel        ::Level               ... initial- (bound-state) level
     + finalLevel          ::Level               ... final- (bound-state) level
-    + temperatures        ::Array{Float64,1}    ... Temperatures in [K] to calculate excitation rates or effective collision strengths
+    + temperatures        ::Array{Float64,1}    ... Temperatures in [K] to calculate excitation rates and effective collision strengths
     + alphas              ::Array{Float64,1}    ... Excitation rate coefficients in [cm^3/s] for the input temperatures
     + effOmegas           ::Array{Float64,1}    ... Effective collision strengths for the input temperatures
 """
@@ -59,12 +59,12 @@ function RateCoefficients()
 end
 
 
-# `Base.show(io::IO, rateSettings::ImpactExcitation.RateSettings)`  ... prepares a proper printout of the variable settings::ImpactExcitation.RateSettings
-function Base.show(io::IO, rateSettings::ImpactExcitation.RateSettings) 
-    println(io, "maxElectronEnergy:           $(rateSettings.maxElectronEnergy)  ")
-    println(io, "NoFreeElectronEnergy:        $(rateSettings.NoFreeElectronEnergy)  ")
-    println(io, "temperatures:                $(rateSettings.temperatures)  ")
-end
+# # `Base.show(io::IO, rateSettings::ImpactExcitation.RateSettings)`  ... prepares a proper printout of the variable settings::ImpactExcitation.RateSettings
+# function Base.show(io::IO, rateSettings::ImpactExcitation.RateSettings) 
+#     println(io, "maxElectronEnergy:           $(rateSettings.maxElectronEnergy)  ")
+#     println(io, "NoFreeElectronEnergy:        $(rateSettings.NoFreeElectronEnergy)  ")
+#     println(io, "temperatures:                $(rateSettings.temperatures)  ")
+# end
 
 
 """
@@ -75,8 +75,9 @@ end
     + energyShift              ::Float64            ... An overall energy shift for all transitions |i> --> |f>.
     + maxKappa                 ::Int64              ... Maximum kappa value of partial waves to be included.
     + calcRateCoefficient      ::Bool               ... True, if the plasma rate coefficients to be calculated, and false otherwise.
-    + calcEffStrength          ::Bool               ... True, if effective collision strength need to be calculated, and false otherwise.
-    + rateSettings             ::RateSettings       ... Inputs for excitation rate or effective collision strength calculations
+    + maxElectronEnergy        ::Int64              ... Maximum energy of initial electron ( maxElectronEnergy * Excitation threshold)
+    + NoFreeElectronEnergy     ::Int64              ... Number of electron energies at which cross sections to be calculated
+    + temperatures             ::Array{Float64, 1}  ... Electron temperatures [K] for the rate coefficients or eff. collision strengths
     + printBefore              ::Bool               ... True, if all energies and lines are printed before their evaluation.
     + operator                 ::AbstractEeInteraction   
         ... Interaction operator that is to be used for evaluating the e-e interaction amplitudes; allowed values are: 
@@ -88,8 +89,9 @@ struct Settings  <:  AbstractProcessSettings
     energyShift               ::Float64   
     maxKappa                  ::Int64
     calcRateCoefficient       ::Bool 
-    calcEffStrength           ::Bool
-    rateSettings              ::RateSettings
+    maxElectronEnergy         ::Int64
+    NoFreeElectronEnergy      ::Int64
+    temperatures              ::Array{Float64, 1}
     printBefore               ::Bool  
     operator                  ::AbstractEeInteraction 
 end 
@@ -99,7 +101,7 @@ end
 `ImpactExcitation.Settings()`  ... constructor for the default values of electron-impact excitation line computations.
 """
 function Settings()
-    Settings( LineSelection(), Float64[], 0., 400, false, false, RateSettings(), false, CoulombInteraction())
+    Settings( LineSelection(), Float64[], 0., 400, false, 30, 6, [5e4, 1e5, 2e5, 3e5, 5e5, 7e5, 1e6], false, CoulombInteraction())
 end
 
 
@@ -107,11 +109,10 @@ end
 `ImpactExcitation.Settings(set::ImpactExcitation.Settings;`
 
     lineSelection...,  electronEnergies..., energyShift..., maxKappa...,
-    calcRateCoefficient..., calcEffStrength..., rateSettings...,
+    calcRateCoefficient..., maxElectronEnergy..., NoFreeElectronEnergy..., temperatures...,
     printBefore..., operator...)
 
     ... constructor for modifying the given ImpactExcitation.Settings by 'overwriting' the previously selected parameters.
-
 """
 function Settings(set::ImpactExcitation.Settings;
     lineSelection::Union{Nothing, LineSelection} = nothing, 
@@ -119,8 +120,9 @@ function Settings(set::ImpactExcitation.Settings;
     energyShift::Union{Nothing, Float64} = nothing,
     maxKappa::Union{Nothing, Int64} = nothing,
     calcRateCoefficient::Union{Nothing, Bool} = nothing,
-    calcEffStrength::Union{Nothing, Bool} = nothing,
-    rateSettings::Union{Nothing, RateSettings} = nothing,
+    maxElectronEnergy::Union{Nothing, Int64} = nothing,
+    NoFreeElectronEnergy::Union{Nothing, Int64} = nothing,
+    temperatures::Union{ Nothing, Array{Float64,1} } = nothing,
     printBefore::Union{Nothing, Bool} = nothing,
     operator::Union{Nothing, AbstractEeInteraction} = nothing )
 
@@ -130,13 +132,15 @@ function Settings(set::ImpactExcitation.Settings;
     if maxKappa == nothing          maxKappax = set.maxKappa                 else maxKappax = maxKappa                  end
     if calcRateCoefficient == nothing   calcRateCoefficientx = set.calcRateCoefficient else 
                                                                                 calcRateCoefficientx = calcRateCoefficient end
-    if calcEffStrength == nothing  calcEffStrengthx = set.calcEffStrength    else calcEffStrengthx = calcEffStrength    end
-    if rateSettings == nothing      rateSettingsx = set.rateSettings         else rateSettingsx = rateSettings          end
+    if maxElectronEnergy == nothing maxElectronEnergyx = set.maxElectronEnergy else maxElectronEnergyx = maxElectronEnergy end
+    if NoFreeElectronEnergy == nothing NoFreeElectronEnergyx = set.NoFreeElectronEnergy else 
+                                                                             NoFreeElectronEnergyx = NoFreeElectronEnergy end
+    if temperatures == nothing      temperaturesx = set.temperatures         else temperaturesx = temperatures          end
     if printBefore == nothing       printBeforex = set.printBefore           else printBeforex = printBefore            end
     if operator == nothing          operatorx = set.operator                 else operatorx = operator                  end
 
-    Settings( lineSelectionx, electronEnergiesx, energyShiftx, maxKappax, calcRateCoefficientx, calcEffStrengthx, 
-                rateSettingsx, printBeforex, operatorx )
+    Settings( lineSelectionx, electronEnergiesx, energyShiftx, maxKappax, calcRateCoefficientx, maxElectronEnergyx, 
+                                                            NoFreeElectronEnergyx, temperaturesx, printBeforex, operatorx )
 
 end
 
@@ -148,8 +152,9 @@ function Base.show(io::IO, settings::ImpactExcitation.Settings)
     println(io, "energyShift:                $(settings.energyShift)  ")
     println(io, "maxKappa:                   $(settings.maxKappa)  ")
     println(io, "calcRateCoefficient:        $(settings.calcRateCoefficient)  ")
-    println(io, "calcEffStrength:            $(settings.calcEffStrength)  ")
-    println(io, "rateSettings:               $(settings.rateSettings)  ")
+    println(io, "maxElectronEnergy:          $(settings.maxElectronEnergy)  ")
+    println(io, "NoFreeElectronEnergy:       $(settings.NoFreeElectronEnergy)  ")
+    println(io, "temperatures:               $(settings.temperatures)  ")
     println(io, "printBefore:                $(settings.printBefore)  ")
     println(io, "operator:                   $(settings.operator)  ")
 end
@@ -461,14 +466,11 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     ImpactExcitation.displayResults(newLines)
     
     if settings.calcRateCoefficient 
-        rates = ImpactExcitation.computeRateCoefficients(newLines, settings.rateSettings)
-        ImpactExcitation.displayResults(rates)
-    elseif settings.calcEffStrength
-        rates = ImpactExcitation.computeEffStrengths(newLines, settings.rateSettings)
+        rates = ImpactExcitation.computeRateCoefficients(newLines, settings)
         ImpactExcitation.displayResults(rates)
     end
     #
-    if     output  &&  (settings.calcRateCoefficient || settings.calcEffStrength) return( newLines, rates );
+    if    ( output  &&  settings.calcRateCoefficient) return( newLines, rates );
     elseif output   return( newLines );
     else            return( nothing );
     end
@@ -508,15 +510,14 @@ function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet,
     energyShift = Defaults.convertUnits("energy: to atomic", settings.energyShift)
     lines = ImpactExcitation.Line[]
     
-    if settings.calcEffStrength || settings.calcRateCoefficient
-        rateSettings = settings.rateSettings
+    if settings.calcRateCoefficient
         for  iLevel  in  initialMultiplet.levels
             for  fLevel  in  finalMultiplet.levels
                 if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
                     ΔE = fLevel.energy - iLevel.energy
-                    #enGrid = Radial.GridGL("Finite", ΔE, ΔE * rateSettings.maxElectronEnergy, rateSettings.NoFreeElectronEnergy, printout=false)
-                    electronEnergies = exp.( LinRange(log(ΔE+0.0003), log(max(5., rateSettings.maxElectronEnergy*ΔE)), 
-                                                                                                rateSettings.NoFreeElectronEnergy) ) 
+                    #enGrid = Radial.GridGL("Finite", ΔE, ΔE * settings.maxElectronEnergy, settings.NoFreeElectronEnergy, printout=false)
+                    electronEnergies = exp.( LinRange(log(ΔE+0.0003), log(max(5., settings.maxElectronEnergy*ΔE)), 
+                                                                                                settings.NoFreeElectronEnergy) ) 
                     for  initialElectronEnergy in electronEnergies         # initial electron energies
                         finalElectronEnergy    = initialElectronEnergy - (fLevel.energy - iLevel.energy) + energyShift
                         if  finalElectronEnergy < 0    continue   end  
@@ -581,13 +582,13 @@ end
 
 
 """
-`ImpactExcitation.groupLines(lines::Array{ImpactExcitation.Line,1}, rateSettings::ImpactExcitation.RateSettings)`
+`ImpactExcitation.groupLines(lines::Array{ImpactExcitation.Line,1}, settings::ImpactExcitation.Settings)`
     ... groups lines having the same initial and final level but different energies
         returns an Array{Array{ImpactExcitation.Line,1},1}
 """
-function groupLines(lines::Array{ImpactExcitation.Line,1}, rateSettings::ImpactExcitation.RateSettings)
+function groupLines(lines::Array{ImpactExcitation.Line,1}, settings::ImpactExcitation.Settings)
 
-    n = rateSettings.NoFreeElectronEnergy
+    n = settings.NoFreeElectronEnergy
     q, r = divrem(length(lines), n)
     if r != 0 error("Error a") end
 
@@ -628,12 +629,12 @@ end
 
 
 """
-`ImpactExcitation.computeEffStrengths(lines::Array{ImpactExcitation.Line, 1}, rateSettings::ImpactExcitation.RateSettings)`
+`ImpactExcitation.computeEffStrengths(lines::Array{ImpactExcitation.Line, 1}, settings::ImpactExcitation.Settings)`
     ... computes Effective collision strengths from the calculated line collision strengths at temperature(s) [K].
         Returns an Array{ImpactExcitation.RateCoefficients,1}.
 """
-function computeEffStrengths(lines::Array{ImpactExcitation.Line, 1}, rateSettings::ImpactExcitation.RateSettings)
-    gLines = ImpactExcitation.groupLines(lines, rateSettings)
+function computeEffStrengths(lines::Array{ImpactExcitation.Line, 1}, settings::ImpactExcitation.Settings)
+    gLines = ImpactExcitation.groupLines(lines, settings)
 
     allEffOmegas = ImpactExcitation.RateCoefficients[]
 
@@ -654,7 +655,7 @@ function computeEffStrengths(lines::Array{ImpactExcitation.Line, 1}, rateSetting
         t, wt = FastGaussQuadrature.gausslaguerre(10)
 
         effOmegas = Float64[]
-        for temp in rateSettings.temperatures
+        for temp in settings.temperatures
             temp_au  = Defaults.convertUnits("temperature: from Kelvin to (Hartree) units", temp)
             wa = 0.0
 
@@ -679,8 +680,8 @@ function computeEffStrengths(lines::Array{ImpactExcitation.Line, 1}, rateSetting
 
             push!(effOmegas, wa)
         end
-        push!(allEffOmegas, ImpactExcitation.RateCoefficients(lines[1].initialLevel, lines[1].finalLevel, rateSettings.temperatures, 
-                                                                    zeros(length(rateSettings.temperatures)), effOmegas ) )
+        push!(allEffOmegas, ImpactExcitation.RateCoefficients(lines[1].initialLevel, lines[1].finalLevel, settings.temperatures, 
+                                                                    zeros(length(settings.temperatures)), effOmegas ) )
     end
     
     return( allEffOmegas )
@@ -745,13 +746,13 @@ end
 
 
 """
-`ImpactExcitation.computeRateCoefficients(effStrengths::Vector{RateCoefficients})`
+`ImpactExcitation.computeRateCoefficients(effStrengths::Vector{RateCoefficients}, settings::ImpactExcitation.Settings)`
     ... computes Exitation rate coefficients from the calculated collsion strengths at a temperature(s) [K].
         The rate coefficients are returned in [cm^3/s]. Returns an Array{ImpactExcitation.RateCoefficients,1}.
 """
-function computeRateCoefficients(lines::Array{ImpactExcitation.Line, 1}, rateSettings::ImpactExcitation.RateSettings)
+function computeRateCoefficients(lines::Array{ImpactExcitation.Line, 1}, settings::ImpactExcitation.Settings)
 
-    effStrengths = ImpactExcitation.computeEffStrengths(lines, rateSettings)
+    effStrengths = ImpactExcitation.computeEffStrengths(lines, settings)
     allAlphas = ImpactExcitation.RateCoefficients[]
     
     for effOmegas in effStrengths
