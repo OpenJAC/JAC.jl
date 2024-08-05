@@ -785,7 +785,8 @@ end
     ... to perform the same but to return the complete output in a dictionary; the particular output depends on the method and 
         specifications of the cascade but can easily accessed by the keys of this dictionary.
 """
-function perform(simulation::Cascade.Simulation; output::Bool=false)    
+function perform(simulation::Cascade.Simulation; output::Bool=false)   
+    results = Dict{String, Any}()
     # First review and display the computation data for this simulation; this enables the reader to check the consistency of data.
     # It also returns the level tree to be used in the simulations
     if      typeof(simulation.property) == Cascade.PhotoAbsorptionSpectrum
@@ -807,8 +808,8 @@ function perform(simulation::Cascade.Simulation; output::Bool=false)
         for cs in wa[2]  push!(waC, cs.Coulomb);  push!(waB, cs.Babushkin)      end
         #
         if  output    results = Base.merge( results, Dict("photonEnergies:"           => wa[1]) ) 
-                        results = Base.merge( results, Dict("crossSections(Coulomb):"   => waC) )     
-                        results = Base.merge( results, Dict("crossSections(Babushkin):" => waB) )     end
+                      results = Base.merge( results, Dict("crossSections(Coulomb):"   => waC) )     
+                      results = Base.merge( results, Dict("crossSections(Babushkin):" => waB) )     end
         #
     elseif  typeof(simulation.property) == Cascade.IonDistribution         &&   simulation.method == Cascade.ProbPropagation()
                                             # -----------------------

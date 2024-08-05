@@ -120,19 +120,21 @@ end
 `struct  Plasma.SahaBoltzmannScheme  <:  Plasma.AbstractPlasmaScheme`  
     ... a struct to thermodynamic properties of a Saha-Boltzmann LTE mixture..
 
+    + plasmaModel           ::Basics.AbstractPlasmaModel                 
+        ... A plasma model that "restricts" the Saha-Boltzmann equilibrium densities by some additional parameters, for instance,
+            due to ionization-potential-depression (IPD) or others.
     + calcLTE               ::Bool                 ... True, if the Saha-Boltzmann equilibrium densities should be calculated.         
     + printIonLevels        ::Bool                 ... True, for printing detailed information about all ionic levels.         
+    + qRange                ::UnitRange{Int64}     ... Range of charge states q for which ions are taken into account. 
     + maxNoIonLevels        ::Int64                ... (maximum) No of ionic levels for any charge state of the ions in the mixture.
-    + NoChargeStates        ::Int64                
-        ... No of the ions in the ionic mixture that are taken to be into account. These charge states are `centered' around those 
-            charge state with an ionisation potential that is closest to kT.
     + NoExcitations         ::Int64                
         ... No of excitations (S, D, T) that are taken into account with regard to the reference (ground) configuration of the ions.
             This number is taken as a second qualifier to characterize the quality of the ionic-level data. Usually, NoExcitations = 1,2.
-    + upperShellNo         ::Int64                
+    + upperShellNo          ::Int64                
         ... upper-most princicpal quantum number n for which orbitals are taken into account into the ionic-level computations;
-            this is often chosen upperShellNo= 4..8.
-    + isotopicMixture      ::Array{Basics.IsotopicFraction,1}   
+            this is often chosen upperShellNo= 4..10; if ionic-level data are given, this number decides which of the levels
+            are taken into account.
+    + isotopicMixture       ::Array{Basics.IsotopicFraction,1}   
         ... List of (non-normlized) isotopic fractions that form the requested mixture; the fractions will first be renormalized
             to 1 in course of the Saha-Boltzmann LTE computations.
     + isotopeFilenames      ::Array{String,1}     
@@ -140,10 +142,11 @@ end
     
 """
 struct  SahaBoltzmannScheme  <:  Plasma.AbstractPlasmaScheme
+    plasmaModel             ::Basics.AbstractPlasmaModel                 
     calcLTE                 ::Bool        
     printIonLevels          ::Bool         
+    qRange                  ::UnitRange{Int64} 
     maxNoIonLevels          ::Int64 
-    NoChargeStates          ::Int64                
     NoExcitations           ::Int64                
     upperShellNo            ::Int64                
     isotopicMixture         ::Array{Basics.IsotopicFraction,1}   
@@ -155,7 +158,7 @@ end
 `Plasma.SahaBoltzmannScheme()`  ... constructor for an 'default' instance of a Plasma.SahaBoltzmannScheme.
 """
 function SahaBoltzmannScheme()
-    SahaBoltzmannScheme( false, false, 0., 0., 0., 0., IsotopicFraction[], String[] )
+    SahaBoltzmannScheme( Basics.NoPlasmaModel(), false, false, 0:0, 0., 0., 0., 0., IsotopicFraction[], String[] )
 end
 
 
@@ -169,10 +172,11 @@ end
 # `Base.show(io::IO, scheme::SahaBoltzmannScheme)`  ... prepares a proper printout of the scheme::SahaBoltzmannScheme.
 function Base.show(io::IO, scheme::SahaBoltzmannScheme)
     sa = Base.string(scheme);             println(io, sa)
+    println(io, "plasmaModel:       $(scheme.plasmaModel)  ")
     println(io, "calcLTE:           $(scheme.calcLTE)  ")
     println(io, "printIonLevels:    $(scheme.printIonLevels)  ")
+    println(io, "qRange:            $(scheme.qRange)  ")
     println(io, "maxNoIonLevels:    $(scheme.maxNoIonLevels)  ")
-    println(io, "NoChargeStates:    $(scheme.NoChargeStates)  ")
     println(io, "NoExcitations:     $(scheme.NoExcitations)  ")
     println(io, "upperShellNo:      $(scheme.upperShellNo)  ")
     println(io, "isotopicMixture:   $(scheme.isotopicMixture)  ")

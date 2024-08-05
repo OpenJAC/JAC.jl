@@ -395,7 +395,7 @@ function Basics.sortByEnergy(multiplet::Hfs.IJF_Multiplet)
     newLevels = Hfs.IJF_Level[];   index = 0
     for lev in sortedLevels
         index = index + 1
-        push!(newLevels, Hfs.IJF_Level(lev.I, lev.F, lev.M, lev.parity, lev.energy, lev.hasStateRep, lev.basis, lev.mc) )
+        push!(newLevels, Hfs.IJF_Level(lev.I, lev.F, lev.M, lev.parity, lev.energy, lev.basis, lev.mc) )
     end
     
     newMultiplet = Hfs.IJF_Multiplet(multiplet.name, newLevels)
