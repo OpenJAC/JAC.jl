@@ -13,7 +13,7 @@ if  false
     temp_au     = Defaults.convertUnits("energy: from eV to atomic", 200.)
     settings    = Plasma.Settings(temp_au, rho, true)
     ionMixture  = [IsotopicFraction(6., 12.011, 1.0)]  ## , IsotopicFraction(9., 20.2, 0.4)
-    scheme      = Plasma.SahaBoltzmannScheme(true, true, 10000, 3, 1, 4, ionMixture, ["IonicLevelDataZ6A12RobinA.jld"])
+    scheme      = Plasma.SahaBoltzmannScheme(true, true, 4:6, 10000, 1, 4, ionMixture, ["IonicLevelDataZ6A12RobinA.jld"])
     
     wa          = Plasma.Computation(Plasma.Computation(), scheme=scheme, grid=grid, settings=settings)
     @show wa
@@ -26,11 +26,11 @@ elseif  true
     grid        = Radial.Grid(Radial.Grid(true), rnt = 1.0e-4, h = 5.0e-2, hp = 0., rbox = 100.0)
     nm          = Nuclear.Model(6.0)
     rho         = 2.0e-5      # number density
-    temp_au     = Defaults.convertUnits("energy: from eV to atomic", 2.)
+    temp_au     = Defaults.convertUnits("energy: from eV to atomic", 200.)
     settings    = Plasma.Settings(temp_au, rho, true)
     ionMixture  = [IsotopicFraction(6., 12.2, 1.0)]
-    ## scheme   = Plasma.SahaBoltzmannScheme(true, false, 10000, 7, 2, 3, ionMixture, String["IonicLevelDataZ6A12-allq-n3.jld"])
-    scheme      = Plasma.SahaBoltzmannScheme(true, false, 10000, 7, 2, 8, ionMixture, String["IonicLevelDataZ6A12-allq-n8.jld"])
+    ## scheme   = Plasma.SahaBoltzmannScheme(Basics.NoPlasmaModel(), true, false, 10000, 7, 2, 3, ionMixture, String["IonicLevelDataZ6A12-allq-n3.jld"])
+    scheme      = Plasma.SahaBoltzmannScheme(Basics.NoPlasmaModel(), true, false, 2:6, 10000, 2, 8, ionMixture, String["IonicLevelDataZ6A12-allq-n8.jld"])
     
     wa          = Plasma.Computation(Plasma.Computation(), scheme=scheme, grid=grid, settings=settings)
     @show wa

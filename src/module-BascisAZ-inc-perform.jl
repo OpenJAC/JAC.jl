@@ -29,10 +29,10 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
                 outcome = Einstein.computeLines(multiplet,        computation.grid, settings)    
                 if output    results = Base.merge( results, Dict("Einstein lines:" => outcome) )                  end
                 #
-            elseif  typeof(settings) == Hfs.Settings    && settings.calcIJFexpansion  
-                outcome = Hfs.computeHyperfineMultiplet(multiplet, nModel, computation.grid, settings)         
-                if output    results = Base.merge( results, Dict("IJF multiplet:" => outcome) )                   end
-                #
+            ## elseif  typeof(settings) == Hfs.Settings    && settings.calcIJFexpansion  
+            ##     outcome = Hfs.computeHyperfineMultiplet(multiplet, nModel, computation.grid, settings)         
+            ##     if output    results = Base.merge( results, Dict("IJF multiplet:" => outcome) )                   end
+            ##     #
             elseif  typeof(settings) == Hfs.Settings
                 outcome = Hfs.computeOutcomes(multiplet, nModel,  computation.grid, settings)         
                 if output    results = Base.merge( results, Dict("HFS outcomes:" => outcome) )                    end

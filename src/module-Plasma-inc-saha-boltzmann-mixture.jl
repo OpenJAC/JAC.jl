@@ -9,17 +9,19 @@ using  QuadGK, ..Basics,  ..Defaults
     + energy          ::Float64        ... total energy E (Z, A, q) of the ionic level.
     + g               ::Float64        ... degeneracy g (Z, A, q) of the ionic level.
     + nDensity        ::Float64        ... number density of ions I(Z, A, q) in this level.
+    + uppermostShell  ::Shell          ... uppermost shell in the underlying configuration.
 """
 struct   IonicLevel
     energy            ::Float64
     g                 ::Float64
     nDensity          ::Float64
+    uppermostShell    ::Shell  
 end  
 
 
 # `Base.string(lev::Plasma.IonicLevel)`  ... provides a String notation for the variable lev::Plasma.IonicLevel.
 function Base.string(lev::Plasma.IonicLevel)
-    sa = "Ionic level (energy=$(lev.energy), g=$(lev.g), nDensity=$(lev.nDensity)):"
+    sa = "Ionic level (energy=$(lev.energy), g=$(lev.g), nDensity=$(lev.nDensity), uppermostShell=$(lev.uppermostShell)):"
     return( sa )
 end
 
@@ -287,15 +289,16 @@ function determineIonicClasses(scheme::Plasma.SahaBoltzmannScheme, temp::Float64
         if  abs(bindingEn - temp)  <  deltaIp   deltaIp = abs(bindingEn - temp);   closestNe = ne   end
     end
     
-    neMin = round(Int, closestNe - scheme.NoChargeStates/2 + 0.6);   if  neMin < 0   neMin = 0   end
+    ##x neMin = round(Int, closestNe - scheme.NoChargeStates/2 + 0.6);   if  neMin < 0   neMin = 0   end
     ##x @show  deltaIp, closestNe, neMin
-    for  ne = neMin:neMin+scheme.NoChargeStates-1
+    neMin = nZ-scheme.qRange.stop;   neMax = nZ-scheme.qRange.start
+    for  ne = neMin:neMax
         if  ne > nZ   continue    end
         push!(ionClasses, Plasma.IonicClass(nZ-ne, -1000., Plasma.IonicLevel[]) )
     end
     
-    println(">> Selected ionic charge states for isotope  I(Z=$nZ,A=$nA)^q+  with  q = $nZ - ne  and  " * 
-            "ne = $(neMin:neMin+scheme.NoChargeStates-1)   ... number of electrons")
+    println(">> Selected ionic charge states for isotope  I(Z=$nZ,A=$nA)^q+  with  q = $(scheme.qRange)  and  " * 
+            "ne = $(neMin:neMax)   ... number of electrons")
     
     return ( ionClasses )
 end
@@ -337,7 +340,7 @@ function determineInitialIonDensitiesPropterties(scheme::Plasma.SahaBoltzmannSch
             if   ionLevel.energy < groundEnergy     groundEnergy = ionLevel.energy     end
             nDensity = Plasma.computeIonLevelNumberDensity(temp, ionClass.q, ionLevel, pfIsoClass, 
                                                            isotopicDensity, chemMuE, dominantEnergy)
-            push!(newIonLevels, Plasma.IonicLevel(ionLevel.energy, ionLevel.g, nDensity) )
+            push!(newIonLevels, Plasma.IonicLevel(ionLevel.energy, ionLevel.g, nDensity, ionLevel.uppermostShell) )
         end
         # Initialize the ion class data
         push!(newIonClasses, Plasma.IonicClass(ionClass.q, groundEnergy, newIonLevels) )
@@ -539,12 +542,15 @@ function freeEnergyDensity(temp::Float64, totalIonDensity::Float64, isoClasses::
             end
         end
     end
+    # Add the contributions from the free-electron density
+    ne = Plasma.computeElectronNumberDensity(temp, isoClasses) 
+    wf = wf - ne * temp * (log(2.0/ne) + 1.0)        
+
     println(">>>> Free energy density f(T) = $wf")
         
     return ( wf )
 end
     
-
 
 """
 `Plasma.internalEnergyDensity(temp::Float64, totalIonDensity::Float64, isoClasses::Array{IsotopeClass,1})`  
@@ -599,6 +605,7 @@ function  perform(scheme::Plasma.SahaBoltzmannScheme, computation::Plasma.Comput
     newIsoClasses = IsotopeClass[]
     for  isoClass  in  isoClasses
         newIsoClass = Plasma.readEvaluateIonLevelData(scheme, isoClass, computation.grid)
+        newIsoClass = Plasma.restrictIonLevelData(scheme, newIsoClass) 
         ##x @show "Lambda_e", sqrt(2pi) / sqrt(computation.settings.temperature)
         newIsoClass = Plasma.determineInitialIonDensitiesPropterties(scheme, computation.settings.temperature, totalIonDensity, newIsoClass)
         ##x @show newIsoClass
@@ -686,7 +693,7 @@ function solveSahaBoltzmannEquilibrium(temp::Float64, isoClasses::Array{IsotopeC
                     if   ionLevel.energy < groundEnergy     groundEnergy = ionLevel.energy     end
                     nDensity = Plasma.computeIonLevelNumberDensity(temp, ionClass.q, ionLevel, pfIsoClass, 
                                                                    isoClass.isotopicDensity, chemMuE, dominantEnergy)
-                    push!(newIonLevels, Plasma.IonicLevel(ionLevel.energy, ionLevel.g, nDensity) )
+                    push!(newIonLevels, Plasma.IonicLevel(ionLevel.energy, ionLevel.g, nDensity, ionLevel.uppermostShell) )
                 end
                 push!(newIonClasses, Plasma.IonicClass(ionClass.q, groundEnergy, newIonLevels) )
             end
@@ -703,7 +710,7 @@ function solveSahaBoltzmannEquilibrium(temp::Float64, isoClasses::Array{IsotopeC
         # Determine and report about convergence
         ne     = Plasma.computeElectronNumberDensity(temp, newIsoClasses)
         betamu = Plasma.computeElectronChemicalPotential(temp, ne) / temp
-        if  abs(betamu - betamuOld) < 1.0e-14    isNotConverged = false   else  betamuOld = betamu   end 
+        if  abs(betamu - betamuOld) < 1.0e-10    isNotConverged = false   else  betamuOld = betamu   end 
         println(">> betamu = $betamu ")
         #
         if     isNotConverged  &&  noIteration < 20   oldIsoClasses = deepcopy(newIsoClasses)
@@ -750,7 +757,7 @@ function generateIonLevelData(scheme::Plasma.SahaBoltzmannScheme, isoClass::Isot
     ionLevels = IonicLevel[];  Zint = round(Int, isoClass.isotopicFraction.Z)
     
     # Return a single ionic level for bare ions
-    if  Zint - q == 0   return( [Plasma.IonicLevel(0., 1., 0.)] )   end
+    if  Zint - q == 0   return( [Plasma.IonicLevel(0., 1., 0., Shell(0,0))] )   end
         
     # Determine the reference and the associated configurations for an atomic computation
     refConfig  = Plasma.determineReferenceConfiguration( Zint - q )
@@ -813,7 +820,13 @@ function generateIonLevelData(scheme::Plasma.SahaBoltzmannScheme, isoClass::Isot
     Basics.displayLevels(stdout, [repMultiplet], N=100)
     
     for  level in repMultiplet.levels
-        push!(ionLevels, Plasma.IonicLevel(level.energy, Basics.twice(level.J)+1, 0.) )
+        # Determine the uppermost shell of the given level
+        confs          = Basics.extractNonrelativisticConfigurations(level.basis)
+        shellList      = Basics.extractNonrelativisticShellList(confs)
+        uppermostShell = Shell(0,0)
+        for  shell in shellList     if  shell > uppermostShell    uppermostShell = shell    end     end
+            
+        push!(ionLevels, Plasma.IonicLevel(level.energy, Basics.twice(level.J)+1, 0., uppermostShell) )
     end
     #
     println("\n >> Generation of $(length(ionLevels)) ion-levels for Z = $Zint and charge state q = $q.")
@@ -955,16 +968,16 @@ end
 
 
 """
-`Plasma.readUpdateIonLevelData(filename::String, isoClass::IsotopeClass, NoExcitations::Int64, upperShellNo::Int64,
+`Plasma.readUpdateIonLevelDataObsolete(filename::String, isoClass::IsotopeClass, NoExcitations::Int64, upperShellNo::Int64,
                                newIonClasses::Array{Plasma.IonicClass,1})`  
     ... reads in, if available, the ionic-level data for the given isotope class from filename.
         The ionic-level data are accepted for return, if (1) they belong to isotope (Z,A) in isoClasses
         and if they fullfill (2) upperShellNo <= filename:upperShellNo, (3) NoExcitations <= filename:NoExcitations.
         The newIonClasses are updated/appended in the given ionClasses data and a new ionic-level data file is written
         out. The procedure terminates with an error if no proper ionic level data are found in filename.
-        Nothing is returned.
+        Nothing is returned. ... This procedures is not used a present.
 """
-function readUpdateIonLevelData(filename::String, isoClass::IsotopeClass, noExcitations::Int64, upperShellNo::Int64,
+function readUpdateIonLevelDataObsolete(filename::String, isoClass::IsotopeClass, noExcitations::Int64, upperShellNo::Int64,
                                 newIonClasses::Array{Plasma.IonicClass,1})
     found = false;  chargeStates = Int64[];    updatedIonClasses = Plasma.IonicClass[]
         
@@ -974,7 +987,7 @@ function readUpdateIonLevelData(filename::String, isoClass::IsotopeClass, noExci
     
     if  trunc(isoData["Z"], digits=3)  ==  trunc(isoClass.isotopicFraction.Z, digits=3)   &&
         trunc(isoData["A"], digits=3)  ==  trunc(isoClass.isotopicFraction.A, digits=3)   &&
-        isoData["NoExcitations"]       >=  NoExcitations                                 &&                      
+        isoData["NoExcitations"]       >=  NoExcitations                                  &&                      
         isoData["upperShellNo"]        >=  upperShellNo  
         
         # Update or append all new data
@@ -984,7 +997,7 @@ function readUpdateIonLevelData(filename::String, isoClass::IsotopeClass, noExci
         for  ionClass in isoClass.ionClasses
             qkey = "q" * string(ionClass.q) * "Levels"
             if   haskey(isoData, qkey)     push!(updatedIonClasses, IonicClass(ionClass.q, ionClass.groundEnergy, isoData[qkey]) )
-            else                      push!(updatedIonClasses, ionClass)
+            else                           push!(updatedIonClasses, ionClass)
                 println(">> No ionic-level data are found for q = $(ionClass.q) ... ")
             end
         end
@@ -1002,6 +1015,28 @@ function readUpdateIonLevelData(filename::String, isoClass::IsotopeClass, noExci
     end
     
     return ( nothing )
+end
+
+
+"""
+`Plasma.restrictIonLevelData(scheme::Plasma.SahaBoltzmannScheme, isoClass::IsotopeClass)`  
+    ... restricts the compiled ion-level-data tp those levels that need to be included into the Saha-Boltzmann
+        equilibrium iteration. a newIsoClass::IsotopeClass is returned.
+"""
+function restrictIonLevelData(scheme::Plasma.SahaBoltzmannScheme, isoClass::IsotopeClass)
+    println(">>> Restrict ion-level data to uppermost n <= $(scheme.upperShellNo) ... ")
+    newIonClasses = Plasma.IonicClass[]
+    for  ionClass  in  isoClass.ionClasses
+        newIonLevels = Plasma.IonicLevel[]
+        for  level  in  ionClass.ionLevels
+            if  level.uppermostShell.n <= scheme.upperShellNo    push!(newIonLevels, level)    end
+        end
+        push!(newIonClasses, Plasma.IonicClass(ionClass.q, ionClass.groundEnergy, newIonLevels))
+    end
+    newIsoClass = Plasma.IsotopeClass(isoClass.isotopicDensity, isoClass.Lambda, isoClass.dominantEnergy, 
+                                      isoClass.isotopicFraction, newIonClasses)
+    
+    return ( newIsoClass )
 end
 
 

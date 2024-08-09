@@ -54,7 +54,7 @@ function determineSteps(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Com
                     photonEnergies = scheme.photonEnergies
                     println(">>> Photon energies must still be given in user-selected units: $(photonEnergies)")
                     settings = PhotoIonization.Settings(scheme.multipoles, [UseCoulomb, UseBabushkin], photonEnergies, Float64[],
-                                                        false, false, false, false, LineSelection(), Basics.ExpStokes() )
+                                                        false, false, false, false, false, LineSelection(), Basics.ExpStokes(), 0. )
                     push!( stepList, Cascade.Step(Basics.Photo(), settings, initialBlock.confs, ionizedBlock.confs, 
                                                                             initialBlock.multiplet, ionizedBlock.multiplet) )
                 end

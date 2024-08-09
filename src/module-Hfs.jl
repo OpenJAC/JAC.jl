@@ -7,7 +7,7 @@ module Hfs
 
 
 using Printf, ..AngularMomentum, ..Basics,  ..Defaults, ..InteractionStrength, ..ManyElectron, ..Radial, ..Nuclear, 
-                ..SpinAngular, ..TableStrings
+                ..SpinAngular, ..TableStrings, ..PhotoEmission
 
 
 """
@@ -23,7 +23,7 @@ struct InteractionMatrix
     calcT1     ::Bool
     calcT2     ::Bool
     matrixT1   ::Array{Float64,2}
-    matrixT2   ::Array
+    matrixT2   ::Array{Float64,2}
 end 
 
 
@@ -110,9 +110,6 @@ end
     + M              ::AngularM64       ... Total projection M, only defined if a particular sublevel is referred to.
     + parity         ::Parity           ... Parity of the level which corresponds to the electronic system.
     + energy         ::Float64          ... energy
-    + hasStateRep    ::Bool             ... Determines whether this IJF-level 'point' to a physical representation of 
-                                            an state (i.e. an basis and corresponding mixing coefficient vector), or 
-                                            just to empty instances, otherwise.
     + basis          ::IJF_Basis        ... basis for this level
     + mc             ::Vector{Float64}  ... Vector of mixing coefficients w.r.t basis.
 """
@@ -122,7 +119,6 @@ struct IJF_Level
     M                ::AngularM64
     parity           ::Parity
     energy           ::Float64
-    hasStateRep      ::Bool
     basis            ::IJF_Basis
     mc               ::Vector{Float64}
 end 
@@ -144,7 +140,6 @@ function Base.show(io::IO, ijfLevel::Hfs.IJF_Level)
     println(io, "M:              $(ijfLevel.M)  ")
     println(io, "parity:         $(ijfLevel.parity)  ")
     println(io, "energy:         $(ijfLevel.energy)  ")
-    println(io, "hasStateRep:    $(ijfLevel.hasStateRep)  ")
     println(io, "basis:          $(ijfLevel.basis)  ")
     println(io, "mc:             $(ijfLevel.mc)  ")
 end
@@ -189,8 +184,7 @@ end
     + amplitudeT1               ::Complex{Float64} ... T1 amplitude
     + amplitudeT2               ::Complex{Float64} ... T2 amplitude
     + nuclearI                  ::AngularJ64       ... nuclear spin
-    + hasFlevels                ::Bool             ... True if the F-values and F-energies are specified explicitly.
-    + Flevels                   ::Bool             ... Array to keep F-values and F-energies.
+    + hfsMultiplet              ::IJF_Multiplet    ... Multiplet of IJF levels as associated with the JLevel.
 """
 struct Outcome 
     Jlevel                      ::Level 
@@ -199,8 +193,7 @@ struct Outcome
     amplitudeT1                 ::Complex{Float64}
     amplitudeT2                 ::Complex{Float64}
     nuclearI                    ::AngularJ64
-    hasFlevels                  ::Bool
-    Flevels                     ::Bool
+    hfsMultiplet                ::IJF_Multiplet
 end 
 
 
@@ -208,7 +201,7 @@ end
 `Hfs.Outcome()`  ... constructor for an `empty` instance of Hfs.Outcome for the computation of HFS properties.
 """
 function Outcome()
-    Outcome(Level(), 0., 0., 0., 0., AngularJ64(0), false, false)
+    Outcome(Level(), 0., 0., 0., 0., AngularJ64(0), IJF_Multiplet() )
 end
 
 
@@ -220,8 +213,7 @@ function Base.show(io::IO, outcome::Hfs.Outcome)
     println(io, "amplitudeT1:               $(outcome.amplitudeT1)  ")
     println(io, "amplitudeT2:               $(outcome.amplitudeT2)  ")
     println(io, "nuclearI:                  $(outcome.nuclearI)  ")
-    println(io, "hasFlevels:                $(outcome.hasFlevels)  ")
-    println(io, "Flevels:                   $(outcome.Flevels)  ")
+    println(io, "hfsMultiplet:               (outcome.hfsMultiplet)  ")
 end
 
 
@@ -230,12 +222,11 @@ end
 
     + calcT1                    ::Bool             ... True if T1-amplitudes (HFS A values) need to be calculated, and false otherwise.
     + calcT2                    ::Bool             ... True if T2-amplitudes (HFS B values) need to be calculated, and false otherwise.
-    + calcNondiagonal           ::Bool             ... True if also (non-)diagonal hyperfine amplitudes are to be calculated and
-                                                        printed, and false otherwise.
-    + calcIJFexpansion          ::Bool             ... True if the selected atomic levels are to be represented in a IJF-coupled basis,
-                                                        and false otherwise.
-    + printBefore    ::Bool                        ... True if a list of selected levels is printed before the actual computations start. 
-    + printDeltaEF              ::Bool             ... True if the energy shift of E_F (with regard to E_J) is to be printed, and false otherwise.
+    + calcNondiagonal           ::Bool             
+        ... True if also (non-)diagonal hyperfine amplitudes are to be calculated and printed, and false otherwise.
+    + calcIJFexpansion          ::Bool             
+        ... True if the selected atomic levels are to be represented in a IJF-coupled basis, and false otherwise.
+    + printBefore               ::Bool             ... True if a list of selected levels is printed before the actual computations start. 
     + levelSelection            ::LevelSelection   ... Specifies the selected levels, if any.
 """
 struct Settings  <:  AbstractPropertySettings
@@ -244,21 +235,18 @@ struct Settings  <:  AbstractPropertySettings
     calcNondiagonal             ::Bool 
     calcIJFexpansion            ::Bool 
     printBefore                 ::Bool 
-    printDeltaEF                ::Bool  
     levelSelection              ::LevelSelection
 end 
 
 
 """
 `Hfs.Settings(; calcT1::Bool=true,` calcT2::Bool=false, calcNondiagonal::Bool=false, calcIJFexpansion::Bool=false, 
-                    printBefore::Bool=false, printDeltaEF::Bool=false, 
-                    levelSelection::LevelSelection=LevelSelection()) 
+                    printBefore::Bool=false, levelSelection::LevelSelection=LevelSelection()) 
     ... keyword constructor to overwrite selected value of Einstein line computations.
 """
 function Settings(; calcT1::Bool=true, calcT2::Bool=false, calcNondiagonal::Bool=false, calcIJFexpansion::Bool=false, 
-                    printBefore::Bool=false, printDeltaEF::Bool=false, 
-                    levelSelection::LevelSelection=LevelSelection())
-    Settings(calcT1, calcT2, calcNondiagonal, calcIJFexpansion, printBefore, printDeltaEF, levelSelection)
+                    printBefore::Bool=false, levelSelection::LevelSelection=LevelSelection())
+    Settings(calcT1, calcT2, calcNondiagonal, calcIJFexpansion, printBefore, levelSelection)
 end
 
 
@@ -269,7 +257,6 @@ function Base.show(io::IO, settings::Hfs.Settings)
     println(io, "calcNondiagonal:          $(settings.calcNondiagonal)  ")
     println(io, "calcIJFexpansion:         $(settings.calcIJFexpansion)  ")
     println(io, "printBefore:              $(settings.printBefore)  ")
-    println(io, "printDeltaEF:             $(settings.printDeltaEF)  ")
     println(io, "levelSelection:           $(settings.levelSelection)  ")
 end
 
@@ -352,8 +339,7 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Gri
             end
             #
             matrix[r,s] = me
-            println("**                                                                    " *
-                    "                      <$r || $kind || $s> = $me" )
+            println(">>> HF interaction matrix:  <$r || $kind || $s> = $me" )
         end
     end
     if  printout   printstyled("done.\n", color=:light_green)   end
@@ -364,11 +350,11 @@ end
 
 
 """
-`Hfs.computeAmplitudesProperties(outcome::Hfs.Outcome, grid::Radial.Grid, settings::Hfs.Settings, im::Hfs.InteractionMatrix) 
+`Hfs.computeAmplitudesProperties(outcome::Hfs.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings, im::Hfs.InteractionMatrix) 
     ... to compute all amplitudes and properties of for a given level; an outcome::Hfs.Outcome is returned for which the 
         amplitudes and properties are now evaluated explicitly.
 """
-function  computeAmplitudesProperties(outcome::Hfs.Outcome, grid::Radial.Grid, settings::Hfs.Settings, im::Hfs.InteractionMatrix)
+function  computeAmplitudesProperties(outcome::Hfs.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings, im::Hfs.InteractionMatrix)
     AIoverMu = BoverQ = amplitudeT1 = amplitudeT2 = 0.;    J = AngularMomentum.oneJ(outcome.Jlevel.J)
     if  settings.calcT1  &&  outcome.Jlevel.J != AngularJ64(0)
         if  im.calcT1   amplitudeT1 = transpose(outcome.Jlevel.mc) * im.matrixT1 * outcome.Jlevel.mc
@@ -385,9 +371,29 @@ function  computeAmplitudesProperties(outcome::Hfs.Outcome, grid::Radial.Grid, s
         
         BoverQ   = 2 * amplitudeT2 * sqrt( (2J-1) / ((J+1)*(2J+3)) )  ## * sqrt(J)
     end
+    #
+    hfsMultiplet = Hfs.IJF_Multiplet()
+    if  settings.calcIJFexpansion
+        # Determine a IJF_Multiplet for the given Jlevel/outcome
+        hfsMultiplet = Hfs.computeHyperfineMultiplet(outcome.Jlevel, nm, grid)
+    end
     newOutcome = Hfs.Outcome( outcome.Jlevel, AIoverMu, BoverQ, amplitudeT1, amplitudeT2, 
-                                outcome.nuclearI, outcome.hasFlevels, outcome.Flevels)
+                              nm.spinI, hfsMultiplet)
     return( newOutcome )
+end
+
+
+"""
+`Hfs.computeHyperfineMultiplet(level::Level, nm::Nuclear.Model, grid::Radial.Grid)`  
+    ... to compute a hyperfine multiplet, i.e. a representation of hyperfine levels within a hyperfine-coupled basis as defined by the
+        given (electronic) level; a hfsMultiplet::IJF_Multiplet is returned.
+"""
+function computeHyperfineMultiplet(level::Level, nm::Nuclear.Model, grid::Radial.Grid)
+    #
+    hfsBasis     = Hfs.defineHyperfineBasis(level, nm)
+    hfsMultiplet = Hfs.computeHyperfineRepresentation(hfsBasis, nm, grid)
+
+    return( hfsMultiplet )
 end
 
 
@@ -401,8 +407,8 @@ function computeHyperfineMultiplet(multiplet::Multiplet, nm::Nuclear.Model, grid
     printstyled("Hfs.computeHyperfineMultiplet(): The computation of the hyperfine multiplet starts now ... \n", color=:light_green)
     printstyled("------------------------------------------------------------------------------------------ \n", color=:light_green)
     #
-    hfsBasis     = Hfs.defineHyperfineBasis(multiplet, nm, settings)
-    hfsMultiplet = Hfs.computeHyperfineRepresentation(hfsBasis, nm, grid, settings)
+    hfsBasis     = Hfs.defineHyperfineBasis(multiplet, nm)
+    hfsMultiplet = Hfs.computeHyperfineRepresentation(hfsBasis, nm, grid)
     # Print all results to screen
     hfsMultiplet = Basics.sortByEnergy(hfsMultiplet)
     Basics.tabulate("multiplet: energies",                                      hfsMultiplet) 
@@ -420,11 +426,11 @@ end
 
 
 """
-`Hfs.computeHyperfineRepresentation(hfsBasis::IJF_Basis, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings)`  
+`Hfs.computeHyperfineRepresentation(hfsBasis::IJF_Basis, nm::Nuclear.Model, grid::Radial.Grid)`  
     ... to set-up and diagonalized the Hamiltonian matrix of H^(DFB) + H^(hfs) within the atomic hyperfine (IJF-coupled) basis;
         a hfsMultiplet::IJF_Multiplet is returned.
 """
-function computeHyperfineRepresentation(hfsBasis::IJF_Basis, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings)
+function computeHyperfineRepresentation(hfsBasis::IJF_Basis, nm::Nuclear.Model, grid::Radial.Grid)
     n = length(hfsBasis.vectors);   matrix = zeros(n,n)
     for  r = 1:n
         for  s = 1:n
@@ -463,7 +469,7 @@ function computeHyperfineRepresentation(hfsBasis::IJF_Basis, nm::Nuclear.Model, 
                 parity = hfsBasis.vectors[r].levelJ.parity
                 F      = hfsBasis.vectors[r].F;     MF = AngularM64(hfsBasis.vectors[r].F);   break    end
         end
-        newlevelF = Hfs.IJF_Level(nm.spinI, F, MF, parity, en, true, hfsBasis, evector) 
+        newlevelF = Hfs.IJF_Level(nm.spinI, F, MF, parity, en, hfsBasis, evector) 
         push!( levelFs, newlevelF)
     end
     hfsMultiplet = Hfs.IJF_Multiplet("hyperfine", levelFs)
@@ -576,7 +582,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     im = computeInteractionMatrix(multiplet.levels[1].basis, grid, settings)
     newOutcomes = Hfs.Outcome[]
     for  outcome in outcomes
-        newOutcome = Hfs.computeAmplitudesProperties(outcome, grid, settings, im) 
+        newOutcome = Hfs.computeAmplitudesProperties(outcome, nm, grid, settings, im) 
         push!( newOutcomes, newOutcome)
     end
     # Print all results to screen
@@ -596,11 +602,33 @@ end
 
 
 """
-`Hfs.defineHyperfineBasis(multiplet::Multiplet, nm::Nuclear.Model, settings::Hfs.Settings)`  
+`Hfs.defineHyperfineBasis(level::Level, nm::Nuclear.Model)`  
+    ... to define/set-up an atomic hyperfine (IJF-coupled) basis for the given electronic level; 
+        a hfsBasis::IJF_Basis is returned.
+"""
+function  defineHyperfineBasis(level::Level, nm::Nuclear.Model)
+    function  display_ijfVector(i::Int64, vector::Hfs.IJF_Vector) 
+        si = string(i);   ni = length(si);    sa = repeat(" ", 5);    sa = sa[1:5-ni] * si * ")  "
+        sa = sa * "[" * string( LevelSymmetry(vector.levelJ.J, vector.levelJ.parity) ) * "] " * string(vector.F) * repeat(" ", 4)
+        return( sa )
+    end
+
+    vectors = IJF_Vector[]
+    Flist = Basics.oplus(nm.spinI, level.J)
+    for  F in Flist     push!(vectors,  IJF_Vector(nm.spinI, F, level) )      end
+    #
+    hfsBasis = IJF_Basis(vectors, level.basis)
+    
+    return( hfsBasis )
+end
+
+
+"""
+`Hfs.defineHyperfineBasis(multiplet::Multiplet, nm::Nuclear.Model)`  
     ... to define/set-up an atomic hyperfine (IJF-coupled) basis for the given electronic multipet; 
         a hfsBasis::IJF_Basis is returned.
 """
-function  defineHyperfineBasis(multiplet::Multiplet, nm::Nuclear.Model, settings::Hfs.Settings)
+function  defineHyperfineBasis(multiplet::Multiplet, nm::Nuclear.Model)
     function  display_ijfVector(i::Int64, vector::Hfs.IJF_Vector) 
         si = string(i);   ni = length(si);    sa = repeat(" ", 5);    sa = sa[1:5-ni] * si * ")  "
         sa = sa * "[" * string( LevelSymmetry(vector.levelJ.J, vector.levelJ.parity) ) * "] " * string(vector.F) * repeat(" ", 4)
@@ -636,6 +664,97 @@ end
 
 
 """
+`Hfs.computeModifiedEinsteinRates(upperOutcome::Outcome, lowerOutcome::Outcome, multipoles::Array{EmMultipole,1}, gauge::EmGauge,
+                                  grid::Radial.Grid)`  
+    ... to compute and tabulate the modified Einstein amplitudes and rates for the hyperfine-resolved 
+        transitions between the upper and lower outcome. The procedures assumes that the two outcomes provide
+        a proper IJF expansion (multiplet) of the hyperfine levels of interest.
+        A neat table is printed but nothing is returned otherwise
+"""
+function  computeModifiedEinsteinRates(upperOutcome::Outcome, lowerOutcome::Outcome, multipoles::Array{EmMultipole,1}, gauge::EmGauge,
+                                       grid::Radial.Grid)
+    if  upperOutcome.nuclearI != lowerOutcome.nuclearI   
+            error("Inconsistent nuclear spins; upper-I=$(upperOutcome.nuclearI)  !=  lower-I=$(lowerOutcome.nuclearI)")
+    end
+    
+    stream      = stdout
+    amplitudesJ = ComplexF64[]
+    iJsym = LevelSymmetry(upperOutcome.Jlevel.J, upperOutcome.Jlevel.parity)
+    fJsym = LevelSymmetry(lowerOutcome.Jlevel.J, lowerOutcome.Jlevel.parity)
+    omega = upperOutcome.Jlevel.energy - lowerOutcome.Jlevel.energy
+    
+    # First compute the multipole transition amplitudes between the J-levels of the upper and lower outcome
+    println(stream, " ")
+    println(stream, "  Multipole amplitudes for J-levels with symmetry $iJsym --> $fJsym:")
+    println(stream, " ")
+    for  multipole in multipoles
+        if  multipole  in  [M1, M2, M3]    gaugex = Basics.Magnetic    else    gaugex = gauge  end
+        ampJ = PhotoEmission.amplitude("emission", multipole, gaugex, omega, upperOutcome.Jlevel, lowerOutcome.Jlevel, grid)
+        push!(amplitudesJ, ampJ)
+        println(stream, "  J-level amplitude for $multipole  = $ampJ  ")
+    end
+    
+    # Print a table header
+    nx = 150
+    println(stream, " ")
+    println(stream, "  HFS modified Einstein amplitudes and rates:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
+    sa = " ";   sb = "  "
+    sa = sa * TableStrings.center(14, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(16)
+    sa = sa * TableStrings.center(14, "i--J^P--f"; na=2);                         sb = sb * TableStrings.hBlank(16)
+    sa = sa * TableStrings.center(12, "i--F--f";   na=2);                         sb = sb * TableStrings.hBlank(15)
+    sa = sa * TableStrings.center(12, "Energy"   ; na=3);               
+    sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=3)
+    sa = sa * TableStrings.center( 9, "Multipole"; na=1);                         sb = sb * TableStrings.hBlank(10)
+    sa = sa * TableStrings.center(11, "Gauge"    ; na=4);                         sb = sb * TableStrings.hBlank(14)
+    sa = sa * TableStrings.center(26, "A--Einstein--B"; na=3);       
+    sb = sb * TableStrings.center(26, TableStrings.inUnits("rate")*"           "*TableStrings.inUnits("rate"); na=2)
+    sa = sa * TableStrings.center(26, "re-- <Ff |amplitude L| Fi> --im"; na=2);       
+    
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+    #  
+    for  upperLevF in  upperOutcome.hfsMultiplet.levelFs
+        for  lowerLevF in  lowerOutcome.hfsMultiplet.levelFs
+            for  (m, mp)  in  enumerate(multipoles)
+                Ji = upperOutcome.Jlevel.J;   Fi = upperLevF.F
+                Jf = lowerOutcome.Jlevel.J;   Ff = lowerLevF.F
+                
+                ampF = ComplexF64(0.)
+                for  umc in upperLevF.mc,   lmc in lowerLevF.mc
+                    ampF = ampF  +  umc * lmc * sqrt( AngularMomentum.bracket([Fi, Ff]) ) *
+                           AngularMomentum.phaseFactor([Ji, +1, upperOutcome.nuclearI, +1, Ff, +1, AngularJ64(mp.L)]) * 
+                           AngularMomentum.AngularMomentum.Wigner_6j(Fi, Ff, mp.L, Jf, Ji, upperOutcome.nuclearI) * amplitudesJ[m]
+                end
+                sa = ""
+                sa = sa * TableStrings.center(14, TableStrings.levels_if(upperOutcome.Jlevel.index, lowerOutcome.Jlevel.index); na=2)
+                sa = sa * TableStrings.center(14, TableStrings.symmetries_if(iJsym, iJsym); na=0)
+                sc = "         " * string(Fi) * "    " * string(Ff)
+                sa = sa * TableStrings.center(12, sc[end-9:end]; na=3)
+                en = upperOutcome.Jlevel.energy - lowerOutcome.Jlevel.energy
+                sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", en)) * "    "
+                sa = sa * TableStrings.center(9,  string(mp); na=4)
+                if  mp  in  [M1, M2, M3]    gaugex = Basics.Magnetic    else    gaugex = gauge  end
+                sa = sa * TableStrings.flushleft(11, string(gaugex);  na=0)
+                chRate =  8pi * Defaults.getDefaults("alpha") * en / (Basics.twice(Ji) + 1) * (abs(ampF)^2) * (Basics.twice(Jf) + 1)
+                ## sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein A",  line, chRate)) * "  "
+                ## sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein B",  line, chRate)) * "    "
+                sa = sa * @sprintf("% .6e", chRate)  * "  " 
+                sa = sa * @sprintf("% .6e", chRate)  * "    " 
+                sa = sa * @sprintf("% .6e", ampF.re) * "  " 
+                sa = sa * @sprintf("% .6e", ampF.im) * "  " 
+                println(stream, sa)
+            end
+            println(stream, " ")
+        end
+    end
+    println(stream, "  ", TableStrings.hLine(nx)) 
+    
+    return( nothing )
+end
+
+
+"""
 `Hfs.determineOutcomes(multiplet::Multiplet, settings::Hfs.Settings)`  
     ... to determine a list of Outcomes's for the computation of HFS A- and B-parameters for the given multiplet. 
         It takes into account the particular selections and settings. An Array{Hfs.Outcome,1} is returned. Apart from the 
@@ -645,7 +764,7 @@ function  determineOutcomes(multiplet::Multiplet, settings::Hfs.Settings)
     outcomes = Hfs.Outcome[]
     for  level  in  multiplet.levels
         if  Basics.selectLevel(level, settings.levelSelection)
-            push!( outcomes, Hfs.Outcome(level, 0., 0., 0., 0., AngularJ64(0), false, false) )
+            push!( outcomes, Hfs.Outcome(level, 0., 0., 0., 0., AngularJ64(0), Hfs.IJF_Multiplet() ) )
         end
     end
     return( outcomes )
@@ -772,16 +891,14 @@ function  displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1}, nm::Nuclear
     println(stream, "  ", TableStrings.hLine(nx))
     #
     #
-    if !settings.printDeltaEF   return( nothing )   end
-    #
     # Printout the Delta E_F energy shifts of the hyperfine levels |alpha F> with regard to the (electronic) levels |alpha J>
     nx = 90
     println(stream, " ")
     println(stream, "  HFS Delta E_F energy shifts with regard to the (electronic) level energies E_J:")
     println(stream, " ")
-    println(stream, "    Nuclear spin I:                        $(nm.spinI) ")
-    println(stream, "    Nuclear magnetic-dipole moment    mu = $(nm.mu)    ")
-    println(stream, "    Nuclear electric-quadrupole moment Q = $(nm.Q)     ")
+    println(stream, "    Nuclear spin I:                          $(nm.spinI) ")
+    println(stream, "    Nuclear magnetic-dipole moment      mu = $(nm.mu)    ")
+    println(stream, "    Nuclear electric-quadrupole moment   Q = $(nm.Q)     ")
     println(stream, " ")
     println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
@@ -823,6 +940,46 @@ function  displayResults(stream::IO, outcomes::Array{Hfs.Outcome,1}, nm::Nuclear
         end
     end
     println(stream, "  ", TableStrings.hLine(nx))
+    #
+    if  settings.calcIJFexpansion
+        nx = 90
+        println(stream, " ")
+        println(stream, "  IJF-coupled hyperfine levels:")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  "
+        sa = sa * TableStrings.center(10, "Level"; na=2)
+        sa = sa * TableStrings.center(10, "J^P";   na=4)
+        sa = sa * TableStrings.center( 6, "F^P";   na=4);   na = length(sa)   
+        sa = sa * TableStrings.flushleft(34, "IJF basis (1:)"; na=4)
+        println(stream, sa);    sa = repeat(" ", na);   
+        sa = sa * TableStrings.flushleft(34, "Mixing coefficients (1:)"; na=4);                         
+        println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx)) 
+        #  
+        for  outcome in outcomes
+            sa = "  ";    sym = LevelSymmetry( outcome.Jlevel.J, outcome.Jlevel.parity)
+            sa = sa * TableStrings.center(10, TableStrings.level(outcome.Jlevel.index); na=2)
+            sa = sa * TableStrings.center(10, string(sym); na=6);    na = length(sa)
+            sa = sa * "        "
+            if   length(outcome.hfsMultiplet.levelFs) == 0  sa = sa * "No IJF levels";   println(stream, sa);    continue    end
+            nvecs = min( length(outcome.hfsMultiplet.levelFs[1].basis.vectors), 6)
+            for  nvec = 1:nvecs
+                sa = sa * "[" * string(outcome.hfsMultiplet.levelFs[1].basis.vectors[nvec].levelJ.J) * "] " *
+                                string(outcome.hfsMultiplet.levelFs[1].basis.vectors[nvec].F) * "       "
+            end
+            println(stream, sa)
+            for  levelF in outcome.hfsMultiplet.levelFs
+                sa = repeat(" ", na)
+                sa = sa * string(levelF.F) * "       "
+                for  nvec = 1:nvecs
+                    sa = sa * @sprintf("% .5e", levelF.mc[nvec] ) * "  "
+                end
+                println(stream, sa)
+            end
+            println(stream, " ")
+        end
+        println(stream, "  ", TableStrings.hLine(nx))
+    end
     #
     return( nothing )
 end
