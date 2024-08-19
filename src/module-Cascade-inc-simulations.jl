@@ -800,8 +800,12 @@ function perform(simulation::Cascade.Simulation; output::Bool=false)
         else  linesE = PhotoExcitation.Line[]
         end
         # Display the line data if appropriate
-        PhotoIonization.displayLineData(stdout, linesP)
-        PhotoExcitation.displayLineData(stdout, linesE)
+        if  simulation.settings.printTree
+            PhotoIonization.displayLineData(stdout, linesP)
+            PhotoExcitation.displayLineData(stdout, linesE)
+        else
+            println(">>>> Set settings.printTree to list all line data explicitly.")
+        end
         #
         wa     = Cascade.simulatePhotoAbsorptionSpectrum(simulation, linesP, linesE)
         waC    = Float64[];   waB = Float64[]

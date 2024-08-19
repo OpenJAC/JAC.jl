@@ -6,8 +6,8 @@
 module ManyElectron
 
 
-using  ..Basics, ..Defaults,  ..Radial
-export Configuration, ConfigurationR, AsfSettings, CsfR, Basis, Level, Multiplet, 
+using   ..Basics, ..Defaults,  ..Radial
+export  Configuration, ConfigurationR, AsfSettings, CsfR, Basis, Level, Multiplet, 
         AbstractQedModel, NoneQed, QedPetersburg, QedSydney, LSjjSettings,
         AbstractConfigurationRestriction, RestrictMaximumDisplacements, RestrictNoElectronsTo, RestrictParity, 
         RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation
@@ -130,6 +130,60 @@ function Base.string(conf::Configuration)
     for  k  in sortedShells 
         occ = conf.shells[k]
         sa  = sa * string(k) * "^$occ "
+    end
+
+    return( sa )
+end
+
+
+"""
+`Base.string(conf::Configuration, open::Bool)`  
+    ... provides, if open=trueM a String notation for the open-shell part of variable conf::Configuration,
+        and the standard printout for open=false.
+"""
+function Base.string(conf::Configuration, open::Bool)
+    if    false   sa = Base.string(conf)
+    else
+        # Define a new configurations with shells "beyond" the closed core
+        openShell = Shell(100,99)
+        for  (shell,occ)  in conf.shells
+            if  occ <  2*(2*shell.l + 1)  &&  shell < openShell    openShell = shell   end 
+        end
+        #
+        NoElectrons = 0;       newShells  = Dict{Shell,Int64}()
+        CoreElectrons = 0;     coreShells = Dict{Shell,Int64}()
+        for  (shell,occ)  in conf.shells
+            if    shell >= openShell    newShells[shell]  = occ;    NoElectrons = NoElectrons + occ   
+            else                        coreShells[shell] = occ;    CoreElectrons = CoreElectrons + occ 
+            end 
+        end
+        newConf  = Configuration(newShells, NoElectrons)
+        coreConf = Configuration(coreShells, CoreElectrons)
+        if      coreConf == Configuration("[He]")                   sb = "[He] "
+        elseif  coreConf == Configuration("[He] 2s^2")              sb = "[Be] "
+        elseif  coreConf == Configuration("[Ne]")                   sb = "[Ne] "
+        elseif  coreConf == Configuration("[Ne] 3s^2")              sb = "[Mg] "
+        elseif  coreConf == Configuration("[Ar]")                   sb = "[Ar] "
+        elseif  coreConf == Configuration("[Ar] 4s^2")              sb = "[Ca] "
+        elseif  coreConf == Configuration("[Ar] 3d^10")             sb = "[Ni-like] "
+        elseif  coreConf == Configuration("[Ar] 3d^10 4s^2")        sb = "[Zn-like] "
+        elseif  coreConf == Configuration("[Kr]")                   sb = "[Kr] "
+        elseif  coreConf == Configuration("[Kr] 5s^2")              sb = "[Sr] "
+        elseif  coreConf == Configuration("[Kr] 4d^10")             sb = "[Pd-like] "
+        elseif  coreConf == Configuration("[Kr] 4d^10 5s^2")        sb = "[Cd-like] "
+        elseif  coreConf == Configuration("[Kr] 4d^10 4f^14")       sb = "[Nd-like] "
+        elseif  coreConf == Configuration("[Kr] 4d^10 4f^14 5s^2")  sb = "[Sm-like] "
+        elseif  coreConf == Configuration("[Xe]")                   sb = "[Xe] "
+        elseif  coreConf == Configuration("[Xe] 6s^2")              sb = "[Ba] "
+        elseif  coreConf == Configuration("[Xe] 5d^10")             sb = "[Gd-like] "
+        elseif  coreConf == Configuration("[Xe] 4f^14")             sb = "[Er-like] "
+        elseif  coreConf == Configuration("[Xe] 5d^10 6s^2")        sb = "[Dy-like] "
+        elseif  coreConf == Configuration("[Xe] 4f^14 5d^10")       sb = "[Pt-like] "
+        elseif  coreConf == Configuration("[Hg]")                   sb = "[Hg] "
+        else                                                        sb = "[Core] "
+        end 
+        #
+        sa = sb * Base.string(newConf)
     end
 
     return( sa )

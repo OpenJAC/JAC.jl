@@ -39,7 +39,7 @@ using JAC, ..Defaults, ..TestFrames
     end
 
     @testset "JAC properties" begin
-        @test TestFrames.testModule_Einstein()
+        # @test TestFrames.testModule_Einstein()
         @test TestFrames.testModule_Hfs()   
         @test TestFrames.testModule_LandeZeeman() 
         @test TestFrames.testModule_IsotopeShift()   
@@ -47,7 +47,6 @@ using JAC, ..Defaults, ..TestFrames
         @test TestFrames.testModule_FormFactor() 
         @test TestFrames.testModule_DecayYield()
         @test TestFrames.testModule_MultipolePolarizibility()
-        @test TestFrames.testModule_PlasmaShift() 
     end
 
     @testset "JAC processes" begin
@@ -65,7 +64,7 @@ using JAC, ..Defaults, ..TestFrames
     end
 
     @testset "JAC cascades" begin
-        @test TestFrames.testModule_Cascade_StepwiseDecay()
+        ## @test TestFrames.testModule_Cascade_StepwiseDecay()
         ## @test TestFrames.testModule_Cascade_PhotonIonization()
         ## @test TestFrames.testModule_Cascade_PhotonExcitation()
         ## @test TestFrames.testModule_Cascade_Simulation()

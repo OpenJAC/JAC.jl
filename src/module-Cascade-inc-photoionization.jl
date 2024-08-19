@@ -11,16 +11,17 @@ function computeSteps(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Compu
     linesP = PhotoIonization.Line[]    
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
     nt = 0;   st = 0;   previousMeanEn = 0.
+    @show scheme.initialLevelSelection
     for  step  in  stepList
         st = st + 1
-        nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels)
+        nc = length(step.initialMultiplet.levels) * length(step.finalMultiplet.levels) * length(scheme.photonEnergies)
         println("\n  $st) Perform $(string(step.process)) amplitude computations for up to $nc photoionization lines (without selection rules): ")
         if  printSummary   println(iostream, "\n* $st) Perform $(string(step.process)) amplitude computations for " *
                                                 "up to $nc photoionization lines (without selection rules): ")   end 
                                                 
         if  step.process == Basics.Photo() 
             newLines = PhotoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
-                                                            step.settings, output=true, printout=false) 
+                                                           step.settings, scheme.initialLevelSelection, output=true, printout=false) 
             append!(linesP, newLines);    nt = length(linesP)
         else   error("Unsupported atomic process for photoionization computations.")
         end
@@ -54,7 +55,8 @@ function determineSteps(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Com
                     photonEnergies = scheme.photonEnergies
                     println(">>> Photon energies must still be given in user-selected units: $(photonEnergies)")
                     settings = PhotoIonization.Settings(scheme.multipoles, [UseCoulomb, UseBabushkin], photonEnergies, Float64[],
-                                                        false, false, false, false, false, LineSelection(), Basics.ExpStokes(), 0. )
+                                                        false, false, false, false, false, LineSelection(), Basics.ExpStokes(), 0.,
+                                                        scheme.lValues)
                     push!( stepList, Cascade.Step(Basics.Photo(), settings, initialBlock.confs, ionizedBlock.confs, 
                                                                             initialBlock.multiplet, ionizedBlock.multiplet) )
                 end

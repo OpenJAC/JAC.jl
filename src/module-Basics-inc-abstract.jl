@@ -402,6 +402,29 @@ end
 
 
 """
+`struct  Basics.Cartesian3DFieldValue{Type}   <: Basics.AbstractFieldValue`  
+    ... to specify a scalar field value of type Type in terms of x, y, z.
+
+    + x       ::Float64       ... x-coordinate.
+    + y       ::Float64       ... y-coordinate.
+    + z       ::Float64       ... z-coordinate.
+    + val     ::Type          ... field value of type Type.
+"""
+struct  Cartesian3DFieldValue{Type}        <: Basics.AbstractFieldValue
+    x         ::Float64
+    y         ::Float64
+    z         ::Float64
+    val       ::Type 
+end 
+
+
+# `Base.show(io::IO, value::Cartesian3DFieldValue{Type})`  ... prepares a proper printout of the variable value::Cartesian3DFieldValue{Type}.
+function Base.show(io::IO, value::Cartesian3DFieldValue{Type}) 
+    sa = "Cartesian 3D field value f(x,y,z) = f($(value.x),$(value.y),$(value.z)) = $(value.val)";                print(io, sa)
+end
+
+
+"""
 `struct  Basics.PolarFieldValue{Type}     <: Basics.AbstractFieldValue`  
     ... to specify a field value of type Type in terms of rho, phi.
 
@@ -445,6 +468,140 @@ function Base.show(io::IO, value::SphericalFieldValue{Type})
 end
 
 export  AbstractFieldValue, Cartesian2DFieldValue, Cartesian3DFieldValue, PolarFieldValue, SphericalFieldValue
+
+#################################################################################################################################
+#################################################################################################################################
+
+
+"""
+`abstract type Basics.AbstractFieldVector` 
+    ... to specify and deal with different physical field vectors, such as (Ax, Ay),  (Ax, Ay, Az),  (A_1, A_0, A_-1).
+        Often, such field values are used to charaterize electric or magnetic fields (vector potentials).
+        
+    + struct Cartesian2DFieldVector{Type}    ... to specify a field vector of type T in terms of (Ax, Ay).
+    + struct Cartesian3DFieldVector{Type}    ... to specify a field vector of type T in terms of (Ax, Ay, Az).
+    + struct SphericalFieldVector{Type}      ... to specify a field vector of type T in terms of (A_1, A_0, A_-1).
+    
+"""
+abstract type  AbstractFieldVector               end
+
+
+"""
+`struct  Basics.Cartesian2DFieldVector{Type}   <: Basics.AbstractFieldVector`  
+    ... to specify a scalar field vector of type T in terms of (Ax, Ay).
+
+    + x       ::Type       ... x-component.
+    + y       ::Type       ... y-component.
+"""
+struct  Cartesian2DFieldVector{Type}        <: Basics.AbstractFieldVector
+    x         ::Type
+    y         ::Type 
+end 
+
+
+# `Base.show(io::IO, vector::Cartesian2DFieldVector{Type})`  ... prepares a proper printout of the variable vector::Cartesian2DFieldVector{Type}.
+function Base.show(io::IO, vector::Cartesian2DFieldVector{Type}) 
+    sa = "Cartesian 2D field vector (Ax, Ay) = ($(vector.x),$(vector.y)).";                print(io, sa)
+end
+
+
+"""
+`struct  Basics.Cartesian3DFieldVector{Type}   <: Basics.AbstractFieldVector`  
+    ... to specify a scalar field vector of type T in terms of (Ax, Ay, Az).
+
+    + x       ::Type       ... x-component.
+    + y       ::Type       ... y-component.
+    + z       ::Type       ... z-component.
+"""
+struct  Cartesian3DFieldVector{Type}        <: Basics.AbstractFieldVector
+    x         ::Type
+    y         ::Type 
+    z         ::Type 
+end 
+
+
+# `Base.show(io::IO, vector::Cartesian3DFieldVector{Type})`  ... prepares a proper printout of the variable vector::Cartesian3DFieldVector{Type}.
+function Base.show(io::IO, vector::Cartesian3DFieldVector{Type}) 
+    sa = "Cartesian 3D field vector (Ax, Ay, Az) = ($(vector.x),$(vector.y),$(vector.z))";                print(io, sa)
+end
+
+export  AbstractFieldVector, Cartesian2DFieldVector, Cartesian3DFieldVector, SphericalFieldVector
+
+
+#################################################################################################################################
+#################################################################################################################################
+
+
+"""
+`abstract type Basics.AbstractEmField` 
+    ... defines an abstract type to distinguish between different static and time-dependent electric and magnetic fields;
+        this is useful for atomic compass simulations and for the computation of Stark shifts.
+        
+    + NoEmField               ... No electric and magnetic field is defined.
+    + StaticField             ... A static field that is characterized by its (real) amplitude into a given direction.
+    + TimeHarmonicField       ... Define a time-harmonic field that is characterized by its (real) amplitude into a 
+                                  given direction and a (harmonic) frequency.
+"""
+abstract type  AbstractEmField                    end
+struct         NoEmField    <:  AbstractEmField   end
+
+
+# `Base.show(io::IO, field::AbstractEmField)`  ... prepares a proper printout of the variable field::AbstractEmField.
+function Base.show(io::IO, field::AbstractEmField) 
+    print(io, string(field) )
+end
+
+
+# `Base.string(field::AbstractEmField)`  ... provides a proper printout of the variable field::AbstractEmField.
+function Base.string(field::AbstractEmField) 
+    if       field == NoEmField()     return("No electric and magnetic field is defined.")
+    else     error("stop a")
+    end
+end 
+
+
+"""
+`struct  Basics.StaticField   <:  AbstractEmField`  
+    ... to specify a static -- electric or magnetic -- field that is characterized by its (real) amplitude into a 
+        given direction.
+
+    + amplitude    ::Basics.Cartesian3DFieldVector{Float64}  ... 3D vector that represents the amplitude A_o of the field.
+"""
+struct  StaticField           <:  AbstractEmField
+    amplitude      ::Basics.Cartesian3DFieldVector{Float64}
+end 
+
+
+# `Base.show(io::IO, field::StaticField)`  ... prepares a proper printout of the variable field::StaticField.
+function Base.show(io::IO, field::StaticField) 
+    sa = "Static field with amplitude A_o = $(field.amplitude)."
+    print(io, sa)
+end
+
+
+"""
+`struct  Basics.TimeHarmonicField   <:  AbstractEmField`  
+    ... to specify a time-harmonic -- electric or magnetic -- field that is characterized by its (real) amplitude into a 
+        given direction and a (harmonic) frequency.
+
+    + amplitude    ::Basics.Cartesian3DFieldVector{Float64}  ... 3D vector that represents the amplitude A_o of the field.
+    + omega        ::Float64                                ... Frequency of the time-harmonic field.
+                                                    
+"""
+struct  TimeHarmonicField           <:  AbstractEmField
+    amplitude      ::Basics.Cartesian3DFieldVector{Float64}
+    omega          ::Float64
+end 
+
+
+# `Base.show(io::IO, field::TimeHarmonicField)`  ... prepares a proper printout of the variable field::TimeHarmonicField.
+function Base.show(io::IO, field::TimeHarmonicField) 
+    sa = "Time-harmonic field with frequency $(field.omega) and amplitude A_o = $(field.amplitude)."
+    print(io, sa)
+end
+
+export AbstractEmField, NoEmField, StaticField, TimeHarmonicField
+
 
 #################################################################################################################################
 #################################################################################################################################
@@ -925,6 +1082,82 @@ function Base.string(propc::Rec)                return( "Rec" )                 
 abstract type  AbstractPropertySettings                 end
 
 export AbstractPropertySettings 
+
+#################################################################################################################################
+#################################################################################################################################
+
+
+"""
+`abstract type Basics.AbstractQuantizationAxis` 
+    ... defines an abstract type to distinguish between different choices of the quantization axis in light-atom 
+        interactions.
+        
+    + DefaultQuantizationAxis      ... Use the (default) z-axis for quantization of atomic levels.
+    + StaticQuantizationAxis       ... Define a static quantization axis in terms of a unit vector.
+    + HarmonicQuantizationAxis     ... Define a time-harmonic quanization axis in terms of a unit vector and a frequency.
+"""
+abstract type  AbstractQuantizationAxis                 end
+struct         DefaultQuantizationAxis  <:  AbstractQuantizationAxis   end
+
+
+# `Base.show(io::IO, axis::AbstractQuantizationAxis)`  ... prepares a proper printout of the variable axis::AbstractQuantizationAxis.
+function Base.show(io::IO, axis::AbstractQuantizationAxis) 
+    print(io, string(axis) )
+end
+
+
+# `Base.string(axis::AbstractQuantizationAxis)`  ... provides a proper printout of the variable axis::AbstractQuantizationAxis.
+function Base.string(axis::AbstractQuantizationAxis) 
+    if       axis == DefaultQuantizationAxis()     return("Default (z-) quantization axis.")
+    else     error("stop a")
+    end
+end 
+
+
+"""
+`struct  Basics.StaticQuantizationAxis   <:  AbstractQuantizationAxis`  
+    ... to specify a static quantization axis in terms of a unit vector for its direction.
+
+    + nVector      ::Basics.Cartesian3DFieldValue{Float64}
+        ... 3D unit vector that specifies the quantization axis.
+"""
+struct  StaticQuantizationAxis   <:  AbstractQuantizationAxis
+    nVector        ::Basics.Cartesian3DFieldValue{Float64}
+end 
+
+
+# `Base.show(io::IO, axis::StaticQuantizationAxis)`  ... prepares a proper printout of the variable axis::StaticQuantizationAxi.
+function Base.show(io::IO, axis::StaticQuantizationAxis) 
+    sa = "Static quantization axis along nVector = $(axis.nVector)."
+    print(io, sa)
+end
+
+
+
+"""
+`struct  Basics.HarmonicQuantizationAxis   <:  AbstractQuantizationAxis`  
+    ... to specify a time-harmonic quantization axis in terms of a unit vector for its direction and a frequency omega.
+        !!! It need to be explained how omega is related to the components of nVector; perhaps, some further
+            further specification is required to make this axis unique.
+
+    + nVector  ::Basics.Cartesian3DFieldValue{Float64} ... 3D unit vector that specifies the quantization axis.
+    + omega    ::Float64                               ... Frequency of the time-harmonic motion.
+                                                    
+"""
+struct  HarmonicQuantizationAxis   <:  AbstractQuantizationAxis
+    nVector    ::Basics.Cartesian3DFieldValue{Float64}
+    omega      ::Float64
+end 
+
+
+# `Base.show(io::IO, axis::HarmonicQuantizationAxis)`  ... prepares a proper printout of the variable axis::HarmonicQuantizationAxis.
+function Base.show(io::IO, axis::HarmonicQuantizationAxis) 
+    sa = "Time-harmonic quantization axis with frequency $(axis.omega) along nVector = $(axis.nVector)."
+    print(io, sa)
+end
+
+export AbstractQuantizationAxis, DefaultQuantizationAxis, StaticQuantizationAxis, HarmonicQuantizationAxis
+
 
 #################################################################################################################################
 #################################################################################################################################

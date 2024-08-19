@@ -2,6 +2,107 @@
 # Functions and methods for cascade computation
 
 
+function Base.isless(x::Cascade.AbsorptionCrossSection, y::Cascade.AbsorptionCrossSection)
+    return x.photonEnergy < y.photonEnergy
+end
+
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+
+    
+"""
+`Basics.extractLeadingConfiguration(cLevel::Cascade.Level)`  
+    ... extract the leading configuration of the given level; a conf::Configuration is returned.
+"""
+function Basics.extractLeadingConfiguration(cLevel::Cascade.Level)
+    # First extract the right ManyElectron.Level that is to be analyzed
+    level = Level()
+    if length(cLevel.parents) > 0   
+        parent = cLevel.parents[1]
+        if      parent.process == Basics.Auger()       level = parent.lines[parent.index].finalLevel
+        elseif  parent.process == Basics.Radiative()   level = parent.lines[parent.index].finalLevel
+        else    error("stop a")
+        end
+    elseif length(cLevel.daugthers) > 0   
+        daugth = cLevel.daugthers[1]
+        ##x @show typeof(daugth.lines[daugth.index])
+        if      daugth.process == Basics.Auger()       level = daugth.lines[daugth.index].initialLevel
+        elseif  daugth.process == Basics.Radiative()   level = daugth.lines[daugth.index].initialLevel
+        else    error("stop b")
+        end
+    else        error("stop c")
+    end
+
+    allConfs = Basics.extractNonrelativisticConfigurations(level.basis)
+    weights  = zeros(length(allConfs))
+    for  (ia, allConf) in  enumerate(allConfs)
+        for (ic, csf) in enumerate(level.basis.csfs)
+            if  allConf == Basics.extractNonrelativisticConfigurationFromCsfR(csf, level.basis)     
+                weights[ia] = weights[ia] + level.mc[ic]
+            end
+        end
+    end
+    # Determine index of maximum and return the corresponding configuration
+    wx   = findmax(weights)
+    conf = allConfs[ wx[2] ]
+    
+    return( conf )
+end
+
+    
+"""
+`Basics.isSimilar()`  ... returns true if two instances are similar to each other, and false otherwise.
+
++ `(keya::LevelKey, keyb::LevelKey, relAcc::Float64)`  
+    ... returns true if two level keys refer to the same level, i.e. level with the same symmetry and
+        if the relative energy abs( (E_a - E_b)/E_a ) < relAcc. It returns false otherwise.
+"""
+function Basics.isSimilar(keya::LevelKey, keyb::LevelKey, relAcc::Float64)
+    if  keya.sym == keyb.sym   &&   abs( (keya.energy - keyb.energy)/keya.energy ) < relAcc    return(true)
+    else                                                                                       return(false)
+    end
+end
+
+
+"""
+`Basics.perform(comp::Cascade.Computation)`  
+    ... to set-up and perform a cascade computation that starts from a given set of initial configurations and proceeds via 
+        various steps until a given number of electrons has been removed or the decay stops at some stable levels with regard 
+        to the given atomic processes. The results of all individual steps are printed to screen but nothing is returned 
+        otherwise.
+
+`Basics.perform(comp::Cascade.Computation; output::Bool=true, outputToFile::Bool=true)`   
+    ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
+        and specifications of the cascade but can easily accessed by the keys of this dictionary.
+"""
+function Basics.perform(comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true)
+    Cascade.perform(comp.scheme, comp::Cascade.Computation, output=output, outputToFile=outputToFile)
+end
+
+
+
+"""
+`Basics.perform(comp::Cascade.Simulation)`  
+    ... to set-up and perform a cascade computation that starts from a given set of initial configurations and proceeds via 
+        various steps until a given number of electrons has been removed or the decay stops at some stable levels with regard 
+        to the given atomic processes. The results of all individual steps are printed to screen but nothing is returned 
+        otherwise.
+
+`Basics.perform(comp::Cascade.Simulation; output=true)`   
+    ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
+        and specifications of the cascade but can easily accessed by the keys of this dictionary.
+"""
+function Basics.perform(comp::Cascade.Simulation; output::Bool=false)
+    Cascade.perform(comp::Cascade.Simulation, output=output)
+end
+
+
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+
+
 """
 `Cascade.computeDecayProbabilities(outcome::DecayYield.Outcome, linesR::Array{PhotoEmission.Line,1}, 
                                     linesA::Array{AutoIonization.Line,1}, settings::DecayYield.Settings)` 
@@ -199,7 +300,7 @@ function displayBlocks(stream::IO, blockList::Array{Cascade.Block,1}; sa::String
     for  block  in  blockList
         i = i + 1;    
         sa = "   " * TableStrings.flushright( 6, string(i); na=2)
-        sb = " ";         for conf  in blockList[i].confs   sb = sb * string(conf) * ", "    end
+        sb = " ";         for conf  in blockList[i].confs   sb = sb * string(conf, true) * ", "    end
         en = Float64[];   for level in  block.multiplet.levels    push!(en, level.energy)    end
         minEn = minimum(en);   minEn = Defaults.convertUnits("energy: from atomic", minEn)
         maxEn = maximum(en);   maxEn = Defaults.convertUnits("energy: from atomic", maxEn)
@@ -470,10 +571,10 @@ function displaySteps(stream::IO, steps::Array{Cascade.Step,1}; sa::String="")
     for  i = 1:length(steps)
         sa = " " * TableStrings.flushright( 7, string(i); na=5)
         sa = sa  * TableStrings.flushleft( 11, string(steps[i].process); na=1)
-        sb = "";   for conf in steps[i].initialConfigs   sb = sb * string(conf) * ", "    end
+        sb = "";   for conf in steps[i].initialConfigs   sb = sb * string(conf,true) * ", "    end
         sa = sa  * TableStrings.flushright( 5, string( length(steps[i].initialMultiplet.levels[1].basis.csfs) )*", "; na=0) 
         sa = sa  * TableStrings.flushleft( 50, sb[1:end-2]; na=4)
-        sb = "";   for conf in steps[i].finalConfigs     sb = sb * string(conf) * ", "    end
+        sb = "";   for conf in steps[i].finalConfigs     sb = sb * string(conf,true) * ", "    end
         sa = sa  * TableStrings.flushright( 5, string( length(steps[i].finalMultiplet.levels[1].basis.csfs) )*", "; na=0) 
         sa = sa  * TableStrings.flushleft( 50, sb[1:end-2]; na=4)
         minEn = 1000.;   maxEn = -1000.;
@@ -794,10 +895,12 @@ function groupDisplayConfigurationList(Z::Float64, confs::Array{Configuration,1}
                 ## nxx = nxx + 1;    if nxx > 4   break    end                                         ## delete nxx
                 nc = nc + 1
                 push!(confList, conf ) 
-                if  Z > 36.0    wa = 0.
-                else            wa = Semiempirical.estimate("binding energy", round(Int64, Z), conf);    
-                                wa = Defaults.convertUnits("energy: from atomic", wa)
-                end
+                wa = Semiempirical.estimate("binding energy: XrayDataBooklet", round(Int64, Z), conf);    
+                wa = Defaults.convertUnits("energy: from atomic", wa)
+                ##x if  Z > 36.0    wa = 0.
+                ##x else            wa = Semiempirical.estimate("binding energy: XrayDataBooklet", round(Int64, Z), conf);    
+                ##x                 wa = Defaults.convertUnits("energy: from atomic", wa)
+                ##x end
                 sb = "   av. BE = "  * string( round(-wa) ) * "  " * TableStrings.inUnits("energy")
                 sd = "      " * string(conf) * "                                "
                 println(sd[1:nd+3] * sb * "      ($nc)" )

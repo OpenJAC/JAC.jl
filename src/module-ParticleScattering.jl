@@ -10,7 +10,7 @@
 module ParticleScattering
 
 
-using  Printf, GSL,
+using  Printf, GSL, SpecialFunctions,
         ..AngularMomentum, ..Basics, ..Beam, ..Continuum, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, 
         ..Radial, ..RadialIntegrals, ..SpinAngular, ..TableStrings
 
@@ -220,7 +220,7 @@ end
 `ParticleScattering.EventNR()`  ... constructor for the default ParticleScattering.EventNR.
 """
 function EventNR()
-    EventNR(ElasticElectronNR(), Beam.PlaneWave(), Level(), Level(), 0., 0., 0., 0., 0., 0., PartialWaveNR[])
+    EventNR(ElasticElectronNR(), Beam.PlaneWave(), Level(), Level(), 0., 0., 0., 0., 0., 0., 0., PartialWaveNR[])
 end
 
 
@@ -233,10 +233,10 @@ function Base.show(io::IO, event::ParticleScattering.EventNR)
     println(io, "impactEnergy:       $(event.impactEnergy)  ")
     println(io, "theta:              $(event.theta)  ")
     println(io, "phi:                $(event.phi)  ")
-    println(io, "d2SigmaHeadOn:      $(event.d2SigmaHeadOn)  ")
+    println(io, "d2SigmaHeadon:      $(event.d2SigmaHeadon)  ")
     println(io, "d2SigmaBorn:        $(event.d2SigmaBorn)  ")
     println(io, "d2SigmaMacros:      $(event.d2SigmaMacros)  ")
-    println(io, "dSigmadEHeadOn:     $(event.dSigmadEHeadOn)  ")
+    println(io, "dSigmadEHeadon:     $(event.dSigmadEHeadon)  ")
     println(io, "partialWaves:       $(event.partialWaves)  ")
 end
 
@@ -361,6 +361,7 @@ function computeAmplitudesProperties(processType::ElasticElectronNR, event::Part
         totalAmp = ComplexF64(0.);   k = event.beamType.kz / cos(event.beamType.openingAngle)
         for  l = 0:1000
             @show  l, amp1, amp2, amp3, amp4, amp5, amp6, amp7, maxamp, settings.epsPartialWave
+            #== Compute the lPhaseBorn by means of JAC orbitals
             kappa      = -l - 1;
             potZero = Radial.Potential("zero potential", zeros(grid.NoPoints), grid)
             potDFS  = Basics.computePotential(Basics.DFSField(0.7), grid, event.finalLevel) 
@@ -368,13 +369,28 @@ function computeAmplitudesProperties(processType::ElasticElectronNR, event::Part
             wx = Float64[];   mtp = length(cOrbital.P)   
             for  m = 1:mtp 
                 wy = (cOrbital.P[m]^2 + cOrbital.Q[m]^2) * potDFS.Zr[m] / grid.r[m];    push!(wx, -wy )
+            end  ==#
+            # Compute the lPhaseBorn by means of spherical bessel functions
+            wfl2 = Float64[];  mtp = grid.NoPoints-20;      wx = 0.;  kr = 0.
+            nuclearPotential  = Nuclear.nuclearPotential(nm, grid)
+            potDFS            = Basics.computePotential(Basics.DFSField(0.7), grid, event.finalLevel) 
+            pot               = Basics.add(nuclearPotential, potDFS)
+            for  m = 1:mtp   kr = k * grid.r[m];    wx = kr * SpecialFunctions.sphericalbesselj(l, kr);   
+                push!(wfl2, - wx^2 * pot.Zr[m] / grid.r[m])   
             end
-            wint   = - RadialIntegrals.V0(wx, mtp, grid::Radial.Grid) / k
+            wint = - RadialIntegrals.V0(wfl2, mtp, grid::Radial.Grid) / k
+            #
+            #==
+            for m = 1:5:mtp
+                println("    $(grid.r[m])   $(- pot.Zr[m] / grid.r[m])  ")
+            end
+            error("aaaa")   ==#
+            #
             lPhaseBorn = atan(wint)
-            @show "*******", k, l, lPhase, lPhaseBorn, mtp, wint
+            @show "*******", k, l, lPhaseBorn, mtp, wint
             amplitude  = ParticleScattering.amplitude(event.processType, event.beamType, l, lPhaseBorn, event.theta, event.phi, grid)
             totalAmp   = totalAmp + amplitude
-            push!( newPws, ParticleScattering.PartialWaveNR(l, lPhase, amplitude) )
+            push!( newPws, ParticleScattering.PartialWaveNR(l, lPhaseBorn, amplitude) )
             amp1 = amp2;   amp2 = amp3;   amp3 = amp4;   amp4 = amp5;   amp5 = amp6;   amp6 = amp7;   amp7 = amp8;   
             amp8 = abs(amplitude)^2;   maxamp = max(maxamp, amp8)
             if  l > 10  &&  (amp1 + amp2 + amp3 + amp4 + amp5 + amp6 + amp7 + amp8) / maxamp < settings.epsPartialWave    break     end
@@ -663,6 +679,7 @@ function  displayAmplitudes(stream::IO, processType::ElasticElectronNR, events::
     sa = sa * TableStrings.center( 3, "l";     na=2);                                    sb = sb * TableStrings.hBlank( 3)               
     sa = sa * TableStrings.center(30, "Partial-wave amplitudes";  na=2);                  
     sb = sb * TableStrings.center(30, "Re-Amplitude-Im";          na=2)           
+    sa = sa * TableStrings.center(10, "phase"; na=2);                                    sb = sb * TableStrings.hBlank(12)               
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #
     nsa = 0
@@ -682,11 +699,12 @@ function  displayAmplitudes(stream::IO, processType::ElasticElectronNR, events::
         println(stream,  sa)
         for  j in 2:length(event.partialWaves)
             sa = " "^nsa
-            sa = sa * @sprintf("%.3e", event.theta)                           * "  "
-            sa = sa * @sprintf("%.3e", event.phi)                             * "     "
-            sa = sa * string(event.partialWaves[j].l)                         * "   " 
+            sa = sa * @sprintf("%.3e", event.theta)                             * "  "
+            sa = sa * @sprintf("%.3e", event.phi)                               * "     "
+            sa = sa * string(event.partialWaves[j].l)                           * "   " 
             sa = sa * @sprintf("% 1.6e", event.partialWaves[j].amplitude.re)    * "   " 
             sa = sa * @sprintf("% 1.6e", event.partialWaves[j].amplitude.im)    * "   " 
+            sa = sa * @sprintf("% 1.6e", event.partialWaves[j].phase)           * "   " 
             println(stream,  sa)
         end
     end

@@ -149,7 +149,7 @@ end
 
 
 """
-`Semiempirical.estimate("binding energy", Z::Float64, conf::Configuration)`  
+`Semiempirical.estimate("binding energy: ...", Z::Float64, conf::Configuration)`  
     ... to provide an approximate binding energy of a given electron configuration. This estimate adds the binding 
         energies of all subshell, taken frogm a semi-empirical tabulations by Williams et al., 
         https://userweb.jlab.org/~gwyn/ebindene.html. If no binding energy is provided by this table, it simply scales the 
@@ -158,23 +158,34 @@ end
         occur with regard to the neutral atom. An energy::Float64 in  Hartree is returned.
 """
 function estimate(sa::String, Z::Int64, conf::Configuration)
-    if     sa == "binding energy"
-        wa = PeriodicTable.bindingEnergies_Williams2000(Z);    wb = 0.
-        for (sh,v) in  conf.shells
-            if      sh == Shell("1s")    if wa[1]  == -1.   error("stop aa")          else    wb = wb + v * wa[1]    end
-            elseif  sh == Shell("2s")    if wa[2]  == -1.   error("stop ab")          else    wb = wb + v * wa[2]    end
-            elseif  sh == Shell("2p")    if wa[3]  == -1.   wb = wb + v * wa[2]/12.   else    wb = wb + v * wa[3]    end
-            elseif  sh == Shell("3s")    if wa[5]  == -1.   wb = wb + v * wa[2]/12.   else    wb = wb + v * wa[5]    end
-                                            if wa[2]  == -1.   error("stop ad")   end
-            elseif  sh == Shell("3p")    if wa[6]  == -1.   wb = wb + v * wa[3]/12.   else    wb = wb + v * wa[6]    end
-                                            if wa[3]  == -1.   error("stop af")   end
-            elseif  sh == Shell("3d")    if wa[8]  == -1.                             else    wb = wb + v * wa[8]    end
-            elseif  sh == Shell("4s")    if wa[10] == -1.                             else    wb = wb + v * wa[10]   end
-            elseif  sh == Shell("4p")    if wa[11] == -1.                             else    wb = wb + v * wa[11]   end
-            else    ## error("No binding energy available for Z = $Z and subshell $sh ")
-            end
-        end
+    if         sa == "binding energy: Williams2000"
+        wa = PeriodicTable.bindingEnergies_Williams2000(Z)    
+    elseif     sa == "binding energy: Larkins1977"
+        wa = PeriodicTable.bindingEnergies_Larkins1977(Z) 
+    elseif     sa == "binding energy: XrayDataBooklet"
+        wa = PeriodicTable.bindingEnergies_XrayDataBooklet(Z)    
     else   error("Unsupported keystring")
+    end
+    #
+    wb = 0.
+    for (sh,v) in  conf.shells
+        if      sh == Shell("1s")    if wa[1]  == -1.   error("stop aa")          else    wb = wb + v * wa[1]    end
+        elseif  sh == Shell("2s")    if wa[2]  == -1.   error("stop ab")          else    wb = wb + v * wa[2]    end
+        elseif  sh == Shell("2p")    if wa[4]  == -1.   error("stop ac")          else    wb = wb + v * wa[4]    end
+        elseif  sh == Shell("3s")    if wa[5]  == -1.   error("stop ad")          else    wb = wb + v * wa[5]    end
+        elseif  sh == Shell("3p")    if wa[7]  == -1.   error("stop ae")          else    wb = wb + v * wa[7]    end
+        elseif  sh == Shell("3d")    if wa[9]  == -1.   error("stop af")          else    wb = wb + v * wa[9]    end
+        elseif  sh == Shell("4s")    if wa[10] == -1.   error("stop ag")          else    wb = wb + v * wa[10]   end
+        elseif  sh == Shell("4p")    if wa[12] == -1.   error("stop ah")          else    wb = wb + v * wa[12]   end
+        elseif  sh == Shell("4d")    if wa[14] == -1.   error("stop ai")          else    wb = wb + v * wa[14]   end
+        elseif  sh == Shell("4f")    if wa[16] == -1.   error("stop aj")          else    wb = wb + v * wa[16]   end
+        elseif  sh == Shell("5s")    if wa[17] == -1.   error("stop ag")          else    wb = wb + v * wa[17]   end
+        elseif  sh == Shell("5p")    if wa[19] == -1.   error("stop ah")          else    wb = wb + v * wa[19]   end
+        elseif  sh == Shell("5d")    if wa[21] == -1.                             else    wb = wb + v * wa[21]   end
+        elseif  sh == Shell("6s")    if wa[22] == -1.                             else    wb = wb + v * wa[12]   end
+        elseif  sh == Shell("6p")    if wa[24] == -1.                             else    wb = wb + v * wa[24]   end
+        else    ## error("No binding energy available for Z = $Z and subshell $sh ")
+        end
     end
     #
     wb = Defaults.convertUnits("energy: from eV to atomic", wb)

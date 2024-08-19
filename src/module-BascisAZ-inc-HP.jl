@@ -150,32 +150,8 @@ function Base.isless(x::ManyElectron.Level, y::ManyElectron.Level)
 end
 
 
-function Base.isless(x::Hfs.IJF_Level, y::Hfs.IJF_Level)
-    return x.energy < y.energy
-end
-
-
 function Base.isless(x::Basics.AngularJ64, y::Basics.AngularJ64)
     return x.num < y.num
-end
-
-
-function Base.isless(x::Cascade.AbsorptionCrossSection, y::Cascade.AbsorptionCrossSection)
-    return x.photonEnergy < y.photonEnergy
-end
-
-    
-"""
-`Basics.isSimilar()`  ... returns true if two instances are similar to each other, and false otherwise.
-
-+ `(keya::LevelKey, keyb::LevelKey, relAcc::Float64)`  
-    ... returns true if two level keys refer to the same level, i.e. level with the same symmetry and
-        if the relative energy abs( (E_a - E_b)/E_a ) < relAcc. It returns false otherwise.
-"""
-function Basics.isSimilar(keya::LevelKey, keyb::LevelKey, relAcc::Float64)
-    if  keya.sym == keyb.sym   &&   abs( (keya.energy - keyb.energy)/keya.energy ) < relAcc    return(true)
-    else                                                                                       return(false)
-    end
 end
 
     

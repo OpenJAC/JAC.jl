@@ -6,7 +6,7 @@
 module Beam
 
 
-using  Printf, ..AngularMomentum, ..Basics, ..Defaults
+using  Printf, ..AngularMomentum, ..Basics, ..Defaults, ..Pulse
 
 
 """
@@ -165,6 +165,51 @@ end
 # `Base.show(io::IO, beam::Component)`  ... prepares a proper printout of the beam::Component.
 function Base.show(io::IO, beam::Component)
     sa = Base.string(beam);                print(io, sa)
+end
+
+
+"""
+`struct  Beam.PhotonBeam`   
+    ... to model a full photon beams withwell-defined beamType, polarization, time envelope, 
+        central frequency (omega), intensity and carrier-envelope phase. 
+        Such photon beams can be utilized for strong-field phenomena, atomic-compass simulations 
+        and other atom-beam interactions.
+        
+        !! This data type is still under development ... and improvements are welcome.
+
+    + beamType      ::Beam.AbstractBeamType         ... to specifies the beam component in terms of its quantum numbers.
+    + polarization  ::Basics.AbstractPolarization   ... to specify the polarization of the beam.
+    + envelope      ::Pulse.AbstractEnvelope        ... to characterize the envelope-function
+    + omega         ::Float64                       ... frequency (a.u.)
+    + intensity     ::Float64                       ... intensity of the beam (which units ??)
+    + cep           ::Float64                       ... cep-phase
+"""
+struct  PhotonBeam
+    beamType      ::Beam.AbstractBeamType 
+    polarization  ::Basics.AbstractPolarization
+    envelope      ::Pulse.AbstractEnvelope
+    omega         ::Float64 
+    intensity     ::Float64 
+    cep           ::Float64 
+end
+
+
+"""
+`Beam.PhotonBeam()`  ... constructor for an 'default' Beam.PhotonBeam.
+"""
+function PhotonBeam()
+    PhotonBeam( LaguerreGauss(), Basics.LinearPolarization() )
+end
+
+
+# `Base.show(io::IO, beam::Beam.PhotonBeam)`  ... prepares a proper printout of the beam::Beam.PhotonBeam.
+function Base.show(io::IO, beam::Beam.PhotonBeam)
+    println(io, "beamType:           $(beam.beamType)  ")
+    println(io, "polarization:       $(beam.polarization)  ")
+    println(io, "envelope:           $(beam.envelope)  ")
+    println(io, "omega:              $(beam.omega)  ")
+    println(io, "intensity:          $(beam.intensity)  ")
+    println(io, "cep:                $(beam.cep)  ")
 end
 
 

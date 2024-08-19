@@ -214,56 +214,6 @@ end
 
 
 """
-`Basics.perform(comp::Plasma.Computation)`  
-    ... to set-up and perform a plasma computation that starts from a given set of reference configurations and 
-        support both, an atomic-average SCF procedure and the computation of various plasma properties and processe.
-        The results of all individual steps are printed to screen but nothing is returned otherwise.
-
-`Basics.perform(comp::Plasma.Computation; output::Bool=true)`   
-    ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
-        and specifications of the plasma computation but can easily accessed by the keys of this dictionary.
-"""
-function Basics.perform(comp::Plasma.Computation; output::Bool=false)
-    Plasma.perform(comp.scheme, comp::Plasma.Computation, output=output)
-end
-
-
-
-"""
-`Basics.perform(comp::Cascade.Computation)`  
-    ... to set-up and perform a cascade computation that starts from a given set of initial configurations and proceeds via 
-        various steps until a given number of electrons has been removed or the decay stops at some stable levels with regard 
-        to the given atomic processes. The results of all individual steps are printed to screen but nothing is returned 
-        otherwise.
-
-`Basics.perform(comp::Cascade.Computation; output::Bool=true, outputToFile::Bool=true)`   
-    ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
-        and specifications of the cascade but can easily accessed by the keys of this dictionary.
-"""
-function Basics.perform(comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true)
-    Cascade.perform(comp.scheme, comp::Cascade.Computation, output=output, outputToFile=outputToFile)
-end
-
-
-
-"""
-`Basics.perform(comp::Cascade.Simulation)`  
-    ... to set-up and perform a cascade computation that starts from a given set of initial configurations and proceeds via 
-        various steps until a given number of electrons has been removed or the decay stops at some stable levels with regard 
-        to the given atomic processes. The results of all individual steps are printed to screen but nothing is returned 
-        otherwise.
-
-`Basics.perform(comp::Cascade.Simulation; output=true)`   
-    ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
-        and specifications of the cascade but can easily accessed by the keys of this dictionary.
-"""
-function Basics.perform(comp::Cascade.Simulation; output::Bool=false)
-    Cascade.perform(comp::Cascade.Simulation, output=output)
-end
-
-
-
-"""
 `Basics.perform(comp::Empirical.Computation)`  
     ... to set-up and perform an empirical computation that starts from a given nuclear model and set of configurations,
         and which is mainly controlled by its settings. The results are printed to screen but nothing is returned otherwise.

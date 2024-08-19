@@ -8,13 +8,14 @@ module Atomic
 
 
 ## using Interact
-using  ..Basics, ..Radial, ..ManyElectron, ..Nuclear
-using  ..Einstein, ..Hfs, ..IsotopeShift, ..LandeZeeman, ..AlphaVariation, ..FormFactor, ..DecayYield,
-       ..MultipolePolarizibility, ..PhotoEmission, ..PhotoIonization, ..PhotoExcitation, ..PhotoRecombination, 
+using  ..Basics, ..Radial, ..ManyElectron, ..Nuclear, ..PhotoEmission
+
+#== using  ..Einstein, ..Hfs, ..IsotopeShift, ..LandeZeeman, ..AlphaVariation, ..FormFactor, ..DecayYield,
+       ..MultipolePolarizibility, ..PhotoIonization, ..PhotoExcitation, ..PhotoRecombination, 
        ..AutoIonization, ..DoubleAutoIonization, ..Dielectronic, ..ImpactExcitation, ..CoulombExcitation, ..CoulombIonization,
        ..PhotoDoubleIonization, ..PhotoExcitationFluores, ..PhotoExcitationAutoion, ..RayleighCompton, ..MultiPhotonDeExcitation,
        ..PhotoIonizationFluores, ..PhotoIonizationAutoion, ..ImpactExcitationAutoion, ..RadiativeAuger, 
-       ..MultiPhotonIonization, ..MultiPhotonDoubleIon, ..InternalConversion
+       ..MultiPhotonIonization, ..MultiPhotonDoubleIon, ..InternalConversion  ==#
 
 
 """

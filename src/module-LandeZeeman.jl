@@ -177,6 +177,7 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Gri
                 #
                 for  coeff in wa
                     tamp  = InteractionStrength.zeeman_n1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
+                    ##x @show "***** n1-amplitude", coeff.a, coeff.b, tamp
                     me = me + coeff.T * tamp  
                 end
             #
@@ -195,10 +196,12 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Gri
             end
             #
             matrix[r,s] = me
+            ##x @show r, s, me
         end
     end
     printstyled("done.\n", color=:light_green)
     amplitude = transpose(rLevel.mc) * matrix * sLevel.mc 
+    ##x @show "*****", rLevel.J, sLevel.J, amplitude
     #
     return( amplitude )
 end
@@ -316,6 +319,7 @@ function  computeQuadraticZeemanC2(level::Level, Jsub::SublevelJ, grid::Radial.G
     for nLevel in settings.gMultiplet.levels
         # Exclude levels with the same energy (E == E_n) or with total angular momenta that differ more than by 1.
         if level.J == nLevel.J  &&  level.parity == nLevel.parity    &&  isapprox(level.energy, nLevel.energy, rtol=1.0e-4)
+            @show "C2 continue:", level.energy, nLevel.energy
             continue
         elseif  abs(Basics.twice(Jsub.M)) > Basics.twice(nLevel.J)   
             continue
@@ -338,7 +342,8 @@ function  computeQuadraticZeemanC2(level::Level, Jsub::SublevelJ, grid::Radial.G
         @show  "compute c2: bb", level.J, Jsub.M, nLevel.J
         cg   = AngularMomentum.ClebschGordan_old(level.J, Jsub.M, AngularJ64(1), AngularM64(0), nLevel.J, Jsub.M)
         amp  = abs(amplitudeN1 + amplitudeDeltaN1)
-        c2 = c2 + cg^2 / (Basics.twice(nLevel.J) + 1) / (level.energy - nLevel.energy) * amp^2
+        ## c2 = c2 + cg^2 / (Basics.twice(nLevel.J) + 1) / (level.energy - nLevel.energy) * amp^2
+        c2 = c2 + cg^2 / (level.energy - nLevel.energy) * amp^2
         @show  "compute c2: cc", amplitudeN1, amplitudeDeltaN1, c2
 
         ##x w3jValue = AngularMomentum.Wigner_3j(level.J, AngularJ64(1), ilevel.J, Jsub.M, AngularM64(0), AngularM64(-Jsub.M.num//Jsub.M.den))

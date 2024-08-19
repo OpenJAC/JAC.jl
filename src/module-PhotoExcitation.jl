@@ -242,13 +242,14 @@ end
 
 """
 `PhotoExcitation.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
-                                        settings::PhotoExcitation.Settings; output::Bool=true, printout::Bool=true)`  
+                                     settings::PhotoExcitation.Settings, initialLevelSelection::LevelSelection; 
+                                     output::Bool=true, printout::Bool=true)`  
     ... to compute the excitation (absorption) transition amplitudes and all properties as requested by the given settings. 
         The computations and printout is adapted for larger cascade computations by including only lines with at least one channel 
         and by sending all printout to a summary file only. A list of lines::Array{PhotoExcitation.Lines} is returned.
 """
 function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid, 
-                                        settings::PhotoExcitation.Settings; output::Bool=true, printout::Bool=true) 
+                              settings::PhotoExcitation.Settings, initialLevelSelection::LevelSelection; output::Bool=true, printout::Bool=true) 
     # Define a common subshell list for both multiplets
     subshellList = Basics.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
@@ -258,7 +259,9 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
     # Calculate all amplitudes and requested properties
     newLines = PhotoExcitation.Line[]
     for  (i,line)  in  enumerate(lines)
-        if  rem(i,50) == 0    println("> Excitation line $i:")   end
+        if  rem(i,200) == 0    println("> Excitation line $i:")   end
+        ##x @show Basics.selectLevel(line.initialLevel, initialLevelSelection)
+        if  !Basics.selectLevel(line.initialLevel, initialLevelSelection)     continue    end
         newLine = PhotoExcitation.computeAmplitudesProperties(line, grid, settings, printout=printout) 
         #
         # Don't add this line if it does not contribute to the decay

@@ -25,6 +25,7 @@ using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Radial, ..
     + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
     + stokes                  ::ExpStokes                    ... Stokes parameters of the incident radiation.
     + freeElectronShift       ::Float64                      ... An overall energy shift of all free-electron energies [user-specified units].
+    + lValues                 ::Array{Int64,1}               ... Orbital angular momentum of free-electrons, for which partial waves are considered.
 """
 struct Settings  <:  AbstractProcessSettings 
     multipoles                ::Array{EmMultipole}
@@ -39,6 +40,7 @@ struct Settings  <:  AbstractProcessSettings
     lineSelection             ::LineSelection
     stokes                    ::ExpStokes
     freeElectronShift         ::Float64 
+    lValues                   ::Array{Int64,1}
 end 
 
 
@@ -47,7 +49,7 @@ end
 """
 function Settings()
     Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb, Basics.UseBabushkin], Float64[], Float64[], 
-                false, false, false, false, false, LineSelection(), Basics.ExpStokes(), 0.)
+                false, false, false, false, false, LineSelection(), Basics.ExpStokes(), 0., [0,1,2,3,4,5])
 end
 
 
@@ -56,7 +58,8 @@ end
 
         multipoles=..,          gauges=..,                  photonEnergies=..,          electronEnergies=..,     
         calcAnisotropy=..,      calcPartialCs..,            calcTimeDelay=..,           calcTensors=..,             
-        printBefore=..,         lineSelection=..,           stokes=..,                  freeElectronShift=..)
+        printBefore=..,         lineSelection=..,           stokes=..,                  freeElectronShift=..,
+        lValues=.. )
                     
     ... constructor for modifying the given PhotoIonization.Settings by 'overwriting' the previously selected parameters.
 """
@@ -66,7 +69,8 @@ function Settings(set::PhotoIonization.Settings;
     calcAnisotropy::Union{Nothing,Bool}=nothing,                            calcPartialCs::Union{Nothing,Bool}=nothing, 
     calcTimeDelay::Union{Nothing,Bool}=nothing,                             calcTensors::Union{Nothing,Bool}=nothing,   
     printBefore::Union{Nothing,Bool}=nothing,                               lineSelection::Union{Nothing,LineSelection}=nothing, 
-    stokes::Union{Nothing,ExpStokes}=nothing,                               freeElectronShift::Union{Nothing,Float64}=nothing)  
+    stokes::Union{Nothing,ExpStokes}=nothing,                               freeElectronShift::Union{Nothing,Float64}=nothing,
+    lValues::Union{Nothing,Array{Int64,1}}=nothing)  
     
     if  multipoles        == nothing   multipolesx        = set.multipoles        else  multipolesx        = multipoles         end 
     if  gauges            == nothing   gaugesx            = set.gauges            else  gaugesx            = gauges             end 
@@ -80,9 +84,10 @@ function Settings(set::PhotoIonization.Settings;
     if  lineSelection     == nothing   lineSelectionx     = set.lineSelection     else  lineSelectionx     = lineSelection      end 
     if  stokes            == nothing   stokesx            = set.stokes            else  stokesx            = stokes             end 
     if  freeElectronShift == nothing   freeElectronShiftx = set.freeElectronShift else  freeElectronShiftx = freeElectronShift  end 
+    if  lValues           == nothing   lValuesx           = set.lValues           else  lValuesx           = lValues            end 
 
     Settings( multipolesx, gaugesx, photonEnergiesx, electronEnergiesx, calcAnisotropyx, calcPartialCsx, calcTimeDelayx, 
-                calcTensorsx, printBeforex, lineSelectionx, stokesx, freeElectronShiftx)
+                calcTensorsx, printBeforex, lineSelectionx, stokesx, freeElectronShiftx, lValuesx)
 end
 
 
@@ -100,6 +105,7 @@ function Base.show(io::IO, settings::PhotoIonization.Settings)
     println(io, "lineSelection:            $(settings.lineSelection)  ")
     println(io, "stokes:                   $(settings.stokes)  ")
     println(io, "freeElectronShift:        $(settings.freeElectronShift)  ")
+    println(io, "lValues:                  $(settings.lValues)  ")
 end
 
 
@@ -418,29 +424,31 @@ end
 
 """
 `PhotoIonization.computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                                        settings::PhotoIonization.Settings; output=true, printout::Bool=true)`  
+                                     settings::PhotoIonization.Settings, initialLevelSelection::LevelSelection; 
+                                     output=true, printout::Bool=true)`  
     ... to compute the photoionization transition amplitudes and all properties as requested by the given settings. The computations
         and printout is adapted for large cascade computations by including only lines with at least one channel and by sending
         all printout to a summary file only. A list of lines::Array{PhotoIonization.Lines} is returned.
 """
 function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
-                                settings::PhotoIonization.Settings; output=true, printout::Bool=true)
+                              settings::PhotoIonization.Settings, initialLevelSelection::LevelSelection; output=true, printout::Bool=true)
     
     lines = PhotoIonization.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
     # if  settings.printBefore    PhotoIonization.displayLines(stdout, lines)    end  
     # Determine maximum energy and check for consistency of the grid
     maxEnergy = 0.;   for  en in settings.photonEnergies     maxEnergy = max(maxEnergy, Defaults.convertUnits("energy: to atomic", en))   end
-                        for  en in settings.electronEnergies   maxEnergy = max(maxEnergy, Defaults.convertUnits("energy: to atomic", en))   end
+                      for  en in settings.electronEnergies   maxEnergy = max(maxEnergy, Defaults.convertUnits("energy: to atomic", en))   end
     nrContinuum = Continuum.gridConsistency(maxEnergy, grid)
     # Calculate all amplitudes and requested properties
     newLines = PhotoIonization.Line[]
     for  (i,line)  in  enumerate(lines)
         if  rem(i,10) == 0    println("> Photo line $i:  ... calculated ")    end
+        # Do not compute line if initial level is not in initialLevelSelection()
+        ##x @show Basics.selectLevel(line.initialLevel, initialLevelSelection)
+        if  !Basics.selectLevel(line.initialLevel, initialLevelSelection)     continue    end
+        #
         newLine = PhotoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
-        ##x if  rem(i,10) == 0    println("> Photo line $i:  ... not calculated ")    end
-        ##x newLine = PhotoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, line.photonEnergy, Basics.EmProperty(1.0, 0.), 
-        ##x                                false, PhotoIonization.Channel[] )
         push!( newLines, newLine)
     end
     # Print all results to a summary file, if requested
@@ -681,13 +689,13 @@ function determineChannels(finalLevel::Level, initialLevel::Level, settings::Pho
     symi = LevelSymmetry(initialLevel.J, initialLevel.parity);    symf = LevelSymmetry(finalLevel.J, finalLevel.parity) 
     if  Basics.UseCoulomb  in  settings.gauges   gaugeM = Basics.UseCoulomb    else   gaugeM = Basics.UseBabushkin    end
     for  mp in settings.multipoles
-        ### for  gauge in settings.gauges
-            symList = AngularMomentum.allowedMultipoleSymmetries(symi, mp)
-            ##x println("mp = $mp   symi = $symi   symList = $symList")
-            for  symt in symList
-                kappaList = AngularMomentum.allowedKappaSymmetries(symt, symf)
-                for  kappa in kappaList
-        for  gauge in settings.gauges
+        symList = AngularMomentum.allowedMultipoleSymmetries(symi, mp)
+        ##x println("mp = $mp   symi = $symi   symList = $symList")
+        for  symt in symList
+            kappaList = AngularMomentum.allowedKappaSymmetries(symt, symf)
+            for  kappa in kappaList
+                if  !(Basics.subshell_l(Subshell(10,kappa)) in  settings.lValues)    continue     end
+                for  gauge in settings.gauges
                     # Include further restrictions if appropriate
                     if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      
                         push!(channels, PhotoIonization.Channel(mp, Basics.Coulomb,   kappa, symt, 0., Complex(0.)) )

@@ -5,12 +5,13 @@
 """
 module BasicsAZ
 
-using  Printf,  LinearAlgebra, GaussQuadrature, JAC, ..AlphaVariation, ..AngularMomentum, ..Atomic, ..AtomicState, ..AutoIonization,
-                ..Basics, ..Bsplines, ..Cascade, ..Continuum, ..DecayYield, ..Defaults, ..Dielectronic, 
-                ..Einstein, ..FormFactor, ..Hfs, ..HydrogenicIon, ..InteractionStrength, ..InteractionStrengthQED, 
-                ..IsotopeShift, ..LandeZeeman, ..LSjj, ..ManyElectron, ..MultipolePolarizibility, ..Nuclear, 
-                ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, 
-                ..Radial, ..RadialIntegrals, ..TableStrings
+using  Printf,  LinearAlgebra, GaussQuadrature, JAC, 
+       ..AngularMomentum, ..Atomic, ..AtomicState, ..Basics, ..Bsplines, ..HydrogenicIon, ..InteractionStrength, ..InteractionStrengthQED, 
+       ..ManyElectron, ..Nuclear, ..PhotoEmission, ..Radial, ..RadialIntegrals, ..TableStrings 
+       
+#==    ..AlphaVariation,  ..AutoIonization, ..Cascade, ..Continuum, ..DecayYield, ..Defaults, ..Dielectronic, ..Einstein, 
+       ..FormFactor, ..Hfs, ..IsotopeShift, ..LandeZeeman, ..LSjj, ..MultipolePolarizibility,  ..PhotoExcitation, 
+       ..PhotoIonization  ==#
 
 
 include("module-BascisAZ-inc-AG.jl")

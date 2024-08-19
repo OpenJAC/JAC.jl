@@ -426,5 +426,25 @@ include("module-Plasma-inc-average-atom.jl")
 include("module-Plasma-inc-line-shifts.jl")
 include("module-Plasma-inc-saha-boltzmann-mixture.jl")
 
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+
+
+"""
+`Basics.perform(comp::Plasma.Computation)`  
+    ... to set-up and perform a plasma computation that starts from a given set of reference configurations and 
+        support both, an atomic-average SCF procedure and the computation of various plasma properties and processe.
+        The results of all individual steps are printed to screen but nothing is returned otherwise.
+
+`Basics.perform(comp::Plasma.Computation; output::Bool=true)`   
+    ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the type 
+        and specifications of the plasma computation but can easily accessed by the keys of this dictionary.
+"""
+function Basics.perform(comp::Plasma.Computation; output::Bool=false)
+    Plasma.perform(comp.scheme, comp::Plasma.Computation, output=output)
+end
+
+
 
 end # module

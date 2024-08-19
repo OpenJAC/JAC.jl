@@ -260,6 +260,85 @@ function Base.show(io::IO, settings::Hfs.Settings)
     println(io, "levelSelection:           $(settings.levelSelection)  ")
 end
 
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+
+
+function Base.isless(x::Hfs.IJF_Level, y::Hfs.IJF_Level)
+    return x.energy < y.energy
+end
+
+
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+
+    
+"""
+`Basics.sortByEnergy(multiplet::Hfs.IJF_Multiplet)`  
+    ... to sort all hyperfine levels in the multiplet into a sequence of increasing energy; a (new) multiplet::Hfs.IJF_Multiplet 
+        is returned.
+"""
+function Basics.sortByEnergy(multiplet::Hfs.IJF_Multiplet)
+    sortedLevels = Base.sort( multiplet.levelFs , lt=Base.isless)
+    newLevels = Hfs.IJF_Level[];   index = 0
+    for lev in sortedLevels
+        index = index + 1
+        push!(newLevels, Hfs.IJF_Level(lev.I, lev.F, lev.M, lev.parity, lev.energy, lev.basis, lev.mc) )
+    end
+    
+    newMultiplet = Hfs.IJF_Multiplet(multiplet.name, newLevels)
+    
+    return( newMultiplet )  
+end
+
+
+"""
+`Basics.tabulate(sa::String, multiplet::Hfs.IJF_Multiplet; stream::IO=stdout)`  
+    ... tabulates the energies from the multiplet due to different criteria.
+
++ `("multiplet: energies", multiplet::Hfs.IJF_Multiplet; stream::IO=stdout)`  
+    ... to tabulate the energies of all hyperfine levels of the given multiplet into a neat format; nothing is returned.
++ `("multiplet: energy of each level relative to lowest level", multiplet::Hfs.IJF_Multiplet; stream::IO=stdout)`  
+    ... to tabulate the energy splitting of all levels with regard to the lowest level of the given multiplet into 
+        a neat format; nothing is returned.
+"""
+function Basics.tabulate(sa::String, multiplet::Hfs.IJF_Multiplet; stream::IO=stdout)
+    if        sa == "multiplet: energies"
+        println(stream, "\n  Eigenenergies for nuclear spin I = $(multiplet.levelFs[1].I):")
+        sb = "  Level  F Parity          Hartrees       " * "             eV                   " *  TableStrings.inUnits("energy")     
+        println(stream, "\n", sb, "\n")
+        for  i = 1:length(multiplet.levelFs)
+            lev = multiplet.levelFs[i]
+            en  = lev.energy;    en_eV = Defaults.convertUnits("energy: from atomic to eV", en);    en_requested = Defaults.convertUnits("energy: from atomic", en)
+            sc  = " " * TableStrings.level(i) * "    " * string(LevelSymmetry(lev.F, lev.parity)) * "    "
+            @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
+        end
+
+    elseif    sa == "multiplet: energy of each level relative to lowest level"
+        println(stream, "\n  Energy of each level relative to lowest level for nuclear spin I = $(multiplet.levelFs[1].I):")
+        sb = "  Level  F Parity          Hartrees       " * "             eV                   " * TableStrings.inUnits("energy")      
+        println(stream, "\n", sb, "\n")
+        for  i = 2:length(multiplet.levelFs)
+            lev = multiplet.levelFs[i]
+            en    = lev.energy - multiplet.levelFs[1].energy;    
+            en_eV = Defaults.convertUnits("energy: from atomic to eV", en);    en_requested = Defaults.convertUnits("energy: from atomic", en)
+            sc  = " " * TableStrings.level(i) * "    " * string(LevelSymmetry(lev.F, lev.parity))  * "    "
+            @printf(stream, "%s %.15e %s %.15e %s %.15e %s", sc, en, "  ", en_eV, "  ", en_requested, "\n")
+        end
+    else
+        error("Unsupported keystring.")
+    end
+
+    return( nothing )  
+end
+
+
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+
 
 """
 `Hfs.amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Grid; printout::Bool=true)` 

@@ -280,11 +280,16 @@ end
         nearest values and differences (value - x0) from x0. An error message is issued of n > length(values).
 """
 function Basics.determineNearestPoints(x0::Float64, n::Int64, values::Array{Float64,1})
-    if  n > length(values)   error("stop a")    end
+    valuesx = copy(values)
+    @show n, values
+    if  n > length(values)
+        println(">>> Warning in Basics.determineNearestPoints():  n=$n > No of $values ")
+        for  i=1:100   push!(valuesx, values[end] + i*0.1 );   if length(valuesx) == n   break   end     end
+    end
     ws = zeros(n);      diffs = zeros(n)
-    dabs = Float64[];     for  v in values   push!(dabs, abs(v-x0))   end
+    dabs = Float64[];     for  v in valuesx   push!(dabs, abs(v-x0))   end
     for  i=1:n 
-        ix = findmin(dabs)[2];    ws[i] = values[ix];    diffs[i] = values[ix] - x0
+        ix = findmin(dabs)[2];    ws[i] = valuesx[ix];    diffs[i] = valuesx[ix] - x0
         dabs[ix] = 1.0e99
     end
     
@@ -1061,46 +1066,6 @@ function Basics.extractLeadingConfigurationR(level::ManyElectron.Level)
         for (ic, csf) in enumerate(level.basis.csfs)
             if  allConf == Basics.extractRelativisticConfigurationFromCsfR(csf, level.basis)     
                 weights[ia] = weights[ia] + level.mc[ic]^2
-            end
-        end
-    end
-    # Determine index of maximum and return the corresponding configuration
-    wx   = findmax(weights)
-    conf = allConfs[ wx[2] ]
-    
-    return( conf )
-end
-
-    
-"""
-`Basics.extractLeadingConfiguration(cLevel::Cascade.Level)`  
-    ... extract the leading configuration of the given level; a conf::Configuration is returned.
-"""
-function Basics.extractLeadingConfiguration(cLevel::Cascade.Level)
-    # First extract the right ManyElectron.Level that is to be analyzed
-    level = Level()
-    if length(cLevel.parents) > 0   
-        parent = cLevel.parents[1]
-        if      parent.process == Basics.Auger()       level = parent.lines[parent.index].finalLevel
-        elseif  parent.process == Basics.Radiative()   level = parent.lines[parent.index].finalLevel
-        else    error("stop a")
-        end
-    elseif length(cLevel.daugthers) > 0   
-        daugth = cLevel.daugthers[1]
-        ##x @show typeof(daugth.lines[daugth.index])
-        if      daugth.process == Basics.Auger()       level = daugth.lines[daugth.index].initialLevel
-        elseif  daugth.process == Basics.Radiative()   level = daugth.lines[daugth.index].initialLevel
-        else    error("stop b")
-        end
-    else        error("stop c")
-    end
-
-    allConfs = Basics.extractNonrelativisticConfigurations(level.basis)
-    weights  = zeros(length(allConfs))
-    for  (ia, allConf) in  enumerate(allConfs)
-        for (ic, csf) in enumerate(level.basis.csfs)
-            if  allConf == Basics.extractNonrelativisticConfigurationFromCsfR(csf, level.basis)     
-                weights[ia] = weights[ia] + level.mc[ic]
             end
         end
     end
