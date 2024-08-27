@@ -334,7 +334,7 @@ function computeAmplitudesProperties(processType::ElasticElectronNR, event::Part
     newPws   = ParticleScattering.PartialWaveNR[];   contSettings = Continuum.Settings(false, nrContinuum)
     d2SigmaHeadon = 0.;   d2SigmaBorn = 0.;   d2SigmaMacros = 0.
     
-    if  processType.calcd2SigmaHeadon
+    if  false  ## processType.calcd2SigmaHeadon
         # Compute the head-on scattering cross sections
         amp1 = amp2 = amp3 = amp4 = amp5 = amp6 = amp7 = amp8 = 1.0e6;   maxamp = 0.
         totalAmp = ComplexF64(0.)
@@ -349,6 +349,21 @@ function computeAmplitudesProperties(processType::ElasticElectronNR, event::Part
             amp1 = amp2;   amp2 = amp3;   amp3 = amp4;   amp4 = amp5;   amp5 = amp6;   amp6 = amp7;   amp7 = amp8;   
             amp8 = abs(amplitude)^2;   maxamp = max(maxamp, amp8)
             if  l > 10  &&  (amp1 + amp2 + amp3 + amp4 + amp5 + amp6 + amp7 + amp8) / maxamp < settings.epsPartialWave    break     end
+        end
+        @show typeof(totalAmp)
+        d2SigmaHeadon  = conj(totalAmp) * totalAmp
+    end
+    
+    if  processType.calcd2SigmaHeadon
+        # Compute the head-on scattering cross sections
+        totalAmp = ComplexF64(0.)
+        for  l = 0:20
+            kappa      = -l - 1;    
+            cOrbital, lPhase  = Continuum.generateOrbitalForLevel(event.impactEnergy, Subshell(101, kappa), event.finalLevel, 
+                                                                  nm, grid, contSettings)
+            amplitude  = ParticleScattering.amplitude(event.processType, event.beamType, l, lPhase, event.theta, event.phi, grid)
+            totalAmp   = totalAmp + amplitude
+            push!( newPws, ParticleScattering.PartialWaveNR(l, lPhase, amplitude) )
         end
         @show typeof(totalAmp)
         d2SigmaHeadon  = conj(totalAmp) * totalAmp
@@ -375,7 +390,8 @@ function computeAmplitudesProperties(processType::ElasticElectronNR, event::Part
             nuclearPotential  = Nuclear.nuclearPotential(nm, grid)
             potDFS            = Basics.computePotential(Basics.DFSField(0.7), grid, event.finalLevel) 
             pot               = Basics.add(nuclearPotential, potDFS)
-            for  m = 1:mtp   kr = k * grid.r[m];    wx = kr * SpecialFunctions.sphericalbesselj(l, kr);   
+            for  m = 1:mtp   kr = k * grid.r[m];    wx = kr * SpecialFunctions.sphericalbesselj(l, kr); 
+                @show l, kr, SpecialFunctions.sphericalbesselj(l, kr)
                 push!(wfl2, - wx^2 * pot.Zr[m] / grid.r[m])   
             end
             wint = - RadialIntegrals.V0(wfl2, mtp, grid::Radial.Grid) / k

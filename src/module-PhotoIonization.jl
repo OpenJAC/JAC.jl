@@ -279,7 +279,7 @@ function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Mo
     ##x csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
     ##x csFactor     = 4 * pi^2 / Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
     csFactor     = 8 * pi^3 / Defaults.getDefaults("alpha") / line.photonEnergy
-    csFactor     = csFactor / 2.   # Not fully clear, arises likely from the Rydberg normalization
+    ##  csFactor     = csFactor / 2.   # Not fully clear, arises likely from the Rydberg normalization
     ##  Correct for energy normalization 
     ##  if  line.electronEnergy < 2.0   csFactor = csFactor * (line.electronEnergy/2.0)^1.5     end
     crossSection = EmProperty(csFactor * csC, csFactor * csB)

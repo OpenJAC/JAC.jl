@@ -66,17 +66,29 @@ end
 
     + multipoles            ::Array{EmMultipoles}  ... Multipoles of the radiation field that are to be included.
     + gauges                ::Array{UseGauge}      ... Specifies the gauges to be included into the computations.
-    + calcRateAlpha         ::Bool                 ... True, if the DR rate coefficients are to be calculated, 
-                                                        and false o/w.
-    + printBefore           ::Bool                 ... True, if all energies and pathways are printed before their 
-                                                        evaluation.
+    + calcOnlyResonances    ::Bool                 
+        ... Only compute resonance strength but without making all the pathways explicit. This option is useful
+            for the capture into high-n shells or if the photons are not considered explicit. It also treats the 
+            shells differently due to the given core shells < final-state shells < hydrogenically-scaled shells <
+            capture-shells < asymptotic-shells. Various correction and multi-threading techiques can be applied
+            to deal with or omit different classes of these shells.
+    + calcRateAlpha         ::Bool                 
+        ... True, if the DR rate coefficients are to be calculated, and false o/w.
+    + printBefore           ::Bool                 
+        ... True, if all energies and pathways are printed before their evaluation.
     + pathwaySelection      ::PathwaySelection     ... Specifies the selected levels/pathways, if any.
-    + electronEnergyShift   ::Float64              ... An overall energy shift for all electron energies (i.e. from 
-                                                        the initial to the resonance levels [Hartree].
-    + photonEnergyShift     ::Float64              ... An overall energy shift for all photon energies (i.e. from 
-                                                        the resonance to the final levels.
-    + mimimumPhotonEnergy   ::Float64              ... minimum transition energy for which photon transitions are 
-                                                        included into the evaluation.
+    + lowerResonanceEnergy  ::Float64             
+    + upperResonanceEnergy  ::Float64             
+        ... Lower and upper energy of resonances (intermediate levels and beyond the threshold) which are considered 
+            in the computations; all others with higher energy are determined by the CI computation of the intermediate 
+            levels but are omitted from the DR computations. This feature is useful to restrict the computations to a 
+            certain range of energies.
+    + electronEnergyShift   ::Float64              
+        ... An overall energy shift for all electron energies (i.e. from the initial to the resonance levels [Hartree].
+    + photonEnergyShift     ::Float64              
+        ... An overall energy shift for all photon energies (i.e. from the resonance to the final levels.
+    + mimimumPhotonEnergy   ::Float64              
+        ... minimum transition energy for which photon transitions are  included into the evaluation.
     + temperatures          ::Array{Float64,1}     
         ... list of temperatures for which plasma rate coefficients are displayed; however, these rate coefficients
             only include the contributions from those pathsways that are calculated here explicitly.
@@ -89,9 +101,12 @@ end
 struct Settings  <:  AbstractProcessSettings 
     multipoles              ::Array{EmMultipole,1}
     gauges                  ::Array{UseGauge}
+    calcOnlyResonances      ::Bool
     calcRateAlpha           ::Bool
     printBefore             ::Bool 
     pathwaySelection        ::PathwaySelection
+    lowerResonanceEnergy    ::Float64             
+    upperResonanceEnergy    ::Float64
     electronEnergyShift     ::Float64
     photonEnergyShift       ::Float64
     mimimumPhotonEnergy     ::Float64
@@ -106,7 +121,7 @@ end
     ... constructor for the default values of dielectronic recombination pathway computations.
 """
 function Settings()
-    Settings([E1], UseGauge[], false, false, PathwaySelection(), 0., 0., 0., Float64[], Dielectronic.NoCorrections(),
+    Settings([E1], UseGauge[], false, false, false, PathwaySelection(), 0., 1.0e4, 0., 0., 0., Float64[], Dielectronic.NoCorrections(),
                 CoulombInteraction())
 end
 
@@ -114,34 +129,40 @@ end
 """
 ` (set::Dielectronic.Settings;`
 
-        multipoles=..,           gauges=..,                  calcRateAlpha=..,           printBefore=..,
-        pathwaySelection=..,     electronEnergyShift=..,     photonEnergyShift=..,       mimimumPhotonEnergy=..,     
-        temperatures=..,         corrections=..,             augerOperator=..)
+        multipoles=..,             gauges=..,                  
+        calcOnlyResonances=..,     calcRateAlpha=..,         printBefore=..,           pathwaySelection=..,     
+        lowerResonanceEnergy=..,   upperResonanceEnergy,     electronEnergyShift=..,   photonEnergyShift=..,       
+        mimimumPhotonEnergy=..,    temperatures=..,          corrections=..,           augerOperator=..)
                     
     ... constructor for modifying the given Dielectronic.Settings by 'overwriting' the previously selected parameters.
 """
 function Settings(set::Dielectronic.Settings;    
-    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                        gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
-    calcRateAlpha::Union{Nothing,Bool}=nothing,                                     printBefore::Union{Nothing,Bool}=nothing, 
-    pathwaySelection::Union{Nothing,PathwaySelection}=nothing,                      electronEnergyShift::Union{Nothing,Float64}=nothing,
-    photonEnergyShift::Union{Nothing,Float64}=nothing,                              mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,
-    temperatures::Union{Nothing,Array{Float64,1}}=nothing,                          corrections::Union{Nothing,AbstractCorrections}=nothing,
-    augerOperator::Union{Nothing,AbstractEeInteraction}=nothing)
+    multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,               gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
+    calcOnlyResonances::Union{Nothing,Bool}=nothing,                       calcRateAlpha::Union{Nothing,Bool}=nothing,   
+    printBefore::Union{Nothing,Bool}=nothing,                              pathwaySelection::Union{Nothing,PathwaySelection}=nothing,
+    lowerResonanceEnergy::Union{Nothing,Float64}=nothing,                  upperResonanceEnergy::Union{Nothing,Float64}=nothing,
+    electronEnergyShift::Union{Nothing,Float64}=nothing,                   photonEnergyShift::Union{Nothing,Float64}=nothing, 
+    mimimumPhotonEnergy::Union{Nothing,Float64}=nothing,                   temperatures::Union{Nothing,Array{Float64,1}}=nothing,    
+    corrections::Union{Nothing,AbstractCorrections}=nothing,               augerOperator::Union{Nothing,AbstractEeInteraction}=nothing)
     
-    if  multipoles          == nothing   multipolesx          = set.multipoles            else  multipolesx          = multipoles           end 
-    if  gauges              == nothing   gaugesx              = set.gauges                else  gaugesx              = gauges               end 
-    if  calcRateAlpha       == nothing   calcRateAlphax       = set.calcRateAlpha         else  calcRateAlphax       = calcRateAlpha        end 
-    if  printBefore         == nothing   printBeforex         = set.printBefore           else  printBeforex         = printBefore          end 
-    if  pathwaySelection    == nothing   pathwaySelectionx    = set.pathwaySelection      else  pathwaySelectionx    = pathwaySelection     end 
-    if  electronEnergyShift == nothing   electronEnergyShiftx = set.electronEnergyShift   else  electronEnergyShiftx = electronEnergyShift  end 
-    if  photonEnergyShift   == nothing   photonEnergyShiftx   = set.photonEnergyShift     else  photonEnergyShiftx   = photonEnergyShift    end 
-    if  mimimumPhotonEnergy == nothing   mimimumPhotonEnergyx = set.mimimumPhotonEnergy   else  mimimumPhotonEnergyx = mimimumPhotonEnergy  end 
-    if  temperatures        == nothing   temperaturesx        = set.temperatures          else  temperaturesx        = temperatures         end 
-    if  corrections         == nothing   correctionsx         = set.corrections           else  correctionsx         = corrections          end 
-    if  augerOperator       == nothing   augerOperatorx       = set.augerOperator         else  augerOperatorx       = augerOperator        end 
+    if  multipoles           == nothing   multipolesx           = set.multipoles            else  multipolesx           = multipoles           end 
+    if  gauges               == nothing   gaugesx               = set.gauges                else  gaugesx               = gauges               end 
+    if  calcOnlyResonances   == nothing   calcOnlyResonancesx   = set.calcOnlyResonances    else  calcOnlyResonancesx   = calcOnlyResonances   end 
+    if  calcRateAlpha        == nothing   calcRateAlphax        = set.calcRateAlpha         else  calcRateAlphax        = calcRateAlpha        end 
+    if  printBefore          == nothing   printBeforex          = set.printBefore           else  printBeforex          = printBefore          end 
+    if  pathwaySelection     == nothing   pathwaySelectionx     = set.pathwaySelection      else  pathwaySelectionx     = pathwaySelection     end 
+    if  lowerResonanceEnergy == nothing   lowerResonanceEnergyx = set.lowerResonanceEnergy  else  lowerResonanceEnergyx = lowerResonanceEnergy end 
+    if  upperResonanceEnergy == nothing   upperResonanceEnergyx = set.upperResonanceEnergy  else  upperResonanceEnergyx = upperResonanceEnergy end 
+    if  electronEnergyShift  == nothing   electronEnergyShiftx  = set.electronEnergyShift   else  electronEnergyShiftx  = electronEnergyShift  end 
+    if  photonEnergyShift    == nothing   photonEnergyShiftx    = set.photonEnergyShift     else  photonEnergyShiftx    = photonEnergyShift    end 
+    if  mimimumPhotonEnergy  == nothing   mimimumPhotonEnergyx  = set.mimimumPhotonEnergy   else  mimimumPhotonEnergyx  = mimimumPhotonEnergy  end 
+    if  temperatures         == nothing   temperaturesx         = set.temperatures          else  temperaturesx         = temperatures         end 
+    if  corrections          == nothing   correctionsx          = set.corrections           else  correctionsx          = corrections          end 
+    if  augerOperator        == nothing   augerOperatorx        = set.augerOperator         else  augerOperatorx        = augerOperator        end 
 
-    Settings( multipolesx, gaugesx, calcRateAlphax, printBeforex, pathwaySelectionx, electronEnergyShiftx, 
-                photonEnergyShiftx, mimimumPhotonEnergyx, temperaturesx, correctionsx, augerOperatorx )
+    Settings( multipolesx, gaugesx, calcOnlyResonancesx, calcRateAlphax, printBeforex, pathwaySelectionx, 
+                lowerResonanceEnergyx, upperResonanceEnergyx, electronEnergyShiftx, photonEnergyShiftx, mimimumPhotonEnergyx, 
+                temperaturesx, correctionsx, augerOperatorx )
 end
 
 
@@ -149,9 +170,12 @@ end
 function Base.show(io::IO, settings::Dielectronic.Settings) 
     println(io, "multipoles:                 $(settings.multipoles)  ")
     println(io, "use-gauges:                 $(settings.gauges)  ")
+    println(io, "calcOnlyResonances:         $(settings.calcOnlyResonances)  ")
     println(io, "calcRateAlpha:              $(settings.calcRateAlpha)  ")
     println(io, "printBefore:                $(settings.printBefore)  ")
     println(io, "pathwaySelection:           $(settings.pathwaySelection)  ")
+    println(io, "lowerResonanceEnergy:       $(settings.lowerResonanceEnergy)  ")
+    println(io, "upperResonanceEnergy:       $(settings.upperResonanceEnergy)  ")
     println(io, "electronEnergyShift:        $(settings.electronEnergyShift)  ")
     println(io, "photonEnergyShift:          $(settings.photonEnergyShift)  ")
     println(io, "mimimumPhotonEnergy:        $(settings.mimimumPhotonEnergy)  ")
