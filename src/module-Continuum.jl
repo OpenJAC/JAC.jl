@@ -7,7 +7,7 @@
 module Continuum
 
 
-using  GSL, Printf, SpecialFunctions, DelimitedFiles
+using  GSL, Printf, SpecialFunctions, DelimitedFiles, OrdinaryDiffEq, Dierckx
 using  ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear
 
 
@@ -54,6 +54,8 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
         cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
     elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin()
         cOrbital = Continuum.generateOrbitalGalerkin(energy, sh, pot, settings)
+    elseif  Defaults.GBL_CONT_SOLUTION  ==  SciML()
+        cOrbital = Continuum.generateOrbitalSciML(energy, sh, pot, settings)
     else    error("stop a")
     end
     #
@@ -211,6 +213,126 @@ function generateOrbitalGalerkin(energy::Float64, sh::Subshell, pot::Radial.Pote
     
     return( cOrbital )
 end
+
+
+"""
+`Continuum.generateOrbitalSciML(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`
+    ... to generate a non-normalized continuum orbital within the given local potential by using the SciML ODEProblem method 
+        A (non-normalized) orbital::Orbital is returned.
+"""
+function generateOrbitalSciML(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)
+
+    α = Defaults.getDefaults("alpha")  ;      wc = 1/α
+    E = energy  ;   κ = sh.kappa
+    grid = pot.grid
+
+    Vitp = Dierckx.Spline1D(grid.r, - pot.Zr ./ grid.r)
+    V(r) = Vitp(r)
+
+    # Define the system of ODEs
+    function dirac_system!(du, u, p, r)
+        P, Q = u  # u[1] = P(r), u[2] = Q(r)
+        # κ, wc = p
+
+        # Equations
+        du[1] = -(κ / r) * P + ((E + 2.0 * wc^2 - V(r)) / wc) * Q  # dP/dr
+        du[2] = (κ / r) * Q + ((-E + V(r)) / wc) * P   # dQ/dr
+    end
+
+    if ( κ < 0 && abs(κ) > 30 ) κ = ( abs(κ) - 1 ) end
+
+    # Define the radial range to solve over
+    if κ < 30
+        rspan = (1e-6, grid.r[grid.NoPoints]) 
+    elseif κ < 60
+        rspan = (1e-2, grid.r[grid.NoPoints])
+    elseif κ < 80
+        rspan = (0.5, grid.r[grid.NoPoints])
+    elseif κ < 150
+        rspan = (2.0, grid.r[grid.NoPoints])
+    else
+        rspan = (5.0, grid.r[grid.NoPoints])
+    end
+
+    # Initial conditions: 
+    u0 = Continuum.computeInitialCondition(rspan[2], energy, sh, pot)
+    # u0 = big.(computeInitialCond(rspan[2], energy, sh, pot))
+    # u0 =[1e-30, 1e-30]
+
+    # Define the ODE problem
+    prob = OrdinaryDiffEq.ODEProblem(dirac_system!, u0, rspan)
+
+    # Solve the ODE problem
+    sol = OrdinaryDiffEq.solve(prob, Vern9(), abstol=1e-15, reltol=1e-15);
+
+    P = sol(grid.r)[1,:]         ;    Q = sol(grid.r)[2,:] 
+    Pprime = sol(grid.r, Val{1})[1,:]     ;    Qprime = sol(grid.r, Val{1})[2,:] 
+
+    cOrbital = Orbital( sh, false, true, energy, P, Q, Pprime, Qprime, grid)
+
+    println("energy $energy kappa $(sh.kappa)")
+        
+    return( cOrbital )
+end
+
+
+"""
+`Continuum.computeInitialCondition(r::Float64, energy::Float64, sh::Subshell, pot::Radial.Potential)`
+"""
+function computeInitialCondition(r::Float64, energy::Float64, sh::Subshell, pot::Radial.Potential)
+    Zbar = -Radial.determineZbar(pot)  ; 
+    # mtp = size( cOrbital.P, 1)  ;             #energy = cOrbital.energy;      
+    kappa = sh.kappa  ;                       l = Basics.subshell_l(sh) 
+    α = Defaults.getDefaults("alpha")  ;      wc = 1/α
+    q  = sqrt( energy * (energy + 2 * wc^2) ) / wc  ;    x  = q * r
+
+    ## println("Normalization with Coulomb functions")
+    # sa = "Normalization with Coulomb functions"
+    λ  = sqrt(kappa^2 - Zbar^2 / wc^2)  ; λm1 = λ - 1.0
+    η  = Zbar * α * (energy + wc^2) / sqrt( energy * (energy + 2 * wc^2) ) 
+
+    xTP = η + sqrt(η^2 + λ*(λ+1.0))
+    if x < xTP println("The kr is less than the Coulomb turning point") end
+
+    Δ = angle(SpecialFunctions.gamma(λm1 + 1 + im * η))
+    if Δ >= 0.0 Δ = mod(Δ, 2pi) else Δ = -mod(-Δ, 2pi) end
+
+    θ  = x - λm1*pi/2 - η*log(2x) + Δ                               #Eq 7.3
+    if θ > 1e4   θ = mod(θ, 2pi) end
+
+    hgfλ = twoFzero(im*η - λm1, im*η + λm1 + 1, im*2*x)
+    hgfλm1 = twoFzero(im*η - λm1 + 1, im*η + λm1 + 2, im*2*x)
+    hgfλm1 = im * hgfλm1 * (im*η - λm1) * (im*η + λm1 + 1) / ( 2.0 * x^2 )
+
+    GiFλm1 = hgfλ * exp(im*θ)  ;   GPiFPλm1 = ( hgfλm1 + im *(1.0 - η/x) * hgfλ ) * exp(im*θ)
+    gm_1 = GiFλm1.re ; fm_1 = GiFλm1.im   ;   gpm_1 = GPiFPλm1.re ; fpm_1 = GPiFPλm1.im
+
+    if abs(gm_1*fpm_1 - fm_1*gpm_1 - 1.0) > 1e-15 
+        ef= 0.0 ; eg = 0.0
+        f, fp, g, gp = GSL.sf_coulomb_wave_FG_e(η, x, λm1, 0, ef, eg)
+        gm_1 = g.val ; fm_1 = f.val ; gpm_1 = gp.val ; fpm_1 = fp.val
+    end
+
+    f = λ * ((λ/x + η/λ)*fm_1 - fpm_1) / sqrt(λ^2 + η^2)
+    g = λ * ((λ/x + η/λ)*gm_1 - gpm_1) / sqrt(λ^2 + η^2)
+
+    N  =  ( α^2 * Zbar^2 * (energy + 2 * wc^2)^2 + (kappa + λ)^2 * wc^2 * q^2 )^(-0.5) / λ
+
+    # Coulomb phase shift for λ
+    rnu = angle(Zbar * α * (energy + 2 * wc^2) - im * (kappa+λ) * sqrt(energy*(energy+2*wc^2)))
+    Δ =  rnu - (λ-l-1.0)*pi/2 + Δ
+    if ( Zbar < 0.0 && kappa < 0)  Δ = Δ - pi ; N = -N end
+    if Δ >= 0.0 Δ = mod(Δ, 2pi) else Δ = -mod(-Δ, 2pi) end
+
+    fu = N * ( (kappa + λ) * sqrt(λ^2 + η^2) * wc * q * f + α * Zbar * (λ * wc^2 - kappa * (energy + wc^2)) * fm_1 )
+    gu = N * ( (kappa + λ) * sqrt(λ^2 + η^2) * wc * q * g + α * Zbar * (λ * wc^2 - kappa * (energy + wc^2)) * gm_1 )
+
+    fl = -N * ( α * Zbar * sqrt(λ^2 + η^2) * wc * q * f + (kappa + λ) * (λ * wc^2 - kappa * (energy + wc^2)) * fm_1 )
+    gl = -N * ( α * Zbar * sqrt(λ^2 + η^2) * wc * q * g + (kappa + λ) * (λ * wc^2 - kappa * (energy + wc^2)) * gm_1 )
+
+    return [fu, fl]
+end 
+
 
 """
 `Continuum.generateOrbitalNonrelativisticCoulomb(energy::Float64, sh::Subshell, Zeff::Float64, grid::Radial.Grid, 
