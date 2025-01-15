@@ -105,7 +105,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         if  output   results["initialMultiplet"] = initialMultiplet;   results["finalMultiplet"] = finalMultiplet    end 
         #
         if typeof(computation.processSettings) in [PhotoExcitationFluores.Settings, PhotoExcitationAutoion.Settings, PhotoIonizationFluores.Settings, 
-                                                    PhotoIonizationAutoion.Settings, ImpactExcitationAutoion.Settings, Dielectronic.Settings]
+                                                    PhotoIonizationAutoion.Settings, ImpactExcitationAutoion.Settings, DielectronicRecombination.Settings]
             intermediateBasis     = Basics.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
             intermediateMultiplet = Basics.performCI( intermediateBasis, nModel, computation.grid, computation.intermediateAsfSettings)
             if  output   results["intermediateMultiplet"] = intermediateMultiplet    end 
@@ -120,8 +120,8 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         elseif  typeof(computation.processSettings) == DoubleAutoIonization.Settings   
             outcome = DoubleAutoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("Double-Auger lines:" => outcome) )                    end
-        elseif  typeof(computation.processSettings) == Dielectronic.Settings 
-            outcome = Dielectronic.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 
+        elseif  typeof(computation.processSettings) == DielectronicRecombination.Settings 
+            outcome = DielectronicRecombination.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, nModel, 
                                                                 computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("dielectronic recombination pathways:" => outcome) )   end
         elseif  typeof(computation.processSettings) == MultiPhotonDeExcitation.Settings

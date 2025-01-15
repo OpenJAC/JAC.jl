@@ -85,7 +85,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        compute, convertUnits, Compton, Configuration, ConfigurationR, 
        Cascade, Continuum, CorePolarization, Coulex, CoulombExcitation, Coulion, CoulombBreit, CoulombGaunt, 
        CoulombInteraction, CoulombIonization, CsfR,        
-       diagonalize, Defaults, DecayYield, Details, Dielectronic, Dierec, Djpq, DoubleAutoIonization, DoubleAuger, DiagonalCoulomb, 
+       diagonalize, Defaults, DecayYield, Details, DielectronicRecombination, Dierec, Djpq, DoubleAutoIonization, DoubleAuger, DiagonalCoulomb, 
        DefaultQuantizationAxis, 
        Eimex, ElectronCapture, ElecCapture, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate, ExpStokes, Empirical,
        E1, M1, E2, M2, E3, M3, E4, M4,
@@ -175,7 +175,7 @@ include("module-PhotoIonization.jl")
 include("module-PhotoRecombination.jl")
 include("module-AutoIonization.jl")
 include("module-ElectronCapture.jl")
-include("module-Dielectronic.jl")
+include("module-DielectronicRecombination.jl")
 include("module-PhotoExcitationFluores.jl")
 include("module-PhotoExcitationAutoion.jl")
 include("module-RayleighCompton.jl")

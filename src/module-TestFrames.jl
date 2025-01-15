@@ -506,10 +506,10 @@ end
 
 
 """
-`TestFrames.testModule_Dielectronic(; short::Bool=true)`  ... tests on module Dielectronic.
+`TestFrames.testModule_DielectronicRecombination(; short::Bool=true)`  ... tests on module DielectronicRecombination.
 """
-function testModule_Dielectronic(; short::Bool=true)     Defaults.setDefaults("print summary: open", "test-Dielectronic-new.sum")
-    printstyled("\n\nTest the module  Dielectronic  ... \n", color=:cyan)
+function testModule_DielectronicRecombination(; short::Bool=true)     Defaults.setDefaults("print summary: open", "test-DielectronicRecombination-new.sum")
+    printstyled("\n\nTest the module  DielectronicRecombination  ... \n", color=:cyan)
     ### Make the tests
     grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, rbox = 7.0)
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid,
@@ -517,17 +517,17 @@ function testModule_Dielectronic(; short::Bool=true)     Defaults.setDefaults("p
                             initialConfigs=[Configuration("1s^2 2s"), Configuration("1s^2 2p")],
                             intermediateConfigs=[Configuration("1s 2s^2 2p"), Configuration("1s 2s 2p^2") ],
                             finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2s 2p") ], 
-                            processSettings=Dielectronic.Settings(Dielectronic.Settings(), multipoles=[E1, M1], gauges=[UseCoulomb, UseBabushkin], 
+                            processSettings=DielectronicRecombination.Settings(DielectronicRecombination.Settings(), multipoles=[E1, M1], gauges=[UseCoulomb, UseBabushkin], 
                                                                   pathwaySelection=PathwaySelection(true, indexTriples=[(1,1,0)]) )  
 )
     wb = perform(wa)
     ###
     Defaults.setDefaults("print summary: close", "")
     # Make the comparison with approved data
-    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-Dielectronic-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-Dielectronic-new.sum"), 
+    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-DielectronicRecombination-approved.sum"), 
+                                joinpath(@__DIR__, "..", "test", "test-DielectronicRecombination-new.sum"), 
                             "Partial (Auger) capture", 10) 
-    testPrint("testModule_Dielectronic()::", success)
+    testPrint("testModule_DielectronicRecombination()::", success)
     return(success)  
 end
 

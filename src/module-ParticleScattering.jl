@@ -357,7 +357,7 @@ function computeAmplitudesProperties(processType::ElasticElectronNR, event::Part
     if  processType.calcd2SigmaHeadon
         # Compute the head-on scattering cross sections
         totalAmp = ComplexF64(0.)
-        for  l = 0:20
+        for  l = 0:30
             kappa      = -l - 1;    
             cOrbital, lPhase  = Continuum.generateOrbitalForLevel(event.impactEnergy, Subshell(101, kappa), event.finalLevel, 
                                                                   nm, grid, contSettings)
@@ -391,7 +391,7 @@ function computeAmplitudesProperties(processType::ElasticElectronNR, event::Part
             potDFS            = Basics.computePotential(Basics.DFSField(0.7), grid, event.finalLevel) 
             pot               = Basics.add(nuclearPotential, potDFS)
             for  m = 1:mtp   kr = k * grid.r[m];    wx = kr * SpecialFunctions.sphericalbesselj(l, kr); 
-                @show l, kr, SpecialFunctions.sphericalbesselj(l, kr)
+                ## @show l, k, grid.r[m], kr, SpecialFunctions.sphericalbesselj(l, kr), - wx^2 * pot.Zr[m] / grid.r[m]
                 push!(wfl2, - wx^2 * pot.Zr[m] / grid.r[m])   
             end
             wint = - RadialIntegrals.V0(wfl2, mtp, grid::Radial.Grid) / k

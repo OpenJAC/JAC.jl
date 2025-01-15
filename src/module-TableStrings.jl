@@ -138,6 +138,23 @@ end
 
 
 """
+`TableStrings.kappaSymmetryTupelList(n::Int64, kappaList::Array{Tuple{Int64,LevelSymmetry},1})`  
+    ... a list of Strings with maximal length n is returned; each string in this list comprises a number of 
+        'shell -> symmetry -> shell' descriptors.
+"""
+function kappaSymmetryTupelList(n::Int64, kappaList::Array{Tuple{Int64,LevelSymmetry},1}) 
+    sa = "";   wa = String[]
+    for k in kappaList
+        shin = Subshell(9, k[1])
+        sa = sa * string(shin)[2:end] * "(" * string(k[2]) * ")" * ",  "
+        if  length(sa) + 15 > n    push!(wa, sa[1:end-3]);    sa = ""    end
+    end
+    if  sa != ""    push!(wa, sa[1:end-3])    end
+    return( wa )
+end
+
+
+"""
 `TableStrings.kappaKappaSymmetryTupels(n::Int64, kappaList::Array{Tuple{Int64,Int64,LevelSymmetry},1})`  
     ... a list of Strings with maximal length n is returned; each string in this list comprises a number of 
         'shell -> symmetry -> shell' descriptors.

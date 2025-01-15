@@ -1,12 +1,12 @@
 #
 println("Da) Apply & test the PhotoEmission module with ASF from an internally generated initial- and final-state multiplet.")
 
-setDefaults("unit: energy", "Kayser")   ## setDefaults("unit: rate", "a.u.")
+setDefaults("unit: energy", "eV")   ## setDefaults("unit: rate", "a.u.")
 setDefaults("unit: rate", "1/s")
 setDefaults("print summary: open", "zzz-radiative.sum")
 
 
-if  false
+if  true
     # Last successful:  12May2024
     # Compute the photoemission transition probabilities for Cl-like Fe X
     grid = Radial.Grid(true)

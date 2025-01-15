@@ -268,10 +268,11 @@ function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Mo
         if  settings.calcTimeDelay
             cOrbitalx, phasex  = Continuum.generateOrbitalForLevel(line.electronEnergy+0.01, Subshell(101, channel.kappa), 
                                                                     newfLevel, nm, grid, contSettings)
+            newcLevelx = Basics.generateLevelWithExtraElectron(cOrbitalx, channel.symmetry, newfLevel)
             nxChannel  = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phasex, 0.)
-            amplitude  = PhotoIonization.amplitude("photoionization", nChannel, line.photonEnergy+0.01, newcLevel, newiLevel, grid)
+            amplitude  = PhotoIonization.amplitude("photoionization", nxChannel, line.photonEnergy+0.01, newcLevelx, newiLevel, grid)
             push!( nxChannels, PhotoIonization.Channel(nxChannel.multipole, nxChannel.gauge, nxChannel.kappa, nxChannel.symmetry, 
-                                                        nxChannel.phase, amplitude) )
+                                                       nxChannel.phase, amplitude) )
         end
     end
     Ji2 = Basics.twice(line.initialLevel.J)
@@ -288,7 +289,7 @@ function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Mo
     else  angularBeta  = EmProperty(0.)
     end
     if    settings.calcTimeDelay
-            coherentDelay, incoherentDelay = PhotoIonization.computeTimeDelays(nChannels, nxChannels, 0.01, line.finalLevel.J)
+          coherentDelay, incoherentDelay = PhotoIonization.computeTimeDelays(nChannels, nxChannels, 0.01, line.finalLevel.J)
     else  coherentDelay = EmProperty(0.);     incoherentDelay = EmProperty(0.)
     end
     #
@@ -630,6 +631,7 @@ function  computeTimeDelays(channels::Array{PhotoIonization.Channel,1}, xchannel
     #
     # Calculate the coherent time delays
     # Third attempt, explicit derivation by Nikolay, April 2024
+    ## @warn "l0 = 1 ... for p_1/2, 3/2 splitting"
     @warn "l0 = 2 ... for d_3/2, 5/2 splitting"
     ampC = ampCx = ampB = ampBx = ComplexF64(0.)
     for  (ic, ch) in  enumerate(channels)
@@ -637,23 +639,27 @@ function  computeTimeDelays(channels::Array{PhotoIonization.Channel,1}, xchannel
         @show  "***", j, l, l0, Jc
         @show  "***", ch.gauge, ch.amplitude, xchannels[ic].amplitude, (xchannels[ic].amplitude - ch.amplitude) / deltaE
         ## factor = (1.0im)^( Basics.twice(l)/2 ) * sqrt(3/(4pi))  * AngularMomentum.phaseFactor([j, +1, l, +1, AngularJ64(1//2)]) *
-        ##          AngularMomentum.ClebschGordan( l0, AngularM64(0), AngularJ64(1), AngularM64(0), l,  AngularM64(0)) *
-        ##          sqrt(Basics.twice(j)+1) * AngularMomentum.Wigner_6j(Jc, AngularJ64(1//2), l0, l, AngularJ64(1), j)
-        factor = (1.0im)^( Basics.twice(l)/2 ) * sqrt(3/(4pi)) 
+        factor = sqrt(3/(4pi))  * AngularMomentum.phaseFactor([j, +1, l, +1, AngularJ64(1//2)]) *
+                 AngularMomentum.ClebschGordan( l0, AngularM64(0), AngularJ64(1), AngularM64(0), l,  AngularM64(0)) *
+                 sqrt(Basics.twice(j)+1) * AngularMomentum.Wigner_6j(Jc, AngularJ64(1//2), l0, l, AngularJ64(1), j)
         if       ch.gauge == Basics.Coulomb
             ampC  = ampC  + factor * ch.amplitude
             ampCx = ampCx + factor * xchannels[ic].amplitude
-            elseif   ch.gauge == Basics.Babushkin
+        elseif   ch.gauge == Basics.Babushkin
             ampB  = ampB  + factor * ch.amplitude
             ampBx = ampBx + factor * xchannels[ic].amplitude
         end
     end
     coherentTauC = (ampCx - ampC) / deltaE / ampC  
     coherentTauB = (ampBx - ampB) / deltaE / ampB
-    phiEffB      = log(ampB);       phiEffBx = log(ampBx);    coherentTaulnB = (phiEffBx.re - phiEffB.re) / deltaE
-    @show coherentTauC, coherentTauB, coherentTaulnB
-    coherentDelay = EmProperty( coherentTaulnB, coherentTauB.re )
+    ## phiEffB      = log(ampB);       phiEffBx = log(ampBx);    coherentTaulnB = (phiEffBx.re - phiEffB.re) / deltaE
+    @show coherentTauC, coherentTauB
+    coherentDelay = EmProperty( coherentTauC.im, coherentTauB.im )
     #
+    println("\n\nChannel amplitudes M_lj for photon energy: \n")
+    for channel in channels
+        println("   $(Subshell(11, channel.kappa))   $(channel.gauge)     phase=$(channel.phase)    M_lj=$(channel.amplitude) ")
+    end
     # Incoherent time delays
     nomDeffC = nomDeffCx = nomDeffB = nomDeffBx = 0.
     denDeffC = denDeffCx = denDeffB = denDeffBx = 0.

@@ -208,7 +208,11 @@ function fermiDistributedNucleus(Rrms::Float64, Z::Float64, grid::Radial.Grid)
     function  r_rho(r::Float64)  r / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )   end
     function  rr_rho(r::Float64)  r^2 / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )  end
 
-    b = computeFermiBParameter(Rrms);    b < 0  &&  error("Inappropriate R_rms radius.")
+    if  Z < 1.2
+        b = computeFermiBParameter(1.89);    b < 0  &&  error("Inappropriate R_rms radius.")
+    else
+        b = computeFermiBParameter(Rrms);    b < 0  &&  error("Inappropriate R_rms radius.")
+    end
     
     fermiA_au = Defaults.convertUnits("length: from fm to atomic", fermiA)
     fermiC_au = Defaults.convertUnits("length: from fm to atomic", b)

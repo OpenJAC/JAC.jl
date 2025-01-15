@@ -323,9 +323,14 @@ end
 # `Base.show(io::IO, comp::Plasma.Computation)`  ... prepares a printout of comp::Plasma.Computation.
 function Base.show(io::IO, comp::Plasma.Computation)
     sa = Base.string(comp);             print(io, sa, "\n")
+    println(io, "scheme:                $(comp.scheme)  ")
     println(io, "nuclearModel:          $(comp.nuclearModel)  ")
     println(io, "grid:                  $(comp.grid)  ")
+    println(io, "refConfigs:            $(comp.refConfigs)  ")
+    println(io, "asfSettings:           $(comp.asfSettings)  ")
+    println(io, "settings:              $(comp.settings)  ")
 end
+
 
 #==  ... This can be used to establish other Plasma.AbstractPlasmaScheme's
 """

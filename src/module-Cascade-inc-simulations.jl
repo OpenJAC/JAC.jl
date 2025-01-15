@@ -1062,7 +1062,7 @@ end
 """
 function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
-    resonances = Dielectronic.Resonance[]
+    resonances = DielectronicRecombination.Resonance[]
     rSelection = simulation.property.resonanceSelection
     @show length(levels)
     #
@@ -1091,8 +1091,8 @@ function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::
             wa          = Defaults.convertUnits("kinetic energy to wave number: atomic units", en)
             if   augerRate + photonRate.Babushkin == 0.
                 strength = EmProperty(0.)
-            elseif  Dielectronic.isResonanceToBeExcluded(aLine.initialLevel, aLine.finalLevel, rSelection)
-                @show Dielectronic.isResonanceToBeExcluded(aLine.initialLevel, aLine.finalLevel, rSelection)
+            elseif  DielectronicRecombination.isResonanceToBeExcluded(aLine.initialLevel, aLine.finalLevel, rSelection)
+                @show DielectronicRecombination.isResonanceToBeExcluded(aLine.initialLevel, aLine.finalLevel, rSelection)
                 # Set the strength to zero, if the initial (resonance) level of aLine is not selected explicitly
                 strength = EmProperty(0.)
             else
@@ -1101,8 +1101,8 @@ function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::
                             (augerRate + photonRate.Babushkin)
                 strength = EmProperty(wa * photonRate.Coulomb, wa * photonRate.Babushkin)
             end
-            newResonance = Dielectronic.Resonance(iLevel, dLevel, en, strength, 0., augerRate, photonRate)
-            ## newResonance = Dielectronic.Resonance(iLevel, dLevel, en, strength, captureRate, augerRate, photonRate)
+            newResonance = DielectronicRecombination.Resonance(iLevel, dLevel, en, strength, 0., augerRate, photonRate)
+            ## newResonance = DielectronicRecombination.Resonance(iLevel, dLevel, en, strength, captureRate, augerRate, photonRate)
             push!(resonances, newResonance)
         end
     end
@@ -1149,7 +1149,7 @@ function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::
                     dLevel      = ManyElectron.Level(dJ, dM, dParity, nIndex, dEnergy, 0., false, ManyElectron.Basis(), Float64[])
                     es          = Defaults.convertUnits("energy: to atomic", simulation.property.electronEnergyShift)
                     en          = dLevel.energy-iLevel.energy + es;    if  en < 0.  continue   end
-                    newResonance = Dielectronic.Resonance(iLevel, dLevel, en, nFactor * nStrength, 0., augerRate, photonRate)
+                    newResonance = DielectronicRecombination.Resonance(iLevel, dLevel, en, nFactor * nStrength, 0., augerRate, photonRate)
                     push!(resonances, newResonance)
                     @show n, augerRate, photonRate, nStrength
                 end
@@ -1158,10 +1158,10 @@ function simulateDrRateCoefficients(levels::Array{Cascade.Level,1}, simulation::
     end
     
     # Printout the resonance strength
-    settings = Dielectronic.Settings(Dielectronic.Settings(), calcRateAlpha=true, temperatures=simulation.property.temperatures)
-    Dielectronic.displayResults(stdout, resonances, settings)
-    Dielectronic.displayRateCoefficients(stdout, resonances, settings)
-    wb = Dielectronic.extractRateCoefficients(resonances, settings)
+    settings = DielectronicRecombination.Settings(DielectronicRecombination.Settings(), calcRateAlpha=true, temperatures=simulation.property.temperatures)
+    DielectronicRecombination.displayResults(stdout, resonances, settings)
+    DielectronicRecombination.displayRateCoefficients(stdout, resonances, settings)
+    wb = DielectronicRecombination.extractRateCoefficients(resonances, settings)
 
     return( wb )
 end
