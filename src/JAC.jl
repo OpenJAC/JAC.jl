@@ -91,7 +91,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, FullCIeigen,
        generate, GreenSettings, GreenChannel, GreenExpansion, getDefaults, Green, Gui,
-       Hfs, HighHarmonic, HFS, HydrogenicIon, HarmonicQuantizationAxis,
+       Hfs, HyperfineInduced, HighHarmonic, HFS, HydrogenicIon, HarmonicQuantizationAxis,
        interpolate, integrate, Integral, ImpactExcAuto, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, 
        InteractionStrength, InternalConv, InternalConversion, InternalRecombination, Isotope, IsotopeShift, IsotopicFraction, 
        Kronecker,
@@ -181,6 +181,7 @@ include("module-PhotoExcitationAutoion.jl")
 include("module-RayleighCompton.jl")
 include("module-ParticleScattering.jl")
 include("module-BeamPhotoExcitation.jl") 
+include("module-HyperfineInduced.jl") 
 end
 
 if incAdvancedProcesses
@@ -263,7 +264,7 @@ function __init__()
 end
 
 println("\nWelcome to JAC:  A community approach to the computation of atomic structures, cascades and time evolutions " * 
-        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2024)].")
+        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2025)].")
 
 end
 

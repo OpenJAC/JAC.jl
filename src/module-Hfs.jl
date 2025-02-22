@@ -558,6 +558,26 @@ end
 
 
 """
+`Hfs.computeInteractionAmplitude(mp::EmMultipole, leftLevel::Level, rightLevel::Level, grid::Radial.Grid)` 
+    ... to compute the hyperfine interaction amplitude (<leftLevel || T^(mp)) || rightLevel>) by assuming
+        that both levels are given with regard to same (though not necessarely equal) physical basis. 
+        This means that the bases of the leftLevel and rightLevel could ge generated independently
+        An amplitude::ComplexF64 is returned.
+"""
+function  computeInteractionAmplitude(mp::EmMultipole, leftLevel::Level, rightLevel::Level, grid::Radial.Grid)
+    #
+    if  length(leftLevel.basis.csfs) != length(rightLevel.basis.csfs)  ||
+        leftLevel.basis.subshells    != rightLevel.basis.subshells
+        error("Check that both levels are given in the same physical basis.")
+    end 
+    
+    ncsf = length(levelLevel.basis.csfs);    amplitude = ComplexF64(1.)
+    
+    return( amplitude )
+end
+
+
+"""
 `Hfs.computeInteractionMatrix(basis::Basis, grid::Radial.Grid, settings::Hfs.Settings)` 
     ... to compute the T^1 and/or T^2 interaction matrices for the given basis, i.e. (<csf_r || T^(n)) || csf_s>).
         An im::Hfs.InteractionMatrix is returned.

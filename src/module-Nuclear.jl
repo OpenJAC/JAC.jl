@@ -129,6 +129,66 @@ end
 
 
 """
+`struct  Nuclear.Compound`  
+    ... defines a type for modeling isomeric (compound) nuclei with two nuclear symmetries, one common nuclear model
+        and additional (nuclear) information. This type is of interest for studying hyperfine-induced transitions
+        which involve different nuclear states.
+
+    + Z             ::Float64      ... nuclear charge
+    + model         ::String       ... identifier of the nuclear model: {"Fermi", "Point", "Uniform"}
+    + mass          ::Float64      ... atomic mass
+    + radius        ::Float64      ... (root-mean square) radius of a uniform or Fermi-distributed nucleus
+    + lowerI        ::AngularJ64   ... nuclear spin I >= 0 of the lower (ground) nuclear level
+    + lowerParity   ::Parity       ... parity of the lower (ground) nuclear level
+    + upperI        ::AngularJ64   ... nuclear spin I >= 0 of the upper (isomeric) nuclear level
+    + upperParity   ::Parity       ... parity of the upper (isomeric) nuclear level
+    + upperEnergy   ::Float64      ... energy of the upper (isomeric) relative to the ground level [in user-specified units]
+    + WE3element    ::Float64      ... <lowerI || W^(E3) || upperI> matrix element in [a.u.]
+"""
+struct  Compound
+    Z               ::Float64
+    model           ::String
+    mass            ::Float64
+    radius          ::Float64
+    lowerI          ::AngularJ64 
+    lowerParity     ::Parity
+    upperI          ::AngularJ64
+    upperParity     ::Parity
+    upperEnergy     ::Float64 
+    WE3element      ::Float64
+end
+
+
+"""
+`Nuclear.Compound()`  ... constructor for an `empty` instance of Nuclear.Compound.
+"""
+function Compound()
+    nm = Nuclear.Model(1.0)
+    Compound(nm.Z, nm.model, nm.mass, nm.radius, nm.spinI, Basics.plus, nm.spinI, Basics.plus, 0., 0.)
+end
+
+
+# `Base.show(io::IO, compound::Nuclear.Compound)`  ... prepares a proper printout of the variable compound::Nuclear.Compound.
+function Base.show(io::IO, compound::Nuclear.Compound) 
+    println(io, "Z:              $(compound.Z)  ")
+    println(io, "model:          $(compound.model)  ")
+    println(io, "mass:           $(compound.mass)  ")
+    println(io, "radius:         $(compound.radius)  ")
+    println(io, "lowerI:         $(compound.lowerI)  ")
+    println(io, "lowerParity:    $(compound.lowerParity)  ")
+    println(io, "upperI:         $(compound.upperI)  ")
+    println(io, "upperParity:    $(compound.upperParity)  ")
+    println(io, "upperEnergy:    $(compound.upperEnergy)  ")
+    println(io, "WE3element:     $(compound.WE3element)  ")
+end
+
+        
+#################################################################################################################################
+#################################################################################################################################
+
+
+
+"""
 `Nuclear.fermiA`  ... provides a value::Float64 for the fermi_a parameter.
 """
 fermiA   = 2.3/(4 * log(3))

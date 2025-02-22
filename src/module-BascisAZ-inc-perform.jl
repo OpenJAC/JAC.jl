@@ -169,6 +169,9 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         elseif  typeof(computation.processSettings) == BeamPhotoExcitation.Settings 
             outcome = BeamPhotoExcitation.computeOutcomes(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("beam-assisted photo-excitation:" => outcome) )         end
+        elseif  typeof(computation.processSettings) == HyperfineInduced.Settings 
+            outcome = HyperfineInduced.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
+            if output    results = Base.merge( results, Dict("hyperfine-induced transitions:" => outcome) )         end
             #
             #
         elseif  typeof(computation.processSettings) == PairA1P()  
