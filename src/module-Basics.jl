@@ -71,6 +71,7 @@ function extractShellList                                       end
 function extractShellOccupationDifference                       end
 function extractShellOccupationFromCsfR                         end
 function extractSubshellList                                    end
+function extractValenceShell                                    end
 function FermiDirac                                             end
 function generate                                               end
 function generateBasis                                          end

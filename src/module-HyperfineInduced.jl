@@ -735,7 +735,7 @@ end
         electronic levels in multiplet as well as the allowed F-values (from settings).
         A basis::Array{HyperfineInduced.IJF_Vector,1} is returned.
 """
-function  generateBasisNuclear(iNuclearSym::LevelSymmetry, fNuclearSym::LevelSymmetry, multiplet::Multiplet, 
+function  generateBasisElectronic(iNuclearSym::LevelSymmetry, fNuclearSym::LevelSymmetry, multiplet::Multiplet, 
                                settings::HyperfineInduced.Settings)
     basis    = HyperfineInduced.IJF_Vector[]
     for F  in  settings.Fvalues
