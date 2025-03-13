@@ -558,20 +558,45 @@ end
 
 
 """
-`Hfs.computeInteractionAmplitude(mp::EmMultipole, leftLevel::Level, rightLevel::Level, grid::Radial.Grid)` 
+`Hfs.computeInteractionAmplitudeM(mp::EmMultipole, leftIsomer::Nuclear.Isomer, rightIsomer::Nuclear.Isomer)` 
+    ... to compute the hyperfine interaction amplitude (<leftIsomer || M^(mp)) || rightIsomer>) for the interaction of two
+        nuclear levels; this ME is geometrically fixed if the left and right isomer are the same, and it depends
+        on the nuclear ME otherwise. An amplitude::ComplexF64 is returned.
+"""
+function  computeInteractionAmplitudeM(mp::EmMultipole, leftIsomer::Nuclear.Isomer, rightIsomer::Nuclear.Isomer)
+    amplitude = 1.
+    # Calculate the geometrical factor if the left- and right-hand isomer is the same
+    if  leftIsomer == rightIsomer
+        floatI = Basics.twice(leftIsomer.spinI) / 2.
+        if       mp == M1       amplitude = leftIsomer.mu * sqrt( (floatI + 1) / floatI)
+        elseif   mp == E2       amplitude = leftIsomer.Q / 2 * sqrt( (floatI + 1) * (2*floatI + 3)/ (floatI * (2*floatI -1)) )
+        else   error("stop a; mp = $mp")
+        end
+    else
+        @warn("Return wrong M^M amplitude")
+        amplitude = 0.1
+    end
+    
+    return( amplitude )
+end
+
+
+"""
+`Hfs.computeInteractionAmplitudeT(mp::EmMultipole, leftLevel::Level, rightLevel::Level, grid::Radial.Grid)` 
     ... to compute the hyperfine interaction amplitude (<leftLevel || T^(mp)) || rightLevel>) by assuming
         that both levels are given with regard to same (though not necessarely equal) physical basis. 
         This means that the bases of the leftLevel and rightLevel could ge generated independently
         An amplitude::ComplexF64 is returned.
 """
-function  computeInteractionAmplitude(mp::EmMultipole, leftLevel::Level, rightLevel::Level, grid::Radial.Grid)
+function  computeInteractionAmplitudeT(mp::EmMultipole, leftLevel::Level, rightLevel::Level, grid::Radial.Grid)
     #
     if  length(leftLevel.basis.csfs) != length(rightLevel.basis.csfs)  ||
         leftLevel.basis.subshells    != rightLevel.basis.subshells
         error("Check that both levels are given in the same physical basis.")
     end 
     
-    ncsf = length(levelLevel.basis.csfs);    amplitude = ComplexF64(1.)
+    ncsf = length(leftLevel.basis.csfs);    amplitude = ComplexF64(1.)
+    @warn("Return wrong T^M amplitude")
     
     return( amplitude )
 end

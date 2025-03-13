@@ -129,57 +129,43 @@ end
 
 
 """
-`struct  Nuclear.Compound`  
-    ... defines a type for modeling isomeric (compound) nuclei with two nuclear symmetries, one common nuclear model
-        and additional (nuclear) information. This type is of interest for studying hyperfine-induced transitions
-        which involve different nuclear states.
+`struct  Nuclear.Isomer`  
+    ... defines a type for modeling isomeric levels that are involved in hyperfine-induced transitions and structure.
+        It assumes that the nuclear charge, model and mass, radius is defined by an associated nm::Nuclear.Model.
 
-    + Z             ::Float64      ... nuclear charge
-    + model         ::String       ... identifier of the nuclear model: {"Fermi", "Point", "Uniform"}
-    + mass          ::Float64      ... atomic mass
-    + radius        ::Float64      ... (root-mean square) radius of a uniform or Fermi-distributed nucleus
-    + lowerI        ::AngularJ64   ... nuclear spin I >= 0 of the lower (ground) nuclear level
-    + lowerParity   ::Parity       ... parity of the lower (ground) nuclear level
-    + upperI        ::AngularJ64   ... nuclear spin I >= 0 of the upper (isomeric) nuclear level
-    + upperParity   ::Parity       ... parity of the upper (isomeric) nuclear level
-    + upperEnergy   ::Float64      ... energy of the upper (isomeric) relative to the ground level [in user-specified units]
-    + WE3element    ::Float64      ... <lowerI || W^(E3) || upperI> matrix element in [a.u.]
+    + spinI         ::AngularJ64   ... nuclear spin I >= 0 of the isomeric nuclear level, could be the ground level.
+    + parity        ::Parity       ... parity of the isomeric nuclear level
+    + energy        ::Float64      ... nuclear excitation energy of the isomeric level; 0. if nuclear ground level [in user-specified units]
+    + mu            ::Float64      ... magnetic dipole moment in Bohr magnetons
+    + Q             ::Float64      ... electric quadrupole moment
+    + WE3element    ::Float64      ... <ground level || W^(E3) || this level > nuclear matrix element in [a.u.]
 """
-struct  Compound
-    Z               ::Float64
-    model           ::String
-    mass            ::Float64
-    radius          ::Float64
-    lowerI          ::AngularJ64 
-    lowerParity     ::Parity
-    upperI          ::AngularJ64
-    upperParity     ::Parity
-    upperEnergy     ::Float64 
-    WE3element      ::Float64
+struct  Isomer
+    spinI           ::AngularJ64
+    parity          ::Parity  
+    energy          ::Float64 
+    mu              ::Float64
+    Q               ::Float64
+    WE3element      ::Float64 
 end
 
 
 """
-`Nuclear.Compound()`  ... constructor for an `empty` instance of Nuclear.Compound.
+`Nuclear.Isomer()`  ... constructor for an `empty` instance of Nuclear.Isomer.
 """
-function Compound()
-    nm = Nuclear.Model(1.0)
-    Compound(nm.Z, nm.model, nm.mass, nm.radius, nm.spinI, Basics.plus, nm.spinI, Basics.plus, 0., 0.)
+function Isomer()
+    Isomer( AngularJ64(0), Basics.plus, 0., 0., 0., 0.)
 end
 
 
-# `Base.show(io::IO, compound::Nuclear.Compound)`  ... prepares a proper printout of the variable compound::Nuclear.Compound.
-function Base.show(io::IO, compound::Nuclear.Compound) 
-    println(io, "Z:              $(compound.Z)  ")
-    println(io, "model:          $(compound.model)  ")
-    println(io, "mass:           $(compound.mass)  ")
-    println(io, "radius:         $(compound.radius)  ")
-    println(io, "lowerI:         $(compound.lowerI)  ")
-    println(io, "lowerParity:    $(compound.lowerParity)  ")
-    println(io, "upperI:         $(compound.upperI)  ")
-    println(io, "upperParity:    $(compound.upperParity)  ")
-    println(io, "upperEnergy:    $(compound.upperEnergy)  ")
-    println(io, "WE3element:     $(compound.WE3element)  ")
+# `Base.show(io::IO, isomer::Nuclear.Isomer)`  ... prepares a proper printout of the variable isomer:Nuclear.Isomer.
+function Base.show(io::IO, isomer::Nuclear.Isomer) 
+    println(io, "spinI:          $(isomer.spinI)  ")
+    println(io, "parity:         $(isomer.parity)  ")
+    println(io, "energy:         $(isomer.energy)  ")
+    println(io, "mu:             $(isomer.mu)  ")
+    println(io, "Q:              $(isomer.Q)  ")
+    println(io, "WE3element:     $(isomer.WE3element)  ")
 end
 
         

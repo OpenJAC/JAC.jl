@@ -9,8 +9,9 @@ if  true
     #
     # Last successful:  unknown ...
     # Calculate partial EII cross section for K-subshell of Ne IX in different models 
-    # BEBmodel(), BEDmodel(), RelativisticBEBmodel(), RelativisticBEDmodel(), MUIBEDmodel()
+    # BEBmodel(), BEDmodel(), RelativisticBEBmodel(), RelativisticBEDmodel(), FittedBEDmodel()
     approx      = ImpactIonization.RelativisticBEBmodel()
+    multipleN   = 1
     iEnergies   = [1200., 1400., 1600., 1800., 2000., 3000., 4000., 5000., 6000., 8000., 
                    10000., 20000., 40000., 60000., 80000., 100000.] ## unit: eV. The incident energies should be > epsilon_subshell.
     shells      = Basics.generateShellList(1,1, [0])
@@ -18,60 +19,70 @@ if  true
     configs     = [Configuration("1s^2")]
     name        = "EII cross section for K-subshell of Ne IX."
     nucModel    = Nuclear.Model(10.0)
-    eiiSettings = ImpactIonization.Settings(approx, iEnergies, true, true, selection)
+    eiiSettings = ImpactIonization.Settings(approx, multipleN, iEnergies, true, true, selection)
     ##X basis       = Basics.performSCF(configs, nucModel, grid, AsfSettings()) 
     ##x display     = ImpactIonization.displayCrossSections(basis, grid, nucModel, shells, eiiSettings, configs)
     comp        = Empirical.Computation(name, nucModel, grid, configs, eiiSettings)
     #
     @show comp
-    perform(comp)
+    perform(comp; output=true)
+    #
+    setDefaults("print summary: close", "")
     #
 elseif false
     #
     # Last successful:  unknown ...
     # Calculate partial EII cross section for M-subshell of Kr XIX in different models 
-    # BEBmodel(), BEDmodel(), RelativisticBEBmodel(), RelativisticBEDmodel(), MUIBEDmodel()
+    # BEBmodel(), BEDmodel(), RelativisticBEBmodel(), RelativisticBEDmodel(), FittedBEDmodel()
     approx      = ImpactIonization.RelativisticBEBmodel()
+    multipleN   = 1
     iEnergies   = [800, 1000, 1200., 1400., 1600., 1800., 2000., 3000., 4000., 5000., 6000., 8000., 
                    10000., 20000., 40000., 60000., 80000., 100000.] ## unit: eV. The incident energies should be > epsilon_subshell.
-    shells      = Basics.generateShellList(3,3, [0,1,2])
+    shells      = Basics.generateShellList(3,3, [0,1])
     selection   = ShellSelection(true, shells, Int64[])
     configs     = [Configuration("[Ar]")]
-    name        = "EII cross section for K-subshell of Ne IX."
+    name        = "EII cross section for M-subshell of Kr XIX."
     nucModel    = Nuclear.Model(36.0)
-    eiiSettings = ImpactIonization.Settings(approx, iEnergies, false, true, true, selection)
+    eiiSettings = ImpactIonization.Settings(approx, multipleN, iEnergies, true, true, selection)
     ##X basis       = Basics.performSCF(configs, nucModel, grid, AsfSettings()) 
     ##x display     = ImpactIonization.displayCrossSections(basis, grid, nucModel, shells, eiiSettings, configs)
     comp        = Empirical.Computation(name, nucModel, grid, configs, eiiSettings)
     #
     @show comp
-    perform(comp)
+    perform(comp; output=true)
+    #
+    setDefaults("print summary: close", "")
     #
 elseif false
     #
     # Last successful:  unknown ...
     # Calculate partial EII cross section for M-subshells of U in different models
-    approx      = ImpactIonization.MUIBEDmodel()
+    approx      = ImpactIonization.FittedBEDmodel()
+    multipleN   = 1
     iEnergies   = [6000., 8000., 10000., 12000., 14000., 16000., 18000., 20000., 30000., 40000., 60000., 70000., 
                    80000., 90000., 100000., 120000., 140000., 160000., 180000.,  200000., 500000., 1000000., 2000000., 
                    3000000., 5000000., 10000000.] ## unit: eV. The incident energies should be > epsilon_subshell.
     shells      = Basics.generateShellList(3,3, [0,1,2])
+    subshells      =  Basics.generateSubshellList(shells)
     configs     = [Configuration("[Rn] 5f^3 6d 7s^2")]
     name        = "EII cross section for M-subshells of U."
     nucModel    = Nuclear.Model(92.0)
-    eiiSettings = ImpactIonization.Settings(approx, iEnergies, false, true, false, selection)
+    eiiSettings = ImpactIonization.Settings(approx, multipleN, iEnergies, false, true, selection)
     ##x basis       = Basics.performSCF(configs, nucModel, grid, AsfSettings()) 
-    ##x display     = ImpactIonization.displayCrossSections(basis, grid, nucModel, iEnergies, shells, eiiSettings, configs)
+    ##x display     = ImpactIonization.displayCrossSections(basis, grid, nucModel, iEnergies, subshells, eiiSettings, configs)
     comp        = Empirical.Computation(name, nucModel, grid, configs, eiiSettings)
     #
     @show comp
-    perform(comp)
+    perform(comp; output=true)
+    #
+    setDefaults("print summary: close", "")
     #
 elseif false
     #
     # Last successful:  unknown ...
     # Calculate partial EII cross section for for L-subshells of Bi in different models
     approx      = ImpactIonization.BEBmodel() 
+    multipleN   = 1
     iEnergies   = [10000.0, 12000., 14000., 16000., 18000., 20000., 30000., 40000., 50000., 60000., 70000., 80000., 
                    100000., 200000., 400000., 600000., 800000., 1000000., 2000000., 4000000., 6000000., 8000000., 
                    10000000., 100000000, 1000000000] ## unit: eV. The incident energies should be > epsilon_subshell.                
@@ -81,12 +92,40 @@ elseif false
     name        = "EII cross section for L-subshells of Bi."
     nucModel    = Nuclear.Model(83.0)
     ##x basis       = Basics.performSCF(configs, nucModel, grid, AsfSettings()) 
-    eiiSettings = ImpactIonization.Settings( approx, iEnergies, false, true, false, selection )
+    eiiSettings = ImpactIonization.Settings( approx, multipleN, iEnergies, false, true, selection )
     ##x display     = ImpactIonization.displayCrossSections(basis, grid, nucModel, iEnergies, shells, eiiSettings, configs)
     comp        = Empirical.Computation(name, nucModel, grid, configs, eiiSettings)
     #
     @show comp
-    perform(comp)
+    perform(comp; output=true)
     #
+    setDefaults("print summary: close", "")
+    #
+### EIMI start here
+
+elseif false
+    # Last successful:  unknown ...
+    # Calculate total EIMI cross section for Be-like of Boron in different models 
+    # DirectMultipleModel(), InDirectDoubleModel(), DoubleExperimentModel(), LotzMultipleModel()
+    approx      = ImpactIonization.DirectMultipleModel()
+    # multipleN for N
+    multipleN = 2
+    iEnergies   = [1., 1200., 1400., 1600., 1800., 2000., 3000., 4000., 5000., 6000., 8000., 
+                   10000., 20000., 40000., 60000., 80000., 100000.] ## unit: eV. The incident energies should be > epsilon_subshell.
+    shells      = Basics.generateShellList(1,1, [0])
+    selection   = ShellSelection(true, shells, Int64[])
+    configs     = [Configuration("1s^2 2s^2")]
+    name        = "EII cross section for K-subshell of Ne IX."
+    nucModel    = Nuclear.Model(5.0)
+    eiiSettings = ImpactIonization.Settings(approx, multipleN, iEnergies, false, true, selection)
+    ##X basis       = Basics.performSCF(configs, nucModel, grid, AsfSettings()) 
+    ##x display     = ImpactIonization.displayCrossSections(basis, grid, nucModel, shells, eiiSettings, configs)
+    comp        = Empirical.Computation(name, nucModel, grid, configs, eiiSettings)
+    #
+    @show comp
+    perform(comp; output=true)
+    #
+    setDefaults("print summary: close", "")
+
 end
  

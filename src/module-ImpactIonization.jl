@@ -185,21 +185,23 @@ function  computeCrossSections(model::BEBmodel, cs::ImpactIonization.CrossSectio
                                 basis::Basis, nm::Nuclear.Model, grid::Radial.Grid, settings::ImpactIonization.Settings)
     bindingEnergy = kineticEnergy = q = t = u = 0.0
     partialCS     = 0.0 
+    Ryd           = 13.6
     # Determine the binding energy, kinetic energy and occupation number for the subshell
-    bindingEnergy    = - basis.orbitals[subshell].energy
-    orb              = basis.orbitals[subshell]
+    bindingEnergy    = - basis.orbitals[cs.subshell].energy
+    orb              = basis.orbitals[cs.subshell]
     kineticEnergy    = RadialIntegrals.isotope_nms(orb, orb, 0.0, grid)
-    occupationNumber = Basics.computeMeanSubshellOccupation(subshell, basis)
+    occupationNumber = Basics.computeMeanSubshellOccupation(cs.subshell, basis)
     eC               = ImpactIonization.effectiveCharge(cs.subshell, nm, basis)
     # Transform the imput energies into atomic unit and get the default values
     iE = Defaults.convertUnits("energy: from eV to atomic", cs.impactEnergy)
+    ryd = Defaults.convertUnits("energy: from eV to atomic", Ryd)  # epislon/R
     # Define parameters using symbols in BEB & BED formulas
     t = iE / bindingEnergy     
     u = kineticEnergy / bindingEnergy  
     q = occupationNumber 
     @show cs.subshell, eC
     # Calculate the partial and total cross sections
-    csFactor = pi * q * (1/bindingEnergy)^2/(t + (u + 1)/(eC+1))
+    csFactor = 4 * pi * q * ryd^2 * (1/bindingEnergy)^2/(t + (u + 1)/(eC+1))
     wc       = 1 - 1/t - log(t)/(1+t)
     wd       = log(t) * 1/2 * (1 - 1/t^2 )            
     if t < 1   else    partialCS = csFactor * (wc + wd)     end 
@@ -220,28 +222,28 @@ function  computeCrossSections(model::BEDmodel, cs::ImpactIonization.CrossSectio
     bindingEnergy = kineticEnergy = q = t = u = 0.0
     partialCS     = 0.0 
     # Determine the binding energy, kinetic energy and occupation number for the subshell
-    bindingEnergy    = - basis.orbitals[subshell].energy
-    orb              = basis.orbitals[subshell]
+    bindingEnergy    = - basis.orbitals[cs.subshell].energy
+    orb              = basis.orbitals[cs.subshell]
     kineticEnergy    = RadialIntegrals.isotope_nms(orb, orb, 0.0, grid)
-    occupationNumber = Basics.computeMeanSubshellOccupation(subshell, basis)
+    occupationNumber = Basics.computeMeanSubshellOccupation(cs.subshell, basis)
     eC               = ImpactIonization.effectiveCharge(cs.subshell, nm, basis)
     # Transform the imput energies into atomic unit and get the default values
-    iE = Defaults.convertUnits("energy: from eV to atomic", cs.impactEnergy)
+    iE = Defaults.convertUnits("energy: from eV to atomic", cs.impactEnergy); @show iE
     # Define parameters using symbols in BEB & BED formulas
-    t = iE / bindingEnergy     
+    t = iE / bindingEnergy; @show t     
     u = kineticEnergy / bindingEnergy  
     q = occupationNumber 
     # Calculate the dipole term
     k = 2*bindingEnergy
     f = x -> (sqrt(2*x[2])*(2*x[2]+k))/(x[1]*((x[1]+sqrt(2*x[2]))^2+k)^3*(((x[1])-sqrt(2*x[2]))^2+k)^3) 
-    xmin,xmax = (bindingEnergy/sqrt(2*iE), 0), (sqrt(8*iE)*(1+tP), iE-bindingEnergy) 
+    xmin,xmax = (bindingEnergy/sqrt(2*iE), 0), (sqrt(8*iE)*(1+t), iE-bindingEnergy) 
     (val,err) = hcubature(f, xmin, xmax; reltol=1e-8, abstol=0, maxevals=0) 
-    # Calculate the partial and total cross sections 
+    # Calculate the partial and total cross sections
     Gfactor = val
     Hfactor = 0.5 * (1/bindingEnergy - 1/iE - log(t)/(iE + bindingEnergy))
-    Sfactor = 4 * pi * q /(iE +bindingEnergy + kineticEnergy)
-    Ffactor = 32 * q * (sqrt(2*bindingEnergy))^3 /iE
-    if t < 1   else    partialCS = csFactor * (wc + wd)     end  
+    Sfactor = 4 * pi * q /(iE +(bindingEnergy + kineticEnergy)/(eC + 1))
+    Ffactor = 32 * q * (sqrt(2*bindingEnergy))^3 /iE            
+    if t < 1   else    partialCS = Sfactor *Hfactor + Ffactor *Gfactor     end   
     newCs = ImpactIonization.CrossSection(cs.subshell, cs.impactEnergy, partialCS, Float64[], Float64[])
     return( newCs )
 end
@@ -256,6 +258,7 @@ end
 """    
 function  computeCrossSections(model::FittedBEDmodel, cs::ImpactIonization.CrossSection,
                                 basis::Basis, nm::Nuclear.Model, grid::Radial.Grid, settings::ImpactIonization.Settings)
+    subshell    = cs.subshell
     # Determine a scaling factor in the FittedBEDmodel
     function scalingFactor(subshell::Subshell, nm::Nuclear.Model)
         parameters = [ (Subshell("1s_1/2"),  0.,    0.), 
@@ -263,13 +266,16 @@ function  computeCrossSections(model::FittedBEDmodel, cs::ImpactIonization.Cross
                        (Subshell("3s_1/2"), -0.01,  0.01),   (Subshell("3p_1/2"), -0.07, 0.01),  (Subshell("3p_3/2"), 0.05, 0.04), 
                        (Subshell("3d_3/2"),  0.45,  0.05),   (Subshell("3d_5/2"),  0.40, 0.01)  ]
         hasfound = false
+        m = 0.0 
+        lambda = 0.0
         for  par in parameters   
             if par[1] == subshell  m = par[2];  lambda = par[3];   hasfound = true;    break    end
         end
         if  !hasfound   error("Can only calculate K- L- and M-shells!")     end
-        scalingFactor = 1 + m * nm.Z^lambda
-        return( scalingFactor )
+        return  1 + m * nm.Z^lambda
     end
+        scale_factor_value = scalingFactor(subshell, nm)
+       
     bindingEnergy = kineticEnergy = q = t = u = 0.0
     partialCS     = 0.0 
     # Determine the binding energy, kinetic energy and occupation number for the subshell
@@ -279,7 +285,7 @@ function  computeCrossSections(model::FittedBEDmodel, cs::ImpactIonization.Cross
     occupationNumber = Basics.computeMeanSubshellOccupation(cs.subshell, basis)
     eC               = ImpactIonization.effectiveCharge(cs.subshell, nm, basis)
     # Transform the imput energies into atomic unit and get the default values
-    iE    = Defaults.convertUnits("energy: from eV to atomic", impactEnergy)
+    iE    = Defaults.convertUnits("energy: from eV to atomic", cs.impactEnergy)
     mC2   = Defaults.getDefaults("mc^2") 
     # Define parameters using symbols in BEB & BED formulas
     t = iE / bindingEnergy     
@@ -293,14 +299,15 @@ function  computeCrossSections(model::FittedBEDmodel, cs::ImpactIonization.Cross
     f = x -> (sqrt(2*x[2])*(2*x[2]+k))/(x[1]*((x[1]+sqrt(2*x[2]))^2+k)^3*(((x[1])-sqrt(2*x[2]))^2+k)^3) 
     xmin,xmax = (bindingEnergy/sqrt(2*iE), 0), (sqrt(8*iE)*(1+tP), iE-bindingEnergy) 
     (val,err) = hcubature(f, xmin, xmax; reltol=1e-8, abstol=0, maxevals=0) 
+    Gfactor = val
     # Calculate the partial and total cross sections 
     Hfactor   = 0.5 * (1/bindingEnergy - 1/iE - log(t)/(iE + bindingEnergy))
     Sfactor   = 4 * pi * q /(iE +(bindingEnergy + kineticEnergy)/(eC + 1))
     Ffactor   = 32 * q * (sqrt(2*bindingEnergy))^3 /iE 
     RfactorB  = (((1 + t)*(t + 2/bP)*(1 + 1/bP)^2)/((1 + 2/bP)/(bP^2) + t*(t + 2/bP)*(1 + 1/bP)^2))^1.5
     RfactorLM = (1 + 2/bP)/(0.6 * t +2/bP) * ((t + 1/bP)/(1 + 1/bP))^2.11
-    if t < 1   else    partialCS = scalingFactor * (RfactorLM *Sfactor *Hfactor + RfactorB *Ffactor *Gfactor)    end  
-    newCs = ImpactIonization.CrossSection(cs.subshell, Float64[], Float64[], partialCS)
+    if t < 1   else    partialCS = scale_factor_value * (RfactorLM *Sfactor *Hfactor + RfactorB *Ffactor *Gfactor)    end  
+    newCs = ImpactIonization.CrossSection(cs.subshell, cs.impactEnergy, partialCS, Float64[], Float64[])
     return( newCs )
 end
 
@@ -362,8 +369,9 @@ function  computeCrossSections(model::RelativisticBEDmodel, cs::ImpactIonization
     occupationNumber = Basics.computeMeanSubshellOccupation(cs.subshell, basis)
     eC               = ImpactIonization.effectiveCharge(cs.subshell, nm, basis)
     # Transform the imput energies into atomic unit and get the default values
-    iE    = Defaults.convertUnits("energy: from eV to atomic", impactEnergy)
+    iE    = Defaults.convertUnits("energy: from eV to atomic", cs.impactEnergy)
     mC2   = Defaults.getDefaults("mc^2") 
+    alpha = Defaults.getDefaults("alpha")
     # Define parameters using symbols in BEB & BED formulas
     t = iE / bindingEnergy     
     u = kineticEnergy / bindingEnergy  
@@ -379,8 +387,8 @@ function  computeCrossSections(model::RelativisticBEDmodel, cs::ImpactIonization
     # Calculate the partial and total cross sections
     Gfactor = val
     Hfactor = 0.5 * (1/bindingEnergy - 1/iE - log(t)/(iE + bindingEnergy))
-    Sfactor = 4 * pi * q /(iE +(bindingEnergy + kineticEnergy)/(eC + 1))
-    Ffactor = 32 * q * (sqrt(2*bindingEnergy))^3 /iE            
+    Sfactor = 4 * pi * alpha^2 * q / (relTpra + (relBpra + relUpra)/(eC +1))
+    Ffactor = 64 * q * (sqrt(relUpra))^3 /relTpra/alpha            
     if t < 1   else    partialCS = Sfactor *Hfactor + Ffactor *Gfactor     end 
     newCs = ImpactIonization.CrossSection(cs.subshell, cs.impactEnergy, partialCS, Float64[], Float64[])
     return( newCs )
