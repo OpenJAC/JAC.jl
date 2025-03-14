@@ -265,6 +265,7 @@ export  AbstractContinuumNormalization,   PureSineNorm,   CoulombSineNorm,   Ong
     + NonrelativisticCoulomb  ... generate a non-relativistic Coulomb function for the large component together with kinetic balance.
     + AsymptoticCoulomb       ... generate a pure (asymptotic) Coulombic function for both components.
     + BsplineGalerkin         ... generate a continuum orbital with the Galerkin method.dealing with warnings that are made during a run or REPL session.
+    + SciML                   ... generate a continuum orbital with the OrdinaryDiffEq package of SciML.
 """
 abstract type  AbstractContinuumSolutions                            end
 struct     ContBessel             <:  AbstractContinuumSolutions     end
@@ -272,8 +273,9 @@ struct     ContSine               <:  AbstractContinuumSolutions     end
 struct     NonrelativisticCoulomb <:  AbstractContinuumSolutions     end
 struct     AsymptoticCoulomb      <:  AbstractContinuumSolutions     end
 struct     BsplineGalerkin        <:  AbstractContinuumSolutions     end
+struct     SciML                  <:  AbstractContinuumSolutions     end
 
-export  AbstractContinuumSolutions, ContBessel, ContSine, NonrelativisticCoulomb, AsymptoticCoulomb, BsplineGalerkin 
+export  AbstractContinuumSolutions, ContBessel, ContSine, NonrelativisticCoulomb, AsymptoticCoulomb, BsplineGalerkin, SciML
 
 #################################################################################################################################
 #################################################################################################################################
