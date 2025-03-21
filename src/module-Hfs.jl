@@ -573,8 +573,11 @@ function  computeInteractionAmplitudeM(mp::EmMultipole, leftIsomer::Nuclear.Isom
         else   error("stop a; mp = $mp")
         end
     else
-        @warn("Return wrong M^M amplitude")
-        amplitude = 0.1
+        if       leftIsomer.multipoleM != rightIsomer.multipoleM     
+               error("stop a; $(leftIsomer.multipoleM) != $(rightIsomer.multipoleM) ")    
+        elseif   mp == leftIsomer.multipoleM     amplitude = (leftIsomer.elementM + rightIsomer.elementM) / 2
+        else                                     amplitude = 0.
+        end
     end
     
     return( amplitude )
@@ -582,24 +585,43 @@ end
 
 
 """
-`Hfs.computeInteractionAmplitudeT(mp::EmMultipole, leftLevel::Level, rightLevel::Level, grid::Radial.Grid)` 
-    ... to compute the hyperfine interaction amplitude (<leftLevel || T^(mp)) || rightLevel>) by assuming
-        that both levels are given with regard to same (though not necessarely equal) physical basis. 
-        This means that the bases of the leftLevel and rightLevel could ge generated independently
-        An amplitude::ComplexF64 is returned.
+`Hfs.computeInteractionAmplitudeT(mp::EmMultipole, aLevel::Level, bLevel, grid::Radial.Grid)` 
+    ... to compute the T^(mp) interaction matrices for the given basis, i.e. (<aLevel || T^(mp) || bLevel>).
+        Both levels must refer to the same basis. A me::ComplexF64 is returned.
 """
-function  computeInteractionAmplitudeT(mp::EmMultipole, leftLevel::Level, rightLevel::Level, grid::Radial.Grid)
+function  computeInteractionAmplitudeT(mp::EmMultipole, aLevel::Level, bLevel, grid::Radial.Grid)
     #
-    if  length(leftLevel.basis.csfs) != length(rightLevel.basis.csfs)  ||
-        leftLevel.basis.subshells    != rightLevel.basis.subshells
-        error("Check that both levels are given in the same physical basis.")
+    ncsf = length(aLevel.basis.csfs);  me = ComplexF64(0.)
+    if  ncsf != length(bLevel.basis.csfs)  ||  aLevel.basis.subshells != bLevel.basis.subshells
+        error("stop a: both levels must refer to the same electronic basis.")
     end 
     
-    ncsf = length(leftLevel.basis.csfs);    amplitude = ComplexF64(1.)
-    @warn("Return wrong T^M amplitude")
-    
-    return( amplitude )
-end
+    # Compute the  T^(mp) matrix element
+    for  (ia, csfa)  in  enumerate(aLevel.basis.csfs)
+        for  (ib, csfb)  in  enumerate(bLevel.basis.csfs)
+            wb  = ComplexF64(0.)
+            if  abs(aLevel.mc[ia] * bLevel.mc[ib]) > 1.0e-10
+                if  aLevel.basis.csfs[ia].parity  != bLevel.basis.csfs[ib].parity   error("stop b")    end 
+                subshellList = aLevel.basis.subshells
+                orbitals     = aLevel.basis.orbitals
+                opa = SpinAngular.OneParticleOperator(mp.L, plus, true)
+                wa  = SpinAngular.computeCoefficients(opa, aLevel.basis.csfs[ia], bLevel.basis.csfs[ib], subshellList)
+                for  coeff in wa
+                    ja   = Basics.subshell_2j(orbitals[coeff.a].subshell)
+                    jb   = Basics.subshell_2j(orbitals[coeff.b].subshell)
+                    if      mp == M1    tamp = InteractionStrength.hfs_t1(orbitals[coeff.a], orbitals[coeff.b], grid)
+                    elseif  mp == E2    tamp = InteractionStrength.hfs_t2(orbitals[coeff.a], orbitals[coeff.b], grid)
+                    else    error("stop b")    
+                    end 
+                    wb = wb + coeff.T * tamp
+                end
+            end 
+            me = me + aLevel.mc[ia] * bLevel.mc[ib] * wb    
+        end 
+    end 
+
+    return( me )
+end 
 
 
 """

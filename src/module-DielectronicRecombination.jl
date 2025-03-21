@@ -1181,10 +1181,10 @@ function determineEmpiricalTreatment(finalMultiplet::Multiplet, intermediateMult
                   nm::Nuclear.Model, initialMultiplet::Multiplet, settings::DielectronicRecombination.Settings)
     # First specify all parameters in turn 
     doEmpiricalCorrections = doHydrogenicCorrections = doMaximumlCorrection = doResonanceWindowCorrection = false
-    nHydrogenic            = nUpperEmpirical = 0
+    nHydrogenic            = nUpperEmpirical         = 0
     maximum_l              = 1000
     empiricalRateScaling   = hydrogenicEffectiveZ = hydrogenicRateScaling = 1.0
-    resonanceEnergyMin     = 0.;    resonanceEnergyMax = 1.0e8
+    resonanceEnergyMin     = 0.;    resonanceEnergyMax = 1.0e8;    empiricalEffectiveZ = 0.
     
     for correction in settings.corrections
         if  typeof(correction) == EmpiricalCorrections    

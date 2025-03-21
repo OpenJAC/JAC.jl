@@ -343,4 +343,23 @@ function  twoPhotonGaugeTupels(n::Int64, mpList::Array{Tuple{AngularJ64, Basics.
     return( wa )
 end
 
+
+"""
+`   + (n::Int64, mpList::Array{Tuple{String, Basics.EmMultipole, LevelSymmetry, Basics.EmMultipole, Basics.EmGauge},1})
+    ... a string of tupels (Sik, multipole_1, Jsym, multipole_2, gauge) is returned.
+"""
+function  twoPhotonGaugeTupels(n::Int64, mpList::Array{Tuple{String, Basics.EmMultipole, LevelSymmetry, Basics.EmMultipole, Basics.EmGauge},1}) 
+    sa = "";   wa = String[];   mpReduced = String[]
+    for tt in mpList
+        sb = "(" * string(tt[1]) * ", " * string(tt[2]) * ", " * string(tt[3]) * ", " * string(tt[4]) * ", " * string(tt[5])[1:3] * ")"
+        if    sb in mpReduced    else    push!(mpReduced, sb)    end
+    end
+    for sb in mpReduced
+        sa = sa * sb * ", "  
+        if  length(sa) + 20 > n    push!(wa, sa[1:end-2]);    sa = ""    end
+    end
+    if  sa != ""    push!(wa, sa[1:end-2])    end
+    return( wa )
+end
+
 end # module

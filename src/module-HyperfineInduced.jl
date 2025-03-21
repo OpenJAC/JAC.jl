@@ -16,18 +16,14 @@ using Printf, ..AngularMomentum, ..Basics,  ..Defaults, ..Hfs, ..ManyElectron, .
     ... defines a type for a IJF-coupled basis vector with given nuclear spin and parity as well as
         an electronic ASF (level).
 
-    + I             ::AngularJ64        ... Nuclear spin I.
     + F             ::AngularJ64        ... Total angular momentum F
-    + nuclearParity ::Parity            ... Parity of the nuclear level.
-    + levelJ        ::Level             ... Atomic level with well-defined total (electronic) angular momentum J.
     + isomer        ::Nuclear.Isomer    ... Isomeric level of the nucleus.
+    + levelJ        ::Level             ... Atomic level with well-defined total (electronic) angular momentum J.
 """
 struct IJF_Vector
-    I               ::AngularJ64
     F               ::AngularJ64
-    nuclearParity   ::Parity 
-    levelJ          ::Level
     isomer          ::Nuclear.Isomer
+    levelJ          ::Level
 end 
 
 
@@ -35,17 +31,15 @@ end
 `HyperfineInduced.IJF_Vector()`  ... constructor for an `empty` instance of the basis IJF_Vector.
 """
 function IJF_Vector()
-    IJF_Vector(AngularJ64(0), AngularJ64(0), Basics.plus, Level(), Nuclear.Isomer())
+    IJF_Vector(AngularJ64(0), Nuclear.Isomer(), Level())
 end
 
 
 # `Base.show(io::IO, ijfVector::HyperfineInduced.IJF_Vector)`  ... prepares a proper printout of the variable ijfVector.
 function Base.show(io::IO, ijfVector::HyperfineInduced.IJF_Vector) 
-    println(io, "I:              $(ijfVector.I)  ")
     println(io, "F:              $(ijfVector.F)  ")
-    println(io, "nuclearParity:  $(ijfVector.nuclearParity)  ")
-    println(io, "levelJ:         $(ijfVector.levelJ)  ")
     println(io, "isomer:         $(ijfVector.isomer)  ")
+    println(io, "levelJ:         $(ijfVector.levelJ)  ")
 end
 
 
@@ -202,18 +196,20 @@ end
 
     + multipole         ::EmMultipole        ... Multipole of the photon emission/absorption.
     + gauge             ::EmGauge            ... Gauge for dealing with the (coupled) radiation field.
-    + amplitude         ::Complex{Float64}   ... Amplitude of this multiple channel.
+    + amplitude         ::Complex{Float64}   ... Amplitude of this multipole channel.
+    + rate              ::Float64            ... Rate of this multipole channel.
 """
 struct Channel 
     multipole           ::EmMultipole
     gauge               ::EmGauge
     amplitude           ::Complex{Float64}
+    rate                ::Float64 
 end 
 
 
 # `Base.show(io::IO, channel::HyperfineInduced.Channel)`  ... prepares a proper printout of the variable channel::HyperfineInduced.Channel.
 function Base.show(io::IO, channel::HyperfineInduced.Channel) 
-    print(io, "HyperfineInduced.Channel($(channel.multipole), $(channel.gauge), amp = $(channel.amplitude)) ") 
+    print(io, "HyperfineInduced.Channel($(channel.multipole), $(channel.gauge), amp = $(channel.amplitude), rate = $(channel.rate)) ") 
 end
 
 
@@ -251,6 +247,39 @@ end
 #################################################################################################################################
 #################################################################################################################################
 
+"""
+`HyperfineInduced.amplitude(kind::String, mp::EmMultipole, gauge::EmGauge, omega::Float64, 
+                            finalLevel::IJF_Level, initialLevel::IJF_Level, grid::Radial.Grid; printout=true)`  
+    ... to compute the radiative (mulipole) transition amplitude between two hyperfine levels; 
+        a amplitude::ComplexF64 is returned.
+"""
+function  amplitude(kind::String, mp::EmMultipole, gauge::EmGauge, omega::Float64, 
+                    finalLevel::IJF_Level, initialLevel::IJF_Level, grid::Radial.Grid; printout=true)
+    if kind == "emission"
+        amp = ComplexF64(0.)
+        for  (ib, ibState)  in  enumerate(initialLevel.basis)
+            for  (fb, fbState)  in  enumerate(finalLevel.basis)
+                # First, compute the nuclear transition, if possible
+                if   abs(finalLevel.mc[fb] * initialLevel.mc[ib]) > 0.8  &&   fbState.levelJ.index == ibState.levelJ.index
+                    amp = amp + AngularMomentum.phaseFactor([fbState.isomer.spinI, +1, AngularJ64(mp.L), +1, ibState.F, +1, ibState.levelJ.J]) * 
+                                AngularMomentum.Wigner_6j(fbState.isomer.spinI, ibState.isomer.spinI, AngularJ64(mp.L), 
+                                                          ibState.F, fbState.F, ibState.levelJ.J)                                              *
+                                Hfs.computeInteractionAmplitudeM(mp, fbState.isomer, ibState.isomer) 
+                end
+                # Second, compute the contributions due to the change in the electronic state
+                amp = amp + finalLevel.mc[fb] * initialLevel.mc[ib] * 
+                            AngularMomentum.phaseFactor([fbState.levelJ.J, +1, AngularJ64(mp.L), +1, ibState.F, +1, fbState.isomer.spinI])     * 
+                            AngularMomentum.Wigner_6j(fbState.levelJ.J, ibState.levelJ.J, AngularJ64(mp.L), 
+                                                      ibState.F, fbState.F, fbState.levelJ.J)                                                  *
+                            PhotoEmission.amplitude(kind, mp, gauge, omega, fbState.levelJ, ibState.levelJ, grid, display=false)
+            end
+        end
+    else   error("stop a")
+    end
+    
+    return( amp )
+end
+
 
 """
 `HyperfineInduced.computeAmplitudesProperties(line::HyperfineInduced.Line, grid::Radial.Grid, 
@@ -259,26 +288,37 @@ end
         amplitudes and properties are now evaluated.
 """
 function  computeAmplitudesProperties(line::HyperfineInduced.Line, grid::Radial.Grid, settings::HyperfineInduced.Settings; printout::Bool=true)
+    function doublefactorial(L::Int64)
+        # Need to be implemented properly
+        if       L == 3     return(   3 )
+        elseif   L == 5     return(  15 )
+        elseif   L == 7     return( 105 )
+        else     error("stop a")
+        end 
+    end
+    
     newChannels = HyperfineInduced.Channel[];    rateC = rateB = 0.
     for channel in line.channels
         #
-        ## amplitude = HyperfineInduced.amplitudeNuclear("emission", channel.multipole, channel.gauge, line.omega, 
-        ##                                               line.finalLevel, line.initialLevel, grid, printout=printout)
-        amplitude = ComplexF64(1.5)
-        push!( newChannels, HyperfineInduced.Channel( channel.multipole, channel.gauge, amplitude) )
+        amplitude = HyperfineInduced.amplitude("emission", channel.multipole, channel.gauge, line.omega, 
+                                                           line.finalLevel, line.initialLevel, grid, printout=printout)
+        Lx        = 2 * channel.multipole.L + 1;           Ly = doublefactorial(Lx)^2
+        Fx        = Basics.twice(line.finalLevel.F)
+        rate      = 2 * Lx * Fx / Ly * (Defaults.getDefaults("alpha") * line.omega)^Lx *
+                    (channel.multipole.L + 1) / channel.multipole.L   * abs(amplitude)^2
+                
+        push!( newChannels, HyperfineInduced.Channel( channel.multipole, channel.gauge, amplitude, rate) )
         #
-        if       channel.gauge == Basics.Coulomb     rateC = rateC + abs(amplitude)^2
-        elseif   channel.gauge == Basics.Babushkin   rateB = rateB + abs(amplitude)^2
-        elseif   channel.gauge == Basics.Magnetic    rateB = rateB + abs(amplitude)^2;   rateC = rateC + abs(amplitude)^2
+        if       channel.gauge == Basics.Coulomb     rateC = rateC + rate
+        elseif   channel.gauge == Basics.Babushkin   rateB = rateB + rate
+        elseif   channel.gauge == Basics.Magnetic    rateB = rateB + rate;   rateC = rateC + rate
         end
     end
     #     
-    # Calculate the photonrate and angular beta if requested 
-    wa         = 8pi * Defaults.getDefaults("alpha") * line.omega / (Basics.twice(line.initialLevel.F) + 1) 
-    photonrate = EmProperty(wa * rateC, wa * rateB)    
+    # Calculate the photonrate 
+    photonrate = EmProperty(rateC, rateB)    
     newLine    = HyperfineInduced.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, newChannels)
     #
-    ##x @show photonrate, newLine
     
     return( newLine )
 end
@@ -361,9 +401,9 @@ function determineChannels(finalLevel::IJF_Level, initialLevel::IJF_Level, setti
             hasMagnetic = false
             for  gauge in settings.gauges
                 # Include further restrictions if appropriate
-                if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      push!(channels, HyperfineInduced.Channel(mp, Basics.Coulomb,   0.) )
-                elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    push!(channels, HyperfineInduced.Channel(mp, Basics.Babushkin, 0.) )  
-                elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)                  push!(channels, HyperfineInduced.Channel(mp, Basics.Magnetic,  0.) );
+                if     string(mp)[1] == 'E'  &&   gauge == Basics.UseCoulomb      push!(channels, HyperfineInduced.Channel(mp, Basics.Coulomb,   0., 0.) )
+                elseif string(mp)[1] == 'E'  &&   gauge == Basics.UseBabushkin    push!(channels, HyperfineInduced.Channel(mp, Basics.Babushkin, 0., 0.) )  
+                elseif string(mp)[1] == 'M'  &&   !(hasMagnetic)                  push!(channels, HyperfineInduced.Channel(mp, Basics.Magnetic,  0., 0.) );
                                                     hasMagnetic = true; 
                 end 
             end
@@ -413,25 +453,24 @@ function  determineIJFlevels(multiplet::Multiplet, isomer::Nuclear.Isomer, index
                 ndx = ndx + 1;   mc = ComplexF64[];   mbr = 0;    aRenormalized = 0.
                 # Compute the mixing coefficients for the given basis
                 for  (mbi, bState)  in  enumerate(basis)
-                    if  bState.I == I   &&   bState.nuclearParity == nuclearParity  &&   bState.F == F   &&  
-                        bState.levelJ.J == eLevel.J                                                     mx = ComplexF64(1.);   mbr = mbi
-                    elseif  AngularMomentum.isTriangle(bState.I, bState.levelJ.J, F)    &&
-                            AngularMomentum.isTriangle(eLevel.J, I, F) 
+                    if  bState.isomer.spinI == I   &&   bState.isomer.parity == nuclearParity  &&   bState.F == F   &&  
+                        bState.levelJ.J     == eLevel.J                         mx = ComplexF64(1.);   mbr = mbi
+                    elseif  AngularMomentum.isTriangle(bState.isomer.spinI, bState.levelJ.J, F)    &&
+                            AngularMomentum.isTriangle(eLevel.J, I, F)                             && 
+                            F == bState.F
                         mx          = ComplexF64(0.)
                         deltaEnergy = nuclearEnergy + eLevel.energy - bState.levelJ.energy
                         for  mp in settings.hfMultipoles
                             if  AngularMomentum.isTriangle(eLevel.J, bState.levelJ.J, AngularJ64(mp.L) )  &&
-                                AngularMomentum.isTriangle(bState.I, I, AngularJ64(mp.L))                 &&
+                                AngularMomentum.isTriangle(bState.isomer.spinI, I, AngularJ64(mp.L))      &&
                                 abs(deltaEnergy)  >  1.0e-10 
                                 # Compute the relevant multipole M^M and T^M interaction amplitude
                                 MM = Hfs.computeInteractionAmplitudeM(mp, bState.isomer, isomer)
                                 TM = Hfs.computeInteractionAmplitudeT(mp, bState.levelJ, eLevel, grid)
                                 mx = mx + AngularMomentum.phaseFactor([I, 1, bState.levelJ.J, 1, F]) *
-                                          AngularMomentum.Wigner_6j(bState.I, bState.levelJ.J, F, eLevel.J, I, AngularJ64(mp.L)) *
+                                          AngularMomentum.Wigner_6j(bState.isomer.spinI, bState.levelJ.J, F, eLevel.J, I, AngularJ64(mp.L)) *
                                           MM * TM  / deltaEnergy                                
-                                ##x wa1 = AngularMomentum.phaseFactor([I, 1, bState.levelJ.J, 1, F])
-                                ##x wa2 = AngularMomentum.Wigner_6j(bState.I, bState.levelJ.J, F, eLevel.J, I, AngularJ64(mp.L))
-                                ##x @show MM, TM, deltaEnergy, wa1, wa2, mx
+                                @show deltaEnergy, MM, TM, mx
                             end 
                         end
                     else                                                                                mx = ComplexF64(0.)
@@ -504,10 +543,37 @@ end
         the multiplet. The results are printed but nothing is returned otherwise.
 """
 function  displayHfMultiplet(stream::IO, sa::String, multiplet::HyperfineInduced.IJF_Multiplet)
-    nx = 149
+    nx = 79
     println(stream, " ")
     println(stream, "  $sa")
     println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
+    # First display the basis states
+    sa = "  ";   sb = "  "
+    sa = sa * TableStrings.center(8, "No "; na=2);                                sb = sb * TableStrings.hBlank(10)
+    sa = sa * TableStrings.center(8, "F^P";   na=4);                              sb = sb * TableStrings.hBlank(12)
+    sa = sa * TableStrings.center(14, "E_n"; na=4);              
+    sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+    sa = sa * TableStrings.center(14, "E_e"; na=4);              
+    sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+    sa = sa * TableStrings.flushleft(30, "Basis states"; na=4);                   sb = sb * TableStrings.hBlank(34)
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+    #   
+    for  (ib, bState)  in  enumerate(multiplet.levelFs[1].basis)
+        sa  = "  ";    sym = LevelSymmetry( bState.F, bState.isomer.parity * bState.levelJ.parity)
+        sa = sa * TableStrings.center(8, string(ib); na=2)
+        sa = sa * TableStrings.center(8, string(sym); na=4)
+        sa = sa * @sprintf("%.6e", bState.isomer.energy) * "     "  # Nuclear energies already in user-specified units
+        sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", bState.levelJ.energy)) * "      "
+        sa = sa * "|(" * string(bState.isomer.spinI) * string(bState.isomer.parity) * ", " * 
+                         string(bState.levelJ.J)     * string(bState.levelJ.parity) * "; " * string(sym) *  ">"
+        println(stream, sa)
+    end
+    println(stream, "  ", TableStrings.hLine(nx)) 
+    println(stream, " ")
+    
+    # Now, display the levels and mixing coefficients
+    nx = 149
     println(stream, "  ", TableStrings.hLine(nx))
     sa = "  ";   sb = "  "
     sa = sa * TableStrings.center(8, "level"; na=2);                              sb = sb * TableStrings.hBlank(10)
@@ -603,7 +669,7 @@ function  generateBasis(multiplet::Multiplet, index::Int64, addIndices::Array{In
                 if  level.index  in  index  ||   level.index  in  addIndices 
                     ##x @show level.J
                     if   AngularMomentum.isTriangle(isomer.spinI, level.J, F)
-                        push!(basis, HyperfineInduced.IJF_Vector(isomer.spinI, F, isomer.parity, level, isomer) )
+                        push!(basis, HyperfineInduced.IJF_Vector(F, isomer, level) )
                     end 
                 end
             end 

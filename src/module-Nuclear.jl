@@ -138,7 +138,8 @@ end
     + energy        ::Float64      ... nuclear excitation energy of the isomeric level; 0. if nuclear ground level [in user-specified units]
     + mu            ::Float64      ... magnetic dipole moment in Bohr magnetons
     + Q             ::Float64      ... electric quadrupole moment
-    + WE3element    ::Float64      ... <ground level || W^(E3) || this level > nuclear matrix element in [a.u.]
+    + multipoleM    ::EmMultipole  ... multipole of the <Ia || M^(multipole) || Ib > nuclear matrix element
+    + elementM      ::Float64      ... (real) value of the  <Ia || M^(multipole) || Ib > nuclear matrix element in [a.u.]
 """
 struct  Isomer
     spinI           ::AngularJ64
@@ -146,7 +147,8 @@ struct  Isomer
     energy          ::Float64 
     mu              ::Float64
     Q               ::Float64
-    WE3element      ::Float64 
+    multipoleM      ::EmMultipole
+    elementM        ::Float64  
 end
 
 
@@ -154,7 +156,7 @@ end
 `Nuclear.Isomer()`  ... constructor for an `empty` instance of Nuclear.Isomer.
 """
 function Isomer()
-    Isomer( AngularJ64(0), Basics.plus, 0., 0., 0., 0.)
+    Isomer( AngularJ64(0), Basics.plus, 0., 0., 0., E1, 0.)
 end
 
 
@@ -165,7 +167,8 @@ function Base.show(io::IO, isomer::Nuclear.Isomer)
     println(io, "energy:         $(isomer.energy)  ")
     println(io, "mu:             $(isomer.mu)  ")
     println(io, "Q:              $(isomer.Q)  ")
-    println(io, "WE3element:     $(isomer.WE3element)  ")
+    println(io, "multipoleM:     $(isomer.multipoleM)  ")
+    println(io, "elementM:       $(isomer.elementM)  ")
 end
 
         
