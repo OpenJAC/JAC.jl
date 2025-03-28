@@ -13,34 +13,38 @@ using Printf, ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..Radial, ..
 """
 `struct  PhotoIonization.Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing photoionization lines.
 
-    + multipoles              ::Array{EmMultipole}           ... Specifies the multipoles of the radiation field that are to be included.
-    + gauges                  ::Array{UseGauge}              ... Specifies the gauges to be included into the computations.
-    + photonEnergies          ::Array{Float64,1}             ... List of photon energies [in user-selected units].  
-    + electronEnergies        ::Array{Float64,1}             ... List of electron energies; usually only one of these lists are utilized. 
-    + calcAnisotropy          ::Bool                         ... True, if the beta anisotropy parameters are to be calculated and false otherwise (o/w). 
-    + calcPartialCs           ::Bool                         ... True, if partial cross sections are to be calculated and false otherwise.  
-    + calcTimeDelay           ::Bool                         ... True, if time-delays are to be calculated and false otherwise.  
-    + calcTensors             ::Bool                         ... True, if statistical tensors of the excited atom are to be calculated and false o/w. 
-    + printBefore             ::Bool                         ... True, if all energies and lines are printed before their evaluation.
-    + lineSelection           ::LineSelection                ... Specifies the selected levels, if any.
-    + stokes                  ::ExpStokes                    ... Stokes parameters of the incident radiation.
-    + freeElectronShift       ::Float64                      ... An overall energy shift of all free-electron energies [user-specified units].
-    + lValues                 ::Array{Int64,1}               ... Orbital angular momentum of free-electrons, for which partial waves are considered.
+    + multipoles                    ::Array{EmMultipole}  ... Specifies the multipoles of the radiation field that are to be included.
+    + gauges                        ::Array{UseGauge}     ... Specifies the gauges to be included into the computations.
+    + photonEnergies                ::Array{Float64,1}    ... List of photon energies [in user-selected units].  
+    + electronEnergies              ::Array{Float64,1}    ... List of electron energies; usually only one of these lists are utilized. 
+    + thetas                        ::Array{Float64,1}    ... List of theta-values if angle-differential CS are calculated explicitly. 
+    + calcAnisotropy                ::Bool                ... True, if the beta anisotropy parameters are to be calculated and false otherwise (o/w). 
+    + calcPartialCs                 ::Bool                ... True, if partial cross sections are to be calculated and false otherwise.  
+    + calcTimeDelay                 ::Bool                ... True, if time-delays are to be calculated and false otherwise.  
+    + calcNonE1AngleDifferentialCS  ::Bool                ... True, if non-E1 angle-differential CS are be calculated and false otherwise.  
+    + calcTensors                   ::Bool                ... True, if statistical tensors of the excited atom are to be calculated and false o/w. 
+    + printBefore                   ::Bool                ... True, if all energies and lines are printed before their evaluation.
+    + lineSelection                 ::LineSelection       ... Specifies the selected levels, if any.
+    + stokes                        ::ExpStokes           ... Stokes parameters of the incident radiation.
+    + freeElectronShift             ::Float64             ... An overall energy shift of all free-electron energies [user-specified units].
+    + lValues                       ::Array{Int64,1}      ... Orbital angular momentum of free-electrons, for which partial waves are considered.
 """
 struct Settings  <:  AbstractProcessSettings 
-    multipoles                ::Array{EmMultipole}
-    gauges                    ::Array{UseGauge}
-    photonEnergies            ::Array{Float64,1} 
-    electronEnergies          ::Array{Float64,1} 
-    calcAnisotropy            ::Bool 
-    calcPartialCs             ::Bool 
-    calcTimeDelay             ::Bool 
-    calcTensors               ::Bool 
-    printBefore               ::Bool
-    lineSelection             ::LineSelection
-    stokes                    ::ExpStokes
-    freeElectronShift         ::Float64 
-    lValues                   ::Array{Int64,1}
+    multipoles                      ::Array{EmMultipole}
+    gauges                          ::Array{UseGauge}
+    photonEnergies                  ::Array{Float64,1} 
+    electronEnergies                ::Array{Float64,1} 
+    thetas                          ::Array{Float64,1}
+    calcAnisotropy                  ::Bool 
+    calcPartialCs                   ::Bool 
+    calcTimeDelay                   ::Bool 
+    calcNonE1AngleDifferentialCS    ::Bool  
+    calcTensors                     ::Bool 
+    printBefore                     ::Bool
+    lineSelection                   ::LineSelection
+    stokes                          ::ExpStokes
+    freeElectronShift               ::Float64 
+    lValues                         ::Array{Int64,1}
 end 
 
 
@@ -48,26 +52,27 @@ end
 `PhotoIonization.Settings()`  ... constructor for the default values of photoionization line computations
 """
 function Settings()
-    Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb, Basics.UseBabushkin], Float64[], Float64[], 
-                false, false, false, false, false, LineSelection(), Basics.ExpStokes(), 0., [0,1,2,3,4,5])
+    Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb, Basics.UseBabushkin], Float64[], Float64[], Float64[], 
+                false, false, false, false, false, false, LineSelection(), Basics.ExpStokes(), 0., [0,1,2,3,4,5])
 end
 
 
 """
 `PhotoIonization.Settings(set::PhotoIonization.Settings;`
 
-        multipoles=..,          gauges=..,                  photonEnergies=..,          electronEnergies=..,     
-        calcAnisotropy=..,      calcPartialCs..,            calcTimeDelay=..,           calcTensors=..,             
-        printBefore=..,         lineSelection=..,           stokes=..,                  freeElectronShift=..,
-        lValues=.. )
+        multipoles=..,                      gauges=..,                  photonEnergies=..,          electronEnergies=..,     
+        thetas=..,                          calcAnisotropy=..,          calcPartialCs..,            calcTimeDelay=..,           
+        calcNonE1AngleDifferentialCS=..,    calcTensors=..,             printBefore=..,             lineSelection=..,           
+        stokes=..,                          freeElectronShift=..,       lValues=.. )
                     
     ... constructor for modifying the given PhotoIonization.Settings by 'overwriting' the previously selected parameters.
 """
 function Settings(set::PhotoIonization.Settings;    
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,                gauges::Union{Nothing,Array{UseGauge,1}}=nothing,  
-    photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,                electronEnergies::Union{Nothing,Array{Float64,1}}=nothing,       
-    calcAnisotropy::Union{Nothing,Bool}=nothing,                            calcPartialCs::Union{Nothing,Bool}=nothing, 
-    calcTimeDelay::Union{Nothing,Bool}=nothing,                             calcTensors::Union{Nothing,Bool}=nothing,   
+    photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,                electronEnergies::Union{Nothing,Array{Float64,1}}=nothing, 
+    thetas::Union{Nothing,Array{Float64,1}}=nothing,                        calcAnisotropy::Union{Nothing,Bool}=nothing,
+    calcPartialCs::Union{Nothing,Bool}=nothing,                             calcTimeDelay::Union{Nothing,Bool}=nothing,  
+    calcNonE1AngleDifferentialCS::Union{Nothing,Bool}=nothing,              calcTensors::Union{Nothing,Bool}=nothing,   
     printBefore::Union{Nothing,Bool}=nothing,                               lineSelection::Union{Nothing,LineSelection}=nothing, 
     stokes::Union{Nothing,ExpStokes}=nothing,                               freeElectronShift::Union{Nothing,Float64}=nothing,
     lValues::Union{Nothing,Array{Int64,1}}=nothing)  
@@ -76,9 +81,12 @@ function Settings(set::PhotoIonization.Settings;
     if  gauges            == nothing   gaugesx            = set.gauges            else  gaugesx            = gauges             end 
     if  photonEnergies    == nothing   photonEnergiesx    = set.photonEnergies    else  photonEnergiesx    = photonEnergies     end 
     if  electronEnergies  == nothing   electronEnergiesx  = set.electronEnergies  else  electronEnergiesx  = electronEnergies   end 
+    if  thetas            == nothing   thetasx            = set.thetas            else  thetasx            = thetas             end 
     if  calcAnisotropy    == nothing   calcAnisotropyx    = set.calcAnisotropy    else  calcAnisotropyx    = calcAnisotropy     end 
     if  calcPartialCs     == nothing   calcPartialCsx     = set.calcPartialCs     else  calcPartialCsx     = calcPartialCs      end 
     if  calcTimeDelay     == nothing   calcTimeDelayx     = set.calcTimeDelay     else  calcTimeDelayx     = calcTimeDelay      end 
+    if  calcNonE1AngleDifferentialCS   == nothing   calcNonE1AngleDifferentialCSx = set.calcNonE1AngleDifferentialCS        else  
+        calcNonE1AngleDifferentialCSx  = calcNonE1AngleDifferentialCS                                                           end 
     if  calcTensors       == nothing   calcTensorsx       = set.calcTensors       else  calcTensorsx       = calcTensors        end 
     if  printBefore       == nothing   printBeforex       = set.printBefore       else  printBeforex       = printBefore        end 
     if  lineSelection     == nothing   lineSelectionx     = set.lineSelection     else  lineSelectionx     = lineSelection      end 
@@ -86,26 +94,28 @@ function Settings(set::PhotoIonization.Settings;
     if  freeElectronShift == nothing   freeElectronShiftx = set.freeElectronShift else  freeElectronShiftx = freeElectronShift  end 
     if  lValues           == nothing   lValuesx           = set.lValues           else  lValuesx           = lValues            end 
 
-    Settings( multipolesx, gaugesx, photonEnergiesx, electronEnergiesx, calcAnisotropyx, calcPartialCsx, calcTimeDelayx, 
-                calcTensorsx, printBeforex, lineSelectionx, stokesx, freeElectronShiftx, lValuesx)
+    Settings( multipolesx, gaugesx, photonEnergiesx, electronEnergiesx, thetasx, calcAnisotropyx, calcPartialCsx, calcTimeDelayx, 
+                calcNonE1AngleDifferentialCSx, calcTensorsx, printBeforex, lineSelectionx, stokesx, freeElectronShiftx, lValuesx)
 end
 
 
 # `Base.show(io::IO, settings::PhotoIonization.Settings)`  ... prepares a proper printout of the variable settings::PhotoIonization.Settings.
 function Base.show(io::IO, settings::PhotoIonization.Settings) 
-    println(io, "multipoles:               $(settings.multipoles)  ")
-    println(io, "gauges:                   $(settings.gauges)  ")
-    println(io, "photonEnergies:           $(settings.photonEnergies)  ")
-    println(io, "electronEnergies:         $(settings.electronEnergies)  ")
-    println(io, "calcAnisotropy:           $(settings.calcAnisotropy)  ")
-    println(io, "calcPartialCs:            $(settings.calcPartialCs)  ")
-    println(io, "calcTimeDelay:            $(settings.calcTimeDelay)  ")
-    println(io, "calcTensors:              $(settings.calcTensors)  ")
-    println(io, "printBefore:              $(settings.printBefore)  ")
-    println(io, "lineSelection:            $(settings.lineSelection)  ")
-    println(io, "stokes:                   $(settings.stokes)  ")
-    println(io, "freeElectronShift:        $(settings.freeElectronShift)  ")
-    println(io, "lValues:                  $(settings.lValues)  ")
+    println(io, "multipoles:                    $(settings.multipoles)  ")
+    println(io, "gauges:                        $(settings.gauges)  ")
+    println(io, "photonEnergies:                $(settings.photonEnergies)  ")
+    println(io, "electronEnergies:              $(settings.electronEnergies)  ")
+    println(io, "thetas:                        $(settings.thetas)  ")
+    println(io, "calcAnisotropy:                $(settings.calcAnisotropy)  ")
+    println(io, "calcPartialCs:                 $(settings.calcPartialCs)  ")
+    println(io, "calcTimeDelay:                 $(settings.calcTimeDelay)  ")
+    println(io, "calcNonE1AngleDifferentialCS:  $(settings.calcNonE1AngleDifferentialCS)  ")
+    println(io, "calcTensors:                   $(settings.calcTensors)  ")
+    println(io, "printBefore:                   $(settings.printBefore)  ")
+    println(io, "lineSelection:                 $(settings.lineSelection)  ")
+    println(io, "stokes:                        $(settings.stokes)  ")
+    println(io, "freeElectronShift:             $(settings.freeElectronShift)  ")
+    println(io, "lValues:                       $(settings.lValues)  ")
 end
 
 
@@ -240,6 +250,136 @@ end
 
 
 """
+`PhotoIonization.angularFunctionK(L1::Int64, L2::Int64, X::Int64, Ji::AngularJ64, Jf::AngularJ64, 
+                                  kappa1::Int64, J1::AngularJ64, kappa2::Int64, J2::AngularJ64)`  
+    ... to compute angular function K(...) as defined for the non-E1 angle-differential cross sections by
+        Nishita Hosea (2025). No tests are made that the triangular conditions of the quantum numbers
+        are fulfilled. A wa::Float64 is returned.
+"""
+function angularFunctionK(L1::Int64, L2::Int64, X::Int64, Ji::AngularJ64, Jf::AngularJ64, 
+                          kappa1::Int64, J1::AngularJ64, kappa2::Int64, J2::AngularJ64)
+    s1 = Subshell(20,kappa1);   j1 = Basics.subshell_j(s1)
+    s2 = Subshell(20,kappa2);   j2 = Basics.subshell_j(s2)
+    wb = (2L1+1) * (Basics.twice(j1)+1) * (Basics.twice(J1)+1) * (2L2+1) * (Basics.twice(j2)+1) * (Basics.twice(J2)+1)
+    wa = (2X+1) / (Basics.twice(Ji)+1)  * sqrt(wb) * AngularMomentum.phaseFactor([Ji, -1, Jf, 1, AngularJ64(1//2)])
+    wa = wa * AngularMomentum.Wigner_6j(J2, J1, X, j1, j2, Jf) * AngularMomentum.Wigner_6j(J2, J1, X, L2, L1, Ji)
+    
+    return( wa )
+end
+
+
+"""
+`PhotoIonization.angularFunctionW(theta::Float64, L1::Int64, L2::Int64, X::Int64, lambda1::Int64, lambda2::Int64,
+                                  kappa1::Int64, mu1::Rational{Int64}, kappa2::Int64, mu2::Rational{Int64})`  
+    ... to compute angular function W(theta; ...) as defined for the non-E1 angle-differential cross sections by
+        Nishita Hosea (2025). No tests are made that the triangular conditions of the quantum numbers
+        are fulfilled. A  wa::Float64 is returned.
+"""
+function angularFunctionW(theta::Float64, L1::Int64, L2::Int64, X::Int64, lambda1::Int64, lambda2::Int64,
+                          kappa1::Int64, mu1::Rational{Int64}, kappa2::Int64, mu2::Rational{Int64})
+    if  abs(lambda1) > L1  ||   abs(lambda2) > L2  ||   abs(lambda2-lambda1) > X   return( 0.)    end
+    s1 = Subshell(20,kappa1);   j1 = Basics.subshell_j(s1)
+    s2 = Subshell(20,kappa2);   j2 = Basics.subshell_j(s2)
+    wa = # AngularMomentum.Wigner_dmatrix(X, lambda2-lambda1, Int64(mu2-mu1), theta) *
+         # AngularMomentum.Wigner_3j(j2, j1, X, -mu2, mu1, mu2-mu1) * 
+         AngularMomentum.Wigner_3j(L2, L1, X, -lambda2, lambda1, lambda2-lambda1)
+    
+    return( wa )
+end
+
+
+"""
+`PhotoIonization.computeDisplayNonE1AngleDifferentialCS(stream::IO, lines::Array{PhotoIonization.Line,1}, 
+                                                        settings::PhotoIonization.Settings)`  
+    ... to compute & display the non-E1 angle-differential photoionization cross sections for all PhotoIonization.Line's 
+        and at all angles theta as defined in the settings. The general formula by Nishita Hosea (2025) is applied here.
+        A neat table is printed for each line but nothing is returned otherwise. 
+"""
+function computeDisplayNonE1AngleDifferentialCS(stream::IO, lines::Array{PhotoIonization.Line,1}, settings::PhotoIonization.Settings)
+    function spinDensityMatrix(lambda1::Int64, lambda2::Int64, stokes::ExpStokes)
+        # Convert the Stokes parameters of the incoming light into a spin-density matrix on the indices lambda = +-1
+        if      lambda1 == lambda2  == 1               return( (1.0 + stokes.P3)/2. )
+        elseif  lambda1 ==  1   &&   lambda2  == -1    return( (stokes.P1 - stokes.P1*im)/2. )
+        elseif  lambda1 == -1   &&   lambda2  ==  1    return( (stokes.P1 + stokes.P1*im)/2. )
+        elseif  lambda1 == lambda2  == -1              return( (1.0 - stokes.P3)/2. )
+        else    error("stop a")
+        end
+    end
+    #
+    angCS = Tuple{Float64, ComplexF64, ComplexF64}[]  # theta, angCs.Coulomb, angCs.Babushkin
+    nx = 50
+    # Define the 2x2 spin
+    # Loop about all lines; a table is printed independently for each line
+    for  line in lines
+        # Loop over all angles theta
+        for  theta in settings.thetas
+            #
+            # Loop twice about all channels but distinguish the two gauges
+            csCoulomb = 0.;   csBabushkin = 0.
+            for  cha in line.channels, chb in line.channels
+                if  cha.gauge == Basics.Coulomb  &&   chb.gauge == Basics.Babushkin   continue    end  
+                if  chb.gauge == Basics.Coulomb  &&   cha.gauge == Basics.Babushkin   continue    end
+                s1 = Subshell(20,cha.kappa);   j1 = Basics.subshell_j(s1)
+                s2 = Subshell(20,chb.kappa);   j2 = Basics.subshell_j(s2)                
+                for  X = 0:20  # Test for triangular conditions for X and continue otherwise
+                    if  AngularMomentum.isTriangle(cha.multipole.L, chb.multipole.L, X)             &&
+                        AngularMomentum.isTriangle(cha.symmetry.J,  chb.symmetry.J, AngularJ64(X) ) &&   
+                        AngularMomentum.isTriangle(j1,  j2, AngularJ64(X) )
+                        K = PhotoIonization.angularFunctionK(cha.multipole.L, chb.multipole.L, X, line.initialLevel.J, line.finalLevel.J,
+                                                             cha.kappa, cha.symmetry.J, chb.kappa, chb.symmetry.J)
+                        # Compute the summation over lambda's and mu's
+                        W = 0.
+                        for  lambda1 = -1:2:1,   lambda2 = -1:2:1,   mu = -1//2:1: 1//2
+                            W = W + spinDensityMatrix(lambda1, lambda2, settings.stokes) *
+                                    PhotoIonization.angularFunctionW(theta, cha.multipole.L, chb.multipole.L, X, lambda1, lambda2,
+                                                                     cha.kappa, mu, chb.kappa, mu) *
+                                    (1.0im)^(chb.multipole.L - cha.multipole.L) * (lambda1*lambda2) / 2. *
+                                     AngularMomentum.phaseMultipole(1.0im*lambda1, cha.multipole) *
+                                     AngularMomentum.phaseMultipole(1.0im*lambda2, chb.multipole)    
+                        end
+                        #
+                        if  cha.gauge != Basics.Coulomb     &&   chb.gauge != Basics.Coulomb 
+                            csBabushkin =  csBabushkin + K * W * cha.amplitude * conj(chb.amplitude)      end
+                        if  cha.gauge != Basics.Babushkin   &&   chb.gauge != Basics.Babushkin 
+                            csCoulomb   =  csCoulomb   + K * W * cha.amplitude * conj(chb.amplitude)      end
+                    end
+                end 
+            end
+            push!(angCS, (theta, csCoulomb, csBabushkin) ) 
+        end 
+        #
+        # Prepare and printout a table for the angle-differential cross sections
+        nx = 69;   symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity)
+                   symf = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity)
+        println(stream, " ")
+        println(stream, "  Non-E1 angle-differential cross sections for line:" *
+                        "  $(line.initialLevel.index) [$symi] -- $(line.finalLevel.index) [$symf] "    )
+        println(stream, " ")
+        println(stream, "  + Photon energy:   $(line.photonEnergy)    [Hartree]")
+        println(stream, "  + Multipoles:      $(settings.multipoles)")
+        println(stream, " ")
+        println(stream, "  ", TableStrings.hLine(nx))
+        sa = "  ";   sb = "  "
+        sa = sa * TableStrings.center(14, "theta" ; na=6);               
+        sb = sb * TableStrings.center(14, "[rad]" ; na=6)
+        sa = sa * TableStrings.center(44, "Coulomb -- cross sections -- Babushkin"; na=3);                        
+        sb = sb * TableStrings.center(44, "    [Mb]     "; na=3)
+        println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+        for  cs in angCS
+            sa = "     " * @sprintf("%.2e", cs[1])      * "      "
+            sa = sa      * @sprintf("%.4e", cs[2].re)   * "  " * @sprintf("%.4e", cs[2].im)   * "    "
+            sa = sa      * @sprintf("%.4e", cs[3].re)   * "  " * @sprintf("%.4e", cs[3].im)
+            println(stream, sa)
+        end
+        println(stream, "  ", TableStrings.hLine(nx)) 
+        #   
+    end 
+    
+    return( nothing )
+end
+
+
+"""
 `PhotoIonization.computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Model, grid::Radial.Grid, nrContinuum::Int64, 
                                                     settings::PhotoIonization.Settings; printout::Bool=false)`  
     ... to compute all amplitudes and properties of the given line; a line::PhotoIonization.Line is returned for which the amplitudes and 
@@ -268,10 +408,11 @@ function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Mo
         if  settings.calcTimeDelay
             cOrbitalx, phasex  = Continuum.generateOrbitalForLevel(line.electronEnergy+0.01, Subshell(101, channel.kappa), 
                                                                     newfLevel, nm, grid, contSettings)
+            newcLevelx = Basics.generateLevelWithExtraElectron(cOrbitalx, channel.symmetry, newfLevel)
             nxChannel  = PhotoIonization.Channel(channel.multipole, channel.gauge, channel.kappa, channel.symmetry, phasex, 0.)
-            amplitude  = PhotoIonization.amplitude("photoionization", nChannel, line.photonEnergy+0.01, newcLevel, newiLevel, grid)
+            amplitude  = PhotoIonization.amplitude("photoionization", nxChannel, line.photonEnergy+0.01, newcLevelx, newiLevel, grid)
             push!( nxChannels, PhotoIonization.Channel(nxChannel.multipole, nxChannel.gauge, nxChannel.kappa, nxChannel.symmetry, 
-                                                        nxChannel.phase, amplitude) )
+                                                       nxChannel.phase, amplitude) )
         end
     end
     Ji2 = Basics.twice(line.initialLevel.J)
@@ -279,7 +420,7 @@ function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Mo
     ##x csFactor     = 4 * pi^2 * Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
     ##x csFactor     = 4 * pi^2 / Defaults.getDefaults("alpha") / line.photonEnergy / (Ji2 + 1)
     csFactor     = 8 * pi^3 / Defaults.getDefaults("alpha") / line.photonEnergy
-    csFactor     = csFactor / 2.   # Not fully clear, arises likely from the Rydberg normalization
+    ##  csFactor     = csFactor / 2.   # Not fully clear, arises likely from the Rydberg normalization
     ##  Correct for energy normalization 
     ##  if  line.electronEnergy < 2.0   csFactor = csFactor * (line.electronEnergy/2.0)^1.5     end
     crossSection = EmProperty(csFactor * csC, csFactor * csB)
@@ -288,7 +429,7 @@ function  computeAmplitudesProperties(line::PhotoIonization.Line, nm::Nuclear.Mo
     else  angularBeta  = EmProperty(0.)
     end
     if    settings.calcTimeDelay
-            coherentDelay, incoherentDelay = PhotoIonization.computeTimeDelays(nChannels, nxChannels, 0.01, line.finalLevel.J)
+          coherentDelay, incoherentDelay = PhotoIonization.computeTimeDelays(nChannels, nxChannels, 0.01, line.finalLevel.J)
     else  coherentDelay = EmProperty(0.);     incoherentDelay = EmProperty(0.)
     end
     #
@@ -414,6 +555,12 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     if  printSummary   PhotoIonization.displayResults(iostream, newLines, settings)     
                         ## PhotoIonization.displayTimeDelay(iostream, newLines, settings)    
     end
+    #
+    # Add printout about non-E1 angle-differential cross sections, if required
+    if  settings.calcNonE1AngleDifferentialCS
+        PhotoIonization.computeDisplayNonE1AngleDifferentialCS(stdout, newLines, settings)
+    end
+    #
     #
     if    output    return( newLines )
     else            return( nothing )
@@ -630,6 +777,7 @@ function  computeTimeDelays(channels::Array{PhotoIonization.Channel,1}, xchannel
     #
     # Calculate the coherent time delays
     # Third attempt, explicit derivation by Nikolay, April 2024
+    ## @warn "l0 = 1 ... for p_1/2, 3/2 splitting"
     @warn "l0 = 2 ... for d_3/2, 5/2 splitting"
     ampC = ampCx = ampB = ampBx = ComplexF64(0.)
     for  (ic, ch) in  enumerate(channels)
@@ -637,23 +785,27 @@ function  computeTimeDelays(channels::Array{PhotoIonization.Channel,1}, xchannel
         @show  "***", j, l, l0, Jc
         @show  "***", ch.gauge, ch.amplitude, xchannels[ic].amplitude, (xchannels[ic].amplitude - ch.amplitude) / deltaE
         ## factor = (1.0im)^( Basics.twice(l)/2 ) * sqrt(3/(4pi))  * AngularMomentum.phaseFactor([j, +1, l, +1, AngularJ64(1//2)]) *
-        ##          AngularMomentum.ClebschGordan( l0, AngularM64(0), AngularJ64(1), AngularM64(0), l,  AngularM64(0)) *
-        ##          sqrt(Basics.twice(j)+1) * AngularMomentum.Wigner_6j(Jc, AngularJ64(1//2), l0, l, AngularJ64(1), j)
-        factor = (1.0im)^( Basics.twice(l)/2 ) * sqrt(3/(4pi)) 
+        factor = sqrt(3/(4pi))  * AngularMomentum.phaseFactor([j, +1, l, +1, AngularJ64(1//2)]) *
+                 AngularMomentum.ClebschGordan( l0, AngularM64(0), AngularJ64(1), AngularM64(0), l,  AngularM64(0)) *
+                 sqrt(Basics.twice(j)+1) * AngularMomentum.Wigner_6j(Jc, AngularJ64(1//2), l0, l, AngularJ64(1), j)
         if       ch.gauge == Basics.Coulomb
             ampC  = ampC  + factor * ch.amplitude
             ampCx = ampCx + factor * xchannels[ic].amplitude
-            elseif   ch.gauge == Basics.Babushkin
+        elseif   ch.gauge == Basics.Babushkin
             ampB  = ampB  + factor * ch.amplitude
             ampBx = ampBx + factor * xchannels[ic].amplitude
         end
     end
     coherentTauC = (ampCx - ampC) / deltaE / ampC  
     coherentTauB = (ampBx - ampB) / deltaE / ampB
-    phiEffB      = log(ampB);       phiEffBx = log(ampBx);    coherentTaulnB = (phiEffBx.re - phiEffB.re) / deltaE
-    @show coherentTauC, coherentTauB, coherentTaulnB
-    coherentDelay = EmProperty( coherentTaulnB, coherentTauB.re )
+    ## phiEffB      = log(ampB);       phiEffBx = log(ampBx);    coherentTaulnB = (phiEffBx.re - phiEffB.re) / deltaE
+    @show coherentTauC, coherentTauB
+    coherentDelay = EmProperty( coherentTauC.im, coherentTauB.im )
     #
+    println("\n\nChannel amplitudes M_lj for photon energy: \n")
+    for channel in channels
+        println("   $(Subshell(11, channel.kappa))   $(channel.gauge)     phase=$(channel.phase)    M_lj=$(channel.amplitude) ")
+    end
     # Incoherent time delays
     nomDeffC = nomDeffCx = nomDeffB = nomDeffBx = 0.
     denDeffC = denDeffCx = denDeffB = denDeffBx = 0.

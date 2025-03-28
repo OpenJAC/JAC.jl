@@ -788,13 +788,16 @@ export  AbstractMesh, Cartesian2DMesh, GLegenreMesh, LinearMesh, PolarMesh, Sphe
 `abstract type Basics.AbstractPlasmaModel` 
     ... defines an abstract and a number of singleton types for the the (allowed) plasma models.
 
-    + NoPlasmaModel      ... No plasma model defined.
-    + DebyeHueckel       ... Debye-Hueckel plasma model.
-    + IonSphere          ... Ion-sphere (not yet supported).
+    + NoPlasmaModel                 ... No plasma model defined.
+    + DebyeHueckelModel             ... Debye-Hueckel plasma model.
+    + IonSphereModel                ... Ion-sphere (not yet supported).
+    + StewartPyattModel             ... Stewart-Pyatt model (not yet supported).
+    + WithoutAutoionizationModel    ... Just excludes all autoionizing levels; no original plasma model.
 """
-abstract type  AbstractPlasmaModel                      end
-struct         NoPlasmaModel  <:  AbstractPlasmaModel   end
-struct         DebyeBox       <:  AbstractPlasmaModel   end
+abstract type  AbstractPlasmaModel                                    end
+struct         NoPlasmaModel                <:  AbstractPlasmaModel   end
+struct         DebyeBox                     <:  AbstractPlasmaModel   end
+struct         WithoutAutoionizationModel   <:  AbstractPlasmaModel   end
 
 
 # `Base.show(io::IO, model::AbstractPlasmaModel)`  ... prepares a proper printout of the variable model::AbstractPlasmaModel.
@@ -805,67 +808,102 @@ end
 
 # `Base.string(model::AbstractPlasmaModel)`  ... provides a proper printout of the variable model::AbstractPlasmaModel.
 function Base.string(model::AbstractPlasmaModel) 
-    if       model == NoPlasmaModel()     return("No plasma model")
-    elseif   model == DebyeBox()          return("Debye-box model")
+    if       model == NoPlasmaModel()               return("No plasma model.")
+    elseif   model == DebyeBox()                    return("Debye-box model.")
+    elseif   model == WithoutAutoionizationModel()  return("Without autoionization model (just exclude all autoionizing levels).")
     else     error("stop a")
     end
 end 
 
 
 """
-`struct  Basics.DebyeHueckel   <:  AbstractPlasmaModel`  
+`struct  Basics.DebyeHueckelModel   <:  AbstractPlasmaModel`  
     ... to specify (the parameters of) a Debye-Hückel potential.
 
     + debyeLength  ::Float64               ... the Debye length D [a_o].
     + radius       ::Float64               ... the Debye radius R_D [a_o].
 """
-struct  DebyeHueckel   <:  AbstractPlasmaModel
+struct  DebyeHueckelModel   <:  AbstractPlasmaModel
     debyeLength   ::Float64
     debyeRadius   ::Float64
 end 
 
 
 """
-`Basics.DebyeHueckel()`  ... constructor for the default settings of Basics.DebyeHueckel().
+`Basics.DebyeHueckelModel()`  ... constructor for the default settings of Basics.DebyeHueckelModel().
 """
-function DebyeHueckel()
-    DebyeHueckel( 0.1, 0. )
+function DebyeHueckelModel()
+    DebyeHueckelModel( 0.1, 0. )
 end
 
 
-# `Base.show(io::IO, model::DebyeHueckel)`  ... prepares a proper printout of the variable model::DebyeHueckel.
-function Base.show(io::IO, model::DebyeHueckel) 
+# `Base.show(io::IO, model::DebyeHueckelModel)`  ... prepares a proper printout of the variable model::DebyeHueckelModel.
+function Base.show(io::IO, model::DebyeHueckelModel) 
     sa = "Debye-Hueckel plasma model with Debye length D = $(model.debyeLength) a_o and radius R_D = $(model.debyeRadius) a_o."
     print(io, sa)
 end
 
 
 """
-`struct  Basics.IonSphere   <:  AbstractPlasmaModel`  
+`struct  Basics.IonSphereModel   <:  AbstractPlasmaModel`  
     ... to specify (the parameters of) a ion-sphere potential.
 
-    + radius      ::Float64               ... the ion-sphere radius R [a_o].
+    + radius          ::Float64               ... the ion-sphere radius R [a_o].
+    + electronDensity ::Float64               ... electron density n_e (T).
 """
-struct  IonSphere           <:  AbstractPlasmaModel
-    radius        ::Float64
+struct  IonSphereModel           <:  AbstractPlasmaModel
+    radius            ::Float64
+    electronDensity   ::Float64 
 end 
 
 
 """
-`Basics.IonSphere()`  ... constructor for the default settings of Basics.IonSphere().
+`Basics.IonSphereModel()`  ... constructor for the default settings of Basics.IonSphereModel().
 """
-function IonSphere()
-    IonSphere( 0.9 )
+function IonSphereModel()
+    IonSphereModel( 0.9, 0. )
 end
 
 
-# `Base.show(io::IO, model::IonSphere)`  ... prepares a proper printout of the variable model::IonSphere.
-function Base.show(io::IO, model::IonSphere) 
-    sa = "Ion-sphere plasma model with (Wigner-Seitz radius) R = $(model.radius) a_o."
+# `Base.show(io::IO, model::IonSphereModel)`  ... prepares a proper printout of the variable model::IonSphereModel.
+function Base.show(io::IO, model::IonSphereModel) 
+    sa = "Ion-sphere plasma model with (Wigner-Seitz radius) R = $(model.radius) a_o and electron density n_e (T) = " *
+         "$(model.electronDensity)"
     print(io, sa)
 end
 
-export  AbstractPlasmaModel, NoPlasmaModel, DebyeHueckel, DebeyBox, IonSphere
+
+"""
+`struct  Basics.StewartPyattModel   <:  AbstractPlasmaModel`  
+    ... to specify (the parameters of) a Stewart-Pyatt plasma model.
+
+    + radius          ::Float64               ... the Stewart-Pyatt radius R [a_o].
+    + electronDensity ::Float64               ... electron density n_e (T).
+    + lambda          ::Float64               ... lambda^(ST) (T, ne, ni)
+"""
+struct  StewartPyattModel           <:  AbstractPlasmaModel
+    radius            ::Float64
+    electronDensity   ::Float64 
+    lambda            ::Float64 
+end 
+
+
+"""
+`Basics.StewartPyattModel()`  ... constructor for the default settings of Basics.StewartPyattModel().
+"""
+function StewartPyattModel()
+    StewartPyattModel( 0., 0., 0. )
+end
+
+
+# `Base.show(io::IO, model::StewartPyattModel)`  ... prepares a proper printout of the variable model::StewartPyattModel.
+function Base.show(io::IO, model::StewartPyattModel) 
+    sa = "Stewart-PyattModel plasma model with (Wigner-Seitz radius) R = $(model.radius) a_o, electron density n_e (T) = " *
+         "$(model.electronDensity), and lambda = $(model.lambda)"
+    print(io, sa)
+end
+
+export  AbstractPlasmaModel, NoPlasmaModel, DebyeHueckelModel, DebeyBox, IonSphereModel, StewartPyattModel
 
 #################################################################################################################################
 #################################################################################################################################

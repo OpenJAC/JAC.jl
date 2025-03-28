@@ -138,6 +138,23 @@ end
 
 
 """
+`TableStrings.kappaSymmetryTupelList(n::Int64, kappaList::Array{Tuple{Int64,LevelSymmetry},1})`  
+    ... a list of Strings with maximal length n is returned; each string in this list comprises a number of 
+        'shell -> symmetry -> shell' descriptors.
+"""
+function kappaSymmetryTupelList(n::Int64, kappaList::Array{Tuple{Int64,LevelSymmetry},1}) 
+    sa = "";   wa = String[]
+    for k in kappaList
+        shin = Subshell(9, k[1])
+        sa = sa * string(shin)[2:end] * "(" * string(k[2]) * ")" * ",  "
+        if  length(sa) + 15 > n    push!(wa, sa[1:end-3]);    sa = ""    end
+    end
+    if  sa != ""    push!(wa, sa[1:end-3])    end
+    return( wa )
+end
+
+
+"""
 `TableStrings.kappaKappaSymmetryTupels(n::Int64, kappaList::Array{Tuple{Int64,Int64,LevelSymmetry},1})`  
     ... a list of Strings with maximal length n is returned; each string in this list comprises a number of 
         'shell -> symmetry -> shell' descriptors.
@@ -313,6 +330,25 @@ end
     ... a string of tupels (K-rank, multipole_1, Jsym, multipole_2, gauge) is returned.
 """
 function  twoPhotonGaugeTupels(n::Int64, mpList::Array{Tuple{AngularJ64, Basics.EmMultipole, LevelSymmetry, Basics.EmMultipole, Basics.EmGauge},1}) 
+    sa = "";   wa = String[];   mpReduced = String[]
+    for tt in mpList
+        sb = "(" * string(tt[1]) * ", " * string(tt[2]) * ", " * string(tt[3]) * ", " * string(tt[4]) * ", " * string(tt[5])[1:3] * ")"
+        if    sb in mpReduced    else    push!(mpReduced, sb)    end
+    end
+    for sb in mpReduced
+        sa = sa * sb * ", "  
+        if  length(sa) + 20 > n    push!(wa, sa[1:end-2]);    sa = ""    end
+    end
+    if  sa != ""    push!(wa, sa[1:end-2])    end
+    return( wa )
+end
+
+
+"""
+`   + (n::Int64, mpList::Array{Tuple{String, Basics.EmMultipole, LevelSymmetry, Basics.EmMultipole, Basics.EmGauge},1})
+    ... a string of tupels (Sik, multipole_1, Jsym, multipole_2, gauge) is returned.
+"""
+function  twoPhotonGaugeTupels(n::Int64, mpList::Array{Tuple{String, Basics.EmMultipole, LevelSymmetry, Basics.EmMultipole, Basics.EmGauge},1}) 
     sa = "";   wa = String[];   mpReduced = String[]
     for tt in mpList
         sb = "(" * string(tt[1]) * ", " * string(tt[2]) * ", " * string(tt[3]) * ", " * string(tt[4]) * ", " * string(tt[5])[1:3] * ")"

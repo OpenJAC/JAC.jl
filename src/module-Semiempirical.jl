@@ -267,4 +267,37 @@ function estimateBindingEnergies(Z::Float64, coreConf::Configuration, nRange::Un
 end
 
 
+
+"""
+`Semiempirical.estimateRadialExpectation(Z::Float64, coreConf::Configuration, nRange::UnitRange{Int64}, l::Int64)`  
+    ... to estimate the radial extent (r-expectation value) of the high-n shells with n = nRange and orbital
+        angular momentum l for a (multiply-charged) ion with nuclear charge Z and core configuration 
+        coreConfiguration. A list of radii::Array{Float64} [in a_o] is returned.
+"""
+function estimateRadialExpectation(Z::Float64, coreConf::Configuration, nRange::UnitRange{Int64}, l::Int64)
+    rValues = Float64[];    effZs = Float64[];    Ne = coreConf.NoElectrons
+    # Terminate if  nRange.start  <=  nMaxCore,  i.e. if any core-shell has a higher n-value
+    nMaxCore = 0;     for (k,v) in coreConf.shells   if  k.n > nMaxCore   nMaxCore = k.n    end    end
+    if  nRange.start  <=  nMaxCore   error("Unsupported n-values:  nMin = $(nRange.start)  <=  nMaxCore = $nMaxCore")    end
+    
+    # Compute an effective Zeff for each n separately (later by considering the (mean) overlap with the core-shell electrons) 
+    sn = "";    sZ = "";    sr = ""    
+    for  n = nRange
+        effZ = Z - Ne * (1 - 0.5/n^2.2)
+        rnl  = (3*n^2 - l*(l+1)) / (2*Z)
+        push!(rValues, rnl)
+        sx = "           " * string(n);                   sn = sn * sx[end-10:end]
+        sx = "           " * @sprintf("% 2.2f", effZ);    sZ = sZ * sx[end-10:end]
+        sx = "           " * @sprintf("% 0.2e", rnl);     sr = sr * sx[end-10:end]
+    end
+    
+    println("  Estimated high-n <r_nl> expectation values for Z = $Z and the given core configuration $coreConf: \n\n" *
+            "    n            = " * sn *"\n" *
+            "    Zeff         = " * sZ *"\n" * 
+            "    <r_nl> [a_o] = " * sr *"\n" )
+    
+    return( rValues )
+end
+
+
 end # module

@@ -282,20 +282,20 @@ function convertUnits(sa::String, wa::Float64)
         
     elseif  sa in ["time: from atomic to predefined unit", "time: from atomic"]
         if      Defaults.getDefaults("unit: time") == "sec"             return( wa * CONVERT_TIME_AU_TO_SEC )
-        elseif  Defaults.getDefaults("unit: time") == "fs"              return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e15 )
-        elseif  Defaults.getDefaults("unit: time") == "as"              return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e18 )
+        elseif  Defaults.getDefaults("unit: time") == "fs"              return( wa * CONVERT_TIME_AU_TO_SEC * 1.0e15 )
+        elseif  Defaults.getDefaults("unit: time") == "as"              return( wa * CONVERT_TIME_AU_TO_SEC * 1.0e18 )
         elseif  Defaults.getDefaults("unit: time") == "a.u."            return( wa )
         else    error("stop g")
         end
     
     elseif   sa in ["time: from atomic to sec"]                         return( wa * CONVERT_TIME_AU_TO_SEC )
-    elseif   sa in ["time: from atomic to fs"]                          return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e15 )
-    elseif   sa in ["time: from atomic to as"]                          return( wa * CONVERT_TIME_AU_TO_SEC * 10.0e18 )
+    elseif   sa in ["time: from atomic to fs"]                          return( wa * CONVERT_TIME_AU_TO_SEC * 1.0e15 )
+    elseif   sa in ["time: from atomic to as"]                          return( wa * CONVERT_TIME_AU_TO_SEC * 1.0e18 )
 
     elseif  sa in ["time: from predefined to atomic unit", "time: to atomic"]
         if      Defaults.getDefaults("unit: time") == "sec"             return( wa / CONVERT_TIME_AU_TO_SEC )
-        elseif  Defaults.getDefaults("unit: time") == "fs"              return( wa / (CONVERT_TIME_AU_TO_SEC * 10.0e15) )
-        elseif  Defaults.getDefaults("unit: time") == "as"              return( wa / (CONVERT_TIME_AU_TO_SEC * 10.0e18) )
+        elseif  Defaults.getDefaults("unit: time") == "fs"              return( wa / (CONVERT_TIME_AU_TO_SEC * 1.0e15) )
+        elseif  Defaults.getDefaults("unit: time") == "as"              return( wa / (CONVERT_TIME_AU_TO_SEC * 1.0e18) )
         elseif  Defaults.getDefaults("unit: time") == "a.u."            return( wa )
         else    error("stop h")
         end

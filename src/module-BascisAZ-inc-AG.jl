@@ -1143,7 +1143,7 @@ function Basics.extractNonrelativisticShellList(confs::Array{Configuration,1})
             if  k in shellList      else    push!(shellList, k)     end
         end
     end
-    @show shellList
+    ##x @show shellList
     
     return( shellList )
 end
@@ -1163,7 +1163,7 @@ function Basics.extractNonrelativisticShellList(multiplet::Multiplet)
             if  k in shellList      else    push!(shellList, k)     end
         end
     end
-    @show shellList
+    ##x @show shellList
     
     return( shellList )
 end
@@ -1179,7 +1179,7 @@ function Basics.extractNonrelativisticShellList(multiplets::Array{Multiplet,1})
     for  mp in multiplets
         shellList = Basics.merge(shellList, Basics.extractNonrelativisticShellList(mp))
     end
-    @show shellList
+    ##x @show shellList
     
     return( shellList )
 end
@@ -1612,6 +1612,23 @@ function Basics.extractShellOccupationFromCsfR(csfR::CsfR, basis::Basis)
     end 
     
     return( (shellList, occList) )
+end
+
+
+"""
+`Basics.extractValenceShell(basis::Basis)`  
+    ... extract the valence shell from basis, ie. the Shell with the (in its magnitude) lowest binding energy.
+        A shell::Shell is returned.
+"""
+function Basics.extractValenceShell(basis::Basis)
+    # Find the subshell with the lowest binding energy
+    subShell = Subshell(100,-1);   energy = 1.0e6
+    for (k,v) in basis.orbitals
+        if  abs(v.energy) < energy    energy = abs(v.energy);    subShell = k   end 
+    end
+    shell = Shell(subShell.n, Basics.subshell_l(subShell) )
+    
+    return( shell )
 end
 
 

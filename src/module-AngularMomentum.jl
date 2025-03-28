@@ -441,6 +441,18 @@ end
 
 
 """
+`AngularMomentum.phaseMultipole(x::ComplexF64, mp::EmMultipole)`  
+    ... calculates (x)^p   with   mp = (L,p) and p = 0 (magnetic), p = 1 (electric).
+        A  wa ::ComplexF64  is returned.
+"""
+function  phaseMultipole(x::ComplexF64, mp::EmMultipole)
+    if  mp.electric   wa = x    else   wa = ComplexF64(1.0)   end 
+    return( wa )
+end
+    
+
+
+"""
 `AngularMomentum.sigma_reduced_me(suba::Subshell, subb::Subshell)`  
     ... calculates the reduced matrix element of the sigma^(1) spherical tensor <suba || sigma^(1) || subb>; 
         a value::Float64 is returned.

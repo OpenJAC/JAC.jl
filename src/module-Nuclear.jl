@@ -129,6 +129,55 @@ end
 
 
 """
+`struct  Nuclear.Isomer`  
+    ... defines a type for modeling isomeric levels that are involved in hyperfine-induced transitions and structure.
+        It assumes that the nuclear charge, model and mass, radius is defined by an associated nm::Nuclear.Model.
+
+    + spinI         ::AngularJ64   ... nuclear spin I >= 0 of the isomeric nuclear level, could be the ground level.
+    + parity        ::Parity       ... parity of the isomeric nuclear level
+    + energy        ::Float64      ... nuclear excitation energy of the isomeric level; 0. if nuclear ground level [in user-specified units]
+    + mu            ::Float64      ... magnetic dipole moment in Bohr magnetons
+    + Q             ::Float64      ... electric quadrupole moment
+    + multipoleM    ::EmMultipole  ... multipole of the <Ia || M^(multipole) || Ib > nuclear matrix element
+    + elementM      ::Float64      ... (real) value of the  <Ia || M^(multipole) || Ib > nuclear matrix element in [a.u.]
+"""
+struct  Isomer
+    spinI           ::AngularJ64
+    parity          ::Parity  
+    energy          ::Float64 
+    mu              ::Float64
+    Q               ::Float64
+    multipoleM      ::EmMultipole
+    elementM        ::Float64  
+end
+
+
+"""
+`Nuclear.Isomer()`  ... constructor for an `empty` instance of Nuclear.Isomer.
+"""
+function Isomer()
+    Isomer( AngularJ64(0), Basics.plus, 0., 0., 0., E1, 0.)
+end
+
+
+# `Base.show(io::IO, isomer::Nuclear.Isomer)`  ... prepares a proper printout of the variable isomer:Nuclear.Isomer.
+function Base.show(io::IO, isomer::Nuclear.Isomer) 
+    println(io, "spinI:          $(isomer.spinI)  ")
+    println(io, "parity:         $(isomer.parity)  ")
+    println(io, "energy:         $(isomer.energy)  ")
+    println(io, "mu:             $(isomer.mu)  ")
+    println(io, "Q:              $(isomer.Q)  ")
+    println(io, "multipoleM:     $(isomer.multipoleM)  ")
+    println(io, "elementM:       $(isomer.elementM)  ")
+end
+
+        
+#################################################################################################################################
+#################################################################################################################################
+
+
+
+"""
 `Nuclear.fermiA`  ... provides a value::Float64 for the fermi_a parameter.
 """
 fermiA   = 2.3/(4 * log(3))
@@ -208,7 +257,11 @@ function fermiDistributedNucleus(Rrms::Float64, Z::Float64, grid::Radial.Grid)
     function  r_rho(r::Float64)  r / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )   end
     function  rr_rho(r::Float64)  r^2 / (1.0 + exp( (r-fermiC_au)/fermiA_au ) )  end
 
-    b = computeFermiBParameter(Rrms);    b < 0  &&  error("Inappropriate R_rms radius.")
+    if  Z < 1.2
+        b = computeFermiBParameter(1.89);    b < 0  &&  error("Inappropriate R_rms radius.")
+    else
+        b = computeFermiBParameter(Rrms);    b < 0  &&  error("Inappropriate R_rms radius.")
+    end
     
     fermiA_au = Defaults.convertUnits("length: from fm to atomic", fermiA)
     fermiC_au = Defaults.convertUnits("length: from fm to atomic", b)

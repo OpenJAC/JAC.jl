@@ -142,6 +142,7 @@ Base.:+(a, b::EmProperty) = b + a
 Base.:-(a::EmProperty, b::EmProperty) = EmProperty(a.Coulomb - b.Coulomb, a.Babushkin - b.Babushkin)
 Base.:*(a::EmProperty, b::EmProperty) = EmProperty(a.Coulomb * b.Coulomb, a.Babushkin * b.Babushkin)
 Base.:*(a, b::EmProperty) = EmProperty(a * b.Coulomb, a * b.Babushkin)
+Base.:*(a::EmProperty, b) = EmProperty(a.Coulomb * b, a.Babushkin * b)
 Base.:/(a::EmProperty, b::EmProperty) = EmProperty(a.Coulomb / b.Coulomb, a.Babushkin / b.Babushkin)
 Base.:/(a, b::EmProperty) = EmProperty(a / b.Coulomb, a / b.Babushkin)
 

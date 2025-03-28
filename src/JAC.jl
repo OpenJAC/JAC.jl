@@ -85,13 +85,13 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        compute, convertUnits, Compton, Configuration, ConfigurationR, 
        Cascade, Continuum, CorePolarization, Coulex, CoulombExcitation, Coulion, CoulombBreit, CoulombGaunt, 
        CoulombInteraction, CoulombIonization, CsfR,        
-       diagonalize, Defaults, DecayYield, Details, Dielectronic, Dierec, Djpq, DoubleAutoIonization, DoubleAuger, DiagonalCoulomb, 
+       diagonalize, Defaults, DecayYield, Details, DielectronicRecombination, Dierec, Djpq, DoubleAutoIonization, DoubleAuger, DiagonalCoulomb, 
        DefaultQuantizationAxis, 
        Eimex, ElectronCapture, ElecCapture, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate, ExpStokes, Empirical,
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, FullCIeigen,
        generate, GreenSettings, GreenChannel, GreenExpansion, getDefaults, Green, Gui,
-       Hfs, HighHarmonic, HFS, HydrogenicIon, HarmonicQuantizationAxis,
+       Hfs, HyperfineInduced, HighHarmonic, HFS, HydrogenicIon, HarmonicQuantizationAxis,
        interpolate, integrate, Integral, ImpactExcAuto, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, 
        InteractionStrength, InternalConv, InternalConversion, InternalRecombination, Isotope, IsotopeShift, IsotopicFraction, 
        Kronecker,
@@ -175,12 +175,13 @@ include("module-PhotoIonization.jl")
 include("module-PhotoRecombination.jl")
 include("module-AutoIonization.jl")
 include("module-ElectronCapture.jl")
-include("module-Dielectronic.jl")
+include("module-DielectronicRecombination.jl")
 include("module-PhotoExcitationFluores.jl")
 include("module-PhotoExcitationAutoion.jl")
 include("module-RayleighCompton.jl")
 include("module-ParticleScattering.jl")
 include("module-BeamPhotoExcitation.jl") 
+include("module-HyperfineInduced.jl") 
 end
 
 if incAdvancedProcesses
@@ -263,7 +264,7 @@ function __init__()
 end
 
 println("\nWelcome to JAC:  A community approach to the computation of atomic structures, cascades and time evolutions " * 
-        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2024)].")
+        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2025)].")
 
 end
 

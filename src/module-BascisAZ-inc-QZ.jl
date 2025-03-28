@@ -200,32 +200,35 @@ end
 `Basics.recast()`  
     ... recasts some data from one number/representation into another one; cf. the supported keystrings and return values.
 
-+ `("rate: radiative, to decay width", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
++ `("rate: radiative, to decay width", line::Union{PhotoEmission.Line, HyperfineInduced.Line}, value::Float64)`  
     ... to recast a given radiative rate (Einstein A in atomic units) into a decay withs, taking the selected energy unit 
         into account. A Float64 is returned.
 
-+ `("rate: radiative, to Einstein A", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
++ `("rate: radiative, to Einstein A", line::Union{PhotoEmission.Line, HyperfineInduced.Line}, value::Float64)`  
     ... to recast a given spontaneous radiative rate (= Einstein A-coefficient), taking the selected unit into account. 
         A Float64 is returned.
 
-+ `("rate: radiative, to Einstein B", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
++ `("rate: radiative, to Einstein B", line::Union{PhotoEmission.Line, HyperfineInduced.Line}, value::Float64)`  
     ... to recast a given radiative rate (Einstein A in atomic units) into an Einstein B-coefficient, taking the selected 
         unit into account. A Float64 is returned.
 
-+ `("rate: radiative, to g_f", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
++ `("rate: radiative, to g_f", line::Union{PhotoEmission.Line}, value::Float64)`  
     ... to recast a given radiative rate (Einstein A in atomic units) into an oscillator strength g_f; 
         a Float64 is returned.
 
-+ `("rate: radiative, to f", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
++ `("rate: radiative, to f", line::Union{PhotoEmission.Line}, value::Float64)`  
     ... to recast a given radiative rate (Einstein A in atomic units) into an oscillator strength f; 
         a Float64 is returned.
 
-+ `("rate: radiative, to S", line::Union{Einstein.Line,PhotoEmission.Line}, value::Float64)`  
++ `("rate: radiative, to S", line::Union{PhotoEmission.Line}, value::Float64)`  
     ... to recast a given radiative rate (Einstein A in atomic units) into a line strength S; 
         a Float64 is returned.
 """
-function Basics.recast(sa::String, line::Union{PhotoEmission.Line}, wa::Float64)
-## function Basics.recast(sa::String, line::Union{Einstein.Line, PhotoEmission.Line, TwoElectronOnePhoton.Line}, wa::Float64)
+function Basics.recast(sa::String, line::Union{PhotoEmission.Line, HyperfineInduced.Line}, wa::Float64)
+    if  typeof(line) == HyperfineInduced.Line  &&
+        ! (sa  in ["rate: radiative, to decay width", "rate: radiative, to Einstein A", "rate: radiative, to Einstein B"])
+        error("Not supported recast for HyperfineInduced.Line's ")
+    end
 
     if       sa == "rate: radiative, to decay width"
         width = Defaults.convertUnits("energy: from atomic", wa)

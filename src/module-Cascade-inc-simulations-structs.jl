@@ -206,7 +206,7 @@ abstract type  AbstractSimulationProperty                              end
     + nMax                ::Int64 
         ... Maximum n (principal quantum number), for which contributions are scaled; NO scaling is taken
             into account for nMax <= nDetailed.
-    + resonanceSelection  ::Dielectronic.ResonanceSelection
+    + resonanceSelection  ::DielectronicRecombination.ResonanceSelection
 """  
 struct  DrRateCoefficients   <:  Cascade.AbstractSimulationProperty
     initialLevelNo        ::Int64 
@@ -214,7 +214,7 @@ struct  DrRateCoefficients   <:  Cascade.AbstractSimulationProperty
     temperatures          ::Array{Float64,1}
     nDetailed             ::Int64 
     nMax                  ::Int64 
-    resonanceSelection    ::Dielectronic.ResonanceSelection
+    resonanceSelection    ::DielectronicRecombination.ResonanceSelection
 end 
 
 
@@ -222,7 +222,7 @@ end
 `Cascade.DrRateCoefficients()`  ... (simple) constructor for cascade DrRateCoefficients.
 """
 function DrRateCoefficients()
-    DrRateCoefficients(1, 0.,  Float64[], 0, 0, Dielectronic.ResonanceSelection() )
+    DrRateCoefficients(1, 0.,  Float64[], 0, 0, DielectronicRecombination.ResonanceSelection() )
 end
 
 

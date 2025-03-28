@@ -558,6 +558,73 @@ end
 
 
 """
+`Hfs.computeInteractionAmplitudeM(mp::EmMultipole, leftIsomer::Nuclear.Isomer, rightIsomer::Nuclear.Isomer)` 
+    ... to compute the hyperfine interaction amplitude (<leftIsomer || M^(mp)) || rightIsomer>) for the interaction of two
+        nuclear levels; this ME is geometrically fixed if the left and right isomer are the same, and it depends
+        on the nuclear ME otherwise. An amplitude::ComplexF64 is returned.
+"""
+function  computeInteractionAmplitudeM(mp::EmMultipole, leftIsomer::Nuclear.Isomer, rightIsomer::Nuclear.Isomer)
+    amplitude = 1.
+    # Calculate the geometrical factor if the left- and right-hand isomer is the same
+    if  leftIsomer == rightIsomer
+        floatI = Basics.twice(leftIsomer.spinI) / 2.
+        if       mp == M1       amplitude = leftIsomer.mu * sqrt( (floatI + 1) / floatI)
+        elseif   mp == E2       amplitude = leftIsomer.Q / 2 * sqrt( (floatI + 1) * (2*floatI + 3)/ (floatI * (2*floatI -1)) )
+        else   error("stop a; mp = $mp")
+        end
+    else
+        if       leftIsomer.multipoleM != rightIsomer.multipoleM     
+               error("stop a; $(leftIsomer.multipoleM) != $(rightIsomer.multipoleM) ")    
+        elseif   mp == leftIsomer.multipoleM     amplitude = (leftIsomer.elementM + rightIsomer.elementM) / 2
+        else                                     amplitude = 0.
+        end
+    end
+    
+    return( amplitude )
+end
+
+
+"""
+`Hfs.computeInteractionAmplitudeT(mp::EmMultipole, aLevel::Level, bLevel, grid::Radial.Grid)` 
+    ... to compute the T^(mp) interaction matrices for the given basis, i.e. (<aLevel || T^(mp) || bLevel>).
+        Both levels must refer to the same basis. A me::ComplexF64 is returned.
+"""
+function  computeInteractionAmplitudeT(mp::EmMultipole, aLevel::Level, bLevel, grid::Radial.Grid)
+    #
+    ncsf = length(aLevel.basis.csfs);  me = ComplexF64(0.)
+    if  ncsf != length(bLevel.basis.csfs)  ||  aLevel.basis.subshells != bLevel.basis.subshells
+        error("stop a: both levels must refer to the same electronic basis.")
+    end 
+    
+    # Compute the  T^(mp) matrix element
+    for  (ia, csfa)  in  enumerate(aLevel.basis.csfs)
+        for  (ib, csfb)  in  enumerate(bLevel.basis.csfs)
+            wb  = ComplexF64(0.)
+            if  abs(aLevel.mc[ia] * bLevel.mc[ib]) > 1.0e-10
+                if  aLevel.basis.csfs[ia].parity  != bLevel.basis.csfs[ib].parity   error("stop b")    end 
+                subshellList = aLevel.basis.subshells
+                orbitals     = aLevel.basis.orbitals
+                opa = SpinAngular.OneParticleOperator(mp.L, plus, true)
+                wa  = SpinAngular.computeCoefficients(opa, aLevel.basis.csfs[ia], bLevel.basis.csfs[ib], subshellList)
+                for  coeff in wa
+                    ja   = Basics.subshell_2j(orbitals[coeff.a].subshell)
+                    jb   = Basics.subshell_2j(orbitals[coeff.b].subshell)
+                    if      mp == M1    tamp = InteractionStrength.hfs_t1(orbitals[coeff.a], orbitals[coeff.b], grid)
+                    elseif  mp == E2    tamp = InteractionStrength.hfs_t2(orbitals[coeff.a], orbitals[coeff.b], grid)
+                    else    error("stop b")    
+                    end 
+                    wb = wb + coeff.T * tamp
+                end
+            end 
+            me = me + aLevel.mc[ia] * bLevel.mc[ib] * wb    
+        end 
+    end 
+
+    return( me )
+end 
+
+
+"""
 `Hfs.computeInteractionMatrix(basis::Basis, grid::Radial.Grid, settings::Hfs.Settings)` 
     ... to compute the T^1 and/or T^2 interaction matrices for the given basis, i.e. (<csf_r || T^(n)) || csf_s>).
         An im::Hfs.InteractionMatrix is returned.

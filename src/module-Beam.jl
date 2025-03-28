@@ -297,7 +297,7 @@ function  redefineEnergy(energy::Float64, beam::AbstractBeamType)
         if  beam.kx != 0  ||   beam.ky != 0   error("stop a")   end
         newBeam = Beam.PlaneWave(0., 0., k)
     elseif  typeof(beam) == Beam.BesselBeam
-        kz = k * beam.openingAngle
+        kz = k * cos(beam.openingAngle)
         newBeam = Beam.BesselBeam( beam.mOAM, beam.openingAngle, kz)
     else    error("stop b")   
     end

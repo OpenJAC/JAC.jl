@@ -12,7 +12,7 @@ using  ..Basics, ..Radial, ..ManyElectron, ..Nuclear, ..PhotoEmission
 
 #== using  ..Einstein, ..Hfs, ..IsotopeShift, ..LandeZeeman, ..AlphaVariation, ..FormFactor, ..DecayYield,
        ..MultipolePolarizibility, ..PhotoIonization, ..PhotoExcitation, ..PhotoRecombination, 
-       ..AutoIonization, ..DoubleAutoIonization, ..Dielectronic, ..ImpactExcitation, ..CoulombExcitation, ..CoulombIonization,
+       ..AutoIonization, ..DoubleAutoIonization, ..DielectronicRecombination, ..ImpactExcitation, ..CoulombExcitation, ..CoulombIonization,
        ..PhotoDoubleIonization, ..PhotoExcitationFluores, ..PhotoExcitationAutoion, ..RayleighCompton, ..MultiPhotonDeExcitation,
        ..PhotoIonizationFluores, ..PhotoIonizationAutoion, ..ImpactExcitationAutoion, ..RadiativeAuger, 
        ..MultiPhotonIonization, ..MultiPhotonDoubleIon, ..InternalConversion  ==#
@@ -152,13 +152,13 @@ end
 # `Base.string(comp::Atomic.Computation)`  ... provides a String notation for the variable comp::Atomic.Computation.
 function Base.string(comp::Atomic.Computation)
     sa = "Atomic computation:    $(comp.name) for Z = $(comp.nuclearModel.Z), "
-    if  comp.processSettings != Nothing   sa = sa * "for the process (comp.process) and with the \ninitial configurations:    "
+    if  comp.processSettings != Nothing   sa = sa * "for the process (comp.process) and with the \n\ninitial configurations:       "
         for  config  in  comp.initialConfigs   sa = sa * string(config) * ",  "         end
         if  length(comp.intermediateConfigs) > 0
-            sa = sa * "\nintermediate configurations:"
-            for  config  in  comp.finalConfigs     sa = sa * string(config) * ",  "     end
+            sa = sa * "\nintermediate configurations:  "
+            for  config  in  comp.intermediateConfigs     sa = sa * string(config) * ",  "     end
         end
-        sa = sa * "\nfinal configurations:      "
+        sa = sa * "\nfinal configurations:         "
         for  config  in  comp.finalConfigs     sa = sa * string(config) * ",  "         end
     else                                sa = sa * "for the properties $(comp.properties) and with the \nconfigurations:        "
         for  config  in  comp.configs   sa = sa * string(config) * ",  "                end
@@ -169,7 +169,7 @@ end
 
 # `Base.show(io::IO, comp::Atomic.Computation)`  ... prepares a printout of comp::Atomic.Computation.
 function Base.show(io::IO, comp::Atomic.Computation)
-    sa = Base.string(comp);             print(io, sa, "\n")
+    sa = Base.string(comp);             print(io, sa, "\n\n")
     println(io, "nuclearModel:          $(comp.nuclearModel)  ")
     println(io, "grid:                  $(comp.grid)  ")
     #
