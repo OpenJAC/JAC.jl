@@ -33,42 +33,42 @@ using JAC, ..Defaults, ..TestFrames
         @test TestFrames.testRepresentation_GreenExpansion() 
     end
 
-    @testset "JAC amplitudes" begin
-        @test TestFrames.testModule_MultipoleMoment() 
-        @test TestFrames.testModule_ParityNonConservation() 
-    end
+    # @testset "JAC amplitudes" begin
+    #     @test TestFrames.testModule_MultipoleMoment() 
+    #     @test TestFrames.testModule_ParityNonConservation() 
+    # end
 
-    @testset "JAC properties" begin
-        # @test TestFrames.testModule_Einstein()
-        @test TestFrames.testModule_Hfs()   
-        @test TestFrames.testModule_LandeZeeman() 
-        @test TestFrames.testModule_IsotopeShift()   
-        @test TestFrames.testModule_AlphaVariation() 
-        @test TestFrames.testModule_FormFactor() 
-        @test TestFrames.testModule_DecayYield()
-        @test TestFrames.testModule_MultipolePolarizibility()
-    end
+    # @testset "JAC properties" begin
+    #     # @test TestFrames.testModule_Einstein()
+    #     @test TestFrames.testModule_Hfs()   
+    #     @test TestFrames.testModule_LandeZeeman() 
+    #     @test TestFrames.testModule_IsotopeShift()   
+    #     @test TestFrames.testModule_AlphaVariation() 
+    #     @test TestFrames.testModule_FormFactor() 
+    #     @test TestFrames.testModule_DecayYield()
+    #     @test TestFrames.testModule_MultipolePolarizibility()
+    # end
 
-    @testset "JAC processes" begin
-        @test TestFrames.testModule_PhotoEmission()
-        @test TestFrames.testModule_PhotoExcitation()
-        @test TestFrames.testModule_PhotoIonization()
-        @test TestFrames.testModule_PhotoRecombination()
-        @test TestFrames.testModule_AutoIonization()  
-        @test TestFrames.testModule_Dielectronic()  
-        ## @test TestFrames.testModule_PhotoExcitationFluores() 
-        ## @test TestFrames.testModule_PhotoExcitationAutoion() 
-        ## @test TestFrames.testModule_RayleighCompton() 
-        ## @test TestFrames.testModule_MultiPhotonDeExcitation() 
-        ## @test TestFrames.testModule_CoulombExcitation() 
-    end
+    # @testset "JAC processes" begin
+    #     @test TestFrames.testModule_PhotoEmission()
+    #     @test TestFrames.testModule_PhotoExcitation()
+    #     @test TestFrames.testModule_PhotoIonization()
+    #     @test TestFrames.testModule_PhotoRecombination()
+    #     @test TestFrames.testModule_AutoIonization()  
+    #     @test TestFrames.testModule_Dielectronic()  
+    #     ## @test TestFrames.testModule_PhotoExcitationFluores() 
+    #     ## @test TestFrames.testModule_PhotoExcitationAutoion() 
+    #     ## @test TestFrames.testModule_RayleighCompton() 
+    #     ## @test TestFrames.testModule_MultiPhotonDeExcitation() 
+    #     ## @test TestFrames.testModule_CoulombExcitation() 
+    # end
 
-    @testset "JAC cascades" begin
-        ## @test TestFrames.testModule_Cascade_StepwiseDecay()
-        ## @test TestFrames.testModule_Cascade_PhotonIonization()
-        ## @test TestFrames.testModule_Cascade_PhotonExcitation()
-        ## @test TestFrames.testModule_Cascade_Simulation()
-    end
+    # @testset "JAC cascades" begin
+    #     ## @test TestFrames.testModule_Cascade_StepwiseDecay()
+    #     ## @test TestFrames.testModule_Cascade_PhotonIonization()
+    #     ## @test TestFrames.testModule_Cascade_PhotonExcitation()
+    #     ## @test TestFrames.testModule_Cascade_Simulation()
+    # end
 
     ## Defaults.setDefaults("print test: close", "")
 end

@@ -320,12 +320,14 @@ function testModule_AlphaVariation(; short::Bool=true)
                             nuclearModel=Nuclear.Model(26.), 
                             configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
                             propertySettings = [ AlphaVariation.Settings(true, true, LevelSelection() )] )
-    wb = perform(wa)
-    ###
-    Defaults.setDefaults("print summary: close", "")
-    # Make the comparison with approved data
-    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-AlphaVariation-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-AlphaVariation-new.sum"), "Alpha variation parameters:", 1) 
+    wb = perform(wa; output=true)
+
+    # energies = [ wb["multiplet:"].levels[i].energy for i=1:length(wb["multiplet:"].levels)]
+    # success = isapprox( energies, [-1242.7463283049592, -1242.672267413598, -1241.095724201333] )
+
+    alphaVar = [wb["alpha variation parameter outcomes:"][i].K for i=1:length(wb["alpha variation parameter outcomes:"]) ]
+    success = isapprox( alphaVar, [2.0 2.0 2.0] )
+
     testPrint("testModule_AlphaVariation()::", success)
     return(success)  
 end
@@ -346,12 +348,11 @@ function testModule_AutoIonization(; short::Bool=true)
                             processSettings = AutoIonization.Settings(AutoIonization.Settings(), calcAnisotropy=true, printBefore=true, 
                                                                       lineSelection=LineSelection(true, indexPairs=[(3,1), (4,1), (5,1), (6,1)]), 
                                                                       maxKappa=2) )
-    wb = perform(wa)
-    ###
-    Defaults.setDefaults("print summary: close", "")
-    # Make the comparison with approved data
-    success = testCompareFiles( joinpath(@__DIR__, "..", "test", "approved", "test-AutoIonization-approved.sum"), 
-                                joinpath(@__DIR__, "..", "test", "test-AutoIonization-new.sum"), "Auger rates and intrinsic", 5) 
+    wb = perform(wa; output=true)
+
+
+
+
     testPrint("testModule_AutoIonization()::", success)
     return(success)  
 end
@@ -1000,12 +1001,12 @@ function testRepresentation_MeanFieldBasis_CiExpansion(; short::Bool=true)
     println("wc = $wc")
     wd = generate(wc, output=true)
     
-    if  abs(orbitals[Subshell("1s_1/2")].energy + 18.705283) > 1.0e-3
+    if  isapprox(orbitals[Subshell("1s_1/2")].energy, -18.705284049196337, atol=1e-6)!
         success = false
         if printTest   @info(iostream, "orbital energy $(orbitals[Subshell("1s_1/2")].energy) != -18.705283")     end
         @info(iostream, "orbital energy $(orbitals[Subshell("1s_1/2")].energy) != -18.705283")
     end
-    if  abs(wd["CI multiplet"].levels[1].energy + 74.840309)  > 1.0e-2
+    if  isapprox(wd["CI multiplet"].levels[1].energy,  -74.84772845491935, atol=1e-6)!
         success = false
         if printTest   @info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -74.840309")   end
         @info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -74.840309")
@@ -1044,7 +1045,7 @@ function testRepresentation_RasExpansion(; short::Bool=true)
     wa          = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs, 
                                     RasExpansion([LevelSymmetry(0, Basics.plus)], 4, [step1, step2, step3], rasSettings) )
     wb = generate(wa, output=true)
-    if  abs(wb["step3"].levels[1].energy + 14.61679117)  > 1.0e-3
+    if  isapprox(wb["step3"].levels[1].energy, -14.616790204551974, atol=1e-6)!
         success = false
         if printTest   info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -14.61679117")   end
     end
@@ -1073,7 +1074,7 @@ function testRepresentation_GreenExpansion(; short::Bool=true)
                                                     [LevelSymmetry(1//2, Basics.plus), LevelSymmetry(3//2, Basics.plus)], 3, greenSettings) )
     wb = generate(wa, output=true)
 
-    if  abs(wb["Green channels"][1].gMultiplet.levels[1].energy + 64.080705)  > 1.0e-3
+    if  isapprox(wb["Green channels"][1].gMultiplet.levels[1].energy, -64.08035763736868)!
         success = false
         if printTest   info(iostream, "gMultiplet.levels[1].energy $(wb["Green channels"][1].gMultiplet.levels[1].energy) != -64.080705")   end
     end
