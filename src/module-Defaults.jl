@@ -72,7 +72,7 @@ end
 # Global settings that can be (re-) defined by the user.
 GBL_FRAMEWORK                = "relativistic"
 GBL_CONT_POTENTIAL           = Basics.DFSField(0.42)
-GBL_CONT_SOLUTION            = BsplineGalerkin()         ###  ContBessel(), ContSine(), AsymptoticCoulomb(), NonrelativisticCoulomb(), BsplineGalerkin()
+GBL_CONT_SOLUTION            = SciML()         ###  ContBessel(), ContSine(), AsymptoticCoulomb(), NonrelativisticCoulomb(), BsplineGalerkin(), SciML()
 GBL_CONT_NORMALIZATION       = AlokNorm()                ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm(), AlokNorm()
 ##x GBL_CONT_NORMALIZATION       = PureSineNorm()            ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm()
 GBL_QED_HYDROGENIC_LAMBDAC   = [1.0,  1.0,  1.0,  1.0,  1.0]
@@ -394,6 +394,7 @@ function setDefaults(sa::String)
     elseif    sa == "method: continuum, asymptotic Coulomb"              GBL_CONT_SOLUTION       = AsymptoticCoulomb()  
     elseif    sa == "method: continuum, nonrelativistic Coulomb"         GBL_CONT_SOLUTION       = NonrelativisticCoulomb()  
     elseif    sa == "method: continuum, Galerkin"                        GBL_CONT_SOLUTION       = BsplineGalerkin()   
+    elseif    sa == "method: continuum, SciML"                           GBL_CONT_SOLUTION       = SciML()   
     elseif    sa == "method: normalization, pure sine"                   GBL_CONT_NORMALIZATION  = PureSineNorm()   
     elseif    sa == "method: normalization, pure Coulomb"                GBL_CONT_NORMALIZATION  = CoulombSineNorm()  
     elseif    sa == "method: normalization, Ong-Russek"                  GBL_CONT_NORMALIZATION  = OngRussekNorm()
