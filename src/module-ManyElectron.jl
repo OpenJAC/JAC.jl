@@ -1069,12 +1069,12 @@ end
 `struct  ManyElectron.Multiplet`  
     ... defines a type for an ordered list of atomic levels; has only the default constructor.
 
-        + name  	 ::String	        ... A name associated to the multiplet.
-        + levels	 ::Array{Level,1}   ... A list of levels (pointers).
+    + name  	 ::String	        ... A name associated to the multiplet.
+    + levels	 ::Array{Level,1}   ... A list of levels (pointers).
 """
 struct  Multiplet
-    name       ::String
-        levels  	 ::Array{Level,1}
+    name         ::String
+    levels  	 ::Array{Level,1}
 end 
 
 

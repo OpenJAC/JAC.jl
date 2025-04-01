@@ -535,7 +535,7 @@ end
 `AtomicState.GreenChannel()`  ... constructor for an `empty` instance of AtomicState.GreenChannel.
 """
 function GreenChannel()
-    GreenChannel( LevelSymmetry(0, Basics.plus), ManyElectron.Multiplet)
+    GreenChannel( LevelSymmetry(0, Basics.plus), ManyElectron.Multiplet() )
 end
 
 

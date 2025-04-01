@@ -1450,6 +1450,20 @@ end
         returned otherwise.
 """
 function  displayResults(stream::IO, pathways::Array{DielectronicRecombination.Pathway,1}, settings::DielectronicRecombination.Settings)
+    function  computeTotalRate(mLevel::Level)
+        tRate = EmProperty(0.);   captureRateAdded = false 
+        # Add all capture and photon rate for the given level
+        for  pathway in pathways
+            if  mLevel.index == pathway.intermediateLevel.index   
+                if  captureRateAdded              tRate = tRate + pathway.photonRate   
+                else   captureRateAdded = true;   tRate = tRate + pathway.captureRate + pathway.photonRate   
+                end
+            end
+        end
+        
+        return( tRate )
+    end
+    
     nx = 150
     println(stream, " ")
     println(stream, "  Partial (Auger) capture and radiative decay rates:")
@@ -1466,7 +1480,8 @@ function  displayResults(stream::IO, pathways::Array{DielectronicRecombination.P
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  pathway in pathways
-        sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
+        if  pathway.photonRate.Coulomb == 0.  &&   pathway.photonRate.Babushkin == 0.   continue    end
+        sa  = " ";      isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                         msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
                         fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
         sa = sa * TableStrings.center(23, TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
@@ -1491,7 +1506,7 @@ function  displayResults(stream::IO, pathways::Array{DielectronicRecombination.P
     #
     #
     #
-    nx = 137
+    nx = 170
     println(stream, " ")
     println(stream, "  Partial resonance strength:")
     println(stream, " ")
@@ -1503,11 +1518,14 @@ function  displayResults(stream::IO, pathways::Array{DielectronicRecombination.P
     sb = sb * TableStrings.center(38, "electron        m--i       photon  "; na=1)
     sa = sa * TableStrings.center(10, "Multipoles"; na=5);        sb = sb * TableStrings.hBlank(16)
     sa = sa * TableStrings.center(26, "S * Gamma_m  " * TableStrings.inUnits("reduced strength"); na=2);   
-    sb = sb * TableStrings.center(26, " Cou -- photon -- Bab";        na=2)
+    sb = sb * TableStrings.center(26, " Cou -- photon -- Bab";        na=5)
+    sa = sa * TableStrings.center(26, "   Width_m   " * TableStrings.inUnits("energy"); na=2);   
+    sb = sb * TableStrings.center(26, " Cou --  width  -- Bab";       na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  pathway in pathways
-        sa  = " ";     isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
+        if  pathway.reducedStrength.Coulomb == 0.  &&   pathway.reducedStrength.Babushkin == 0.     continue   end
+        sa  = " ";      isym = LevelSymmetry( pathway.initialLevel.J,      pathway.initialLevel.parity)
                         msym = LevelSymmetry( pathway.intermediateLevel.J, pathway.intermediateLevel.parity)
                         fsym = LevelSymmetry( pathway.finalLevel.J,        pathway.finalLevel.parity)
         sa = sa * TableStrings.center(23, TableStrings.levels_imf(pathway.initialLevel.index, pathway.intermediateLevel.index, 
@@ -1522,10 +1540,15 @@ function  displayResults(stream::IO, pathways::Array{DielectronicRecombination.P
             multipoles = push!( multipoles, pch.multipole)
         end
         multipoles = unique(multipoles);   mpString = TableStrings.multipoleList(multipoles)                          * "                   "
-        sa = sa * TableStrings.flushleft(16, mpString[1:15];  na=0)
+        sa = sa * TableStrings.flushleft(15, mpString[1:15];  na=0)
         wa = Defaults.convertUnits("strength: from atomic", 1.0) * Defaults.convertUnits("energy: from atomic", 1.0)
         sa = sa * @sprintf("%.4e", wa * pathway.reducedStrength.Coulomb)     * "     "
         sa = sa * @sprintf("%.4e", wa * pathway.reducedStrength.Babushkin)   * "     "
+        wb = computeTotalRate(pathway.intermediateLevel)
+        wa = Defaults.convertUnits("energy: from atomic", 1.0)
+        sa = sa * @sprintf("%.4e", wa * wb.Coulomb)     * "     "
+        sa = sa * @sprintf("%.4e", wa * wb.Babushkin)   * "     "
+        
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))
@@ -1562,7 +1585,7 @@ function  displayResults(stream::IO, resonances::Array{DielectronicRecombination
     #   
     for  resonance in resonances
         sa  = "";      isym = LevelSymmetry( resonance.initialLevel.J,      resonance.initialLevel.parity)
-                        msym = LevelSymmetry( resonance.intermediateLevel.J, resonance.intermediateLevel.parity)
+                       msym = LevelSymmetry( resonance.intermediateLevel.J, resonance.intermediateLevel.parity)
         sa = sa * TableStrings.center(18, TableStrings.levels_if(resonance.initialLevel.index, resonance.intermediateLevel.index); na=4)
         sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, msym);  na=4)
         sa = sa * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", resonance.resonanceEnergy))          * "      "

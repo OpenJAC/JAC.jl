@@ -5,7 +5,7 @@
 """
 module RayleighCompton
 
-using Printf, ..AngularMomentum, ..AtomicState, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..TableStrings
+using Printf, ..AngularMomentum, ..AtomicState, ..Basics, ..Defaults, ..ManyElectron, ..PhotoEmission, ..Radial, ..TableStrings
 
 
 """
@@ -183,9 +183,7 @@ end
 function  computeAmplitudesProperties(line::RayleighCompton.Line, grid::Radial.Grid, settings::RayleighCompton.Settings)
     newChannels = RayleighCompton.Channel[]
     for ch in line.channels
-        amplitude = ComplexF64(1.0)
-        ## amplitude = RayleighCompton.computeReducedAmplitude(ch.K, line.finalLevel, ch.multipole2, ch.omega2, ch.Jsym, ch.omega, 
-        ##                                                     ch.multipole1, ch.omega1, line.initialLevel, ch.gauge, grid, settings.green)
+        amplitude = RayleighCompton.computeChannelAmplitude(ch, line.finalLevel, line.initialLevel, grid, settings.green)
         push!( newChannels, RayleighCompton.Channel(ch.isS12, ch.Jsym, ch.multipole1, ch.multipole2, ch.gauge, ch.omega1, ch.omega2, amplitude) )
     end
     cs_Cou       = 0.;   cs_Bab = 0.
@@ -240,9 +238,22 @@ end
 """
 function  computeChannelAmplitude(channel::RayleighCompton.Channel, finalLevel::Level, initialLevel::Level, 
                                   grid::Radial.Grid, greenChannels::Array{AtomicState.GreenChannel,1})
-    function  computePoleInterval()
+    function  computePoleInterval(poleEnergy::Float64, lowerMid::Float64, lowerEnergy::Float64, midEnergy::Float64, 
+                                  upperEnergy::Float64, upperMid::Float64,
+                                  lowerNom::ComplexF64, lowerDenom::Float64, upperNom::ComplexF64, upperDenom::Float64)
         # Compute from the given parameters the contribution of the pole-interval
-        return( 0. )
+        wc = ComplexF64(0.);    deltaEnergies = [0.03]  ## , 0.05, 0.1, 0.03];   
+        for dE in deltaEnergies
+            wc = 0.
+            if      abs(poleEnergy - lowerEnergy) < dE    wc = wc + lowerNom / lowerDenom
+            else    wc = wc + abs(poleEnergy - lowerMid) / abs(midEnergy - lowerMid) * lowerNom / lowerDenom
+            end
+            if      abs(poleEnergy - upperEnergy) < dE    wc = wc + upperNom / upperDenom
+            else    wc = wc + abs(poleEnergy - upperMid) / abs(midEnergy - upperMid) * upperNom / upperDenom
+            end
+        end
+            
+        return( wc)
     end
     
     # Extract the proper Green channel, if available
@@ -256,49 +267,76 @@ function  computeChannelAmplitude(channel::RayleighCompton.Channel, finalLevel::
     
     # Extract whether the S_ik has a pole and, if yes, determine the index leftIdx of the resonance.
     # Analyse of whether there is a sign change in the denominator for the current and next function
-    hasPole = false;    leftIdx = 0
+    hasPole = false;    leftIdx = -99
     for  (ig, gLevel)  in  enumerate(gChannel.gMultiplet.levels)
+        ##x if channel.isS12    @show channel.isS12, ig, gLevel.energy, initialLevel.energy - gLevel.energy - channel.omega2   end
         if   ig == 1   continue
         elseif   channel.isS12   &&    sign(initialLevel.energy - gChannel.gMultiplet.levels[ig-1].energy - channel.omega2)  !=  
-                                       sign(initialLevel.energy - gLevel.energy - channel.omega2)   
+                                       sign(initialLevel.energy - gLevel.energy - channel.omega2)  
                                        hasPole = true;      leftIdx = ig - 1;   break                              # for S_12
         elseif  !(channel.isS12) &&    sign(initialLevel.energy - gChannel.gMultiplet.levels[ig-1].energy + channel.omega1)  !=  
                                        sign(initialLevel.energy - gLevel.energy + channel.omega1)   
                                        hasPole = true;      leftIdx = ig - 1;   break                              # for S_21
         end
     end
+    ## @show channel.isS12, gChannel.symmetry, h asPole, channel.omega1, channel.omega2
     
     # Extract relevant parameters to (later) compute the contribution of the pole-interval
-    if  hasPole      
+    if  hasPole
+        lowerEnergy = gChannel.gMultiplet.levels[leftIdx].energy
+        upperEnergy = gChannel.gMultiplet.levels[leftIdx+1].energy
+        midEnergy   = 0.5 * (upperEnergy + lowerEnergy)
+        if  leftIdx == 1   lowerMid = lowerEnergy - abs(midEnergy)   
+        else               lowerMid = 0.5* (gChannel.gMultiplet.levels[leftIdx].energy - gChannel.gMultiplet.levels[leftIdx-1].energy)
+        end 
+        if  leftIdx == length(gChannel.gMultiplet.levels) 
+                           upperMid = upperEnergy + abs(midEnergy)   
+        else               upperMid = 0.5* (gChannel.gMultiplet.levels[leftIdx+1].energy - gChannel.gMultiplet.levels[leftIdx].energy)
+        end
+        # Compute the pole energy
+        if  channel.isS12  poleEnergy = initialLevel.energy - channel.omega2
+        else               poleEnergy = initialLevel.energy + channel.omega1
+        end
+        #
+        @show channel.isS12, poleEnergy, lowerMid, lowerEnergy, midEnergy, upperEnergy, upperMid        
     end
         
     # Sum over all terms of the Green function channel; distinghuis between S_12 and S_21 integrals
-    amplitude  = 0.0im
+    amplitude  = 0.0im;   lowerNom = lowerDenom = upperNom = upperDenom = 0.
+    @show "  "
+    @show "  "
     for  (ig, gLevel)  in  enumerate(gChannel.gMultiplet.levels)
+        if   ig != 1   continue   end
         if   channel.isS12  # for S_12
-            leftMe  = PhotonEmission.amplitude()
-            rightMe = PhotonEmission.amplitude()
-            me      = leftMe * rightMe / (initialLevel.energy - gLevel.energy - channel.omega2)
+            leftMe  = PhotoEmission.amplitude("absorption", channel.multipole1, channel.gauge, channel.omega1, finalLevel, gLevel, grid, display=false)
+            rightMe = PhotoEmission.amplitude("absorption", channel.multipole2, channel.gauge, channel.omega2, gLevel, initialLevel, grid, display=false)
+            #
+            if        ig == leftIdx     lowerNom = leftMe * rightMe;   lowerDenom = (initialLevel.energy - gLevel.energy - channel.omega2);   me = 0.0im  
+            elseif    ig == leftIdx+1   upperNom = leftMe * rightMe;   upperDenom = (initialLevel.energy - gLevel.energy - channel.omega2);   me = 0.0im 
+            else                        me       = leftMe * rightMe / (initialLevel.energy - gLevel.energy - channel.omega2)
+                                        denominator = (initialLevel.energy - gLevel.energy - channel.omega2)
+            end
         else 
-            leftMe  = PhotonEmission.amplitude()
-            rightMe = PhotonEmission.amplitude()
-            me      = leftMe * rightMe / (initialLevel.energy - gLevel.energy + channel.omega1)
+            leftMe  = PhotoEmission.amplitude("absorption", channel.multipole2, channel.gauge, channel.omega2, finalLevel, gLevel, grid, display=false)
+            rightMe = PhotoEmission.amplitude("absorption", channel.multipole1, channel.gauge, channel.omega1, gLevel, initialLevel, grid, display=false)
+            #
+            if        ig == leftIdx     lowerNom = leftMe * rightMe;   lowerDenom = (initialLevel.energy - gLevel.energy + channel.omega1);   me = 0.0im  
+            elseif    ig == leftIdx+1   upperNom = leftMe * rightMe;   upperDenom = (initialLevel.energy - gLevel.energy + channel.omega1);   me = 0.0im 
+            else                        me       = leftMe * rightMe / (initialLevel.energy - gLevel.energy + channel.omega1)
+                                        denominator = (initialLevel.energy - gLevel.energy + channel.omega1)
+            end
         end
-        # Add this term properly if a pole arise
-        if      hasPole  &&  ig == leftIdx
-            # add 1/2 of this term + contribution from pole interval
-            amplitude = amplitude + 0.5 * me + computePoleInterval()
-        elseif  hasPole  &&  ig == leftIdx + 1
-            amplitude = amplitude + 0.5 * me   # add 1/2 of this term
-        else
-            amplitude = amplitude + 0.5 * me   # add full term
-        end
+        @show leftMe, rightMe, denominator
+        amplitude  = amplitude + me
+    end
+    @show hasPole, channel.isS12, channel.Jsym, amplitude
+    # Add the contribution from the pole region
+    if  hasPole   
+        amplitude = amplitude + computePoleInterval(poleEnergy, lowerMid, lowerEnergy, midEnergy, upperEnergy, upperMid,
+                                                    lowerNom, lowerDenom, upperNom, upperDenom)
     end
     
-    newChannel = RayleighCompton.Channel(channel.isS12, channel.Jsym, channel.multipole1, channel.multipole2 , channel.gauge, 
-                                         channel.omega1, channel.omega2, amplitude)
-    
-    return( newChannel )
+    return( amplitude )
 end
 
 
@@ -316,12 +354,13 @@ function determineChannels(finalLevel::Level, initialLevel::Level, inOmega::Floa
             for  symn in symmetries
                 for  gauge in settings.gauges
                     # Include further restrictions if appropriate
-                    if     string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseCoulomb
+                    if     (string(mp1)[1] == 'E' || string(mp2)[1] == 'E')  &&   gauge == Basics.UseCoulomb
                         push!(channels, Channel(true,  symn, mp1, mp2, Basics.Coulomb,   inOmega, outOmega, ComplexF64(0.)) ) 
                         push!(channels, Channel(false, symn, mp1, mp2, Basics.Coulomb,   inOmega, outOmega, ComplexF64(0.)) ) 
-                    elseif string(mp1)[1] == 'E' || string(mp2)[1] == 'E'  &&   gauge == Basics.UseBabushkin    
+                    elseif (string(mp1)[1] == 'E' || string(mp2)[1] == 'E')  &&   gauge == Basics.UseBabushkin    
                         push!(channels, Channel(true,  symn, mp1, mp2, Basics.Babushkin, inOmega, outOmega, ComplexF64(0.)) ) 
                         push!(channels, Channel(false, symn, mp1, mp2, Basics.Babushkin, inOmega, outOmega, ComplexF64(0.)) ) 
+                        ##x @show  gauge, Channel(true,  symn, mp1, mp2, Basics.Babushkin, inOmega, outOmega, ComplexF64(0.))
                     elseif string(mp1)[1] == 'M' && string(mp2)[1] == 'M'
                         push!(channels, Channel(true,  symn, mp1, mp2, Basics.Magnetic,  inOmega, outOmega, ComplexF64(0.)) ) 
                         push!(channels, Channel(false, symn, mp1, mp2, Basics.Magnetic,  inOmega, outOmega, ComplexF64(0.)) ) 
@@ -506,7 +545,7 @@ end
         transitions and energies is printed but nothing is returned otherwise.
 """
 function  displayLines(stream::IO, lines::Array{RayleighCompton.Line,1})
-    nx = 157
+    nx = 212
     println(stream, " ")
     println(stream, "  Selected Rayleigh-Compton scacttering lines and (reduced) channels:")
     println(stream, " ")
@@ -540,9 +579,9 @@ function  displayLines(stream::IO, lines::Array{RayleighCompton.Line,1})
             if channel.isS12   sd = "S12"   else   sd = "S21"  end
             push!( mpGaugeList, (sd, channel.multipole1, channel.Jsym, channel.multipole2, channel.gauge) )
         end
-        wa = TableStrings.twoPhotonGaugeTupels(60, mpGaugeList)
+        wa = TableStrings.twoPhotonGaugeTupels(120, mpGaugeList)
         if  length(wa) > 0    sb = sa * wa[1];    println( sb )    end  
-        for  i = 1:length(wa)
+        for  i = 2:length(wa)
             sb = TableStrings.hBlank( length(sa) );    sb = sb * wa[i];    println(stream, sb )
         end
     end
