@@ -1,2 +1,11 @@
-examples/
+# No to include the example folder anymore
+examples
+
+# Ignore this old outdated directory
 src/xold-aloka
+
+
+# Ignore the testrun outputs
+test/*.report
+test/*.sum
+test/*-bak
