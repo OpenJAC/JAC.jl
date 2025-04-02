@@ -369,11 +369,10 @@ function perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output:
         #  Write out the result to file to later continue with simulations on the cascade data
         if outputToFile
             filename = "zzz-cascade-decay-computations-" * string(Dates.now())[1:13] * ".jld"
-            println("\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
-                    "\n   results = JLD.load(''$filename'')    ... to load the results back from file.")
-            if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD.save(''$filename'', results) \n   using JLD " *
-                                                    "\n   results = JLD.load(''$filename'')    ... to load the results back from file." )      end      
-            ## JLD.save(filename, results)
+            println("\n* Write all results to disk; use:\n   JLD2.save(''$filename'', results) \n   using JLD2 " *
+                    "\n   results = JLD2.load(''$filename'')    ... to load the results back from file.")
+            if  printSummary   println(iostream, "\n* Write all results to disk; use:\n   JLD2.save(''$filename'', results) \n   using JLD2 " *
+                                                    "\n   results = JLD2.load(''$filename'')    ... to load the results back from file." )      end      
             JLD2.@save filename results
         end
     else    results = nothing

@@ -6,7 +6,7 @@
 module TestFrames
 
 
-using  Printf, SymEngine, JLD, JAC, 
+using  Printf, SymEngine, JLD2, JAC, 
        ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
 
 export testDummy
@@ -444,7 +444,7 @@ function testModule_Cascade_Simulation(; short::Bool=true)
     printstyled("\n\nTest the module  Cascade for Simulations ... \n", color=:cyan)
     ### Make the tests
     datafile = joinpath(@__DIR__, "..", "test", "approved", "test-Cascade-StepwiseDecay-data.jld")
-    data = [JLD.load(datafile)]
+    data = [JLD2.load(datafile)]
     name = "Simulation of the neon 1s^-1 3p decay"
 
     wc   = Cascade.Simulation(Cascade.Simulation(), name=name, property=Cascade.IonDistribution(), 
