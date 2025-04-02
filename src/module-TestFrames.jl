@@ -223,22 +223,22 @@ function testMethod_integrate_ongrid(; short::Bool=true)
     integrand = integrand .* grid.rp[1:size(integrand, 1)]   # adopt to the form of Grasp92
 
     integral  = Basic.integrate("function: on radial grid, Newton-Cotes", integrand, grid)
-    err = abs(integral - exact1)
-    if  abs(err) > 1.0e-12
+    # err = abs(integral - exact1)
+    if  isapprox(integral, exact1, atol=1.0e-12)!
         success = false
         if printTest   info(iostream, "... Newton-Cotes:  I = $integral,  Err = $err")  end
     end
 
     integral  = Basic.integrate("function: on radial grid, Simpson rule", integrand, grid)
-    err = abs(integral - exact1)
-    if  abs(err) > 1.0e-12
+    # err = abs(integral - exact1)
+    if  isapprox(integral, exact1, atol=1.0e-12)!
         success = false
         if printTest   info(iostream, "... Simpson rule:  I = $integral,  Err = $err")  end
     end
 
     integral  = Basic.integrate("function: on radial grid, trapez rule", integrand, grid)
-    err = abs(integral - exact1)
-    if  abs(err) > 1.0e-12
+    # err = abs(integral - exact1)
+    if  isapprox(integral, exact1, atol=1.0e-12)!
         success = false
         if printTest   info(iostream, "... trapez rule:  I = $integral,  Err = $err")  end
     end
@@ -307,6 +307,121 @@ function testMethod_Wigner_3j(; short::Bool=true)
     return(success)  
 end
 
+
+#===========================================================================================================================
+                                        Test JAC Respresentations
+===========================================================================================================================#
+"""
+`TestFrames.testRepresentation_MeanFieldBasis_CiExpansion(; short::Bool=true)`  ... tests on the representation .
+"""
+function testRepresentation_MeanFieldBasis_CiExpansion(; short::Bool=true) 
+    success = true
+    printTest, iostream = Defaults.getDefaults("test flag/stream")
+
+    name        = "Oxygen 1s^2 2s^2 2p^4 ground configuration"
+    refConfigs  = [Configuration("[He] 2s^2 2p^4")]
+    mfSettings  = MeanFieldSettings()
+    #
+    wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, MeanFieldBasis(mfSettings) )
+    wb = generate(wa, output=true)
+    #
+    orbitals    = wb["mean-field basis"].orbitals
+    ciSettings  = CiSettings(CoulombInteraction(), LevelSelection() )
+    from        = [Shell("2s")]
+    #
+    frozen      = [Shell("1s")]
+    to          = [Shell("2s"), Shell("2p")]
+    excitations = RasStep()
+    #             RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
+    #
+    wc          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
+                                    CiExpansion(orbitals, excitations, ciSettings) )
+    println("wc = $wc")
+    wd = generate(wc, output=true)
+    
+    if  !isapprox(orbitals[Subshell("1s_1/2")].energy, -18.705284049196337, atol=1e-6)
+        success = false
+        if printTest   @info(iostream, "orbital energy $(orbitals[Subshell("1s_1/2")].energy) != -18.705284049196337")     end
+        @info(iostream, "orbital energy $(orbitals[Subshell("1s_1/2")].energy) != -18.705284049196337")
+    end
+    if  !isapprox(wd["CI multiplet"].levels[1].energy,  -74.84772845491935, atol=1e-6)!
+        success = false
+        if printTest   @info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -74.840309")   end
+        @info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -74.840309")
+    end
+
+    testPrint("testRepresentation_MeanFieldBasis_CiExpansion()::", success)
+    return(success)  
+end
+
+
+
+"""
+`TestFrames.testRepresentation_RasExpansion(; short::Bool=true)`  ... tests on the representation .
+"""
+function testRepresentation_RasExpansion(; short::Bool=true) 
+    success = true
+    printTest, iostream = Defaults.getDefaults("test flag/stream")
+    
+    name        = "Beryllium 1s^2 2s^2 ^1S_0 ground state"
+    refConfigs  = [Configuration("[He] 2s^2")]
+    rasSettings = RasSettings([1], 24, 1.0e-6, CoulombInteraction(), LevelSelection(true, indices=[1,2,3]) )
+    from        = [Shell("2s")]
+    #
+    frozen      = [Shell("1s")]
+    to          = [Shell("2s"), Shell("2p")]
+    step1       = RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
+    #
+    append!(frozen, [Shell("2s"), Shell("2p")])
+    append!(to,     [Shell("3s"), Shell("3p"), Shell("3d")])
+    step2       = RasStep(step1; seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
+    #
+    append!(frozen, [Shell("3s"), Shell("3p"), Shell("3d")])
+    append!(to,     [Shell("4s"), Shell("4p"), Shell("4d"), Shell("4f")])
+    step3       = RasStep(step2, seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
+    #
+    wa          = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs, 
+                                    RasExpansion([LevelSymmetry(0, Basics.plus)], 4, [step1, step2, step3], rasSettings) )
+    wb = generate(wa, output=true)
+    if  !isapprox(wb["step3"].levels[1].energy, -14.616790204551974, atol=1e-6)
+        success = false
+        if printTest   info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -14.61679117")   end
+    end
+
+    testPrint("testRepresentation_RasExpansion()::", success)
+    return(success)  
+end
+
+
+
+"""
+`TestFrames.testRepresentation_GreenExpansion(; short::Bool=true)`  ... tests on the representation .
+"""
+function testRepresentation_GreenExpansion(; short::Bool=true) 
+    success = true
+    printTest, iostream = Defaults.getDefaults("test flag/stream")
+    
+    name          = "Lithium 1s^2 2s ground configuration"
+    refConfigs    = [Configuration("[He] 2s")]
+    greenSettings = GreenSettings(5, [0, 1, 2], 0.01, true, LevelSelection() )
+    #
+    wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
+                                    ## GreenExpansion( AtomicState.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(), 
+                                    ## GreenExpansion( AtomicState.CoreSpaceCI(), Basics.DeExciteSingleElectron(), 
+                                    GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), 
+                                                    [LevelSymmetry(1//2, Basics.plus), LevelSymmetry(3//2, Basics.plus)], 3, greenSettings) )
+    wb = generate(wa, output=true)
+
+    if  !isapprox(wb["Green channels"][1].gMultiplet.levels[1].energy, -64.08035763736868, atol=1e-6)
+        success = false
+        if printTest   info(iostream, "gMultiplet.levels[1].energy $(wb["Green channels"][1].gMultiplet.levels[1].energy) != -64.080705")   end
+    end
+
+    testPrint("testRepresentation_GreenExpansion()::", success)
+    return(success)  
+end
+
+end # module
 
 
 """
@@ -972,115 +1087,3 @@ function testModule_RayleighCompton(; short::Bool=true)
 end
 
 
-
-"""
-`TestFrames.testRepresentation_MeanFieldBasis_CiExpansion(; short::Bool=true)`  ... tests on the representation .
-"""
-function testRepresentation_MeanFieldBasis_CiExpansion(; short::Bool=true) 
-    success = true
-    printTest, iostream = Defaults.getDefaults("test flag/stream")
-
-    name        = "Oxygen 1s^2 2s^2 2p^4 ground configuration"
-    refConfigs  = [Configuration("[He] 2s^2 2p^4")]
-    mfSettings  = MeanFieldSettings()
-    #
-    wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, MeanFieldBasis(mfSettings) )
-    wb = generate(wa, output=true)
-    #
-    orbitals    = wb["mean-field basis"].orbitals
-    ciSettings  = CiSettings(CoulombInteraction(), LevelSelection() )
-    from        = [Shell("2s")]
-    #
-    frozen      = [Shell("1s")]
-    to          = [Shell("2s"), Shell("2p")]
-    excitations = RasStep()
-    #             RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
-    #
-    wc          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
-                                    CiExpansion(orbitals, excitations, ciSettings) )
-    println("wc = $wc")
-    wd = generate(wc, output=true)
-    
-    if  isapprox(orbitals[Subshell("1s_1/2")].energy, -18.705284049196337, atol=1e-6)!
-        success = false
-        if printTest   @info(iostream, "orbital energy $(orbitals[Subshell("1s_1/2")].energy) != -18.705283")     end
-        @info(iostream, "orbital energy $(orbitals[Subshell("1s_1/2")].energy) != -18.705283")
-    end
-    if  isapprox(wd["CI multiplet"].levels[1].energy,  -74.84772845491935, atol=1e-6)!
-        success = false
-        if printTest   @info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -74.840309")   end
-        @info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -74.840309")
-    end
-
-    testPrint("testRepresentation_MeanFieldBasis_CiExpansion()::", success)
-    return(success)  
-end
-
-
-
-"""
-`TestFrames.testRepresentation_RasExpansion(; short::Bool=true)`  ... tests on the representation .
-"""
-function testRepresentation_RasExpansion(; short::Bool=true) 
-    success = true
-    printTest, iostream = Defaults.getDefaults("test flag/stream")
-    
-    name        = "Beryllium 1s^2 2s^2 ^1S_0 ground state"
-    refConfigs  = [Configuration("[He] 2s^2")]
-    rasSettings = RasSettings([1], 24, 1.0e-6, CoulombInteraction(), LevelSelection(true, indices=[1,2,3]) )
-    from        = [Shell("2s")]
-    #
-    frozen      = [Shell("1s")]
-    to          = [Shell("2s"), Shell("2p")]
-    step1       = RasStep(RasStep(), seFrom=from, seTo=deepcopy(to), deFrom=from, deTo=deepcopy(to), frozen=deepcopy(frozen))
-    #
-    append!(frozen, [Shell("2s"), Shell("2p")])
-    append!(to,     [Shell("3s"), Shell("3p"), Shell("3d")])
-    step2       = RasStep(step1; seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
-    #
-    append!(frozen, [Shell("3s"), Shell("3p"), Shell("3d")])
-    append!(to,     [Shell("4s"), Shell("4p"), Shell("4d"), Shell("4f")])
-    step3       = RasStep(step2, seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
-    #
-    wa          = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs, 
-                                    RasExpansion([LevelSymmetry(0, Basics.plus)], 4, [step1, step2, step3], rasSettings) )
-    wb = generate(wa, output=true)
-    if  isapprox(wb["step3"].levels[1].energy, -14.616790204551974, atol=1e-6)!
-        success = false
-        if printTest   info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -14.61679117")   end
-    end
-
-    testPrint("testRepresentation_RasExpansion()::", success)
-    return(success)  
-end
-
-
-
-"""
-`TestFrames.testRepresentation_GreenExpansion(; short::Bool=true)`  ... tests on the representation .
-"""
-function testRepresentation_GreenExpansion(; short::Bool=true) 
-    success = true
-    printTest, iostream = Defaults.getDefaults("test flag/stream")
-    
-    name          = "Lithium 1s^2 2s ground configuration"
-    refConfigs    = [Configuration("[He] 2s")]
-    greenSettings = GreenSettings(5, [0, 1, 2], 0.01, true, LevelSelection() )
-    #
-    wa          = Representation(name, Nuclear.Model(8.), Radial.Grid(true), refConfigs, 
-                                    ## GreenExpansion( AtomicState.SingleCSFwithoutCI(), Basics.DeExciteSingleElectron(), 
-                                    ## GreenExpansion( AtomicState.CoreSpaceCI(), Basics.DeExciteSingleElectron(), 
-                                    GreenExpansion( AtomicState.DampedSpaceCI(), Basics.DeExciteSingleElectron(), 
-                                                    [LevelSymmetry(1//2, Basics.plus), LevelSymmetry(3//2, Basics.plus)], 3, greenSettings) )
-    wb = generate(wa, output=true)
-
-    if  isapprox(wb["Green channels"][1].gMultiplet.levels[1].energy, -64.08035763736868)!
-        success = false
-        if printTest   info(iostream, "gMultiplet.levels[1].energy $(wb["Green channels"][1].gMultiplet.levels[1].energy) != -64.080705")   end
-    end
-
-    testPrint("testRepresentation_GreenExpansion()::", success)
-    return(success)  
-end
-
-end # module

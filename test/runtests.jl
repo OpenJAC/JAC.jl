@@ -29,8 +29,8 @@ using JAC, ..Defaults, ..TestFrames
 
     @testset "JAC representations" begin
         @test TestFrames.testRepresentation_MeanFieldBasis_CiExpansion() 
-        @test TestFrames.testRepresentation_RasExpansion() 
-        @test TestFrames.testRepresentation_GreenExpansion() 
+        @test TestFrames.testRepresentation_RasExpansion()                  #broken=true
+        @test TestFrames.testRepresentation_GreenExpansion()                #broken=true
     end
 
     # @testset "JAC amplitudes" begin
