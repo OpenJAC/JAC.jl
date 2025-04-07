@@ -38,12 +38,13 @@ function Basics.generate(repType::AtomicState.MeanFieldBasis, rep::AtomicState.R
     # The asfSettings only define the SCF part and are partly derived from the MeanFieldSettings
     asfSettings = AsfSettings(AsfSettings(); scField=repType.settings.scField) 
     
-    basis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    ##x basis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    multiplet      = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    basis          = multiplet.levels[1].basis
     if output    results = Base.merge( results, Dict("mean-field basis" => basis) )          end
     
     return( results )
 end
-
 
 
 """
@@ -62,10 +63,11 @@ function Basics.generate(repType::AtomicState.MeanFieldMultiplet, rep::AtomicSta
     # The asfSettings only define the SCF part and are partly derived from the MeanFieldSettings
     asfSettings = AsfSettings(AsfSettings(); scField=repType.settings.scField) 
     
-    basis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
-    multiplet  = Basics.performCI(basis, nModel, rep.grid, asfSettings; printout=true)
+    ##x basis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    ##x multiplet  = Basics.performCI(basis, nModel, rep.grid, asfSettings; printout=true)
+    multiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     if output    
-        results = Base.merge( results, Dict("mean-field basis" => basis) )          
+        results = Base.merge( results, Dict("mean-field basis" => multiplet.level[1].basis) )          
         results = Base.merge( results, Dict("mean-field multiplet" => multiplet) )          
     end
     
@@ -91,9 +93,11 @@ function Basics.generate(repType::AtomicState.OneElectronSpectrum, rep::AtomicSt
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
     asfSettings   = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
                                     ## all further details are specified for each step
-    refBasis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    ##x refBasis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    ##x refMultiplet  = Basics.performCI(refBasis, nModel, rep.grid, asfSettings; printout=true)
+    refMultiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    refBasis      = refMultiplet.levels[1].basis
     Basics.display(stdout, refBasis.orbitals, rep.grid; longTable=false)
-    refMultiplet  = Basics.performCI(refBasis, nModel, rep.grid, asfSettings; printout=true)
     nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
     @warn("The potential is generated for the mean-field basis but not (yetc hosen for the selected levels.")
     electronicPot = Basics.compute("radial potential: Dirac-Fock-Slater", rep.grid, refBasis)
@@ -142,13 +146,13 @@ function Basics.generate(repType::AtomicState.CiExpansion, rep::AtomicState.Repr
     # Generate a list of relativistic configurations and  CSF's for the given subshell list
     relconfList = ConfigurationR[]
     for  conf in rep.refConfigs
-        wa = Basics.generate("configuration list: relativistic", conf)
+        wa = Basics.generateConfigurationRs(conf)
         append!( relconfList, wa)
     end
-    subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+    subshellList = Basics.generateSubshellList(relconfList)
     csfList = CsfR[]
     for  relconf in relconfList
-        newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
+        newCsfs = Basics.generateCsfRs(relconf, subshellList)
         append!( csfList, newCsfs)
     end
     
@@ -198,8 +202,9 @@ function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Rep
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
     asfSettings    = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
                                     ## all further details are specified for each step
-    priorBasis     = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
-    priorMultiplet = Basics.performCI(priorBasis, nModel, rep.grid, asfSettings; printout=true)
+    ##x priorBasis     = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    ##x priorMultiplet = Basics.performCI(priorBasis, nModel, rep.grid, asfSettings; printout=true)
+    priorMultiplet = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     nuclearPot     = Nuclear.nuclearPotential(nModel, rep.grid)
     ## electronicPot  = Basics.compute("radial potential: Dirac-Fock-Slater", rep.grid, priorMultiplet.levels[1].basis)
     ## meanPot        = Basics.add(nuclearPot, electronicPot)
@@ -219,8 +224,8 @@ function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Rep
         basis      = Basics.generateBasis(rep.refConfigs, repType.symmetries, step)
         orbitals   = Basics.generateOrbitalsForBasis(basis, step.frozenShells, priorMultiplet.levels[1].basis, startOrbitals)
         basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )  
-        basis      = Basics.performSCF(basis, nModel, rep.grid, step.frozenShells, repType.settings; printout=true)
-        multiplet  = Basics.performCI(basis,  nModel, rep.grid, asfSettings; printout=true) 
+        ## basis      = Basics.performSCF(basis, nModel, rep.grid, step.frozenShells, repType.settings; printout=true)
+        ## multiplet  = Basics.performCI(basis,  nModel, rep.grid, asfSettings; printout=true) 
         if output    results = Base.merge( results, Dict("step"*string(istep) => Multiplet("Multiplet:", multiplet.levels)) )              end
         priorMultiplet = multiplet
     end
@@ -247,8 +252,9 @@ function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.R
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
     asfSettings   = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
                                     ## all further details are specified for each step
-    refBasis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
-    refMultiplet  = Basics.performCI(refBasis, nModel, rep.grid, asfSettings; printout=true)
+    ##x refBasis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    ##x refMultiplet  = Basics.performCI(refBasis, nModel, rep.grid, asfSettings; printout=true)
+    refMultiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
     electronicPot = Basics.computePotential(Basics.DFSField(), rep.grid, refBasis)
     meanPot       = Basics.add(nuclearPot, electronicPot)
@@ -421,6 +427,44 @@ end
 
 
 """
+`Basics.generateConfigurationRs(conf::Configuration)`  
+    ... to split/decompose a non-relativistic configuration into an list of relativistic ConfigurationR[]. The proper 
+        occupuation of the relativistic subshells is taken into account.
+"""
+function Basics.generateConfigurationRs(conf::Configuration)
+    subshellList = Subshell[]
+    confList     = ConfigurationR[]
+
+    initialize = true;    NoElectrons = 0
+    for (k, occ)  in conf.shells
+        NoElectrons     = NoElectrons + occ
+        wa              = Basics.shellSplitOccupation(k, occ)
+        subshellListNew = Dict{Subshell,Int64}[]
+
+        if  initialize
+            subshellListNew = wa;    initialize = false
+        else
+            for  s in 1:length(subshellList)
+                for  a in 1:length(wa)
+                    wb = Base.merge( subshellList[s], wa[a] )
+                    push!(subshellListNew, wb)
+                end
+            end
+        end
+        subshellList = deepcopy(subshellListNew)
+    end
+    
+    for subsh in subshellList
+    wa = ConfigurationR(subsh, NoElectrons)
+    push!(confList, wa)
+    end
+
+    return( confList )
+end
+
+
+#==
+"""
 `Basics.generate("configuration list: relativistic", conf::Configuration)`  
     ... to split/decompose a non-relativistic configuration into an list of relativistic ConfigurationR[]. The proper 
         occupuation of the relativistic subshells is taken into account.
@@ -456,9 +500,55 @@ function Basics.generate(sa::String, conf::Configuration)
     end
 
     return( confList )
+end  ==#
+
+
+"""
+`Basics.generateCsfRs(conf::ConfigurationR, subshellList::Array{Subshell,1})` 
+    ... to construct from a given (relativistic) configuration all possible CSF with regard to the subshell order as specified 
+        by subshellList; a list::Array{CsfR,1} is returned.
+"""
+function Basics.generateCsfRs(conf::ConfigurationR, subshellList::Array{Subshell,1})
+    parity  = Basics.determineParity(conf)
+    csfList = CsfR[];   useStandardSubshells = true;    first = true;    previousCsfs = CsfR[]
+    # subhshellList = Subshell[];   
+    for  subsh in subshellList
+        if   subsh in keys(conf.subshells)    occ = conf.subshells[subsh]    else    occ = 0    end
+        if   first
+            stateList   = ManyElectron.provideSubshellStates(subsh, occ)
+            currentCsfs = CsfR[]
+            for  state in stateList
+                push!( currentCsfs, CsfR( true, AngularJ64(state.Jsub2//2), parity, [state.occ], [state.nu],
+                                            [AngularJ64(state.Jsub2//2)], [AngularJ64(state.Jsub2//2)], Subshell[]) )
+            end
+            previousCsfs = copy(currentCsfs)
+            first        = false
+        else
+            # Now support also all couplings of the subshell states with the CSFs that were built-up so far
+            stateList   = ManyElectron.provideSubshellStates(subsh, occ)
+            currentCsfs = CsfR[]
+            for  csf in  previousCsfs
+                for  state in stateList
+                    occupation = deepcopy(csf.occupation);    seniorityNr = deepcopy(csf.seniorityNr);    
+                    subshellJ  = deepcopy(csf.subshellJ);     subshells = deepcopy(csf.subshells)
+                    push!(occupation, state.occ);   push!(seniorityNr, state.nu);   push!(subshellJ, AngularJ64(state.Jsub2//2) ) 
+                    push!(subshells, subsh)
+                    newXList = oplus( csf.subshellX[end], AngularJ64(state.Jsub2//2) )
+                    for  newX in newXList
+                        subshellX = deepcopy(csf.subshellX);   push!(subshellX, newX) 
+                        push!( currentCsfs, CsfR( true, subshellX[end], parity, occupation, seniorityNr, subshellJ, subshellX, Subshell[]) ) 
+                    end
+                end
+            end
+            previousCsfs = copy(currentCsfs)
+        end
+    end
+    
+    return( previousCsfs )
 end
 
 
+#==
 """
 `Basics.generate("CSF list: from single ConfigurationR", conf::ConfigurationR, subshellList::Array{Subshell,1})` 
     ... to construct from a given (relativistic) configuration all possible CSF with regard to the subshell order as specified 
@@ -501,7 +591,8 @@ function Basics.generate(sa::String, conf::ConfigurationR, subshellList::Array{S
     end
     
     return( previousCsfs )
-end
+end  ==#
+    
 
 
 """
@@ -527,6 +618,25 @@ function Basics.generate(sa::String, confs::Array{Configuration,1})
 end
 
 
+"""
+`Basics.generateSubshellList(confs::Array{ConfigurationR,1})`  
+    ... to generate for confs, i.e. all the given (relativistic) configurations, common and ordered subshell list; 
+        a list::Array{Subshell,1} is returned.
+"""
+function Basics.generateSubshellList(confs::Array{ConfigurationR,1})
+    subshells = Subshell[]   
+
+    for  conf in confs
+        for  subsh in keys(conf.subshells)      push!(subshells, subsh)     end
+    end
+    subshells = Base.unique(subshells)
+    subshells = Base.sort( subshells, lt=Base.isless)
+
+    return( subshells )
+end
+
+
+#==
 """
 `Basics.generate("subshells: ordered list for relativistic configurations", confs::Array{ConfigurationR,1})`  
     ... to generate for confs, i.e. all the given (relativistic) configurations, common and ordered subshell list; 
@@ -557,7 +667,7 @@ function Basics.generate(sa::String, confs::Array{ConfigurationR,1})
     end ==#
 
     return( subshells )
-end
+end  ==#
 
 
 """
@@ -656,16 +766,16 @@ function Basics.generateBasis(confList::Array{Configuration,1}, symmetries::Arra
     #
     relconfList = ConfigurationR[]
     for  conf in confList
-        wa = Basics.generate("configuration list: relativistic", conf)
+        wa = Basics.generateConfigurationRs(conf)
         append!( relconfList, wa)
     end
-    subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+    subshellList = Basics.generateSubshellList(relconfList)
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
 
     # Generate the relativistic CSF's for the given subshell list
     csfList = CsfR[]
     for  relconf in relconfList
-        newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
+        newCsfs = Basics.generateCsfRs(relconf, subshellList)
         for  csf in newCsfs     if  LevelSymmetry(csf.J, csf.parity) in symmetries   push!(csfList, csf)   end   end
     end
     #
@@ -734,16 +844,16 @@ function Basics.generateBasis(refConfigs::Array{Configuration,1}, symmetries::Ar
     #
     relconfList = ConfigurationR[]
     for  conf in confList
-        wa = Basics.generate("configuration list: relativistic", conf)
+        wa = Basics.generateConfigurationRs(conf)
         append!( relconfList, wa)
     end
-    subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+    subshellList = Basics.generateSubshellList(relconfList)
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
 
     # Generate the relativistic CSF's for the given subshell list
     csfList = CsfR[]
     for  relconf in relconfList
-        newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
+        newCsfs = Basics.generateCsfRs(relconf, subshellList)
         for  csf in newCsfs     if  LevelSymmetry(csf.J, csf.parity) in symmetries   push!(csfList, csf)   end   end
     end
 

@@ -84,22 +84,25 @@ end
 
 
 """
-`Empirical.perform(computation::Empirical.Computation)`  
+`Basics.perform(computation::Empirical.Computation)`  
     ... to set-up and perform an empirical computation that starts from a given nuclear model and set of configurations,
         and which is mainly controlled by its settings. The results are printed to screen but nothing is returned otherwise.
 
-`Empirical.perform(computation::Empirical.Computation; output=true)`  
+`Basics.perform(computation::Empirical.Computation; output=true)`  
     ... to perform the same but to return the complete output in a dictionary;  the particular output depends on the kind
         and specifications of the empirical computation but can easily accessed by the keys of this dictionary.
 """
-function perform(computation::Empirical.Computation; output::Bool=false)
+function Basics.perform(computation::Empirical.Computation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     nm          = computation.nuclearModel
     asfSettings = AsfSettings()
     
     if typeof(computation.settings)  in  [ImpactIonization.Settings]
         # Generate an SCF basis for the given configurations to extract the one-particle energies for all shells
-        basis  = Basics.performSCF(computation.configs, nm, computation.grid, asfSettings)
+        ##x basis  = Basics.performSCF(computation.configs, nm, computation.grid, asfSettings)
+        multiplet  = SelfConsistent.performSCF(computation.configs, nm, computation.grid, asfSettings)
+        basis      = multiplet.levels[1].basis
+        
     else
         error("stop a")
     end

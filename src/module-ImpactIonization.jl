@@ -452,7 +452,9 @@ function  computeCrossSections(model::DirectMultipleModel, cs::ImpactIonization.
         for  N = 1:multipleN
             newConfs  = Basics.generateConfigurationsWithElectronLoss(confs::Array{Configuration,1}, [valenceShell])
             @show confs
-            newBasis  = Basics.performSCF(newConfs, nm, grid, ManyElectron.AsfSettings() );   @show newBasis.subshells
+            ##x newBasis  = Basics.performSCF(newConfs, nm, grid, ManyElectron.AsfSettings() );   @show newBasis.subshells
+            multipletX    = SelfConsistent.performSCF(computation.configs, nm, computation.grid, asfSettings)
+            newBasis      = multipletX.levels[1].basis
             push!(newBases, newBasis)
             #
             confs        = Basics.extractNonrelativisticConfigurations(newBasis);   @show confs

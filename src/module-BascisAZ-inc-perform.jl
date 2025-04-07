@@ -1,6 +1,8 @@
 
 export  perform
 
+#== 7Apr25
+
 """
 `Basics.perform(computation::Atomic.Computation)`  
     ... to perform the computation as prescribed by comp. All relevant intermediate and final results are printed to screen (stdout). 
@@ -212,10 +214,11 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
     Defaults.warn(PrintWarnings())
     Defaults.warn(ResetWarnings())
     return( results )
-end
+end  ==#
 
 
 
+#== 6Apr2025
 """
 `Basics.perform(comp::Empirical.Computation)`  
     ... to set-up and perform an empirical computation that starts from a given nuclear model and set of configurations,
@@ -227,10 +230,11 @@ end
 """
 function Basics.perform(comp::Empirical.Computation; output::Bool=false)
     Empirical.perform(comp::Empirical.Computation, output=output)
-end
+end ==#
 
 
 
+#== 6Apr2025
 """
 `Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", configs::Array{Configuration,1}, 
                 initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)` 
@@ -242,7 +246,7 @@ function Basics.perform(sa::String, configs::Array{Configuration,1}, initalOrbit
     !(sa == "computation: mutiplet from orbitals, no CI, CSF diagonal")   &&   error("Unsupported keystring = $sa")
     return( Basics.performCI(configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
                                 grid::Radial.Grid, settings::AsfSettings; printout=printout) )
-end
+end ==#
 
 
 #== 17Jul2024
@@ -262,6 +266,7 @@ end   ==#
                 
 
 
+#== 7Apr25
 """
 `Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings;
                     printout::Bool=true)`  
@@ -275,17 +280,17 @@ function Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclea
     # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
     relconfList = ConfigurationR[]
     for  conf in configs
-        wa = Basics.generate("configuration list: relativistic", conf)
+        wa = Basics.generateConfigurationRs(conf)
         append!( relconfList, wa)
     end
     if  printout    for  i = 1:length(relconfList)    println(">> include ", relconfList[i])    end   end
-    subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+    subshellList = Basics.generateSubshellList(relconfList)
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
 
     # Generate the relativistic CSF's for the given subshell list
     csfList = CsfR[]
     for  relconf in relconfList
-        newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
+        newCsfs = Basics.generateCsfRs(relconf, subshellList)
         append!( csfList, newCsfs)
     end
 
@@ -340,10 +345,11 @@ function Basics.performSCF(configs::Array{Configuration,1}, nuclearModel::Nuclea
     end
     
     return( basis )  
-end
+end  ==#
                 
 
 
+#== 7Apr25
 """
 `Basics.performSCF(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, frozenShells::Array{Shell,1}, 
                     settings::AtomicState.RasSettings; printout::Bool=true)`  
@@ -371,9 +377,10 @@ function Basics.performSCF(basis::Basis, nuclearModel::Nuclear.Model, grid::Radi
     basis = Bsplines.solveSelfConsistentMeanField(wa, nuclearModel, basis, asfSettings; printout=printout) 
     
     return( basis )  
-end
+end  ==#
 
 
+#== 7Apr25
 """
 `Basics.performCI(configs::Array{Configuration,1}, initalOrbitals::Dict{Subshell, Orbital}, nuclearModel::Nuclear.Model, 
                     grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)` 
@@ -389,17 +396,17 @@ function Basics.performCI(configs::Array{Configuration,1}, initalOrbitals::Dict{
     # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
     relconfList = ConfigurationR[]
     for  conf in configs
-        wa = Basics.generate("configuration list: relativistic", conf)
+        wa = Basics.generateConfigurationRs(conf)
         append!( relconfList, wa)
     end
     if  printout    for  i = 1:length(relconfList)    println(">> include ", relconfList[i])    end   end
-    subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+    subshellList = Basics.generateSubshellList(relconfList)
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
 
     # Generate the relativistic CSF's for the given subshell list
     csfList = CsfR[]
     for  relconf in relconfList
-        newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
+        newCsfs = Basics.generateCsfRs(relconf, subshellList)
         append!( csfList, newCsfs)
     end
 
@@ -498,9 +505,10 @@ function Basics.performCI(configs::Array{Configuration,1}, initalOrbitals::Dict{
     end
 
     return( mp )
-end
+end  ==#
 
 
+#== 7Apr25
 """
 `Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings; printout::Bool=true)`  
     ... to  set-up and diagonalize from the (SCF) basis the configuration-interaction matrix and to derive and display the 
@@ -568,9 +576,10 @@ function Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radia
     end
 
     return( mp )
-end
+end  ==#
 
 
+#== 7Apr25
 """
 `Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings, 
                   plasmaModel::Basics.AbstractPlasmaModel; printout::Bool=true)`  
@@ -636,4 +645,4 @@ function Basics.performCI(basis::Basis, nuclearModel::Nuclear.Model, grid::Radia
     end
 
     return( mp )
-end
+end  ==#

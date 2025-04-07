@@ -95,10 +95,12 @@ function  perform(scheme::Plasma.LineShiftScheme, computation::Plasma.Computatio
     nm = computation.nuclearModel
         
     # Use computation.grid, computation.nuclearModel, scheme.initialConfigs, scheme.finalConfigs, scheme.settings, 
-    initialBasis     = Basics.performSCF(scheme.initialConfigs, nm, computation.grid, computation.asfSettings)
-    initialMultiplet = Basics.performCI(initialBasis, nm, computation.grid, computation.asfSettings, scheme.plasmaModel)
-    finalBasis       = Basics.performSCF(scheme.finalConfigs, nm, computation.grid, computation.asfSettings)
-    finalMultiplet   = Basics.performCI(finalBasis, nm, computation.grid, computation.asfSettings, scheme.plasmaModel)
+    ##x initialBasis     = Basics.performSCF(scheme.initialConfigs, nm, computation.grid, computation.asfSettings)
+    ##x initialMultiplet = Basics.performCI(initialBasis, nm, computation.grid, computation.asfSettings, scheme.plasmaModel)
+    initialMultiplet = SelfConsistent.performSCF(scheme.initialConfigs, nm, computation.grid, computation.asfSettings)
+    ##x finalBasis       = Basics.performSCF(scheme.finalConfigs, nm, computation.grid, computation.asfSettings)
+    ##x finalMultiplet   = Basics.performCI(finalBasis, nm, computation.grid, computation.asfSettings, scheme.plasmaModel)
+    finalMultiplet   = SelfConsistent.performSCF(scheme.finalConfigs, nm, computation.grid, computation.asfSettings)
     #
     if      typeof(scheme.settings)  == AutoIonization.PlasmaSettings
         outcome = AutoIonization.computeLinesPlasma(finalMultiplet, initialMultiplet, nm, computation.grid, scheme.settings) 

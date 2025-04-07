@@ -151,10 +151,10 @@ function generateBlocks(scheme::Cascade.DielectronicRecombinationScheme, comp::C
             # Determine a list of hydrogenic orbitals for later use 
             relconfList = ConfigurationR[]
             for  confa in confs
-                wa = Basics.generate("configuration list: relativistic", confa)
+                wa = Basics.generateConfigurationRs(confa)
                 append!( relconfList, wa)
             end
-            subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+            subshellList = Basics.generateSubshellList(relconfList)
             Defaults.setDefaults("relativistic subshell list", subshellList; printout=printout)
             wa                 = Bsplines.generatePrimitives(comp.grid)
             hydrogenicOrbitals = Bsplines.generateOrbitalsHydrogenic(wa, comp.nuclearModel, subshellList; printout=printout)
@@ -166,17 +166,19 @@ function generateBlocks(scheme::Cascade.DielectronicRecombinationScheme, comp::C
             # Now distinguish between the first and all other blocks; for the first block, a SCF is generated and the occupied orbital
             # used also for all other blocks. In addition, a set of hydrogenic orbitals generated for later use
             if  ia == 1
-                basis     = Basics.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                ##x basis     = Basics.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                multiplet     = SelfConsistent.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                basis         = multiplet.levels[1].basis
             else
                 # Generate a list of relativistic configurations and determine an ordered list of subshells for these configurations
                 relconfList  = ConfigurationR[]
-                wa           = Basics.generate("configuration list: relativistic", confa);    append!( relconfList, wa)
-                subshellList = Basics.generate("subshells: ordered list for relativistic configurations", relconfList)
+                wa           = Basics.generateConfigurationRs(confa);    append!( relconfList, wa)
+                subshellList = Basics.generateSubshellList(relconfList)
                 Defaults.setDefaults("relativistic subshell list", subshellList; printout=false)
                 # Generate the relativistic CSF's for the given subshell list
                 csfList = CsfR[]
                 for  relconf in relconfList
-                    newCsfs = Basics.generate("CSF list: from single ConfigurationR", relconf, subshellList)
+                    newCsfs = Basics.generateCsfRs(relconf, subshellList)
                     append!( csfList, newCsfs)
                 end
                 # Determine the list of coreSubshells
@@ -216,8 +218,9 @@ function generateBlocks(scheme::Cascade.DielectronicRecombinationScheme, comp::C
         for  confa  in confs
             print("  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")
             if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")   end
-                basis     = Basics.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
-                multiplet = Basics.performCI(basis,    comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                ##x basis     = Basics.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                ##x multiplet = Basics.performCI(basis,    comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+                multiplet = SelfConsistent.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
             push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
             println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
         end
@@ -301,8 +304,9 @@ function perform(scheme::DielectronicRecombinationScheme, comp::Cascade.Computat
     #
     # Perform the SCF and CI computation for the intial-state multiplets if initial configurations are given
     if  comp.initialConfigs != Configuration[]
-        basis      = Basics.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
-        multiplet  = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+        ##x basis      = Basics.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+        ##x multiplet  = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+        multiplet  = SelfConsistent.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
         multiplets = [Multiplet("initial states", multiplet.levels)]
     else
         #== # Shift the initial level energy by -electronEnergyShift

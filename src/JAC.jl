@@ -72,7 +72,7 @@ incRacahAlgebra         = false  ==#
 
 
 
-using  Dates, Printf,  LinearAlgebra, SpecialFunctions, QuadGK, Cubature, GSL, JLD2, SymEngine, 
+using  Dates,  Printf,  BSplineKit, LinearAlgebra, SpecialFunctions, QuadGK, Cubature, GSL, JLD2, SymEngine, 
        HypergeometricFunctions  ## , Interact, GaussQuadrature, IJulia, FortranFiles
 
 export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod, AbstractPotential, AbstractQedModel, AbstractStartOrbitals,
@@ -80,7 +80,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        add, AlphaX, AlphaVariation, analyze, AnapoleMoment, 
        AngularJ64, AngularM64, AngularJ, AngularMomentum, 
        AsfSettings, Atomic, AtomicState, AtomicStructure, Auger, AugerInPlasma, AutoIonization, AverageAtom, AtomicCompass,
-       Basics, Basis, Beam, BeamPhotoExcitation, BreitInteraction, Bsplines,
+       Basics, Basis, Beam, BeamPhotoExcitation, BreitInteraction, Bsplines, BsplinesN,
        CartesianVector, Cartesian2DFieldVector, Cartesian3DFieldVector, CiSettings, CiExpansion, ClebschGordan, CloseCoupling, 
        compute, convertUnits, Compton, Configuration, ConfigurationR, 
        Cascade, Continuum, CorePolarization, Coulex, CoulombExcitation, Coulion, CoulombBreit, CoulombGaunt, 
@@ -112,7 +112,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix, RadiativeOpacity,
        RestrictMaximumDisplacements, RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
        SchiffMoment, Semiempirical, setDefaults, Shell, ShellSelection, SolidAngle, Spectroscopy, SphericalTensor, SpinAngular, StarkShift,
-       StartFromHydrogenic, StartFromPrevious, StrongField, StrongField2, Subshell, StaticQuantizationAxis, StaticField,
+       StartFromHydrogenic, StartFromPrevious, StrongField, StrongField2, Subshell, StaticQuantizationAxis, StaticField, SelfConsistent,
        tabulate, TestFrames, tools, Triangle, TwoElectronOnePhoton, TimeHarmonicField,
        UseBabushkin, UseCoulomb, UseGauge,
        WeightedCartesian, W3j, W6j, W9j,
@@ -134,19 +134,22 @@ include("module-AngularMomentum.jl")
 ## include("module-AngularCoefficients-Ratip2013.jl")  ## keep for internal test purposes only
 include("module-SpinAngular.jl");       using ..SpinAngular
 include("module-Bsplines.jl");          using ..Bsplines
+include("module-BsplinesN.jl");         using ..BsplinesN
 include("module-Pulse.jl")
 include("module-Beam.jl")
 include("module-Continuum.jl")
 include("module-Details.jl")
-include("module-RadialIntegrals.jl")
+include("module-RadialIntegrals.jl");   using ..RadialIntegrals
 include("module-HydrogenicIon.jl")
 include("module-InteractionStrength.jl")
 include("module-InteractionStrengthQED.jl")
+include("module-Hamiltonian.jl");       using ..Hamiltonian
+include("module-SelfConsistent.jl");    using ..SelfConsistent
 include("module-PeriodicTable.jl")
 include("module-TableStrings.jl")
 include("module-Tools.jl")
 include("module-AtomicState.jl");       using ..AtomicState
-include("module-LSjj.jl")
+include("module-LSjj.jl");              using ..LSjj
 
 include("module-PhotoEmission.jl")
 

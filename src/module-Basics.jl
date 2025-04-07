@@ -75,12 +75,14 @@ function extractValenceShell                                    end
 function FermiDirac                                             end
 function generate                                               end
 function generateBasis                                          end
+function generateConfigurationRs                                end
 function generateConfigurations                                 end
 function generateConfigurationsForExcitationScheme              end
 function generateConfigurationsWithAdditionalElectron           end
 function generateConfigurationsWithAdditionalElectrons          end
 function generateConfigurationsWithElectronCapture              end
 function generateConfigurationsWithElectronLoss                 end
+function generateCsfRs                                          end
 function generateFieldCoordinates                               end
 function generateLevelWithExtraElectron                         end
 function generateLevelWithExtraSubshell                         end

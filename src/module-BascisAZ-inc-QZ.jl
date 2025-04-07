@@ -511,23 +511,23 @@ function Basics.tabulateKappaSymmetryEnergiesDirac(kappa::Int64, evalues::Array{
     sa = sa * TableStrings.center(17, "Delta-E / |E|";    na=2)
     println(sa)
     println("  ", TableStrings.hLine(nx))
-    for  i = ns+1:ns+38
+    for  i = ns+1:ns+7
         sa = " " * TableStrings.center( 6, TableStrings.level(i-ns); na=2)
         sa = sa *  TableStrings.flushright(10, string(Subshell(i-ns+l, kappa)); na=6)
         en = Basics.computeDiracEnergy(Subshell(i-ns+l, kappa), Z)
         if  evalues[i] >= 0.      sa = sa * "+"   end;    sa = sa * @sprintf("%.8e", evalues[i])                       * "    "
         if  en         >= 0.      sa = sa * "+"   end;    sa = sa * @sprintf("%.8e", en)                               * "    "
-        if  evalues[i]-en >= 0.   sa = sa * "+"   end;    sa = sa * @sprintf("%.8e", (evalues[i]-en)/abs(evalues[i])) * "    "
+        if  evalues[i]-en >= 0.   sa = sa * "+"   end;    sa = sa * @sprintf("%.8e", (evalues[i]-en)/abs(evalues[i]))  * "    "
         println(sa)
     end
     println("      :       :    ")
-    for  i = length(evalues)-5:length(evalues)
+    for  i = length(evalues)-1:length(evalues)
         sa = " " * TableStrings.center( 6, TableStrings.level(i-ns); na=2)
         sa = sa *  TableStrings.flushright(10, string(Subshell(i-ns+l, kappa)); na=6)
         en = Basics.computeDiracEnergy(Subshell(i-ns+l, kappa), Z)
         if  evalues[i] >= 0.      sa = sa * "+"   end;    sa = sa * @sprintf("%.8e", evalues[i])                       * "    "
         if  en         >= 0.      sa = sa * "+"   end;    sa = sa * @sprintf("%.8e", en)                               * "    "
-        if  evalues[i]-en >= 0.   sa = sa * "+"   end;    sa = sa * @sprintf("%.8e", (evalues[i]-en)/abs(evalues[i])) * "    "
+        if  evalues[i]-en >= 0.   sa = sa * "+"   end;    sa = sa * @sprintf("%.8e", (evalues[i]-en)/abs(evalues[i]))  * "    "
         println(sa)
     end
     println("  ", TableStrings.hLine(nx))
