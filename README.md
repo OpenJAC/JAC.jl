@@ -73,13 +73,13 @@ as follows:
     in order to keep the computations feasible. In addition, these cascade computations are generally divided into two
     parts, the (cascade) computation for determining all necessary many-electron amplitudes and the (so-called)
     simulations to combine the amplitudes due to the experimental scenario of interest.
-5. **Empirical Computations**: Not all atomic  properties and processes, such as the -- single and multiple -- 
+5. **Empirical computations**: Not all atomic  properties and processes, such as the -- single and multiple -- 
     electron-impact ionization, stopping powers or tunnel ionization rates, can be efficiently described by ab-initio 
     many-body techniques. If needed, they are often easier computed by using empirical formulas and models. 
     A number of empirical computations are now supported to deal with such models; are often based on simple
     electronic structure calculations, together with empirically obtained parameters. These computations are only 
     implemented when data are needed but no *ab-initio* computations of the involved processes appears to be feasible. 
-6. **Plasma Computations**: The notion of atoms and ions in plasma has been frequently applied to analyze the 
+6. **Plasma computations**: The notion of atoms and ions in plasma has been frequently applied to analyze the 
     behaviour of plasma in situations where the level structure and effective single-electron states remain partly 
     intact. Useful plasma computations refer to shifted photo lines, ionic mixtures in local and non-local 
     thermodynamic equilibria, or applications of the average-atom model.
@@ -215,8 +215,7 @@ coupling of the radiation field that are to be applied in these calculations:
     perform(comp::Atomic.Computation)
 ```
 
-This example is discussed also in one of the [tutorials](tutorials/51-compute-Fe-X-spectrum.ipynb) below or directly in the
-[cloud](https://mybinder.org/v2/gh/openjac/JAC.jl/master?labpath=tutorials%2F51-compute-Fe-X-spectrum.ipynb).
+This example is discussed also in one of the [demos](demos/51-compute-Fe-X-spectrum.ipynb) below.
     
     
 ## Demos
