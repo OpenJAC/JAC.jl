@@ -20,3 +20,6 @@ makedocs(;
     warnonly = Documenter.except(),
 )
 
+deploydocs(;
+    repo = "https://github.com/AlokaSahoo/JAC.jl"
+)
