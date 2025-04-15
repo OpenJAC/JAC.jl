@@ -21,5 +21,5 @@ makedocs(;
 )
 
 deploydocs(;
-    repo = "https://github.com/AlokaSahoo/JAC.jl"
+    repo = "github.com/AlokaSahoo/JAC.jl"
 )
