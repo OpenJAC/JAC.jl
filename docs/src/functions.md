@@ -4,26 +4,44 @@ Modules = [Defaults]
 Order   = [:function]
 ```
 
-##  JAC.Radial
+##  Auto Ionization
 ```@autodocs
-Modules = [Radial]
+Modules = [AutoIonization]
 Order   = [:function]
 ```
 
-##  JAC.ImpactExcitation
+##  Dielectronic Recombination
+```@autodocs
+Modules = [DielectronicRecombination]
+Order   = [:function]
+```
+
+##  Electron Impact Excitation
 ```@autodocs
 Modules = [ImpactExcitation]
 Order   = [:function]
 ```
 
-##  JAC.PhotoExcitation
+##  Photo Emission
+```@autodocs
+Modules = [PhotoEmission]
+Order   = [:function]
+```
+
+##  Photo Excitation
 ```@autodocs
 Modules = [PhotoExcitation]
 Order   = [:function]
 ```
 
-##  JAC.PhotoIonization
+##  Photo Ionization
 ```@autodocs
 Modules = [PhotoIonization]
+Order   = [:function]
+```
+
+##  Photo Recombination
+```@autodocs
+Modules = [PhotoRecombination]
 Order   = [:function]
 ```
