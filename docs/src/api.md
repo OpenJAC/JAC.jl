@@ -1,41 +1,41 @@
 ##  Autoionization
 ```@autodocs
 Modules = [AutoIonization]
-Order   = [:type]
+Order   = [:type, :function]
 ```
 
 ##  Dielectronic Recombination
 ```@autodocs
 Modules = [DielectronicRecombination]
-Order   = [:type]
+Order   = [:type, :function]
 ```
 
 ##  Electron Impact Excitation
 ```@autodocs
 Modules = [ImpactExcitation]
-Order   = [:type]
+Order   = [:type, :function]
 ```
 
 ##  Photoemission
 ```@autodocs
 Modules = [PhotoEmission]
-Order   = [:type]
+Order   = [:type, :function]
 ```
 
 ##  Photoexcitation
 ```@autodocs
 Modules = [PhotoExcitation]
-Order   = [:type]
+Order   = [:type, :function]
 ```
 
 ##  Photoionization
 ```@autodocs
 Modules = [PhotoIonization]
-Order   = [:type]
+Order   = [:type, :function]
 ```
 
 ##  Photorecombination
 ```@autodocs
 Modules = [PhotoRecombination]
-Order   = [:type]
+Order   = [:type, :function]
 ```

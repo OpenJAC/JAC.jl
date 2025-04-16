@@ -4,14 +4,16 @@ using Documenter, JAC
 
 makedocs(;
     modules=[JAC],
-    format=Documenter.HTML(prettyurls=false),
+    format=Documenter.HTML(prettyurls=false, 
+                           size_threshold = 300 * 1024,),
     pages=[
         "Home"      => "index.md",
         "Examples"  => "examples.md",
-        "Types"     => "types.md",
-        "Functions" => "functions.md",
+        "JAC API Reference"   => "api.md",
+        # "Types"     => "types.md",
+        # "Functions" => "functions.md",
         "Reference" => "reference.md",
-        "Contributers" => "contributors.md",
+        "Contributors" => "contributors.md",
         "License"   => "license.md",
     ],
     repo="https://github.com/OpenJAC/JAC.jl/",
