@@ -223,6 +223,22 @@ end
 
 
 """
+`TableStrings.multipolesSymmetryTupels(n::Int64, mpList::Array{Tuple{EmMultipole,LevelSymmetry,EmMultipole,EmGauge},1})` 
+    ... a list of Strings with maximal length n is returned; each string in this list comprises a number of 
+        'gauge (multipole, symmetry, multipole)' descriptors.
+"""
+function  multipolesSymmetryTupels(n::Int64, mpList::Array{Tuple{EmMultipole,LevelSymmetry,EmMultipole,EmGauge},1})
+    sa = "";   wa = String[]
+    for k in mpList
+        sa = sa * string(k[4])[1:3] * " (" * string(k[1]) * " > " * string(k[2]) * " > " * string(k[3]) * "),  "
+        if  length(sa) + 15 > n    push!(wa, sa[1:end-3]);    sa = ""    end
+    end
+    if  sa != ""    push!(wa, sa[1:end-3])    end
+    return( wa )
+end
+
+
+"""
 `TableStrings.processSymmetryEnergyTupels(n::Int64, pList::Array{Tuple{Basics.AbstractProcess, Int64, LevelSymmetry, Float64},1}, sc::String)`  
         ... a list of Strings with maximal length n is returned; each string in this list comprises a number of 
         'sc(process: NoElectrons, symmetry, energy),  ' descriptors.

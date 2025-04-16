@@ -1,7 +1,7 @@
 
 export  perform
 
-#== 7Apr25
+# 7Apr25
 
 """
 `Basics.perform(computation::Atomic.Computation)`  
@@ -18,8 +18,9 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
 
     # Distinguish between the computation of level energies and properties and the simulation of atomic processes
     if   length(computation.configs) != 0
-        basis     = Basics.performSCF(computation.configs, nModel, computation.grid, computation.asfSettings)
-        multiplet = Basics.performCI( basis, nModel, computation.grid, computation.asfSettings)
+        ##x basis     = Basics.performSCF(computation.configs, nModel, computation.grid, computation.asfSettings)
+        ##x multiplet = Basics.performCI( basis, nModel, computation.grid, computation.asfSettings)
+        multiplet = SelfConsistent.performSCF(computation.configs, nModel, computation.grid, computation.asfSettings)
         LSjj.expandLevelsIntoLS(multiplet, computation.asfSettings.jjLS)
         #
         if output    results = Base.merge( results, Dict("multiplet:" => multiplet) ) 
@@ -98,18 +99,22 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         end  ==#
         
     else
-        initialBasis     = Basics.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
-        initialMultiplet = Basics.performCI( initialBasis, nModel, computation.grid, computation.initialAsfSettings)
+        ##x initialBasis     = Basics.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
+        ##x initialMultiplet = Basics.performCI( initialBasis, nModel, computation.grid, computation.initialAsfSettings)
+        initialMultiplet = SelfConsistent.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
         LSjj.expandLevelsIntoLS(initialMultiplet, computation.initialAsfSettings.jjLS)
-        finalBasis       = Basics.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
-        finalMultiplet   = Basics.performCI(   finalBasis, nModel, computation.grid, computation.finalAsfSettings)
+        ##x finalBasis       = Basics.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
+        ##x finalMultiplet   = Basics.performCI(   finalBasis, nModel, computation.grid, computation.finalAsfSettings)
+        finalMultiplet   = SelfConsistent.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
         LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
         if  output   results["initialMultiplet"] = initialMultiplet;   results["finalMultiplet"] = finalMultiplet    end 
         #
         if typeof(computation.processSettings) in [PhotoExcitationFluores.Settings, PhotoExcitationAutoion.Settings, PhotoIonizationFluores.Settings, 
-                                                    PhotoIonizationAutoion.Settings, ImpactExcitationAutoion.Settings, DielectronicRecombination.Settings]
-            intermediateBasis     = Basics.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
-            intermediateMultiplet = Basics.performCI( intermediateBasis, nModel, computation.grid, computation.intermediateAsfSettings)
+                                                   PhotoIonizationAutoion.Settings, ImpactExcitationAutoion.Settings, 
+                                                   DielectronicRecombination.Settings, ResonantInelastic.Settings]
+            ##x intermediateBasis     = Basics.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
+            ##x intermediateMultiplet = Basics.performCI( intermediateBasis, nModel, computation.grid, computation.intermediateAsfSettings)
+            intermediateMultiplet = SelfConsistent.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
             if  output   results["intermediateMultiplet"] = intermediateMultiplet    end 
         end
         #
@@ -147,6 +152,9 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             outcome = PhotoExcitationFluores.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
                                                                 computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("photo-excitation-fluorescence pathways:" => outcome) )        end
+        elseif  typeof(computation.processSettings) == ResonantInelastic.Settings 
+            outcome = ResonantInelastic.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
+                                                        computation.grid, computation.processSettings) 
         elseif  typeof(computation.processSettings) == PhotoEmission.Settings
             outcome = PhotoEmission.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("radiative lines:" => outcome) )                       end
@@ -214,7 +222,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
     Defaults.warn(PrintWarnings())
     Defaults.warn(ResetWarnings())
     return( results )
-end  ==#
+end 
 
 
 

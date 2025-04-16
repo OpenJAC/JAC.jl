@@ -426,6 +426,28 @@ function Basics.modifyLevelEnergies(multiplet::Multiplet)
 end
 
 
+"""
+`Basics.modifyLevelMixing(level::Level, enhancementFaktor::Float64)`  
+    ... to "enhance" the mixing of all CSF with |c_ik|^2 < 1.0e-3 by the given enhancementFaktor. 
+        The weights all CSF are renormalized eventually. A (normalized) newLevel::Level is returned.
+"""
+function Basics.modifyLevelMixing(level::Level, enhancementFaktor::Float64)
+    mcx = Float64[];   
+    for  mc in level.mc   if  abs(mc)^2 < 1.0e-3   push!(mcx, enhancementFaktor * mc)   else  push!(mcx, mc)   end    end
+    
+    # Renormalize the mixing coefficients
+    wx  = 0.;          for  mc  in  mcx   wx = wx + abs(mc)^2         end
+    mcy = Float64[];   for  mc  in  mcx   push!(mcy, mc / sqrt(wx))   end
+    wy  = 0.;          for  mc  in  mcy   wy = wy + abs(mc)^2         end
+    ##x @show  " ", level.mc
+    ##x @show  mcy, wx, wy
+    
+    newLevel = Level(level.J, level.M, level.parity, level.index, level.energy, level.relativeOcc, 
+                     level.hasStateRep, level.basis, mcy)
+    return( newLevel )
+end
+
+
 # using Plots
 # pyplot()
 

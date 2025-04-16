@@ -111,6 +111,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        RacahAlgebra, RacahExpression, Radial, RadialIntegrals, Radiative, RadiativeAuger, RAuger, RasSettings, RasStep, 
        RasExpansion, RayleighCompton, recast, Rec, REDA, READI, Representation, ReducedDensityMatrix, RadiativeOpacity,
        RestrictMaximumDisplacements, RestrictNoElectronsTo, RestrictParity, RestrictToShellDoubles, RequestMinimumOccupation, RequestMaximumOccupation,
+       ResonantInelastic,
        SchiffMoment, Semiempirical, setDefaults, Shell, ShellSelection, SolidAngle, Spectroscopy, SphericalTensor, SpinAngular, StarkShift,
        StartFromHydrogenic, StartFromPrevious, StrongField, StrongField2, Subshell, StaticQuantizationAxis, StaticField, SelfConsistent,
        tabulate, TestFrames, tools, Triangle, TwoElectronOnePhoton, TimeHarmonicField,
@@ -185,6 +186,7 @@ include("module-RayleighCompton.jl")
 include("module-ParticleScattering.jl")
 include("module-BeamPhotoExcitation.jl") 
 include("module-HyperfineInduced.jl") 
+include("module-ResonantInelastic.jl") 
 end
 
 if incAdvancedProcesses

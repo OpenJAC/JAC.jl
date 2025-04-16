@@ -61,7 +61,6 @@ function performCI(basis::Basis, nm::Nuclear.Model, grid::Radial.Grid, settings:
     # Merge all multiplets into a single one
     mp = Basics.merge(multiplets)
     mp = Basics.sortByEnergy(mp)
-    @show mp
     
     # Determine the level list to be printed out
     levelNos = Int64[]

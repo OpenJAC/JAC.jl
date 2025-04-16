@@ -8,7 +8,7 @@
 
 # Jena Atomic Calculator (JAC) for the computation of atomic representations, processes and cascades
 
-*Last update:* April, 15th, 2025
+*Last update:* April, 16th, 2025
 
 
 ## What is JAC?
@@ -223,12 +223,15 @@ This example is discussed also in one of the [demos](demos/51-compute-Fe-X-spect
 The following Pluto.jl notebooks introduce the reader to JAC and demonstrate several features of this toolbox. ---
 They can be explored statically at GitHub or can be run locally after the software repository has been cloned and installed.
 
-* [Getting started with Julia](demos/11-getting-started-with-Julia.ipynb)
+* [Getting started with Julia](demos/A1-Pluto-notebook-basics.jl)
+* [Getting started with Julia & JAC](demos/A3-Pluto-getting-started-with-Julia-and-JAC.jl)
+* [Self-Consistent-Field (and CI) computations for carbon](demos/B1-Pluto-compute-SCF+CI-carbon-III.jl)
+
+
 * [Getting started with JAC](demos/12-getting-started-with-JAC.ipynb)
 * [Simple estimates for hydrogenic atoms and ions](demos/13-compute-hydrogenic-orbitals.ipynb)
 * [Specifying nuclear models and potentials](demos/16-define-nuclear-model-parameters.ipynb)
 * [Selection and use of atomic potentials](demos/21-compare-radial-atomic-potentials.ipynb)
-* [Self-Consistent-Field (and CI) computations for carbon](demos/22-compute-SCF+CI-carbon-III.ipynb)
 * [Generate extended configuration lists](demos/23-generate-configuration-lists.ipynb)
 * [Determine LS notation for atomic levels](demos/25-expand-levels-into-LS-basis.ipynb)
 * [Estimate QED corrections for beryllium-like ions](demos/26-estimate-QED-for-beryllium-like.ipynb)

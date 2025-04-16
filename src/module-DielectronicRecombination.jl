@@ -239,7 +239,6 @@ function Base.show(io::IO, tr::EmpiricalTreatment)
 end     
 
 
-
 """
 `struct  DielectronicRecombination.Settings  <:  AbstractProcessSettings`  
     ... defines a type for the details and parameters of computing dielectronic recombination pathways.

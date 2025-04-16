@@ -209,7 +209,7 @@ function Base.show(io::IO, comp::Atomic.Computation)
     end
 end
 
-
+#==
 """
 `Basics.perform(computation::Atomic.Computation)`  
     ... to perform the computation as prescribed by comp. All relevant intermediate and final results are printed to screen (stdout). 
@@ -316,13 +316,15 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
         if  output   results["initialMultiplet"] = initialMultiplet;   results["finalMultiplet"] = finalMultiplet    end 
         #
+        #==
         if typeof(computation.processSettings) in [PhotoExcitationFluores.Settings, PhotoExcitationAutoion.Settings, PhotoIonizationFluores.Settings, 
-                                                    PhotoIonizationAutoion.Settings, ImpactExcitationAutoion.Settings, DielectronicRecombination.Settings]
+                                                    PhotoIonizationAutoion.Settings, ImpactExcitationAutoion.Settings, 
+                                                    DielectronicRecombination.Settings, ResonantInelastic.Setting]
             ##x intermediateBasis     = Basics.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
             ##x intermediateMultiplet = Basics.performCI( intermediateBasis, nModel, computation.grid, computation.intermediateAsfSettings)
             intermediateMultiplet = SelfConsistent.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
             if  output   results["intermediateMultiplet"] = intermediateMultiplet    end 
-        end
+        end  ==#
         #
         if      typeof(computation.processSettings) == AutoIonization.Settings 
             outcome = AutoIonization.computeLines(finalMultiplet, initialMultiplet, nModel, computation.grid, computation.processSettings) 
@@ -361,6 +363,10 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         elseif  typeof(computation.processSettings) == PhotoEmission.Settings
             outcome = PhotoEmission.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("radiative lines:" => outcome) )                       end
+        elseif  typeof(computation.processSettings) == ResonantInelastic.Settings 
+            outcome = ResonantInelastic.computePathways(finalMultiplet, intermediateMultiplet, initialMultiplet, 
+                                                        computation.grid, computation.processSettings) 
+            if output    results = Base.merge( results, Dict("RIXS pathways:" => outcome) )   end
         elseif  typeof(computation.processSettings) == RadiativeAuger.Settings
             outcome = RadiativeAuger.computeLines(finalMultiplet, initialMultiplet, computation.grid, computation.processSettings) 
             if output    results = Base.merge( results, Dict("radiative Auger sharings:" => outcome) )              end
@@ -425,7 +431,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
     Defaults.warn(PrintWarnings())
     Defaults.warn(ResetWarnings())
     return( results )
-end
+    end  ==#
 
 
 end # module

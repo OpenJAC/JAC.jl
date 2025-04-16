@@ -112,6 +112,7 @@ function isZero                                                 end
 function lastPoint                                              end
 function merge                                                  end
 function modifyLevelEnergies                                    end
+function modifyLevelMixing                                      end
 function perform                                                end
 function performSCF                                             end
 function performCI                                              end

@@ -671,10 +671,12 @@ end
 """
 function  determineLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, settings::AutoIonization.Settings)
     lines = AutoIonization.Line[]
+    augerEnergyShift = Defaults.convertUnits("energy: to atomic", settings.augerEnergyShift)
+    @show augerEnergyShift
     for  iLevel  in  initialMultiplet.levels
         for  fLevel  in  finalMultiplet.levels
             if  Basics.selectLevelPair(iLevel, fLevel, settings.lineSelection)
-                energy = iLevel.energy - fLevel.energy   + settings.augerEnergyShift
+                energy = iLevel.energy - fLevel.energy + augerEnergyShift
                 if   energy < 0.01                                                             continue   end
                 if   energy < settings.minAugerEnergy  ||  energy > settings.maxAugerEnergy    continue   end  
                 channels = AutoIonization.determineChannels(fLevel, iLevel, settings) 
