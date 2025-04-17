@@ -56,3 +56,6 @@ julia> ]                   # Change to the Julia package mode
 (JAC) pkg> resolve         # Required **Only if** there is a cinflict in the dependancies
 (JAC) pkg> develop .       # Adds the current directory path to Julia local Registry
 ```
+
+# User Guide and Manual
+
