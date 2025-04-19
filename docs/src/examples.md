@@ -1,5 +1,5 @@
 ## Demo files
-!!! tips "Tips"
+!!! info "Info"
     - The demo files are designed with Pluto notebook. A detaild guideline of Pluto Installation is available at (https://plutojl.org/#install).
     - Users can also find the files in the **demo** folder JAC package.
 
