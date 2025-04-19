@@ -1,3 +1,13 @@
+## Demo files
+!!! tips "Tips"
+    - The demo files are designed with Pluto notebook. A detaild guideline of Pluto Installation is available at (https://plutojl.org/#install).
+    - Users can also find the files in the **demo** folder JAC package.
+
+- [SCF and CI](https://github.com/OpenJAC/JAC.jl/blob/master/demos/B1-Pluto-compute-SCF%2BCI-carbon-III.jl)
+- [Transition Probabilities and Lifetime](https://github.com/OpenJAC/JAC.jl/blob/master/demos/demo-A-FeX-lifetimes.jl)
+- [Dielectronic Recombination](https://github.com/OpenJAC/JAC.jl/blob/master/demos/demo-D-H-like-DR.jl)
+- [Auger rates](https://github.com/OpenJAC/JAC.jl/blob/master/demos/demo-B-Ne-KLL-Auger.jl)
+
 ## Compute the low-lying levels of C``^{2+}`` ``1s^{2}(2s^{2}+2s2p+2p^{2})`` : 
 
 Perform SCF and configuration interaction calculations for these low-lying levels.
@@ -27,8 +37,3 @@ multiplet2 = SelfConsistent.performSCF([Configuration("1s^2 2s^2"), Configuratio
 
 For a quick computation of the ground level of C``^{2+}`` ions, we can simply use the **standard settings** as given by **AsfSettings()**:
 
-## Demo files
-!!! tips "Tips"
-    The demo files are designed with Pluto notebook. Users can also find the files in the **demo** folder JAC package.
-
-- [SCF and CI calculations](https://github.com/OpenJAC/JAC.jl/blob/master/demos/B1-Pluto-compute-SCF%2BCI-carbon-III.jl)
