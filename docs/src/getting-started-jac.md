@@ -3,7 +3,7 @@
 !!! info
     JAC user guide pdf .... link
 
-```
+```@example startJAC
 using JAC
 ```
 
@@ -40,16 +40,14 @@ and many other terms (types) that we shall explain later.
 
 Let us simply start, for instance, with specifying and assigning the $1s$ and $2p$ shells:
 
-```@repl
-using JAC   # hide
+```@example startJAC
 w1s = Shell("1s")
 w2p = Shell("2p")
 ```
 
 Similarly, we can readily specify and assign any (relativistic) subshell:
 
-```@repl
-using JAC   # hide
+```@example startJAC
 Subshell("2p_1/2"),   Subshell("2p_3/2")  
 ```
 
@@ -69,8 +67,7 @@ Of course, we can interactively also specify any electron configuration:
 ? Configuration
 ```
 
-```
-using JAC # hide
+```@example startJAC
 wc1 = Configuration("1s^2 2s^2 2p^5")
 wc2 = Configuration("[Ar] 4s^2 3d^5")
 ```
@@ -91,8 +88,7 @@ This list gives further details why Julia (and JAC) is a very suitable and power
 
 Of course, there are many other features that make Julia & JAC as powerful as it is: For example, the user may pre-define and overwrite the **units** in which he wishes to communicate with JAC. These units determine how (most of) the input data are interpreted as well as output data are displayed in tabulations or to screen. The current defaults settings for the units can be seen by typing:
 
-```@repl
-using JAC   # hide
+```@example startJAC
 Basics.display("settings")
 ```
 
@@ -107,16 +103,14 @@ Defaults.setDefaults
 ```
 which enables one to re-define various **global values** of JAC. If we wish to enter/display energies in **Kaysers** or cross sections in atomic units, we can simply type:
 
-```@repl
-using JAC   # hide
+```@example startJAC
 Defaults.setDefaults("unit: energy", "Kayser")
 Defaults.setDefaults("unit: cross section", "a.u.")
 ```
 
 Here, again `nothing` is returned but the corresponding global constants are now changed.
 
-```@repl    
-using JAC   # hide
+```@example startJAC   
 Basics.display("settings")
 ```
 Apart from the default units, one can similarly *overwrite* the method that is use for the generation and normalization of continuum orbitals and several others. Although called *global*, the corresponding values can be accesses just in two ways. (i) The **global constants**, such as the electron mass, the speed of light, the fine-structure constant $\alpha$, etc., are accessed via the function:
@@ -129,8 +123,7 @@ Apart from the default units, one can similarly *overwrite* the method that is u
 Defaults.getDefaults
 ```
 
-```@repl
-using JAC   # hide
+```@example startJAC
 Defaults.getDefaults("alpha")
 Defaults.getDefaults("electron rest energy")
 Defaults.getDefaults("unit: energy")
@@ -148,23 +141,19 @@ Defaults.convertUnits
 
 This function is called at many places within JAC to generate tables where all physical data are printed out in the pre-specified units:
 
-```@repl
-using JAC   # hide
+```@example startJAC
 Defaults.convertUnits("energy: from atomic", 1.0)
 ```
 
 With the given user-selection, this is equivalent to:
 
-```@repl
-using JAC # hide
+```@example startJAC
 Defaults.convertUnits("energy: from atomic to Kayser", 1.0)
 ```
 
 In JAC, the call of this function is often combined with some proper formatting of the results, such as:
 
-```@repl
-import Pkg  ; Pkg.add("Printf") ; # hide
-using JAC   # hide
+```@example startJAC
 using Printf
 @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", 1.0))
 ```

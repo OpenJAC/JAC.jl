@@ -4,7 +4,7 @@ using Documenter, JAC
 
 makedocs(;
     modules=[JAC],
-    format=Documenter.HTML(prettyurls=false, 
+    format=Documenter.HTML(prettyurls=false, repolink = "https://github.com/AlokaSahoo/JAC.jl/",
                            size_threshold = 300 * 1024,),
     pages=[
         "Home"              => "index.md",

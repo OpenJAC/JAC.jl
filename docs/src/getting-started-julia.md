@@ -7,7 +7,7 @@ Here, we shall **not introduce** Julia's syntax and concepts for which many tuto
 
 In brief, JAC provides tools for performing atomic (structure) calculations of different kind and complexity, and for which further details are given in the tutorials below. To see anything from JAC, we shall first invoke the tools by:
 
-```@repl
+```@example startJulia
 using JAC
 ```
 
@@ -73,7 +73,7 @@ PhotoEmission.Settings
 We shall meet these and (many) other settings quite often in the tutorials below. --- Beside of Julia's help features (?), however, it is sometimes difficult to remember the right term or function name. In this case, it easy to make a <double-tab> after the dot (notation) or to make use of the (Unix/Linux) `grep` command within the `JAC/src` directly. Similar line-search commands will exist also at other platforms. In particular, for those of you who wishes to support and extend the JAC toolbox, the dot expansion and the `grep` command will be found very helpful, perhaps more than other search tools.
 
 
-!!! @info "Info"
+!!! info
     Users can also refer to the API Reference section that provides a comprehensive list of JAC declared `Type`s and `Function`s for selected atomic processes.
 
 **Use of constructors:$\quad$** Another Julia feature, that is frequently applied in JAC, is the successive definition of constructors in order to set-up complex data structures. This features is applied, for instance, in order to define an `Atomic.Computation` or a `Cascade.Computation` as a whole. We shall explain these rather complex data types below in different tutorials. The same issue appears however already at a much simpler level. For example, if we wish to select (specify) a number of levels from a multiplet prior to some particular -- configuration interaction -- computation, we can make use of a
@@ -86,9 +86,11 @@ LevelSelection
 ```
 Apart from the logical flag `active`, such a level selection requires to either specify a list of level numbers (indices) or *level symmetries*
 
-```@repl
-using JAC   # hide
+```@example startJulia
 LevelSelection(true, indices= [i for i in 1:11])
+```
+
+```@example startJulia
 LevelSelection(true, symmetries= [LevelSymmetry(1//2, Basics.plus)])
 ```
 
@@ -104,8 +106,7 @@ LevelSymmetry
 
 As seen from this definition, the level symmetry just comprises the total angular momentum (of type `AngularJ64`) and the parity of the level (of type `Parity`). Therefore, the specification of a list of level symmetries in `LevelSelection` already requires to nest four constructors in order make the level selection explicit: (i) For the angular momentum, (ii) the parity, (iii) the level symmetry and (iv) to create a list (array) of such level symmetries. All the constructors can be specified and built together also in subsequent steps, such as:
 
-```@julia
-using JAC   # hide
+```@example startJulia
 J1    = AngularJ64(1//2);           J2 = AngularJ64(5//2)  
 pl    = Basics.plus;                mn = Basics.minus
 lsym1 = LevelSymmetry(J1, pl);      lsym2 = LevelSymmetry(J2, mn)
@@ -113,14 +114,13 @@ levelsyms = [lsym1, lsym2]
 ```
 
 or simply by *nesting* all the information within a single step
-```@repl
-using JAC   # hide
+```@example startJulia
 levelsyms = [LevelSymmetry(AngularJ64(1//2), Basics.plus), LevelSymmetry(AngularJ64(5//2), Basics.minus)]
 ```
 
 Both way have their pros and cons, and often some *mixture* is applied where complex constructors are first assigned to some variables, and which are later utilized to built up constructors of higher complexity. --- To finally specify aǹ instance of a `LevelSelection`, we use (onc more) its second constructor above:
 
-```@repl
+```@example startJulia
 LevelSelection(true, indices=[1,2,3], symmetries=levelsyms)
 ```
 
@@ -128,7 +128,7 @@ and which will tell the JAC program to compute the lowest three levels (1, 2, 3)
 
 **Functions & methods:$\quad$** Like most other languages, Julia is based on the successive work through functions and methods; a **function** is first of all specified by its name and it maps a tuple of argument values upon a return value. For instance, the function
 
-```@repl
+```@example startJulia
 function addSomething(a, b)
     c = a + b
 end
@@ -137,7 +137,7 @@ addSomething(3.1, 5//2)
 
 can be used to *add* two numbers, rather independent of their particular type, and which are *infered* here automatically. However, additional type declarations might help to *specialize* a function and to ensure **type stability**:
 
-```@repl
+```@example startJulia
 function addSomething(a::Int64, b::Int64, c::Int64)
     d = a + b + c
 end
@@ -145,7 +145,7 @@ end
 
 While the function name is the same in both of these examples above, Julia carefully distinguishes between these two **methods** of the function `addSomething` that may differ by the type *and/or* the number of arguments. This multiple *use* **(dispatch)** of function name enables the user to write highly specialized code. Although a proper (and specialized) definition of functions is often very important for the performance of the program, we shall not discuss such technical issues here. Let us just mention, that a function/method may also return `nothing`:
 
-```@repl
+```@example startJulia
 typeof(nothing)
 ```
 
@@ -155,20 +155,19 @@ In JAC, the value `nothing` is usually returned by all *display* functions that 
 
 **Julia macros:$\quad$**  What can one do, if the (source) code itself does not tell so much about the problem ? --- In this case, it is often useful to include some additional **printouts**  near to the line in question into the code and to re-run it again. There are different ways (`@show`, `print()`, `println()`) to place printout in the code; cf. https://julialang.org/learning/  A particular quick and useful way makes use of the Julia macro:
 
-```@repl
-using JAC   # hide
+```@example startJulia
 @show levelsyms
 ```
 
 which simply repeats the *names* of the variables together with their values. Of course, the values of several such variables can be shown within the same call:
 
-```@repl
+```@example startJulia
 wa = 5;   wb = [2.0, pi];   wc = ones(3)
 @show wa, wb, wc
 ```
 
 Indeed, this `@show` macro makes printout very easy. There are many macros (all starting with `@`) in Julia which need not to be considered here. We just mention that `@time` in front of a Julia command (block) will take and display the CPU time that is necessary to run this line(s):
 
-```@repl
+```@example startJulia
 @time rand(50000)   ;
 ```
