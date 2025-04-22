@@ -13,6 +13,7 @@ using   Distributed, FastGaussQuadrature, GSL, SpecialFunctions, Printf,
 """
 `struct  ImpactExcitation.RateCoefficients`     ... Defines a type for the output results from excitation rate or
                                                     effective collision strengths calculations
+                                                    
     + initialLevel        ::Level               ... initial- (bound-state) level
     + finalLevel          ::Level               ... final- (bound-state) level
     + temperatures        ::Array{Float64,1}    ... Temperatures in [K] to calculate excitation rates and effective collision strengths
@@ -40,6 +41,7 @@ end
 """
 `struct  ImpactExcitation.Settings  <:  AbstractProcessSettings`  ... defines a type for the details and parameters of computing 
                                                                                                 electron-impact excitation lines.
+
     + lineSelection            ::LineSelection      ... Specifies the selected levels, if any.
     + electronEnergies         ::Array{Float64,1}   ... List of impact-energies of the incoming elecgtrons (in user-defined units).
     + energyShift              ::Float64            ... An overall energy shift for all transitions |i> --> |f>.
