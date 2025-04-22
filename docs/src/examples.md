@@ -252,7 +252,7 @@ Further control about these electronic computations can be obtained by modifying
 ? AsfSettings
 ```
 
-```@docs
+```@docs ; canonical=false
 AsfSettings
 ```
 
