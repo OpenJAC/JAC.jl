@@ -4,7 +4,7 @@ using Documenter, JAC
 
 makedocs(;
     modules=[JAC],
-    format=Documenter.HTML(prettyurls=false, repolink = "https://github.com/AlokaSahoo/JAC.jl/",
+    format=Documenter.HTML(prettyurls=false, repolink = "https://github.com/OpenJAC/JAC.jl",
                            size_threshold = 300 * 1024,),
     pages=[
         "Home"              => "index.md",
@@ -16,12 +16,12 @@ makedocs(;
         "Contributors"      => "contributors.md",
         "License"           => "license.md",
     ],
-    repo="https://github.com/AlokaSahoo/JAC.jl/",
-    sitename="JAC.jl",
-    authors="Stephan Fritzsche",
+    repo="https://github.com/OpenJAC/JAC.jl",
+    sitename ="JAC.jl",
+    authors  ="Stephan Fritzsche",
     warnonly = Documenter.except(),
 )
 
 deploydocs(;
-    repo = "github.com/AlokaSahoo/JAC.jl"
+    repo = "github.com/OpenJAC/JAC.jl"
 )

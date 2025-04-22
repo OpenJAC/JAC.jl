@@ -19,6 +19,10 @@ using  ..AtomicState, ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Nuclea
         ... to perform an average-atom computation.
     + struct LineShiftScheme    
         ... to compute the energy shifts and properties of atomic/ionic lines in some selected plasma model.
+    + struct RateSchemePhotoionization    
+        ... to compute (empirical) photoionization plasma rates and rate coefficients.
+    + struct RateSchemePhotorecombination    
+        ... to compute (empirical) photorecombination plasma rates and rate coefficients.
     + struct SahaBoltzmannScheme    
         ... to compute thermodynamic properties of a Saha-Boltzmann LTE mixture.
 """
@@ -429,6 +433,7 @@ end
 
 include("module-Plasma-inc-average-atom.jl")
 include("module-Plasma-inc-line-shifts.jl")
+include("module-Plasma-inc-empirical-rates.jl")
 include("module-Plasma-inc-saha-boltzmann-mixture.jl")
 
 #######################################################################################################################
