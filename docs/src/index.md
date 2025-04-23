@@ -1,9 +1,9 @@
 # Jena Atomic Calculator (JAC) for the computation of atomic representations, processes and cascades
 
-*Last update:* April, 15th, 2025
+*Last update:* April, 25th, 2025
 
 
-## What is JAC?
+# What is JAC?
 
 **JAC**, the **Jena Atomic Calculator**, provides an open-source Julia package for doing atomic computations of various kind
 and complexity. In particular, JAC is a (relativistic) electronic structure code for the computation of (atomic many-electron) 
@@ -22,7 +22,7 @@ facilitates many typical computations and the handling of atomic data by providi
 uses in a in spoken or written language. Shortly speaking, JAC aims to provide a powerful **platform for daily use and 
 to extent atomic theory towards new applications** or, eventually, a **community platform for Just Atomic Computations**.
 
-## *Kinds* of computations
+# *Kinds* of computations
 
 In some more detail, JAC distinguishes and aims to support **different kinds of computations** which can be summarized 
 as follows:
@@ -106,9 +106,11 @@ julia> ]
 
 # Development
 
-As a **Scientific package** users are encouraged to explore the capabilities of JAC, and modify the package as per their requirement. JAC comes with an MIT 'Expat' [License](@ref jac-license).
+As a **Scientific package** users are encouraged to explore the capabilities of JAC, and modify the package as per their 
+requirement. JAC comes with an MIT 'Expat' [License](@ref jac-license).
 
-For development purpose, user can install JAC from GitHub to their **desired direcory** using `git clone` in the terminal. This will download a copy of JAC from the development branch of GitHub repository.
+For development purpose, user can install JAC from GitHub to their **desired direcory** using `git clone` in the 
+terminal. This will download a copy of JAC from the development branch of GitHub repository.
 ```
 git clone https://github.com/OpenJAC/JAC.jl.git
 ```
@@ -131,4 +133,27 @@ julia> ]                   # Change to the Julia package mode
 
 # User Guide and Manual
 
-A detailed [User Guide, Compendium & Theoretical Background to JAC](https://github.com/AlokaSahoo/JAC.jl/blob/master/docs/UserGuide-Jac.pdf)  is available that describes the **use and underlying atomic theory** of the JAC code.
+A detailed 
+[User Guide, Compendium & Theoretical Background to JAC](https://github.com/AlokaSahoo/JAC.jl/blob/master/docs/UserGuide-Jac.pdf)  
+is available that describes the **use and underlying atomic theory** of the JAC code.
+
+
+# Dependencies 
+
+Dependencies and external code used in JAC
+
+The JAC code makes use of:
+* standard Julia packages, such as BSplineKit, SpecialFunctions, GaussQuadrature, GSL and QuadGK.
+* Matrix elements from G. Gaigalas and S. Fritzsche, Comp. Phys. Commun. 267, 108086 (2021).
+
+
+# Current limitations of JAC
+
+Although JAC has been designed for all atoms and ions across the periodic table, a number of limitations occur:
+* All self-consistent-field computations are based so far on a local potential (e.g. core-Hartree, Kohn-Sham, 
+  Dirac-Hartree-Slater, ...) that can be controlled by the user.
+* Until the present, no serious optimization has been done for the code; this restricts most computations
+  to CSF expansion with several hundred CSF.
+* All continuum orbitals are generated in a local potential (Dirac-Hartree-Slater or others, as above) of the ionic core, 
+  and without the explicit treatment of the exchange interaction.
+

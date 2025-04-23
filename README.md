@@ -9,7 +9,7 @@
 
 # Jena Atomic Calculator (JAC) for the computation of atomic representations, processes and cascades
 
-*Last update:* April, 16th, 2025
+*Last update:* April, 25th, 2025
 
 
 ## What is JAC?
@@ -110,53 +110,6 @@ JAC toolbox but come with a rather limited implementation so far.
     plan to consider the interaction of atoms and ions with pulses of different shape, polarization strength 
     and duration.
 
-       
-
-## Documentation & News
-
-A detailed [User Guide, Compendium & Theoretical Background to JAC](docs/UserGuide-Jac.pdf)  is available that
-describes the **use and underlying atomic theory** of the JAC code. News about recent developments of JAC
-are summarized [here](NEWS.md).
-
-
-
-## Licence & Reference
-
-The code in this repository is distributed under the [MIT licence](LICENSE.md). The associated 
-[User Guide, Compendium & Theoretical Background to JAC](docs/UserGuide-Jac.pdf) is distributed under the Creative 
-Commons Attribution 4.0 International (CC BY 4.0) license.
-
-For reference to (using) this code, please, use the Computer Physics Communications publication on JAC:
-
-* S. Fritzsche: A fresh computational approach to atomic structures, processes and cascades 
-     [Computer Physics Communications 240, 1 (2019)](https://doi.org/10.1016/j.cpc.2019.01.012)
-* G. Gaigalas & S. Fritzsche: Angular coefficients for symmetry-adapted configuration states in jj-coupling.
-     [Comp. Phys. Commun. 267, 108086 (2021)](https://doi.org/10.1016/j.cpc.2021.108086)
-* S. Fritzsche, P. Palmeri & S. Schippers: Atomic cascade computations. [Symmetry 13, 520 (2021)](https://doi.org/10.3390/sym13030520)
-* S. Fritzsche: Symbolic evaluation of expressions from Racah’s algebra. [Symmetry 13, 1558 (2021)](https://doi.org/10.3390/sym13091558)
-* S. Fritzsche & A. Surzhykov: Approximate atomic Green functions. [Molecules 26, 2660 (2021)](https://doi.org/10.3390/molecules26092660)
-* S. Fritzsche: Dielectronic recombination strengths and plasma rate coefficients of multiply-charged ions.
-     [A&A 656, A163 (2021)](https://doi.org/10.1051/0004-6361/202141673)
-* S. Fritzsche: Level structure and properties of open f-shell elements. [Atoms 10, 7 (2022)](https://doi.org/10.3390/atoms10010007)
-* S. Fritzsche: Photon emission from hollow ions near surfaces. [Atoms 10, 37 (2022)](https://doi.org/10.3390/atoms10020037)
-* S. Fritzsche, B. Böning: Strong-field ionization amplitudes for atomic many-electron targets. [Atoms 10, 70 (2022)](https://doi.org/10.3390/atoms10030070)
-* S. Fritzsche: Application of symmetry-adapted atomic amplitudes. [Atoms 10, 127 (2022)](https://doi.org/10.3390/atoms10040127)
-* S. Fritzsche, A.V. Maiorova & Z.W. Wu: Radiative recombination plasma rate coefficients of multiply-charged ions.
-     [Atoms 11, 50 (2023)](https://doi.org/10.3390/atoms11030050)
-* S. Fritzsche, L.G. Jiao, Y.C. Wang & J.E. Sienkiewicz; Collision strengths of astrophysical interest for multiply charged ions.
-     [Atoms 11, 80 (2023)](https://doi.org/10.3390/atoms11050080)
-* S. Fritzsche, A.K. Sahoo, L.Sharma, Z.W. Wu & S. Schippers; Merits of atomic cascade computations.
-     [European Physical Journal D 78, 75 (2024)](https://link.springer.com/article/10.1140/epjd/s10053-024-00865-z)
-* S. Fritzsche, H.K. Huang, Z.K. Huang, S. Schippers, W.Q. Wen and Z.W. Wu; Dielectronic recombination into high-n Rydberg shells.
-     [European Physical Journal D 79, 22 (2025)](https://link.springer.com/article/10.1140/epjd/s10053-025-00969-0)
-* S. Fritzsche; Atomic input for modeling ionic mixtures in astrophysical plasma.
-     [European Physical Journal A 61, 63 (2025)](https://doi.org/10.1140/epja/s10050-025-01535-3)
-
-
-See also [`CITATION.bib`](CITATION.bib) for the relevant references(s).
-
-
-
 
 ## Installation
 
@@ -165,85 +118,6 @@ and by typing
 ```
 pkg> add https://github.com/OpenJAC/JAC.jl
 ```
-Further information is given in the demo [Install Julia ...](demos/xxx.jl)
-
-
-## Dependencies and external code used in JAC
-
-The JAC code makes use of:
-* standard Julia packages, such as BSplineKit, SpecialFunctions, GaussQuadrature, GSL and QuadGK.
-* Matrix elements from G. Gaigalas and S. Fritzsche, Comp. Phys. Commun. 267, 108086 (2021).
-
-    
-    
-## Quickstart
-
-The 'simplest access' to the JAC toolbox is by using Binder in the cloud. If you click here:
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master) 
-
-you will get a Jupyter notebook where you can call 'using JAC' in order to have Julia and JAC (completely) 
-installed. -- Then you can run all examples and calls like on your own computer, just a bit slower 
-(say, by a factor 3..5). This will help you to run a few first examples (as shown in the example folder above) 
-and in order to decide of whether you wish to install the code locally.
-
-
-You can also directly access the 
-[Getting started with JAC](demos/...)
-tutorial in the cloud, and similar for other tutorials that are distributed together with the code. Further details 
-can then be found from the [User Guide, Compendium & Theoretical Background to JAC](docs/UserGuide-Jac.pdf). 
-Make use of the index or a full-text search to find selected items in this (.pdf) User Guide.
-
-
-A very **simple example** has been discussed in the [CPC reference](https://doi.org/10.1016/j.cpc.2019.01.012)
-above and just refers to the low-lying level structure and the Einstein A and B coefficients of the 
-3s 3p^6 + 3s^2 3p^4 3d -> 3s^2 3p^5  transition array for Fe^{9+} ions, also known as the spectrum Fe X. To perform such 
-a computation within the framework of JAC, one needs to specify the initial- and final-state configurations by an instance
-of an `Atomic.Computation`. We here also provide a title (line), the multipoles (default E1) and the gauge forms for the 
-coupling of the radiation field that are to be applied in these calculations:
-
-
-```julia
-    grid = Radial.Grid(true);   setDefaults("standard grid", grid)
-    defaultsSettings = PhotoEmission.Settings()
-    photoSettings    = PhotoEmission.Settings(defaultsSettings, multipoles=[E1, M1], gauges=[UseCoulomb, UseBabushkin], printBefore=true)
-    
-    comp = Atomic.Computation(Atomic.Computation(), name="Energies and Einstein coefficients for the spectrum Fe X",  
-                              grid = grid, nuclearModel = Nuclear.Model(26.);
-                              initialConfigs = [Configuration("[Ne] 3s 3p^6"), Configuration("[Ne] 3s^2 3p^4 3d")],
-                              finalConfigs   = [Configuration("[Ne] 3s^2 3p^5")], 
-                              processSettings = photoSettings ); 
-    perform(comp::Atomic.Computation)
-```
-
-This example is discussed also in one of the [demos](demos/51-compute-Fe-X-spectrum.ipynb) below.
-    
-    
-## Demos
-
-The following Pluto.jl notebooks introduce the reader to JAC and demonstrate several features of this toolbox. ---
-They can be explored statically at GitHub or can be run locally after the software repository has been cloned and installed.
-
-* [Getting started with Julia](demos/A1-Pluto-notebook-basics.jl)
-* [Getting started with Julia & JAC](demos/A3-Pluto-getting-started-with-Julia-and-JAC.jl)
-* [Self-Consistent-Field (and CI) computations for carbon](demos/B1-Pluto-compute-SCF+CI-carbon-III.jl)
-
-
-* [Getting started with JAC](demos/12-getting-started-with-JAC.ipynb)
-* [Simple estimates for hydrogenic atoms and ions](demos/13-compute-hydrogenic-orbitals.ipynb)
-* [Specifying nuclear models and potentials](demos/16-define-nuclear-model-parameters.ipynb)
-* [Selection and use of atomic potentials](demos/21-compare-radial-atomic-potentials.ipynb)
-* [Generate extended configuration lists](demos/23-generate-configuration-lists.ipynb)
-* [Determine LS notation for atomic levels](demos/25-expand-levels-into-LS-basis.ipynb)
-* [Estimate QED corrections for beryllium-like ions](demos/26-estimate-QED-for-beryllium-like.ipynb)
-* [Compute the atomic level structure in a Debye-Hückel plasma](tutorials/28-compute-atoms-in-plasma.ipynb)
-* [Generate an atomic mean field and apply it for CI computations](tutorials/31-generate-mean-field+ci-expansion.ipynb)
-* [Compute transition probabilities for Fe X](tutorials/51-compute-Fe-X-spectrum.ipynb)
-* [Compute the 2s, 2p photoionization of argon](tutorials/53-compute-Ar-2s-2p-photoionization.ipynb)
-* [Compute the K-LL Auger rates of atomic neon](tutorials/54-compute-Ne-KLL-Auger-spectrum.ipynb)
-* [Compute K-LL Auger rates in a Debye-Hückel plasma](tutorials/55-compute-Auger-rates-in-DH-plasma.ipynb)
-* Several [other tutorials](tutorials/) are available, and this list will be extended with the further development of JAC.
-
 
 
 ## Current limitations of JAC
@@ -256,57 +130,3 @@ Although JAC has been designed for all atoms and ions across the periodic table,
 * All continuum orbitals are generated in a local potential (Dirac-Hartree-Slater or others, as above) of the ionic core, 
   and without the explicit treatment of the exchange interaction.
 
-
-
-## Encouragement & Contribution
-
-The scope of JAC is much wider than what we can (and plan to) implement ourselves here in Jena. 
-With making JAC an official Julia package (at Github), we wish to **encourage the users to fork the code and to 
-make and announce improvements, to report failures, bugs, etc.** Non-trivial changes to the code can be made available 
-via pull requests, i.e. by submitting code for review (by us and other users), and with the goal to merge these advancements
-with the master code. However, since JAC is still a *physics code*, this merging may need some time to enable us to
-understand and test for side-effects upon other parts of the code.
-
-In particular, **we like to encourage contributions from the atomic physics community** to contribute to the code, provided
-that the overall style of the package is maintained and if consensus exists how to add new features to the code. The goal 
-should be to *avoid* duplication and inhomogeneity across the package as well as to implement (too) specific features 
-that will cause issues in the future. External support by developers may include incremental improvements as well as 
-multiple approaches for algorithms and modules in order to provide well-tested alternatives, for instance, if some 
-particular approach does not work properly in all applications. Moreover, emphasis will be placed first on all those 
-applications that receive enough attention by the community. --- In contrast, we shall not support developments that 
-are highly sophisticated or detrimental to a long-term maintenance of the code. 
-
-Although a good number of tests and applications have been performed by using JAC, this code still in an early stage, 
-and no code is error free. We shall therefore appreciate reports from the users if problems are encountered or, 
-more helpful, if solutions are suggesteg and/or provided. One of the simplest way to start contributing to JAC is 
-writing some new *demos* (Pluto notebooks), in addition to those provided above, in order to navigate others to the 
-task of a new user. Also, new graphical user interface and plotting features on different outcomes of atomic computations 
-will be very helpful for the community. A few further suggestions for extending and improving JAC can be found in 
-section 1.7 in the [User Guide, Compendium & Theoretical Background to JAC](docs/UserGuide-Jac.pdf).
-
-
-
-## Developers:
-
-* Fritzsche, Stephan, s.fritzsche@gsi.de (U Jena, Germany)
-* Sahoo, Aloka Kumar, aloka_s@ph.iitr.ac.in (HI Jena, Germany)
-* Huang, Houke (Institute of Modern Physics, Lanzhou, China)
-* Wang, Wu (HI Jena, Germany & U Haikou, China)
-* Li, Bowen (U Lanzhou, China)
-
-
-
-## (Former) Supporters:
-
-* Böning, Birger (HI Jena, Germany)
-* Dar, Danish F. (U Jena, Germany)
-* Gaigalas, Gediminas (U Vilnius, Lithuania)
-* Gilles, Jan (PTB Braunschweig, Germany)
-* Hofbrucker, Jiri (U Jena, Germany)
-* Jiao, Li-Guang (HI Jena, Germany & Jilin U Changchun, China)
-* Schippers, Stefan (U Giessen, Germany)
-* Sienkiwicz, Joseph (TU Gdansk, Poland)
-* Surzhykov, Andrey (U Braunschweig, Germany)
-* Volotka, Andrey (HI Jena, Germany & St. Petersburg, Russia)
-* Wang, Yuan-Cheng (HI Jena, Germany & U Shenyang, China)
-* Wu, Zhongwen (HI Jena, Germany & U Lanzhou, China)
