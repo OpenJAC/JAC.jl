@@ -11,9 +11,24 @@ Modules = [InteractionStrength]
 Order   = [:type, :function]
 ```
 
-##  Basic procedures
+##  Basics: data types
 ```@autodocs
 Modules = [Basics]
+Pages   = ["Basics.jl"]
+Order   = [:type, :function]
+```
+
+##  Basics: functions
+```@autodocs
+Modules = [Basics]
+Pages   = ["inc-AZ.jl", "inc-AG.jl", "inc-HP.jl", "inc-QZ.jl"]
+Order   = [:type, :function]
+```
+
+##  Basics: compute & generate
+```@autodocs
+Modules = [Basics]
+Pages   = ["inc-compute.jl", "inc-generate.jl"]
 Order   = [:type, :function]
 ```
 
