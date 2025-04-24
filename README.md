@@ -118,7 +118,7 @@ and by typing
 pkg> add https://github.com/OpenJAC/JAC.jl
 ```
 
-!!! info "Info"
+!!! @info "Info"
     We suggest to use JAC with the Julia v1.10.
 
 ## Current limitations of JAC
