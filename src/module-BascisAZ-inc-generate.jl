@@ -1,4 +1,5 @@
-using   QuadGK
+
+using   QuadGK, ..Hamiltonian
 export  generate
 
 
@@ -178,7 +179,7 @@ function Basics.generate(repType::AtomicState.CiExpansion, rep::AtomicState.Repr
     for  subshell in  basis.subshells   
         if   !(haskey(orbitals, subshell))  error("No orbital available for subshell $subshell ")     end
     end
-    multiplet  = Basics.performCI(basis,  nModel, rep.grid, asfSettings; printout=true) 
+    multiplet  = Hamiltonian.performCI(basis,  nModel, rep.grid, asfSettings; printout=true) 
     if output    results = Base.merge( results, Dict("CI multiplet" => Multiplet("CI multiplet:", multiplet.levels)) )              end
     
     return( results )
@@ -224,6 +225,7 @@ function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Rep
         basis      = Basics.generateBasis(rep.refConfigs, repType.symmetries, step)
         orbitals   = Basics.generateOrbitalsForBasis(basis, step.frozenShells, priorMultiplet.levels[1].basis, startOrbitals)
         basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )  
+        multiplet  = Hamiltonian.performCI(basis,  nModel, rep.grid, asfSettings; printout=true) 
         ## basis      = Basics.performSCF(basis, nModel, rep.grid, step.frozenShells, repType.settings; printout=true)
         ## multiplet  = Basics.performCI(basis,  nModel, rep.grid, asfSettings; printout=true) 
         if output    results = Base.merge( results, Dict("step"*string(istep) => Multiplet("Multiplet:", multiplet.levels)) )              end
@@ -255,8 +257,9 @@ function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.R
     ##x refBasis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     ##x refMultiplet  = Basics.performCI(refBasis, nModel, rep.grid, asfSettings; printout=true)
     refMultiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    refBasis      = refMultiplet.levels[1].basis
     nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
-    electronicPot = Basics.computePotential(Basics.DFSField(), rep.grid, refBasis)
+    electronicPot = Basics.computePotential(Basics.DFSField(1.0), rep.grid, refBasis)
     meanPot       = Basics.add(nuclearPot, electronicPot)
     
     println("")

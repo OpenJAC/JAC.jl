@@ -11,7 +11,7 @@ using Dates, JLD2, Printf, FastGaussQuadrature, Distributed, ProgressMeter,
         ..AngularMomentum, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
         ..DecayYield, ..DielectronicRecombination, ..ElectronCapture, ..ImpactExcitation, ..Radial, ..ManyElectron, ..Nuclear, 
         ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..PhotoRecombination, 
-        ..Semiempirical, ..TableStrings
+        ..SelfConsistent, ..Semiempirical, ..TableStrings
 
 
 """

@@ -331,6 +331,7 @@ function perform(scheme::StepwiseDecayScheme, comp::Cascade.Computation; output:
         ##x basis      = Basics.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
         ##x multiplet  = Basics.performCI(basis, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
         multiplet  = SelfConsistent.performSCF(comp.initialConfigs, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+        basis      = multiplet.levels[1].basis
         multiplets = [Multiplet("initial states", multiplet.levels)]
     else
         basis      = comp.initialMultiplets[1].levels[1].basis

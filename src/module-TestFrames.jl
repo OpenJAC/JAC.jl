@@ -589,7 +589,7 @@ function testModule_Hfs(; short::Bool=true)
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
                             nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.81, AngularJ64(5//2), 1.0, 1.0),
                             configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                            propertySettings = [ Hfs.Settings(true, true, true, true, true, true, LevelSelection() )] )
+                            propertySettings = [ Hfs.Settings(true, true, true, true, true, LevelSelection() )] )
 
     wb = perform(wa)
     ###
@@ -638,8 +638,8 @@ function testModule_LandeZeeman(; short::Bool=true)
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=Radial.Grid(true),
                             nuclearModel=Nuclear.Model(26., "Fermi", 58., 3.75, AngularJ64(5//2), 1.0, 2.0),
                             configs=[Configuration("[Ne] 3s^2 3p^5"), Configuration("[Ne] 3s 3p^6")],
-                            propertySettings = [ LandeZeeman.Settings(true, true, true, true, true, true, 0., 
-                                                                      LevelSelection(), LevelSelection() )] )
+                            propertySettings = [ LandeZeeman.Settings(true, true, true, false, true, true, 0., 
+                                                                      LevelSelection(), Multiplet() )] )
     wb = perform(wa)
     ###
     Defaults.setDefaults("print summary: close", "")
@@ -1042,11 +1042,11 @@ function testRepresentation_RasExpansion(; short::Bool=true)
     step3       = RasStep(step2, seTo=deepcopy(to), deTo=deepcopy(to), frozen=deepcopy(frozen))
     #
     wa          = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs, 
-                                    RasExpansion([LevelSymmetry(0, Basics.plus)], 4, [step1, step2, step3], rasSettings) )
+                                 RasExpansion([LevelSymmetry(0, Basics.plus)], 4, [step1, step2, step3], rasSettings) )
     wb = generate(wa, output=true)
-    if  abs(wb["step3"].levels[1].energy + 14.61679117)  > 1.0e-3
+    if  abs(wb["step3"].levels[1].energy + 14.7540801622)  > 1.0e-3
         success = false
-        if printTest   info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != -14.61679117")   end
+        if printTest   info(iostream, "levels[1].energy $(wd["CI multiplet"].levels[1].energy) != 14.754080162")   end
     end
 
     testPrint("testRepresentation_RasExpansion()::", success)

@@ -91,7 +91,7 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, FullCIeigen,
        generate, GreenSettings, GreenChannel, GreenExpansion, getDefaults, Green, Gui,
-       Hfs, HyperfineInduced, HighHarmonic, HFS, HydrogenicIon, HarmonicQuantizationAxis,
+       Hamiltonian, Hfs, HyperfineInduced, HighHarmonic, HFS, HydrogenicIon, HarmonicQuantizationAxis,
        interpolate, integrate, Integral, ImpactExcAuto, ImpactExcitation, ImpactExcitationAutoion, ImpactIonization, 
        InteractionStrength, InternalConv, InternalConversion, InternalRecombination, Isotope, IsotopeShift, IsotopicFraction, 
        Kronecker,
