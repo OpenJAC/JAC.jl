@@ -106,6 +106,7 @@ end
     + omegaIn           ::Float64                           ... Transition frequency of excitation.
     + omegaOut          ::Float64                           ... Transition frequency of emission.
     + intermediateGamma ::Float64                           ... Widths of the intermediate level
+    + productF          ::EmProperty                        ... F (product of amplitudes is assumed to be real)
     + relativeCS        ::EmProperty                        ... relative CS = |F|^2
     + excitationChannels::Array{PhotoEmission.Channel,1}    ... List of incoming channels.
     + emissionChannels  ::Array{PhotoEmission.Channel,1}    ... List of outgoing RIXS channels.
@@ -117,6 +118,7 @@ struct  Pathway
     omegaIn             ::Float64 
     omegaOut            ::Float64 
     intermediateGamma   ::Float64 
+    productF            ::EmProperty 
     relativeCS          ::EmProperty
     excitationChannels  ::Array{PhotoEmission.Channel,1}
     emissionChannels    ::Array{PhotoEmission.Channel,1}
@@ -131,6 +133,7 @@ function Base.show(io::IO, pathway::ResonantInelastic.Pathway)
     println(io, "omegaIn:              $(pathway.omegaIn)  ")
     println(io, "omegaOut:             $(pathway.omegaOut)  ")
     println(io, "intermediateGamma:    $(pathway.intermediateGamma)  ")
+    println(io, "productF:             $(pathway.productF)  ")
     println(io, "relativeCS:           $(pathway.relativeCS)  ")
     println(io, "channels:             $(pathway.channels)  ")
 end
@@ -144,7 +147,7 @@ end
 """
 function  computeAmplitudesProperties(pathway::ResonantInelastic.Pathway, grid::Radial.Grid, 
                                       settings::ResonantInelastic.Settings)
-    relativeCS = EmProperty(0.)
+    productF = EmProperty(0.);   relativeCS = EmProperty(0.)
     ## println(">> pathway: $(pathway.initialLevel.index)--$(pathway.intermediateLevel.index)--$(pathway.finalLevel.index) ...")
     #
     Defaults.setDefaults("relativistic subshell list", pathway.intermediateLevel.basis.subshells; printout=false)
@@ -188,9 +191,12 @@ function  computeAmplitudesProperties(pathway::ResonantInelastic.Pathway, grid::
         end
     end
 
+    @show ampCou, ampBab
+    productF   = EmProperty(    ampCou.re,     ampBab.re )
     relativeCS = EmProperty(abs(ampCou)^2, abs(ampBab)^2)
     pathway    = ResonantInelastic.Pathway( pathway.initialLevel, pathway.intermediateLevel, pathway.finalLevel, 
-                                            pathway.omegaIn, pathway.omegaOut, width, relativeCS, newExChannels, newEmChannels)
+                                            pathway.omegaIn, pathway.omegaOut, width, productF, relativeCS, 
+                                            newExChannels, newEmChannels)
     return( pathway )
 end
 
@@ -315,7 +321,7 @@ function  determinePathways(finalMultiplet::Multiplet, intermediateMultiplet::Mu
                     emChannels = ResonantInelastic.determineEmissionChannels(  fLevel, nLevel, settings)
                     if  length(exChannels) * length(emChannels) > 0
                         push!( pathways, ResonantInelastic.Pathway(iLevel, nLevel, fLevel, omegaIn, omegaOut, 0., 
-                                                                   EmProperty(0., 0.), exChannels, emChannels) )
+                                              EmProperty(0., 0.),  EmProperty(0., 0.), exChannels, emChannels) )
                     end
                 end
             end
@@ -388,7 +394,8 @@ end
 function  displayResults(stream::IO, pathways::Array{ResonantInelastic.Pathway,1},  settings::ResonantInelastic.Settings)
     nx = 163
     println(stream, " ")
-    println(stream, "  RIXS energies, widths and relative |F|^2 values (without omega/Gamma-dependent denominator):")
+    println(stream, "  RIXS energies, widths and relative F = Re (<f|Mout|m> <m|Min|i>) values" * 
+                    "  (without omega/Gamma-dependent denominator):")
     println(stream, " ")
     println(stream, "  ", TableStrings.hLine(nx))
     sa = "    ";   sb = "    "
@@ -399,7 +406,7 @@ function  displayResults(stream::IO, pathways::Array{ResonantInelastic.Pathway,1
     sa = sa * TableStrings.center(10, "Multipoles"; na=6)        
     sb = sb * TableStrings.center(10, "in;  out  "; na=5)
     sa = sa * TableStrings.center(36, " relative |F|^2 "; na=2);   
-    sb = sb * TableStrings.center(36, "  Cou-- |<f|Mout|m> <m|Min|i>|^2 --Bab"; na=2)
+    sb = sb * TableStrings.center(36, "  Cou-- Re (<f|Mout|m> <m|Min|i>) --Bab"; na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
     #   
     for  pathway in pathways
@@ -419,8 +426,8 @@ function  displayResults(stream::IO, pathways::Array{ResonantInelastic.Pathway,1
         for  ch in pathway.emissionChannels     push!( emMultipoles, ch.multipole)   end;   emMultipoles = unique(emMultipoles)
         mpString = TableStrings.multipoleList(exMultipoles) * ";  " * TableStrings.multipoleList(emMultipoles) * "               "
         sa = sa * TableStrings.flushleft(18, mpString[1:18];  na=1)
-        sa = sa * @sprintf("%.6e", pathway.relativeCS.Coulomb)     * "          "
-        sa = sa * @sprintf("%.6e", pathway.relativeCS.Babushkin)   * "  "
+        sa = sa * @sprintf("%.6e", pathway.productF.Coulomb)     * "          "
+        sa = sa * @sprintf("%.6e", pathway.productF.Babushkin)   * "  "
         println(stream, sa)
     end
     println(stream, "  ", TableStrings.hLine(nx))

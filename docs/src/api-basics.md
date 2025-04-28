@@ -1,6 +1,6 @@
 
 ##  Angular momentum
-```@autodocs
+```@autodocs ; canonical=false
 Modules = [AngularMomentum]
 Order   = [:type, :function]
 ```
@@ -12,23 +12,23 @@ Order   = [:type, :function]
 ```
 
 ##  Basics: data types
-```@autodocs
+```@autodocs ; canonical=false
 Modules = [Basics]
-Pages   = ["Basics.jl"]
+Pages   = ["Basics-inc-abstract.jl", "module-Basics-inc-first.jl", "module-Basics-inc-second.jl"]
 Order   = [:type, :function]
 ```
 
 ##  Basics: functions
-```@autodocs
+```@autodocs ; canonical=false
 Modules = [Basics]
-Pages   = ["inc-AZ.jl", "inc-AG.jl", "inc-HP.jl", "inc-QZ.jl"]
-Order   = [:type, :function]
+Pages   = ["module-BascisAZ-inc-AZ.jl", "module-BascisAZ-inc-AG.jl", "module-BascisAZ-inc-HP.jl", "module-BascisAZ-inc-QZ.jl"]
+Order   = [:function]
 ```
 
 ##  Basics: compute & generate
-```@autodocs
+```@autodocs ; canonical=false
 Modules = [Basics]
-Pages   = ["inc-compute.jl", "inc-generate.jl"]
+Pages   = ["BascisAZ-inc-compute.jl", "BascisAZ-inc-generate.jl"]
 Order   = [:type, :function]
 ```
 

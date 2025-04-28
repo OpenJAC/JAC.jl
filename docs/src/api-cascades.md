@@ -1,6 +1,6 @@
 
 ##  Cascade computations
-```@autodocs
+```@autodocs ; canonical=false
 Modules = [Cascade]
 Order   = [:type, :function]
 ```
