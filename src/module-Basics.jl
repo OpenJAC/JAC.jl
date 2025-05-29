@@ -55,6 +55,8 @@ function expandOrbital                                          end
 function extractLeadingConfiguration                            end
 function extractLeadingConfigurationR                           end
 function extractMeanEnergy                                      end
+function extractMeanOccupation                                  end
+function extractMultiplicity                                    end
 function extractNoOpenShells                                    end
 function extractNonrelativisticShellList                        end
 function extractNonrelativisticConfigurations                   end

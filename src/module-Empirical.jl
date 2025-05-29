@@ -7,7 +7,27 @@
 module Empirical
 
 
-using ..Basics, ..Radial, ..ManyElectron, ..Nuclear, ..ImpactIonization
+using ..Basics, ..Defaults, ..Distribution, ..Radial, ..ManyElectron, ..Nuclear, ..ImpactIonization, ..PeriodicTable
+
+"""
+`abstract type Empirical.AbstractEmpiricalApproximation` 
+    ... defines an abstract and a number of singleton types to deal with different line profiles, for instance,
+        in a plasma.
+
+    + GaussianProfile       ... assumes a Gaussian line profile L^Gaussian (omega)
+    + LorentzianProfile     ... assumes a Lorentzian line profile L^Lorentzian (omega)
+"""
+abstract type  AbstractEmpiricalApproximation                                end
+struct     Bohr1913                      <:  AbstractEmpiricalApproximation  end
+struct     Kramers1923                   <:  AbstractEmpiricalApproximation  end
+struct     Bethe1931                     <:  AbstractEmpiricalApproximation  end
+struct     Axelrod1980                   <:  AbstractEmpiricalApproximation  end
+struct     KozmaFranson1992              <:  AbstractEmpiricalApproximation  end
+
+export  AbstractEmpiricalApproximation, Bohr1913, Kramers1923, Bethe1931, Axelrod1980, KozmaFranson1992 
+
+#################################################################################################################################
+#################################################################################################################################
 
 
 """
@@ -117,5 +137,9 @@ function Basics.perform(computation::Empirical.Computation; output::Bool=false)
     
     return( results )
 end
+
+include("module-Empirical-inc-energies.jl")
+include("module-Empirical-inc-plasma-rates.jl")
+include("module-Empirical-inc-stopping-powers.jl")
 
 end # module

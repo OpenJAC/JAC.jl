@@ -224,7 +224,7 @@ end
     ... to recast a given radiative rate (Einstein A in atomic units) into a line strength S; 
         a Float64 is returned.
 """
-function Basics.recast(sa::String, line::Union{PhotoEmission.Line, HyperfineInduced.Line}, wa::Float64)
+function Basics.recast(sa::String, line::Union{Einstein.Line, PhotoEmission.Line, HyperfineInduced.Line}, wa::Float64)
     if  typeof(line) == HyperfineInduced.Line  &&
         ! (sa  in ["rate: radiative, to decay width", "rate: radiative, to Einstein A", "rate: radiative, to Einstein B"])
         error("Not supported recast for HyperfineInduced.Line's ")

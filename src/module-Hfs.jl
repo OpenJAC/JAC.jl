@@ -360,8 +360,7 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Gri
             #
             if      kind == "T^(1) amplitude"
             #--------------------------------
-                ##x wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
-                # Calculate the spin-angular coefficients
+                 # Calculate the spin-angular coefficients
                 if  Defaults.saRatip()
                     waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 1, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                     wa  = waR       
@@ -380,7 +379,7 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Gri
                 for  coeff in wa
                     ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                     jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                    tamp  = InteractionStrength.hfs_t1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
+                    tamp  = InteractionStrength.hfs_tM1(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
                     #
                     ## println("**  <$(coeff.a) || t1 || $(coeff.b)>  = $(coeff.T * tamp)   = $(coeff.T) * $tamp" )
                     me = me + coeff.T * tamp  
@@ -388,7 +387,6 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Gri
             #
             elseif  kind == "T^(2) amplitude"
             #--------------------------------
-                ##x wa = compute("angular coefficients: 1-p, Grasp92", 0, 2, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
                 # Calculate the spin-angular coefficients
                 if  Defaults.saRatip()
                     waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 2, rLevel.basis.csfs[r], sLevel.basis.csfs[s])
@@ -408,7 +406,7 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Gri
                 for  coeff in wa
                     ja = Basics.subshell_2j(rLevel.basis.orbitals[coeff.a].subshell)
                     jb = Basics.subshell_2j(sLevel.basis.orbitals[coeff.b].subshell)
-                    tamp  = InteractionStrength.hfs_t2(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
+                    tamp  = InteractionStrength.hfs_tE2(rLevel.basis.orbitals[coeff.a], sLevel.basis.orbitals[coeff.b], grid)
                     #
                     ## println("**  <$(coeff.a) || t2 || $(coeff.b)>  = $(coeff.T * tamp)   = $(coeff.T) * $tamp" )
                     me = me + coeff.T * tamp  
@@ -426,7 +424,85 @@ function  amplitude(kind::String, rLevel::Level, sLevel::Level, grid::Radial.Gri
     #
     return( amplitude )
 end
+"""
+`Hfs.computeInteractionAmplitudeM(mp::EmMultipole, leftIsomer::Nuclear.Isomer, rightIsomer::Nuclear.Isomer)` 
+    ... to compute the hyperfine interaction amplitude (<leftIsomer || M^(mp)) || rightIsomer>) for the interaction of two
+        nuclear levels; this ME is geometrically fixed if the left and right isomer are the same, and it depends
+        on the nuclear ME otherwise. An amplitude::ComplexF64 is returned.
+"""
+function  computeInteractionAmplitudeM(mp::EmMultipole, leftIsomer::Nuclear.Isomer, rightIsomer::Nuclear.Isomer)
+    amplitude = 1.
+    # Calculate the geometrical factor if the left- and right-hand isomer is the same
+    if  leftIsomer == rightIsomer
+        floatI = Basics.twice(leftIsomer.spinI) / 2.
+        if       mp == M1       amplitude = leftIsomer.mu * sqrt( (floatI + 1)*(2*floatI+1) / floatI)
+        elseif   mp == E2       amplitude = leftIsomer.Q / 2 * sqrt( (floatI + 1)*(2*floatI+1) * (2*floatI + 3)/ (floatI * (2*floatI -1)) )
+        else   error("stop a; mp = $mp")
+        end
+    else
+        if mp in leftIsomer.multipoleM && mp in rightIsomer.multipoleM
+            lidx = findall(==(mp), leftIsomer.multipoleM)
+            ridx = findall(==(mp), rightIsomer.multipoleM)
+            if lidx != ridx
+                error("stop a; leftIsomer.multipoleM != rightIsomer.multipoleM ") 
+            else
+                if length(lidx) == 1 && length(ridx) == 1 
+                    amplitude = (leftIsomer.elementM[lidx[1]] + rightIsomer.elementM[ridx[1]]) / 2
+                    if rightIsomer.energy < leftIsomer.energy
+                        amplitude =amplitude *(-1)^(Basics.twice(rightIsomer.spinI)/2-Basics.twice(leftIsomer.spinI)/2)
+                    end
+                else error("stop b; leftIsomer.multipoleM setting error")
+                end
+            end
+        else
+            amplitude = 0.
+        end  
+    end  
+    return( amplitude )
+end
 
+"""
+`Hfs.computeInteractionAmplitudeT(mp::EmMultipole, aLevel::Level, bLevel, grid::Radial.Grid)` 
+    ... to compute the T^(mp) interaction matrices for the given basis, i.e. (<aLevel || T^(mp) || bLevel>).
+        Both levels must refer to the same basis. A me::ComplexF64 is returned.
+"""
+function  computeInteractionAmplitudeT(mp::EmMultipole, aLevel::Level, bLevel, grid::Radial.Grid)
+    #
+    ncsf = length(aLevel.basis.csfs);  me = ComplexF64(0.)
+    if  ncsf != length(bLevel.basis.csfs)  ||  aLevel.basis.subshells != bLevel.basis.subshells
+        error("stop a: both levels must refer to the same electronic basis.")
+    end 
+    
+    # Compute the  T^(mp) matrix element
+    for  (ia, csfa)  in  enumerate(aLevel.basis.csfs)
+        for  (ib, csfb)  in  enumerate(bLevel.basis.csfs)
+            wb  = ComplexF64(0.)
+            if  abs(aLevel.mc[ia] * bLevel.mc[ib]) > 1.0e-10
+                if  aLevel.basis.csfs[ia].parity  != bLevel.basis.csfs[ib].parity   error("stop b")    end 
+                subshellList = aLevel.basis.subshells
+                orbitals     = aLevel.basis.orbitals
+                opa = SpinAngular.OneParticleOperator(mp.L, plus, true)
+                wa  = SpinAngular.computeCoefficients(opa, aLevel.basis.csfs[ia], bLevel.basis.csfs[ib], subshellList)
+                for  coeff in wa
+                    ja   = Basics.subshell_2j(orbitals[coeff.a].subshell)
+                    jb   = Basics.subshell_2j(orbitals[coeff.b].subshell)
+                    if      mp == M1    tamp = InteractionStrength.hfs_tM1(orbitals[coeff.a], orbitals[coeff.b], grid)
+                    elseif  mp == E2    tamp = InteractionStrength.hfs_tE2(orbitals[coeff.a], orbitals[coeff.b], grid)
+                    elseif  mp == E1    tamp = InteractionStrength.hfs_tE1(orbitals[coeff.a], orbitals[coeff.b], grid)  
+                    elseif  mp == E3    tamp = InteractionStrength.hfs_tE3(orbitals[coeff.a], orbitals[coeff.b], grid)
+                    elseif  mp == M2    tamp = InteractionStrength.hfs_tM2(orbitals[coeff.a], orbitals[coeff.b], grid)   
+                    elseif  mp == M3    tamp = InteractionStrength.hfs_tM3(orbitals[coeff.a], orbitals[coeff.b], grid)   
+                    else    error("stop b")    
+                    end 
+                    wb = wb + coeff.T * tamp/ sqrt( ja + 1) * sqrt( (Basics.twice(aLevel.J) + 1))    
+                end
+            end 
+            me = me + aLevel.mc[ia] * bLevel.mc[ib] * wb    
+        end 
+    end 
+
+    return( me )
+end 
 
 """
 `Hfs.computeAmplitudesProperties(outcome::Hfs.Outcome, nm::Nuclear.Model, grid::Radial.Grid, settings::Hfs.Settings, im::Hfs.InteractionMatrix) 
@@ -557,6 +633,7 @@ function computeHyperfineRepresentation(hfsBasis::IJF_Basis, nm::Nuclear.Model, 
 end
 
 
+#==
 """
 `Hfs.computeInteractionAmplitudeM(mp::EmMultipole, leftIsomer::Nuclear.Isomer, rightIsomer::Nuclear.Isomer)` 
     ... to compute the hyperfine interaction amplitude (<leftIsomer || M^(mp)) || rightIsomer>) for the interaction of two
@@ -609,8 +686,8 @@ function  computeInteractionAmplitudeT(mp::EmMultipole, aLevel::Level, bLevel, g
                 for  coeff in wa
                     ja   = Basics.subshell_2j(orbitals[coeff.a].subshell)
                     jb   = Basics.subshell_2j(orbitals[coeff.b].subshell)
-                    if      mp == M1    tamp = InteractionStrength.hfs_t1(orbitals[coeff.a], orbitals[coeff.b], grid)
-                    elseif  mp == E2    tamp = InteractionStrength.hfs_t2(orbitals[coeff.a], orbitals[coeff.b], grid)
+                    if      mp == M1    tamp = InteractionStrength.hfs_tM1(orbitals[coeff.a], orbitals[coeff.b], grid)
+                    elseif  mp == E2    tamp = InteractionStrength.hfs_tE2(orbitals[coeff.a], orbitals[coeff.b], grid)
                     else    error("stop b")    
                     end 
                     wb = wb + coeff.T * tamp
@@ -622,6 +699,8 @@ function  computeInteractionAmplitudeT(mp::EmMultipole, aLevel::Level, bLevel, g
 
     return( me )
 end 
+==#
+
 
 
 """
@@ -639,7 +718,6 @@ function  computeInteractionMatrix(basis::Basis, grid::Radial.Grid, settings::Hf
             for  s = 1:ncsf
                 if  basis.csfs[r].parity  != basis.csfs[s].parity   continue    end 
                 #
-                ##x wa = compute("angular coefficients: 1-p, Grasp92", 0, 1, basis.csfs[r], basis.csfs[s])
                 # Calculate the spin-angular coefficients
                 if  Defaults.saRatip()
                     waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 1, basis.csfs[r], basis.csfs[s])
@@ -659,7 +737,7 @@ function  computeInteractionMatrix(basis::Basis, grid::Radial.Grid, settings::Hf
                 for  coeff in wa
                     ja   = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                     jb   = Basics.subshell_2j(basis.orbitals[coeff.b].subshell)
-                    tamp = InteractionStrength.hfs_t1(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
+                    tamp = InteractionStrength.hfs_tM1(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
                     matrixT1[r,s] = matrixT1[r,s] + coeff.T * tamp  
                 end
             end
@@ -674,7 +752,6 @@ function  computeInteractionMatrix(basis::Basis, grid::Radial.Grid, settings::Hf
             for  s = 1:ncsf
                 if  basis.csfs[r].parity  != basis.csfs[s].parity   continue    end 
                 #
-                ##x wa = compute("angular coefficients: 1-p, Grasp92", 0, 2, basis.csfs[r], basis.csfs[s])
                 # Calculate the spin-angular coefficients
                 if  Defaults.saRatip()
                     waR = Basics.compute("angular coefficients: 1-p, Grasp92", 0, 2, basis.csfs[r], basis.csfs[s])
@@ -694,7 +771,7 @@ function  computeInteractionMatrix(basis::Basis, grid::Radial.Grid, settings::Hf
                 for  coeff in wa
                     ja   = Basics.subshell_2j(basis.orbitals[coeff.a].subshell)
                     jb   = Basics.subshell_2j(basis.orbitals[coeff.b].subshell)
-                    tamp  = InteractionStrength.hfs_t2(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
+                    tamp  = InteractionStrength.hfs_tE2(basis.orbitals[coeff.a], basis.orbitals[coeff.b], grid)
                     matrixT2[r,s] = matrixT2[r,s] + coeff.T * tamp  
                 end
             end
@@ -707,7 +784,6 @@ function  computeInteractionMatrix(basis::Basis, grid::Radial.Grid, settings::Hf
     #
     return( im )
 end
-
 
 
 """
@@ -725,7 +801,7 @@ function computeOutcomes(multiplet::Multiplet, nm::Nuclear.Model, grid::Radial.G
     # Display all selected levels before the computations start
     if  settings.printBefore    Hfs.displayOutcomes(outcomes)    end
     # Calculate all amplitudes and requested properties
-    im = computeInteractionMatrix(multiplet.levels[1].basis, grid, settings)
+    im = Hfs.computeInteractionMatrix(multiplet.levels[1].basis, grid, settings)
     newOutcomes = Hfs.Outcome[]
     for  outcome in outcomes
         newOutcome = Hfs.computeAmplitudesProperties(outcome, nm, grid, settings, im) 

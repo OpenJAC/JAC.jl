@@ -6,7 +6,7 @@
 module Radial
 
 
-using  QuadGK, Printf, JAC, ..Basics
+using  QuadGK, Printf, JenaAtomicCalculator, ..Basics 
 
 export Grid, Potential, Orbital, SingleElecSpectrum
 
@@ -694,9 +694,9 @@ function OrbitalBunge1993(subshell::Subshell, Z::Int64, grid::Radial.Grid)
     Q = zeros(size(P, 1))
     #x println("small component not yet defined properly; P = $P ")
 
-    dP(i) = JAC.Math.derivative(P, i)
+    dP(i) = JenaAtomicCalculator.Math.derivative(P, i)
     for i = 2:size(Q, 1)
-        Q[i] = -1/(2 * JAC.Defaults.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(i) / grid.h / grid.rp[i] + kappa/grid.r[i]) * P[i]
+        Q[i] = -1/(2 * JenaAtomicCalculator.Defaults.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(i) / grid.h / grid.rp[i] + kappa/grid.r[i]) * P[i]
     end
 
     o     = Orbital( subshell, true, true, -0.5, P, Q, grid)
@@ -759,7 +759,7 @@ end
 """
 function OrbitalPrimitiveSlater(subshell::Subshell, N::Int64, alpha0::Float64, beta0::Float64, grid::Radial.Grid) 
     function P(i::Int64, l::Int64, eta::Float64)   return( grid.r[i]^(l+1) * exp(-eta*grid.r[i]) )   end
-    dP(i) = JAC.Math.derivative(Px, i)
+    dP(i) = JenaAtomicCalculator.Math.derivative(Px, i)
 
     orbitals = Orbital[];    ll = Basics.subshell_l(subshell)
     for  i = 1:N
@@ -767,15 +767,15 @@ function OrbitalPrimitiveSlater(subshell::Subshell, N::Int64, alpha0::Float64, b
         # Px  = [for i = 1:grid.NoPoints P(i, ll, eta)]
         Qx  = zeros(size(Px, 1))
         for j = 2:size(Q, 1)
-            Qx[j] = -1/(2 * JAC.Defaults.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(j) / grid.h / grid.rp[j] + kappa/grid.r[j]) * Px[j]
+            Qx[j] = -1/(2 * JenaAtomicCalculator.Defaults.INVERSE_FINE_STRUCTURE_CONSTANT) * (dP(j) / grid.h / grid.rp[j] + kappa/grid.r[j]) * Px[j]
         end
 
         o     = Orbital( subshell, true, true, 0., Px, Qx, grid() )
-        norma = JAC.RadialIntegrals.overlap(o, o, grid)
+        norma = JenaAtomicCalculator.RadialIntegrals.overlap(o, o, grid)
         o.P = o.P/sqrt(norma)
         o.Q = o.Q/sqrt(norma)
 
-        normb = JAC.RadialIntegrals.overlap(o, o, grid)
+        normb = JenaAtomicCalculator.RadialIntegrals.overlap(o, o, grid)
         println("OrbitalPrimitiveSlater-aa:  for i = $i : norm-before = $norma, norm-after = $normb")
         
         push!( orbitals, o)

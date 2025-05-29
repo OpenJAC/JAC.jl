@@ -6,7 +6,7 @@
 module HydrogenicIon 
 
 
-using  Printf, ..Basics, ..Bsplines, ..Defaults, ..Math, ..Nuclear, ..Radial, ..RadialIntegrals,  GSL
+using  Printf, ..Basics, ..BsplinesN, ..Defaults, ..Math, ..Nuclear, ..Radial, ..RadialIntegrals,  GSL
 using  SpecialFunctions,  HypergeometricFunctions
 
 

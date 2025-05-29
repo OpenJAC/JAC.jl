@@ -6,12 +6,37 @@
 """
 module Hamiltonian
 
-using  Printf, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, ..Radial, 
+using  Printf, ..Basics, ..BsplinesN, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, ..Radial, 
        ..RadialIntegrals, ..SpinAngular
 
 
 """
-`Hamiltonian.performCI(settings::AsfSettings; printout::Bool=false)
+`Hamiltonian.projectHamiltonian(subshell::Subshell, matrix::Array{Float64,2}, matrixB::Array{Float64,2}, 
+                                bVectors::Dict{Subshell, Vector{Float64}})` 
+    ... projects the (single-electron DHF) Hamiltonian matrix of subshell with regard to the B-vectors of the same
+        symmetry. This projection is necessary to ensure orthogonality among the various orbitals.
+        A (nsL+nsS) x (nsL+nsS) matrix::Array{Float64,2} is returned.
+"""
+function projectHamiltonian(subshell::Subshell, matrix::Array{Float64,2}, matrixB::Array{Float64,2}, 
+                            bVectors::Dict{Subshell, Vector{Float64}})
+    nn = size(matrix, 1);   matrixP = deepcopy(matrix);           
+    
+    matrixI = zeros(nn, nn);   for i = 1:nn   matrixI[i,i] = 1.0   end
+    
+    for  (subsh, bVector)  in  bVectors
+        if  subsh != subshell  &&  subshell.kappa == subsh.kappa
+            ## println(">>> Project $subshell  upon $subsh  vectors")
+            bbtMatrix = bVector * transpose(bVector)
+            matrixP   = (matrixI - matrixB * bbtMatrix) * matrixP * (matrixI - bbtMatrix * matrixB)
+        end 
+    end 
+    
+    return( matrix )
+end
+
+
+"""
+`Hamiltonian.performCI(settings::AsfSettings; printout::Bool=true)
         sym::LevelSymmetry, basis::Basis, nm::Nuclear.Model, grid::Radial.Grid, )
     ... Computes and diagonalizes the Hamiltonian matrix for all CSF in the given basis. It also assigns the
         mixing coefficients

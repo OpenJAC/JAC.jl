@@ -310,7 +310,6 @@ function Basics.determineNonorthogonalShellOverlap(finalSubshells::Array{Subshel
                                                     grid::Radial.Grid)
     neSubshells = setdiff(union(finalSubshells, initialSubshells),  intersect(finalSubshells, initialSubshells))
     ret = (Subshell(99,-1), Subshell(99,-1), 0.);     ne = length(neSubshells)
-    ##x @show  neSubshells
     for  a = 1:ne
         for  b = a+1:ne
             if   neSubshells[a].kappa == neSubshells[b].kappa   
@@ -1092,6 +1091,41 @@ end
 
     
 """
+`Basics.extractMeanOccupation(basis::Basis)`  
+    ... extracts the mean occupation numbers for all subshells of the given basis; an 
+        meanOccs::Dict{Subshell, Float64} is returned.
+"""
+function Basics.extractMeanOccupation(basis::Basis)
+    meanOccs = Dict{Subshell, Float64}();   ncsf = length(basis.csfs)
+    for  (is, subsh)  in  enumerate(basis.subshells)
+        occ = 0.;   for  csf in basis.csfs   occ = occ + csf.occupation[is]   end   
+        meanOccs[subsh] = occ / ncsf
+    end
+    return( meanOccs )
+end
+
+    
+"""
+`Basics.extractMultiplicity(conf::Configuration)`  
+    ... extracts the multiplicity, i.e. the g-factor, of the configuration conf if all the levels are considered to be degenerate;
+        this multiplicity is used for empirical computations that are based on configuration-averaged plasma levels.
+        A g::Int64 is returned
+"""
+function Basics.extractMultiplicity(conf::Configuration)
+    g = 0
+    rConfs       = Basics.generateConfigurationRs(conf)
+    shellList    = Basics.generateShellList(1, 10, "f")
+    subshellList = Basics.generateSubshellList(shellList)
+    
+    for  rConf  in  rConfs
+        g = g + length(Basics.generateCsfRs(rConf, subshellList))
+    end
+    
+    return( g )
+end
+
+    
+"""
 `Basics.extractNoOpenShells(conf::Configuration)`  
     ... determine the number of open (nonrelativistic) shells in conf; a singleton of type AbstractOpenShell is returned.
 """
@@ -1143,7 +1177,6 @@ function Basics.extractNonrelativisticShellList(confs::Array{Configuration,1})
             if  k in shellList      else    push!(shellList, k)     end
         end
     end
-    ##x @show shellList
     
     return( shellList )
 end
@@ -1163,7 +1196,6 @@ function Basics.extractNonrelativisticShellList(multiplet::Multiplet)
             if  k in shellList      else    push!(shellList, k)     end
         end
     end
-    ##x @show shellList
     
     return( shellList )
 end
@@ -1179,7 +1211,6 @@ function Basics.extractNonrelativisticShellList(multiplets::Array{Multiplet,1})
     for  mp in multiplets
         shellList = Basics.merge(shellList, Basics.extractNonrelativisticShellList(mp))
     end
-    ##x @show shellList
     
     return( shellList )
 end
@@ -1496,7 +1527,6 @@ function Basics.extractRydbergSubshellList(level::Level, n0::Int64, wx::Float64)
 
     for (i, coeff) in enumerate(level.mc)
         if  coeff*coeff  >  wx
-            ##x @show  i, coeff*coeff
             redSubshells     = Basics.extractRelativisticSubshellList(level.basis.csfs[i], level.basis.subshells)
             reducedSubshells = append!(reducedSubshells, redSubshells)
         end

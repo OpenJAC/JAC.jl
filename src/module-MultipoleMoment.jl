@@ -7,7 +7,7 @@
 module MultipoleMoment
 
 
-using Printf, JAC, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..InteractionStrength
+using Printf, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..InteractionStrength, ..SpinAngular
 
 """
 `MultipoleMoment.amplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
@@ -133,7 +133,7 @@ function dipoleAmplitude(finalLevel::Level, initialLevel::Level, grid::Radial.Gr
                 for  coeff in wa
                     ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
                     jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
-                    tamp  = JAC.InteractionStrength.dipole(finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], grid)
+                    tamp  = InteractionStrength.dipole(finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], grid)
                     matrix[r,s] = matrix[r,s] + coeff.T * tamp  
                 end
             end
@@ -182,7 +182,7 @@ function emmStaticAmplitude(k::Int64, finalLevel::Level, initialLevel::Level, gr
                 for  coeff in wa
                     ja   = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
                     jb   = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
-                    tamp = JAC.InteractionStrength.eMultipole(k, finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], grid)
+                    tamp = InteractionStrength.eMultipole(k, finalLevel.basis.orbitals[coeff.a], initialLevel.basis.orbitals[coeff.b], grid)
                     matrix[r,s] = matrix[r,s] + coeff.T * tamp  
                 end
             end
@@ -207,7 +207,7 @@ end
 
 
 """
-`JAC.MultipoleMoment.transitionAmplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
+`MultipoleMoment.transitionAmplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
                                             grid::Radial.Grid; display::Bool=false)`  
     ... to compute Johnson's (2007) multipole-transition amplitude  <alpha_f J_f || T^(M, absorption) (omega, gauge) || alpha_i J_i>  
         for the given final and initial level. Allowed gauges are {Velocity, Length} for the electric-multipole transition 
@@ -227,7 +227,7 @@ function transitionAmplitude(mp::EmMultipole, gauge::EmGauge, omega::Float64, fi
             for  coeff in wa
                 ##x ja = Basics.subshell_2j(finalLevel.basis.orbitals[coeff.a].subshell)
                 ##x jb = Basics.subshell_2j(initialLevel.basis.orbitals[coeff.b].subshell)
-                tamp  = JAC.InteractionStrength.multipoleTransition(mp, gauge, omega, finalLevel.basis.orbitals[coeff.a], 
+                tamp  = InteractionStrength.multipoleTransition(mp, gauge, omega, finalLevel.basis.orbitals[coeff.a], 
                                                                     initialLevel.basis.orbitals[coeff.b], grid)
                 matrix[r,s] = matrix[r,s] + coeff.T * tamp  
             end

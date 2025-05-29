@@ -8,6 +8,29 @@
 module PeriodicTable
 
 
+"""
+`abstract type PeriodicTable.AbstractEnergyData` 
+    ... defines an abstract and a number of singleton types to deal with different data set for binding energies,
+        ionization potentials, etc.
+
+    + Larkins1977       ... assumes a Lorentzian line profile L^Lorentzian (omega)
+    + Nist2025          ... assumes a Lorentzian line profile L^Lorentzian (omega)
+    + Williams2000      ... applies the subshell binding energies by Williams (2000)
+    + XrayDataBooklet   ... assumes a Lorentzian line profile L^Lorentzian (omega)
+"""
+abstract type  AbstractEnergyData                                    end
+struct     Larkins1977                   <:  AbstractEnergyData      end
+struct     Nist2025                      <:  AbstractEnergyData      end
+struct     Williams2000                  <:  AbstractEnergyData      end
+struct     XrayDataBooklet               <:  AbstractEnergyData      end
+
+
+export  AbstractEnergyData, Larkins1977, Nist2025, Williams2000, XrayDataBooklet
+
+#################################################################################################################################
+#################################################################################################################################
+
+
 using  Printf, ..Basics, ..ManyElectron
 
 

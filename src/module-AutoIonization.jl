@@ -592,7 +592,6 @@ function computeTeaAmplitude(kind::AbstractEeInteraction, channel::AutoIonizatio
     #
     # Always ensure the same subshell list for all initial, intermediate and final (continuum) levels
     subshells  = Basics.merge(initialLevel.basis.subshells, continuumLevel.basis.subshells)
-    ##x @show  initialLevel.basis.subshells, continuumLevel.basis.subshells, subshells
     iLevel     = Level(initialLevel, subshells)
     fLevel     = Level(continuumLevel, subshells)
     nMultiplet = Multiplet(gMultiplet, subshells)
@@ -621,7 +620,6 @@ function computeTeaAmplitude(kind::AbstractEeInteraction, channel::AutoIonizatio
                     Vee = ManyElectron.matrixElement_Vee(kind, nLevel.basis, t, iLevel.basis, s, grid)
                     Vae = ManyElectron.matrixElement_Vee(kind, fLevel.basis, r, nLevel.basis, t, grid)
                     amp = amp + fLevel.mc[r] * Vae * nLevel.mc[t]^2 * Vee * iLevel.mc[s] / (eni - enn) / 4.
-                    ##x @show  t, eni, (eni - enn), amp
                 end
             end
         end

@@ -6,8 +6,7 @@
 module AlphaVariation
 
 
-using  Printf, JAC, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..TableStrings
-global  JAC_counter = 0
+using  Printf, ..Basics, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
 
 
 """

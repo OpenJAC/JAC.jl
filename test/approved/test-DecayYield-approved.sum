@@ -1,4 +1,4 @@
-Summary file opened at 2025-04-23T15:38: 
+Summary file opened at 2025-05-29T20:35: 
 ========================================   
 
 
@@ -63,7 +63,7 @@ Summary file opened at 2025-04-23T15:38:
 
 * Generate blocks for the decay cascade:
 
-* In the cascade approach JAC.Cascade.SCA(), the following assumptions/simplifications are made: 
+* In the cascade approach JenaAtomicCalculator.Cascade.SCA(), the following assumptions/simplifications are made: 
     + orbitals are generated independently for each multiplet (block); 
     + configuration interaction is included for each block; 
     + only E1 dipole transitions are applied in all radiative decay stets; 
@@ -241,7 +241,7 @@ Summary file opened at 2025-04-23T15:38:
 
 * Generate blocks for the decay cascade:
 
-* In the cascade approach JAC.Cascade.SCA(), the following assumptions/simplifications are made: 
+* In the cascade approach JenaAtomicCalculator.Cascade.SCA(), the following assumptions/simplifications are made: 
     + orbitals are generated independently for each multiplet (block); 
     + configuration interaction is included for each block; 
     + only E1 dipole transitions are applied in all radiative decay stets; 

@@ -228,7 +228,76 @@ function amplitude(kind::String, Mp::EmMultipole, gauge::EmGauge, omega::Float64
     
     return( amplitude )
 end
-
+    
+    
+"""
+` +  amplitude_Wu(kind::String, Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
+                  grid::Radial.Grid; display::Bool=false, printout::Bool=false)`  
+        ... to compute the kind = (absorption or emission) amplitude  <alpha_f J_f || O^(Mp, kind) || alpha_i J_i> for the 
+            interaction with  photon of multipolarity Mp and for the given transition energy and gauge. A value::ComplexF64 is 
+            returned. The radial function is calculated by InteractionStrength.MabEmissionJohnsony_Wu. The amplitude value is 
+            printed to screen if display=true.
+"""
+function amplitude_Wu(kind::String, Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level, 
+                    grid::Radial.Grid; display::Bool=false, printout::Bool=false)
+    
+    if      kind == "emission"
+    #-------------------------
+        if  initialLevel.basis.subshells == finalLevel.basis.subshells
+            iLevel = initialLevel;   fLevel = finalLevel
+        else
+            subshells = Basics.merge(initialLevel.basis.subshells, finalLevel.basis.subshells)
+            iLevel    = Level(initialLevel, subshells)
+            fLevel    = Level(finalLevel, subshells)
+        end
+        
+        nf = length(fLevel.basis.csfs);    ni = length(iLevel.basis.csfs)
+        if  printout   printstyled("Compute radiative $(Mp) matrix of dimension $nf x $ni in the initial- and final-state bases " *
+                                    "for the transition [$(iLevel.index)-$(fLevel.index)] ... ", color=:light_green)    end
+        matrix = zeros(ComplexF64, nf, ni)
+        #
+        for  r = 1:nf
+            if  fLevel.basis.csfs[r].J != fLevel.J      ||  fLevel.basis.csfs[r].parity  != fLevel.parity    continue    end 
+            for  s = 1:ni
+                if  iLevel.basis.csfs[s].J != iLevel.J  ||  iLevel.basis.csfs[s].parity  != iLevel.parity    continue    end 
+                subshellList = fLevel.basis.subshells
+                opa = SpinAngular.OneParticleOperator(Mp.L, plus, true)
+                wa  = SpinAngular.computeCoefficients(opa, fLevel.basis.csfs[r], iLevel.basis.csfs[s], subshellList) 
+                me = 0.
+                for  coeff in wa
+                    ## MbaJohnsonx = InteractionStrength.MbaEmissionJohnsonx(Mp, gauge, omega, fLevel.basis.orbitals[coeff.a],  
+                    ##                                                                         iLevel.basis.orbitals[coeff.b], grid)
+                    MabJohnsony = InteractionStrength.MabEmissionJohnsony_Wu(Mp, gauge, omega, fLevel.basis.orbitals[coeff.a],  
+                                                                                            iLevel.basis.orbitals[coeff.b], grid)
+                    ja = Basics.subshell_2j(fLevel.basis.orbitals[coeff.a].subshell)
+                    ## jb = Basics.subshell_2j(iLevel.basis.orbitals[coeff.b].subshell)
+                    me = me + coeff.T * MabJohnsony / sqrt( ja + 1) * sqrt( (Basics.twice(fLevel.J) + 1))      ## * sqrt( jb + 1)
+                end
+                matrix[r,s] = me
+            end
+        end 
+        if  printout   printstyled("done. \n", color=:light_green)    end
+        amplitude = transpose(fLevel.mc) * matrix * iLevel.mc 
+        #
+        #
+    elseif  kind == "absorption"
+    #---------------------------
+        iLevel = finalLevel;   fLevel = initialLevel
+        amplitude = PhotoEmission.amplitude("emission", Mp, gauge, omega, fLevel, iLevel, grid, printout=printout) 
+        amplitude = conj(amplitude)
+    else    error("stop a")
+    end
+    # Multiply with the multipolarity factors to keep different multipoles on the same footings; this factor need to be better understood
+    # amplitude = amplitude * sqrt( (2Mp.L+1)*(Mp.L+1)/Mp.L )
+    
+    if  display  
+        println("    < level=$(finalLevel.index) [J=$(finalLevel.J)$(string(finalLevel.parity))] ||" *
+                " O^($Mp, $kind) ($omega a.u., $gauge) ||" *
+                " $(initialLevel.index) [$(initialLevel.J)$(string(initialLevel.parity))] >  = $amplitude  ")
+    end
+    
+    return( amplitude )
+end
 
 """
 `   + (kind::String, cp::CorePolarization, omega::Float64, finalLevel::Level, initialLevel::Level, grid::Radial.Grid; 

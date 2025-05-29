@@ -8,7 +8,7 @@ module Continuum
 
 
 using  GSL, Printf, SpecialFunctions, DelimitedFiles
-using  ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear
+using  ..Basics, ..BsplinesN, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear
 
 
 """
@@ -39,8 +39,6 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
     ## wp2 = compute("radial potential: Hartree-Slater", grid, wLevel)
     ## wp3 = compute("radial potential: Kohn-Sham", grid, wLevel)
     ## wp4 = compute("radial potential: Dirac-Fock-Slater", grid, wLevel)
-    ##x wp = compute("radial potential: Kohn-Sham", grid, level)   
-    ##x wp  = Basics.computePotential(Basics.DFSField(0.70), grid, level)   
     ## wp  = Basics.computePotential(Basics.DFSField(0.42), grid, level)   
     wp  = Basics.computePotential(Basics.DFSField(1.0), grid, level)   
     pot = Basics.add(nuclearPotential, wp)
@@ -189,8 +187,8 @@ end
 function generateOrbitalGalerkin(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)  
     P = zeros(settings.mtp);   Q = zeros(settings.mtp);   Pprime = zeros(settings.mtp);    Qprime = zeros(settings.mtp)
     nsL = pot.grid.nsL - 1;    nsS = pot.grid.nsS - 1
-    wa = Bsplines.generatePrimitives(pot.grid)
-    wb = Bsplines.generateGalerkinMatrix(wa, nsL, nsS, energy, sh, pot)
+    wa = BsplinesN.generatePrimitives(pot.grid)
+    wb = BsplinesN.generateGalerkinMatrix(sh, energy, pot, wa)
     wc = adjoint(wb) * wb
     
     # Test for 'real-symmetric matrix' ... and symmetrize otherwise
@@ -205,8 +203,8 @@ function generateOrbitalGalerkin(energy::Float64, sh::Subshell, pot::Radial.Pote
     wd = Basics.diagonalize("matrix: LinearAlgebra", wc) ## , range=1:1)
     ## println(">>> Galerkin-eigenvalues = $(wd.values[1]), $(wd.values[2]) for  $sh  with  energy = $energy")
     
-    cOrbital = Bsplines.generateOrbitalFromPrimitives(energy, sh, settings.mtp, wd.vectors[1], wa)  
-    mtp = size(cOrbital.P,1)
+    cOrbital = BsplinesN.generateOrbitalFromPrimitives(sh, energy, settings.mtp, wd.vectors[1], wa)  
+    mtp      = size(cOrbital.P,1)
     println(">> Continuum B-spline-Galerkin orbital for energy=" * @sprintf("%.4e",energy) * ",  kappa=$(sh.kappa) " *
             "[mpt=$mtp, r[mtp]=" * @sprintf("%.4e",pot.grid.r[mtp]) * ", smallest eigenvalue=" * @sprintf("%.4e",wd.values[1]) * "].")
     
@@ -323,7 +321,7 @@ function normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings
 
     PPprime = cOrbital.P[mtp] / cOrbital.Pprime[mtp];    kr  = q * grid.r[mtp];   at = atan( PPprime * q )
     phi = at - kr + l*pi/2; 
-    phi = rem(phi+1000pi, pi)    ##x to bring phi in the interval 0. <= phi < pi
+    phi = rem(phi+1000pi, pi)    # to bring phi in the interval 0. <= phi < pi
     # For normalization, determine the maximum of the large component within the last 300 point
     A = maximum( abs.(cOrbital.P[end-300:end]) );    N   = sqrt(2/(pi*q)) / A
     
@@ -356,7 +354,7 @@ function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, s
         PPprime = cOrbital.P[mtp] / cOrbital.Pprime[mtp];    kr  = q * pot.grid.r[mtp];   at = atan( PPprime * q )
         sigmac  = SpecialFunctions.gamma(l + 1 - im*Zbar/q)
         phi = at - kr + l*pi/2 - Zbar/q * log(2*q*pot.grid.r[mtp]) - atan(sigmac.im / sigmac.re); 
-        phi = rem(phi+1000pi, pi)    ##x to bring phi in the interval 0. <= phi < pi
+        phi = rem(phi+1000pi, pi)    # to bring phi in the interval 0. <= phi < pi
         # For normalization, determine the maximum of the large component within the last 300 point
         A = maximum( abs.(cOrbital.P[end-300:end]) );    N   = sqrt(2/(pi*q)) / A
         
@@ -376,7 +374,7 @@ function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, s
         argG  = SpecialFunctions.gamma(gammaBar + im*y)
         theta = q * pot.grid.r[mtp]  +  y * log(2q * pot.grid.r[mtp])  - atan(argG.im / argG.re)  -  pi*gammaBar/2 ##  +  eta.re
         phi = at - theta
-        phi = rem(phi+1000pi, pi)    ##x to bring phi in the interval 0. <= phi < pi
+        phi = rem(phi+1000pi, pi)    # to bring phi in the interval 0. <= phi < pi
         ## A   = cOrbital.P[mtp] / cos(theta + phi);           N   = NP / A
         A = maximum( abs.(cOrbital.P[end-300:end]) );    N   = NP / A
         
@@ -529,7 +527,6 @@ function normalizeOrbitalAlok(cOrbital::Orbital, pot::Radial.Potential, settings
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
     
-    ##x println(">> $sa:   r = $(pot.grid.r[mtp]),   iPhase = ", δ, " cPhase= ", Δ)
     println(">> $sa:   r = $(pot.grid.r[mtp]),   iPhase = $δ,   cPhase = $Δ ")
 
     return( newOrbital, δ + Δ, N )

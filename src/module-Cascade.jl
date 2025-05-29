@@ -8,7 +8,7 @@ module Cascade
 
 
 using Dates, JLD2, Printf, FastGaussQuadrature, Distributed, ProgressMeter,
-        ..AngularMomentum, ..AutoIonization, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
+        ..AngularMomentum, ..AutoIonization, ..Basics, ..BsplinesN, ..Continuum, ..Defaults, 
         ..DecayYield, ..DielectronicRecombination, ..ElectronCapture, ..ImpactExcitation, ..Radial, ..ManyElectron, ..Nuclear, 
         ..PhotoEmission, ..PhotoExcitation, ..PhotoIonization, ..PhotoRecombination, 
         ..SelfConsistent, ..Semiempirical, ..TableStrings

@@ -6,7 +6,7 @@
 module TestFrames
 
 
-using  Printf, SymEngine, JLD2, JAC, 
+using  Printf, SymEngine, JLD2, JenaAtomicCalculator, 
        ..AngularMomentum, ..Basics, ..Continuum, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
 
 export testDummy
@@ -913,7 +913,7 @@ function testModule_PhotoRecombination(; short::Bool=true)
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(12.), 
                             initialConfigs=[Configuration("1s^2")],
                             finalConfigs  =[Configuration("1s^2 2s"), Configuration("1s^2 3s"), Configuration("1s^2 3p"), Configuration("1s^2 3d")], 
-                            processSettings=PhotoRecombination.Settings([E1, M1], [JAC.UseCoulomb, JAC.UseBabushkin], [10.], 
+                            processSettings=PhotoRecombination.Settings([E1, M1], [UseCoulomb, UseBabushkin], [10.], 
                                                     [2.18, 21.8, 218.0], false, false, false, false, true, 2, LineSelection() ) )
     wb = perform(wa)
     ###

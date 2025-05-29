@@ -7,7 +7,7 @@
 module InteractionStrength
 
 
-using  GSL, JAC, ..AngularMomentum, ..Basics, ..Bsplines, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals
+using  GSL, ..AngularMomentum, ..Basics, ..BsplinesN, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals
 
 
 """
@@ -94,7 +94,7 @@ function hamiltonian_nms(a::Orbital, b::Orbital, nm::Nuclear.Model, grid::Radial
     return( wa )
 end
 
-
+#==
 """
 `InteractionStrength.hfs_t1(a::Orbital, b::Orbital, grid::Radial.Grid)`  
     ... computes the <a|| t^(1) ||b> reduced matrix element for the HFS coupling to the magnetic-dipole moment 
@@ -127,7 +127,104 @@ function hfs_t2(a::Orbital, b::Orbital, grid::Radial.Grid)
     ## println("**  <$(a.subshell) || t2 || $(b.subshell)>  = $wa   = $wb * $wc" )
     return( wa )
 end
+==#
 
+
+"""
+`InteractionStrength.hfs_tM1(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+    ... computes the <a|| t^(1) ||b> reduced matrix element for the HFS coupling to the magnetic-dipole moment 
+        of the nucleus for orbital functions a, b. A value::Float64 is returned.  
+"""
+function hfs_tM1(a::Orbital, b::Orbital, grid::Radial.Grid)
+    # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
+    minusa = Subshell(1, -a.subshell.kappa)
+    wb =   - (a.subshell.kappa + b.subshell.kappa) * AngularMomentum.CL_reduced_me_sms(minusa, 1, b.subshell)
+    wc =   RadialIntegrals.rkNonDiagonal(-2, a, b, grid)
+    wa =   wb * wc
+    #
+    ##x println("**  <$(a.subshell) || t1 || $(b.subshell)>  = $wa   = $wb * $wc" )
+    return( wa )
+end
+
+"""
+`InteractionStrength.hfs_tM2(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+    ... computes the <a|| t^(M2) ||b> reduced matrix element for the HFS coupling to the magnetic-dipole moment 
+        of the nucleus for orbital functions a, b. A value::Float64 is returned.  
+"""
+function hfs_tM2(a::Orbital, b::Orbital, grid::Radial.Grid)
+    # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
+    minusa = Subshell(1, -a.subshell.kappa)
+    wb =   - (a.subshell.kappa + b.subshell.kappa) * AngularMomentum.CL_reduced_me_sms(minusa, 2, b.subshell)
+    wc =   RadialIntegrals.rkNonDiagonal(-3, a, b, grid)/2
+    wa =   wb * wc
+    #
+    ##x println("**  <$(a.subshell) || t1 || $(b.subshell)>  = $wa   = $wb * $wc" )
+    return( wa )
+end
+
+"""
+`InteractionStrength.hfs_tM3(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+    ... computes the <a|| t^(M3) ||b> reduced matrix element for the HFS coupling to the magnetic-dipole moment 
+        of the nucleus for orbital functions a, b. A value::Float64 is returned.  
+"""
+function hfs_tM3(a::Orbital, b::Orbital, grid::Radial.Grid)
+    # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
+    minusa = Subshell(1, -a.subshell.kappa)
+    wb =   - (a.subshell.kappa + b.subshell.kappa) * AngularMomentum.CL_reduced_me_sms(minusa, 3, b.subshell)
+    wc =   RadialIntegrals.rkNonDiagonal(-4, a, b, grid)/3
+    wa =   wb * wc
+    #
+    ##x println("**  <$(a.subshell) || t1 || $(b.subshell)>  = $wa   = $wb * $wc" )
+    return( wa )
+end
+
+"""
+`InteractionStrength.hfs_tE2(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+    ... computes the <a|| t^(2) ||b> reduced matrix element for the HFS coupling to the electric-quadrupole moment of 
+        the nucleus for orbital functions a, b. A value::Float64 is returned.  
+    """
+function hfs_tE2(a::Orbital, b::Orbital, grid::Radial.Grid)
+    # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
+    wb = - AngularMomentum.CL_reduced_me_sms(a.subshell, 2, b.subshell)
+    ## wc =   RadialIntegrals.rkDiagonal(-3, a, b, grid)
+    wc =   RadialIntegrals.rkDiagonal(-3, a, b, grid)
+    wa =   wb * wc
+    #
+    ## println("**  <$(a.subshell) || t2 || $(b.subshell)>  = $wa   = $wb * $wc" )
+    return( wa )
+end
+
+"""
+`InteractionStrength.hfs_tE1(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+    ... computes the <a|| t^(E1) ||b> reduced matrix element for the HFS coupling to the electric-quadrupole moment of 
+        the nucleus for orbital functions a, b. A value::Float64 is returned.  
+    """
+function hfs_tE1(a::Orbital, b::Orbital, grid::Radial.Grid)
+    # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
+    wb = - AngularMomentum.CL_reduced_me_sms(a.subshell, 1, b.subshell)
+    ## wc =   RadialIntegrals.rkDiagonal(-3, a, b, grid)
+    wc =   RadialIntegrals.rkDiagonal(-2, a, b, grid)
+    wa =   wb * wc
+    #
+    ## println("**  <$(a.subshell) || t2 || $(b.subshell)>  = $wa   = $wb * $wc" )
+    return( wa )
+end
+
+"""
+`InteractionStrength.hfs_tE3(a::Orbital, b::Orbital, grid::Radial.Grid)`  
+    ... computes the <a|| t^(E3) ||b> reduced matrix element for the HFS coupling to the electric-quadrupole moment of 
+        the nucleus for orbital functions a, b. A value::Float64 is returned.  
+    """
+function hfs_tE3(a::Orbital, b::Orbital, grid::Radial.Grid)
+    # Use Andersson, Jönson (2008), CPC, Eq. (49) ... test for the proper definition of the C^L tensors.
+    wb = - AngularMomentum.CL_reduced_me_sms(a.subshell, 3, b.subshell)
+    ## wc =   RadialIntegrals.rkDiagonal(-3, a, b, grid)
+    wc =   RadialIntegrals.rkDiagonal(-4, a, b, grid)
+    wa =   wb * wc
+    #
+    ## println("**  <$(a.subshell) || t2 || $(b.subshell)>  = $wa   = $wb * $wc" )
+    return( wa )
+end
 
 """
 `InteractionStrength.MbaAbsorptionCheng(mp::EmMultipole, gauge::EmGauge, omega::Float64, b::Orbital, a::Orbital, grid::Radial.Grid)`
@@ -252,6 +349,44 @@ function MabEmissionJohnsony(mp::EmMultipole, gauge::EmGauge, omega::Float64, b:
         wr       = wr  +  mp.L/(2mp.L+1) * RadialIntegrals.GrantILminus(mp.L-1, q, a, b, grid::Radial.Grid) 
         wr       = wr  +  mp.L/(2mp.L+1) * RadialIntegrals.GrantILminus(mp.L+1, q, a, b, grid::Radial.Grid) 
         wa       = JohnsonI * wr
+    else     error("stop a")
+    end
+
+    return( wa )
+end
+
+
+"""
+`InteractionStrength.MabEmissionJohnsony_Wu(mp::EmMultipole, gauge::EmGauge, omega::Float64, a::Orbital, b::Orbital, grid::Radial.Grid)`
+    ... to compute the (single-electron reduced matrix element) interaction strength <a || O^(Mp,emission) || b> 
+        for the interaction with the Mp multipole component of the radiation field and the transition frequency omega, and 
+        within the given gauge. The caluclation is performed by using the function AngularMomentum.CL_reduced_me_sms. 
+        A value::Float64 is returned. This procedure has been re-worked due to the book by Johnson (2007). 
+"""
+function MabEmissionJohnsony_Wu(mp::EmMultipole, gauge::EmGauge, omega::Float64, a::Orbital, b::Orbital, grid::Radial.Grid)
+    kapa = a.subshell.kappa;   kapb = b.subshell.kappa;    q = omega / Defaults.getDefaults("speed of light: c") 
+    #
+    if       gauge == Basics.Magnetic
+        minusa = Subshell(1, -kapa)
+        JohnsonI =AngularMomentum.CL_reduced_me_sms(minusa, mp.L, b.subshell)*sqrt((2*mp.L+1)*(mp.L+1) /(4*pi*mp.L ));
+        wa     = JohnsonI * (kapa + kapb)/(mp.L+1) * RadialIntegrals.GrantILplus(mp.L, q, a, b, grid::Radial.Grid)
+        #
+    elseif   gauge == Basics.Babushkin
+        JohnsonI = AngularMomentum.CL_reduced_me_sms(a.subshell,mp.L, b.subshell)*sqrt((2*mp.L+1)*(mp.L+1) /(4*pi*mp.L ));
+        wr     = RadialIntegrals.GrantJL(mp.L, q, a, b, grid::Radial.Grid)
+        wr     = wr +  (kapa-kapb)/(mp.L+1) * RadialIntegrals.GrantILplus(mp.L+1, q, a, b, grid::Radial.Grid)
+        wr     = wr +  RadialIntegrals.GrantILminus(mp.L+1, q, a, b, grid::Radial.Grid)
+        wa     = -JohnsonI * wr
+        #
+    elseif   gauge == Basics.Coulomb
+        # This reduced matrix element has been re-worked due to Johnson (2007)
+        JohnsonI = AngularMomentum.CL_reduced_me_sms(a.subshell, mp.L, b.subshell)*sqrt((2*mp.L+1)*(mp.L+1) /(4*pi*mp.L ));
+        wr       = (1 - mp.L/(2mp.L+1)) * RadialIntegrals.GrantILplus(mp.L-1, q, a, b, grid::Radial.Grid)  -
+                    mp.L/(2mp.L+1) * RadialIntegrals.GrantILplus(mp.L+1, q, a, b, grid::Radial.Grid) 
+        wr       = -(kapa-kapb) / (mp.L+1) * wr 
+        wr       = wr  +  mp.L/(2mp.L+1) * RadialIntegrals.GrantILminus(mp.L-1, q, a, b, grid::Radial.Grid) 
+        wr       = wr  +  mp.L/(2mp.L+1) * RadialIntegrals.GrantILminus(mp.L+1, q, a, b, grid::Radial.Grid) 
+        wa       = -JohnsonI * wr
     else     error("stop a")
     end
 
@@ -658,12 +793,12 @@ end
 
 
 """
-`InteractionStrength.matrixL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, primitives::Bsplines.Primitives)`  
+`InteractionStrength.matrixL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, primitives::BsplinesN.Primitives)`  
     ... computes the partly-contracted (effective) Coulomb interaction matrices M^L_Coulomb (abcd) for given rank L and orbital functions 
         a, b, c and d at the given grid. The matrix M^L is defined for the primitives and contracted over the two orbitals
         b, d (for a=c) or  b, c (for a=d).  An error message is issued if a != c && a != d. A matrix::Array{Float64,2} is returned.
 """
-function matrixL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, primitives::Bsplines.Primitives)
+function matrixL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, primitives::BsplinesN.Primitives)
     grid = primitives.grid;   nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
     wm = zeros( nsL+nsS, nsL+nsS )
     # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
@@ -806,6 +941,131 @@ function XL_Coulomb(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::Orbital, gr
     end
     
     return( XL_Coulomb )
+end
+
+
+"""
+`InteractionStrength.XL_Coulomb(L::Int64, a::Subshell, b::Orbital, c::Subshell, d::Orbital, primitives::BsplinesN.Primitives)`  
+    ... computes the (direct) Coulomb interaction strengths X^L_Coulomb (.b.d) for given rank L and orbital functions
+        as well as the given primitives. A (nsL+nsS) x (nsL+nsS) matrixV::Array{Float64,2} is returned.
+"""
+function XL_Coulomb(L::Int64, a::Subshell, b::Orbital, c::Subshell, d::Orbital, primitives::BsplinesN.Primitives)
+    nsL = primitives.grid.nsL;        nsS = primitives.grid.nsS;    grid = primitives.grid
+    wm  = zeros(nsL+nsS, nsL+nsS)
+    
+    # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
+    la = Basics.subshell_l(a);             ja2 = Basics.subshell_2j(a)
+    lb = Basics.subshell_l(b.subshell);    jb2 = Basics.subshell_2j(b.subshell)
+    lc = Basics.subshell_l(c);             jc2 = Basics.subshell_2j(c)
+    ld = Basics.subshell_l(d.subshell);    jd2 = Basics.subshell_2j(d.subshell)
+
+    if  AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
+        rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
+        @warn("stop aa")  ## This should not occur.
+        return( wm )
+    end
+    
+    xc = AngularMomentum.CL_reduced_me(a, L, c) * AngularMomentum.CL_reduced_me(b.subshell, L, d.subshell)
+    if   rem(L,2) == 1    xc = - xc    end 
+    
+    # Direct interaction; contract the full interaction array over the orbitals b and d
+    wm = zeros(nsL+nsS, nsL+nsS)
+    for  i = 1:nsL
+        for  k = 1:nsL 
+            ## Ba = primitives.bsplinesL[i].bs;    Bc = primitives.bsplinesL[k].bs
+            Ba = primitives.bsplinesL[i];    Bc = primitives.bsplinesL[k]
+            Pa = zeros(Ba.upper);   add = 1 - Ba.lower;   
+            for  j = Ba.lower:Ba.upper  Pa[j] = Pa[j] + Ba.bs[j+add]   end
+            Pc = zeros(Bc.upper);   add = 1 - Bc.lower;   
+            for  j = Bc.lower:Bc.upper  Pc[j] = Pc[j] + Bc.bs[j+add]   end
+            wm[i,k] = RadialIntegrals.SlaterRkComponent_2dim(L, Pa, b.P, Pc, d.P, grid) + 
+                      RadialIntegrals.SlaterRkComponent_2dim(L, Pa, b.Q, Pc, d.Q, grid)
+        end
+    end
+    for  i = 1:nsS
+        for  k = 1:nsS
+            ## Ba = primitives.bsplinesS[i].bs;    Bc = primitives.bsplinesS[k].bs
+            Ba = primitives.bsplinesS[i];    Bc = primitives.bsplinesS[k]
+            Qa = zeros(Ba.upper);   add = 1 - Ba.lower;   
+            for  j = Ba.lower:Ba.upper  Qa[j] = Qa[j] + Ba.bs[j+add]   end
+            Qc = zeros(Bc.upper);   add = 1 - Bc.lower;   
+            for  j = Bc.lower:Bc.upper  Qc[j] = Qc[j] + Bc.bs[j+add]   end            
+            wm[nsL+i,nsL+k] = RadialIntegrals.SlaterRkComponent_2dim(L, Qa, b.P, Qc, d.P, grid) + 
+                              RadialIntegrals.SlaterRkComponent_2dim(L, Qa, b.Q, Qc, d.Q, grid)
+        end
+    end
+    
+    return( xc * wm )
+end
+
+
+"""
+`InteractionStrength.XL_Coulomb(L::Int64, a::Subshell, b::Orbital, c::Orbital, d::Subshell, primitives::BsplinesN.Primitives)`
+    ... computes the (exchange) Coulomb interaction strengths X^L_Coulomb (.bc.) for given rank L and orbital functions
+        as well as the given primitives. A (nsL+nsS) x (nsL+nsS) matrixV::Array{Float64,2} is returned.
+"""
+function XL_Coulomb(L::Int64, a::Subshell, b::Orbital, c::Orbital, d::Subshell, primitives::BsplinesN.Primitives)
+    nsL = primitives.grid.nsL;        nsS = primitives.grid.nsS;    grid = primitives.grid
+    wm  = zeros(nsL+nsS, nsL+nsS)
+    
+    # Test for the triangular-delta conditions and calculate the reduced matrix elements of the C^L tensors
+    la = Basics.subshell_l(a);             ja2 = Basics.subshell_2j(a)
+    lb = Basics.subshell_l(b.subshell);    jb2 = Basics.subshell_2j(b.subshell)
+    lc = Basics.subshell_l(c.subshell);    jc2 = Basics.subshell_2j(c.subshell)
+    ld = Basics.subshell_l(d);             jd2 = Basics.subshell_2j(d)
+
+    if  AngularMomentum.triangularDelta(ja2+1,jc2+1,L+L+1) * AngularMomentum.triangularDelta(jb2+1,jd2+1,L+L+1) == 0   ||   
+        rem(la+lc+L,2) == 1   ||   rem(lb+ld+L,2) == 1
+        @warn("stop ab")  ## This should not occur.
+        return( wm )
+    end
+    
+    xc = AngularMomentum.CL_reduced_me(a, L, c.subshell) * AngularMomentum.CL_reduced_me(b.subshell, L, d)
+    if   rem(L,2) == 1    xc = - xc    end 
+    
+    # Exchange interaction; contract the full interaction array over the orbitals b and c
+    for  i = 1:nsL
+        for  k = 1:nsL 
+            ## Ba = primitives.bsplinesL[i].bs;    Bd = primitives.bsplinesL[k].bs
+            Ba = primitives.bsplinesL[i];    Bd = primitives.bsplinesL[k]
+            Pa = zeros(Ba.upper);   add = 1 - Ba.lower;   
+            for  j = Ba.lower:Ba.upper  Pa[j] = Pa[j] + Ba.bs[j+add]   end
+            Pd = zeros(Bd.upper);   add = 1 - Bd.lower;   
+            for  j = Bd.lower:Bd.upper  Pd[j] = Pd[j] + Bd.bs[j+add]   end            
+            wm[i,k] = RadialIntegrals.SlaterRkComponent_2dim(L, Pa, b.P, c.P, Pd, grid)
+        end
+        for  k = 1:nsS 
+            ## Ba = primitives.bsplinesL[i].bs;    Bd = primitives.bsplinesS[k].bs
+            Ba = primitives.bsplinesL[i];    Bd = primitives.bsplinesS[k]
+            Pa = zeros(Ba.upper);   add = 1 - Ba.lower;   
+            for  j = Ba.lower:Ba.upper  Pa[j] = Pa[j] + Ba.bs[j+add]   end
+            Qd = zeros(Bd.upper);   add = 1 - Bd.lower;   
+            for  j = Bd.lower:Bd.upper  Qd[j] = Qd[j] + Bd.bs[j+add]   end            
+            wm[i,nsL+k] = RadialIntegrals.SlaterRkComponent_2dim(L, Pa, b.P, c.Q, Qd, grid)
+        end
+    end
+    for  i = 1:nsS
+        for  k = 1:nsL 
+            ## Ba = primitives.bsplinesS[i].bs;    Bd = primitives.bsplinesL[k].bs
+            Ba = primitives.bsplinesS[i];    Bd = primitives.bsplinesL[k]
+            Qa = zeros(Ba.upper);   add = 1 - Ba.lower;   
+            for  j = Ba.lower:Ba.upper  Qa[j] = Qa[j] + Ba.bs[j+add]   end
+            Pd = zeros(Bd.upper);   add = 1 - Bd.lower;   
+            for  j = Bd.lower:Bd.upper  Pd[j] = Pd[j] + Bd.bs[j+add]   end            
+            wm[nsL+i,k] = RadialIntegrals.SlaterRkComponent_2dim(L, Qa, b.Q, c.P, Pd, grid)
+        end
+        for  k = 1:nsS 
+            ## Ba = primitives.bsplinesS[i].bs;    Bd = primitives.bsplinesS[k].bs
+            Ba = primitives.bsplinesS[i];    Bd = primitives.bsplinesS[k]
+            Qa = zeros(Ba.upper);   add = 1 - Ba.lower;   
+            for  j = Ba.lower:Ba.upper  Qa[j] = Qa[j] + Ba.bs[j+add]   end
+            Qd = zeros(Bd.upper);   add = 1 - Bd.lower;   
+            for  j = Bd.lower:Bd.upper  Qd[j] = Qd[j] + Bd.bs[j+add]   end            
+            wm[nsL+i,nsL+k] = RadialIntegrals.SlaterRkComponent_2dim(L, Qa, b.Q, c.Q, Qd, grid)
+        end
+    end
+    
+    return( xc * wm )
 end
 
 

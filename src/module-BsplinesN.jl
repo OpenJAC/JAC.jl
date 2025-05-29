@@ -14,8 +14,7 @@
 module BsplinesN
 
 
-using  BSplineKit, Printf, ..Basics, ..Defaults, ..Nuclear, ..Radial, JAC
-##x LinearAlgebra, ..AngularMomentum, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..Nuclear, JAC
+using  BSplineKit, Printf, ..Basics, ..Defaults, ..Nuclear, ..Radial, JenaAtomicCalculator
 
 
 """
@@ -66,7 +65,6 @@ function computeOverlap(bspline1::BsplinesN.Bspline, bspline2::BsplinesN.Bspline
     if  bspline1.upper <= bspline2.lower  ||  bspline2.upper <= bspline1.lower    return( 0. )   end
     lower = max(bspline1.lower, bspline2.lower);    add1 = 1 - bspline1.lower
     upper = min(bspline1.upper, bspline2.upper);    add2 = 1 - bspline2.lower
-    ##x @show  bspline1.lower, bspline2.lower, add1, add2
     
     wa = 0.            
     for  i = lower:upper   wa = wa + bspline1.bs[i+add1] * bspline2.bs[i+add2] * grid.wr[i]   end
@@ -83,7 +81,6 @@ function computeNondiagonalD(pm::Int64, kappa::Int64, bspline1::BsplinesN.Bsplin
     if  bspline1.upper <= bspline2.lower  ||  bspline2.upper <= bspline1.lower    return( 0. )   end
     lower = max(bspline1.lower, bspline2.lower);    add1 = 1 - bspline1.lower
     upper = min(bspline1.upper, bspline2.upper);    add2 = 1 - bspline2.lower
-    ##x @show  bspline1.lower, bspline2.lower, add1, add2    
     
     wa = 0.
     for  i = lower:upper  
@@ -104,7 +101,6 @@ function computeVlocal(bspline1::BsplinesN.Bspline, bspline2::BsplinesN.Bspline,
     if  bspline1.upper <= bspline2.lower  ||  bspline2.upper <= bspline1.lower    return( 0. )   end
     lower = max(bspline1.lower, bspline2.lower);    add1 = 1 - bspline1.lower
     upper = min(bspline1.upper, bspline2.upper);    add2 = 1 - bspline2.lower
-    ##x @show  bspline1.lower, bspline2.lower, add1, add2    
     
     wa = 0.
     for  i = lower:upper  
@@ -127,7 +123,6 @@ end
 function extractBsplineCoefficients(sh::Subshell, wc::Basics.Eigen, grid::Radial.Grid)
     nsL = grid.nsL - 2;    nsS = grid.nsS - 2
     l   = Basics.subshell_l(sh);   ni = nsS + sh.n - l;          
-    ##x if   sh.kappa > 0   ni = ni + 1 - 1  end
     en  = wc.values[ni];        
     ev  = wc.vectors[ni];       if  length(ev) != nsL + nsS    error("stop a")  end
     
@@ -202,17 +197,30 @@ function generateOrbitals(subshells::Array{Subshell,1}, pot::Radial.Potential, n
         # (2) Compute the local Hamiltonian matrix and diagonalize it
         wa = BsplinesN.setupLocalMatrix(kappa, primitives, pot, storage)
         w2 = Basics.diagonalize("generalized eigenvalues: LinearAlgebra", wa, wb)
-        nsi = nsS      ##x;    if kappa > 0   nsi = nsi + 1 - 1   end
+        nsi = nsS    
         if  true   Basics.tabulateKappaSymmetryEnergiesDirac(kappa, w2.values, nsi, nm)    end
         
         # (3) Collect all the requested single-electron orbitals
         for  sh in subshells
-            ##x orbitals = Base.merge( orbitals, Dict( sh => generateOrbitalFromPrimitives(sh, w2, primitives, nsL, nsS) ))
             if  sh.kappa == kappa    orbitals[sh] = BsplinesN.generateOrbitalFromPrimitives(sh, w2, primitives)    end
         end
     end
     
     return( orbitals )
+end
+
+
+"""
+`BsplinesN.extractVectorFromPrimitives(sh::Subshell, wc::Basics.Eigen, primitives::BsplinesN.Primitives)`  
+    ... extracts the B-spline coefficient of the sh orbital from eigenvalues & eigenvectors. 
+        A vector::Array{Float64,1} is returned.
+"""
+function extractVectorFromPrimitives(sh::Subshell, wc::Basics.Eigen, primitives::BsplinesN.Primitives)
+    nsL = primitives.grid.nsL;     nsS = primitives.grid.nsS
+    l   = Basics.subshell_l(sh);   ni = nsS + sh.n - l;          if   sh.kappa > 0   ni = ni + 1 - 1  end
+    vector = wc.vectors[ni];       if  length(vector) != nsL + nsS    error("stop a")                 end
+    
+    return( vector )   
 end
 
 
@@ -258,7 +266,7 @@ function generateOrbitalFromPrimitives(sh::Subshell, wc::Basics.Eigen, primitive
     orbital   = Orbital(sh, isBound, true, en, Px, Qx, Pprimex, Qprimex, Radial.Grid())
     
     # Renormalize the radial orbital   
-    wN        = sqrt( JAC.RadialIntegrals.overlap(orbital, orbital, primitives.grid) )   
+    wN        = sqrt( JenaAtomicCalculator.RadialIntegrals.overlap(orbital, orbital, primitives.grid) )
     Px[1:mtp] = Px[1:mtp] / wN;    Pprimex[1:mtp] = Pprimex[1:mtp] / wN
     Qx[1:mtp] = Qx[1:mtp] / wN;    Qprimex[1:mtp] = Qprimex[1:mtp] / wN 
     
@@ -278,12 +286,18 @@ function generateOrbitalFromPrimitives(sh::Subshell, energy::Float64, mtp::Int64
     P = zeros(primitives.grid.NoPoints);    Pprime = zeros(primitives.grid.NoPoints)
     Q = zeros(primitives.grid.NoPoints);    Qprime = zeros(primitives.grid.NoPoints)
     for  i = 1:nsL   
-        for  j = primitives.bsplinesL[i].lower:primitives.bsplinesL[i].upper  P[j]      = P[j] + ev[i] * primitives.bsplinesL[i].bs[j]      end
-        for  j = primitives.bsplinesL[i].lower:primitives.bsplinesL[i].upper  Pprime[j] = Pprime[j] + ev[i] * primitives.bsplinesL[i].bp[j] end
+        lower = primitives.bsplinesL[i].lower;   upper = primitives.bsplinesL[i].upper;   add = 1 - primitives.bsplinesL[i].lower
+        for  j = lower:upper  P[j]      = P[j] + ev[i] * primitives.bsplinesL[i].bs[j+add]           end
+        for  j = lower:upper  Pprime[j] = Pprime[j] + ev[i] * primitives.bsplinesL[i].bp[j+add]      end
+        ##x for  j = primitives.bsplinesL[i].lower:primitives.bsplinesL[i].upper  P[j]      = P[j] + ev[i] * primitives.bsplinesL[i].bs[j]      end
+        ##x for  j = primitives.bsplinesL[i].lower:primitives.bsplinesL[i].upper  Pprime[j] = Pprime[j] + ev[i] * primitives.bsplinesL[i].bp[j] end
     end 
     for  i = 1:nsS   
-        for  j = primitives.bsplinesS[i].lower:primitives.bsplinesS[i].upper  Q[j]      = Q[j] + ev[nsL+i] * primitives.bsplinesS[i].bs[j]      end
-        for  j = primitives.bsplinesS[i].lower:primitives.bsplinesS[i].upper  Qprime[j] = Qprime[j] + ev[nsL+i] * primitives.bsplinesS[i].bp[j] end
+        lower = primitives.bsplinesS[i].lower;   upper = primitives.bsplinesS[i].upper;   add = 1 - primitives.bsplinesS[i].lower
+        for  j = lower:upper  Q[j]      = Q[j] + ev[nsL+i] * primitives.bsplinesS[i].bs[j+add]       end
+        for  j = lower:upper  Qprime[j] = Qprime[j] + ev[nsL+i] * primitives.bsplinesS[i].bp[j+add]  end
+        ##x for  j = primitives.bsplinesS[i].lower:primitives.bsplinesS[i].upper  Q[j]      = Q[j] + ev[nsL+i] * primitives.bsplinesS[i].bs[j]      end
+        ##x for  j = primitives.bsplinesS[i].lower:primitives.bsplinesS[i].upper  Qprime[j] = Qprime[j] + ev[nsL+i] * primitives.bsplinesS[i].bp[j] end
     end 
     
     Px      = zeros(mtp);    Qx      = zeros(mtp);    Px[1:mtp]      = P[1:mtp];         Qx[1:mtp]      = Q[1:mtp]    
@@ -310,7 +324,6 @@ function generatePrimitives(grid::Radial.Grid)
     # Generate B-spline basis for large component
     breaks = deepcopy( grid.tL[grid.orderL:end-grid.orderL+1] )
     BL = BSplineKit.BSplineBasis(BSplineOrder(grid.orderL), breaks)
-    ##x @show grid.nsL, length(BL)
     #
     for  (ib, bL)  in  enumerate(BL)
         bs = Float64[];   bp = Float64[];   needlower = true
@@ -319,14 +332,12 @@ function generatePrimitives(grid::Radial.Grid)
                               upper = ir;        if needlower   lower = ir;   needlower = false   end
             end
         end
-        ##x @show ib, lower, upper, length(bs)
         push!(primitivesL, Bspline(lower, upper, bs, bp) )
     end
     
     # Generate B-spline basis for large component
     breaks = deepcopy( grid.tS[grid.orderS:end-grid.orderS+1] )
     BL = BSplineKit.BSplineBasis(BSplineOrder(grid.orderS), breaks)
-    ##x @show grid.nsS, length(BL)
     #
     for  (ib, bL)  in  enumerate(BL)
         bs = Float64[];   bp = Float64[];   needlower = true
@@ -335,7 +346,6 @@ function generatePrimitives(grid::Radial.Grid)
                               upper = ir;        if needlower   lower = ir;   needlower = false   end
             end
         end
-        ##x @show ib, lower, upper, length(bs)
         push!(primitivesS, Bspline(lower, upper, bs, bp) )
     end
     

@@ -53,6 +53,23 @@ end
 
 
 """
+`ManyElectron.Configuration(NoElectrons::Int64)`  
+    ... constructor for a given number of electrons which are just "filled" according to the standard order of
+        the shells and subshells. A conf::Configuration is returned.
+"""
+function Configuration(NoElectrons::Int64)
+    shellDict = Dict{Shell,Int64}();  N = NoElectrons
+    shellList = Basics.generateShellList(1, 8, 7)
+    for  sh in shellList
+        maxocc = 2 * (2*sh.l + 1);    occ    = min(maxocc, N);    shellDict[sh] = occ
+        N      = N - occ;             if  N == 0   break   end
+    end
+    
+    return ( Configuration(shellDict, NoElectrons) )
+end
+
+
+"""
 `ManyElectron.Configuration(sa::String)`  
     ... constructor for a given configuration string, such as "[He]", "[Ne]", "[Ne] 3s 3p^6"  or "1s 2p^6 3s^2 3p".
         One can also use "1s^0" to represent a (bare-ion) empty configuration.
@@ -409,7 +426,7 @@ function AsfSettings(settings::AsfSettings;
     if  scField             == nothing   scFieldx              = settings.scField               else   scFieldx              = scField              end 
     if  startScfFrom        == nothing   startScfFromx         = settings.startScfFrom          else   startScfFromx         = startScfFrom         end 
     if  maxIterationsScf    == nothing   maxIterationsScfx     = settings.maxIterationsScf      else   maxIterationsScfx     = maxIterationsScf     end 
-    if  accuracyScf         == nothing   accuracyScfx          = settings.accuracyScf           else   accuracyScf           = accuracyScf          end 
+    if  accuracyScf         == nothing   accuracyScfx          = settings.accuracyScf           else   accuracyScfx          = accuracyScf          end 
     if  shellSequenceScf    == nothing   shellSequenceScfx     = settings.shellSequenceScf      else   shellSequenceScfx     = shellSequenceScf     end 
     if  frozenSubshells     == nothing   frozenSubshellsx      = settings.frozenSubshells       else   frozenSubshellsx      = frozenSubshells      end 
     if  eeInteractionCI     == nothing   eeInteractionCIx      = settings.eeInteractionCI       else   eeInteractionCIx      = eeInteractionCI      end 

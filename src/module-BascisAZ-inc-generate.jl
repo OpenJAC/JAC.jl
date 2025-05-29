@@ -39,7 +39,6 @@ function Basics.generate(repType::AtomicState.MeanFieldBasis, rep::AtomicState.R
     # The asfSettings only define the SCF part and are partly derived from the MeanFieldSettings
     asfSettings = AsfSettings(AsfSettings(); scField=repType.settings.scField) 
     
-    ##x basis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     multiplet      = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     basis          = multiplet.levels[1].basis
     if output    results = Base.merge( results, Dict("mean-field basis" => basis) )          end
@@ -64,8 +63,6 @@ function Basics.generate(repType::AtomicState.MeanFieldMultiplet, rep::AtomicSta
     # The asfSettings only define the SCF part and are partly derived from the MeanFieldSettings
     asfSettings = AsfSettings(AsfSettings(); scField=repType.settings.scField) 
     
-    ##x basis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
-    ##x multiplet  = Basics.performCI(basis, nModel, rep.grid, asfSettings; printout=true)
     multiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     if output    
         results = Base.merge( results, Dict("mean-field basis" => multiplet.level[1].basis) )          
@@ -92,10 +89,8 @@ function Basics.generate(repType::AtomicState.OneElectronSpectrum, rep::AtomicSt
     nModel    = rep.nuclearModel
     settings  = repType.settings
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
-    asfSettings   = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
+    asfSettings   = AsfSettings()   ## Use default settings to define a first multiplet from the reference configurations;
                                     ## all further details are specified for each step
-    ##x refBasis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
-    ##x refMultiplet  = Basics.performCI(refBasis, nModel, rep.grid, asfSettings; printout=true)
     refMultiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     refBasis      = refMultiplet.levels[1].basis
     Basics.display(stdout, refBasis.orbitals, rep.grid; longTable=false)
@@ -112,7 +107,8 @@ function Basics.generate(repType::AtomicState.OneElectronSpectrum, rep::AtomicSt
     shellList = Basics.generateShellList(1, settings.nMax, settings.lValues)
     subshellList = Subshell[]
     for  shell in shellList     append!(subshellList, Basics.shellSplitIntoSubshells(shell))    end
-    orbitals  = Basics.generateOrbitalsForPotential(rep.grid, meanPot, subshellList)  ## generate a spectrum of sufficient size
+    primitives = BsplinesN.generatePrimitives(rep.grid)
+    orbitals   = BsplinesN.generateOrbitals(subshellList, meanPot, nModel, primitives; printout=true)
     
     # Print all results to screen
     Basics.display(stdout, orbitals, rep.grid; longTable=true)
@@ -203,14 +199,13 @@ function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Rep
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
     asfSettings    = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
                                     ## all further details are specified for each step
-    ##x priorBasis     = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
-    ##x priorMultiplet = Basics.performCI(priorBasis, nModel, rep.grid, asfSettings; printout=true)
     priorMultiplet = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     nuclearPot     = Nuclear.nuclearPotential(nModel, rep.grid)
     ## electronicPot  = Basics.compute("radial potential: Dirac-Fock-Slater", rep.grid, priorMultiplet.levels[1].basis)
     ## meanPot        = Basics.add(nuclearPot, electronicPot)
     subshellList   = Basics.extractRelativisticSubshellList(rep)             ## extract all subshells that occur in the RAS computation
-    startOrbitals  = Basics.generateOrbitalsForPotential(rep.grid, nuclearPot, subshellList)  ## generate a spectrum of sufficient size
+    primitives     = BsplinesN.generatePrimitives(rep.grid)
+    startOrbitals  = BsplinesN.generateOrbitals(subshellList, nuclearPot, nModel, primitives, printout=true)  ## generate a spectrum of sufficient size
     if output    results = Base.merge( results, Dict("reference multiplet" => Multiplet("Reference multiplet:", priorMultiplet.levels) ) )  end
 
     # The asfSettings only define the CI part of the RAS steps and partly derived from the RasSettings
@@ -254,8 +249,6 @@ function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.R
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
     asfSettings   = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
                                     ## all further details are specified for each step
-    ##x refBasis      = Basics.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
-    ##x refMultiplet  = Basics.performCI(refBasis, nModel, rep.grid, asfSettings; printout=true)
     refMultiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     refBasis      = refMultiplet.levels[1].basis
     nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
@@ -275,7 +268,8 @@ function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.R
     
     # Generate shell list abd a full single-electron spectrum for this potential
     subshellList = Basics.extractRelativisticSubshellList(confList)                      ## extract all subshells that occur in confList
-    orbitals     = Basics.generateOrbitalsForPotential(rep.grid, meanPot, subshellList)  ## generate a spectrum of sufficient size
+    primitives   = BsplinesN.generatePrimitives(rep.grid)
+    orbitals     = BsplinesN.generateOrbitals(subshellList, meanPot, nModel, primitives, printout=true) ## generate a spectrum of sufficient size
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
     Basics.display(stdout, orbitals, rep.grid)
 
@@ -1463,6 +1457,7 @@ function Basics.generateMeshCoordinates(mesh::Basics.AbstractMesh)
 end
 
 
+#==
 """
 `Basics.generateOrbitalsForPotential(grid::Radial.Grid, meanPot::Radial.Potential, subshellList::Array{Subshell,1})`  
     ... generates a set of (start) orbitals from the given potential and for all the subshells in subshellList. 
@@ -1480,13 +1475,14 @@ function  Basics.generateOrbitalsForPotential(grid::Radial.Grid, meanPot::Radial
     end
     
     # Generate the primitives for a B-spline basis
-    wa = Bsplines.generatePrimitives(grid)
+    wa = BsplinesN.generatePrimitives(grid)
     
     # Now cycle through all kappa symmetries
     for  kappa = kappaMin:kappaMax
         # Determine all requested subshells of symmetry kappa ... to compute them together
         shList     = Subshell[];    for  subsh in subshellList    if kappa == subsh.kappa    push!( shList, subsh)    end    end
-        shOrbitals = Bsplines.generateOrbitalsForPotential(wa, kappa, shList, meanPot; printout=false)
+        ##x shOrbitals = BsplinesN.generateOrbitalsForPotential(wa, kappa, shList, meanPot; printout=false)
+        shOrbitals = BsplinesN.generateOrbitals(shList, meanPot, Nuclear.Model(1.0), wa; printout=true)
         for  sh in shList
             orbitals = Base.merge( orbitals, Dict( sh => shOrbitals[sh]))
         end
@@ -1494,7 +1490,7 @@ function  Basics.generateOrbitalsForPotential(grid::Radial.Grid, meanPot::Radial
 
     return( orbitals )
 end
-
+==#
 
 
 """
@@ -1625,7 +1621,7 @@ function Basics.generateShellList(nMin::Int64, nMax::Int64, lMax::Int64)
             if  n >= l + 1  && Shell(n,l) in shellList    push!( newShellList, Shell(n,l))     end    
         end
     end
-    println(">> Generated shell list $newShellList ")
+    ## println(">> Generated shell list $newShellList ")
     
     return( newShellList )
 end

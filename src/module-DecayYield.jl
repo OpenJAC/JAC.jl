@@ -6,7 +6,7 @@
 module DecayYield
 
 
-using Printf, JAC, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..TableStrings
+using Printf, JenaAtomicCalculator, ..Basics, ..Defaults, ..ManyElectron, ..Nuclear, ..Radial, ..TableStrings
 
 """
 `struct  DecayYield.Settings  <:  AbstractPropertySettings`  ... defines a type for the details and parameters of computing fluorescence and Auger yields.
@@ -108,29 +108,29 @@ function computeOutcomes(initialConfigs::Array{Configuration,1}, asfSettings::As
     ## setDefaults("method: normalization, pure sine")
     #
     println("\nPerform a cascade computation for all radiative decay channels of the levels from the initial configurations:")
-    if      settings.approach == "AverageSCA"    cApproach = Cascade.AverageSCA()
+    if      settings.approach == "AverageSCA"    cApproach = JenaAtomicCalculator.Cascade.AverageSCA()
     elseif  settings.approach == "SCA"           cApproach = Cascade.SCA()
     else    error("Improper (cascade) approach for yield computations; approach = $(settings.approach)")    
     end
     decayShells = Basics.extractNonrelativisticShellList(initialConfigs)
-    wa = Cascade.Computation(Cascade.Computation(), name="photon lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
-                                scheme=Cascade.StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
+    wa = JenaAtomicCalculator.Cascade.Computation(JenaAtomicCalculator.Cascade.Computation(), name="photon lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
+                                scheme=JenaAtomicCalculator.Cascade.StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
                                 approach=cApproach, initialConfigs=initialConfigs)
     wb = perform(wa, output=true, outputToFile=false);   linesR = wb["photoemission lines:"]
     println("\nPerform a cascade computation for all (single-electron) Auger decay channels of the levels from the initial configurations:")
-    wa = Cascade.Computation(Cascade.Computation(), name="Auger lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
-                                scheme=Cascade.StepwiseDecayScheme([Auger()], 1, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
+    wa = JenaAtomicCalculator.Cascade.Computation(JenaAtomicCalculator.Cascade.Computation(), name="Auger lines", nuclearModel=nm, grid=grid, asfSettings=asfSettings, 
+                                scheme=JenaAtomicCalculator.Cascade.StepwiseDecayScheme([Auger()], 1, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
                                 approach=cApproach, initialConfigs=initialConfigs)
     wb = perform(wa, output=true, outputToFile=false);   linesA = wb["autoionization lines:"]
     #
     # Calculate all amplitudes and requested properties
     newOutcomes = DecayYield.Outcome[]
     for  outcome in outcomes
-        newOutcome = Cascade.computeDecayYieldOutcome(outcome, linesR, linesA, settings)
+        newOutcome = JenaAtomicCalculator.Cascade.computeDecayYieldOutcome(outcome, linesR, linesA, settings)
         push!( newOutcomes, newOutcome)
         #
         if settings.geant4
-            Cascade.computeDecayProbabilities(newOutcome, linesR, linesA, settings)
+            JenaAtomicCalculator.Cascade.computeDecayProbabilities(newOutcome, linesR, linesA, settings)
         end
     end
     #

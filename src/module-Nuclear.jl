@@ -127,7 +127,7 @@ function Base.show(io::IO, m::Model)
     print(io, "nuclear spin I = $(m.spinI), dipole moment mu = $(m.mu) and quadrupole moment Q = $(m.Q).")
 end
 
-
+        
 """
 `struct  Nuclear.Isomer`  
     ... defines a type for modeling isomeric levels that are involved in hyperfine-induced transitions and structure.
@@ -147,8 +147,8 @@ struct  Isomer
     energy          ::Float64 
     mu              ::Float64
     Q               ::Float64
-    multipoleM      ::EmMultipole
-    elementM        ::Float64  
+    multipoleM      ::Array{EmMultipole,1}
+    elementM        ::Array{Float64,1}  
 end
 
 
@@ -156,7 +156,7 @@ end
 `Nuclear.Isomer()`  ... constructor for an `empty` instance of Nuclear.Isomer.
 """
 function Isomer()
-    Isomer( AngularJ64(0), Basics.plus, 0., 0., 0., E1, 0.)
+    Isomer( AngularJ64(0), Basics.plus, 0., 0., 0., [E1], Float64[])
 end
 
 

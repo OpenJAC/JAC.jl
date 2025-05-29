@@ -117,8 +117,6 @@ end
     + omega          ::Float64          ... photon energy = transition energy
     + photonRate     ::EmProperty       ... Total rate of this line.
     + angularBeta    ::EmProperty       ... Angular beta_2 coefficient.
-    + hasSublines    ::Bool             ... Determines whether the individual sublines are defined in terms of 
-                                            their multipolarity, amplitude, or not.
     + channels       ::Array{Einstein.Channel,1}   ... List of radiative (photon) channels.
 """
 struct  Line
@@ -127,7 +125,6 @@ struct  Line
     omega            ::Float64
     photonRate       ::EmProperty
     angularBeta      ::EmProperty
-    hasSublines      ::Bool
     channels         ::Array{Einstein.Channel,1}
 end 
 
@@ -137,7 +134,7 @@ end
     ... constructor an Einstein line between a specified initial and final level.
 """
 function Line(initialLevel::Level, finalLevel::Level, photonRate::EmProperty)
-    Line(initialLevel, finalLevel, 0, 0, photonRate, EmProperty(0., 0.), false, Einstein.Channel[])
+    Line(initialLevel, finalLevel, 0, 0, photonRate, EmProperty(0., 0.), Einstein.Channel[])
 end
 
 
@@ -148,7 +145,6 @@ function Base.show(io::IO, line::Einstein.Line)
     println(io, "omega:                $(line.omega)  ")
     println(io, "photonRate:           $(line.photonRate)  ")
     println(io, "angularBeta:          $(line.angularBeta)  ")
-    println(io, "hasSublines:          $(line.hasSublines)  ")
     println(io, "channels:             $(line.channels)  ")
 end
 
@@ -207,7 +203,7 @@ function  computeAmplitudesProperties(line::Einstein.Line, grid::Radial.Grid, se
                                                     (Basics.twice(line.finalLevel.J) + 1)
     photonrate  = EmProperty(wa * rateC, wa * rateB)    
     angularBeta = EmProperty(-9., -9.)
-    line = Einstein.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, true, newChannels)
+    line = Einstein.Line( line.initialLevel, line.finalLevel, line.omega, photonrate, angularBeta, newChannels)
     return( line )
 end
 
@@ -249,7 +245,7 @@ function  determineLines(multiplet::Multiplet, settings::Einstein.Settings)
                 omega    = iLevel.energy - fLevel.energy + settings.photonEnergyShift
                 if  omega <= settings.mimimumPhotonEnergy  ||  omega > settings.maximumPhotonEnergy    continue   end  
                 channels = determineChannels(fLevel, iLevel, settings) 
-                push!( lines, Einstein.Line(iLevel, fLevel, omega, EmProperty(0., 0.), EmProperty(0., 0.), true, channels) )
+                push!( lines, Einstein.Line(iLevel, fLevel, omega, EmProperty(0., 0.), EmProperty(0., 0.), channels) )
             end
         end
     end

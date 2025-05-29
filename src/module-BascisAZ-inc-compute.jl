@@ -12,11 +12,11 @@ export compute
 function Basics.compute(sa::String, csfa::CsfR, csfb::CsfR)
     if sa == "angular coefficients: e-e, Ratip2013"
         if csfa == csfb
-            JAC.AngularCoefficientsRatip2013.load_csl(csfa)
-            t_coeffs, v_coeffs = JAC.AngularCoefficientsRatip2013.angular_coefficients_pair(1,1)
+            AngularCoefficientsRatip2013.load_csl(csfa)
+            t_coeffs, v_coeffs = AngularCoefficientsRatip2013.angular_coefficients_pair(1,1)
         else
-            JAC.AngularCoefficientsRatip2013.load_csl(csfa, csfb)
-            t_coeffs, v_coeffs = JAC.AngularCoefficientsRatip2013.angular_coefficients_pair(1,2)
+            AngularCoefficientsRatip2013.load_csl(csfa, csfb)
+            t_coeffs, v_coeffs = AngularCoefficientsRatip2013.angular_coefficients_pair(1,2)
         end
     else 
         error("Unsupported keystring = ", sa)
@@ -34,11 +34,11 @@ end
 function Basics.compute(sa::String, rank, csfa::CsfR, csfb::CsfR)
     if      sa == "angular coefficients: 1-p, Ratip2013"
         if csfa == csfb
-            JAC.AngularCoefficientsRatip2013.load_csl(csfa)
-            t_coeffs = JAC.AngularCoefficientsRatip2013.angular_coefficients_pair_1p(rank,1,1)
+            AngularCoefficientsRatip2013.load_csl(csfa)
+            t_coeffs = AngularCoefficientsRatip2013.angular_coefficients_pair_1p(rank,1,1)
         else
-            JAC.AngularCoefficientsRatip2013.load_csl(csfa, csfb)
-            t_coeffs = JAC.AngularCoefficientsRatip2013.angular_coefficients_pair_1p(rank,1,2)
+            AngularCoefficientsRatip2013.load_csl(csfa, csfb)
+            t_coeffs = AngularCoefficientsRatip2013.angular_coefficients_pair_1p(rank,1,2)
         end
     else    error("Unsupported keystring = ", sa)
     end
@@ -55,18 +55,18 @@ end
 function Basics.compute(sa::String, parity, rank::Integer, csfa::CsfR, csfb::CsfR)
     if      sa == "angular coefficients: 1-p, Grasp92"
         if csfa == csfb
-            subshells  = JAC.AngularCoefficientsRatip2013.load_csl(csfa)
-            mct_coeffs = JAC.AngularCoefficientsRatip2013.mct_generate_coefficients(1, 1, 1, 1, Int32(parity), rank)
+            subshells  = AngularCoefficientsRatip2013.load_csl(csfa)
+            mct_coeffs = AngularCoefficientsRatip2013.mct_generate_coefficients(1, 1, 1, 1, Int32(parity), rank)
         else
             # Add 'zeros' to the fields if the length of occupation does not agree
             if       ( nz = length(csfa.occupation) - length(csfb.occupation) ) <  0   csfa = Basics.addZerosToCsfR( -nz, csfa)
             elseif   ( nz = length(csfa.occupation) - length(csfb.occupation) ) >  0   csfb = Basics.addZerosToCsfR(  nz, csfb)    end
-            subshells  = JAC.AngularCoefficientsRatip2013.load_csl(csfa, csfb)
-            mct_coeffs = JAC.AngularCoefficientsRatip2013.mct_generate_coefficients(1, 1, 2, 2, Int32(parity), rank)
+            subshells  = AngularCoefficientsRatip2013.load_csl(csfa, csfb)
+            mct_coeffs = AngularCoefficientsRatip2013.mct_generate_coefficients(1, 1, 2, 2, Int32(parity), rank)
         end
     else    error("Unsupported keystring = ", sa)
     end
-    return map(t -> JAC.AngularCoefficientsRatip2013.AngularTcoeff(t, subshells), mct_coeffs) # Convert Fmctcoefficient to AngularTcoeff
+    return map(t -> AngularCoefficientsRatip2013.AngularTcoeff(t, subshells), mct_coeffs) # Convert Fmctcoefficient to AngularTcoeff
 end
 
 
@@ -667,13 +667,13 @@ function Basics.computePotential(scField::Basics.AaDFSField, grid::Radial.Grid, 
     # Define the integrant and take the integrals
     for i = 1:npoints
         for j = 1:npoints    rg = max( grid.r[i],  grid.r[j]);    wx[j] = rhot[j]/rg   end
-        wb[i] = JAC.RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
+        wb[i] = RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
         wb[i] = wb[i] - (3 /(4*pi^2 * grid.r[i]^2) * rhot[i])^(1/3)
     end
     # Define the potential with regard to Z(r)
     for i = 2:npoints    wb[i] = - wb[i] * grid.r[i]   end;    wb[1] = 0.
     #
-    wc = JAC.Radial.Potential("average-atom DFS", wb, grid)
+    wc = Radial.Potential("average-atom DFS", wb, grid)
     return( wc )
 end
 
@@ -799,13 +799,13 @@ function Basics.computePotential(scField::Basics.KSField, grid::Radial.Grid, lev
     # Define the integrant and take the integrals (without alpha)
     for i = 1:npoints
         for j = 1:npoints    rg = max( grid.r[i],  grid.r[j]);    wx[j] = rhot[j]/rg   end
-        wb[i] = JAC.RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
+        wb[i] = RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
         wb[i] = wb[i] - 2 / (3grid.r[i]) * (81 /(32 * pi^2) * grid.r[i] * rhot[i])^(1/3)
     end
     # Define the potential with regard to Z(r)
     for i = 2:npoints    wb[i] = - wb[i] * grid.r[i]   end;    wb[1] = 0.
     #
-    wc = JAC.Radial.Potential("Kohn-Sham", wb, grid)
+    wc = Radial.Potential("Kohn-Sham", wb, grid)
     return( wc )
 end
 
@@ -838,14 +838,14 @@ function Basics.computePotential(scField::Basics.DFSField, grid::Radial.Grid, le
     wy = scField.strength
     for i = 1:npoints
         for j = 1:npoints    rg = max( grid.r[i],  grid.r[j]);    wx[j] = rhot[j]/rg   end
-        wb[i] = JAC.RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
+        wb[i] = RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
         wb[i] = wb[i] - (3 /(4*pi^2 * grid.r[i]^2) * rhot[i])^(1/3) * wy
     end
     ## wb = 1.02 * wb
     # Define the potential with regard to Z(r)
     for i = 2:npoints    wb[i] = - wb[i] * grid.r[i]   end;    wb[1] = 0.
     #
-    wc = JAC.Radial.Potential("DFS", wb, grid)
+    wc = Radial.Potential("DFS", wb, grid)
     return( wc )
 end
 
@@ -868,13 +868,13 @@ function Basics.computePotential(scField::Basics.DFSField, grid::Radial.Grid, ba
     # Define the integrant and take the integrals
     for i = 1:npoints
         for j = 1:npoints    rg = max( grid.r[i],  grid.r[j]);    wx[j] = rhot[j]/rg   end
-        wb[i] = JAC.RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
+        wb[i] = RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
         wb[i] = wb[i] - (3 /(4*pi^2 * grid.r[i]^2) * rhot[i])^(1/3)
     end
     # Define the potential with regard to Z(r)
     for i = 2:npoints    wb[i] = - wb[i] * grid.r[i]   end;    wb[1] = 0.
     #
-    wc = JAC.Radial.Potential("DFS for CSF basis", wb, grid)
+    wc = Radial.Potential("DFS for CSF basis", wb, grid)
     return( wc )
 end
 
@@ -906,7 +906,7 @@ function Basics.computePotential(scField::Basics.DFSwCPField, kappa::Int64, cp::
     # Define the integrant and take the integrals
     for i = 1:npoints
         for j = 1:npoints    rg = max( grid.r[i],  grid.r[j]);    wx[j] = rhot[j]/rg   end
-        wb[i] = JAC.RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
+        wb[i] = RadialIntegrals.V0(wx, npoints, grid::Radial.Grid)
         wb[i] = wb[i] - (3 /(4*pi^2 * grid.r[i]^2) * rhot[i])^(1/3)
     end
     # Add the core-polarization contributions from the valence shells
@@ -923,7 +923,7 @@ function Basics.computePotential(scField::Basics.DFSwCPField, kappa::Int64, cp::
     # Define the potential with regard to Z(r)
     for i = 2:npoints    wb[i] = - wb[i] * grid.r[i]   end;    wb[1] = 0.
     #
-    wc = JAC.Radial.Potential("DFS", wb, grid)
+    wc = Radial.Potential("DFS", wb, grid)
     return( wc )
 end
 
@@ -951,7 +951,7 @@ function Basics.computePotential(scField::Basics.EHField, grid::Radial.Grid, lev
             if  a != b  wc = occa*occb   else   wc = occa * (occb -1.0)   end
             if  wc < 0.  error("Improper potential for subshells with mean occupation < 1; stop a")    end
             for  i = 1:nrho    rhobb[i] = orbb.P[i]^2 + orbb.Q[i]^2       end
-            for  i = 1:length(orba.P)    wx[i] = wx[i] + wc * JAC.RadialIntegrals.Yk_ab(0, grid.r[i], rhobb, nrho, grid) * rhoa[i]   end
+            for  i = 1:length(orba.P)    wx[i] = wx[i] + wc * RadialIntegrals.Yk_ab(0, grid.r[i], rhobb, nrho, grid) * rhoa[i]   end
         end
     end
     # Second term Sum_a ...
@@ -963,8 +963,8 @@ function Basics.computePotential(scField::Basics.EHField, grid::Radial.Grid, lev
         wc = occa * (occa - 1.0)
         if  wc < 0.  error("Improper potential for subshells with mean occupation < 1; stop b")    end
         for  k = 1:10
-            fk = JAC.AngularMomentum.fk_ab(a,a);    if  fk == 0   cycle    end
-            for  i = 1:length(orba.P)    wx[i] = wx[i] + wc * fk * JAC.RadialIntegrals.Yk_ab(k, grid.r[i], rhoa, nrho, grid) * rhoa[i]   end
+            fk = AngularMomentum.fk_ab(a,a);    if  fk == 0   cycle    end
+            for  i = 1:length(orba.P)    wx[i] = wx[i] + wc * fk * RadialIntegrals.Yk_ab(k, grid.r[i], rhoa, nrho, grid) * rhoa[i]   end
         end
     end
     # Third term Sum_a != b ...
@@ -978,8 +978,8 @@ function Basics.computePotential(scField::Basics.EHField, grid::Radial.Grid, lev
         for  i = 1:nrho    rhoab[i] = orba.P[i]*orbb.P[i] + orba.Q[i]*orbb.Q[i]   end
         wc = occa * occb
         for  k = 0:10
-            gk = JAC.AngularMomentum.gk_ab(a,b);    if  gk == 0   continue    end
-            for  i = 1:nrho    wx[i] = wx[i] + wc * gk * JAC.RadialIntegrals.Yk_ab(k, grid.r[i], rhoab, nrho, grid) * rhoab[i]   end
+            gk = AngularMomentum.gk_ab(a,b);    if  gk == 0   continue    end
+            for  i = 1:nrho    wx[i] = wx[i] + wc * gk * RadialIntegrals.Yk_ab(k, grid.r[i], rhoab, nrho, grid) * rhoab[i]   end
         end
     end
     # Weight factor
@@ -1020,8 +1020,8 @@ function Basics.computeScfCoefficients(field::Basics.ALField, basis::Basis, subs
         return( true )
     end
     #
-    Tcoeffs = JAC.AngularCoefficientsRatip2013.AngularTcoeff[];   allTcoeffs = JAC.AngularCoefficientsRatip2013.AngularTcoeff[]
-    Vcoeffs = JAC.AngularCoefficientsRatip2013.AngularVcoeff[];   allVcoeffs = JAC.AngularCoefficientsRatip2013.AngularVcoeff[]
+    Tcoeffs = AngularCoefficientsRatip2013.AngularTcoeff[];   allTcoeffs = AngularCoefficientsRatip2013.AngularTcoeff[]
+    Vcoeffs = AngularCoefficientsRatip2013.AngularVcoeff[];   allVcoeffs = AngularCoefficientsRatip2013.AngularVcoeff[]
     # Compute all angular coefficients for the diagonal matrix elements
     for  csf in basis.csfs
         # Calculate the spin-angular coefficients
@@ -1069,7 +1069,7 @@ function Basics.computeScfCoefficients(field::Basics.ALField, basis::Basis, subs
             wa = (coeff.nu, coeff.a, coeff.b)
             if  wa == redCoeff      redT = redT + coeff.T   end
         end
-        push!( Tcoeffs, JAC.AngularCoefficientsRatip2013.AngularTcoeff( redCoeff[1], redCoeff[2], redCoeff[3], redT) )
+        push!( Tcoeffs, AngularCoefficientsRatip2013.AngularTcoeff( redCoeff[1], redCoeff[2], redCoeff[3], redT) )
     end
     for  redCoeff in vcoeffs
         redV = 0.
@@ -1084,7 +1084,7 @@ function Basics.computeScfCoefficients(field::Basics.ALField, basis::Basis, subs
             wa = (coeff.nu, coeff.b, coeff.a, coeff.d, coeff.c)
             if  wa == redCoeff      redV = redV + V    end
         end
-        push!( Vcoeffs, JAC.AngularCoefficientsRatip2013.AngularVcoeff( redCoeff[1], redCoeff[2], redCoeff[3], redCoeff[4], redCoeff[5],  redV) )
+        push!( Vcoeffs, AngularCoefficientsRatip2013.AngularVcoeff( redCoeff[1], redCoeff[2], redCoeff[3], redCoeff[4], redCoeff[5],  redV) )
     end
     
     return( Tcoeffs, Vcoeffs )

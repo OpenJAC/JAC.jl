@@ -1,5 +1,5 @@
 using Test
-using JAC, ..Defaults, ..TestFrames
+using JenaAtomicCalculator, ..Defaults, ..TestFrames
 
 @testset "Name" begin
     printstyled("\nPerform tests on the JAC program; this may take a while .... \n", color=:cyan)
@@ -33,8 +33,8 @@ using JAC, ..Defaults, ..TestFrames
     end
 
     @testset "JAC properties" begin
-        ## @test TestFrames.testModule_Einstein()
-        ## @test TestFrames.testModule_Hfs()   
+        @test TestFrames.testModule_Einstein()
+        @test TestFrames.testModule_Hfs()   
         @test TestFrames.testModule_LandeZeeman() 
         @test TestFrames.testModule_IsotopeShift()   
         @test TestFrames.testModule_AlphaVariation() 

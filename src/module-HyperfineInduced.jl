@@ -247,6 +247,7 @@ end
 #################################################################################################################################
 #################################################################################################################################
 
+#==
 """
 `HyperfineInduced.amplitude(kind::String, mp::EmMultipole, gauge::EmGauge, omega::Float64, 
                             finalLevel::IJF_Level, initialLevel::IJF_Level, grid::Radial.Grid; printout=true)`  
@@ -279,6 +280,56 @@ function  amplitude(kind::String, mp::EmMultipole, gauge::EmGauge, omega::Float6
     
     return( amp )
 end
+==#
+
+"""
+`HyperfineInduced.amplitude(kind::String, mp::EmMultipole, gauge::EmGauge, omega::Float64, 
+                            finalLevel::IJF_Level, initialLevel::IJF_Level, grid::Radial.Grid; printout=true)`  
+    ... to compute the radiative (mulipole) transition amplitude between two hyperfine levels; 
+        a amplitude::ComplexF64 is returned.
+"""
+function  amplitude(kind::String, mp::EmMultipole, gauge::EmGauge, omega::Float64, 
+                    finalLevel::IJF_Level, initialLevel::IJF_Level, grid::Radial.Grid; printout=true)
+    function doublefactorial(L::Int64)
+        # Need to be implemented properly
+        if       L == 3     return(   3 )
+        elseif   L == 5     return(  15 )
+        elseif   L == 7     return( 105 )
+        else     error("stop a")
+        end 
+    end
+
+    if kind == "emission"
+        amp = ComplexF64(0.)
+        for  (ib, ibState)  in  enumerate(initialLevel.basis)
+            for  (fb, fbState)  in  enumerate(finalLevel.basis)
+                # First, compute the nuclear transition, if possible
+                if   abs(finalLevel.mc[fb] * initialLevel.mc[ib]) > 0.8  &&   fbState.levelJ.index == ibState.levelJ.index
+                    Lx=2*mp.L+1
+                    Ly=doublefactorial(Lx)
+                    Lz=sqrt((mp.L+1)*Lx/4/pi/mp.L)*(Defaults.getDefaults("alpha") * omega)^mp.L/Ly
+                    amp = amp + AngularMomentum.phaseFactor([fbState.isomer.spinI, +1, AngularJ64(mp.L), +1, ibState.F, +1, ibState.levelJ.J]) * 
+                                AngularMomentum.Wigner_6j(fbState.isomer.spinI, ibState.isomer.spinI, AngularJ64(mp.L), 
+                                                          ibState.F, fbState.F, ibState.levelJ.J)                                              *
+                                Hfs.computeInteractionAmplitudeM(mp, fbState.isomer, ibState.isomer)                                           *
+                                Lz
+                end
+                # Second, compute the contributions due to the change in the electronic state
+                if fbState.isomer.spinI==ibState.isomer.spinI
+                amp = amp + finalLevel.mc[fb] * initialLevel.mc[ib] * 
+                            AngularMomentum.phaseFactor([ibState.levelJ.J, +1, AngularJ64(mp.L), +1, fbState.F, +1, fbState.isomer.spinI])     *                         
+                       AngularMomentum.Wigner_6j(fbState.levelJ.J, ibState.levelJ.J, AngularJ64(mp.L), 
+                                                ibState.F, fbState.F, fbState.isomer.spinI)                                                    *
+                            PhotoEmission.amplitude_Wu(kind, mp, gauge, omega, fbState.levelJ, ibState.levelJ, grid, display=false)
+                end
+            end
+        end
+    else   error("stop a")
+    end
+    
+    return( amp )
+end
+
 
 
 """
@@ -324,6 +375,7 @@ function  computeAmplitudesProperties(line::HyperfineInduced.Line, grid::Radial.
 end
 
 
+#==
 """
 `HyperfineInduced.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
                                settings::HyperfineInduced.Settings; output=true)`  
@@ -351,6 +403,73 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     finalLevels    = HyperfineInduced.determineIJFlevels(finalMultiplet,   settings.fIsomer, settings.fLevelIndex, settings.fFvalues, 
                                                          finalHfBasis, grid,     settings)
     
+    # Generate initial and final hyperfine multiplet
+    initialHfMultiplet = HyperfineInduced.IJF_Multiplet("iMultiplet", initialLevels)
+    finalHfMultiplet   = HyperfineInduced.IJF_Multiplet("fMultiplet", finalLevels)
+    
+    if  settings.printBefore
+        HyperfineInduced.displayHfMultiplet(stdout, "Initial IJF-coupled multiplet:", initialHfMultiplet)
+        HyperfineInduced.displayHfMultiplet(stdout, "Final IJF-coupled multiplet:",   finalHfMultiplet)
+    end
+    #
+    # Determine the HFI transitions/lines and all associated channels
+    lines = HyperfineInduced.determineLines(finalHfMultiplet, initialHfMultiplet, settings)
+    if  settings.printBefore    HyperfineInduced.displayLines(stdout, lines)    end
+    
+    # Calculate all transition amplitudes and requested properties
+    newLines = HyperfineInduced.Line[]
+    for  line in lines
+        newLine = HyperfineInduced.computeAmplitudesProperties(line, grid, settings) 
+        push!( newLines, newLine)
+    end
+    
+    # Print all results to screen
+    HyperfineInduced.displayRates(stdout, newLines, settings)
+ 
+    printSummary, iostream = Defaults.getDefaults("summary flag/stream")
+    if  printSummary   HyperfineInduced.displayRates(iostream, newLines, settings)
+    end
+
+    if    output    return( newLines )
+    else            return( nothing )
+    end
+end
+==#
+
+"""
+`HyperfineInduced.computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+                               settings::HyperfineInduced.Settings; output=true)`  
+    ... to compute the hyperfine-induced (radiative) transition amplitudes and all properties as requested by the given settings. 
+        The finalMultiplet and initialMultiplet always refer to the electronic systems, whereas all further nuclear information either 
+        comes from the nuclear model nm or the settings.nuclearCompound.
+        A list of lines::Array{HyperfineInduced.Lines} is returned.
+"""
+function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid, 
+                       settings::HyperfineInduced.Settings; output=true) 
+    # Define a common subshell list for both multiplets
+    subshellList = Basics.generate("subshells: ordered list for two bases", finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
+    Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
+    println("")
+    printstyled("HyperfineInduced.computeLines(): The computation of hyperfine-induced transition amplitudes starts now ... \n", color=:light_green)
+    printstyled("---------------------------------------------------------------------------------------------------------- \n", color=:light_green)
+    println("")
+    #
+    # Generate the hyperfine basis for the initial and final hyperfine levels as well as the levels themselve
+    initialHfBasis = HyperfineInduced.generateBasis(initialMultiplet, settings.iLevelIndex, settings.iAddIndices, settings.iFvalues, settings)
+  
+    finalHfBasis   = HyperfineInduced.generateBasis(finalMultiplet,   settings.fLevelIndex, settings.fAddIndices, settings.fFvalues, settings)
+    
+     #Calculate A and B coefficients
+     println(">>> Generate A and B coefficients for initial and final hyperfine levels")
+     A_c, B_c=HyperfineInduced.splitting_AB(initialMultiplet, settings.iIsomer, settings.iLevelIndex, grid)
+     println("The initial level: A is $(real(A_c)) a.u. and B is $(real(B_c)) a.u.")
+     A_c, B_c=HyperfineInduced.splitting_AB(finalMultiplet, settings.fIsomer, settings.fLevelIndex, grid)
+     println("The final level: A is $(real(A_c)) a.u. and B is $(real(B_c)) a.u.")
+    
+    initialLevels  = HyperfineInduced.determineIJFlevels(initialMultiplet, settings.iIsomer, settings.iLevelIndex, settings.iFvalues, 
+                                                         initialHfBasis, grid,   settings)
+    finalLevels    = HyperfineInduced.determineIJFlevels(finalMultiplet,   settings.fIsomer, settings.fLevelIndex, settings.fFvalues, 
+                                                         finalHfBasis, grid,     settings)
     # Generate initial and final hyperfine multiplet
     initialHfMultiplet = HyperfineInduced.IJF_Multiplet("iMultiplet", initialLevels)
     finalHfMultiplet   = HyperfineInduced.IJF_Multiplet("fMultiplet", finalLevels)
@@ -434,6 +553,7 @@ function  determineLines(finalMultiplet::IJF_Multiplet, initialMultiplet::IJF_Mu
 end
 
 
+#==
 """
 `HyperfineInduced.determineIJFlevels(multiplet::Multiplet, isomer::Nuclear.Isomer, index::Int64, Fvalues::Array{AngularJ64,1},
                                      basis::Array{HyperfineInduced.IJF_Vector,1}, grid::Radial.Grid, settings::HyperfineInduced.Settings)`  
@@ -495,6 +615,75 @@ function  determineIJFlevels(multiplet::Multiplet, isomer::Nuclear.Isomer, index
     
     return( levels )
 end
+==#
+
+
+
+"""
+`HyperfineInduced.determineIJFlevels(multiplet::Multiplet, isomer::Nuclear.Isomer, index::Int64, Fvalues::Array{AngularJ64,1},
+                                     basis::Array{HyperfineInduced.IJF_Vector,1}, grid::Radial.Grid, settings::HyperfineInduced.Settings)`  
+    ... to determine all hyperfine levels that are associated with the given nuclear isomeric level, the electronic level as
+        well as the given F-values. It also computes the expansion coefficients of the given hyperfine levels within the given
+        hyperfine basis. Usually, a perturbative representation of this level in the given basis is also computed. 
+        A list of hyperfine levels::Array{HyperfineInduced.IJF_Level,1} is returned.
+"""
+function  determineIJFlevels(multiplet::Multiplet, isomer::Nuclear.Isomer, index::Int64, Fvalues::Array{AngularJ64,1},
+                             basis::Array{HyperfineInduced.IJF_Vector,1}, grid::Radial.Grid, settings::HyperfineInduced.Settings)
+    levels = HyperfineInduced.IJF_Level[];   ndx = 0;    nuclearSymmetry = LevelSymmetry(isomer.spinI, isomer.parity)
+    for F  in  Fvalues
+        for eLevel  in  multiplet.levels
+            I = isomer.spinI;   nuclearParity = isomer.parity;   nuclearEnergy = Defaults.convertUnits("energy: to atomic", isomer.energy)
+            M = AngularM64(F.num, F.den);                        totalEnergy   = nuclearEnergy + eLevel.energy               # Set M_F = F
+            if  eLevel.index  == index   &&   AngularMomentum.isTriangle(I, eLevel.J, F)
+                ndx = ndx + 1;   mc = ComplexF64[];   mbr = 0;    aRenormalized = 0.
+                # Compute the mixing coefficients for the given basis
+                for  (mbi, bState)  in  enumerate(basis)
+                    bstatenuclearEnergy = Defaults.convertUnits("energy: to atomic", bState.isomer.energy)
+                    if  bState.isomer.spinI == I   &&   bState.isomer.parity == nuclearParity  &&   bState.F == F   &&  
+                        bState.levelJ.J     == eLevel.J  && bState.levelJ.energy==eLevel.energy && bstatenuclearEnergy==nuclearEnergy
+                            mx = ComplexF64(1.);   mbr = mbi
+                    elseif  AngularMomentum.isTriangle(bState.isomer.spinI, bState.levelJ.J, F)    &&
+                            AngularMomentum.isTriangle(eLevel.J, I, F)                             &&                            
+                            F == bState.F                                                                                     
+                        mx          = ComplexF64(0.)
+                        deltaEnergy = nuclearEnergy + eLevel.energy - (bState.levelJ.energy+bstatenuclearEnergy)
+                        for  (ia, csfa)  in  enumerate(eLevel.basis.csfs)
+                        end
+                        for  mp in settings.hfMultipoles
+                            if  AngularMomentum.isTriangle(eLevel.J, bState.levelJ.J, AngularJ64(mp.L) )  &&
+                                AngularMomentum.isTriangle(bState.isomer.spinI, I, AngularJ64(mp.L))      &&
+                                abs(deltaEnergy)  >  1.0e-10 
+                                # Compute the relevant multipole M^M and T^M interaction amplitude
+                                MM = Hfs.computeInteractionAmplitudeM(mp, bState.isomer, isomer)
+                                TM = Hfs.computeInteractionAmplitudeT(mp, bState.levelJ, eLevel, grid)
+                                mx = mx + AngularMomentum.phaseFactor([I, 1, bState.levelJ.J, 1, F]) *
+                                          AngularMomentum.Wigner_6j(bState.isomer.spinI, bState.levelJ.J, F, eLevel.J, I, AngularJ64(mp.L)) *
+                                          MM * TM  / deltaEnergy      
+                            end 
+                        end                       
+                    else                                                                                mx = ComplexF64(0.)
+                    end
+                    push!(mc, mx)
+                end
+                # Renormalize the contribution of the leading basis state
+                for  (mbi, bState)  in  enumerate(basis)
+                    if   mbi == mbr   continue   
+                    else  aRenormalized = aRenormalized + abs(mc[mbi])^2
+                    end
+                end
+                mc[mbr] = 1.0 - sqrt(aRenormalized)
+                #
+                push!(levels, HyperfineInduced.IJF_Level(I, F, M, nuclearParity, index, totalEnergy, eLevel, basis, mc) )
+            end 
+        end 
+    end 
+    
+    println(">>> Generate IJF levels for I^P = $nuclearSymmetry, index = $(index) and F-values = $(Fvalues)  " *
+            "==>   No IJF levels = $(length(levels))")
+    
+    return( levels )
+end
+
     
 
 """
@@ -537,6 +726,7 @@ function  displayLines(stream::IO, lines::Array{HyperfineInduced.Line,1})
 end
 
 
+#==
 """
 `HyperfineInduced.displayHfMultiplet(stream::IO, sa::String, multiplet::HyperfineInduced.IJF_Multiplet)`  
     ... to display the hyperfine levels from a IJF-coupled multiplet; sa is a string that is printed to characterize 
@@ -601,8 +791,77 @@ function  displayHfMultiplet(stream::IO, sa::String, multiplet::HyperfineInduced
     #
     return( nothing )
 end
+==#
 
 
+
+"""
+`HyperfineInduced.displayHfMultiplet(stream::IO, sa::String, multiplet::HyperfineInduced.IJF_Multiplet)`  
+    ... to display the hyperfine levels from a IJF-coupled multiplet; sa is a string that is printed to characterize 
+        the multiplet. The results are printed but nothing is returned otherwise.
+"""
+function  displayHfMultiplet(stream::IO, sa::String, multiplet::HyperfineInduced.IJF_Multiplet)
+    nx = 79
+    println(stream, " ")
+    println(stream, "  $sa")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
+    # First display the basis states
+    sa = "  ";   sb = "  "
+    sa = sa * TableStrings.center(8, "No "; na=2);                                sb = sb * TableStrings.hBlank(10)
+    sa = sa * TableStrings.center(8, "F^P";   na=4);                              sb = sb * TableStrings.hBlank(12)
+    sa = sa * TableStrings.center(14, "E_n"; na=4);              
+    sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+    sa = sa * TableStrings.center(14, "E_e"; na=4);              
+    sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+    sa = sa * TableStrings.flushleft(30, "Basis states"; na=4);                   sb = sb * TableStrings.hBlank(34)
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+    #   
+    for  (ib, bState)  in  enumerate(multiplet.levelFs[1].basis)
+        sa  = "  ";    sym = LevelSymmetry( bState.F, bState.isomer.parity * bState.levelJ.parity)
+        sa = sa * TableStrings.center(8, string(ib); na=2)
+        sa = sa * TableStrings.center(8, string(sym); na=4)
+        sa = sa * @sprintf("%.6e", bState.isomer.energy) * "     "  # Nuclear energies already in user-specified units
+        sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", bState.levelJ.energy)) * "      "
+        sa = sa * "|(" * string(bState.isomer.spinI) * string(bState.isomer.parity) * ", " * 
+                         string(bState.levelJ.J)     * string(bState.levelJ.parity) * "; " * string(sym) *  ">"
+        println(stream, sa)
+    end
+    println(stream, "  ", TableStrings.hLine(nx)) 
+    println(stream, " ")
+    
+    # Now, display the levels and mixing coefficients
+    nx = 149
+    println(stream, "  ", TableStrings.hLine(nx))
+    sa = "  ";   sb = "  "
+    sa = sa * TableStrings.center(8, "level"; na=2);                              sb = sb * TableStrings.hBlank(10)
+    sa = sa * TableStrings.center(8, "F^P";   na=4);                              sb = sb * TableStrings.hBlank(12)
+    sa = sa * TableStrings.center(14, "Energy"; na=4);              
+    sb = sb * TableStrings.center(14, TableStrings.inUnits("energy"); na=4)
+    sa = sa * TableStrings.flushleft(30, "Mixing coefficients"; na=4);            sb = sb * TableStrings.hBlank(34)
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+    #   
+    for  level in multiplet.levelFs
+        sa  = "  ";    sym = LevelSymmetry( level.F, level.nuclearParity * level.eLevel.parity)
+        sa = sa * TableStrings.center(8, string(level.index); na=2)
+        sa = sa * TableStrings.center(8, string(sym); na=4)
+        sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", level.energy)) * "     "
+        for  (ic, coeff)  in  enumerate(level.mc)
+            if       ic < 21    sa = sa * @sprintf("% .3e", coeff) * " "   
+            elseif   ic == 21   sa = sa * "..."
+            else     break   
+            end  
+        end
+        println(stream, sa)
+    end
+    println(stream, "  ", TableStrings.hLine(nx)) 
+    println(stream, " ")
+    #
+    return( nothing )
+end
+
+
+#==
 """
 `HyperfineInduced.displayRates(stream::IO, lines::Array{HyperfineInduced.Line,1}, settings::HyperfineInduced.Settings)`  
     ... to list all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is 
@@ -647,6 +906,54 @@ function  displayRates(stream::IO, lines::Array{HyperfineInduced.Line,1}, settin
     #
     return( nothing )
 end
+==#
+
+
+"""
+`HyperfineInduced.displayRates(stream::IO, lines::Array{HyperfineInduced.Line,1}, settings::HyperfineInduced.Settings)`  
+    ... to list all results, energies, rates, etc. of the selected lines. A neat table is printed but nothing is 
+        returned otherwise.
+"""
+function  displayRates(stream::IO, lines::Array{HyperfineInduced.Line,1}, settings::HyperfineInduced.Settings)
+    nx = 131
+    println(stream, " ")
+    println(stream, "  Einstein coefficients, transition rates and oscillator strengths for hyperfine-induced transitions:")
+    println(stream, " ")
+    println(stream, "  ", TableStrings.hLine(nx))
+    sa = "  ";   sb = "  "
+    sa = sa * TableStrings.center(18, "i-level-f"; na=2);                         sb = sb * TableStrings.hBlank(20)
+    sa = sa * TableStrings.center(18, "i--F^P--f"; na=4);                         sb = sb * TableStrings.hBlank(22)
+    sa = sa * TableStrings.center(12, "Energy"   ; na=4);               
+    sb = sb * TableStrings.center(12,TableStrings.inUnits("energy"); na=4)
+    sa = sa * TableStrings.center( 9, "Multipole"; na=0);                         sb = sb * TableStrings.hBlank(10)
+    sa = sa * TableStrings.center(11, "Gauge"    ; na=4);                         sb = sb * TableStrings.hBlank(17)
+    sa = sa * TableStrings.center(26, "A--Einstein--B"; na=3);       
+    sb = sb * TableStrings.center(26, TableStrings.inUnits("rate")*"          "*TableStrings.inUnits("rate"); na=2)
+    sa = sa * TableStrings.center(12, "Decay widths"; na=3);       
+    sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=4)
+    println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx)) 
+    #   
+    for  line in lines
+        for  ch in line.channels
+            sa  = "";      isym = LevelSymmetry( line.initialLevel.F, line.initialLevel.nuclearParity * line.initialLevel.eLevel.parity)
+                           fsym = LevelSymmetry( line.finalLevel.F,   line.finalLevel.nuclearParity   * line.finalLevel.eLevel.parity)
+            sa = sa * TableStrings.center(18, TableStrings.levels_if(line.initialLevel.index, line.finalLevel.index); na=4)
+            sa = sa * TableStrings.center(18, TableStrings.symmetries_if(isym, fsym); na=4)
+            sa = sa * @sprintf("%.6e", Defaults.convertUnits("energy: from atomic", line.omega)) * "    "
+            sa = sa * TableStrings.center(9,  string(ch.multipole); na=4)
+            sa = sa * TableStrings.flushleft(11, string(ch.gauge);  na=2)
+            chRate =  8pi * Defaults.getDefaults("alpha") * line.omega * (Basics.twice(line.finalLevel.F) + 1) * (abs(ch.amplitude)^2) 
+            sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein A",    line, chRate)) * "  "
+            sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to Einstein B",    line, chRate)) * "    "
+            sa = sa * @sprintf("%.6e", Basics.recast("rate: radiative, to decay width",   line, chRate)) * "    "
+            println(stream, sa)
+        end
+    end
+    println(stream, "  ", TableStrings.hLine(nx))
+    #
+    return( nothing )
+end
+
 
 
 """
@@ -682,6 +989,32 @@ function  generateBasis(multiplet::Multiplet, index::Int64, addIndices::Array{In
     return( basis )
 end
 
+    
+"""
+`HyperfineInduced.splitting_AB(multiplet::Multiplet, isomer::Nuclear.Isomer, index::Int64, grid::Radial.Grid)`
+    ... calculates A and B coefficients in hyperfine splitting. 
+        is returned.
+"""
+function splitting_AB(multiplet::Multiplet, isomer::Nuclear.Isomer, index::Int64, grid::Radial.Grid)  
+    A=0.0
+    B=0.0
+    for eLevel  in  multiplet.levels
+        I = isomer.spinI;   nuclearParity = isomer.parity;  
+        if  eLevel.index  == index   
+            if AngularMomentum.isTriangle(I, I, AngularJ64(1))
+                A=isomer.mu*Hfs.computeInteractionAmplitudeT(M1, eLevel, eLevel, grid)
+                tem_J=Basics.twice(eLevel.J)/2
+                A=A/(Basics.twice(I)/2)/sqrt(tem_J*(tem_J+1)*(2*tem_J+1))
+            end
+            if AngularMomentum.isTriangle(I, I, AngularJ64(2))
+                B=2*isomer.Q*Hfs.computeInteractionAmplitudeT(E2, eLevel, eLevel, grid)
+                tem_J=Basics.twice(eLevel.J)
+                B=B*sqrt(tem_J*(tem_J-1)/(tem_J+1)/(tem_J+2)/(tem_J+3))
+            end
+            return (A, B)
+        end 
+    end    
+end
 
 end # module
 

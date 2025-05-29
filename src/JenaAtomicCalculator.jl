@@ -6,48 +6,19 @@
 #  
 #  Copy to desktop             scp -r JAC.jl/ fritzsch@10.140.119.236:~/fri/.
 """
-`module JAC`  
+`module JenaAtomicCalculator`  
     ... Jena Atomic Calculator (JAC) provides tools for performing atomic (structure) calculations at various degrees of complexity 
         and sophistication. It has been designed to not only calculate atomic level structures and properties [such as g-factors or
-        hyperfine and isotope-shift parameters] but also transition amplitudes between bound-state levels [for the anapole moment, dipole 
-        operator, electron electric-dipole moment, parity non-conservation, etc.] and, in particular, (atomic) transition probabilities, 
-        Auger rates, photoionization cross sections, radiative and dielectronic recombination rates as well as cross sections for many 
-        other (elementary) processes. JAC also facilitates interactive computations, the simulation of atomic cascades, the time-evolution 
-        of statistical tensors, a few semi-empirical estimates of atomic properties as well as the simplification of symbolic expressions
-        from Racah's algebra. -- In addition, the JAC module supports the display of level energies, electron and photon spectra, 
-        radial orbitals and other atomic data.
-
-
-**`Perform (atomic) computations of different complexity:`**  
-    JAC will eventually support **ten kinds** of computations which can be summarized as follows:
-
-   + Atomic computations, based on explicitly specified electron configurations.
-   + Restricted active-space computations (RAS).
-   + Interactive computations.
-   + Atomic cascade computations (partly implemented).
-   + Atomic representations (Green and close-coupling functions, complex rotation; partly implemented).
-   + Atomic responses (partly implemented).
-   + Atomic descriptors for machine learning algorithms (not yet implemented).
-   + Time-evolution of statistical tensors in (intense) light pusles (not yet implemented).
-   + Semi-empirical estimates of cross sections, etc. (partly implemented).
-   + Symbolic evaluation of expressions from Racah's algebra, etc.
-
-
-**`Further details and information`**
-
-        + Kinds of atomic implementation                                       [cf. ? Details.kindsOfComputation]
-        + Atomic amplitudes (partly) implemented in JAC                        [cf. ? Details.amplitudes]
-        + Atomic level properties (partly) implemented in JAC                  [cf. ? Details.properties]
-        + Atomic processes (partly) implemented in JAC                         [cf. ? Details.processes]
-        + Interactive use of JAC procedures                                    [cf. ? Details.interactive]
-        + Design principles and limitations of the JAC program                 [cf. ? Details.design]
-        + Data types, structs and name conventions of the JAC module           [cf. ? Details.datatypes]
-        + Atomic cascade computations and approximations                       [cf. ? Details.decayCascades]
-        + Use of (em) light pulses in the time evolution of statist. tensors   [cf. ? Details.pulses]
-        + Why Julia ?                                                          [cf. ? Details.whyJulia]
+        hyperfine and isotope-shift parameters] but also transition amplitudes between bound-state levels [for the dipole 
+        operator, etc.] and, in particular, (atomic) transition probabilities, Auger rates, photoionization cross sections, 
+        radiative and dielectronic recombination rates as well as cross sections for several other -- elementary or composed --
+        processes. 
 
 """
-module JAC
+module JenaAtomicCalculator
+
+const JAC = JenaAtomicCalculator
+
 
 # Restrict the size and functionality of code by just including certain modules, while others are not taken into account.
 # Of course, this "exclusion" may cause later errors if missing functionality is invoked.  The selective use of code
@@ -75,7 +46,7 @@ incRacahAlgebra         = false  ==#
 using  Dates,  Printf,  BSplineKit, LinearAlgebra, SpecialFunctions, QuadGK, Cubature, GSL, JLD2, SymEngine, 
        HypergeometricFunctions  ## , Interact, GaussQuadrature, IJulia, FortranFiles
 
-export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod, AbstractPotential, AbstractQedModel, AbstractStartOrbitals,
+export AbstractCImethod, AbstractConfigurationRestriction, AbstractEeInteraction, AbstractPotential, AbstractQedModel, AbstractStartOrbitals,
        AbstractProcessSettings, AbstractEmpiricalSettings, AbstractPlasmaModel, AbstractPropertySettings, AbstractLineShiftSettings,
        add, AlphaX, AlphaVariation, analyze, AnapoleMoment, 
        AngularJ64, AngularM64, AngularJ, AngularMomentum, 
@@ -85,9 +56,10 @@ export AbstractConfigurationRestriction, AbstractEeInteraction, AbstractCImethod
        compute, convertUnits, Compton, Configuration, ConfigurationR, 
        Cascade, Continuum, CorePolarization, Coulex, CoulombExcitation, Coulion, CoulombBreit, CoulombGaunt, 
        CoulombInteraction, CoulombIonization, CsfR,        
-       diagonalize, Defaults, DecayYield, Details, DielectronicRecombination, Dierec, Djpq, DoubleAutoIonization, DoubleAuger, DiagonalCoulomb, 
-       DefaultQuantizationAxis, 
-       Eimex, ElectronCapture, ElecCapture, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate, ExpStokes, Empirical,
+       diagonalize, Defaults, DecayYield, DielectronicRecombination, Dierec, Djpq, DoubleAutoIonization, DoubleAuger, 
+       DiagonalCoulomb, DefaultQuantizationAxis, 
+       Eimex, ElectronCapture, ElecCapture, estimate, ElectricDipoleMoment, Einstein, EinsteinX, EmMultipole, evaluate, ExpStokes, 
+       Empirical,
        E1, M1, E2, M2, E3, M3, E4, M4,
        FormFactor, FormF, FullCIeigen,
        generate, GreenSettings, GreenChannel, GreenExpansion, getDefaults, Green, Gui,
@@ -125,21 +97,22 @@ include("module-Basics.jl");            using ..Basics
 include("module-Radial.jl");            using ..Radial
 include("module-Math.jl");              using ..Math
 include("module-Defaults.jl");          using ..Defaults
+include("module-Distribution.jl");      using ..Defaults
 include("module-ManyElectron.jl");      using ..ManyElectron
 include("module-Nuclear.jl");           using ..Nuclear
-include("module-BiOrthogonal.jl");      using ..BiOrthogonal
+# include("module-BiOrthogonal.jl");      using ..BiOrthogonal
 
 
 # Specialized functions/methods to manipulate these data
 include("module-AngularMomentum.jl")
 ## include("module-AngularCoefficients-Ratip2013.jl")  ## keep for internal test purposes only
 include("module-SpinAngular.jl");       using ..SpinAngular
-include("module-Bsplines.jl");          using ..Bsplines
+##x include("module-Bsplines.jl");          using ..Bsplines
 include("module-BsplinesN.jl");         using ..BsplinesN
 include("module-Pulse.jl")
 include("module-Beam.jl")
 include("module-Continuum.jl")
-include("module-Details.jl")
+##x include("module-Details.jl")
 include("module-RadialIntegrals.jl");   using ..RadialIntegrals
 include("module-HydrogenicIon.jl")
 include("module-InteractionStrength.jl")
@@ -167,7 +140,6 @@ include("module-StarkShift.jl")
 include("module-FormFactor.jl")
 include("module-ReducedDensityMatrix.jl")
 include("module-AlphaVariation.jl")
-include("module-DecayYield.jl")
 include("module-RadiativeOpacity.jl")
 include("module-MultipolePolarizibility.jl")
 end
@@ -187,15 +159,15 @@ include("module-ParticleScattering.jl")
 include("module-BeamPhotoExcitation.jl") 
 include("module-HyperfineInduced.jl") 
 include("module-ResonantInelastic.jl") 
+include("module-DecayYield.jl")
+include("module-ImpactExcitation.jl")
 end
 
 if incAdvancedProcesses
 # Functions/methods for more advanced atomic processes
 include("module-MultiPhotonDeExcitation.jl")
-include("module-DoubleAutoIonization.jl")
 include("module-CoulombExcitation.jl")
 include("module-CoulombIonization.jl")
-include("module-ImpactExcitation.jl")
 include("module-PhotoDoubleIonization.jl")
 include("module-PhotoIonizationFluores.jl")
 include("module-PhotoIonizationAutoion.jl")
@@ -206,6 +178,7 @@ include("module-MultiPhotonDoubleIon.jl")
 include("module-InternalConversion.jl") 
 include("module-InternalRecombination.jl") 
 include("module-TwoElectronOnePhoton.jl") 
+include("module-DoubleAutoIonization.jl")
 #= Further processes, not yet included into the code
 include("module-REDA.jl")
 include("module-READI.jl")
@@ -268,8 +241,9 @@ function __init__()
     global JAC_TEST_IOSTREAM    = stdout
 end
 
-println("\nWelcome to JAC:  A community approach to the computation of atomic structures, cascades and time evolutions " * 
-        "[(C) Copyright by Stephan Fritzsche, Jena (2018-2025)].")
+println("\nWelcome to JenaAtomicCalculator (JAC):  A community approach to the computation of atomic structures, " *
+        "cascades and time evolutions [(C) Copyright by Stephan Fritzsche, Jena (2018-2025)].")
+        
 
 end
 

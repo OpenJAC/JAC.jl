@@ -6,7 +6,7 @@
 module RadiativeOpacity
 
 
-using Printf, JAC, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..TableStrings
+using Printf, ..Basics, ..Defaults, ..ManyElectron, ..Radial, ..TableStrings
 
 """
 `struct  RadiativeOpacity.Settings  <:  AbstractPropertySettings`  

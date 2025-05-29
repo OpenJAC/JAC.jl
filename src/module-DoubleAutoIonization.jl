@@ -6,7 +6,7 @@
 module DoubleAutoIonization
 
 
-using Printf, JAC, ..AngularMomentum, ..AtomicState, ..AutoIonization, ..Basics, ..ManyElectron, ..TableStrings
+using Printf, ..AngularMomentum, ..AtomicState, ..AutoIonization, ..Basics, ..ManyElectron, ..Nuclear, ..Radial,  ..TableStrings
 
 
 """
