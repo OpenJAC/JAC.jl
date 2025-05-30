@@ -7,7 +7,7 @@
 module Empirical
 
 
-using ..Basics, ..Defaults, ..Distribution, ..Radial, ..ManyElectron, ..Nuclear, ..ImpactIonization, ..PeriodicTable
+using ..Basics, ..Defaults, ..Distribution, ..Radial, ..ManyElectron, ..Nuclear, ..ImpactIonization, ..PeriodicTable, ..SelfConsistent
 
 """
 `abstract type Empirical.AbstractEmpiricalApproximation` 
