@@ -1,10 +1,10 @@
 # push!(LOAD_PATH,"../src/")
 
-using Documenter, JAC
+using Documenter, JenaAtomicCalculator
 
 makedocs(;
-    modules=[JAC],
-    format=Documenter.HTML(prettyurls=false, repolink = "https://github.com/OpenJAC/JAC.jl",
+    modules=[JenaAtomicCalculator],
+    format=Documenter.HTML(prettyurls=false, repolink = "https://github.com/OpenJAC/JenaAtomicCalculator.jl",
                            size_threshold = 300 * 1024,),
     pages=[
         "Home"                          => "index.md",
@@ -25,12 +25,12 @@ makedocs(;
         "Contributors"                  => "contributors.md",
         "License"                       => "license.md",
     ],
-    repo     = "https://github.com/OpenJAC/JAC.jl",
-    sitename = "JAC.jl",
+    repo     = "https://github.com/OpenJAC/JenaAtomicCalculator.jl",
+    sitename = "JenaAtomicCalculator.jl",
     authors  = "Stephan Fritzsche",
     warnonly = Documenter.except(),
 )
 
 deploydocs(;
-    repo     = "github.com/OpenJAC/JAC.jl"
+    repo     = "github.com/OpenJAC/JenaAtomicCalculator.jl"
 )

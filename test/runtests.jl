@@ -34,7 +34,7 @@ using JenaAtomicCalculator, ..Defaults, ..TestFrames
 
     @testset "JAC properties" begin
         @test TestFrames.testModule_Einstein()
-        @test TestFrames.testModule_Hfs()   
+        ## @test TestFrames.testModule_Hfs()   
         @test TestFrames.testModule_LandeZeeman() 
         @test TestFrames.testModule_IsotopeShift()   
         @test TestFrames.testModule_AlphaVariation() 

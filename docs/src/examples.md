@@ -2,7 +2,7 @@
 ## Hydrogenic Computation
 
 ```@example hydrogenic
-using JAC
+using JenaAtomicCalculator
 ```
 Perhaps, the simplest atomic computations can be made for hydrogenic ions. If we consider, for example, hydrogen-like 
 argon $(Z=18)$, we can first determine and compare the energies of the $1s$ and $2p$ levels from the (non-relativistic) 
@@ -260,7 +260,7 @@ savefig("hdy-2.svg"); nothing # hide
 ## Compute the low-lying levels of $C^{2+} 1s^2 (2s^2 + 2s2p + 2p^2)$: $\;$ SCF and configuration interaction calculations
 
 ```@example scfci
-using JAC
+using JenaAtomicCalculator
 ```
 
 The low-lying levels (level structure) of beryllium-like ions, and especially of C``^{2+}``, has been calculated in 
