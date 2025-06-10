@@ -20,7 +20,7 @@ In brief, JAC provides tools for performing atomic (structure) calculations of d
 which further details are given in the tutorials below. To see anything from JAC, we shall first invoke the tools by:
 
 ```@example startJulia
-using JAC
+using JenaAtomicCalculator
 ```
 
 a line that will appear at the beginning of all subsequent tutorials. -- A first powerful and frequently needed feature 
@@ -104,7 +104,7 @@ PhotoEmission.Settings
 
 We shall meet these and (many) other settings quite often in the tutorials below. --- Beside of Julia's help features (?),
 however, it is sometimes difficult to remember the right term or function name. In this case, it easy to make a <double-tab> 
-after the dot (notation) or to make use of the (Unix/Linux) `grep` command within the `JAC/src` directly. Similar 
+after the dot (notation) or to make use of the (Unix/Linux) `grep` command within the `JenaAtomicCalculator/src` directly. Similar 
 line-search commands will exist also at other platforms. In particular, for those of you who wishes to support and extend 
 the JAC toolbox, the dot expansion and the `grep` command will be found very helpful, perhaps more than other search tools.
 
@@ -258,7 +258,7 @@ Getting started with JAC (in REPL)
     JAC user guide pdf .... link
 
 ```@example startJAC
-using JAC
+using JenaAtomicCalculator
 ```
 
 ### Welcome to **JAC**, the **Jena Atomic Calculator**
@@ -267,14 +267,14 @@ using JAC
 Apart from the computation of atomic (many-electron) amplitudes, properties and processes, **JAC supports interactive, 
 restricted-active space (RAS) and cascade computations**. It also help perform a few simple *hydrogenic* and 
 *semi-empirical* estimates as well as simplify symbolic expressions from Racah's algebra. --- 
-Let's first use  `? JAC` in order to obtain more information about this toolbox:
+Let's first use  `? JenaAtomicCalculator` in order to obtain more information about this toolbox:
 
 ```
-? JAC
+? JenaAtomicCalculator
 ```
 
 ```@docs ; canonical=false
-JAC
+JenaAtomicCalculator
 ```
 H'm, this tells us a lot of details which we still need to better understand. To quickly list the atomic properties, 
 that have been (partly) considered in JAC, we can use `? Details.properties`   or some other of the listed calls:

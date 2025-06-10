@@ -27,4 +27,4 @@ For reference to (using) this code, please, use the Computer Physics Communicati
      [European Physical Journal A 61, 63 (2025)](https://doi.org/10.1140/epja/s10050-025-01535-3)
 
 
-See also [`citations.bib`](https://github.com/AlokaSahoo/JAC.jl/blob/master/docs/src/citations.bib) for the relevant references(s).
+See also [`citations.bib`](https://github.com/OpenJAC/JenaAtomicCalculator.jl/blob/master/docs/src/citations.bib) for the relevant references(s).
