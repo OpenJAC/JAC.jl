@@ -261,7 +261,9 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
     for  (i,line)  in  enumerate(lines)
         if  rem(i,200) == 0    println("> Excitation line $i:")   end
         ##x @show Basics.selectLevel(line.initialLevel, initialLevelSelection)
-        if  !Basics.selectLevel(line.initialLevel, initialLevelSelection)     continue    end
+        if  !Basics.selectLevel(line.initialLevel, initialLevelSelection)     continue    
+        ## else @show "jump to be calculated";    continue 
+        end
         newLine = PhotoExcitation.computeAmplitudesProperties(line, grid, settings, printout=printout) 
         #
         # Don't add this line if it does not contribute to the decay

@@ -21,7 +21,8 @@ function computeSteps(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Compu
                                                 
         if  step.process == Basics.Photo() 
             newLines = PhotoIonization.computeLinesCascade(step.finalMultiplet, step.initialMultiplet, comp.nuclearModel, comp.grid, 
-                                                           step.settings, scheme.initialLevelSelection, output=true, printout=false) 
+                                                           ## step.settings, scheme.initialLevelSelection, output=true, printout=false) 
+                                                           step.settings, LevelSelection(true, indices=[1]), output=true, printout=false) 
             append!(linesP, newLines);    nt = length(linesP)
         else   error("Unsupported atomic process for photoionization computations.")
         end
@@ -54,9 +55,9 @@ function determineSteps(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Com
                 if  initialBlock.NoElectrons == ionizedBlock.NoElectrons + 1
                     photonEnergies = scheme.photonEnergies
                     println(">>> Photon energies must still be given in user-selected units: $(photonEnergies)")
-                    settings = PhotoIonization.Settings(scheme.multipoles, [UseCoulomb, UseBabushkin], photonEnergies, Float64[],
-                                                        false, false, false, false, false, LineSelection(), Basics.ExpStokes(), 0.,
-                                                        scheme.lValues)
+                    settings = PhotoIonization.Settings(PhotoIonization.Settings(), multipoles = scheme.multipoles, 
+                                                        gauges = [UseCoulomb, UseBabushkin], photonEnergies = photonEnergies, 
+                                                        lValues = scheme.lValues)
                     push!( stepList, Cascade.Step(Basics.Photo(), settings, initialBlock.confs, ionizedBlock.confs, 
                                                                             initialBlock.multiplet, ionizedBlock.multiplet) )
                 end
@@ -98,10 +99,12 @@ function generateBlocks(scheme::Cascade.PhotoIonizationScheme, comp::Cascade.Com
         for  confa  in confs
             print("  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")
             if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")   end
-                ##x basis     = Basics.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
-                basis     = SelfConsistent.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
-                multiplet = Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", [confa],  basis.orbitals, 
-                                            comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            ##x basis     = Basics.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            multiplet = SelfConsistent.performSCF([confa], comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            ##x    multiplet = Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", [confa],  basis.orbitals, 
+            ##x                                comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            multiplet = Hamiltonian.performCIwithFrozenOrbitals([confa], multiplet.levels[1].basis.orbitals, comp.nuclearModel, 
+                                                                comp.grid, comp.asfSettings; printout=false)
             push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )
             println("and $(length(multiplet.levels[1].basis.csfs)) CSF done. ")
         end

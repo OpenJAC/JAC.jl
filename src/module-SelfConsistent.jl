@@ -310,7 +310,7 @@ function performSCF(configs::Array{Configuration,1}, nm::Nuclear.Model, grid::Ra
     basis      = SelfConsistent.initializeBasis(configs, nm, primitives, settings; levelSymmetries, printout)
     
     # Solve a self-consistent field for this basis
-    @show settings.scField
+    ##x @show settings.scField
     if   typeof(settings.scField)  in  [Basics.DFSField, Basics.DFSwCPField, Basics.HSField]
         basis = SelfConsistent.solveMeanFieldBasis(basis, nm, primitives, settings; printout=printout) 
     elseif   settings.scField in [Basics.NuclearField()]  && settings.startScfFrom == StartFromHydrogenic() 

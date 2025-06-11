@@ -27,8 +27,12 @@ function  bindingEnergy(Z::Int64, sh::Shell; data::PeriodicTable.AbstractEnergyD
     shellIndex[Shell("6s")] = 22;    shellIndex[Shell("6p")] = 24
     
     # If no useful value is found, issue a warning and return 2.0 eV; this can be readily improved
+    if  sh in [Shell("5g"), Shell("6d"), Shell("6f"), Shell("6g")]  wb = 2.0;  @warn("Not defined shell $sh in data set $data");   return( 0. )   end
+
     wb = wa[ shellIndex[sh] ];       
-    if  wb == -1.   wb = 2.0;  @warn("No useful binding energy found for shell $sh in data set $data")   end
+    if      wb == -1.   wb = 2.0;  @warn("No useful binding energy found for shell $sh in data set $data")   
+    elseif  sh in [Shell("5g"), Shell("6d"), Shell("6f"), Shell("6g")]  wb = 2.0;  @warn("Not defined shell $sh in data set $data")   
+    end
     wc = Defaults.convertUnits("energy: from eV to atomic", wb)
     
     return( wc )
@@ -137,8 +141,9 @@ end
         
         Note: This is an estimate of the total energy which need not to be so accurate.
 """
-function  totalEnergy(Z::Int64, conf::Configuration; data::PeriodicTable.AbstractEnergyData=Nist2025() )
-    if         typeof(data)== PeriodicTable.Nist2025
+function  totalEnergy(Z::Int64, conf::Configuration; data::PeriodicTable.AbstractEnergyData = PeriodicTable.Williams2000() )
+    ##x @show Z, conf, data
+    if         typeof(data) == PeriodicTable.Nist2025
         wa = PeriodicTable.ionizationPotentials_Nist2025(Z) 
         # Use the ionization potentials to make a realistic estimate of the total energy ... and return the value
         # Warn if the givrn configuration does not follow the standard filling
@@ -152,11 +157,11 @@ function  totalEnergy(Z::Int64, conf::Configuration; data::PeriodicTable.Abstrac
     
         return( wc )
         
-    elseif     typeof(data)== PeriodicTable.Williams2000
+    elseif     typeof(data) == PeriodicTable.Williams2000
         wa = PeriodicTable.bindingEnergies_Williams2000(Z)    
-    elseif     typeof(data)== PeriodicTable.Larkins1977
+    elseif     typeof(data) == PeriodicTable.Larkins1977
         wa = PeriodicTable.bindingEnergies_Larkins1977(Z) 
-    elseif     typeof(data)== PeriodicTable.XrayDataBooklet
+    elseif     typeof(data) == PeriodicTable.XrayDataBooklet
         wa = PeriodicTable.bindingEnergies_XrayDataBooklet(Z)    
     else   error("Unsupported energy data set = $data")
     end
@@ -171,8 +176,9 @@ function  totalEnergy(Z::Int64, conf::Configuration; data::PeriodicTable.Abstrac
     # Use the binding energies of the neutral atom to obtain a useful total binding energy
     totalE = 0.
     for  (sh,occ) in conf.shells
+        if  sh in [Shell("5g"), Shell("6d"), Shell("6f"), Shell("6g")]  wb = 2.0;  @warn("Not defined shell $sh in data set $data"); continue   end
         wb = wa[ shellIndex[sh] ]       
-        if  wb == -1.   wb = 2.0;  @warn("No useful binding energy found for shell $sh in data set $data")   end
+        if  wb == -1.   wb = 2.0;  @warn("No useful binding energy found for shell $sh in data set $data")  end
         totalE = totalE - occ * wb
     end
         

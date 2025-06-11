@@ -2,7 +2,7 @@
 
 | **Documentation**                                                               | **Build Status**                                                                                | **Try JAC in Cloud** 
 |:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
-| [![Documentation](https://img.shields.io/badge/Documentation-dev-blue)](https://openjac.github.io/JAC.jl/dev) | [![Build Status](https://github.com/OpenJAC/JAC.jl/workflows/CI/badge.svg)](https://github.com/OpenJAC/JAC.jl/actions) [![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)  | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master) |
+| [![Documentation](https://img.shields.io/badge/Documentation-dev-blue)](https://openjac.github.io/JenaAtomicCalculator.jl/dev) | [![Build Status](https://github.com/OpenJAC/JAC.jl/workflows/CI/badge.svg)](https://github.com/OpenJAC/JAC.jl/actions) [![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)  | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master) |
 
 
 
@@ -11,7 +11,7 @@
 *Last update:* April, 25th, 2025
 
 
-## What is JAC?
+## What is JAC, the JenaAtomicCalculator ?
 
 **JAC**, the **Jena Atomic Calculator**, provides an open-source Julia package for doing atomic computations of various kind
 and complexity. In particular, JAC is a (relativistic) electronic structure code for the computation of (atomic many-electron) 
@@ -112,14 +112,13 @@ JAC toolbox but come with a rather limited implementation so far.
 
 ## Installation
 
-In Julia, you can install the JAC package like any other package by by just entering the package manager (with <Alt> ]) 
-and by typing
+In Julia, you can install the JenaAtomicCalculator package like any other package by by just typing
 ```
-pkg> add https://github.com/OpenJAC/JAC.jl
+using JenaAtomicCalculator
 ```
 
 !!! @info "Info"
-    We suggest to use JAC with the Julia v1.10.
+    We suggest to use  JenaAtomicCalculator  with the Julia v1.10.
 
 ## Current limitations of JAC
 

@@ -198,7 +198,7 @@ function generateOrbitals(subshells::Array{Subshell,1}, pot::Radial.Potential, n
         wa = BsplinesN.setupLocalMatrix(kappa, primitives, pot, storage)
         w2 = Basics.diagonalize("generalized eigenvalues: LinearAlgebra", wa, wb)
         nsi = nsS    
-        if  true   Basics.tabulateKappaSymmetryEnergiesDirac(kappa, w2.values, nsi, nm)    end
+        if  printout  Basics.tabulateKappaSymmetryEnergiesDirac(kappa, w2.values, nsi, nm)    end
         
         # (3) Collect all the requested single-electron orbitals
         for  sh in subshells

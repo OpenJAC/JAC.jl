@@ -5,16 +5,20 @@
 """
 module BasicsAZ
 
-using  Printf,  LinearAlgebra, GaussQuadrature, ##x JenaAtomicCalculator, 
-       ..AlphaVariation, ..AngularMomentum, ..Atomic, ..AtomicState,  ..AutoIonization,  ..Basics, ..BsplinesN, ..Cascade, 
+using  Printf,  LinearAlgebra, GaussQuadrature, JenaAtomicCalculator, ..Basics, ..TableStrings
+       ## using JenaAtomicCalculator ... since otherwise almost all other modules must be included explicitly
+       
+#==    ..AlphaVariation, ..AngularMomentum, ..Atomic, ..AtomicState,  ..AutoIonization,  ..Basics, ..BsplinesN, ..Cascade, 
        ..DecayYield, ..Defaults, ..DielectronicRecombination, ..DoubleAutoIonization, ..Einstein, ..FormFactor,
-       ..HydrogenicIon, ..Hfs, ..HyperfineInduced, ..ImpactExcitationAutoion, ..InteractionStrength,  ..InteractionStrengthQED,  ..IsotopeShift, 
+       ..HydrogenicIon, ..Hfs, ..HyperfineInduced, ..ImpactExcitation, ..ImpactExcitationAutoion, ..InteractionStrength,  
+       ..InteractionStrengthQED,  ..InternalRecombination, ..IsotopeShift, 
        ..LandeZeeman, ..LSjj, ..ManyElectron,  ..MultiPhotonDeExcitation, ..MultipolePolarizibility,  ..Nuclear, 
        ..PhotoDoubleIonization, ..PhotoEmission,  ..PhotoExcitation,  ..PhotoExcitationAutoion, ..PhotoExcitationFluores, 
        ..PhotoIonization, ..PhotoIonizationFluores, ..PhotoIonizationAutoion, ..PhotoRecombination,
-       ..Radial, ..RadialIntegrals, ..RadiativeAuger, ..RayleighCompton, ..ResonantInelastic, ..SelfConsistent, ..SpinAngular, ..StarkShift, ..TableStrings 
+       ..Radial, ..RadialIntegrals, ..RadiativeAuger, ..RayleighCompton, ..ResonantInelastic, ..SelfConsistent, ..SpinAngular, ..StarkShift, 
+       ..TableStrings, ..TwoElectronOnePhoton
        
-#==    ..AlphaVariation,  ..AutoIonization, ..Cascade, ..Continuum, ..DecayYield, ..Defaults, ..DielectronicRecombination, ..Einstein, 
+       ..AlphaVariation,  ..AutoIonization, ..Cascade, ..Continuum, ..DecayYield, ..Defaults, ..DielectronicRecombination, ..Einstein, 
        ..FormFactor, ..Hfs, ..IsotopeShift, ..LandeZeeman, ..LSjj, ..MultipolePolarizibility,  ..PhotoExcitation, 
        ..PhotoIonization  ==#
 

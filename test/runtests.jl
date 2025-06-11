@@ -58,7 +58,7 @@ using JenaAtomicCalculator, ..Defaults, ..TestFrames
     end
 
     @testset "JAC cascades" begin
-        ## @test TestFrames.testModule_Cascade_StepwiseDecay()
+        @test TestFrames.testModule_Cascade_StepwiseDecay()
         ## @test TestFrames.testModule_Cascade_PhotonIonization()
         ## @test TestFrames.testModule_Cascade_PhotonExcitation()
         ## @test TestFrames.testModule_Cascade_Simulation()

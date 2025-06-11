@@ -592,8 +592,10 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
     for  (i,line)  in  enumerate(lines)
         if  rem(i,10) == 0    println("> Photo line $i:  ... calculated ")    end
         # Do not compute line if initial level is not in initialLevelSelection()
-        ##x @show Basics.selectLevel(line.initialLevel, initialLevelSelection)
-        if  !Basics.selectLevel(line.initialLevel, initialLevelSelection)     continue    end
+        ## @show Basics.selectLevel(line.initialLevel, initialLevelSelection), line.initialLevel.index
+        if  !Basics.selectLevel(line.initialLevel, initialLevelSelection)   continue   ## @show "jump photoioization line";    continue  
+        ##x else @show "jump to be calculated";    continue 
+        end
         #
         newLine = PhotoIonization.computeAmplitudesProperties(line, nm, grid, nrContinuum, settings, printout=printout) 
         push!( newLines, newLine)

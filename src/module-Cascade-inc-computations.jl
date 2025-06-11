@@ -625,8 +625,10 @@ function generateBlocks(comp::Cascade.Computation, confs::Array{Configuration,1}
         for  confa  in confs
             print("  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")
             if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end]) with $(confa.NoElectrons) electrons ... ")   end
-            multiplet = Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", [confa],  initalOrbitals, 
-                                        comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            ##x multiplet = Basics.perform("computation: mutiplet from orbitals, no CI, CSF diagonal", [confa],  initalOrbitals, 
+            ##x                             comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+            multiplet = Hamiltonian.performCIwithFrozenOrbitals([confa], initalOrbitals, comp.nuclearModel, comp.grid, comp.asfSettings; printout=false)
+
             # Shift the total energies of all levels if requested for the StepwiseDecayScheme
             if  typeof(comp.scheme) == StepwiseDecayScheme   &&   haskey(comp.scheme.chargeStateShifts, confa.NoElectrons)
                 energyShift = comp.scheme.chargeStateShifts[confa.NoElectrons]
@@ -896,7 +898,8 @@ function groupDisplayConfigurationList(Z::Float64, confs::Array{Configuration,1}
                 ## nxx = nxx + 1;    if nxx > 4   break    end                                         ## delete nxx
                 nc = nc + 1
                 push!(confList, conf ) 
-                wa = Semiempirical.estimate("binding energy: XrayDataBooklet", round(Int64, Z), conf);    
+                ##x wa = Semiempirical.estimate("binding energy: XrayDataBooklet", round(Int64, Z), conf);  
+                wa = -Empirical.totalEnergy(round(Int64, Z), conf, data = PeriodicTable.XrayDataBooklet() )
                 wa = Defaults.convertUnits("energy: from atomic", wa)
                 ##x if  Z > 36.0    wa = 0.
                 ##x else            wa = Semiempirical.estimate("binding energy: XrayDataBooklet", round(Int64, Z), conf);    

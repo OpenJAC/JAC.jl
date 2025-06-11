@@ -244,7 +244,8 @@ end
 """
 function Basics.determineMeanEnergy(conf::Configuration, orbitals::Dict{Subshell, Orbital}, nm::Nuclear.Model, grid::Radial.Grid)
     asfSettings = AsfSettings();    meanEnergy = 0.;    nlev = 0
-    multiplet   = Basics.performCI([conf], orbitals, nm, grid, asfSettings, printout=false)
+    
+    multiplet   = Hamiltonian.performCIwithFrozenOrbitals([conf], orbitals, nm, grid, asfSettings, printout=false)
     for  level in multiplet.levels
         nl = Basics.twice(level.J) + 1;     nlev = nlev + nl;     meanEnergy = meanEnergy + nl * level.energy
     end  

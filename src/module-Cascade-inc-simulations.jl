@@ -1400,7 +1400,7 @@ end
         All absorption cross sections are displayed in a neat table and are returned as lists.
 """
 function simulatePhotoAbsorptionSpectrum(simulation::Cascade.Simulation, 
-                                            linesP::Array{PhotoIonization.Line,1}, linesE::Array{PhotoExcitation.Line,1})
+                                         linesP::Array{PhotoIonization.Line,1}, linesE::Array{PhotoExcitation.Line,1})
     if  !(getDefaults("unit: energy") in ["eV", "Kayser", "Hartree"])   
         error("\nFor a photo-absorption spectrum, the energy units must be one of eV, Kayser, Hartree;  units = " *
                 getDefaults("unit: energy") )             
@@ -1448,8 +1448,19 @@ function simulatePhotoAbsorptionSpectrum(simulation::Cascade.Simulation,
         println(stdout, sa)
     end
     
-    println(stdout, "\n  Number of photoionization lines = $(length(linesP)) " *
-                    "\n  Number of photoexcitation lines = $(length(linesE)) \n ")
+    println(stdout, "\n  Number of (original) photoionization lines = $(length(linesP)) " *
+                    "\n  Number of (original) photoexcitation lines = $(length(linesE)) \n ")
+                    
+    if  length(paProperty.shells) != 0
+        # Reduce the number of linesP and linesE if partial cross sections are requested;
+        # analyze the population of the (leading configuation of the) initial, final levels and exclude 
+        # all levels with iocc != focc + 1 for just one of the shells
+        newLinesP = PhotoIonization.Line[];    newLinesE = PhotoExcitation.Line[]
+        for  line in linesP
+            iConf = Basics.extractLeadingConfiguration(line.initialLevel)
+            fConf = Basics.extractLeadingConfiguration(line.finalLevel)
+        end
+    end
     
     # Define an empty array of proper size
     for pEnergy  in pEnergies     push!(crossSections, Basics.EmProperty(0.))    end
