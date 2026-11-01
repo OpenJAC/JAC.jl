@@ -110,7 +110,36 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
     for  mp1 in settings.multipoles
         for  mp2 in settings.multipoles
             symi        = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity);    symf = LevelSymmetry(line.finalLevel.J, line.finalLevel.parity) 
-            symmetries  = AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
+            # THE TWO TIME ORDERINGS NEED DIFFERENT INTERMEDIATE-SYMMETRY LISTS, and ONE list was used for BOTH until 01-Nov-2026.
+            # `allowedTotalSymmetries(symf, mpB, mpA, symi)` describes the single path  i -> (mpA) -> nu -> (mpB) -> f:  mpA couples to the
+            # INITIAL symmetry and mpB to the FINAL one.  Ordering 1 emits mp1 first, so its intermediates are (symf, mp2, mp1, symi);
+            # ordering 2 emits mp2 first, so they are (symf, mp1, mp2, symi).  FOR mp1 == mp2 THE TWO SETS COINCIDE -- which is why every
+            # pure-E1E1 result is bit-identical (every MultiPhotonTransition branch in `examples/` is pure E1E1) and why this could not be
+            # seen at all until mixed multipoles computed anything (`94fb9cc5`, 30-Oct-2026).
+            #
+            # MEASURED, H-like 3d_3/2 -> 1s_1/2 with [E1, M2]:  the pair (E1,M2) admits {3/2-, 5/2-} one way and {1/2-, 3/2-} the other, so
+            # the single list summed 5/2- in both orderings, never summed 1/2- in either, and asked the stored channels for 80 combinations
+            # that were never generated -- each answered with a warning and a zero, which reads exactly like a selection rule.  That is how
+            # the three defects of 30-Oct read too, and it is the same mistake on a third index.
+            #
+            # AND THE CHECK IS A PROVABLE IDENTITY, not a reference number.  The two emitted photons are identical bosons, so
+            #     wk(mp2,mp1)[x]  ==  (-1)^(L1+L2-K) * wk(mp1,mp2)[1-x]
+            # at every sharing x, and at x = 1/2 the ratio wk(M2,E1)/wk(E1,M2) must be exactly (-1)^(L1+L2-K).  With one list the identity
+            # was violated by 32 % at K = 1 and 11 % at K = 2, and the midpoint ratios came out +3.106/-0.298 in Coulomb and +2.319/-0.560
+            # in Babushkin where they must be +1/-1.  Per ordering the identity holds to 0.000e+00 and 6.4e-17, the midpoint ratios are
+            # +1.000000000 and -1.000000000 in BOTH gauges independently, and not one channel is reported missing.  The measurement is
+            # `tools/probeTwoPhotonMultipoleCoherence.jl`, run C.
+            #
+            # WHY A SPLIT LOOP AND NOT THE UNION the sibling uses.  `-inc-2p-bichromatic.jl` takes the union of the two lists
+            # (`allowedSymmetries_2pAbsorptionBichromatic`), which it must, because it STORES its channels under that union.  Here the
+            # generator files each ordered pair under its own list, and ordering 2 looks the pair up with the multipole labels swapped -- so
+            # it lands on the COMPLEMENTARY pair's channels, which already carry exactly the symmetries ordering 2 needs.  Splitting the
+            # loop is therefore sufficient and adds no channel and no zero-amplitude work.
+            #   `-inc-2p-absorption.jl` also uses ONE list, at five sites, and is CONSISTENT in doing so: it builds only ONE ordering --
+            # there is no second term and no exchange phase anywhere in that file -- so its list is the right list for the path it forms.
+            # What is absent there is the second ordering ITSELF, which for mixed multipoles is a separate question and is not touched here.
+            symmetries1 = AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
+            symmetries2 = AngularMomentum.allowedTotalSymmetries(symf, mp1, mp2, symi)
             Klist       = oplus(line.finalLevel.J, line.initialLevel.J)
             # THE SUM OVER THE INTERMEDIATE SYMMETRY Jsym IS COHERENT, and sits INSIDE the modulus (corrected
             # 03-Sep-2026). It used to be the outer loop, with abs()^2 taken per Jsym and the squares added --
@@ -135,8 +164,6 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
             # this. NOTE the rate RISES by 1.4211: it does not close the remaining factor ~15 against the exact
             # 8.2206 1/s, and the gauge ratio is untouched because both gauges scale by the same number.
             for  K in Klist
-                wk = Complex(0.)
-                for Jsym in symmetries
                 # THE MODULUS IS TAKEN PER K (corrected 06-Aug-2026). The K-sum used to sit INSIDE abs(), i.e.
                 # dcs += |sum_K M_K|^2 instead of sum_K |M_K|^2, and that is wrong twice over.
                 #
@@ -151,20 +178,39 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
                 # p_K = (-1)^(K+1) = -1, +1 -- so they differ, and the computed spectrum came out asymmetric by
                 # 60-90 % even though the two emitted photons are indistinguishable. Per K, p_K = +-1 gives
                 # |wk'| = |wk| identically, so taking the modulus first restores the symmetry exactly.
+                #
+                # THE (mp1, mp2) PAIRS THEMSELVES ADD INCOHERENTLY, for the same reason the K do:  the multipolarity of each photon is a
+                # label of the FINAL state, the multipole fields form an orthonormal basis of it, and a polarization-summed,
+                # angle-integrated rate is a trace over that basis, in which two different basis states cannot interfere.  Jsym is the
+                # opposite kind of index -- nothing observes the virtual intermediate -- which is exactly the distinction the note above
+                # draws for K.  So this is NOT the Jsym mistake on another index, which is what challenge S22 suspected.
+                # A SECOND ARGUMENT THAT DOES NOT REST ON THE FIRST:  wk already carries BOTH orderings with the exchange phase, i.e. it
+                # IS the Bose-symmetric amplitude for ONE final state, so adding wk(mp2,mp1) would symmetrise a second time -- and the
+                # measured signature of that is the midpoint identity above, the two pair groups being mirror images rather than
+                # independent degrees of freedom.  The 1/2 at `computeProperties_2pEmission` is the matching statistical factor for
+                # running ordered pairs over the full sharing interval.
+                # MEASURED SIZE OF THE CHOICE on the case named above:  summing the four pairs coherently instead changes the integrated
+                # rate by under 1e-6 in either gauge, so here it is academic.  It is NOT academic where a mixed pair is comparable to the
+                # pure one, which is the part of S22 that remains open.
+                wk = Complex(0.)
+                for Jsym in symmetries1
                     wk = wk +
                           MultiPhotonTransition.getReducedAmplitudeEmission(K, line.finalLevel, omega2, mp2, Jsym, omega1, mp1,
-                                                                                        line.initialLevel, gauge, line.sharings) +
-                            # EXCHANGE PHASE (-1)^(L1+L2-K), not (-1)^(K+J_f+J_i)  -- A1, 07-Aug-2026.
-                            # The two emitted photons are identical bosons, so the amplitude must be symmetric
-                            # under exchanging them. Exchanging two coupled multipoles carries
-                            # (-1)^(L1+L2-K); for E1E1 that is (-1)^K. The previous factor was (-1)^(K+J_f+J_i),
-                            # which for J_i = J_f = 1/2 equals -(-1)^K -- an overall sign that SWAPS which K
-                            # adds its two orderings and which cancels.
-                            # MEASURED CONSEQUENCE: for H 2s -> 1s the 2E1 operator is spin-independent and
-                            # orbitally rank 0 (l = 0 -> 0), hence a total scalar, so K = 1 must vanish up to
-                            # (Z alpha)^2 ~ 1e-5. With the old phase K = 1 carried 48 % of the rate; with this
-                            # one it carries 7 %.
-                            (-1.0)^( mp1.L + mp2.L - Basics.twice(K)/2 ) *
+                                                                                        line.initialLevel, gauge, line.sharings)
+                end
+                for Jsym in symmetries2
+                    # EXCHANGE PHASE (-1)^(L1+L2-K), not (-1)^(K+J_f+J_i)  -- A1, 07-Aug-2026.
+                    # The two emitted photons are identical bosons, so the amplitude must be symmetric
+                    # under exchanging them. Exchanging two coupled multipoles carries
+                    # (-1)^(L1+L2-K); for E1E1 that is (-1)^K. The previous factor was (-1)^(K+J_f+J_i),
+                    # which for J_i = J_f = 1/2 equals -(-1)^K -- an overall sign that SWAPS which K
+                    # adds its two orderings and which cancels.
+                    # MEASURED CONSEQUENCE: for H 2s -> 1s the 2E1 operator is spin-independent and
+                    # orbitally rank 0 (l = 0 -> 0), hence a total scalar, so K = 1 must vanish up to
+                    # (Z alpha)^2 ~ 1e-5. With the old phase K = 1 carried 48 % of the rate; with this
+                    # one it carries 7 %.
+                    wk = wk +
+                          (-1.0)^( mp1.L + mp2.L - Basics.twice(K)/2 ) *
                                 MultiPhotonTransition.getReducedAmplitudeEmission(K, line.finalLevel, omega1, mp1, Jsym, omega2, mp2,
                                                                                         line.initialLevel, gauge, line.sharings)
                 end

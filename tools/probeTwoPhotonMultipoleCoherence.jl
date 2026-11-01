@@ -59,8 +59,86 @@
 #  2^3S_1 -> 1^1S_0, where E1M2 is 18 % of the 2E1 rate at Z = 30.
 #
 #  SO S22'S OWN QUESTION -- whether the prefactor's grouping is coherent or incoherent ACROSS (mp1, mp2) --
-#  IS NOW TESTABLE AND WAS NOT BEFORE, because until this was fixed JAC computed no mixed-multipole
-#  two-photon amplitude at all.  That question is still open.
+#  BECAME TESTABLE, because until that was fixed JAC computed no mixed-multipole two-photon amplitude at all.
+#
+#  RUN C -- [S22-COH], 01-Nov-2026.  THE QUESTION IS ANSWERED, AND A FOURTH DEFECT WAS FOUND ON THE WAY.
+#
+#  THE DEFECT FIRST, because it had to be repaired before any coherence statement could be measured.
+#  `computeEnergyDiffCs` formed BOTH time orderings over ONE intermediate-symmetry list.
+#  `AngularMomentum.allowedTotalSymmetries(symf, mpB, mpA, symi)` describes the single path
+#  i -> (mpA) -> nu -> (mpB) -> f:  mpA couples to the INITIAL symmetry, mpB to the FINAL one.  So ordering 1
+#  needs (symf, mp2, mp1, symi) and ordering 2 needs (symf, mp1, mp2, symi) -- THE SAME LIST ONLY WHEN
+#  mp1 == mp2.  Measured, H-like 3d_3/2 -> 1s_1/2 with [E1, M2]:
+#
+#      mp1  mp2    ordering 1 (symf,mp2,mp1,symi)    ordering 2 (symf,mp1,mp2,symi)
+#      E1   E1     1/2-  3/2-                        1/2-  3/2-        <- identical, hence nothing shipped moves
+#      E1   M2     3/2-  5/2-                        1/2-  3/2-
+#      M2   E1     1/2-  3/2-                        3/2-  5/2-
+#      M2   M2     3/2-  5/2-                        3/2-  5/2-        <- identical
+#
+#  For a MIXED pair the single list therefore summed 5/2- in both orderings, never summed 1/2- in either, and
+#  asked the stored channels for combinations that were never generated.  Through `perform` that was 80
+#  "No stored U ... returning zero" warnings on one five-sharing run -- a zero that reads like a selection rule,
+#  which is how the three defects of 29-Oct read too.  It is the same mistake on a third index.
+#
+#  AND THE CHECK IS A PROVABLE IDENTITY, not a reference number.  The two emitted photons are identical bosons,
+#  so at every sharing x
+#
+#      wk(mp2,mp1)[x]  ==  (-1)^(L1+L2-K) * wk(mp1,mp2)[1-x]
+#
+#  and at x = 1/2 the ratio wk(M2,E1)/wk(E1,M2) must be exactly (-1)^(L1+L2-K) = -+1.  Gauss-Legendre nodes are
+#  symmetric about the midpoint and an ODD node count puts a node ON it, which is why run C uses noSharings = 5.
+#
+#      rule              identity, K=1   identity, K=2   midpoint ratio K=1   K=2      channels missing
+#      one list          3.2e-01         1.1e-01         Cou +3.106  Bab +2.319   -0.298 / -0.560     80
+#      per ordering      0.0e+00         6.4e-17         Cou +1.000000000  -1.000000000               0
+#
+#  Both gauges independently, and the per-ordering midpoint ratios are +1.000000000 and -1.000000000 exactly.
+#  THE FIX IS IN `src/module-MultiPhotonTransition-inc-2p-emission.jl` (01-Nov-2026): the Jsym loop is split in
+#  two, one per ordering.  No channel is added -- ordering 2 looks a pair up with the multipole labels swapped,
+#  so it lands on the COMPLEMENTARY pair's stored channels, which already carry the symmetries it needs.  The
+#  sibling `-inc-2p-bichromatic.jl` had already recognised the same thing and solved it by the UNION of the two
+#  lists, which it must, because it stores its channels under that union.
+#
+#  AND `-inc-2p-absorption.jl` IS NOT THE SAME DEFECT, checked rather than assumed.  It uses one list at five
+#  sites and is consistent in doing so: it forms only ONE ordering -- `getReducedAmplitudeAbsorption` is called
+#  with the single argument order (mp2, Jsym, omega, mp1) everywhere, and no exchange phase appears in the file
+#  at all -- so the list it uses is the right list for the path it builds.  What is ABSENT there is the second
+#  ordering itself.  For two monochromatic photons of a mixed pair that is a real and separate question, since
+#  the ordered-pair loop supplies both label assignments but with no relative phase between them.  NOT touched.
+#
+#  NOW S22'S OWN QUESTION.  THE (mp1, mp2) PAIRS ADD INCOHERENTLY, and for the same reason the K do rather than
+#  for the reason Jsym does not:  the multipolarity of each photon is a label of the FINAL state, the multipole
+#  fields are an orthonormal basis of it, and a polarization-summed angle-integrated rate is a trace over that
+#  basis -- so two different pairs are two different final states and cannot interfere.  Jsym is the opposite
+#  kind of index: nothing observes the virtual intermediate.  So S22's worry that this was "the same shape of
+#  bug as Jsym" is NOT borne out, and the distinction is the one the code's own K note already draws.
+#  Two further confirmations, neither of them an appeal to the first:
+#    * wk ALREADY CONTAINS BOTH ORDERINGS with the exchange phase, i.e. it IS the Bose-symmetric amplitude for
+#      one final state;  adding wk(mp2,mp1) to it would symmetrise a second time.  The measured signature of
+#      that double application is the midpoint identity above -- the two groups are mirror images of each other,
+#      not independent degrees of freedom -- and the 1/2 at `computeProperties_2pEmission` is the matching
+#      statistical factor for running the ordered pairs over the full sharing interval.
+#    * the literature's own bookkeeping.  E1M2 is reported as a CONTRIBUTION whose RATIO to the 2E1 one is about
+#      0.27 for He-like uranium;  a coherent cross term with 2E1 would instead be of order 2*sqrt(0.27) = 1.04,
+#      i.e. larger than the thing it is quoted beside, which no paper reports.  THIS IS SUPPORTING AND NOT
+#      DECISIVE:  whether those two numbers are added or interfered is not stated in what was read, and the
+#      primary source was NOT checked.  The trace argument does not depend on it.
+#
+#  AND THE ANCHOR FOR S22'S REMAINING HALF IS A DIFFERENT PAPER FROM THE ONE RECORDED, found 01-Nov-2026.
+#  Derevianko & Johnson, PRA 56, 1288 (1997) is the 2E1 BASELINE -- it tabulates two-photon rates for Z = 2..100
+#  and has no E1M2 breakdown.  The E1M2 numbers are in PRA 69, 062502, which computes the 2^3S_1 rate with both
+#  the 2E1 and the E1M2 amplitudes and puts their ratio near 0.27 for He-like uranium.  That paper also states
+#  the structure measured in run C from the other side: THE SELECTION RULE FORBIDDING J = 1 -> 0 TWO-PHOTON
+#  DECAY AT EQUAL PHOTON ENERGIES HOLDS ONLY WHEN BOTH PHOTONS CARRY THE SAME MULTIPOLARITY, and not for a mixed
+#  amplitude such as E1M2 -- which is the exchange phase (-1)^(L1+L2-K) read as a physical statement, and it is
+#  why E1M2 matters most at equal sharing.  Note for whoever takes that half up:  Savukov & Johnson
+#  (arXiv:physics/0209086) record that their 2E1 expression differs from Derevianko & Johnson's by alpha^2/4, so
+#  the two cannot be compared without settling that factor first.
+#  MEASURED SIZE OF THE QUESTION on the case above: summing the four pairs coherently instead changes the
+#  integrated rate by under 1e-6 in either gauge, so for THIS system the choice is academic.  It is not
+#  academic at Z = 30, where E1M2 is 18 % of 2E1 -- and that case is a correlated two-electron relativistic
+#  calculation, which is the part of S22 that remains and is EFFORT M.
 #
 #  RUN:  julia --project=. tools/probeTwoPhotonMultipoleCoherence.jl
 #
@@ -70,10 +148,31 @@ const JAC = JenaAtomicCalculator
 setDefaults("unit: energy", "eV")
 setDefaults("method: continuum, Galerkin")
 
-## `wk` EXACTLY AS THE PRODUCTION CODE FORMS IT: the Jsym sum is coherent and inside the modulus, and the
-## two photon orderings are added with the exchange phase (-1)^(L1+L2-K).  Reproduced here rather than
-## called, because `computeEnergyDiffCs` returns only the summed cross section.
+## `wk` EXACTLY AS THE PRODUCTION CODE FORMS IT SINCE 01-Nov-2026: the Jsym sum is coherent and inside the
+## modulus, the two photon orderings are added with the exchange phase (-1)^(L1+L2-K), and EACH ORDERING TAKES
+## ITS OWN intermediate-symmetry list.  Reproduced here rather than called, because `computeEnergyDiffCs`
+## returns only the summed cross section.
 function wkOf(line, sharing, K, mp1, mp2, gauge)
+    symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity)
+    symf = LevelSymmetry(line.finalLevel.J,   line.finalLevel.parity)
+    wk   = Complex(0.)
+    for  Jsym  in  AngularMomentum.allowedTotalSymmetries(symf, mp2, mp1, symi)
+        wk = wk + MultiPhotonTransition.getReducedAmplitudeEmission(K, line.finalLevel, sharing.omega2, mp2, Jsym,
+                                        sharing.omega1, mp1, line.initialLevel, gauge, line.sharings)
+    end
+    for  Jsym  in  AngularMomentum.allowedTotalSymmetries(symf, mp1, mp2, symi)
+        wk = wk + (-1.0)^( mp1.L + mp2.L - Basics.twice(K)/2 ) *
+                  MultiPhotonTransition.getReducedAmplitudeEmission(K, line.finalLevel, sharing.omega1, mp1, Jsym,
+                                        sharing.omega2, mp2, line.initialLevel, gauge, line.sharings)
+    end
+    return( wk )
+end
+
+
+## `wk` AS THE PRODUCTION CODE FORMED IT UNTIL 01-Nov-2026 -- ONE symmetry list for BOTH orderings.  Kept so
+## that run C can show the defect and its repair side by side rather than only assert the repair;  it is NOT
+## what `src/` does any more, and for mp1 == mp2 it is identical to `wkOf` above.
+function wkSingleList(line, sharing, K, mp1, mp2, gauge)
     symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity)
     symf = LevelSymmetry(line.finalLevel.J,   line.finalLevel.parity)
     wk   = Complex(0.)
@@ -176,4 +275,82 @@ for  line in linesB
         end
     end
 end
+
+############################################################  RUN C -- [S22-COH]
+println("\n\n", "="^118, "\n  RUN C  [S22-COH]   H-like 3d_3/2 -> 1s_1/2 with [E1, M2] -- Klist = {1,2}, so a MIXED pair reaches an")
+println("  even K and the exchange phase (-1)^(L1+L2-K) takes BOTH signs.  noSharings = 5 is odd, so one node sits")
+println("  exactly on omega1 = omega2.")
+println("  TWO QUESTIONS: (1) does the provable Bose identity hold -- it does not under one symmetry list;  (2) how")
+println("  much would summing the (mp1,mp2) pairs coherently change the rate?\n", "="^118)
+
+nmC   = Nuclear.Model(1.0, PointNucleus())
+gridC = Basics.recommendedGrid(Dict(Shell("1s") => 1, Shell("3d") => 1, Shell("8p") => 1), 1.0)
+setDefaults("standard grid", gridC)
+## nf is needed as well as np: an M2 factor reaches j = 5/2, which no np level carries
+interC = vcat([Configuration("$(n)p") for n = 2:8], [Configuration("$(n)f") for n = 4:7])
+linesC = runCase("S22-coh", nmC, gridC, [Configuration("3d")], [Configuration("1s")], interC, [E1, M2], 5,
+                 Basics.NuclearField())
+
+pairsC = [(E1,E1), (E1,M2), (M2,E1), (M2,M2)]
+for  line in linesC
+    Basics.twice(line.initialLevel.J) == 3  ||  continue
+    ns   = length(line.sharings)
+    symi = LevelSymmetry(line.initialLevel.J, line.initialLevel.parity)
+    symf = LevelSymmetry(line.finalLevel.J,   line.finalLevel.parity)
+    @printf("\n  %s -> %s,  omega_tot = %.4f eV,  %d sharings,  totalRate Cou %.9e  Bab %.9e\n",
+            string(symi), string(symf), (line.initialLevel.energy-line.finalLevel.energy)*27.211386245988, ns,
+            line.totalRate.Coulomb, line.totalRate.Babushkin)
+
+    println("\n    THE TWO INTERMEDIATE-SYMMETRY LISTS, per (mp1,mp2) -- identical only for a PURE pair:")
+    println("      mp1  mp2   ordering 1: (symf,mp2,mp1,symi)       ordering 2: (symf,mp1,mp2,symi)")
+    for (a,b) in pairsC
+        s1 = AngularMomentum.allowedTotalSymmetries(symf, b, a, symi)
+        s2 = AngularMomentum.allowedTotalSymmetries(symf, a, b, symi)
+        @printf("      %-4s %-4s  %-34s %s\n", string(a), string(b),
+                join(string.(s1), "  "), join(string.(s2), "  "))
+    end
+
+    for  gauge in (Basics.Coulomb, Basics.Babushkin)
+        println("\n    ### gauge $gauge")
+        for (tag, f) in (("ONE LIST (pre-01-Nov-2026)", wkSingleList), ("PER ORDERING (production)  ", wkOf))
+            println("      -- $tag --")
+            for K in (AngularJ64(1), AngularJ64(2))
+                worst = 0.;   ref = 0.
+                for j = 1:ns
+                    sj = line.sharings[j];    sm = line.sharings[ns+1-j]
+                    ph  = (-1.0)^(1 + 2 - Basics.twice(K)/2)
+                    lhs = f(line, sj, K, M2, E1, gauge)
+                    rhs = ph * f(line, sm, K, E1, M2, gauge)
+                    worst = max(worst, abs(lhs - rhs));    ref = max(ref, abs(rhs))
+                end
+                @printf("         Bose identity, K = %-4s  worst |lhs-rhs| / max|rhs| = %.3e   (must be 0)\n",
+                        string(K), ref > 0 ? worst/ref : NaN)
+            end
+            mid = line.sharings[div(ns+1,2)]
+            for K in (AngularJ64(1), AngularJ64(2))
+                a = f(line, mid, K, E1, M2, gauge);    b = f(line, mid, K, M2, E1, gauge)
+                @printf("         midpoint ratio, K = %-4s  wk(M2,E1)/wk(E1,M2) = %+.9f   must be %+.0f\n",
+                        string(K), abs(a) > 0 ? real(b)/real(a) : NaN, (-1.0)^(3 - Basics.twice(K)/2))
+            end
+            ti = 0.;   tc = 0.
+            for sh in line.sharings
+                di = 0.;   dc = 0.
+                for K in (AngularJ64(1), AngularJ64(2))
+                    sm = Complex(0.)
+                    for (a,b) in pairsC
+                        w = f(line, sh, K, a, b, gauge);    di = di + abs(w)^2;    sm = sm + w
+                    end
+                    dc = dc + abs(sm)^2
+                end
+                ti = ti + sh.weight * di;    tc = tc + sh.weight * dc
+            end
+            @printf("         pair sum:  incoherent %.9e   coherent %.9e   coherent/incoherent = %.9f\n",
+                    ti, tc, tc/ti)
+        end
+    end
+end
+
+println("\n   A nonzero Bose identity, or a midpoint ratio that is not exactly -+1, means the two time orderings are")
+println("   not being summed over their own intermediate symmetries.  A coherent/incoherent ratio far from 1 would")
+println("   mean S22's grouping question changes a number for this system;  measured, it does not.")
 println()
