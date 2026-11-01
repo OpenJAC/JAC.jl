@@ -1444,72 +1444,102 @@ end
 function testModule_TwoElectronOnePhoton(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-TwoElectronOnePhoton-new.sum")
     printstyled("\n\nTest the module  TwoElectronOnePhoton  ... \n", color=:cyan)
-    # A TWO-ROUTE test, cut down from example-Dn.jl branch a). The same physical rate for Be-like Ne is reached in
+    # A TWO-ROUTE test, cut down from example-Dn.jl branch a). The same physical rate for He-like Ne is reached in
     # two independent ways, and to leading order in the configuration mixing they must agree:
     #
-    #   (ii) EXPLICIT second-order perturbation theory -- this module. The initial state is the PURE 2s2p
+    #   (ii) EXPLICIT second-order perturbation theory -- this module. The reference state is the PURE 2s2p
     #        configuration and the coupling to the one-hole intermediates is carried by an explicit sum over a
     #        Green-function multiplet, with the energy denominators written out.
     #   (i)  IMPLICIT, through ordinary CI mixing -- a plain PhotoEmission computation whose initial multiplet
     #        already contains 1s2p beside 2s2p, so the one-body E1 operator connects the small 1s2p admixture to
-    #        the ground state. The two multiplets are built on different, non-orthogonal orbital sets, hence
-    #        calcBiorthogonal = true.
+    #        the ground state.
     #
-    # The agreement is not a coincidence to be tuned: the CI coefficient of route (i) IS c_n = <n|V|i>/(E_i - E_n),
-    # the very ratio route (ii) forms inside its second-order sum. So this is a known-answer test in which the
-    # answer is supplied by a different part of the code, and neither route can be fixed to match the other by
-    # adjusting a stored number, because there is none.
+    # The agreement is not a coincidence to be tuned: the CI coefficient of route (i) IS c_n = <n|H-E|i>/(E_i - E_n),
+    # the very ratio route (ii) forms inside its second-order sum, and <n|H-E|i> is literally the off-diagonal
+    # element of JAC's own CI matrix -- measured 01-Nov-2026 as equal to ManyElectron.matrixElement_HminusE to all
+    # eleven printed digits over eight CSF pairs. So this is a known-answer test in which the answer is supplied by
+    # a different part of the code, and neither route can be fixed to match the other by adjusting a stored number,
+    # because there is none.
+    #
+    # THE TEST IS BUILT ON ONE FROZEN ORBITAL SET AND ON DISJOINT CONFIGURATION SPACES, AND THAT IS THE POINT OF IT
+    # RATHER THAN A CONVENIENCE. Both are CONDITIONS for a second-order amplitude to mean what it says -- see
+    # TwoElectronOnePhoton.checkSecondOrderConditions, whose docstring carries the derivation -- and until
+    # 01-Nov-2026 this test violated BOTH, which is how it read 1.05 while each route was wrong:
+    #
+    #        route (ii) / route (i)      Green space shares 1s2s      spaces disjoint
+    #        separate SCF sets                   3.700                     0.108
+    #        one frozen orbital set              6.095                     0.997
+    #
+    # (a) the Green space [1s2p, 1s2s] shared 1s2s with the final space [1s^2, 1s2s, 2p^2], so the second-order sum
+    #     counted an admixture the final CI state already carried -- a factor 6.1, on the time ordering that carries
+    #     160-400x the other; and (b) the three multiplets each had their own SCF orbitals, so
+    #     ManyElectron.matrixElement_HminusE dropped a -E<r|s> term that is NOT small there -- the one-body integral
+    #     came out +0.1143 where the single-set value must be -0.1856, the WRONG SIGN. The two errors partly cancel,
+    #     which is exactly why neither was visible. Route (ii) therefore takes the final space [1s^2, 2p^2] and
+    #     leaves 1s2s to the Green multiplet, while route (i) keeps the full [1s^2, 1s2s, 2p^2]: the SAME physics,
+    #     with the correlation partitioned differently, which is what makes the comparison worth making.
+    #
+    # calcBiorthogonal IS NOW false, AND THAT REMOVES A SUSPECT RATHER THAN HIDING ONE. One orbital set needs no
+    # transformation between the two multiplets, so BiOrthogonal.computeTransformation -- independently confirmed
+    # broken for the N-vs-(N-1) case -- is no longer part of what this test depends on.
+    #
+    # IT GOES THROUGH Hamiltonian.performCIwithFrozenOrbitals RATHER THAN Atomic.Computation + perform, because
+    # perform cannot express "these three multiplets share one orbital set". That is a gap in src/ and not a
+    # property of the physics; where it is closed, this test should move back onto the perform route.
     #
     # The COULOMB gauge is compared. Babushkin is deliberately not asserted: these amplitudes are small and
     # near-cancelling, the two routes truncate the cancellation differently, and the length form is the more
-    # sensitive of the two -- example-Dn.jl records the weak line's Babushkin rate moving 37 % under a change that
-    # left Coulomb at 0.14 %. A tolerance loose enough to admit that would test nothing.
+    # sensitive of the two -- the Babushkin ratio for the very comparison below is 0.526 where Coulomb gives 0.9967.
+    # A tolerance loose enough to admit that would test nothing.
     success = true;    printTest, iostream = Defaults.getDefaults("test flag/stream")
-    # hp = 1.2e-2 where example-Dn.jl uses 0.6e-2, and the coarser grid costs nothing in accuracy: MEASURED at
-    # hp = 0.6e-2 / 1.2e-2 / 2.0e-2 (1967 / 1134 / 798 points) the ratio below comes out 1.0516 / 1.0517 / 1.0517
-    # and the TEOP rate 1.53476e10 / 1.53477e10 / 1.53478e10 1/s -- five figures unchanged over a factor 2.5 in
-    # grid size, and the finest reproduces example-Dn.jl's recorded 1.534757e10 exactly. Grid-insensitivity on
+    # hp = 1.2e-2 where example-Dn.jl uses 0.6e-2, and the coarser grid costs nothing: MEASURED 01-Nov-2026 at
+    # hp = 0.6e-2 / 1.2e-2 / 2.0e-2 (1967 / 1134 / 798 points) the ratio asserted below comes out
+    # 0.996749 / 0.996749 / 0.996748 -- six figures unchanged over a factor 2.5 in grid size. Grid-insensitivity on
     # that scale is itself evidence the comparison is converged rather than balanced on a resolution.
-    #
-    # NO TIMING CLAIM IS MADE FOR THE GRID CHANGE. The obvious experiment -- loop over the three grids in one
-    # session -- reports 74.5 s, 3.6 s and 2.3 s, which looks like a twentyfold saving and is not: the FIRST
-    # iteration pays for compiling the TEOP and biorthogonal paths and the later ones run warm. Measured cold, the
-    # same test takes 69.7 s at 0.6e-2 and 56.6 s at 1.2e-2, so the grid is worth about 13 s and compilation is
-    # the rest. Inside the suite most of that compilation is shared with other tests and is not paid again here.
     grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.2e-2, rbox = 10.0)
-    finalConfigs = [Configuration("1s^2"), Configuration("1s 2s"), Configuration("2p^2")]
+    nm   = Nuclear.Model(10.);              asf  = AsfSettings()
+    cRef = [Configuration("2s 2p")]
+    cG   = [Configuration("1s 2p"), Configuration("1s 2s")]
+    c2nd = [Configuration("1s^2"), Configuration("2p^2")]                                       ## disjoint from cG
+    cCIi = [Configuration("2s 2p"), Configuration("1s 2p")]
+    cCIf = [Configuration("1s^2"), Configuration("1s 2s"), Configuration("2p^2")]
 
-    gComp      = Atomic.Computation(Atomic.Computation(), name="TEOP test: Green-function multiplet", grid=grid,
-                                    nuclearModel = Nuclear.Model(10.),
-                                    configs = [Configuration("1s 2p"), Configuration("1s 2s")] )
-    gMultiplet = perform(gComp; output=true)[ResultKeys.Multiplet]
+    # ONE self-consistent field over the union, and every multiplet below is a CI on those frozen orbitals
+    orbitals = SelfConsistent.performSCF(vcat(cRef, cG, cCIf), nm, grid, asf; printout=false).levels[1].basis.orbitals
+    iMp  = Hamiltonian.performCIwithFrozenOrbitals(cRef, orbitals, nm, grid, asf; printout=false)
+    gMp  = Hamiltonian.performCIwithFrozenOrbitals(cG,   orbitals, nm, grid, asf; printout=false)
+    fMp  = Hamiltonian.performCIwithFrozenOrbitals(c2nd, orbitals, nm, grid, asf; printout=false)
+    ciMp = Hamiltonian.performCIwithFrozenOrbitals(cCIi, orbitals, nm, grid, asf; printout=false)
+    cfMp = Hamiltonian.performCIwithFrozenOrbitals(cCIf, orbitals, nm, grid, asf; printout=false)
 
     # route (ii): the module itself
     teopSettings = TwoElectronOnePhoton.Settings([E1], [UseCoulomb,UseBabushkin], false,
                                                  LineSelection(true, indexPairs=[(i,1) for i = 1:4]), 0.,
-                                                 CoulombInteraction(), gMultiplet)
-    wb = Atomic.Computation(Atomic.Computation(), name="TEOP test: explicit second order", grid=grid,
-                            nuclearModel   = Nuclear.Model(10.),
-                            initialConfigs = [Configuration("2s 2p")],
-                            finalConfigs   = finalConfigs,      processSettings = teopSettings )
-    teopLines = perform(wb; output=true)[TwoElectronOnePhoton.Settings]
+                                                 CoulombInteraction(), gMp)
+    teopLines = TwoElectronOnePhoton.computeLines(fMp, iMp, nm, grid, teopSettings; output=true)
 
-    # route (i): CI mixing plus the biorthogonal transformation
+    # route (i): CI mixing, on the same orbitals and so without any biorthogonal transformation
     photoSettings = PhotoEmission.Settings(PhotoEmission.Settings(), multipoles=[E1], gauges=[UseCoulomb,UseBabushkin],
-                        printBefore=false, calcBiorthogonal=true,
+                        printBefore=false, calcBiorthogonal=false,
                         lineSelection=LineSelection(true, indexPairs=[(i,1) for i = 1:8]) )
-    wc = Atomic.Computation(Atomic.Computation(), name="TEOP test: CI mixing + biorthogonal", grid=grid,
-                            nuclearModel   = Nuclear.Model(10.),
-                            initialConfigs = [Configuration("2s 2p"), Configuration("1s 2p")],
-                            finalConfigs   = finalConfigs,      processSettings = photoSettings )
-    photoLines = perform(wc; output=true)[PhotoEmission.Settings]
+    photoLines = PhotoEmission.computeLines(cfMp, ciMp, grid, photoSettings; output=true)
+
+    # THE TWO CONDITIONS ARE ASSERTED, NOT MERELY ARRANGED. The module's own check must find nothing; it reports
+    # both violations on the geometry this test used until 01-Nov-2026, so it is calibrated in both directions.
+    conditions = TwoElectronOnePhoton.checkSecondOrderConditions(fMp, iMp, gMp, grid)
+    if  !isempty(conditions)
+        success = false
+        if printTest   info(iostream, "the second-order validity conditions are not met: $(conditions)")   end
+    end
 
     # THE TWO ROUTES ARE MATCHED BY PHOTON ENERGY, NOT BY SIZE, and that is the one subtlety of this test. Route
     # (i)'s multiplet contains the 1s2p levels as well as the 2s2p ones, so it also produces the ORDINARY Kalpha
-    # lines -- at ~0.92 keV and A ~ 9.9e12 1/s, three orders above anything TEOP. Taking the largest rate finds
+    # lines -- at ~0.92 keV and A ~ 1.0e13 1/s, three orders above anything TEOP. Taking the largest rate finds
     # those, compares an allowed one-electron transition against a second-order one, and fails by a factor of 600.
     # The TEOP counterpart sits near 1.93 keV instead, and the two routes describe the SAME transition, so their
     # photon energies must very nearly coincide -- which is asserted here before the rates are compared at all.
+    # AND THE MATCH IS NARROWER THAN IT LOOKS: the two 2s2p J=1- levels lie 1910.5 and 1926.2 eV apart, i.e. 0.8 %,
+    # while their rates differ by a factor 4000, so a tolerance of 1 % is as loose as this may ever be.
     if  length(teopLines) == 0  ||  length(photoLines) == 0
         success = false
         if printTest   info(iostream, "one of the two routes returned no line at all: $(length(teopLines)) and " *
@@ -1527,19 +1557,22 @@ function testModule_TwoElectronOnePhoton(; short::Bool=true)
         aTeop  = teopLine.teopRate.Coulomb
         aPhoto = photoLine.photonRate.Coulomb
         ratio  = aTeop / aPhoto
-        # (1) the two routes agree. 15 % admits the 5 % of example-Dn.jl with room for the truncation to differ,
-        #     and still excludes everything this test is for: a wrong second-order denominator, a missing time
-        #     ordering or a lost factor would move this by an order of magnitude, not by a tenth.
-        if  !(0.85 < ratio < 1.15)
+        # (1) the two routes agree. 2 % where this was 15 % before 01-Nov-2026, because the comparison is now
+        #     between two evaluations of one number on one basis and it MEASURES 0.996749, stable to six figures
+        #     over a factor 2.5 in grid size. The margin is 6x the observed departure, which leaves room for a
+        #     rebuild to perturb the result while still excluding everything this test is for -- a wrong
+        #     second-order denominator, a missing time ordering, a lost factor, or either validity condition
+        #     silently returning: those read 3.70, 6.10 or 0.108, not 1.02.
+        if  !(0.98 < ratio < 1.02)
             success = false
-            if printTest   info(iostream, "second order gives $aTeop 1/s, CI + biorthogonal $aPhoto 1/s, " *
+            if printTest   info(iostream, "second order gives $aTeop 1/s, CI route $aPhoto 1/s, " *
                                           "ratio $ratio; the two routes must agree to leading order")   end
         end
         # (2) and it really is a SECOND-order rate: an allowed one-electron E1 line at Z = 10 runs at 1e13-1e14
         #     per second, so a TEOP rate anywhere near that would mean the amplitude is not the one intended.
         #     NOTE THE UNITS. `teopRate` and `photonRate` are stored in ATOMIC UNITS; the 1/s figures in the
         #     printed tables and in example-Dn.jl are converted on the way out. 1 a.u. of rate is 4.1341e16 /s,
-        #     so the 1.5348e10 /s of that example is 3.712e-7 here. The ratio in check (1) is unaffected, being
+        #     so the 3.5003e-7 a.u. measured here is 1.4471e10 /s. The ratio in check (1) is unaffected, being
         #     a ratio; this bound is not, and was written in 1/s at first, which is what the restored diagnostic
         #     caught in one line.
         aTeopPerSec = Defaults.convertUnits("rate: from atomic to 1/s", aTeop)
@@ -1550,9 +1583,11 @@ function testModule_TwoElectronOnePhoton(; short::Bool=true)
         end
     end
 
-    println(iostream, "TwoElectronOnePhoton: the same Be-like Ne rate by explicit second-order perturbation " *
-                      "theory and by CI mixing with a biorthogonal transformation; the two must agree to "    *
-                      "leading order in the mixing. Coulomb gauge only. No approved data is used.")
+    println(iostream, "TwoElectronOnePhoton: the same He-like Ne rate by explicit second-order perturbation "    *
+                      "theory and by CI mixing, both on ONE frozen orbital set and with the Green space disjoint " *
+                      "from the reference spaces; the two must agree to leading order in the mixing, and the "     *
+                      "module's own validity conditions are asserted alongside. Coulomb gauge only. No approved "  *
+                      "data is used.")
     Defaults.setDefaults("print summary: close", "")
     testPrint("testModule_TwoElectronOnePhoton()::", success)
     return( success )

@@ -8,7 +8,7 @@ module TwoElectronOnePhoton
 
 
 using Printf, ..AngularMomentum, ..AtomicState, ..Basics, ..Defaults, ..InteractionStrength, ..ManyElectron, ..Nuclear, 
-                ..Radial, ..TableStrings
+                ..Radial, ..RadialIntegrals, ..TableStrings
 
 
 """
@@ -251,7 +251,83 @@ function amplitude(::Emission, Mp::EmMultipole, gauge::EmGauge, omega::Float64, 
     
     return( amplitude )
 end
-        
+
+
+"""
+`TwoElectronOnePhoton.checkSecondOrderConditions(finalMultiplet::Multiplet, initialMultiplet::Multiplet, gMultiplet::Multiplet,
+                                                 grid::Radial.Grid)`
+    ... tests the TWO conditions under which this module's explicit second-order amplitude means what it says, and NAMES what it
+        finds rather than letting a wrong number through in silence.  An array::Array{String,1} of problem descriptions is
+        returned, EMPTY where both conditions hold.
+
+        CONDITION (a):  THE GREEN SPACE MUST BE DISJOINT FROM THE INITIAL AND FINAL CI SPACES.  Second-order perturbation theory
+        corrects a ZEROTH-order reference state by a sum over intermediates;  where that reference state's own CI space already
+        contains a Green-space configuration, its admixture is counted ONCE by the CI and AGAIN by the sum.  The `selfTolerance`
+        guard inside `amplitude` cannot see this, because it compares ENERGIES and the double-counted level is degenerate with
+        nothing -- the reference state merely CONTAINS it.  Measured 01-Nov-2026 on the He-like Ne case of
+        `TestFrames.testModule_TwoElectronOnePhoton`, whose Green space `[1s2p, 1s2s]` shared `1s2s` with its final space
+        `[1s^2, 1s2s, 2p^2]`:  a factor 6.1 too large, and on the time ordering that carries 160-400x the other.
+
+        CONDITION (b):  ALL THREE MULTIPLETS MUST SHARE ONE ORBITAL SET.  `ManyElectron.matrixElement_HminusE` drops the overlap
+        term `-E <r|s>` on a stated orthonormality assumption, and its ONE-BODY part is precisely what cannot survive that
+        assumption failing:  for two nearly-equal orbitals `<b|h_D|a> ~ eps <b|a>`, a large number that only the dropped term
+        cancels.  Measured on the same case with three separate SCF sets:  `<1s_green|2s_initial> = -0.0115`, and the one-body
+        integral came out `+0.1143` where the single-set value must be `-0.1856` -- the WRONG SIGN, so it ANTI-cancels the
+        two-body term instead of cancelling it.  A factor 9.  `V^(e-e)` alone carries no one-body part and never felt this,
+        which is why the condition went unnoticed for as long as that operator was in use.
+
+        WITH BOTH CONDITIONS MET the explicit second order reproduces the same rate obtained by full CI to 0.3 % on that case.
+        These are therefore the conditions under which the module is VALIDATED, not a counsel of perfection, and the two errors
+        can hide each other:  the test above read 3.70 with both violated, 6.10 with only (a), and 0.997 with neither.  Build
+        the three multiplets on one orbital set with `Hamiltonian.performCIwithFrozenOrbitals`.
+"""
+function checkSecondOrderConditions(finalMultiplet::Multiplet, initialMultiplet::Multiplet, gMultiplet::Multiplet,
+                                    grid::Radial.Grid)
+    problems = String[]
+    if  length(gMultiplet.levels) == 0      return( problems )      end
+
+    # Condition (a).  The occupation vectors are only comparable on ONE subshell list, so they are merged first, exactly as
+    # amplitude() merges them before evaluating the sum
+    subshells = Basics.merge(initialMultiplet.levels[1].basis.subshells, finalMultiplet.levels[1].basis.subshells)
+    subshells = Basics.merge(subshells, gMultiplet.levels[1].basis.subshells)
+    gOcc      = Set( csf.occupation  for csf in Multiplet(gMultiplet, subshells).levels[1].basis.csfs )
+    for  (name, mp)  in  ( ("initial", initialMultiplet), ("final", finalMultiplet) )
+        shared = intersect(gOcc, Set( csf.occupation  for csf in Multiplet(mp, subshells).levels[1].basis.csfs ))
+        if  !isempty(shared)
+            push!(problems, "TEOP condition (a) VIOLATED: the Green space shares $(length(shared)) configuration(s) with the " *
+                            "$name CI space over the subshells $subshells, e.g. the occupation $(first(shared)).  The "        *
+                            "second-order sum then counts an admixture that the $name state already carries;  measured cost "  *
+                            "on the He-like Ne test case, a factor 6.1.  Drop the shared configuration from the $name space "  *
+                            "or from the Green space -- see TwoElectronOnePhoton.checkSecondOrderConditions.")
+        end
+    end
+
+    # Condition (b).  One orbital set means every same-subshell overlap is 1 and every same-kappa cross overlap is 0;  the
+    # worst departure from that is reported, since it is the quantity the dropped -E<r|s> term would have cancelled
+    worst = 0.;    worstName = ""
+    for  (name, bA, bB)  in  ( ("Green/initial", gMultiplet.levels[1].basis, initialMultiplet.levels[1].basis),
+                               ("Green/final",   gMultiplet.levels[1].basis, finalMultiplet.levels[1].basis),
+                               ("initial/final", initialMultiplet.levels[1].basis, finalMultiplet.levels[1].basis) )
+        for  sha in keys(bA.orbitals),  shb in keys(bB.orbitals)
+            if  sha.kappa != shb.kappa      continue     end
+            ov  = RadialIntegrals.overlap(bA.orbitals[sha], bB.orbitals[shb], grid)
+            dev = sha == shb  ?  abs(abs(ov) - 1.)  :  abs(ov)
+            if  dev > worst
+                worst = dev;    worstName = "$name  <$(string(sha))|$(string(shb))> = $(round(ov, digits=6))"
+            end
+        end
+    end
+    if  worst > 1.0e-4
+        push!(problems, "TEOP condition (b) VIOLATED: the three multiplets do not share one orbital set -- worst departure "   *
+                        "$(round(worst, digits=6)) at $worstName.  ManyElectron.matrixElement_HminusE drops the -E<r|s> "      *
+                        "overlap term and its one-body part cannot survive that;  measured cost on the He-like Ne test case, " *
+                        "a factor 9, with the one-body integral coming out of the WRONG SIGN.  Build the three multiplets on " *
+                        "one orbital set with Hamiltonian.performCIwithFrozenOrbitals.")
+    end
+
+    return( problems )
+end
+
 
 """
 `TwoElectronOnePhoton.computeAmplitudesProperties(line::TwoElectronOnePhoton.Line, nm::Nuclear.Model, grid::Radial.Grid,
@@ -309,6 +385,12 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     lines = TwoElectronOnePhoton.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
     if  settings.printBefore    TwoElectronOnePhoton.displayLines(lines)    end
+    # The two conditions under which an explicit second-order amplitude means what it says are checked ONCE here, rather than
+    # per line, and reported rather than enforced: a violation is a factor of 6 to 9 on this module's own test case, and the
+    # two can hide one another, so a silent number is the one outcome that must not happen
+    for  problem in TwoElectronOnePhoton.checkSecondOrderConditions(finalMultiplet, initialMultiplet, settings.gMultiplet, grid)
+        @warn problem
+    end
     # The nuclear potential is a constant of the whole computation -- it enters the one-body part of the H - E
     # electron-electron factor -- so it is built once here rather than per line
     nuclearPot = Nuclear.nuclearPotential(nm, grid)

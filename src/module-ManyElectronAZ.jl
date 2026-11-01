@@ -72,6 +72,24 @@ end
         today.  Lifting it -- genuine non-orthogonality between two SCF orbital sets -- is the biorthogonal-transformation route and is NOT
         addressed here;  until it is, this function is H - E evaluated under that assumption, which is exactly what the one-orbital case
         above needs and no more.
+
+        WHAT THIS FUNCTION IS, EXACTLY:  THE OFF-DIAGONAL ELEMENT OF JAC'S OWN CI HAMILTONIAN.  One-body h_D plus two-body V_ee is term for
+        term what Basics.compute(CImatrixWithSymmetryJP(), ...) assembles, so on one orthonormal orbital set the two must agree identically
+        -- and do:  measured 01-Nov-2026 over all eight off-diagonal pairs of a [2s2p, 1s2p] basis at Z = 10, agreement to all eleven
+        printed digits, while matrixElement_Vee beside it came out 50.9x and 42.7x too large at the ONE-orbital pairs and of the WRONG SIGN
+        at two others.  That identity is why a second-order sum built on this function reproduces a full CI:  the first-order mixing
+        coefficient c_n = <n|H-E|i>/(E_i - E_n) is the very ratio the sum forms at its junction.
+
+        AND THE ORTHONORMALITY ASSUMPTION ABOVE IS VIOLATED BY EVERY SECOND-ORDER CALLER IN src/ TODAY, WITH A MEASURED COST, so it is a
+        precondition to CHECK rather than a caveat to note.  The one-body part is precisely what cannot survive it:  for two nearly-equal
+        orbitals <b|h_D|a> ~ eps <b|a>, a large number that only the dropped -E<r|s> term cancels.  Measured on the He-like Ne case of
+        TestFrames.testModule_TwoElectronOnePhoton, whose initial, Green and final multiplets each carried their own SCF orbitals:
+        <1s_green|2s_initial> = -0.0115, and this function's one-body integral came out +0.1143 where the single-orbital-set value must be
+        -0.1856 -- the WRONG SIGN, so it ANTI-cancelled the two-body term instead of cancelling it, a factor 9 on the rate.  On ONE frozen
+        orbital set the same two-route comparison closes to 0.3 %.  matrixElement_Vee carries no one-body part and so never felt this, which
+        is why the assumption went untested for as long as that operator was in use.  TwoElectronOnePhoton.checkSecondOrderConditions tests
+        it;  AutoIonization, PhotoDoubleIonization and InternalRecombination were audited on 01-Nov-2026 and all call across separate
+        orbital sets today, and are NOT yet repaired.
 """
 function ManyElectron.matrixElement_HminusE(op::Basics.HminusE, leftBasis::Basis, r::Int64, rightBasis::Basis, s::Int64,
                                              grid::Radial.Grid, nuclearPotential::Radial.Potential)
