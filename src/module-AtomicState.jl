@@ -7,10 +7,12 @@ module AtomicState
 
 
 # using Interact
-using  Printf, ..Basics, ..ManyElectron, ..Nuclear, ..Radial, ..SpinAngular, ..ResultKeys
+using  Printf, ..Basics, ..ManyElectron, ..Nuclear, ..Radial, ..SelfConsistent, ..SpinAngular, ..ResultKeys
 
 export  MeanFieldSettings, MeanFieldBasis, MeanFieldMultiplet, OneElectronSettings, OneElectronSpectrum, CiSettings, CiExpansion,
-        RasSettings, RasStep, RasLayer, RasExpansion, GreenSettings, GreenChannel, GreenExpansion, Representation
+        RasSettings, RasStep, RasLayer, RasExpansion, GreenSettings, GreenChannel, GreenExpansion, Representation,
+        RasAutoSettings, FixedLayerCount, IncrementBelow, IncrementRatioBelow, CostCeiling, CombinedPolicy,
+        RasCompleteShellPolicy, RasLimitedAngularMomentumPolicy, RasSpectrumOrderedShellPolicy
 
 
 """
@@ -672,6 +674,487 @@ function Base.show(io::IO, expansion::RasExpansion)
     println(io, "$(expansion.steps)  ")
     println(io, "... and the current settings:")
     println(io, "$(expansion.settings)  ")
+end
+
+
+
+### RAS automation: layer verdicts, and the policies that decide an automatic ladder ##########################################
+"""
+`struct  AtomicState.RasLayerVerdict`
+    ... what one completed RAS layer is worth, in numbers a stopping or shell policy can read, modelled on
+        SelfConsistent.ScfVerdict: advice about what has already happened, never a gate on it. It is built by
+        the driver AFTER a layer has run and is never consulted while that layer is still being computed.
+
+    + istep         ::Int64          ... which layer this is; 1 is the reference layer, which carries no increment.
+    + newShells     ::Array{Shell,1} ... the shells this layer introduced, for the printed record.
+    + csfCount      ::Int64          ... size of this layer's CI space -- the cheap, reliable cost signal
+        (reference_ras_cost_scaling found no clean per-CSF law, so this stays a raw count rather than a derived cost).
+    + wallTime      ::Float64        ... seconds this layer took to run.
+    + energy        ::Float64        ... the lowest target-level energy at this layer.
+    + increment     ::Float64        ... `energy` minus the PREVIOUS layer's energy; `NaN` for the reference layer,
+        which has no previous layer to compare against. This is Rule 21's own quantity -- the one a policy must
+        look at, never the total.
+    + scfVerdict    ::Union{Nothing,SelfConsistent.ScfVerdict}   ... this layer's own SCF verdict, so a policy that
+        wants the doubling-test drift, not only the increment, can read it; `nothing` for a layer treated to second
+        order, since that layer's orbitals are never optimized and no SCF verdict exists for it.
+"""
+struct  RasLayerVerdict
+    istep           ::Int64
+    newShells       ::Array{Shell,1}
+    csfCount        ::Int64
+    wallTime        ::Float64
+    energy          ::Float64
+    increment       ::Float64
+    scfVerdict      ::Union{Nothing,SelfConsistent.ScfVerdict}
+end
+
+
+# `Base.show(io::IO, verdict::RasLayerVerdict)`  ... prints one line summarizing the layer verdict.
+function Base.show(io::IO, verdict::RasLayerVerdict)
+    sa = "RAS layer $(verdict.istep), adding $(verdict.newShells): $(verdict.csfCount) CSF, " *
+         @sprintf("%.1f s", verdict.wallTime) * ", energy = $(verdict.energy) Ha, increment = " *
+         (isnan(verdict.increment) ? "n/a (reference layer)" : @sprintf("%+.4f mHa", 1000*verdict.increment))
+    println(io, sa)
+end
+
+
+"""
+`struct  AtomicState.RasStoppingVerdict`
+    ... what a stopping policy concluded about whether a RAS ladder should propose another layer, in the same
+        advisory spirit as SelfConsistent.ScfVerdict: it is read by the driver and PRINTED, never used to
+        silently decide anything a human cannot see.
+
+    + stop      ::Bool      ... whether the policy says to stop proposing further layers.
+    + reason    ::String    ... one sentence naming WHY, printed verbatim; empty when `stop` is false.
+"""
+struct  RasStoppingVerdict
+    stop        ::Bool
+    reason      ::String
+end
+
+
+# `Base.show(io::IO, verdict::RasStoppingVerdict)`  ... prints the policy's verdict.
+function Base.show(io::IO, verdict::RasStoppingVerdict)
+    println(io, verdict.stop ? "STOP: $(verdict.reason)" : "continue")
+end
+
+
+# A shell already present anywhere in the ladder -- core, reference-valence or an earlier layer -- is never
+# proposed again by any shell policy. Not exported: this is plumbing shared by every concrete policy below,
+# not something a caller constructs or inspects on its own.
+function collectLadderShells(coreShells::Array{Shell,1}, fromShells::Array{Shell,1}, layersSoFar::Array{RasLayer,1})
+    used = vcat(deepcopy(coreShells), deepcopy(fromShells))
+    for layer in layersSoFar    append!(used, layer.newShells)    end
+
+    return( unique(used) )
+end
+
+
+"""
+`abstract type AtomicState.AbstractRasStoppingPolicy`
+    ... defines an abstract and a number of concrete types to decide whether another RAS layer should be
+        PROPOSED, given the record of every layer run so far. A policy is read-only advice: it answers one
+        question (stop, or go on) and says WHY, and it cannot abort a layer that is already running. The
+        hierarchy is intentionally small and is meant to grow -- a new stopping rule is a new struct plus one
+        `AtomicState.evaluateStoppingPolicy` method, never a change to the driver that calls it, and never a
+        change to any existing policy.
+"""
+abstract type  AbstractRasStoppingPolicy    end
+
+
+"""
+`AtomicState.evaluateStoppingPolicy(policy::AtomicState.AbstractRasStoppingPolicy, history::Array{AtomicState.RasLayerVerdict,1})`
+    ... asks `policy` whether the ladder recorded in `history` (oldest first, one entry per layer already run)
+        should stop here. A `verdict::AtomicState.RasStoppingVerdict` is returned; see the concrete policies
+        for what each one actually tests.
+"""
+function evaluateStoppingPolicy end
+
+
+"""
+`struct  AtomicState.FixedLayerCount  <:  AtomicState.AbstractRasStoppingPolicy`
+    ... stops once exactly `n` layers have run. This is the escape hatch that makes the automatic driver a
+        strict superset of today's hand-built one: wrapping a fully-specified, hand-written layer list in
+        `FixedLayerCount(length(layers))` reproduces exactly the existing behaviour.
+
+    + n     ::Int64   ... the number of layers to run, reference layer included.
+"""
+struct  FixedLayerCount  <:  AtomicState.AbstractRasStoppingPolicy
+    n       ::Int64
+end
+
+
+"""
+`AtomicState.evaluateStoppingPolicy(policy::AtomicState.FixedLayerCount, history::Array{AtomicState.RasLayerVerdict,1})`
+    ... stops once `length(history) >= policy.n`. A `verdict::AtomicState.RasStoppingVerdict` is returned.
+"""
+function evaluateStoppingPolicy(policy::FixedLayerCount, history::Array{RasLayerVerdict,1})
+    if  length(history) >= policy.n
+        return( RasStoppingVerdict(true, "FixedLayerCount($(policy.n)): $(length(history)) layer(s) have run.") )
+    end
+
+    return( RasStoppingVerdict(false, "") )
+end
+
+
+"""
+`struct  AtomicState.IncrementBelow  <:  AtomicState.AbstractRasStoppingPolicy`
+    ... stops once `consecutive` layer increments IN A ROW fall below `tolerance`. A single small increment
+        proves nothing on its own -- `reference_ras_practical_recipe` measured a case where ONE frozen-looking
+        increment understated the true remaining error by a factor of 100 -- so this policy refuses to trust
+        one data point; `consecutive` is 2 by default and should not be lowered to 1 without reading why.
+
+    + tolerance     ::Float64   ... the absolute increment (in Hartree) a layer must fall below.
+    + consecutive   ::Int64     ... how many layers in a row must fall below `tolerance` before stopping.
+"""
+struct  IncrementBelow  <:  AtomicState.AbstractRasStoppingPolicy
+    tolerance       ::Float64
+    consecutive     ::Int64
+end
+
+
+"""
+`AtomicState.IncrementBelow(tolerance::Float64; consecutive::Int64=2)`
+    ... constructor taking the tolerance positionally and `consecutive` as a keyword, defaulted to the safe
+        value of 2. An `policy::AtomicState.IncrementBelow` is returned.
+"""
+function IncrementBelow(tolerance::Float64; consecutive::Int64=2)
+    IncrementBelow(tolerance, consecutive)
+end
+
+
+"""
+`AtomicState.evaluateStoppingPolicy(policy::AtomicState.IncrementBelow, history::Array{AtomicState.RasLayerVerdict,1})`
+    ... stops once the last `policy.consecutive` layers all have `abs(increment) < policy.tolerance`. A
+        `verdict::AtomicState.RasStoppingVerdict` is returned.
+"""
+function evaluateStoppingPolicy(policy::IncrementBelow, history::Array{RasLayerVerdict,1})
+    if  length(history) < policy.consecutive + 1    ## +1: the reference layer itself carries no increment
+        return( RasStoppingVerdict(false, "") )
+    end
+    tail = history[end-policy.consecutive+1:end]
+    if  all( v -> !isnan(v.increment)  &&  abs(v.increment) < policy.tolerance,  tail )
+        return( RasStoppingVerdict(true, "IncrementBelow($(policy.tolerance)): the last $(policy.consecutive) " *
+                "layer increment(s) were all below tolerance -- a HINT, not proof the ladder has converged; " *
+                "see reference_ras_practical_recipe for a case where this understated the remaining error by " *
+                "up to 100x.") )
+    end
+
+    return( RasStoppingVerdict(false, "") )
+end
+
+
+"""
+`struct  AtomicState.IncrementRatioBelow  <:  AtomicState.AbstractRasStoppingPolicy`
+    ... stops once the newest layer increment's magnitude falls below `fraction` times the PREVIOUS layer's,
+        i.e. a decaying-ladder test. Useful across different elements/ions without re-tuning an absolute
+        tolerance per case, since Rule 21's own warning is that the increment is not an error bar in absolute
+        terms -- but its rate of decay is at least comparable between elements without rescaling.
+
+    + fraction  ::Float64   ... the ratio |increment_n| / |increment_(n-1)| must fall below.
+"""
+struct  IncrementRatioBelow  <:  AtomicState.AbstractRasStoppingPolicy
+    fraction    ::Float64
+end
+
+
+"""
+`AtomicState.evaluateStoppingPolicy(policy::AtomicState.IncrementRatioBelow, history::Array{AtomicState.RasLayerVerdict,1})`
+    ... stops once `abs(history[end].increment) / abs(history[end-1].increment) < policy.fraction`. A
+        `verdict::AtomicState.RasStoppingVerdict` is returned.
+"""
+function evaluateStoppingPolicy(policy::IncrementRatioBelow, history::Array{RasLayerVerdict,1})
+    if  length(history) < 3    return( RasStoppingVerdict(false, "") )    end   ## need two non-NaN increments
+    last = history[end];    prev = history[end-1]
+    if  isnan(last.increment)  ||  isnan(prev.increment)  ||  prev.increment == 0.
+        return( RasStoppingVerdict(false, "") )
+    end
+    ratio = abs(last.increment) / abs(prev.increment)
+    if  ratio < policy.fraction
+        return( RasStoppingVerdict(true, "IncrementRatioBelow($(policy.fraction)): the latest increment is " *
+                @sprintf("%.1f %%", 100*ratio) * " of the previous one.") )
+    end
+
+    return( RasStoppingVerdict(false, "") )
+end
+
+
+"""
+`struct  AtomicState.CostCeiling  <:  AtomicState.AbstractRasStoppingPolicy`
+    ... refuses to propose a further layer once the LAST layer that actually ran already met or exceeded the
+        given cost, in CSF count or wall time. This is a safety valve, not a convergence judgement, and it is
+        deliberately phrased against the last MEASURED layer rather than a predicted next one, since the
+        existing `tryRun` cost estimator is known to be off by 3-4x (`reference_ras_practical_recipe`) and no
+        clean per-CSF cost law fits any case measured so far (`reference_ras_cost_scaling`).
+
+    + maxCsf        ::Int64     ... the CSF count a layer may not meet or exceed.
+    + maxWallTime   ::Float64   ... the wall time (seconds) a layer may not meet or exceed.
+"""
+struct  CostCeiling  <:  AtomicState.AbstractRasStoppingPolicy
+    maxCsf          ::Int64
+    maxWallTime     ::Float64
+end
+
+
+"""
+`AtomicState.evaluateStoppingPolicy(policy::AtomicState.CostCeiling, history::Array{AtomicState.RasLayerVerdict,1})`
+    ... stops once the last layer's own `csfCount` or `wallTime` meets or exceeds the ceiling. A
+        `verdict::AtomicState.RasStoppingVerdict` is returned.
+"""
+function evaluateStoppingPolicy(policy::CostCeiling, history::Array{RasLayerVerdict,1})
+    if  isempty(history)    return( RasStoppingVerdict(false, "") )    end
+    last = history[end]
+    if  last.csfCount >= policy.maxCsf  ||  last.wallTime >= policy.maxWallTime
+        return( RasStoppingVerdict(true, "CostCeiling: the last layer already used $(last.csfCount) CSF in " *
+                @sprintf("%.1f s", last.wallTime) * ", at or beyond the ceiling ($(policy.maxCsf) CSF, " *
+                @sprintf("%.1f s", policy.maxWallTime) * ").") )
+    end
+
+    return( RasStoppingVerdict(false, "") )
+end
+
+
+"""
+`struct  AtomicState.CombinedPolicy  <:  AtomicState.AbstractRasStoppingPolicy`
+    ... stops as soon as ANY of `policies` says to stop (a logical OR), and is the actual seam that keeps the
+        hierarchy expandable: a brand-new policy type needs no change here, it simply becomes one more entry
+        in somebody's list. A convergence rule alone, trusted without a cost ceiling and a hard layer count
+        behind it, is exactly the silent over-trust this item must not build -- so a `CombinedPolicy` such as
+        `CombinedPolicy([IncrementBelow(1.0e-4), CostCeiling(5000, 1800.), FixedLayerCount(6)])` is the
+        recommended way to use this hierarchy, rather than any one policy alone.
+
+    + policies  ::Array{AtomicState.AbstractRasStoppingPolicy,1}   ... the sub-policies, tested in order.
+"""
+struct  CombinedPolicy  <:  AtomicState.AbstractRasStoppingPolicy
+    policies    ::Array{AtomicState.AbstractRasStoppingPolicy,1}
+end
+
+
+"""
+`AtomicState.evaluateStoppingPolicy(policy::AtomicState.CombinedPolicy, history::Array{AtomicState.RasLayerVerdict,1})`
+    ... tests every sub-policy in order and stops on the first one that does, carrying its reason forward. A
+        `verdict::AtomicState.RasStoppingVerdict` is returned.
+"""
+function evaluateStoppingPolicy(policy::CombinedPolicy, history::Array{RasLayerVerdict,1})
+    for  sub in policy.policies
+        verdict = AtomicState.evaluateStoppingPolicy(sub, history)
+        if  verdict.stop    return( verdict )    end
+    end
+
+    return( RasStoppingVerdict(false, "") )
+end
+
+
+"""
+`abstract type AtomicState.AbstractRasShellPolicy`
+    ... defines an abstract and a number of concrete types to decide WHICH new shells the next RAS layer
+        introduces, given what the expansion already has (coreShells, fromShells, every earlier layer's own
+        newShells). AtomicState.AbstractRasStoppingPolicy decides WHETHER another layer runs; this family
+        decides WHAT it would contain if it did -- a separate question, asked first. Like the stopping
+        hierarchy, this one is deliberately small and meant to grow by adding a struct and one
+        `AtomicState.proposeNextShells` method, never by changing the driver or an existing policy.
+"""
+abstract type  AbstractRasShellPolicy    end
+
+
+"""
+`AtomicState.proposeNextShells(policy::AtomicState.AbstractRasShellPolicy, coreShells::Array{Shell,1},`
+                               `fromShells::Array{Shell,1}, layersSoFar::Array{AtomicState.RasLayer,1},`
+                               `candidateOrbitals::Dict{Subshell,Orbital})`
+    ... asks `policy` which shells the NEXT layer should introduce; `candidateOrbitals` is the empty dict for a
+        policy that does not need one (see AtomicState.needsEnergySpectrum). An `Array{Shell,1}` is returned,
+        which may be empty if the policy has nothing left to propose -- an empty proposal is read by the
+        driver as "stop", independent of whatever the stopping policy says, since there is nothing left to run.
+"""
+function proposeNextShells end
+
+
+"""
+`AtomicState.needsEnergySpectrum(policy::AtomicState.AbstractRasShellPolicy)`
+    ... whether `policy` needs a precomputed, named one-electron spectrum to propose shells. Defaults to
+        `false`, so a new, purely combinatorial policy needs no change here; a new policy that DOES read
+        energies overrides this method, the same one-method-to-add discipline as the rest of this hierarchy.
+        A `value::Bool` is returned.
+"""
+needsEnergySpectrum(policy::AbstractRasShellPolicy) = false
+
+
+"""
+`struct  AtomicState.RasCompleteShellPolicy  <:  AtomicState.AbstractRasShellPolicy`
+    ... proposes every `l = 0, ..., n-1` of the next unused principal quantum number `n` -- GRASP's own
+        default layering convention, and the one every RAS example in this codebase has used by hand so far.
+"""
+struct  RasCompleteShellPolicy  <:  AtomicState.AbstractRasShellPolicy    end
+
+
+"""
+`AtomicState.proposeNextShells(policy::AtomicState.RasCompleteShellPolicy, coreShells::Array{Shell,1},`
+                               `fromShells::Array{Shell,1}, layersSoFar::Array{AtomicState.RasLayer,1},`
+                               `candidateOrbitals::Dict{Subshell,Orbital})`
+    ... proposes the complete next principal shell, `n = 1 + maximum(n of every shell already in the ladder)`.
+        `candidateOrbitals` is ignored. An `Array{Shell,1}` is returned.
+"""
+function proposeNextShells(policy::RasCompleteShellPolicy, coreShells::Array{Shell,1}, fromShells::Array{Shell,1},
+                            layersSoFar::Array{RasLayer,1}, candidateOrbitals::Dict{Subshell,Orbital})
+    used  = AtomicState.collectLadderShells(coreShells, fromShells, layersSoFar)
+    nextN = isempty(used) ? 1 : maximum(sh.n for sh in used) + 1
+
+    return( Shell[ Shell(nextN, l)  for l in 0:nextN-1 ] )
+end
+
+
+"""
+`struct  AtomicState.RasLimitedAngularMomentumPolicy  <:  AtomicState.AbstractRasShellPolicy`
+    ... caps how far the active space reaches in `l`, INDEPENDENTLY of how far `n` climbs -- the remedy for
+        AtomicState.RasCompleteShellPolicy being "rather extreme" once `n` exceeds about 5 (at `n=6` it would
+        propose `6s,6p,6d,6f,6g,6h` in one layer, mostly high-`l` partial waves far from anything the
+        reference occupies, and `reference_ras_practical_recipe` measured that a layer of high-`n`,
+        already-occupied-symmetry orbitals is both the hardest to converge and the least rewarding).
+
+        For the next unused `n`, this policy proposes only `l = 0, ..., min(n-1, lMaxRef + extraL)`, where
+        `lMaxRef` is the largest `l` occupied by `coreShells` or `fromShells`. So with `extraL = 2` on a
+        `3d^2` reference (`lMaxRef = 2`), layer `n=6` proposes only `6s,6p,6d,6f` -- `6g` and `6h` are never
+        opened, however high `n` goes, because they sit beyond `lMaxRef+extraL = 4`. The ladder keeps
+        climbing in `n` without ever again reaching for a new, likely-unrewarding high-`l` partial wave.
+
+    + extraL    ::Int64   ... how many `l`-values beyond the reference's own maximum may ever be opened.
+"""
+struct  RasLimitedAngularMomentumPolicy  <:  AtomicState.AbstractRasShellPolicy
+    extraL      ::Int64
+end
+
+
+"""
+`AtomicState.proposeNextShells(policy::AtomicState.RasLimitedAngularMomentumPolicy, coreShells::Array{Shell,1},`
+                               `fromShells::Array{Shell,1}, layersSoFar::Array{AtomicState.RasLayer,1},`
+                               `candidateOrbitals::Dict{Subshell,Orbital})`
+    ... proposes the next unused `n`'s shells with `l` capped at `lMaxRef + policy.extraL`, as described in
+        the struct's own docstring. `candidateOrbitals` is ignored. An `Array{Shell,1}` is returned.
+"""
+function proposeNextShells(policy::RasLimitedAngularMomentumPolicy, coreShells::Array{Shell,1}, fromShells::Array{Shell,1},
+                            layersSoFar::Array{RasLayer,1}, candidateOrbitals::Dict{Subshell,Orbital})
+    used    = AtomicState.collectLadderShells(coreShells, fromShells, layersSoFar)
+    nextN   = isempty(used) ? 1 : maximum(sh.n for sh in used) + 1
+    lMaxRef = maximum( sh.l  for sh in vcat(coreShells, fromShells) )
+    lCap    = min(nextN - 1, lMaxRef + policy.extraL)
+
+    return( Shell[ Shell(nextN, l)  for l in 0:lCap ] )
+end
+
+
+"""
+`struct  AtomicState.RasSpectrumOrderedShellPolicy  <:  AtomicState.AbstractRasShellPolicy`
+    ... for medium and heavy elements, where neither AtomicState.RasCompleteShellPolicy nor
+        AtomicState.RasLimitedAngularMomentumPolicy is reliable, because both assume shells group cleanly by
+        `n` -- which stops holding once a real atomic potential, rather than a bare hydrogenic one, is
+        involved. For a `3d^3 4s^2`-type reference, the next worthwhile correlation orbitals are not "finish
+        n=4, then start n=5" but something that may read `5s, 4p, 4d, 4f, ...`: shells from DIFFERENT
+        principal quantum numbers interleaved by where they actually sit, because screening and `3d`/`4s`
+        mixing move `4p`, `4d`, `4f` and `5s` out of their light-atom, hydrogenic order.
+
+        This policy answers the question numerically rather than combinatorially, reusing
+        AtomicState.OneElectronSpectrum -- generated once by the driver into `candidateOrbitals`, see
+        AtomicState.needsEnergySpectrum -- rather than inventing new orbital generation: for every partial
+        wave `l` present in `candidateOrbitals`, it finds the lowest-`n` shell of that `l` not already in the
+        ladder, ranks those one-candidate-per-`l` shells by their ACTUAL one-electron energy, and proposes
+        the `count` cheapest.
+
+        THIS IS THE ONE PLACE THIS HIERARCHY DOES SOMETHING GRASP'S OWN WORKFLOW NEVER HAS TO, AND IT IS
+        WORTH KNOWING WHY. GRASP's correlation virtuals are generated per `kappa` and referred to only by
+        their sequential index within that `kappa` -- "the 3rd d_5/2 virtual" -- never by a principal
+        quantum number, because once an orbital is correlated and polarized, the node-counting convention
+        that even DEFINES `n` for a hydrogenic function stops applying cleanly, so GRASP never has to decide
+        whether that 3rd virtual "is" 4d or 5d. JAC's RAS API cannot take that way out: `RasLayer.newShells`,
+        every `se/deFrom/To` list, `frozenShells` and this very policy's own candidates are all referred to
+        by name, because that is how a user reads and writes a RAS ladder. So where GRASP can simply ask its
+        spectrum for the next cheapest orbital of a given `kappa` and never decide what to call it, this
+        policy keeps names attached to a measured energy ordering that may cross `n`.
+
+        A diffuse, box-truncated state can rank artificially low in energy (Rule 12's territory), so this
+        policy inherits a risk the other two never face, since they never consult a computed energy at all --
+        its first real use on any one case is a judgement call for a human, not an automatic pass/fail.
+
+    + count             ::Int64                            ... how many new shells to propose per layer.
+    + spectrumSettings  ::AtomicState.OneElectronSettings   ... the candidate pool (nMax, lValues) the
+        driver generates, once, via the existing `Basics.generate(::AtomicState.OneElectronSpectrum, rep)`.
+"""
+struct  RasSpectrumOrderedShellPolicy  <:  AtomicState.AbstractRasShellPolicy
+    count               ::Int64
+    spectrumSettings    ::AtomicState.OneElectronSettings
+end
+
+
+"""
+`AtomicState.needsEnergySpectrum(policy::AtomicState.RasSpectrumOrderedShellPolicy)`
+    ... always `true` -- this policy cannot propose anything without the generated candidate spectrum. A
+        `value::Bool` is returned.
+"""
+needsEnergySpectrum(policy::RasSpectrumOrderedShellPolicy) = true
+
+
+"""
+`AtomicState.proposeNextShells(policy::AtomicState.RasSpectrumOrderedShellPolicy, coreShells::Array{Shell,1},`
+                               `fromShells::Array{Shell,1}, layersSoFar::Array{AtomicState.RasLayer,1},`
+                               `candidateOrbitals::Dict{Subshell,Orbital})`
+    ... ranks the lowest-`n` unused shell of every partial wave present in `candidateOrbitals` by its actual
+        one-electron energy there, and proposes the `policy.count` cheapest, as described in the struct's own
+        docstring. An `Array{Shell,1}` is returned, shorter than `policy.count` once the candidate pool itself
+        is exhausted, and empty once nothing more can be proposed from it.
+"""
+function proposeNextShells(policy::RasSpectrumOrderedShellPolicy, coreShells::Array{Shell,1}, fromShells::Array{Shell,1},
+                            layersSoFar::Array{RasLayer,1}, candidateOrbitals::Dict{Subshell,Orbital})
+    used      = AtomicState.collectLadderShells(coreShells, fromShells, layersSoFar)
+    lValues   = unique( Basics.subshell_l(ss)  for ss in keys(candidateOrbitals) )
+    candidates = Tuple{Shell,Float64}[]
+    for  l in lValues
+        nsOfL = sort(unique( ss.n  for ss in keys(candidateOrbitals)  if Basics.subshell_l(ss) == l ))
+        for  n in nsOfL
+            sh = Shell(n, l)
+            if  !(sh in used)
+                energy = minimum( orb.energy  for (ss, orb) in candidateOrbitals
+                                              if  ss.n == n  &&  Basics.subshell_l(ss) == l )
+                push!(candidates, (sh, energy))
+                break    ## the lowest unused n of this l only; a higher n of the SAME l is not offered yet
+            end
+        end
+    end
+    sort!(candidates, by = c -> c[2])
+
+    return( Shell[ c[1]  for c in candidates[1:min(policy.count, length(candidates))] ] )
+end
+
+
+"""
+`struct  AtomicState.RasAutoSettings`
+    ... bundles the choices an automatic RAS ladder needs: WHICH shells to propose next, WHETHER to propose
+        another layer at all, and a hard ceiling that applies no matter what either policy says.
+
+    + stoppingPolicy    ::AtomicState.AbstractRasStoppingPolicy   ... decides whether another layer runs.
+    + shellPolicy       ::AtomicState.AbstractRasShellPolicy      ... decides what it would contain if it did.
+    + layerTemplate     ::AtomicState.RasLayer                    ... the `se`/`de`/`treatment` to reuse for
+        every auto-proposed layer; its own `newShells` field is ignored, since the shell policy fills that in.
+    + maxLayers         ::Int64                                   ... a hard ceiling that ALWAYS applies,
+        independent of `stoppingPolicy`, so an automatic ladder can never run unbounded even if a
+        AtomicState.CombinedPolicy forgets a count-based term.
+"""
+struct  RasAutoSettings
+    stoppingPolicy      ::AtomicState.AbstractRasStoppingPolicy
+    shellPolicy         ::AtomicState.AbstractRasShellPolicy
+    layerTemplate       ::AtomicState.RasLayer
+    maxLayers           ::Int64
+end
+
+
+"""
+`AtomicState.RasAutoSettings(stoppingPolicy::AtomicState.AbstractRasStoppingPolicy,`
+                             `shellPolicy::AtomicState.AbstractRasShellPolicy;`
+                             `layerTemplate::AtomicState.RasLayer=AtomicState.RasLayer(Shell[]), maxLayers::Int64=10)`
+    ... constructor taking the two policies positionally and the template/ceiling as keywords with safe
+        defaults. A `settings::AtomicState.RasAutoSettings` is returned.
+"""
+function RasAutoSettings(stoppingPolicy::AbstractRasStoppingPolicy, shellPolicy::AbstractRasShellPolicy;
+                          layerTemplate::RasLayer=RasLayer(Shell[]), maxLayers::Int64=10)
+    RasAutoSettings(stoppingPolicy, shellPolicy, layerTemplate, maxLayers)
 end
 
 
