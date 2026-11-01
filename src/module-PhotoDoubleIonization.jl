@@ -153,7 +153,14 @@ using Printf, ..AngularMomentum, ..Basics, ..Bsplines, ..Continuum, ..Defaults, 
     + printBefore             ::Bool                    ... True, if all energies and lines are printed before their evaluation.
     + lineSelection           ::LineSelection           ... Specifies the selected levels, if any.
     + eeInteraction           ::AbstractEeInteraction   ... Type of the electron-electron interaction in the second-order treatment.
-    + gMultiplet              ::Multiplet               ... Mean-field multiplet of intermediate levels in the computations.
+    + gMultiplet              ::Multiplet               ... Mean-field multiplet of the (N-1)-ELECTRON IONIC CORES of the
+        intermediate levels, NOT of the intermediate levels themselves.  `PhotoDoubleIonization.generateIntermediateLevels` builds each
+        intermediate by generating a continuum orbital IN THE FIELD OF one of these levels and attaching it, so a multiplet of
+        N-electron intermediates handed in here yields (N+1)-electron intermediates and every junction of the second-order sum then
+        pairs unequal electron numbers.  This field said "intermediate levels" until 01-Nov-2026 and `examples/example-Dj.jl` followed
+        it: for the two-electron 1s^2 initial state it supplied the two-electron configurations 1s4s and 1s4p, and the code made them
+        three-electron -- measured, and the reason that branch has never carried a `Last successful` date.  The same role is played, and
+        was always correctly documented, by `AutoIonization.Settings.gCoreMultiplet`.
     + continuumExchange       ::Union{Nothing,Bool}     ... True/false to force exchange between the two ejected electrons
         and the bound electrons on or off; `nothing` -- the default -- lets `Basics.perform` decide automatically from the
         final-ion `AsfSettings.scField` (`Continuum.resolveExchangeDefault`, item 99).
@@ -419,6 +426,19 @@ function amplitude(::Absorption, Mp::EmMultipole, gauge::EmGauge, omega::Float64
     onShell = isnothing(nOnShell) ? falses(length(nLevels)) : nOnShell
     length(nLevels) == length(onShell)   ||  error("nLevels and nOnShell must have the same length.")
     if  length(nLevels) == 0    return( ComplexF64(0.) )    end
+    # THE INTERMEDIATE MUST CARRY THE SAME NUMBER OF ELECTRONS AS THE INITIAL STATE, and this is checked rather than assumed because
+    # the one thing that must not happen is a plausible number from a sum whose junctions pair different electron counts.  It is a
+    # caller error and not a physical limitation: `settings.gMultiplet` must hold the (N-1)-electron ionic CORES, to which
+    # generateIntermediateLevels attaches the continuum electron -- see that field's docstring.
+    for  nLevel in nLevels
+        if  nLevel.basis.NoElectrons != initialLevel.basis.NoElectrons
+            error("PhotoDoubleIonization.amplitude(): an intermediate level carries $(nLevel.basis.NoElectrons) electrons where the "  *
+                  "initial level carries $(initialLevel.basis.NoElectrons).  Every junction of the second-order sum would then pair "   *
+                  "unequal electron numbers.  `settings.gMultiplet` must be the (N-1)-ELECTRON IONIC CORES, not the intermediate "     *
+                  "levels themselves:  generateIntermediateLevels generates a continuum orbital in the field of each of its levels "   *
+                  "and attaches it.  See the docstring of PhotoDoubleIonization.Settings' gMultiplet field.")
+        end
+    end
     # The principal value needs the levels grouped by their pole and the integration interval they span; without
     # all three the old, non-convergent assembly is used, so an un-updated caller changes no number silently.
     doPV = !isnothing(nBlock)  &&  !isnothing(nEnergy)  &&  !isnothing(energyRange)

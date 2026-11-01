@@ -8,25 +8,38 @@ setDefaults("method: normalization, pure sine")      ## setDefaults("method: nor
 setDefaults("unit: rate", "a.u.")   
 
 grid        = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
-quasiShells = Basics.generateShellList(4, 4, 1)
 
 if  true
+    # Last visit:  01-Nov-2026
     # Last successful:  unknown ...
-    # Photo-double ionization of he-like Be: 1s^2   -->  4l + epsilon kappa: Generation of MeanFieldMultiplet
+    # Photo-double ionization of he-like Be: 1s^2   -->  epsilon1 kappa1 + epsilon2 kappa2:
+    #   Generation of the MeanFieldMultiplet of IONIC CORES.
+    #
+    # THE GREEN SPACE IS THE (N-1)-ELECTRON IONIC CORES, AND IT WAS NOT, UNTIL 01-Nov-2026.  This branch built
+    #   it as `AddElectrons(1, quasiShells)` applied to [1s], i.e. the TWO-electron configurations 1s4s and
+    #   1s4p -- the "intermediate levels" that PhotoDoubleIonization.Settings' gMultiplet field then asked for
+    #   in words.  But PhotoDoubleIonization.generateIntermediateLevels generates a continuum orbital IN THE
+    #   FIELD OF each gMultiplet level and ATTACHES it, so those became THREE-electron intermediates against a
+    #   TWO-electron initial state, and every junction of the second-order sum paired unequal electron numbers.
+    #   Measured 01-Nov-2026: initial 2, Green 2, Green + one continuum electron 3.  That is why this branch has
+    #   never carried a `Last successful` date, and the module now REFUSES the mismatch instead of returning a
+    #   plausible number.  The 4l quasi-shells were a hand discretisation of the continuum and are superseded:
+    #   generateIntermediateLevels carries its own energy grid (NoIntermediateEnergies).
     name        = "He-like Be"
-    ## `Basics.generateConfigurationsWithAdditionalElectron` was retired with the new configuration language
-    ## (8e633500) and exists nowhere in src/; `AddElectrons(1, shells)` is its literal successor -- add one
-    ## electron in each of the given shells.  Priority item 50.
-    refConfigs  = Basics.generateConfigurations(Basics.AddElectrons(1, quasiShells), [Configuration("1s")])
+    refConfigs  = [Configuration("1s"), Configuration("2s"), Configuration("2p")]
     mfSettings  = MeanFieldSettings()
     #
     wa          = Representation(name, Nuclear.Model(4.01), Radial.Grid(true), refConfigs, MeanFieldMultiplet(mfSettings) )
     wb          = generate(wa, output=true)
     #
 elseif true
-    # Last visit:  20-Oct-2026 (NEEDS AN EARLIER BRANCH OF THIS FILE)
-    # Last successful:  unknown ...
-    # Photo-double ionization of he-like Be: 1s^2   -->  4l + epsilon kappa: Computation of cross sections
+    # Last visit:  01-Nov-2026 (NEEDS AN EARLIER BRANCH OF THIS FILE)   ## with the Green space corrected to the
+    #                            (N-1)-electron cores it now COMPLETES with no warning, at maxKappa = 1 and one
+    #                            photon energy: 400 eV gives 2.998258e+02 barn Coulomb, 1.701679e+02 Babushkin.
+    # Last successful:  unknown ...   ## and it stays unknown: a Coulomb/Babushkin ratio of 1.76 is not a
+    #                            converged cross section.  Three ionic cores and maxKappa = 1 is a demonstration
+    #                            of the pipeline, not a number to quote;  the convergence study is open work.
+    # Photo-double ionization of he-like Be: 1s^2   -->  epsilon1 kappa1 + epsilon2 kappa2: cross sections
     # `wb` is produced by an earlier branch of this file (line 21).
     if  !@isdefined(wb)   error("Run the earlier branch of this file first; it defines `wb`.")   end
     nMultiplet     = wb[ResultKeys.MeanFieldMultiplet]
