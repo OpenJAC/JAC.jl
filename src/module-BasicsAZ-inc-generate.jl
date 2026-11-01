@@ -105,13 +105,12 @@ function Basics.generate(repType::AtomicState.OneElectronSpectrum, rep::AtomicSt
     Basics.display(stdout, refBasis.orbitals, rep.grid; longTable=false)
     nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
     @warn("The potential is generated for the mean-field basis but not (yetc hosen for the selected levels.")
-    ## A NuclearField carries no electronic part at all; adding a DFS screening term on top of it would silently
-    ## reintroduce the very mismatch this field exists to remove.
-    if  typeof(settings.scField) == Basics.NuclearField
-        electronicPot = Radial.Potential("zero", zeros(length(rep.grid.r)), rep.grid)
-    else
-        electronicPot = Basics.computePotential(Basics.DFSField(1.0), rep.grid, refBasis)
-    end
+    # FIXED, found while testing item 16's RasSpectrumOrderedShellPolicy: this branched on `settings.scField`,
+    # a field AtomicState.OneElectronSettings has never had (only nMax, lValues, levelSelectionMean), so every
+    # call of this generator raised a FieldError here -- unconditionally, for every caller, before this screened
+    # potential was reached at all.  Untested in any example or test, so nobody had called it until now.  The
+    # NuclearField branch was therefore never reachable; this is what it always fell through to.
+    electronicPot = Basics.computePotential(Basics.DFSField(1.0), rep.grid, refBasis)
     meanPot       = Basics.add(nuclearPot, electronicPot)
     
     println("")
@@ -614,14 +613,135 @@ function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Rep
         # own layer.
         if  typeof(step.treatment) == Basics.Variational    priorMultiplet = multiplet;   priorIsLayer = true    end
     end
-    
+
     return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
 end
 
 
 
 """
-`Basics.generate(repType::AtomicState.GreenExpansion, representation::AtomicState.Representation)`  
+`Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Representation, coreShells::Array{Shell,1},`
+                 `fromShells::Array{Shell,1}, fixedLayers::Array{AtomicState.RasLayer,1},`
+                 `auto::AtomicState.RasAutoSettings; output::Bool=false)`
+    ... to generate a restricted active-space expansion the SAME way as the plain `Basics.generate(repType, rep)`
+        above, except that every layer beyond the fixed ones already present in `repType.steps` is PROPOSED by
+        `auto.shellPolicy` and judged by `auto.stoppingPolicy`, rather than being hand-written up front (item 16,
+        competition list). `coreShells` and `fromShells` are the same reference shells a hand-built ladder would
+        pass to `AtomicState.RasExpansion(symmetries, NoElectrons, coreShells, fromShells, layers, settings)`;
+        `fixedLayers` is the `layers` list that `repType.steps` was ALREADY built from (typically just the
+        reference layer, `[AtomicState.RasLayer(Shell[]; se=false, de=false)]`), needed here because
+        `AtomicState.RasExpansion` itself does not retain it. Every fixed step runs first, through the SAME
+        `BasicsAZ.runRasStep!` helper the plain driver uses, building the SAME `AtomicState.RasLayerVerdict`
+        history a hand-built ladder never collects; the automatic part then proposes, runs and judges one layer
+        at a time, stopping when the shell policy has nothing left to propose, when the stopping policy says so,
+        or when `auto.maxLayers` is reached -- whichever comes first, and the ceiling ALWAYS applies regardless
+        of what either policy decides. All intermediate and final results are printed to screen, and a
+        `results::Basics.PerformResults` dictionary is returned when `output=true`, `nothing` otherwise.
+"""
+function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Representation, coreShells::Array{Shell,1},
+                          fromShells::Array{Shell,1}, fixedLayers::Array{AtomicState.RasLayer,1},
+                          auto::AtomicState.RasAutoSettings; output::Bool=false)
+    if  output    results = Dict{String, Any}()    else    results = nothing    end
+    nModel   = rep.nuclearModel
+    asfSettings    = AsfSettings()
+    priorMultiplet = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    nuclearPot     = Nuclear.nuclearPotential(nModel, rep.grid)
+    electronicPot  = Basics.computePotential(Basics.DFSField(1.0), rep.grid, priorMultiplet.levels[1].basis)
+    meanPot        = Basics.add(nuclearPot, electronicPot)
+    subshellList   = Basics.extractRelativisticSubshellList(rep)
+    primitives     = Bsplines.generatePrimitives(rep.grid)
+    startOrbitals  = Bsplines.generateOrbitals(subshellList, meanPot, nModel, primitives, printout=true)
+    if output    results = Base.merge( results, Dict("reference multiplet" => Multiplet("Reference multiplet:", priorMultiplet.levels) ) )  end
+
+    # THE CANDIDATE SPECTRUM IS GENERATED ONCE, UP FRONT, AND ONLY IF A POLICY NEEDS IT -- reusing the existing,
+    # unmodified OneElectronSpectrum generator rather than inventing new orbital generation for this driver.
+    candidateOrbitals = Dict{Subshell,Orbital}()
+    if  AtomicState.needsEnergySpectrum(auto.shellPolicy)
+        println("")
+        printstyled(">> [RAS auto] generating the candidate spectrum for the shell policy ... \n", color=:light_green)
+        specResults       = Basics.generate(AtomicState.OneElectronSpectrum(auto.shellPolicy.spectrumSettings), rep; output=true)
+        candidateOrbitals = specResults[ResultKeys.Orbitals]
+    end
+
+    history      = AtomicState.RasLayerVerdict[]
+    layersSoFar  = deepcopy(fixedLayers)
+    priorIsLayer = false
+
+    # THE FIXED STEPS RUN FIRST, through the SAME per-layer helper the plain driver uses -- typically just the
+    # reference layer, but a hand-built correlation layer may also precede automation.
+    for  (istep, step)  in  enumerate(repType.steps)
+        (multiplet, verdict) = runRasStep!(istep, step, repType, rep, priorMultiplet, priorIsLayer, startOrbitals, nModel;
+                                            newShells = istep <= length(fixedLayers) ? fixedLayers[istep].newShells : Shell[])
+        push!(history, verdict)
+        if output    results = Base.merge( results, Dict("step"*string(istep) => Multiplet("Multiplet:", multiplet.levels)) )    end
+        if  typeof(step.treatment) == Basics.Variational    priorMultiplet = multiplet;   priorIsLayer = true    end
+    end
+
+    # THE SAME frozen/to BOOKKEEPING AtomicState.RasExpansion'S OWN CONVENIENCE CONSTRUCTOR KEEPS, replayed here
+    # over the fixed layers so the automatic part starts from exactly the state that constructor would have
+    # reached, were it given these same fixedLayers by hand.
+    frozen = deepcopy(coreShells)
+    to     = deepcopy(fromShells)
+    for  (i, layer)  in  enumerate(fixedLayers)
+        append!(to, layer.newShells)
+        if  i == 1   append!(frozen, fromShells)   end
+        append!(frozen, layer.newShells)
+    end
+    istep = length(repType.steps)
+
+    while  istep < auto.maxLayers
+        newShells = AtomicState.proposeNextShells(auto.shellPolicy, coreShells, fromShells, layersSoFar, candidateOrbitals)
+        if  isempty(newShells)
+            println(">> [RAS auto] the shell policy ($(typeof(auto.shellPolicy))) has nothing further to " *
+                    "propose; stopping after $istep layer(s).")
+            break
+        end
+        istep += 1
+        layer  = AtomicState.RasLayer(newShells; se=auto.layerTemplate.se, de=auto.layerTemplate.de,
+                                       treatment=auto.layerTemplate.treatment)
+        println("")
+        printstyled(">> [RAS auto] layer $istep proposes the new shell(s) $(layer.newShells) ... \n", color=:light_green)
+        # startOrbitals WAS GENERATED ONLY OVER THE FIXED LAYERS, since the auto-proposed shells are not known
+        # until the shell policy names them here -- unlike the hand-built driver, which sees every layer's
+        # shells up front and generates startOrbitals for all of them in one call before its loop even starts.
+        # So EVERY newly proposed shell's subshells are generated into startOrbitals now, the first time they
+        # are needed, in the SAME mean potential meanPot the fixed layers' start orbitals already came from.
+        newSubshells = Subshell[ sh  for  shell in layer.newShells  for sh in Basics.shellSplitIntoSubshells(shell)
+                                      if  !haskey(startOrbitals, sh) ]
+        if  !isempty(newSubshells)
+            startOrbitals = Base.merge( startOrbitals,
+                                         Bsplines.generateOrbitals(newSubshells, meanPot, nModel, primitives, printout=true) )
+        end
+        append!(to, layer.newShells)
+        sxFrom = layer.se ? deepcopy(fromShells) : Shell[];    sxTo = layer.se ? deepcopy(to) : Shell[]
+        dxFrom = layer.de ? deepcopy(fromShells) : Shell[];    dxTo = layer.de ? deepcopy(to) : Shell[]
+        step   = AtomicState.RasStep(AtomicState.RasStep(); seFrom=sxFrom, seTo=sxTo, deFrom=dxFrom, deTo=dxTo,
+                                      frozen=deepcopy(frozen), treatment=layer.treatment)
+        (multiplet, verdict) = runRasStep!(istep, step, repType, rep, priorMultiplet, priorIsLayer, startOrbitals, nModel;
+                                            newShells=layer.newShells)
+        push!(history, verdict)
+        println(">> [RAS auto] " * string(verdict))
+        if output    results = Base.merge( results, Dict("step"*string(istep) => Multiplet("Multiplet:", multiplet.levels)) )    end
+        if  typeof(step.treatment) == Basics.Variational    priorMultiplet = multiplet;   priorIsLayer = true    end
+        append!(frozen, layer.newShells)
+        push!(layersSoFar, layer)
+
+        stoppingVerdict = AtomicState.evaluateStoppingPolicy(auto.stoppingPolicy, history)
+        println(">> [RAS auto] stopping policy ($(typeof(auto.stoppingPolicy))): " * string(stoppingVerdict))
+        if  stoppingVerdict.stop    break    end
+    end
+    if  istep >= auto.maxLayers
+        println(">> [RAS auto] maxLayers = $(auto.maxLayers) reached; stopping unconditionally, regardless of " *
+                "what either policy would otherwise decide.")
+    end
+
+    return( results isa Dict{String,Any} ? Basics.PerformResults(results) : results )
+end
+
+
+
+"""
+`Basics.generate(repType::AtomicState.GreenExpansion, representation::AtomicState.Representation)`
     ... to generate a Green (function) expansion for a given approach and excitation scheme of the electron,
         based on a set of reference configurations, a list of level symmetries as well as for given settings.
         All relevant intermediate and final results are printed to screen (stdout). Nothing is returned.
