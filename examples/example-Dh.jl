@@ -1249,6 +1249,123 @@ elseif  false
                                 finalConfigs   = [Configuration("1s")],
                                 processSettings= emSettings) )
     #
+## =====================================================================================================
+##  TWO-PHOTON EMISSION, A SELECTION RULE  (an EXACT check that needs no reference number at all)
+## =====================================================================================================
+elseif  false
+    # Last visit:  01-Nov-2026
+    # Last successful:  01-Nov-2026   ## the midpoint row (omega1 = omega2) of this branch's own printed table:
+    #                                 ## pure E1E1 gives 0.00000e+00 in BOTH gauges at Z = 2, 18 AND 30, while
+    #                                 ## [E1, M2] gives Cou/Bab 3.17414e-09/5.70324e-09, 3.33244e+00/5.85296e+00
+    #                                 ## and 2.24052e+02/3.87136e+02 [1/s] at those same three Z.
+    #
+    # --- Branch k: THE J = 1 -> 0 EQUAL-SHARING SELECTION RULE, and the mixed-multipole channel read off
+    #     background-free.  He-like 1s2s 3S_1 -> 1s^2 1S_0, for Z = 2, 18 and 30.
+    #
+    # WHY THIS BRANCH EXISTS, and it is a different kind of check from every other branch of this file.  Every
+    # other one compares a NUMBER against a reference, and so inherits the open overall prefactor, the
+    # correlation deficiency and the intermediate-basis truncation all at once.  This one compares against a
+    # SELECTION RULE, which is exact angular algebra and therefore independent of all three.
+    #
+    # THE RULE.  J_i = 1 and J_f = 0, so Klist = oplus(1,0) = {1} and NOTHING ELSE -- the whole differential
+    # rate is the K = 1 channel.  At omega1 = omega2 the two photon time orderings are the SAME reduced
+    # amplitude, so the amplitude collapses to
+    #
+    #     wk  =  U * ( 1 + (-1)^(L1+L2-K) )
+    #
+    # and the bracket decides everything:
+    #     pure E1E1 :  (-1)^(1+1-1) = -1   ->   wk = 0 EXACTLY, whatever the radial content is
+    #     E1M2      :  (-1)^(1+2-1) = +1   ->   wk = 2U, not suppressed at all
+    #
+    # So the spectrum of this transition must have an EXACT ZERO at its centre as long as both photons carry the
+    # same multipolarity, and that zero must fill in the moment a mixed pair is admitted.  This is the published
+    # statement that the J = 1 -> 0 two-photon decay is forbidden at equal photon energies ONLY for equal
+    # multipolarities (Phys. Rev. A 69, 062502);  here it is an output of the code rather than an input to it.
+    #
+    # AND IT IS WHY THAT SYSTEM IS THE ONE THE LITERATURE USES FOR E1M2.  The mixed channel is reported at
+    # roughly a quarter of the 2E1 one for He-like uranium, while contributing under 0.5 % to H-like 2s -> 1s at
+    # any Z.  The difference is not that E1M2 is large here -- it is that the selection rule has suppressed what
+    # it is being compared against.
+    #
+    # THE MIDPOINT IS THEREFORE A BACKGROUND-FREE MEASUREMENT of the mixed-multipole channel: no subtraction of
+    # a large pure-pair term, no ratio against a big number.  noSharings = 9 is ODD on purpose, because
+    # Basics.determineEnergySharings places Gauss-Legendre nodes symmetrically and an odd count puts one node
+    # exactly on omega1 = omega2.  An EVEN count never samples the midpoint and this branch would show nothing.
+    #
+    # MEASURED 01-Nov-2026 -- the MIDPOINT ROW of the differential table this branch prints, in [1/s]:
+    #
+    #     Z     pure E1E1, Cou / Bab        with [E1, M2], Cou / Bab          Bab/Cou of the mixed midpoint
+    #     2     0.00000e+00  0.00000e+00    3.17414e-09   5.70324e-09                   1.80
+    #     18    0.00000e+00  0.00000e+00    3.33244e+00   5.85296e+00                   1.76
+    #     30    0.00000e+00  0.00000e+00    2.24052e+02   3.87136e+02                   1.73
+    #
+    # The zero is EXACT and not merely small -- it is printed as 0.00000e+00 because the two orderings cancel
+    # term by term before any radial integral is weighed.  Every mirror pair of sharings also agrees to all
+    # printed digits, which is the photon-exchange symmetry branch d tests and is forced for the same reason.
+    #
+    # WHAT IS *NOT* CLAIMED, and the last column is why.  The MAGNITUDE of the mixed channel is NOT a result of
+    # this branch:  the mixed midpoint's two GAUGES disagree by 1.73 to 1.80 at every Z, where a converged
+    # amplitude would have them agree, and the pure channel is no better away from the midpoint -- at Z = 2 its
+    # totals differ between the gauges by more than an order of magnitude.  A mixed-multipole RATE from this
+    # route must not be quoted on these settings.
+    #
+    # AND THE INTERMEDIATE BASIS HERE IS DELIBERATELY SMALL -- nmax = 10, i.e. NINE 1snp configurations, against
+    # the NINETY-EIGHT that branch b needs before H 2s -> 1s converges.  So the gauge disagreement above is most
+    # probably ordinary incompleteness and NOT a wall.  The cure branch b demonstrates is not "more
+    # configurations" in the usual sense but a PSEUDO-CONTINUUM: push nmax far up with gridStopper = false and
+    # hold the box FIXED, so the high-n members stand in for the true continuum as box-confined pseudostates --
+    # which took that branch from 9.7702 to 8.22902 /s against an exact 8.22906 and closed its gauges from 6:1
+    # to 4e-5.  Whether the same works HERE is an open and cheap question: watch the mixed midpoint's Bab/Cou
+    # ratio against nmax at one Z.  Two things make it less certain than for branch b.  First, for J = 1 -> 0
+    # the selection rule suppresses the pure channel itself, so near the midpoint the pure part is a small
+    # residual and residuals of truncated sums converge slowly;  the MIXED midpoint, however, is a full 2U and
+    # carries no such cancellation, so it may converge much better than the pure one.  Second, the literature
+    # requires the NEGATIVE-ENERGY (Dirac-sea) intermediates for mixed channels and finds a positive-spectrum
+    # sum high by a factor ~2;  whether a B-spline pseudo-spectrum generated this way carries that branch at all
+    # has NOT been checked.  Nothing here is settled, and none of it affects the date below, which rests only on
+    # the exact zero.
+    #
+    # So this branch is dated for the SELECTION RULE and the exchange symmetry, which are exact angular algebra
+    # and therefore INDEPENDENT of nmax, of the prefactor and of the gauge -- and for nothing else.  The three
+    # mixed-midpoint numbers on the claim line reproduce at THESE settings and are not converged values.
+    # Separately, the literature requires the NEGATIVE-ENERGY (Dirac-sea) intermediates for mixed channels and
+    # finds a positive-spectrum-only sum high by a factor ~2;  the set below is positive-energy BOUND states.
+    #
+    # `tools/probeTwoPhotonSelectionRule.jl` carries the same measurement with the per-Z tables printed in full.
+    for  (Z, nmax) in [(2.0, 10), (18.0, 10), (30.0, 10)]
+        println("\n", "="^116)
+        println("  He-like Z = $Z:  1s2s 3S_1 -> 1s^2 1S_0,  Klist = {1} only -- the midpoint must vanish for E1E1")
+        println("="^116)
+        nk          = Nuclear.Model(Z, Z < 2.5 ? PointNucleus() : FermiNucleus())
+        gridK0      = Basics.recommendedGrid(Dict(Shell(1,0)=>1, Shell(nmax,1)=>1), Z; printout=false)
+        gridK       = Basics.recommendedGrid(Dict(Shell(1,0)=>1, Shell(nmax,1)=>1), Z;
+                                             rbox=gridK0.tL[end], hp=gridK0.tL[end]/3000, printout=false)
+        interConfsK = [Configuration("1s $(n)p")  for n = 2:nmax]
+        interRepK   = Representation("1snp intermediate levels", nk, gridK, interConfsK,
+                                     MeanFieldMultiplet(MeanFieldSettings()))
+        interMpK    = generate(interRepK, output=true)[ResultKeys.MeanFieldMultiplet]
+        #
+        ## the PURE pair first, then the mixed one;  the midpoint tells the two apart
+        for  mps in ( [E1], [E1, M2] )
+            mpSettingsK = MultiPhotonTransition.Settings(MultiPhotonTransition.Settings();
+                                scheme = MultiPhotonTransition.TwoPhotonEmissionScheme(
+                                             MultiPhotonTransition.AbstractMultiPhotonProperty[
+                                                 MultiPhotonTransition.EnergyDiffCs()], 9 ),   ## ODD: samples x = 1/2
+                                multipoles = mps, gauges = [UseCoulomb, UseBabushkin],
+                                intermediateStates = interMpK, calcOverview = false,
+                                lineSelection = LineSelection(true,
+                                    symmetryPairs = [(LevelSymmetry(1, Basics.plus), LevelSymmetry(0, Basics.plus))]),
+                                printBefore = true )
+            println("\n  ---- multipoles = $mps ----")
+            perform( Atomic.Computation(Atomic.Computation(), name="Dh-k: He-like Z = $Z, $mps", grid=gridK,
+                                        nuclearModel   = nk,
+                                        initialConfigs = [Configuration("1s 2s")],
+                                        finalConfigs   = [Configuration("1s^2")],
+                                        processSettings= mpSettingsK) )
+        end
+    end
+    #
+##
 ##
 end
 #
