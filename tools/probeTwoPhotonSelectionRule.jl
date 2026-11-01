@@ -43,12 +43,41 @@
 #  neutral hydrogen and about 2.5 for hydrogen-like uranium (arXiv:0908.2498, arXiv:0904.1503).  The intermediate
 #  set used here is positive-energy BOUND states only.
 #
-#  SO THE CONDITION FOR S22'S LAST HALF IS NAMED RATHER THAN GUESSED: it needs a COMPLETE intermediate spectrum
-#  including the negative-energy continuum, i.e. the chi route (`DalgarnoLewis.twoPhotonAmplitude`, which already
-#  takes its two multipoles independently and is complete by construction) extended to TWO electrons.  It does
-#  NOT need more bound configurations, and it does not need a better prefactor.  Until then JAC can demonstrate
-#  that its mixed-multipole machinery obeys the right selection rule -- which this file does -- and cannot quote
-#  a mixed-multipole rate.
+#  AND THE TWO CHEAP EXPLANATIONS WERE TESTED AND BOTH FAIL, 01-Nov-2026.  The question was whether the gauge
+#  gap is ordinary incompleteness, curable by the PSEUDO-CONTINUUM route that `examples/example-Dh.jl` branch b
+#  uses (nmax far up, gridStopper = false, box held fixed), which takes H 2s -> 1s from 9.7702 to 8.22902 /s
+#  against an exact 8.22906 and closes ITS gauges from 6:1 to 4e-5.  Measured here at Z = 18, Bab/Cou of the
+#  mixed midpoint, with the box and the mesh scaled together so the spline density per unit length is constant:
+#
+#      box [a.u.]   nmax 10   nmax 20   nmax 30     pure midpoint      negative-energy levels kept
+#         21.5       1.7564    1.8128    1.9030     0.00e+00 all                  0
+#         64.6       1.7564    1.7813    1.7908     0.00e+00 all                  0
+#        129.2       1.7564    1.7813    1.7863     0.00e+00 all                  0
+#
+#  THE BOX WAS PARTLY GUILTY AND IS NOW EXONERATED.  At 21.5 a.u. the ratio marched AWAY from 1 (to 1.9030),
+#  which is the signature CLAUDE.md Rule 12 documents for a too-small box -- and enlarging the box removed that
+#  march, exactly as the rule says it would.  But 64.6 and 129.2 a.u. then agree to three digits, so the box is
+#  converged;  and nmax 20 -> 30 moves the ratio by 0.3 %, so the BOUND pseudo-spectrum is converged as well.
+#  The ratio converges to ~1.79 and NOT to 1.  So neither the box nor the basis size is the cause, and
+#  "push nmax further" is not the answer.
+#
+#  WHAT THE ASYMMETRY SAYS, and it is the useful part of this negative.  Babushkin is rock stable -- 1.4142e-16
+#  across all nine cells, varying in the fourth digit -- while COULOMB alone drifts (8.06e-17 -> 7.92e-17) and
+#  alone fails to meet the other gauge.  The velocity gauge is the one sensitive to completeness of the
+#  intermediate spectrum, its negative-energy part included, and the scan reports ZERO negative-energy levels
+#  retained at every nmax and every box.  So the Dirac-sea contribution the literature calls mandatory is absent
+#  BY CONSTRUCTION here rather than by truncation.  One suggestive number, NOT established: 1.79 is close to the
+#  factor ~2 by which a positive-spectrum-only sum is said to overestimate these channels -- but that factor is
+#  quoted for a RATE in H-like ions, not for a gauge ratio, so it is a hint and not a measurement.
+#
+#  SO THE CONDITION FOR S22'S LAST HALF IS NAMED, AND NARROWED BY MEASUREMENT RATHER THAN GUESSED: it needs the
+#  NEGATIVE-ENERGY intermediates.  It does NOT need a bigger box, more bound configurations or a better
+#  prefactor -- all three are now ruled out with numbers.  The quantitative target to close is the mixed
+#  midpoint's Bab/Cou = 1.79 at Z = 18.  The chi route (`DalgarnoLewis.twoPhotonAmplitude`) remains the natural
+#  candidate, since it takes its two multipoles independently and is complete by construction, but it is
+#  ONE-ELECTRON and would have to be extended to two;  and whether its completeness reaches the negative-energy
+#  branch has NOT been checked.  Until then JAC can demonstrate that its mixed-multipole machinery obeys the
+#  right selection rule -- which this file does, exactly -- and cannot quote a mixed-multipole rate.
 #
 #  See `tools/probeTwoPhotonMultipoleCoherence.jl` for the channel-GROUPING half of S22, which is settled.
 #
