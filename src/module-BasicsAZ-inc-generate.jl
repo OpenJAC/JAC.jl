@@ -242,6 +242,312 @@ end
 
 
 """
+`BasicsAZ.runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicState.RasExpansion,
+                      rep::AtomicState.Representation, priorMultiplet::Multiplet, priorIsLayer::Bool,
+                      startOrbitals::Dict{Subshell,Orbital}, nModel::Nuclear.Model; newShells::Array{Shell,1}=Shell[])`
+    ... runs ONE layer of a AtomicState.RasExpansion: builds this step's basis and orbitals, performs its SCF
+        (variational) or second-order (Q-space) treatment exactly as Basics.generate(::RasExpansion, rep) has
+        always done inside its own loop over a hand-built step list, and prints the same per-layer diagnostics
+        (the doubling test, and the boundary check that a variational layer must not end above the layer it
+        sits on). Pulled out of that loop so the SAME per-layer physics can also be driven, layer by layer, by
+        an automatic ladder (AtomicState.RasAutoSettings) that has not built its full step list up front.
+        `newShells` is not read by this function; it only labels the returned verdict, since a hand-built
+        AtomicState.RasStep carries no such field of its own -- the caller supplies it where it is known (an
+        automatic driver, from its own shell policy) and leaves it empty where it is not (a hand-built ladder).
+        A `(multiplet::Multiplet, verdict::AtomicState.RasLayerVerdict)` tuple is returned.
+"""
+function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicState.RasExpansion,
+                      rep::AtomicState.Representation, priorMultiplet::Multiplet, priorIsLayer::Bool,
+                      startOrbitals::Dict{Subshell,Orbital}, nModel::Nuclear.Model; newShells::Array{Shell,1}=Shell[])
+    wallTime0 = time()
+    println("")
+    printstyled("++ Compute the orbitals, orbitals and multiplet for step $istep ... \n", color=:light_green)
+    printstyled("--------------------------------------------------------------      \n", color=:light_green)
+    # THE FREEZING POLICY THIS DRIVER ALREADY CLAIMS, NOW ACTUALLY APPLIED -- 06-Oct-2026, closing the cause of
+    # challenge S18.  The comment above says a step re-optimizes only its new shells, "freezing every shell
+    # already present/optimized in an earlier step -- GRASP's own default behavior".  That was NOT what
+    # happened: AtomicState.RasExpansion accumulates its frozen set from coreShells, fromShells and each
+    # layer's newShells ONLY, so a reference shell named in NEITHER coreShells NOR fromShells was never frozen
+    # and was re-optimized at every layer -- by performSCF's AVERAGE-LEVEL pass, i.e. for the configuration
+    # average rather than for the level energy the layer minimizes.
+    #   MEASURED: 43Ca+ [Ar] 4s with 3s -> 5s,6s singles handed layer 2 a point 36.1 mHa ABOVE where layer 1
+    # had finished, and layer 2 then ended 2.8 mHa WORSE than its own reference -- which a variational layer
+    # cannot be.  Freezing those five shells puts the entry back AT the previous layer's energy and the ladder
+    # descends again.  See the boundary check further down, which reports the symptom when it survives.
+    #   WHY IT WENT UNSEEN: in examples/example-Ai.jl the Be reference 1s^2 2s^2 is exactly coreShells=[1s]
+    # plus fromShells=[2s], so the claimed policy and the implemented one coincide there.
+    #   THE FIRST STEP IS LEFT FREE, deliberately: it is the step that optimizes the reference, and there is no
+    # earlier step whose work could be lost.
+    #   IT IS DERIVED HERE AND NOT IN RasExpansion because that constructor never receives refConfigs, and the
+    # reference's occupied shells are what the policy is about.  A hand-built RasStep still carries whatever
+    # frozen set it is given, so the other policies Rule 21 names ("core frozen", "all free") remain reachable
+    # that way; what changes is only the DEFAULT of the layer API, which now matches its own documentation.
+    stepFrozenShells = step.frozenShells
+    if  istep > 1
+        refShells = Shell[]
+        for  conf in rep.refConfigs,  (sh, occ) in conf.shells
+            if  occ > 0  &&  !(sh in refShells)    push!(refShells, sh)    end
+        end
+        extraFrozen = Shell[ sh  for sh in refShells
+                             if !any(f -> f.n == sh.n  &&  f.l == sh.l, step.frozenShells) ]
+        if  !isempty(extraFrozen)
+            stepFrozenShells = vcat(step.frozenShells, extraFrozen)
+            println(">> [RAS] step $istep also freezes the reference shells " *
+                    join(string.(extraFrozen), ", ") * ", which an earlier step already optimized;  without " *
+                    "this they would be re-optimized here for the configuration average and the layer could " *
+                    "end ABOVE the layer it sits on.")
+        end
+    end
+    basis      = Basics.generateBasis(rep.refConfigs, repType.symmetries, step)
+    orbitals   = Basics.generateOrbitalsForBasis(basis, stepFrozenShells, priorMultiplet.levels[1].basis, startOrbitals)
+    basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )
+
+    # step.frozenShells is a list of non-relativistic Shell(n,l); translate to the concrete, relativistic
+    # Subshell(n,kappa) instances actually present in THIS step's basis, as AsfSettings.frozenSubshells needs.
+    # Subshell[...] and not [...]:  a step with NO frozen shells makes this comprehension empty, Julia then
+    # infers Vector{Any}, and AsfSettings rejects it.  Unreachable through RasLayer, which always passes a
+    # non-empty core, and reached at once by building the steps by hand -- which is what a step that adds new
+    # EXCITATIONS rather than new SHELLS has to do.
+    frozenSubshellsThisStep = Subshell[ sh  for  shell in stepFrozenShells  for sh in basis.subshells
+                                            if  sh.n == shell.n  &&  Basics.subshell_l(sh) == shell.l ]
+
+    # ITEM 22, FIXED 01-Sep-2026.  RasSettings.levelsScf was declared, documented and PRINTED, and never read:
+    # the EOL target came from levelSelectionCI alone, so a user who wrote RasSettings([1], ...) to optimize
+    # the layer on the ground level got, silently, a functional over every level the CI had selected.  It is
+    # now read -- but only when levelSelectionCI is INACTIVE, because levelSelectionCI is the more expressive
+    # and the safer selector: it can name levels by their weight on the reference configurations, which is
+    # the only one of the three that survives an intruder sinking below the reference, whereas levelsScf can
+    # only name indices into the energy-sorted multiplet.  Silently replacing a reference-weight selection by
+    # an index one would be a downgrade, so when both are given levelSelectionCI wins and this says so.
+    stepLevelSelection = repType.settings.levelSelectionCI
+    if  !stepLevelSelection.active  &&  !isempty(repType.settings.levelsScf)
+        stepLevelSelection = LevelSelection(true, indices=repType.settings.levelsScf)
+        if  istep == 1
+            println(">> [RAS] the EOL target of every step is levelsScf = $(repType.settings.levelsScf), by index.")
+        end
+    elseif  stepLevelSelection.active  &&  !isempty(repType.settings.levelsScf)  &&  istep == 1
+        println(">> [RAS] BOTH levelsScf and levelSelectionCI were given; levelSelectionCI is in force as the " *
+                "EOL target and levelsScf = $(repType.settings.levelsScf) is ignored.")
+    end
+    # THE ROUTE IS PASSED THROUGH, NOT REBUILT.  Until 04-Oct-2026 this line read
+    #     scfRoute = Basics.RotationRoute(repType.settings.maxIterationsScf)
+    # which converted an Int field into a route here, one line deep in the driver -- so a RAS ladder could name only the
+    # ROTATION route and only its iteration COUNT, while RotationRoute also carries nVirtual and stepping and FockRoute
+    # carries unscaledOffDiagonal.  Four of the six things a route can say were unreachable from a RAS computation, and the
+    # route hierarchy exists precisely so a run may be repeated on a dearer route when a cheaper one does not converge.
+    # A STEP MAY OVERRIDE THE LADDER, because a ladder's steps are not alike: a reference layer is converged in about twelve
+    # iterations where a correlation layer never converges at all, so one budget cannot serve both.
+    stepRoute    = isnothing(step.scfRoute) ? repType.settings.scfRoute : step.scfRoute
+    if  !isnothing(step.scfRoute)
+        println(">> [RAS] step $istep takes its OWN scf route, $(step.scfRoute), instead of the ladder's " *
+                "$(repType.settings.scfRoute).")
+    end
+    stepSettings = AsfSettings( AsfSettings();  scField=Basics.EOLField(),  frozenSubshells=frozenSubshellsThisStep,
+                                 eeInteractionCI=repType.settings.eeInteractionCI,  levelSelectionCI=stepLevelSelection,
+                                 scfRoute=stepRoute,
+                                 accuracyScf=repType.settings.accuracyScf )
+
+    # A VARIATIONAL step optimizes its new shells and puts every configuration it generated into the CI, which
+    # is what a step has always done.  A SECOND-ORDER step does neither: its orbitals are the ones this layer
+    # was given -- earlier layers frozen, the new shells taken from the spectrum generated once in the mean
+    # potential above -- and its configurations are ranked, then promoted, folded in or dropped.  Skipping the
+    # SCF is the point rather than an economy: the layer exists to RECOVER what P leaves out, so optimizing
+    # orbitals on the whole of it would pay for Q in the one place the treatment is meant to avoid, and the
+    # virtuals of a perturbation belong in the field of the reference in any case.
+    if  typeof(step.treatment) == Basics.Variational
+        multiplet  = SelfConsistent.performSCF(basis, nModel, rep.grid, stepSettings; printout=true)
+        # THE RELEASE PHASE -- RasSettings.freezing, 06-Oct-2026.  A released policy runs the layer TWICE and
+        # that is what makes it trustworthy rather than merely richer.
+        #   Phase 1 above WARMED this layer's new shells with the earlier ones frozen, so the new correlation
+        # orbitals have a sensible shape.  Phase 2 now RELEASES, and starts the optimized-level solver from those
+        # warm orbitals through StartFromPrevious -- which skips the average-level pre-pass, because phase 1
+        # leaves a warm set that COVERS this basis.  Skipping it is the whole point: that pass optimizes the
+        # configuration AVERAGE, a different functional from the level energy, and would re-derive the inherited
+        # orbitals before the solver ever saw them.
+        #   THE SKIP IS CONDITIONAL ON THAT COVERAGE AND NOT ON StartFromPrevious ALONE -- 11-Oct-2026,
+        # priority item 54.  Handing in a set that does NOT cover the basis leaves the uncovered subshells
+        # hydrogenic, and a local optimizer does not recover from that;  SelfConsistent.averageLevelPrePass
+        # then runs the pre-pass for those subshells alone, with the handed-in ones frozen.  Phase 1 exists
+        # precisely so that this layer is in the covered case.
+        #   MEASURED without the two-step entry, 43Ca+ [Ar] 4s with 3s -> 5s,6s singles: a released layer BEGAN
+        # 36.1 mHa above the layer it sits on -- more than the whole correlation effect -- and its increment then
+        # had a budget-dependent SIGN, +11.2, +5.9, +1.0 mHa at budgets 20, 60, 120.  With the two-step entry the
+        # same layer gives -0.013, -0.053, -0.063 mHa: monotone, correctly signed, and saturating.
+        #   THE POLICY GOVERNS WHAT A LAYER DOES WITH WHAT EARLIER LAYERS OPTIMIZED, so it applies from step 2 on.
+        # Step 1 optimizes the reference and has nothing to inherit, and its coreShells stay the caller's
+        # explicit declaration under every policy.
+        if  repType.settings.freezing != :previousLayersFrozen  &&  istep > 1
+            eWarm        = minimum( lv.energy  for lv in multiplet.levels )
+            warmOrbitals = multiplet.levels[1].basis.orbitals
+            # :coreFrozen keeps the expansion's own coreShells, which are exactly the frozen set of step 1;
+            # :allFree keeps nothing.
+            releaseShells = repType.settings.freezing == :coreFrozen ? repType.steps[1].frozenShells : Shell[]
+            releaseSubshells = Subshell[ sh  for  shell in releaseShells  for sh in basis.subshells
+                                         if  sh.n == shell.n  &&  Basics.subshell_l(sh) == shell.l ]
+            printstyled(">> [RAS] step $istep RELEASE phase (freezing = $(repType.settings.freezing)): the " *
+                        "warm-up reached " * @sprintf("%.9f", eWarm) * " Ha and the solver now restarts from " *
+                        "those orbitals with " *
+                        (isempty(releaseSubshells) ? "nothing frozen" :
+                         "only " * join(string.(releaseSubshells), ", ") * " frozen") * ". \n",
+                        color=:light_cyan)
+            warmBasis   = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells,
+                                 warmOrbitals )
+            relSettings = AsfSettings( stepSettings;  frozenSubshells = releaseSubshells,
+                                       startScfFrom = ManyElectron.StartFromPrevious(warmOrbitals) )
+            multiplet   = SelfConsistent.performSCF(warmBasis, nModel, rep.grid, relSettings; printout=true)
+            eRel        = minimum( lv.energy  for lv in multiplet.levels )
+            printstyled(">> [RAS] step $istep RELEASE gained " * @sprintf("%.4f mHa", (eRel - eWarm)*1000) *
+                        " over its own warm-up" *
+                        (eRel > eWarm ? " -- which is POSITIVE and should not be: the release began above the " *
+                                        "warm-up it started from, so suspect the grid or the level selection." :
+                                        ".") * " \n", color=:light_cyan)
+        end
+    else
+        printstyled(">> step $istep is treated to SECOND ORDER in its Q space; the orbitals of this layer are " *
+                    "NOT re-optimized. \n", color=:light_yellow)
+        (multiplet, partitions) = Hamiltonian.performCIwithSecondOrderQ(basis, priorMultiplet.levels[1].basis,
+                                            rep.refConfigs, nModel, rep.grid, stepSettings, step.treatment;
+                                            printout=true)
+        if  !all(p -> p.isJustified, partitions)
+            printstyled(">> step $istep: the second-order treatment was NOT justified in every symmetry; see " *
+                        "the configurations named above. \n", color=:light_red)
+        end
+    end
+    # ITEM 25, ADDED 01-Sep-2026.  Until now a step printed one Multiplet and nothing else, so nothing in
+    # the output said whether the layer just added is a CORRELATION layer or has collapsed onto a
+    # spectroscopic orbital -- a distinction that is not academic: a 5f treated as occupied once came out
+    # at 4f's radius, mixed in at 22 %, and reordered a multiplet by 3.2 eV, caught only because the
+    # application computed the reference weight by hand.  Two numbers per step say it.  The weight is on
+    # the REFERENCE CSFs, so a level that drifts away from the reference space shows up as w_ref falling;
+    # the radii say whether a new shell contracted into the valence region (a correlation orbital) or
+    # expanded out of it (a Rydberg orbital, which is not what a layer is for).
+    # THE DOUBLING TEST, REPORTED PER LAYER AND COSTING NOTHING -- 07-Oct-2026.  A correlation layer never truly
+    # converges, so its iteration count is a cost dial and the honest question is whether DOUBLING the effort
+    # would still move the layer's increment.  That used to need a second computation at half the budget;  the
+    # solver now carries the descent at half its own iterations, so the answer comes from the run in hand -- and
+    # more correctly, since both numbers lie on ONE trajectory rather than on two runs whose earlier layers may
+    # have stopped in different places.
+    #   IT IS ADVISORY AND NEVER GATING, as the verdict itself is.  A layer whose increment is still moving is
+    # not wrong, it is unfinished, and the reader is the one who decides whether that matters.
+    if  repType.settings.scfRoute isa Basics.RotationRoute
+        vd = SelfConsistent.lastScfVerdict()
+        if  !isnothing(vd)  &&  vd.descent > 0.  &&  vd.descentAtHalf > 0.
+            drift = abs(vd.descent - vd.descentAtHalf) / vd.descent
+            # TWO DIFFERENT NUMBERS, AND THEY MUST NOT BE CONFLATED -- which this print did on the day it was
+            # written.  A layer's INCREMENT is everything it gains over the previous layer, and most of it
+            # arrives at the ENTRY, from mixing the new CSFs in at the inherited orbitals: that part is one
+            # diagonalization, exact, and cannot be unconverged.  The solver's DESCENT is only the part the
+            # orbital optimization then adds, and it is the only part an iteration count can affect.  Measured
+            # on C II 1s^2 2s^2 2p + 3s3p3d(SD): the increment is -80.42 mHa and the orbital optimization
+            # contributes -3.26 mHa of it, i.e. 4 %.  So the doubling test applies to the DESCENT -- correctly,
+            # since that is the only thing still moving -- and a tolerance of 5 % on it is worth about 1 % on
+            # the increment.  Printing both keeps that visible instead of inviting the reader to read the
+            # tolerance as an error bar on the layer.
+            layerInc = istep > 1 ? (minimum(lv.energy for lv in multiplet.levels) -
+                                    minimum(lv.energy for lv in priorMultiplet.levels)) : NaN
+            println(">> [RAS] step $istep: increment " *
+                    (isnan(layerInc) ? "n/a (first step)" : @sprintf("%+.4f mHa", 1000*layerInc)) *
+                    ", of which the orbital optimization gave " * @sprintf("%+.4f mHa", -1000*vd.descent) *
+                    " in $(vd.iterations) iterations;  the rest arrived at entry, from the CI, and needs no " *
+                    "iteration.")
+            # A RELATIVE TEST ON A NEGLIGIBLE QUANTITY SAYS NOTHING, and saying it anyway is worse than silence.
+            # Seen on the first run that printed this: a REFERENCE layer whose orbitals were already converged
+            # gained 0.0002 mHa by optimizing them, and a 20 % change in THAT was reported as "not converged" --
+            # alarming, and about nothing.  So the test is only applied where the optimized part is large enough
+            # to matter: above a MICRO-HARTREE in absolute terms -- a thousandth of a milli-Hartree, below which
+            # no quoted atomic energy is affected -- and above a thousandth of the layer's own increment in
+            # relative ones.  The absolute floor was tried at 1e-9 Ha first and was useless: the two reference
+            # layers that provoked this gained 1e-7 and 2e-7 Ha, so they sailed over it and were still judged.
+            negligible = vd.descent < 1.0e-6  ||
+                         (!isnan(layerInc)  &&  vd.descent < 1.0e-3 * abs(layerInc))
+            if  negligible
+                println(">> [RAS] step $istep: the orbital optimization moved this layer by only " *
+                        @sprintf("%+.4f mHa", -1000*vd.descent) * ", so there was nothing left for it to do " *
+                        "and the doubling test does not apply.")
+            else
+            println(">> [RAS] step $istep: the DOUBLING TEST on that optimized part -- " *
+                    @sprintf("%+.4f mHa", -1000*vd.descent) * " against " *
+                    @sprintf("%+.4f mHa", -1000*vd.descentAtHalf) * " at half the iterations, a change of " *
+                    @sprintf("%.2f %%", 100*drift) * " -- " *
+                    (drift <= 0.10 ? "so this layer is CONVERGED in its budget." :
+                                     "so this layer is NOT converged;  raise the budget, or quote the " *
+                                     "increment WITH it."))
+            end
+        end
+    end
+    Basics.printRasStepDiagnostic(istep, multiplet, basis, rep.refConfigs, stepFrozenShells, rep.grid)
+    # A LAYER THAT ENDS ABOVE THE LAYER IT SITS ON IS NOT PHYSICS, AND UNTIL 06-Oct-2026 NOTHING SAID SO.
+    # A variational layer's CSF space CONTAINS the previous layer's, so its lowest level cannot lie above the
+    # previous one: taking the previous orbitals and the mixing vector (1,0,...) is a point of this layer's own
+    # parameter space.  When it does lie above, something has gone wrong in the HANDOVER rather than in the
+    # minimization, and this is the one place that can see it.
+    #
+    # MEASURED, and it is what this check was written from.  43Ca+ [Ar] 4s with 3s -> 5s,6s singles and nothing
+    # frozen: layer 1 converged to -679.5212307 and layer 2 ENTERED at -679.4850961, i.e. 36.1 mHa above it,
+    # ending at -679.5184105 -- a correlation layer 2.8 mHa WORSE than its own reference.  The cause is named
+    # below and is NOT the optimizer: the second-order route drives |grad| from 1.04 to 0.0016, a factor 640
+    # better than the first-order one, and lands HIGHER still (-679.5156563), because a tighter solve converges
+    # to the stationary point of whatever basin it is handed.
+    #
+    # WHY THE HANDOVER LOSES IT.  performSCF runs an AVERAGE-LEVEL pass before the optimized-level solver, and
+    # that pass re-optimizes every subshell not named in AsfSettings.frozenSubshells -- for the configuration
+    # AVERAGE, which is a different functional from the level energy the layer is supposed to minimize.  So a
+    # reference shell that no earlier step froze is re-optimized at every layer, discarding what the previous
+    # layer achieved.  AtomicState.RasExpansion accumulates its frozen set from coreShells, fromShells and each
+    # layer's newShells only, so a reference shell in NEITHER coreShells NOR fromShells is never frozen.  In
+    # examples/example-Ai.jl the Be reference 1s^2 2s^2 is exactly coreShells=[1s] plus fromShells=[2s], the
+    # two coincide, and this is invisible -- which is why it went unseen.
+    #
+    # THE CHECK MOVES NO NUMBER.  It compares two energies that were computed anyway and prints;  the remedy is
+    # the caller's, and naming the unfrozen reference shells is what makes it actionable, since those are
+    # exactly the shells to pass as coreShells.
+    if  typeof(step.treatment) == Basics.Variational  &&  priorIsLayer
+        eNow  = minimum( lv.energy  for lv in multiplet.levels )
+        ePrev = minimum( lv.energy  for lv in priorMultiplet.levels )
+        if  eNow > ePrev
+            refShells = Shell[]
+            for  conf in rep.refConfigs,  (sh, occ) in conf.shells
+                if  occ > 0  &&  !(sh in refShells)    push!(refShells, sh)    end
+            end
+            unfrozen = Shell[ sh  for sh in refShells
+                              if !any(f -> f.n == sh.n  &&  f.l == sh.l, stepFrozenShells) ]
+            sa = ">> [RAS] STEP $istep ENDED ABOVE STEP $(istep-1) BY " *
+                 @sprintf("%.3f mHa", (eNow - ePrev)*1000) * " -- a variational layer CANNOT do that, since " *
+                 "its CSF space contains the previous layer's.  The layer was handed the previous orbitals and " *
+                 "then lost ground before it began to descend."
+            printstyled(sa * "\n", color=:light_red)
+            if  !isempty(unfrozen)
+                sb = ">> [RAS]   These reference shells are frozen in NO earlier step, so they are " *
+                     "re-optimized here -- and performSCF's average-level pass does that for the configuration " *
+                     "AVERAGE, not for the level energy this layer minimizes:  " *
+                     join(string.(unfrozen), ", ") * ".\n" *
+                     ">> [RAS]   Pass them as coreShells to keep what the earlier layers achieved, or read " *
+                     "this layer's increment as a lower bound rather than as the correlation energy."
+                printstyled(sb * "\n", color=:light_red)
+            else
+                sb = ">> [RAS]   Every reference shell IS frozen here, so the loss is not the freezing policy; " *
+                     "suspect the grid (a correlation shell that does not fit cannot lower the energy) or the " *
+                     "level selection (a different level may have become the target)."
+                printstyled(sb * "\n", color=:light_red)
+            end
+            Defaults.warn(AddWarning(), "Basics.generate(RasExpansion): step $istep ended " *
+                          @sprintf("%.3f mHa", (eNow - ePrev)*1000) * " ABOVE step $(istep-1), which a " *
+                          "variational layer cannot do.  Unfrozen reference shells: " *
+                          (isempty(unfrozen) ? "none" : join(string.(unfrozen), ", ")) * ".")
+        end
+    end
+    energy     = minimum( lv.energy  for lv in multiplet.levels )
+    increment  = istep > 1 ? (energy - minimum( lv.energy  for lv in priorMultiplet.levels )) : NaN
+    scfVerdict = typeof(step.treatment) == Basics.Variational  &&  repType.settings.scfRoute isa Basics.RotationRoute ?
+                 SelfConsistent.lastScfVerdict() : nothing
+    verdict    = AtomicState.RasLayerVerdict(istep, newShells, length(basis.csfs), time() - wallTime0, energy, increment,
+                                              scfVerdict)
+
+    return( multiplet, verdict )
+end
+
+
+"""
 `Basics.generate(repType::AtomicState.RasExpansion, representation::AtomicState.Representation)`  
     ... to generate a restricted active-space expansion for a single level symmetry and based on a set of reference configurations
         and a number of pre-specified steps. All relevant intermediate and final results are printed to screen (stdout). 
@@ -298,282 +604,7 @@ function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Rep
     # different field and a first layer may legitimately sit above it.
     priorIsLayer = false
     for (istep, step)  in  enumerate(repType.steps)
-        println("")
-        printstyled("++ Compute the orbitals, orbitals and multiplet for step $istep ... \n", color=:light_green)
-        printstyled("--------------------------------------------------------------      \n", color=:light_green)
-        # THE FREEZING POLICY THIS DRIVER ALREADY CLAIMS, NOW ACTUALLY APPLIED -- 06-Oct-2026, closing the cause of
-        # challenge S18.  The comment above says a step re-optimizes only its new shells, "freezing every shell
-        # already present/optimized in an earlier step -- GRASP's own default behavior".  That was NOT what
-        # happened: AtomicState.RasExpansion accumulates its frozen set from coreShells, fromShells and each
-        # layer's newShells ONLY, so a reference shell named in NEITHER coreShells NOR fromShells was never frozen
-        # and was re-optimized at every layer -- by performSCF's AVERAGE-LEVEL pass, i.e. for the configuration
-        # average rather than for the level energy the layer minimizes.
-        #   MEASURED: 43Ca+ [Ar] 4s with 3s -> 5s,6s singles handed layer 2 a point 36.1 mHa ABOVE where layer 1
-        # had finished, and layer 2 then ended 2.8 mHa WORSE than its own reference -- which a variational layer
-        # cannot be.  Freezing those five shells puts the entry back AT the previous layer's energy and the ladder
-        # descends again.  See the boundary check further down, which reports the symptom when it survives.
-        #   WHY IT WENT UNSEEN: in examples/example-Ai.jl the Be reference 1s^2 2s^2 is exactly coreShells=[1s]
-        # plus fromShells=[2s], so the claimed policy and the implemented one coincide there.
-        #   THE FIRST STEP IS LEFT FREE, deliberately: it is the step that optimizes the reference, and there is no
-        # earlier step whose work could be lost.
-        #   IT IS DERIVED HERE AND NOT IN RasExpansion because that constructor never receives refConfigs, and the
-        # reference's occupied shells are what the policy is about.  A hand-built RasStep still carries whatever
-        # frozen set it is given, so the other policies Rule 21 names ("core frozen", "all free") remain reachable
-        # that way; what changes is only the DEFAULT of the layer API, which now matches its own documentation.
-        stepFrozenShells = step.frozenShells
-        if  istep > 1
-            refShells = Shell[]
-            for  conf in rep.refConfigs,  (sh, occ) in conf.shells
-                if  occ > 0  &&  !(sh in refShells)    push!(refShells, sh)    end
-            end
-            extraFrozen = Shell[ sh  for sh in refShells
-                                 if !any(f -> f.n == sh.n  &&  f.l == sh.l, step.frozenShells) ]
-            if  !isempty(extraFrozen)
-                stepFrozenShells = vcat(step.frozenShells, extraFrozen)
-                println(">> [RAS] step $istep also freezes the reference shells " *
-                        join(string.(extraFrozen), ", ") * ", which an earlier step already optimized;  without " *
-                        "this they would be re-optimized here for the configuration average and the layer could " *
-                        "end ABOVE the layer it sits on.")
-            end
-        end
-        basis      = Basics.generateBasis(rep.refConfigs, repType.symmetries, step)
-        orbitals   = Basics.generateOrbitalsForBasis(basis, stepFrozenShells, priorMultiplet.levels[1].basis, startOrbitals)
-        basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )
-
-        # step.frozenShells is a list of non-relativistic Shell(n,l); translate to the concrete, relativistic
-        # Subshell(n,kappa) instances actually present in THIS step's basis, as AsfSettings.frozenSubshells needs.
-        # Subshell[...] and not [...]:  a step with NO frozen shells makes this comprehension empty, Julia then
-        # infers Vector{Any}, and AsfSettings rejects it.  Unreachable through RasLayer, which always passes a
-        # non-empty core, and reached at once by building the steps by hand -- which is what a step that adds new
-        # EXCITATIONS rather than new SHELLS has to do.
-        frozenSubshellsThisStep = Subshell[ sh  for  shell in stepFrozenShells  for sh in basis.subshells
-                                                if  sh.n == shell.n  &&  Basics.subshell_l(sh) == shell.l ]
-
-        # ITEM 22, FIXED 01-Sep-2026.  RasSettings.levelsScf was declared, documented and PRINTED, and never read:
-        # the EOL target came from levelSelectionCI alone, so a user who wrote RasSettings([1], ...) to optimize
-        # the layer on the ground level got, silently, a functional over every level the CI had selected.  It is
-        # now read -- but only when levelSelectionCI is INACTIVE, because levelSelectionCI is the more expressive
-        # and the safer selector: it can name levels by their weight on the reference configurations, which is
-        # the only one of the three that survives an intruder sinking below the reference, whereas levelsScf can
-        # only name indices into the energy-sorted multiplet.  Silently replacing a reference-weight selection by
-        # an index one would be a downgrade, so when both are given levelSelectionCI wins and this says so.
-        stepLevelSelection = repType.settings.levelSelectionCI
-        if  !stepLevelSelection.active  &&  !isempty(repType.settings.levelsScf)
-            stepLevelSelection = LevelSelection(true, indices=repType.settings.levelsScf)
-            if  istep == 1
-                println(">> [RAS] the EOL target of every step is levelsScf = $(repType.settings.levelsScf), by index.")
-            end
-        elseif  stepLevelSelection.active  &&  !isempty(repType.settings.levelsScf)  &&  istep == 1
-            println(">> [RAS] BOTH levelsScf and levelSelectionCI were given; levelSelectionCI is in force as the " *
-                    "EOL target and levelsScf = $(repType.settings.levelsScf) is ignored.")
-        end
-        # THE ROUTE IS PASSED THROUGH, NOT REBUILT.  Until 04-Oct-2026 this line read
-        #     scfRoute = Basics.RotationRoute(repType.settings.maxIterationsScf)
-        # which converted an Int field into a route here, one line deep in the driver -- so a RAS ladder could name only the
-        # ROTATION route and only its iteration COUNT, while RotationRoute also carries nVirtual and stepping and FockRoute
-        # carries unscaledOffDiagonal.  Four of the six things a route can say were unreachable from a RAS computation, and the
-        # route hierarchy exists precisely so a run may be repeated on a dearer route when a cheaper one does not converge.
-        # A STEP MAY OVERRIDE THE LADDER, because a ladder's steps are not alike: a reference layer is converged in about twelve
-        # iterations where a correlation layer never converges at all, so one budget cannot serve both.
-        stepRoute    = isnothing(step.scfRoute) ? repType.settings.scfRoute : step.scfRoute
-        if  !isnothing(step.scfRoute)
-            println(">> [RAS] step $istep takes its OWN scf route, $(step.scfRoute), instead of the ladder's " *
-                    "$(repType.settings.scfRoute).")
-        end
-        stepSettings = AsfSettings( AsfSettings();  scField=Basics.EOLField(),  frozenSubshells=frozenSubshellsThisStep,
-                                     eeInteractionCI=repType.settings.eeInteractionCI,  levelSelectionCI=stepLevelSelection,
-                                     scfRoute=stepRoute,
-                                     accuracyScf=repType.settings.accuracyScf )
-
-        # A VARIATIONAL step optimizes its new shells and puts every configuration it generated into the CI, which
-        # is what a step has always done.  A SECOND-ORDER step does neither: its orbitals are the ones this layer
-        # was given -- earlier layers frozen, the new shells taken from the spectrum generated once in the mean
-        # potential above -- and its configurations are ranked, then promoted, folded in or dropped.  Skipping the
-        # SCF is the point rather than an economy: the layer exists to RECOVER what P leaves out, so optimizing
-        # orbitals on the whole of it would pay for Q in the one place the treatment is meant to avoid, and the
-        # virtuals of a perturbation belong in the field of the reference in any case.
-        if  typeof(step.treatment) == Basics.Variational
-            multiplet  = SelfConsistent.performSCF(basis, nModel, rep.grid, stepSettings; printout=true)
-            # THE RELEASE PHASE -- RasSettings.freezing, 06-Oct-2026.  A released policy runs the layer TWICE and
-            # that is what makes it trustworthy rather than merely richer.
-            #   Phase 1 above WARMED this layer's new shells with the earlier ones frozen, so the new correlation
-            # orbitals have a sensible shape.  Phase 2 now RELEASES, and starts the optimized-level solver from those
-            # warm orbitals through StartFromPrevious -- which skips the average-level pre-pass, because phase 1
-            # leaves a warm set that COVERS this basis.  Skipping it is the whole point: that pass optimizes the
-            # configuration AVERAGE, a different functional from the level energy, and would re-derive the inherited
-            # orbitals before the solver ever saw them.
-            #   THE SKIP IS CONDITIONAL ON THAT COVERAGE AND NOT ON StartFromPrevious ALONE -- 11-Oct-2026,
-            # priority item 54.  Handing in a set that does NOT cover the basis leaves the uncovered subshells
-            # hydrogenic, and a local optimizer does not recover from that;  SelfConsistent.averageLevelPrePass
-            # then runs the pre-pass for those subshells alone, with the handed-in ones frozen.  Phase 1 exists
-            # precisely so that this layer is in the covered case.
-            #   MEASURED without the two-step entry, 43Ca+ [Ar] 4s with 3s -> 5s,6s singles: a released layer BEGAN
-            # 36.1 mHa above the layer it sits on -- more than the whole correlation effect -- and its increment then
-            # had a budget-dependent SIGN, +11.2, +5.9, +1.0 mHa at budgets 20, 60, 120.  With the two-step entry the
-            # same layer gives -0.013, -0.053, -0.063 mHa: monotone, correctly signed, and saturating.
-            #   THE POLICY GOVERNS WHAT A LAYER DOES WITH WHAT EARLIER LAYERS OPTIMIZED, so it applies from step 2 on.
-            # Step 1 optimizes the reference and has nothing to inherit, and its coreShells stay the caller's
-            # explicit declaration under every policy.
-            if  repType.settings.freezing != :previousLayersFrozen  &&  istep > 1
-                eWarm        = minimum( lv.energy  for lv in multiplet.levels )
-                warmOrbitals = multiplet.levels[1].basis.orbitals
-                # :coreFrozen keeps the expansion's own coreShells, which are exactly the frozen set of step 1;
-                # :allFree keeps nothing.
-                releaseShells = repType.settings.freezing == :coreFrozen ? repType.steps[1].frozenShells : Shell[]
-                releaseSubshells = Subshell[ sh  for  shell in releaseShells  for sh in basis.subshells
-                                             if  sh.n == shell.n  &&  Basics.subshell_l(sh) == shell.l ]
-                printstyled(">> [RAS] step $istep RELEASE phase (freezing = $(repType.settings.freezing)): the " *
-                            "warm-up reached " * @sprintf("%.9f", eWarm) * " Ha and the solver now restarts from " *
-                            "those orbitals with " *
-                            (isempty(releaseSubshells) ? "nothing frozen" :
-                             "only " * join(string.(releaseSubshells), ", ") * " frozen") * ". \n",
-                            color=:light_cyan)
-                warmBasis   = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells,
-                                     warmOrbitals )
-                relSettings = AsfSettings( stepSettings;  frozenSubshells = releaseSubshells,
-                                           startScfFrom = ManyElectron.StartFromPrevious(warmOrbitals) )
-                multiplet   = SelfConsistent.performSCF(warmBasis, nModel, rep.grid, relSettings; printout=true)
-                eRel        = minimum( lv.energy  for lv in multiplet.levels )
-                printstyled(">> [RAS] step $istep RELEASE gained " * @sprintf("%.4f mHa", (eRel - eWarm)*1000) *
-                            " over its own warm-up" *
-                            (eRel > eWarm ? " -- which is POSITIVE and should not be: the release began above the " *
-                                            "warm-up it started from, so suspect the grid or the level selection." :
-                                            ".") * " \n", color=:light_cyan)
-            end
-        else
-            printstyled(">> step $istep is treated to SECOND ORDER in its Q space; the orbitals of this layer are " *
-                        "NOT re-optimized. \n", color=:light_yellow)
-            (multiplet, partitions) = Hamiltonian.performCIwithSecondOrderQ(basis, priorMultiplet.levels[1].basis,
-                                                rep.refConfigs, nModel, rep.grid, stepSettings, step.treatment;
-                                                printout=true)
-            if  !all(p -> p.isJustified, partitions)
-                printstyled(">> step $istep: the second-order treatment was NOT justified in every symmetry; see " *
-                            "the configurations named above. \n", color=:light_red)
-            end
-        end
-        # ITEM 25, ADDED 01-Sep-2026.  Until now a step printed one Multiplet and nothing else, so nothing in
-        # the output said whether the layer just added is a CORRELATION layer or has collapsed onto a
-        # spectroscopic orbital -- a distinction that is not academic: a 5f treated as occupied once came out
-        # at 4f's radius, mixed in at 22 %, and reordered a multiplet by 3.2 eV, caught only because the
-        # application computed the reference weight by hand.  Two numbers per step say it.  The weight is on
-        # the REFERENCE CSFs, so a level that drifts away from the reference space shows up as w_ref falling;
-        # the radii say whether a new shell contracted into the valence region (a correlation orbital) or
-        # expanded out of it (a Rydberg orbital, which is not what a layer is for).
-        # THE DOUBLING TEST, REPORTED PER LAYER AND COSTING NOTHING -- 07-Oct-2026.  A correlation layer never truly
-        # converges, so its iteration count is a cost dial and the honest question is whether DOUBLING the effort
-        # would still move the layer's increment.  That used to need a second computation at half the budget;  the
-        # solver now carries the descent at half its own iterations, so the answer comes from the run in hand -- and
-        # more correctly, since both numbers lie on ONE trajectory rather than on two runs whose earlier layers may
-        # have stopped in different places.
-        #   IT IS ADVISORY AND NEVER GATING, as the verdict itself is.  A layer whose increment is still moving is
-        # not wrong, it is unfinished, and the reader is the one who decides whether that matters.
-        if  repType.settings.scfRoute isa Basics.RotationRoute
-            vd = SelfConsistent.lastScfVerdict()
-            if  !isnothing(vd)  &&  vd.descent > 0.  &&  vd.descentAtHalf > 0.
-                drift = abs(vd.descent - vd.descentAtHalf) / vd.descent
-                # TWO DIFFERENT NUMBERS, AND THEY MUST NOT BE CONFLATED -- which this print did on the day it was
-                # written.  A layer's INCREMENT is everything it gains over the previous layer, and most of it
-                # arrives at the ENTRY, from mixing the new CSFs in at the inherited orbitals: that part is one
-                # diagonalization, exact, and cannot be unconverged.  The solver's DESCENT is only the part the
-                # orbital optimization then adds, and it is the only part an iteration count can affect.  Measured
-                # on C II 1s^2 2s^2 2p + 3s3p3d(SD): the increment is -80.42 mHa and the orbital optimization
-                # contributes -3.26 mHa of it, i.e. 4 %.  So the doubling test applies to the DESCENT -- correctly,
-                # since that is the only thing still moving -- and a tolerance of 5 % on it is worth about 1 % on
-                # the increment.  Printing both keeps that visible instead of inviting the reader to read the
-                # tolerance as an error bar on the layer.
-                layerInc = istep > 1 ? (minimum(lv.energy for lv in multiplet.levels) -
-                                        minimum(lv.energy for lv in priorMultiplet.levels)) : NaN
-                println(">> [RAS] step $istep: increment " *
-                        (isnan(layerInc) ? "n/a (first step)" : @sprintf("%+.4f mHa", 1000*layerInc)) *
-                        ", of which the orbital optimization gave " * @sprintf("%+.4f mHa", -1000*vd.descent) *
-                        " in $(vd.iterations) iterations;  the rest arrived at entry, from the CI, and needs no " *
-                        "iteration.")
-                # A RELATIVE TEST ON A NEGLIGIBLE QUANTITY SAYS NOTHING, and saying it anyway is worse than silence.
-                # Seen on the first run that printed this: a REFERENCE layer whose orbitals were already converged
-                # gained 0.0002 mHa by optimizing them, and a 20 % change in THAT was reported as "not converged" --
-                # alarming, and about nothing.  So the test is only applied where the optimized part is large enough
-                # to matter: above a MICRO-HARTREE in absolute terms -- a thousandth of a milli-Hartree, below which
-                # no quoted atomic energy is affected -- and above a thousandth of the layer's own increment in
-                # relative ones.  The absolute floor was tried at 1e-9 Ha first and was useless: the two reference
-                # layers that provoked this gained 1e-7 and 2e-7 Ha, so they sailed over it and were still judged.
-                negligible = vd.descent < 1.0e-6  ||
-                             (!isnan(layerInc)  &&  vd.descent < 1.0e-3 * abs(layerInc))
-                if  negligible
-                    println(">> [RAS] step $istep: the orbital optimization moved this layer by only " *
-                            @sprintf("%+.4f mHa", -1000*vd.descent) * ", so there was nothing left for it to do " *
-                            "and the doubling test does not apply.")
-                else
-                println(">> [RAS] step $istep: the DOUBLING TEST on that optimized part -- " *
-                        @sprintf("%+.4f mHa", -1000*vd.descent) * " against " *
-                        @sprintf("%+.4f mHa", -1000*vd.descentAtHalf) * " at half the iterations, a change of " *
-                        @sprintf("%.2f %%", 100*drift) * " -- " *
-                        (drift <= 0.10 ? "so this layer is CONVERGED in its budget." :
-                                         "so this layer is NOT converged;  raise the budget, or quote the " *
-                                         "increment WITH it."))
-                end
-            end
-        end
-        Basics.printRasStepDiagnostic(istep, multiplet, basis, rep.refConfigs, stepFrozenShells, rep.grid)
-        # A LAYER THAT ENDS ABOVE THE LAYER IT SITS ON IS NOT PHYSICS, AND UNTIL 06-Oct-2026 NOTHING SAID SO.
-        # A variational layer's CSF space CONTAINS the previous layer's, so its lowest level cannot lie above the
-        # previous one: taking the previous orbitals and the mixing vector (1,0,...) is a point of this layer's own
-        # parameter space.  When it does lie above, something has gone wrong in the HANDOVER rather than in the
-        # minimization, and this is the one place that can see it.
-        #
-        # MEASURED, and it is what this check was written from.  43Ca+ [Ar] 4s with 3s -> 5s,6s singles and nothing
-        # frozen: layer 1 converged to -679.5212307 and layer 2 ENTERED at -679.4850961, i.e. 36.1 mHa above it,
-        # ending at -679.5184105 -- a correlation layer 2.8 mHa WORSE than its own reference.  The cause is named
-        # below and is NOT the optimizer: the second-order route drives |grad| from 1.04 to 0.0016, a factor 640
-        # better than the first-order one, and lands HIGHER still (-679.5156563), because a tighter solve converges
-        # to the stationary point of whatever basin it is handed.
-        #
-        # WHY THE HANDOVER LOSES IT.  performSCF runs an AVERAGE-LEVEL pass before the optimized-level solver, and
-        # that pass re-optimizes every subshell not named in AsfSettings.frozenSubshells -- for the configuration
-        # AVERAGE, which is a different functional from the level energy the layer is supposed to minimize.  So a
-        # reference shell that no earlier step froze is re-optimized at every layer, discarding what the previous
-        # layer achieved.  AtomicState.RasExpansion accumulates its frozen set from coreShells, fromShells and each
-        # layer's newShells only, so a reference shell in NEITHER coreShells NOR fromShells is never frozen.  In
-        # examples/example-Ai.jl the Be reference 1s^2 2s^2 is exactly coreShells=[1s] plus fromShells=[2s], the
-        # two coincide, and this is invisible -- which is why it went unseen.
-        #
-        # THE CHECK MOVES NO NUMBER.  It compares two energies that were computed anyway and prints;  the remedy is
-        # the caller's, and naming the unfrozen reference shells is what makes it actionable, since those are
-        # exactly the shells to pass as coreShells.
-        if  typeof(step.treatment) == Basics.Variational  &&  priorIsLayer
-            eNow  = minimum( lv.energy  for lv in multiplet.levels )
-            ePrev = minimum( lv.energy  for lv in priorMultiplet.levels )
-            if  eNow > ePrev
-                refShells = Shell[]
-                for  conf in rep.refConfigs,  (sh, occ) in conf.shells
-                    if  occ > 0  &&  !(sh in refShells)    push!(refShells, sh)    end
-                end
-                unfrozen = Shell[ sh  for sh in refShells
-                                  if !any(f -> f.n == sh.n  &&  f.l == sh.l, stepFrozenShells) ]
-                sa = ">> [RAS] STEP $istep ENDED ABOVE STEP $(istep-1) BY " *
-                     @sprintf("%.3f mHa", (eNow - ePrev)*1000) * " -- a variational layer CANNOT do that, since " *
-                     "its CSF space contains the previous layer's.  The layer was handed the previous orbitals and " *
-                     "then lost ground before it began to descend."
-                printstyled(sa * "\n", color=:light_red)
-                if  !isempty(unfrozen)
-                    sb = ">> [RAS]   These reference shells are frozen in NO earlier step, so they are " *
-                         "re-optimized here -- and performSCF's average-level pass does that for the configuration " *
-                         "AVERAGE, not for the level energy this layer minimizes:  " *
-                         join(string.(unfrozen), ", ") * ".\n" *
-                         ">> [RAS]   Pass them as coreShells to keep what the earlier layers achieved, or read " *
-                         "this layer's increment as a lower bound rather than as the correlation energy."
-                    printstyled(sb * "\n", color=:light_red)
-                else
-                    sb = ">> [RAS]   Every reference shell IS frozen here, so the loss is not the freezing policy; " *
-                         "suspect the grid (a correlation shell that does not fit cannot lower the energy) or the " *
-                         "level selection (a different level may have become the target)."
-                    printstyled(sb * "\n", color=:light_red)
-                end
-                Defaults.warn(AddWarning(), "Basics.generate(RasExpansion): step $istep ended " *
-                              @sprintf("%.3f mHa", (eNow - ePrev)*1000) * " ABOVE step $(istep-1), which a " *
-                              "variational layer cannot do.  Unfrozen reference shells: " *
-                              (isempty(unfrozen) ? "none" : join(string.(unfrozen), ", ")) * ".")
-            end
-        end
+        (multiplet, verdict) = runRasStep!(istep, step, repType, rep, priorMultiplet, priorIsLayer, startOrbitals, nModel)
         if output    results = Base.merge( results, Dict("step"*string(istep) => Multiplet("Multiplet:", multiplet.levels)) )              end
         # A PERTURBATIVE STEP IS A LEAF AND MUST NOT BECOME THE TRUNK.  It reports what the excitations left out of
         # the previous step are still worth, over that step's own orbitals; a later variational step therefore
