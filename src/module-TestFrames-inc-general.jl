@@ -3140,6 +3140,120 @@ end
 
 
 """
+`TestFrames.testModule_BiOrthogonalRotation(; short::Bool=true)`
+    ... tests that `BiOrthogonal`'s transformation PRESERVES THE ORBITAL NORMS wherever it is free to, which is the
+        invariant whose violation corrupted every N-vs-(N-1) result until 01-Nov-2026;  a success::Bool is returned.
+
+        WHAT IS GUARDED AND WHY THIS SHAPE.  `BiOrthogonal.computeTransformation` returns correctly biorthogonal
+        orbitals -- `<newLeft_i|newRight_j> = delta_ij` -- and that condition does NOT fix the pair of transformation
+        matrices.  The unpivoted LU this module used until 01-Nov-2026 chose the asymmetric pair, leaving all the
+        scaling on the right factor, so a rotation CONFINED TO A FULLY CLOSED, UNIFORMLY OCCUPIED subshell pair --
+        a relabelling with provably zero physical consequence -- returned right-hand orbitals of norm 1/cos(theta).
+        The N-vs-(N-1) consumers then rebuild a MEAN FIELD from that core to generate their continuum orbital, saw
+        11.30 electrons instead of 11, and moved a provably invariant Auger rate by +84.7 %.
+
+        SO THE ASSERTION IS THE NORM, NOT THE RATE.  The rate is what FOUND the defect -- the demonstration lives in
+        `tools/probeBiorthogonalNormDefect.jl` -- but it costs two continuum computations, while the invariant that
+        was actually violated is testable in milliseconds and cannot drift away from the cause.  Three checks: a
+        rotation must give ORTHOGONAL transformation matrices;  a transformed basis must keep every orbital norm;
+        and the density of the transformed core must still integrate to its own electron count.
+"""
+function testModule_BiOrthogonalRotation(; short::Bool=true)
+    Defaults.setDefaults("print summary: open", "test-BiOrthogonalRotation-new.sum")
+    printstyled("\n\nTest that BiOrthogonal preserves orbital norms under a closed-subspace rotation ... \n", color=:cyan)
+    success = true;    printTest, iostream = Defaults.getDefaults("test flag/stream")
+    theta = 0.37
+
+    # (1) PURE LINEAR ALGEBRA, and it guards the root cause directly.  For an overlap that IS a rotation, every
+    #     singular value is one, so both transformation matrices must come back ORTHOGONAL -- which is exactly what
+    #     leaves the orbital norms alone.  The 3 x 3 shape keeps the third direction untouched, as a spectator
+    #     subshell would be, so a factorisation that mixed it in would show here too.
+    ## an explicit departure-from-unity, since TestFrames does not import LinearAlgebra
+    unitDev(M) = maximum( abs(M[i,j] - (i == j ? 1.0 : 0.0))  for i = 1:size(M,1), j = 1:size(M,2) )
+    co = cos(theta);   si = sin(theta)
+    R  = [co -si 0.;  si co 0.;  0. 0. 1.]
+    (Cl, Cr) = BiOrthogonal.appendixB(R)
+    for  (lbl, C)  in  ( ("Cleft", Cl), ("Cright", Cr) )
+        dev = unitDev(C' * C)
+        if  dev > 1.0e-10
+            success = false
+            if printTest   info(iostream, "for an overlap that is a pure rotation, $lbl is not orthogonal " *
+                                          "(worst deviation $dev), so it does not preserve the orbital norms")   end
+        end
+    end
+    devBi = unitDev(Cl' * R * Cr)
+    if  devBi > 1.0e-10
+        success = false
+        if printTest   info(iostream, "Cleft' * R * Cright is not the unit matrix, worst deviation $devBi")   end
+    end
+
+    # (2) and (3) THE SAME STATEMENT ON REAL ORBITALS.  Mg: the 12-electron initial multiplet against the
+    #     11-electron final one, i.e. the N-vs-(N-1) case, with 1s and 2s -- both kappa = -1 and both occupation 2
+    #     in EVERY CSF of BOTH sides -- mixed on the final side alone.
+    grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-6, h = 5.0e-2, hp = 2.0e-2, rbox = 20.0)
+    nm   = Nuclear.Model(12.);    asf = AsfSettings()
+    orbitals = redirect_stdout(devnull) do
+        SelfConsistent.performSCF([Configuration("[Ne] 3p^2"), Configuration("[Ne] 3s^2")], nm, grid, asf;
+                                  printout=false).levels[1].basis.orbitals
+    end
+    iMp = redirect_stdout(devnull) do
+        Hamiltonian.performCIwithFrozenOrbitals([Configuration("[Ne] 3p^2"), Configuration("[Ne] 3s^2")],
+                                                orbitals, nm, grid, asf; printout=false)   end
+    fMp = redirect_stdout(devnull) do
+        Hamiltonian.performCIwithFrozenOrbitals([Configuration("[Ne] 3s")], orbitals, nm, grid, asf; printout=false)   end
+
+    fBasis = fMp.levels[1].basis;    rotated = copy(fBasis.orbitals)
+    s1 = Subshell(1,-1);    s2 = Subshell(2,-1);    oa = rotated[s1];    ob = rotated[s2]
+    np = min(length(oa.P), length(ob.P))
+    mix(x, y, ca, cb) = ca .* x[1:np] .+ cb .* y[1:np]
+    rotated[s1] = Radial.Orbital(s1, oa.isBound, oa.useStandardGrid, oa.energy, mix(oa.P,ob.P,co,si),
+                    mix(oa.Q,ob.Q,co,si), mix(oa.Pprime,ob.Pprime,co,si), mix(oa.Qprime,ob.Qprime,co,si), grid)
+    rotated[s2] = Radial.Orbital(s2, ob.isBound, ob.useStandardGrid, ob.energy, mix(oa.P,ob.P,-si,co),
+                    mix(oa.Q,ob.Q,-si,co), mix(oa.Pprime,ob.Pprime,-si,co), mix(oa.Qprime,ob.Qprime,-si,co), grid)
+    rotBasis = Basis(fBasis.isDefined, fBasis.NoElectrons, fBasis.subshells, fBasis.csfs, fBasis.coreSubshells, rotated)
+    rotMp    = Multiplet(fMp.name, [Level(l.J, l.M, l.parity, l.index, l.energy, l.relativeOcc, l.hasStateRep,
+                                          rotBasis, l.mc)  for l in fMp.levels])
+    newLeftMp, newRightMp = redirect_stdout(devnull) do
+        BiOrthogonal.computeTransformation(iMp, rotMp, grid)
+    end
+
+    worstNorm = 0.;    worstLabel = ""
+    for  (lbl, mp)  in  ( ("left", newLeftMp), ("right", newRightMp) )
+        for  (sh, orb)  in  mp.levels[1].basis.orbitals
+            dev = abs( sqrt(RadialIntegrals.overlap(orb, orb, grid)) - 1. )
+            if  dev > worstNorm    worstNorm = dev;    worstLabel = "$lbl $(string(sh))"    end
+        end
+    end
+    if  worstNorm > 1.0e-6
+        success = false
+        if printTest   info(iostream, "a closed-subshell rotation left the transformed orbitals unnormalised -- " *
+                                      "worst departure $worstNorm at $worstLabel; the mean field built from this " *
+                                      "core is then wrong, which is what corrupted every N-vs-(N-1) result")   end
+    end
+
+    nEff = 0.
+    for  (sh, occ)  in  Basics.extractMeanOccupation(newRightMp.levels[1].basis)
+        nEff = nEff + occ * RadialIntegrals.overlap(newRightMp.levels[1].basis.orbitals[sh],
+                                                    newRightMp.levels[1].basis.orbitals[sh], grid)
+    end
+    if  abs(nEff - newRightMp.levels[1].basis.NoElectrons) > 1.0e-5
+        success = false
+        if printTest   info(iostream, "the transformed core's density carries $nEff electrons where it must carry " *
+                                      "$(newRightMp.levels[1].basis.NoElectrons)")   end
+    end
+
+    println(iostream, "BiOrthogonal, closed-subspace rotation: for an overlap that is a pure rotation both "     *
+                      "transformation matrices come back orthogonal, so a relabelling of a uniformly closed "    *
+                      "subshell pair leaves every transformed orbital normalised (worst departure "              *
+                      "$(round(worstNorm, sigdigits=3))) and the transformed core's density still carries "      *
+                      "$(round(nEff, digits=8)) electrons. No approved data is used.")
+    Defaults.setDefaults("print summary: close", "")
+    testPrint("testModule_BiOrthogonalRotation()::", success)
+    return( success )
+end
+
+
+"""
 `TestFrames.testModule_Continuum(; short::Bool=true)`  ... tests on module Continuum; a success::Bool is returned.
 """
 function testModule_Continuum(; short::Bool=true)

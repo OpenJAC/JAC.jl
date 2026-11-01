@@ -140,17 +140,57 @@ end
         Malmqvist & Froese Fischer, Phys. Rev. E 52, 4499 (1995), for an overlap matrix S of size n x m with
         m >= n. Writing S = (T Z) with T square of order n, the returned pair (Cleft, Cright) -- of orders n
         and m -- satisfies Cleft' * S * Cright = (I 0) exactly, I being the unit matrix of order n. The square
-        problem on T is solved by the same LU factorisation as the equal-dimension case, and Eq. (B6) then
-        reduces to C12 = -C11 * (Cleft' * Z), since Eq. (B4) already identifies Cleft' * T as inv(C11).
+        problem on T is solved by a SYMMETRIC (Loewdin) split of its singular-value decomposition, and Eq. (B6)
+        then reduces to C12 = -C11 * (Cleft' * Z), since Eq. (B4) already identifies Cleft' * T as inv(C11) --
+        which holds for this split exactly as it does for a triangular one.
         A tuple tpl(Cleft::Matrix{Float64}, Cright::Matrix{Float64}) is returned.
+
+        WHY NOT THE UNPIVOTED LU THIS USED UNTIL 01-Nov-2026, and the measurement that settled it.  The condition
+        Cleft' * S * Cright = (I 0) does not fix the pair;  an LU split gives Cleft = inv(L)', which is unit
+        triangular and so leaves every orbital NORM untouched, while Cright = inv(U) carries the WHOLE scaling.
+        The two sides are then treated unequally, and for T a pure ROTATION the right-hand orbitals come back
+        with norms 1/cos(theta) although a rotation can change no norm at all.  The symmetric split has
+        Sigma = I for a rotation, so BOTH factors are orthogonal and BOTH sets of norms are preserved exactly.
+
+        THAT WAS NOT COSMETIC.  `BiOrthogonal.computeTransformation` returns correctly biorthogonal but
+        UNNORMALISED orbitals -- it must, since biorthogonality excludes normalisation -- and the N-vs-(N-1)
+        consumers (`AutoIonization`, `PhotoIonization` with calcBiorthogonal = true) then rebuild a MEAN FIELD
+        from the transformed ionic core in order to generate the continuum orbital.  Measured on Mg, Z = 12,
+        initial [Ne] 3p^2 + [Ne] 3s^2 against final [Ne] 3s, with 1s and 2s mixed by theta = 0.37 -- a pure
+        relabelling of a uniformly closed pair, with provably ZERO physical consequence: under the LU split that
+        core's density carried 11.300876 electrons instead of 11, its DFS screening shifted by ~0.3 charge units
+        at every radius, and the Auger rate of a line that is BIT-IDENTICALLY invariant without the
+        transformation moved by +84.7 %.  The error scales as theta^2, i.e. with the NORM defect
+        1/cos(theta) - 1, and not as theta, the orbital mixing -- which is what identified the cause.  The
+        same-N consumers (`PhotoEmission`, `PhotoExcitation`, `GeneralizedOscillatorStrength`) never rebuild a
+        mean field, which is why they validated while this did not.  See `tools/probeBiorthogonalNormDefect.jl`
+        and `TestFrames.testModule_BiOrthogonalRotation`.
 """
 function  appendixB(S::Matrix{Float64})
     n, m = size(S)
     m < n   &&   error("BiOrthogonal.appendixB(): expects m >= n, got $n x $m.")
     T = S[:, 1:n];    Z = S[:, n+1:m]
-    F     = lu(T, NoPivot())
-    Cleft = inv(Matrix(F.L))'
-    C11   = inv(Matrix(F.U))
+    F     = LinearAlgebra.svd(T)
+    # A SINGULAR VALUE AT ZERO MEANS THE TWO SETS DO NOT SPAN THE SAME SPACE, and no biorthonormal pair exists;
+    # this says so rather than returning an inverse square root of zero
+    if  minimum(F.S) < 1.0e-10
+        error("BiOrthogonal.appendixB(): the overlap block is singular -- smallest singular value " *
+              "$(minimum(F.S)).  The two orbital sets do not span a common space for this kappa, so no "       *
+              "biorthonormal pair exists.  This usually means one side carries an orbital with no counterpart " *
+              "on the other -- a dummy continuum placeholder, for instance.")
+    end
+    # THE FACTORS ARE BUILT SO THAT THE SVD'S OWN GAUGE FREEDOM CANNOT REACH THEM, and that is not a refinement:
+    # the singular vectors are fixed only up to (U, V) -> (U W, V W) for any orthogonal W commuting with Sigma,
+    # which for a ROTATION -- where every singular value is 1 -- is complete freedom.  The bare pair U*Sigma^-1/2
+    # and V*Sigma^-1/2 therefore returns an ARBITRARY orthogonal matrix, and since the new orbitals are built as
+    # newOrb_i = sum_j orb_j * C[j,i], an arbitrary C RELABELS them: `1s` comes back as mostly `2s`.  Measured
+    # 01-Nov-2026, that moved an Auger rate by a factor 31000 and produced a reflection whose logarithm is
+    # complex.  Appending U' on the right of both makes each factor invariant under W, reduces both to the unit
+    # matrix for T = I, and leaves both ORTHOGONAL for T a rotation -- which is the norm preservation this
+    # function exists to provide.
+    U = Matrix(F.U);    V = Matrix(F.V);    invSqrt = LinearAlgebra.Diagonal(1.0 ./ sqrt.(F.S))
+    Cleft = U * invSqrt * U'
+    C11   = V * invSqrt * U'
     C12   = -C11 * (Cleft' * Z)
     Cright                 = zeros(m, m)
     Cright[1:n, 1:n]       = C11
@@ -201,11 +241,12 @@ function  computeTransformationMatrices(leftBasis::Basis, rightBasis::Basis, gri
             S[i,j] = RadialIntegrals.overlap(leftBasis.orbitals[lList[i]], rightBasis.orbitals[rList[j]], grid)
         end
 
-        if      nl == nr
-            F      = lu(S, NoPivot())
-            Cleft  = inv(Matrix(F.L))'
-            Cright = inv(Matrix(F.U))
-        elseif  nr > nl
+        # THE SQUARE CASE GOES THROUGH appendixB TOO, rather than carrying its own copy of the factorisation.
+        # With m == n that function's Z block is empty and it reduces to exactly the square problem, so this is
+        # one implementation instead of two -- and the two had drifted: the inline copy here kept the unpivoted
+        # LU after appendixB moved to a symmetric split on 01-Nov-2026, which left the defect that change was
+        # made to remove alive on every equal-dimension block, i.e. on the common case.
+        if      nl <= nr
             Cleft, Cright = BiOrthogonal.appendixB(S)
         else
             ## the mirror case: transpose, solve with the two sides exchanged, and hand back swapped
