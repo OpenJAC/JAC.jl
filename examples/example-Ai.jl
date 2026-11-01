@@ -570,5 +570,155 @@ elseif  false
     println("  >> And compare the INCREMENTS, not the totals (Rule 21): two policies can agree on the total")
     println("  >> and disagree about where the correlation came from.")
     #
+elseif  false
+    # Last visit:  01-Nov-2026
+    #
+    # g) THE AUTOMATIC LADDER -- AtomicState.RasAutoSettings (competition item 16).  Two checks, not one: that
+    #    automation is a STRICT SUPERSET of the hand-built driver (same shells, same number), and that a
+    #    realistic stopping policy actually stops where a human already judged this ladder sufficient.
+    #
+    # PART 1 -- THE ESCAPE HATCH.  AtomicState.RasCompleteShellPolicy proposes the next complete principal
+    #   shell, which for THIS reference (coreShells=[1s], fromShells=[2s]) is n=3 -- 3s,3p,3d together, not the
+    #   single 2p of branch (a).  So this is not a re-run of branch (a); it is the SAME MACHINERY checked
+    #   against a hand-built RasLayer([Shell("3s"),Shell("3p"),Shell("3d")]) ladder of the SAME two layers, and
+    #   the two must agree to the digit -- if automation ever disagreed with an equivalent hand-built ladder,
+    #   that would be the one failure mode this item must never have.
+    name        = "Beryllium -- automatic ladder, part 1: the escape hatch against a hand-built equivalent"
+    refConfigs  = [Configuration("[He] 2s^2")]
+    rasSettings = RasSettings([1], Basics.RotationRoute(24), 1.0e-6, CoulombInteraction(), LevelSelection(true, indices=[1]) )
+    coreShells  = [Shell("1s")]
+    fromShells  = [Shell("2s")]
+    fixedLayers = [ RasLayer(Shell[]; se=false, de=false) ]
+
+    handLayers  = [ RasLayer(Shell[]; se=false, de=false), RasLayer([Shell("3s"), Shell("3p"), Shell("3d")]) ]
+    waHand      = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs,
+                                 RasExpansion([LevelSymmetry(0, Basics.plus)], 4, coreShells, fromShells, handLayers, rasSettings) )
+    wbHand      = generate(waHand, output=true)
+    eHand       = sort(wbHand["step2"].levels, by = l -> l.energy)[1].energy
+
+    waAuto      = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs,
+                                 RasExpansion([LevelSymmetry(0, Basics.plus)], 4, coreShells, fromShells, fixedLayers, rasSettings) )
+    autoEscape  = AtomicState.RasAutoSettings(AtomicState.FixedLayerCount(2), AtomicState.RasCompleteShellPolicy())
+    wbAuto      = Basics.generate(waAuto.repType, waAuto, coreShells, fromShells, fixedLayers, autoEscape; output=true)
+    eAuto       = sort(wbAuto["step2"].levels, by = l -> l.energy)[1].energy
+
+    println("\n  >> PART 1, the escape hatch:  hand-built = $eHand Ha,  auto (FixedLayerCount) = $eAuto Ha,  " *
+            "difference = $(abs(eHand-eAuto)) Ha")
+    abs(eHand - eAuto) < 1.0e-9  ||
+        error("example-Ai.jl branch g: the automatic ladder disagreed with an EQUIVALENT hand-built one by " *
+              "$(abs(eHand-eAuto)) Ha -- automation must be a strict superset, never a different answer.")
+    println("  >> AGREE to better than 1e-9 Ha, as they must: FixedLayerCount + RasCompleteShellPolicy " *
+            "reproduces a hand-built ladder of the same shells exactly.")
+
+    # PART 2 -- A REALISTIC STOPPING POLICY, pushed past two layers, and checked for the shape Rule 20's
+    #   register discipline asks for: does it stop at a point a human would also have stopped at?  The
+    #   increments on THIS reference are large at layer 2 (tens of mHa) and fall off fast, so a modest
+    #   IncrementBelow with a CostCeiling safety valve behind it (CombinedPolicy's recommended use) is enough.
+    autoCombined = AtomicState.RasAutoSettings(
+                       AtomicState.CombinedPolicy(AtomicState.AbstractRasStoppingPolicy[
+                           AtomicState.IncrementBelow(1.0e-3; consecutive=1), AtomicState.CostCeiling(2000, 300.0)]),
+                       AtomicState.RasCompleteShellPolicy(); maxLayers=5)
+    waCombined  = Representation("Beryllium -- automatic ladder, part 2: CombinedPolicy", Nuclear.Model(4.), Radial.Grid(true),
+                                 refConfigs, RasExpansion([LevelSymmetry(0, Basics.plus)], 4, coreShells, fromShells,
+                                                           fixedLayers, rasSettings) )
+    wbCombined  = Basics.generate(waCombined.repType, waCombined, coreShells, fromShells, fixedLayers, autoCombined; output=true)
+    nLayers     = 0
+    for  i = 1:autoCombined.maxLayers
+        haskey(wbCombined, "step"*string(i))  ||  break
+        nLayers = i
+    end
+    println("\n  >> PART 2, CombinedPolicy(IncrementBelow(1e-3), CostCeiling(2000,300s)): stopped after " *
+            "$nLayers layer(s) of a $(autoCombined.maxLayers)-layer ceiling.")
+    #
+elseif  false
+    # Last visit:  01-Nov-2026
+    #
+    # h) THE SHELL POLICY THAT NEVER WIDENS IN l -- AtomicState.RasLimitedAngularMomentumPolicy, the remedy for
+    #    RasCompleteShellPolicy being "rather extreme" once n exceeds about 5 (plan discussion, item 16).  Pushed
+    #    to n=6 on the SAME Be reference as branch (g): coreShells=[1s], fromShells=[2s] give lMaxRef=0, so
+    #    `extraL=1` caps every layer at l<=1 (s,p only), however high n climbs -- contrast what
+    #    RasCompleteShellPolicy would propose at n=6: 6s,6p,6d,6f,6g,6h, six shells of which four are unopened,
+    #    unrewarding high-l partial waves (reference_ras_practical_recipe: a layer of high-n, already-occupied-
+    #    symmetry orbitals is both the hardest to converge and the least rewarding).
+    name        = "Beryllium -- automatic ladder pushed to n=6 under a capped angular-momentum window"
+    refConfigs  = [Configuration("[He] 2s^2")]
+    rasSettings = RasSettings([1], Basics.RotationRoute(24), 1.0e-6, CoulombInteraction(), LevelSelection(true, indices=[1]) )
+    coreShells  = [Shell("1s")]
+    fromShells  = [Shell("2s")]
+    fixedLayers = [ RasLayer(Shell[]; se=false, de=false) ]
+
+    wa   = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs,
+                          RasExpansion([LevelSymmetry(0, Basics.plus)], 4, coreShells, fromShells, fixedLayers, rasSettings) )
+    auto = AtomicState.RasAutoSettings(AtomicState.FixedLayerCount(5), AtomicState.RasLimitedAngularMomentumPolicy(1); maxLayers=5)
+    wb   = Basics.generate(wa.repType, wa, coreShells, fromShells, fixedLayers, auto; output=true)
+
+    println("\n  Layer   new shell(s)        lowest level [Ha]")
+    println("  " * "-"^48)
+    for  i = 1:5
+        k = "step" * string(i)
+        if  haskey(wb, k)
+            e = sort(wb[k].levels, by = l -> l.energy)[1].energy
+            println("  " * rpad(string(i), 7) * rpad(i==1 ? "(reference)" : "n=$(i+1), l<=1", 20) * string(round(e, digits=9)))
+        end
+    end
+    println("  " * "-"^48)
+    println("  >> l NEVER EXCEEDS 1 however high n climbs: n=6 proposes only 6s,6p, never 6d,6f,6g,6h.")
+    #
+elseif  false
+    # Last visit:  01-Nov-2026 (the Rule-12 risk the branch was written to surface DID occur -- see below;
+    #              MAINTAINER'S JUDGEMENT STILL NEEDED, this is not a Last successful)
+    #
+    # i) THE ENERGY-ORDERED SHELL POLICY, ON A REAL OPEN-d REFERENCE -- AtomicState.RasSpectrumOrderedShellPolicy,
+    #    on Ti III [Ar] 3d^2, the same ion `reference_ras_practical_recipe` already measured by hand for the
+    #    freezing-policy comparison (07-Oct-2026: layer 1 -852.176877 Ha with the core free, layer 2 adding
+    #    4s,4p,4d by hand). Neither RasCompleteShellPolicy nor RasLimitedAngularMomentumPolicy can propose
+    #    `5s` ahead of `4p`/`4d` -- both assume shells group by n, which stops holding once 3d/4s mixing moves
+    #    the real screened-potential ordering out of its light-atom shape. This branch PRINTS the ranked
+    #    candidate list rather than asserting a pass/fail: per the plan, this policy's first real use on any
+    #    one case is a judgement call for the maintainer, not an automatic check.
+    #
+    # WHAT THE FIRST RUN (01-Nov-2026) ACTUALLY PROPOSED, and why it is the cautionary case rather than the
+    #    clean one. Ranked by energy in the screened mean field, this policy proposed Shell[4f, 4s, 4p, 4d] --
+    #    4f CHEAPER than 4s/4p/4d, which is already a surprise on light-atom intuition. Bsplines.
+    #    checkOrbitalConsistency on the resulting layer (added below, stopper=false so the branch still
+    #    completes and prints) then found TWO offending pairs, exactly what Rule 12 warns a too-small or
+    #    ill-matched box produces:
+    #      4f_5/2 / 4f_7/2   <r> = 1.5181 / 6.8446 a.u.   -- a 4.5x radius mismatch between partners that must
+    #                        describe the same shell (4f_5/2 alone is plausibly valence, comparable to 3d's own
+    #                        1.6-2.0 a.u.; 4f_7/2 is not).
+    #      4p_1/2 / 4p_3/2   E ratio 2.907, radii agree (1.017) -- flagged by the ORDERING test instead: an
+    #                        inverted spin-orbit pair, same class as the Pr I 4f case in checkOrbitalConsistency's
+    #                        own docstring.
+    #    So at least one 4f orbital and the 4p pair's ordering are not trustworthy, and the energy ranking that
+    #    put 4f ahead of 4s/4p/4d is suspect for the same reason: a diffuse, box-truncated state can rank
+    #    artificially low, exactly as the policy's own docstring warns. This is not a failure of the wiring --
+    #    FixedLayerCount/RasSpectrumOrderedShellPolicy mechanically did what they were asked -- it is the
+    #    numerical risk the plan named, caught on its first real case rather than left to surprise someone later.
+    #
+    # BEFORE RELYING ON THIS POLICY ON A HEAVIER ION: widen the candidate box (Rule 12; `rbox ~ 2.5 r_+` for the
+    #    4f candidate specifically, which sits far out), or narrow `specSettings.lValues` to exclude l=3 until
+    #    the box is matched, and re-run `Bsplines.checkOrbitalConsistency` clean before trusting the ranking.
+    name        = "Ti III [Ar] 3d^2 -- automatic ladder, RasSpectrumOrderedShellPolicy ranking the candidates by energy"
+    refConfigs  = [Configuration("[Ar] 3d^2")]
+    rasSettings = RasSettings([1], Basics.RotationRoute(24), 1.0e-6, CoulombInteraction(), LevelSelection(true, indices=[1]) )
+    coreShells  = [Shell("1s"), Shell("2s"), Shell("2p"), Shell("3s"), Shell("3p")]
+    fromShells  = [Shell("3d")]
+    fixedLayers = [ RasLayer(Shell[]; se=false, de=false) ]
+
+    wa           = Representation(name, Nuclear.Model(22.), Radial.Grid(true), refConfigs,
+                                  RasExpansion([LevelSymmetry(2, Basics.plus)], 20, coreShells, fromShells, fixedLayers, rasSettings) )
+    specSettings = AtomicState.OneElectronSettings(5, [0, 1, 2, 3], LevelSelection())
+    auto         = AtomicState.RasAutoSettings(AtomicState.FixedLayerCount(2),
+                                               AtomicState.RasSpectrumOrderedShellPolicy(4, specSettings))
+    wb           = Basics.generate(wa.repType, wa, coreShells, fromShells, fixedLayers, auto; output=true)
+
+    println("\n  >> Proposed, ranked by actual one-electron energy in the screened mean field (see the table the")
+    println("  >> driver printed above under '[RAS auto] layer 2 proposes'), and the resulting layer-2 energy " *
+            "is $(sort(wb["step2"].levels, by = l -> l.energy)[1].energy) Ha.")
+    println("  >> Checking the proposed orbitals for the Rule-12 risk the policy's own docstring warns about:")
+    Bsplines.checkOrbitalConsistency(wb["step2"].levels[1].basis.orbitals, wa.grid; stopper=false)
+    println("  >> MAINTAINER'S JUDGEMENT NEEDED before this branch earns a Last successful date: compare the")
+    println("  >> proposed shell order against what a hand-built ladder on this ion would choose.")
+    #
 
 end
