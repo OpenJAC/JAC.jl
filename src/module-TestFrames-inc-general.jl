@@ -603,6 +603,83 @@ end
 
 
 """
+`TestFrames.testRepresentation_CoreValencePerturbation()`  ... tests the two
+    Basics.AbstractQSpacePerturbation routes of Hamiltonian.secondOrderBlock, and the dual-role shell
+    guard of AtomicState's RAS driver, on cheap Be cases (competition item 11).
+"""
+function testRepresentation_CoreValencePerturbation()
+    success = true
+    printTest, iostream = Defaults.getDefaults("test flag/stream")
+
+    # PART 1 -- the two Q-space perturbation routes must agree where they MUST: a folded configuration
+    # whose own CSFs number one or two makes BlockDiagonalizedPerturbation's own small diagonalization a
+    # NO-OP, so it has to reproduce DiagonalCSFPerturbation's bare-CSF fold EXACTLY, not merely
+    # approximately. Kept small for the same reason testRepresentation_RasExpansion is: a real per-layer
+    # EOL optimization runs at every layer. The core-fold step excites into 4s, a shell NEITHER the
+    # reference NOR the valence layer (which uses 3s,3p,3d) has touched, so the dual-role guard added
+    # below stays silent here -- checked explicitly, since a silent guard on a NORMAL layer is exactly
+    # what makes it safe to leave on by default.
+    refConfigs  = [Configuration("[He] 2s^2")]
+    rasSettings = RasSettings([1], Basics.RotationRoute(24), 1.0e-6, CoulombInteraction(), LevelSelection(true, indices=[1]))
+    energies    = Float64[]
+    for  pert in (Basics.DiagonalCSFPerturbation(), Basics.BlockDiagonalizedPerturbation())
+        steps = [ RasStep(),
+                  RasStep(RasStep(); seFrom=[Shell("2s")], seTo=[Shell("3s"), Shell("3p"), Shell("3d")],
+                                     deFrom=[Shell("2s")], deTo=[Shell("3s"), Shell("3p"), Shell("3d")],
+                                     frozen=[Shell("1s")]),
+                  RasStep(RasStep(); seFrom=[Shell("1s"), Shell("2s")], seTo=[Shell("4s")],
+                                     deFrom=[Shell("1s"), Shell("2s")], deTo=[Shell("4s")],
+                                     frozen=[Shell("1s"), Shell("2s"), Shell("3s"), Shell("3p"), Shell("3d")],
+                                     treatment=Basics.SecondOrder(1.0e-5, 1.0e-12, 1.0e-2, pert)) ]
+        wa = Representation("Be -- CoreValencePerturbation test", Nuclear.Model(4.), refConfigs,
+                            RasExpansion([LevelSymmetry(0, Basics.plus)], 4, steps, rasSettings))
+        wb = generate(wa, output=true)
+        push!(energies, sort(wb["step3"].levels, by = l -> l.energy)[1].energy)
+        let  report = "jac-warn.report"
+            text = isfile(report) ? read(report, String) : ""
+            if  occursin("already a valence correlation orbital in this ladder", text)
+                success = false
+                if printTest   info(iostream, "the dual-role shell guard fired on a NORMAL layer (4s, " *
+                                              "unclaimed by any earlier layer); jac-warn.report holds: $text")   end
+            end
+        end
+    end
+    if  abs(energies[1] - energies[2]) > 1.0e-10
+        success = false
+        if printTest   info(iostream, "DiagonalCSFPerturbation and BlockDiagonalizedPerturbation gave " *
+                                      "$(energies[1]) and $(energies[2]) Ha -- expected EXACT agreement " *
+                                      "on this trivial-block case")   end
+    end
+
+    # PART 2 -- the dual-role shell guard must fire on a case built to trigger it: a core-valence step
+    # (seFrom/deFrom = 1s,2s, both frozen by this step itself) sends its excitation into 2p, a shell the
+    # EARLIER VARIATIONAL layer already built a correlation orbital for. This is the cheap reproduction
+    # of the pathology documented in example-Ar.jl's own 16-Sep-2026 header (there, 4f/4p; here, 2p).
+    steps2 = [ RasStep(),
+               RasStep(RasStep(); seFrom=[Shell("2s")], seTo=[Shell("2p")], deFrom=[Shell("2s")], deTo=[Shell("2p")],
+                                  frozen=[Shell("1s")]),
+               RasStep(RasStep(); seFrom=[Shell("1s"), Shell("2s")], seTo=[Shell("2p")],
+                                  deFrom=[Shell("1s"), Shell("2s")], deTo=[Shell("2p")],
+                                  frozen=[Shell("1s"), Shell("2s"), Shell("2p")],
+                                  treatment=Basics.SecondOrder(1.0e-5, 1.0e-12)) ]
+    wa2 = Representation("Be -- dual-role shell guard test", Nuclear.Model(4.), refConfigs,
+                         RasExpansion([LevelSymmetry(0, Basics.plus)], 4, steps2, rasSettings))
+    generate(wa2, output=true)
+    let  report = "jac-warn.report"
+        text = isfile(report) ? read(report, String) : ""
+        if  !occursin("already a valence correlation orbital in this ladder", text)
+            success = false
+            if printTest   info(iostream, "the dual-role shell guard did NOT fire on a case built to " *
+                                          "trigger it; jac-warn.report holds: $text")   end
+        end
+    end
+
+    testPrint("testRepresentation_CoreValencePerturbation()::", success)
+    return(success)
+end
+
+
+"""
 `TestFrames.testMethod_SettingsCopyConstructors(; short::Bool=true)`
     ... exercises the keyword copy-constructor of EVERY submodule Settings that has one; returns success::Bool.
 """
