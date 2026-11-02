@@ -312,6 +312,37 @@ end
 
 
 """
+`BasicsAZ.checkFrozenOrbitalsSpan(frozenOrbitals::Dict{Subshell,Radial.Orbital}, configs::Array{Configuration,1},
+                                    configName::String, sourceName::String)`
+    ... tests that `frozenOrbitals` holds every subshell the given configurations occupy and RAISES an error naming the absent ones
+        if it does not;  `nothing` is returned.  It exists because the failure it replaces is otherwise a bare
+        `KeyError: key 2s_1/2 not found` thrown by `Dict` inside the CI matrix setup and wrapped in a `TaskFailedException` --
+        loud, but telling a user nothing about what to change.  MEASURED 02-Nov-2026: an SCF on `[1s^2]` yields the single
+        orbital `1s_1/2`, so a Green space of `[1s, 2s, 2p]` frozen onto it lacks `2s_1/2, 2p_1/2, 2p_3/2`, while the same SCF
+        over the union `[1s^2, 1s 2s, 1s 2p]` lacks none.  That is the whole content of the check:  ONE orbital set is usable
+        only where it SPANS every subshell the multiplets built on it occupy.
+"""
+function checkFrozenOrbitalsSpan(frozenOrbitals::Dict{Subshell,Radial.Orbital}, configs::Array{Configuration,1},
+                                    configName::String, sourceName::String)
+    relconfs = ConfigurationR[]
+    for  conf in configs
+        append!( relconfs, Basics.generateConfigurations(Basics.RelativisticConfigurations(), conf) )
+    end
+    absent = setdiff( Basics.generateSubshellList(relconfs), collect(keys(frozenOrbitals)) )
+    if  !isempty(absent)
+        error("Basics.perform(): the orbital set taken from $sourceName does not span $configName -- it has no "           *
+              "$(join(string.(absent), ", ")).  ONE shared orbital set is usable only where it SPANS every subshell the "  *
+              "other multiplets occupy, so widen $sourceName to a configuration list that generates those subshells "     *
+              "(for a 1s^2 initial state and a 2s/2p Green space that is [1s^2, 1s 2s, 1s 2p] rather than [1s^2]), or "   *
+              "use Basics.SeparateOrbitals() and accept that a second-order amplitude through these multiplets carries "   *
+              "the dropped -E <r|s> term.  See Basics.AbstractOrbitalSource.")
+    end
+
+    return( nothing )
+end
+
+
+"""
 `Basics.perform(computation::Atomic.Computation)`  
     ... to perform the computation as prescribed by comp. All relevant intermediate and final results are printed to screen (stdout). 
         Nothing is returned.
@@ -410,16 +441,54 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         end
         
     else
-        initialMultiplet = SelfConsistent.performSCF(computation.initialConfigs, nModel, computation.grid, computation.initialAsfSettings)
-        LSjj.expandLevelsIntoLS(initialMultiplet, computation.initialAsfSettings.jjLS)
-        finalMultiplet   = SelfConsistent.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
-        LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
+        # WHICH ORBITAL SET THE TWO MULTIPLETS ARE BUILT ON -- `computation.orbitalSource`, see Basics.AbstractOrbitalSource.
+        # SeparateOrbitals() is the default and its branch below is character for character what this code always did,
+        # two independent SCF runs;  the other two run ONE SCF and build the remaining multiplet as a CI on those frozen
+        # orbitals.  That is what an explicit SECOND-ORDER amplitude needs: ManyElectron.matrixElement_HminusE drops the
+        # overlap term -E <r|s>, which vanishes identically only on one orthonormal set.  The statement ORDER inside the
+        # default branch is preserved deliberately -- performSCF resets the global relativistic subshell list, so moving
+        # an expandLevelsIntoLS across an SCF call is not obviously inert and is not worth risking for tidiness.
+        if      computation.orbitalSource == Basics.SeparateOrbitals()
+            initialMultiplet = SelfConsistent.performSCF(computation.initialConfigs, nModel, computation.grid,
+                                                         computation.initialAsfSettings)
+            LSjj.expandLevelsIntoLS(initialMultiplet, computation.initialAsfSettings.jjLS)
+            finalMultiplet   = SelfConsistent.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
+            LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
+        elseif  computation.orbitalSource == Basics.InitialStateOrbitals()
+            initialMultiplet = SelfConsistent.performSCF(computation.initialConfigs, nModel, computation.grid,
+                                                         computation.initialAsfSettings)
+            LSjj.expandLevelsIntoLS(initialMultiplet, computation.initialAsfSettings.jjLS)
+            sharedOrbitals   = initialMultiplet.levels[1].basis.orbitals
+            BasicsAZ.checkFrozenOrbitalsSpan(sharedOrbitals, computation.finalConfigs, "finalConfigs", "initialConfigs")
+            finalMultiplet   = Hamiltonian.performCIwithFrozenOrbitals(computation.finalConfigs, sharedOrbitals, nModel,
+                                                                       computation.grid, computation.finalAsfSettings)
+            LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
+        elseif  computation.orbitalSource == Basics.FinalStateOrbitals()
+            finalMultiplet   = SelfConsistent.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
+            LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
+            sharedOrbitals   = finalMultiplet.levels[1].basis.orbitals
+            BasicsAZ.checkFrozenOrbitalsSpan(sharedOrbitals, computation.initialConfigs, "initialConfigs", "finalConfigs")
+            initialMultiplet = Hamiltonian.performCIwithFrozenOrbitals(computation.initialConfigs, sharedOrbitals, nModel,
+                                                                       computation.grid, computation.initialAsfSettings)
+            LSjj.expandLevelsIntoLS(initialMultiplet, computation.initialAsfSettings.jjLS)
+        else
+            error("Basics.perform(): computation.orbitalSource is $(computation.orbitalSource), which this method does not "  *
+                  "know how to honour.  The supported values are Basics.SeparateOrbitals(), Basics.InitialStateOrbitals() "   *
+                  "and Basics.FinalStateOrbitals();  see Basics.AbstractOrbitalSource.")
+        end
         if  output   results["initialMultiplet"] = initialMultiplet;   results["finalMultiplet"] = finalMultiplet    end 
+        # HOW A SECOND-ORDER CALLER REACHES THE SHARED SET, since its Green space must sit on these same orbitals and
+        # `settings.gMultiplet` is built by the caller before `perform` ever runs:  it is already returned, as
+        # `res[ResultKeys.InitialMultiplet].levels[1].basis.orbitals` for InitialStateOrbitals() and the FinalMultiplet
+        # key for FinalStateOrbitals().  Hand that dictionary to Hamiltonian.performCIwithFrozenOrbitals to build the
+        # Green space on it.  NO separate result entry is added on purpose:  it would need its own ResultKeys type to be
+        # readable at all, and that is a new promise in the public surface for something already reachable.
         #
         if typeof(computation.processSettings) in [PhotoExcitationFluores.Settings, PhotoExcitationAutoion.Settings,
                                                    DielectronicRecombination.Settings, ResonantInelastic.Settings,
                                                    PhotoRecombinationInterference.Settings, PhotoIonizationInterference.Settings]
-            intermediateMultiplet = SelfConsistent.performSCF(computation.intermediateConfigs, nModel, computation.grid, computation.intermediateAsfSettings)
+            intermediateMultiplet = SelfConsistent.performSCF(computation.intermediateConfigs, nModel, computation.grid,
+                                                              computation.intermediateAsfSettings)
             if  output   results["intermediateMultiplet"] = intermediateMultiplet    end 
         end
         #
