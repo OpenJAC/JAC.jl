@@ -18,11 +18,13 @@
 **JAC**, the **Jena Atomic Calculator**, provides an open-source Julia package for doing atomic computations of various kind
 and complexity. In particular, JAC is a (relativistic) electronic structure code for the computation of (atomic many-electron) 
 interaction amplitudes, properties as well as a good number of excitation and decay processes for open-shell atoms and ions 
-across the whole periodic table. In recent years, moreover, emphasis has been placed support atomic cascade computations
-in different physical contexts as well as symbolic analysis (simplifications) of expressions from Racah's algebra.
-Some further work is done (or planned) to incorporate central features for studying atomic -- strong-field -- responses
-to external fields and particles, or the time-evolution of atoms and ions in the framework of (time-dependent) density
-matrix and Liouville equations.
+across the whole periodic table. In recent years, moreover, emphasis has been placed on atomic cascade computations
+in different physical contexts, on plasma computations (average-atom, ionic mixtures, kinetic and super-configuration
+schemes), on symbolic analysis (simplifications) of expressions from Racah's algebra, and on atomic response
+computations -- dynamic multipole polarizabilities and dispersion coefficients via a direct inhomogeneous-equation
+solve, orchestrated over an atom's active electrons. Further work is ongoing (or still planned) on strong-field
+responses to external fields and particles beyond the simplest case, and on the time-evolution of atoms and ions in
+the framework of (time-dependent) density matrix and Liouville equations.
 
 A primary guiding philosophy of JAC was to develop a **general and easy-to-use toolbox for the atomic physics community**, 
 including an interface that is equally accessible for scientists working in astro and plasma physics, atomic spectroscopy,
@@ -40,87 +42,99 @@ potential users and developers for response, support and encouragement.
 
 
 
+**Not sure whether JAC already does what you need?** [`CAPABILITIES.md`](CAPABILITIES.md) is a register,
+mechanically re-derived from every example branch JAC ships, that lists what JAC can do in plain physics terms,
+which module covers it, and the example branch to open first -- including an honest note where something is
+not yet verified or not ready for real use. Not a substitute for the documentation below, just a fast first
+stop. Search it with `julia tools/searchCapabilities.jl "<term>"`, or just open the file and use your editor's
+find.
+
+
 ## *Kinds* of computations
 
-In some more detail, JAC distinguishes and aims to support **different kinds of computations** which can be summarized 
-as follows:
+JAC distinguishes and aims to support **different kinds of computations**, summarized below. This list gives
+the shape of what JAC does; for the current, itemized detail -- which module, which example branch, and
+whether it has been physically verified yet -- see [`CAPABILITIES.md`](CAPABILITIES.md) instead of trying to
+keep this list exhaustive.
 
-1. **Atomic computations**, based on explicitly specified electron *configurations*: This kind refers to the frequently
-    applied computation of level energies and atomic state representations. It also supports the computation of either 
-    (one or) several atomic properties for selected atomic levels from a given multiplet or of **one** selected process 
-    at a time, if atomic levels from two or more multiplets and/or charge states are involved in some atomic transition,
-    such as the photo or autoionization of atoms.
-2. **Atomic representations**: This kind concerns the generation of different representations of atomic wave functions; 
-    in particular, it includes systematically-enlarged restricted active-space (RAS) computations of atomic states 
-    and level energies due to a pre-specified active space of orbitals as well as due to the (number and/or kind of) 
-    virtual excitations to be taken to be into account. Such RAS computations are normally performed stepwise by making 
-    use of the (one-electron) orbital functions from some prior step. Other atomic representations refer to approximate 
-    atomic Green functions and, in the future, could be combined with concepts from close-coupling, (exterior) complex 
-    scaling, DMRG or perturbation theory.
-3. **Interactive computations**: In practice, the (large set of) methods of the JAC toolbox can always be applied also 
-    interactively, either directly at Julia's REPL or by using some -- more or less -- short Julia scripts in order to 
-    compute and evaluate the desired observables (atomic parameters), such as energies, expansion coefficients, transition
-    matrices and amplitudes, rates, cross sections, etc. An interactive computation typically first prepares and applies 
-    (certain instances of) JAC’s data types, such as orbitals, configuration-state functions (CSF), atomic bases, levels, 
-    multiplets, and others. And like Julia, that is built upon many (high-level) functions and methods, JAC then provides 
-    the required language elements for performing specific atomic computations at different degree of complexity and 
-    sophistication.
-4. **Atomic cascade computations**: An atomic cascade typically includes ions (of one element) in three or more 
-    different charge states. These charge states are connected to each other by different atomic processes, such as 
-    photo ionization, radiative and dielectronic recombination, Auger decay, the photo excitation and emission, or various 
-    others. In practice, moreover, the relative level population of these charge states is usually determined by the
-    specific set-up and geometry of the considered experiment. These cascade computations are usually based on some 
-    predefined *(cascade) approach* that enables one to automatically select the state-space of the ions, to choose the 
-    atomic processes to be considered for the various steps of the cascade, and to specify perhaps additional limitations
-    in order to keep the computations feasible. In addition, these cascade computations are generally divided into two
-    parts, the (cascade) computation for determining all necessary many-electron amplitudes and the (so-called)
-    simulations to combine the amplitudes due to the experimental scenario of interest.
-5. **Empirical computations**: Not all atomic  properties and processes, such as the -- single and multiple -- 
-    electron-impact ionization, stopping powers or tunnel ionization rates, can be efficiently described by ab-initio 
-    many-body techniques. If needed, they are often easier computed by using empirical formulas and models. 
-    A number of empirical computations are now supported to deal with such models; are often based on simple
-    electronic structure calculations, together with empirically obtained parameters. These computations are only 
-    implemented when data are needed but no *ab-initio* computations of the involved processes appears to be feasible. 
-6. **Plasma computations**: The notion of atoms and ions in plasma has been frequently applied to analyze the 
-    behaviour of plasma in situations where the level structure and effective single-electron states remain partly 
-    intact. Useful plasma computations refer to shifted photo lines, ionic mixtures in local and non-local 
-    thermodynamic equilibria, or applications of the average-atom model.
-7. **Symbolic evaluation of expressions from Racah's algebra**: This kind refers to the algebraic transformation
-    and simplification of (Racah) expressions, which may generally include any number of Wigner n-j symbols 
-    of different kind as well as (various integrals over) the spherical harmonics, the Wigner rotation matrices
-    and the Kronecker and triangular deltas. Of course, the complexity of such *Racah expressions* increases 
-    very rapidly as more Wigner symbols are involved. A symbolic evaluation of these expressions is naturally 
-    based on the knowledge of a large set of special values, orthogonality relations and *sum rules* that may include 
-    rules with a (multiple) summation over dummy indices, cf. the monography by Varshalovich *et al* (1988).
-
-    
-Several other *different kinds of computations* have been prepared and will support the applications of the 
-JAC toolbox but come with a rather limited implementation so far.
-    
-8. **Atomic responses**: With this kind, we partly support computations in intense laser field; they also help 
-    analyze the response of atoms to incident beams of light pulses and particles, such as field-induced 
-    ionization processes, high-harmonic generation and several others. For these responses, the detailed 
-    structure of atoms and ions has not been considered much until today. A partial-wave formulation of these 
-    strong-field processes enables one to clearly distinguish between contributions due to the atomic target,
-    the Volkov states, or the shape and phase of the incident light.
-9. **Atomic time-evolution of statistical tensors**: We here wish to simulate the population and coherences
-    of (atomic) levels using the *Liouville equation*, when atoms and ions are irradiated by (intense) light
-    pulses. For these computations, however, we shall assume always that the level structure of the atoms is kept 
-    intact. Further (decay) processes of the excited atoms and ions can be taken into account by some *loss 
-    rate*, but without that the atoms can leave the *pre-specified space of sublevels*. In particular, we here 
-    plan to consider the interaction of atoms and ions with pulses of different shape, polarization strength 
-    and duration.
+1. **Atomic computations**, based on explicitly specified electron *configurations*: the frequently applied
+    computation of level energies and atomic state representations, together with one or several atomic
+    *properties* for selected levels -- hyperfine structure, Landé/Zeeman splitting, isotope shifts, static and
+    dynamic multipole polarizabilities and dispersion coefficients, crystal-field and Stark splittings, among
+    others -- or **one** selected *process* at a time when levels from two or more multiplets and/or charge
+    states are involved, such as photoionization, Auger decay, dielectronic or radiative recombination, and a
+    good number of further excitation and decay processes across the periodic table.
+2. **Atomic representations**: the generation of different representations of atomic wave functions. This
+    includes systematically-enlarged, layer-by-layer restricted active-space (RAS) expansions -- now scaling to
+    several thousand CSF per layer, with the self-consistent-field and CI-matrix construction steps
+    parallelized -- an explicit second-order (effective-Hamiltonian) treatment that folds a weakly-coupled
+    correlation layer directly into the CI matrix instead of enlarging it variationally, approximate Green
+    (-function) expansions, and bi-orthogonal transformations between independently-generated orbital sets.
+3. **Interactive computations**: the large set of JAC methods can always be used directly at Julia's REPL or
+    in short scripts, built from JAC's own data types -- orbitals, configuration-state functions (CSF), atomic
+    bases, levels, multiplets, and others -- down to the observable of interest (energies, expansion
+    coefficients, amplitudes, rates, cross sections, ...). For a first calculation without assembling these by
+    hand, the **`ForPedestrians`** module provides a thin, simplified calling layer (`computeLevelEnergies`,
+    `computeTransitionRates`, `computeCrossSections`, `displaySpectrum`, and similar one-call entry points) --
+    the fastest on-ramp into JAC, and the natural place to start.
+4. **Atomic cascade computations**: an atomic cascade typically connects ions of one element across three or
+    more charge states through processes such as photoionization, radiative and dielectronic recombination,
+    Auger decay, photoexcitation and emission. A predefined *cascade scheme* selects the state space, the
+    processes considered at each step, and the limitations needed to keep the computation feasible; the work is
+    split into the cascade computation itself (the many-electron amplitudes) and a separate simulation step that
+    combines them for a given experimental scenario -- including, more recently, stepwise-decay, hollow-ion,
+    resonant-capture and expansion-opacity schemes.
+5. **Atomic response computations**: the response of an atom to an external field or particle beam, beyond a
+    single transition amplitude. This now includes a direct inhomogeneous-equation solve for the core
+    polarization behind dynamic multipole polarizabilities and dispersion coefficients (`DalgarnoLewis`), an
+    orchestration of one such solve per active electron (`RandomPhase`), and a frozen nonlocal (Dirac-Fock)
+    exchange operator usable in this context without an SCF iteration. Strong-field ionization in the SFA
+    (above-threshold-ionization energy and angular distributions) is supported for hydrogen-like initial
+    states; photoelectron momentum distributions in this framework are explicitly postponed -- see
+    `CAPABILITIES.md` for which branches are ready to use and which are not.
+6. **Plasma computations**: atoms and ions embedded in a plasma environment, where the level structure and
+    effective single-electron states remain partly intact. This spans the average-atom model, Saha-Boltzmann
+    ionic mixtures in LTE, shifted and broadened lines, dielectronic-satellite diagnostics, kinetic (non-LTE)
+    collisional-radiative level populations, super-configuration ionization balance and opacities (including
+    multi-species mixtures), and a kinetic charge-balance scheme with a per-process empirical / semi-empirical /
+    structure-based rate ladder.
+7. **Symbolic evaluation of expressions from Racah's algebra**: the algebraic transformation and
+    simplification of Racah expressions -- any number of Wigner n-j symbols together with integrals over
+    spherical harmonics, Wigner rotation matrices, and Kronecker/triangular deltas -- based on a large set of
+    special values, orthogonality relations and sum rules, cf. the monograph by Varshalovich *et al* (1988).
+8. **Empirical computations**: processes such as single and multiple electron-impact ionization, stopping
+    powers, tunneling ionization, charge exchange, and several plasma-rate-coefficient models that are not
+    efficiently reached by *ab-initio* many-body techniques, computed instead from simple electronic-structure
+    input combined with established empirical formulas (module `Empirical`) -- used only where no feasible
+    *ab-initio* alternative exists.
+9. **Particle- and photon-scattering computations**: elastic electron and positron scattering at atoms (Dirac
+    partial waves, differential cross sections, the Sherman function, transport cross sections), one-photon
+    positron-electron annihilation, Rayleigh and resonant-inelastic (RIXS) photon scattering, the cheap
+    form-factor limit for Rayleigh/Compton scattering, bound-free pair creation, and twisted (Bessel) photon
+    beams.
+10. **Further, more specialized computations**: muonic atoms (binding energies, muonic X-rays, screening),
+    Stark/line-broadening widths via the Dimitrijevic & Konjevic method, three-body recombination rate
+    coefficients via detailed balance, deep-learning estimation of missing level energies, and the
+    time-evolution of atomic statistical tensors (population and coherences) under the Liouville equation for
+    light-pulse-driven dynamics within a fixed level space.
 
 
 ## Installation
 
-In Julia, you can install the JenaAtomicCalculator package like any other package by by just typing
+JAC is a registered Julia package; install it like any other:
+```julia
+import Pkg
+Pkg.add("JenaAtomicCalculator")
 ```
+and then, in any Julia session:
+```julia
 using JenaAtomicCalculator
 ```
 
-!!! @info "Info"
-    We suggest to use  JenaAtomicCalculator  with the Julia v1.10.
+JAC supports **Julia 1.10 and 1.12** (see `Project.toml`'s `[compat]` section for the exact bound in force).
+
+Once installed, [`CAPABILITIES.md`](CAPABILITIES.md) and the `ForPedestrians` module (kind 3, above) are the
+fastest way to find out whether JAC already does what you need and to get a first calculation running.
 
 ## Author and principal developer
 
@@ -142,10 +156,15 @@ button in the sidebar that formats the citation automatically.
 ## Current limitations of JAC
 
 Although JAC has been designed for all atoms and ions across the periodic table, a number of limitations occur:
-* All self-consistent-field computations are based so far on a local potential (e.g. core-Hartree, Kohn-Sham, 
-  Dirac-Hartree-Slater, ...) that can be controlled by the user.
-* Until the present, no serious optimization has been done for the code; this restricts most computations
-  to CSF expansion with several hundred CSF.
-* All continuum orbitals are generated in a local potential (Dirac-Hartree-Slater or others, as above) of the ionic core, 
-  and without the explicit treatment of the exchange interaction.
+* Bound-orbital self-consistent-field computations are still based on a local potential (e.g. core-Hartree,
+  Kohn-Sham, Dirac-Hartree-Slater, ...) that can be controlled by the user, rather than on a fully nonlocal
+  Hartree-Fock-type exchange.
+* The CI-matrix construction and the SCF gradient steps were parallelized during 2026, and RAS expansions now
+  routinely reach several thousand CSF per layer; very large expansions remain, however, the most expensive
+  part of a calculation, and cost still grows quickly with layer count and nuclear charge (see
+  `CAPABILITIES.md`'s note on the RAS entry).
+* Continuum orbitals are still generated, by default, in a local potential of the ionic core. A frozen
+  nonlocal (Dirac-Fock) exchange operator is now available for this case (`Bsplines.setupExchangeMatrix` /
+  `Continuum`, used e.g. by the `RandomPhase` response module) without requiring a full SCF iteration -- but it
+  is not yet the default everywhere a continuum orbital is generated.
 

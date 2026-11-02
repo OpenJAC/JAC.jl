@@ -468,11 +468,17 @@ gitignored and therefore reaches nobody.
    threshold raised. Deployment cannot happen locally; Documenter detects it is not in CI and skips.
 5. **`docs/src/news.md`**, newest first, selecting what a USER would notice over what the repository noticed —
    0.5.0 drew eight entries from about 220 commits.
-6. **Bump `version` in `Project.toml`**, then run the suite from `test/` (Rule 11). No approved reference may be
+6. **If this release changes the MAJOR or MINOR version number (not a patch alone), re-derive
+   `CAPABILITIES.md`**: `julia --project=. tools/buildCapabilityRegister.jl --write`, then commit it alongside
+   the version bump. It is mechanically generated from `examples/examples.jl` and the `Last successful` dates
+   already in `examples/*.jl` (see the file's own preamble and `tools/capabilityNotes.jl`), so this is a
+   re-derivation, not an edit — never hand-edit `CAPABILITIES.md` between releases. Skip this step for a
+   patch-only release; a patch does not add or retire a capability.
+7. **Bump `version` in `Project.toml`**, then run the suite from `test/` (Rule 11). No approved reference may be
    re-approved to make it pass.
-7. **Commit as `Release X.Y.Z: <one line>`** and push. `documentation.yml` then rebuilds and deploys the site
+8. **Commit as `Release X.Y.Z: <one line>`** and push. `documentation.yml` then rebuilds and deploys the site
    automatically, so the docs go live at push, before the registry step.
-8. **Register — the maintainer's step.** Comment on the release commit:
+9. **Register — the maintainer's step.** Comment on the release commit:
 
        @JuliaRegistrator register
 
@@ -488,7 +494,7 @@ gitignored and therefore reaches nobody.
    request in 14 seconds and ignored the second for 44 minutes, because version and commit were unchanged. To add
    notes afterwards, register a NEW commit. Do not create the tag by hand — `TagBot.yml` does it once the General
    registry merges, and doing both yields two tags for one release.
-9. **Afterwards**, read WHICH CI job failed before reacting: JAC's CI has historically failed on the coverage
+10. **Afterwards**, read WHICH CI job failed before reacting: JAC's CI has historically failed on the coverage
    step rather than on the tests.
 
 ## Where the sqrt(2j+1) sits: one Wigner-Eckart convention for the whole code (Rule 18)
