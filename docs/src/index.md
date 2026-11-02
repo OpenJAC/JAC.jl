@@ -148,11 +148,11 @@ JAC toolbox but come with a rather limited implementation so far.
 # Installation
 
 The development version of JAC can installed installed directly in the interactive Julia REPL (Read-Eval-Print-Loop)
-Press `]` to enter the Julia package mode and type `add https://github.com/OpenJAC/JAC.jl` to install JAC.
+Press `]` to enter the Julia package mode and type `add https://github.com/OpenJAC/JenaAtomicCalculator.jl` to install JAC.
 
 ```
 julia> ]
-(@v1.10) pkg> add https://github.com/OpenJAC/JAC.jl
+(@v1.10) pkg> add https://github.com/OpenJAC/JenaAtomicCalculator.jl
 ```
 
 # Development
@@ -163,29 +163,29 @@ requirement. JAC comes with an MIT 'Expat' [License](@ref jac-license).
 For development purpose, user can install JAC from GitHub to their **desired direcory** using `git clone` in the 
 terminal. This will download a copy of JAC from the development branch of GitHub repository.
 ```
-git clone https://github.com/OpenJAC/JAC.jl.git
+git clone https://github.com/OpenJAC/JenaAtomicCalculator.jl.git
 ```
 
-Next `cd` to the `JAC.jl` directory and start a new Julia session
+Next `cd` to the `JenaAtomicCalculator.jl` directory and start a new Julia session
 
 ```
-shell> cd JAC.jl
+shell> cd JenaAtomicCalculator.jl
 shell> julia
 ```
 
-Then activate the `JAC.jl` environment and install the dependancy packages of `JAC.jl`
+Then activate the `JenaAtomicCalculator.jl` environment and install the dependancy packages of `JenaAtomicCalculator.jl`
 ```
 julia> ]                   # Change to the Julia package mode
 (@v1.10) pkg> activate .
-(JAC) pkg> instantiate     # Installs the dependancy packages of JAC
-(JAC) pkg> resolve         # Required **Only if** there is a cinflict in the dependancies
-(JAC) pkg> develop .       # Adds the current directory path to Julia local Registry
+(JenaAtomicCalculator) pkg> instantiate     # Installs the dependancy packages of JAC
+(JenaAtomicCalculator) pkg> resolve         # Required **Only if** there is a cinflict in the dependancies
+(JenaAtomicCalculator) pkg> develop .       # Adds the current directory path to Julia local Registry
 ```
 
 # User Guide and Manual
 
 A detailed 
-[User Guide, Compendium & Theoretical Background to JAC](https://github.com/AlokaSahoo/JAC.jl/blob/master/docs/UserGuide-Jac.pdf)  
+[User Guide, Compendium & Theoretical Background to JAC](https://github.com/OpenJAC/JenaAtomicCalculator.jl/blob/master/docs/UserGuide-Jac.pdf)  
 is available that describes the **use and underlying atomic theory** of the JAC code.
 
 

@@ -21,5 +21,5 @@ more helpful, if solutions are suggesteg and/or provided. One of the simplest wa
 writing some new *demos* (Pluto notebooks), in addition to those provided above, in order to navigate others to the task of
 a new user. Also, new graphical user interface and plotting features on different outcomes of atomic computations will be very 
 helpful for the community. A few further suggestions for extending and improving JAC can be found in section 1.7 in the 
-[User Guide, Compendium & Theoretical Background to JAC](https://github.com/AlokaSahoo/JAC.jl/blob/master/docs/UserGuide-Jac.pdf).
+[User Guide, Compendium & Theoretical Background to JAC](https://github.com/OpenJAC/JenaAtomicCalculator.jl/blob/master/docs/UserGuide-Jac.pdf).
 

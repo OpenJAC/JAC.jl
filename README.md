@@ -1,8 +1,12 @@
 
 
+<!-- The codecov badge below deliberately keeps the OLD repository name: codecov keys the project under
+     `OpenJAC/JAC.jl` and does not follow the GitHub rename.  Measured 02-Nov-2026, the old path reports 41 %
+     while `OpenJAC/JenaAtomicCalculator.jl` reports "unknown".  Do not "correct" it without first checking
+     that codecov has been re-pointed. -->
 | **Documentation**                                                               | **Build Status**                                                                                | **Try JAC in Cloud** 
 |:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
-| [![Documentation](https://img.shields.io/badge/Documentation-stable-blue)](https://openjac.github.io/JenaAtomicCalculator.jl/stable) [![Documentation](https://img.shields.io/badge/Documentation-dev-blue)](https://openjac.github.io/JenaAtomicCalculator.jl/dev) | [![Build Status](https://github.com/OpenJAC/JAC.jl/workflows/CI/badge.svg)](https://github.com/OpenJAC/JAC.jl/actions) [![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)  | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JAC.jl/master) |
+| [![Documentation](https://img.shields.io/badge/Documentation-stable-blue)](https://openjac.github.io/JenaAtomicCalculator.jl/stable) [![Documentation](https://img.shields.io/badge/Documentation-dev-blue)](https://openjac.github.io/JenaAtomicCalculator.jl/dev) | [![Build Status](https://github.com/OpenJAC/JenaAtomicCalculator.jl/workflows/CI/badge.svg)](https://github.com/OpenJAC/JenaAtomicCalculator.jl/actions) [![codecov](https://codecov.io/gh/OpenJAC/JAC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/OpenJAC/JAC.jl)  | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/OpenJAC/JenaAtomicCalculator.jl/master) |
 
 
 
