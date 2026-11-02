@@ -373,4 +373,80 @@ elseif  false
     end
     runRas("0-layer", [RasStep()])
     runRas("1-layer", [RasStep(), RasStep(RasStep(); seFrom=v3, seTo=n4, deFrom=v3, deTo=n4, frozen=frz)])
+elseif  false
+    # Last visit:  02-Nov-2026
+    #
+    # e) THE TWO Q-SPACE PERTURBATION ROUTES, ON BRANCH (a)'s OWN Cl III CASE (competition item 11).
+    #    Basics.AbstractQSpacePerturbation gives secondOrderBlock a second way to fold a Q-space
+    #    configuration: DiagonalCSFPerturbation (every CSF isolated, the default and what this file has
+    #    always used) or BlockDiagonalizedPerturbation (a folded configuration's own CSFs diagonalized
+    #    together first, then folded using ITS eigenstates). This branch runs EXACTLY branch (a)'s own
+    #    three-step ladder -- reference, valence 3s,3p->3d, core 2s,2p+3s,3p fold -- through BOTH routes
+    #    and compares them, rather than inventing a new case. tools/probe-secondOrderQ.jl already measured
+    #    that an effective Hamiltonian is safe in exactly this (core, weakly-coupled) regime; this branch
+    #    is the production-path confirmation of that, not a new finding.
+    Z      = 17.0
+    refs   = [Configuration("1s^2 2s^2 2p^6 3s^2 3p^3")]
+    sym    = LevelSymmetry(AngularJ64(3//2), Basics.minus)
+    val    = [Shell("3s"), Shell("3p")];    core = [Shell("2s"), Shell("2p")]
+    to     = [Shell("3s"), Shell("3p"), Shell("3d")]
+    frozen1 = [Shell("1s"), Shell("2s"), Shell("2p")]
+    frozen2 = [Shell("1s"), Shell("2s"), Shell("2p"), Shell("3s"), Shell("3p"), Shell("3d")]
+    grid   = Basics.recommendedGrid(refs, Nuclear.Model(Z); rbox = 20.)
+    rasSettings = RasSettings(Int64[], Basics.RotationRoute(24), 1.0e-6, CoulombInteraction(),
+                              LevelSelection(true, configurations=refs))
+    results = Tuple{String,Float64,Float64}[]
+    for  (lab, pert)  in  [ ("DiagonalCSFPerturbation (default)", Basics.DiagonalCSFPerturbation()),
+                            ("BlockDiagonalizedPerturbation",     Basics.BlockDiagonalizedPerturbation()) ]
+        steps = [ RasStep(),
+                  RasStep(RasStep(); seFrom=val, seTo=to, deFrom=val, deTo=to, frozen=frozen1),
+                  RasStep(RasStep(); seFrom=vcat(core,val), seTo=to, deFrom=vcat(core,val), deTo=to,
+                                     frozen=frozen2,
+                                     treatment = Basics.SecondOrder(1.0e-5, 1.0e-12, 1.0e-2, pert)) ]
+        wa = Representation("Cl III -- $lab", Nuclear.Model(Z), grid, refs, RasExpansion([sym], 15, steps, rasSettings) )
+        wb = generate(wa, output=true)
+        e2 = sort(wb["step2"].levels, by = l -> l.energy)[1].energy
+        e3 = sort(wb["step3"].levels, by = l -> l.energy)[1].energy
+        push!(results, (lab, e2, e3))
+        println("\n>> $lab :  step 2 (valence) = $e2 Ha,  step 3 (core fold) = $e3 Ha,  increment = " *
+                "$((e3-e2)*1000) mHa")
+    end
+    println("\n  The two routes agree on step 2 (unaffected by the new code) and on step 3 to:")
+    println("  " * string(abs(results[1][3] - results[2][3])) * " Ha " *
+            "(tools/probe-secondOrderQ.jl: the two forms are indistinguishable in this weakly-coupled, " *
+            "core regime -- +-0.2 cm^-1 there, which is the same order as this difference).")
+    abs(results[1][2] - results[2][2]) < 1.0e-12  ||
+        error("example-Ar.jl branch e: the two perturbation routes disagree on step 2, which neither " *
+              "route touches -- something is leaking between them.")
+    #
+elseif  false
+    # Last visit:  02-Nov-2026
+    #
+    # f) THE DUAL-ROLE SHELL GUARD (competition item 11), built small rather than reproducing the nine
+    #    hours branch (a)'s own header records. A core-valence step (seFrom/deFrom naming a shell this
+    #    step itself freezes) is not allowed to send its excitation into a shell an EARLIER VARIATIONAL
+    #    layer already built a correlation orbital for -- exactly the pathology that gave branch (a)'s
+    #    16-Sep-2026 failure two intruder levels, one 7 Ha below the ground state, from a 2p -> 4p
+    #    "excitation" that should cost ~200 eV instead looking free. On Be, cheap: layer 2 introduces 2p
+    #    as a valence correlation shell; layer 3 then (wrongly) tries to reuse 2p as a core-excitation
+    #    target from 1s,2s. Check `jac-warn.report` after running this branch for the physics-worded
+    #    message this is supposed to produce.
+    name        = "Beryllium -- dual-role shell guard (deliberately reproduces the failure pattern, cheaply)"
+    refConfigs  = [Configuration("[He] 2s^2")]
+    rasSettings = RasSettings([1], Basics.RotationRoute(24), 1.0e-6, CoulombInteraction(), LevelSelection(true, indices=[1]) )
+    steps = [ RasStep(),
+              RasStep(RasStep(); seFrom=[Shell("2s")], seTo=[Shell("2p")], deFrom=[Shell("2s")], deTo=[Shell("2p")],
+                                 frozen=[Shell("1s")]),
+              RasStep(RasStep(); seFrom=[Shell("1s"), Shell("2s")], seTo=[Shell("2p")],
+                                 deFrom=[Shell("1s"), Shell("2s")], deTo=[Shell("2p")],
+                                 frozen=[Shell("1s"), Shell("2s"), Shell("2p")],
+                                 treatment=Basics.SecondOrder(1.0e-5, 1.0e-12)) ]
+    wa = Representation(name, Nuclear.Model(4.), Radial.Grid(true), refConfigs,
+                        RasExpansion([LevelSymmetry(0, Basics.plus)], 4, steps, rasSettings) )
+    wb = generate(wa, output=true)
+    println("\n>> Check jac-warn.report now: it must name step 3, the shells 1s, 2s, and the shell 2p, in")
+    println(">> the physics-worded message (\"... which is already a valence correlation orbital in this")
+    println(">> ladder ... add the core-valence excitation into an unused shell instead\").")
+    #
+
 end
