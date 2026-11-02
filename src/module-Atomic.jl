@@ -32,6 +32,12 @@ export  perform
     + intermediateAsfSettings        ::AsfSettings                     ... Provides the SCF settings for the intermediate-state multiplet.
     + finalConfigs                   ::Array{Configuration,1}          ... A list of final-state configurations.
     + finalAsfSettings               ::AsfSettings                     ... Provides the SCF and CI settings for the final-state multiplet.
+    + orbitalSource                  ::Basics.AbstractOrbitalSource    ... Says WHICH one-electron orbital set the initial, intermediate and final
+                                                                           multiplets are built on.  `SeparateOrbitals()` is the default and is what JAC
+                                                                           has always done -- every multiplet from its own SCF.  The alternatives exist
+                                                                           because an explicit SECOND-ORDER amplitude is valid only on ONE orthonormal
+                                                                           set:  `ManyElectron.matrixElement_HminusE` drops the overlap term `-E <r|s>`,
+                                                                           which vanishes identically only then.  See `Basics.AbstractOrbitalSource`.
     + processSettings                ::Basics.AbstractProcessSettings  ... Provides the settings for the selected process.
 """
 struct  Computation
@@ -47,6 +53,7 @@ struct  Computation
     intermediateAsfSettings        ::AsfSettings
     finalConfigs                   ::Array{Configuration,1}
     finalAsfSettings               ::AsfSettings
+    orbitalSource                  ::Basics.AbstractOrbitalSource
     processSettings                ::Basics.AbstractProcessSettings
 end 
 
@@ -59,7 +66,7 @@ function Computation()
                 Configuration[], AsfSettings(),
                 Configuration[], AsfSettings(),
                 Configuration[], AsfSettings(),
-                Configuration[], AsfSettings(), PhotoEmission.Settings() )
+                Configuration[], AsfSettings(), Basics.SeparateOrbitals(), PhotoEmission.Settings() )
 end
 
 
@@ -80,6 +87,7 @@ function Computation(comp::Atomic.Computation;
     initialConfigs::Union{Nothing,Array{Configuration,1}}=nothing,              initialAsfSettings::Union{Nothing,AsfSettings}=nothing, 
     intermediateConfigs::Union{Nothing,Array{Configuration,1}}=nothing,         intermediateAsfSettings::Union{Nothing,AsfSettings}=nothing, 
     finalConfigs::Union{Nothing,Array{Configuration,1}}=nothing,                finalAsfSettings::Union{Nothing,AsfSettings}=nothing, 
+    orbitalSource::Union{Nothing,Basics.AbstractOrbitalSource}=nothing,
     processSettings::Union{Nothing,Any}=nothing,            
     printout::Bool=false)
     
@@ -95,13 +103,14 @@ function Computation(comp::Atomic.Computation;
     if  isnothing(intermediateAsfSettings)  intermediateAsfSettingsx = comp.intermediateAsfSettings else  intermediateAsfSettingsx = intermediateAsfSettings  end 
     if  isnothing(finalConfigs)             finalConfigsx            = comp.finalConfigs            else  finalConfigsx            = finalConfigs             end 
     if  isnothing(finalAsfSettings)         finalAsfSettingsx        = comp.finalAsfSettings        else  finalAsfSettingsx        = finalAsfSettings         end 
+    if  isnothing(orbitalSource)            orbitalSourcex           = comp.orbitalSource           else  orbitalSourcex           = orbitalSource            end 
     if  isnothing(processSettings)          prsx                     = comp.processSettings         else  prsx                     = processSettings          end 
     
     
     Atomic.checkPropertySettings(propertySettingsx)
 
     cp = Computation(namex, nuclearModelx, gridx, propertySettingsx, configsx, asfSettingsx, initialConfigsx, initialAsfSettingsx,     
-                        intermediateConfigsx,  intermediateAsfSettingsx, finalConfigsx, finalAsfSettingsx,        
+                        intermediateConfigsx,  intermediateAsfSettingsx, finalConfigsx, finalAsfSettingsx, orbitalSourcex,        
                         prsx) 
                         
     if printout  Base.show(cp)      end
@@ -168,6 +177,8 @@ function Base.show(io::IO, comp::Atomic.Computation)
         println(io, "intermediateAsfSettings:      \n$(comp.intermediateAsfSettings)  ")    end
     if  comp.finalAsfSettings != AsfSettings()     
         println(io, "finalAsfSettings:             \n$(comp.finalAsfSettings)  ")           end
+    if  comp.orbitalSource != Basics.SeparateOrbitals()
+        println(io, "orbitalSource:                $(comp.orbitalSource)  ")                end
     #
     else
     # For the computation of no or several atomic properties
