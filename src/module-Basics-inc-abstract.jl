@@ -2512,6 +2512,15 @@ export AbstractQuantizationAxis, DefaultQuantizationAxis, StaticQuantizationAxis
                                        `E_i`, its denominators are `E_i - E_n`, and the dropped overlap term carries `E_i`.
     + struct FinalStateOrbitals    ... one SCF on the final configurations, with the others frozen onto it;  the choice where the FINAL
                                        state is the measured one.
+    + struct GivenOrbitals         ... the caller supplies the set outright, and EVERY multiplet is a CI on it.  This is the one that
+                                       completes a SECOND-ORDER computation, because the Green space is built by the caller BEFORE
+                                       `perform` runs -- it lives in the process settings -- so the caller already holds the orbitals
+                                       and nothing is gained by having `perform` rediscover them.  It also lifts the restriction the
+                                       other two carry: the SCF may run over a WIDER configuration list than any multiplet's CI, which
+                                       is what a 1s^2 initial state needs when its Green space occupies 2s and 2p.  Measured
+                                       02-Nov-2026 on He-like Be: one SCF over [1s^2, 1s 2s, 1s 2p] carries a 1s^2 initial state and a
+                                       [1s, 2s, 2p] Green space with condition (b) MET, at the price of 3.3e-02 Ha (0.24 %) on the
+                                       initial-state energy against its own dedicated SCF.
 
         A CONTINUUM orbital's generating field is a SEPARATE question and is not decided here:  it is resolved per module from the
         relevant `AsfSettings.scField`, for which see `Continuum.resolveExchangeDefault`.
@@ -2521,7 +2530,24 @@ struct     SeparateOrbitals         <:  AbstractOrbitalSource   end
 struct     InitialStateOrbitals     <:  AbstractOrbitalSource   end
 struct     FinalStateOrbitals       <:  AbstractOrbitalSource   end
 
-export  AbstractOrbitalSource, FinalStateOrbitals, InitialStateOrbitals, SeparateOrbitals
+##  The field is PARAMETRIC for a mechanical reason, not a conceptual one: this file is included BEFORE
+##  module-Radial.jl, so `Radial.Orbital` cannot be named as a field type here at all.  `T` is in practice
+##  the `Dict{Subshell,Orbital}` that a basis carries, and `Hamiltonian.performCIwithFrozenOrbitals` is
+##  typed on that, so anything else raises a MethodError naming the type rather than failing quietly.
+struct     GivenOrbitals{T<:AbstractDict}  <:  AbstractOrbitalSource
+    orbitals             ::T
+end
+
+
+# `Base.show(io::IO, source::Basics.GivenOrbitals)`  ... prints the orbital set by its SUBSHELLS rather than
+#   dumping every radial array, so that a Computation carrying one stays readable when it is shown.
+function Base.show(io::IO, source::Basics.GivenOrbitals)
+    print(io, "GivenOrbitals(" * string(length(source.orbitals)) * " orbitals: " *
+              join(sort(string.(collect(keys(source.orbitals)))), ", ") * ")")
+end
+
+
+export  AbstractOrbitalSource, FinalStateOrbitals, GivenOrbitals, InitialStateOrbitals, SeparateOrbitals
 
 
 #################################################################################################################################
