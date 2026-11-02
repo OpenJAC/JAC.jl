@@ -120,8 +120,8 @@
 module PhotoDoubleIonization
 
 
-using Printf, ..AngularMomentum, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..Radial, ..Nuclear, ..ManyElectron, ..PhotoEmission,
-                ..TableStrings
+using Printf, ..AngularMomentum, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..Radial, ..RadialIntegrals, ..Nuclear,
+                ..ManyElectron, ..PhotoEmission, ..TableStrings
 
 """
 `struct  PhotoDoubleIonization.Settings  <:  AbstractProcessSettings`  
@@ -715,6 +715,41 @@ end
 
 
 """
+`PhotoDoubleIonization.checkGreenSpaceOnGrid(gMultiplet::Multiplet, grid::Radial.Grid)`
+    ... tests that the caller-supplied Green space actually lives on the grid this computation integrates on, and returns a
+        list::Array{String,1} of the problems found -- empty when there is none.  `settings.gMultiplet` is built by the CALLER,
+        normally from its own `Representation`, and a Representation handed a DIFFERENT grid returns orbitals carrying
+        `useStandardGrid = true` and an EMPTY stored grid.  Their radial arrays are then read index by index against a mesh they
+        do not belong to, so every matrix element through them is nonsense rather than merely inaccurate, and nothing says so.
+        MEASURED on `examples/example-Dj.jl`, whose branch 1 passed `Radial.Grid(true)` (392 points to 614 a.u.) while branch 2
+        computed on 1302 points to 10 a.u.:  <a|a> came back 0.3581 for 1s_1/2, 0.1149 for 2s_1/2 and 0.1242 / 0.1241 for the two
+        2p levels, where it must be 1 -- norms wrong by factors of 3 to 9.  NO choice of transition operator repairs that, which
+        is why this check belongs in front of the operator question of item 98 rather than after it.
+        Only clearly BOUND orbitals are tested and the tolerance is loose, because a continuum orbital follows a different
+        normalisation convention entirely (see `Continuum.checkContinuumAmplitude`) and a bound orbital may legitimately be a
+        box-confined pseudostate.  Calibrated by mutation: on the two-grid case every one of the four bound shells is reported,
+        and on the same case with one grid nothing is.
+"""
+function checkGreenSpaceOnGrid(gMultiplet::Multiplet, grid::Radial.Grid)
+    problems = String[]
+    if  length(gMultiplet.levels) == 0      return( problems )      end
+    for  (sh, orb)  in  gMultiplet.levels[1].basis.orbitals
+        orb.isBound  ||  continue
+        ovl = try   RadialIntegrals.overlap(orb, orb, grid)   catch   NaN   end
+        if  isnan(ovl)  ||  abs(ovl - 1.) > 0.05
+            push!( problems, "the gMultiplet orbital $(string(sh)) has <a|a> = $(round(ovl, digits=6)) on the grid this " *
+                             "computation runs on, where it must be 1.  The Green space was almost certainly built on a " *
+                             "DIFFERENT grid:  give the `Representation` that builds `settings.gMultiplet` the SAME grid as " *
+                             "the `Atomic.Computation`, or call setDefaults(\"standard grid\", grid) before building it.  " *
+                             "Every matrix element through this orbital is otherwise read against the wrong radii." )
+        end
+    end
+
+    return( problems )
+end
+
+
+"""
 `PhotoDoubleIonization.computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nuclear.Model, grid::Radial.Grid,
         nrContinuum::Int64, settings::PhotoDoubleIonization.Settings; nuclearPot::Union{Nothing,Radial.Potential}=nothing,
         primitives::Union{Nothing,Bsplines.Primitives}=nothing, printout::Bool=false)`
@@ -914,6 +949,11 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     nuclearPot = Nuclear.nuclearPotential(nm, grid)
     primitives = Bsplines.generatePrimitives(grid)
     #
+    # ONCE PER COMPUTATION, not once per amplitude.  The first version of this check sat inside `amplitude` and fired 6656
+    # times on one run of `examples/example-Dj.jl`, which is noise rather than a guard.
+    for  problem in PhotoDoubleIonization.checkGreenSpaceOnGrid(settings.gMultiplet, grid)
+        @warn("PhotoDoubleIonization.computeLines(): " * problem)
+    end
     lines = PhotoDoubleIonization.determineLines(finalMultiplet, initialMultiplet, settings)
     # Display all selected lines before the computations start
     if  settings.printBefore    PhotoDoubleIonization.displayLines(stdout, lines)    end
