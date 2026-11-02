@@ -332,7 +332,8 @@ function checkFrozenOrbitalsSpan(frozenOrbitals::Dict{Subshell,Radial.Orbital}, 
     if  !isempty(absent)
         error("Basics.perform(): the orbital set taken from $sourceName does not span $configName -- it has no "           *
               "$(join(string.(absent), ", ")).  ONE shared orbital set is usable only where it SPANS every subshell the "  *
-              "other multiplets occupy, so widen $sourceName to a configuration list that generates those subshells "     *
+              "other multiplets occupy, so widen the configuration list that PRODUCED $sourceName until it generates "    *
+              "those subshells "                                                                                          *
               "(for a 1s^2 initial state and a 2s/2p Green space that is [1s^2, 1s 2s, 1s 2p] rather than [1s^2]), or "   *
               "use Basics.SeparateOrbitals() and accept that a second-order amplitude through these multiplets carries "   *
               "the dropped -E <r|s> term.  See Basics.AbstractOrbitalSource.")
@@ -448,13 +449,13 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
         # overlap term -E <r|s>, which vanishes identically only on one orthonormal set.  The statement ORDER inside the
         # default branch is preserved deliberately -- performSCF resets the global relativistic subshell list, so moving
         # an expandLevelsIntoLS across an SCF call is not obviously inert and is not worth risking for tidiness.
-        if      computation.orbitalSource == Basics.SeparateOrbitals()
+        if      computation.orbitalSource isa Basics.SeparateOrbitals
             initialMultiplet = SelfConsistent.performSCF(computation.initialConfigs, nModel, computation.grid,
                                                          computation.initialAsfSettings)
             LSjj.expandLevelsIntoLS(initialMultiplet, computation.initialAsfSettings.jjLS)
             finalMultiplet   = SelfConsistent.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
             LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
-        elseif  computation.orbitalSource == Basics.InitialStateOrbitals()
+        elseif  computation.orbitalSource isa Basics.InitialStateOrbitals
             initialMultiplet = SelfConsistent.performSCF(computation.initialConfigs, nModel, computation.grid,
                                                          computation.initialAsfSettings)
             LSjj.expandLevelsIntoLS(initialMultiplet, computation.initialAsfSettings.jjLS)
@@ -463,7 +464,7 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             finalMultiplet   = Hamiltonian.performCIwithFrozenOrbitals(computation.finalConfigs, sharedOrbitals, nModel,
                                                                        computation.grid, computation.finalAsfSettings)
             LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
-        elseif  computation.orbitalSource == Basics.FinalStateOrbitals()
+        elseif  computation.orbitalSource isa Basics.FinalStateOrbitals
             finalMultiplet   = SelfConsistent.performSCF(computation.finalConfigs, nModel, computation.grid, computation.finalAsfSettings)
             LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
             sharedOrbitals   = finalMultiplet.levels[1].basis.orbitals
@@ -471,10 +472,26 @@ function Basics.perform(computation::Atomic.Computation; output::Bool=false)
             initialMultiplet = Hamiltonian.performCIwithFrozenOrbitals(computation.initialConfigs, sharedOrbitals, nModel,
                                                                        computation.grid, computation.initialAsfSettings)
             LSjj.expandLevelsIntoLS(initialMultiplet, computation.initialAsfSettings.jjLS)
+        elseif  computation.orbitalSource isa Basics.GivenOrbitals
+            # THE ONE THAT COMPLETES A SECOND-ORDER COMPUTATION.  The Green space is built by the CALLER before `perform`
+            # runs -- it sits in the process settings -- so the caller already holds the orbitals, and the SCF behind them
+            # may have run over a WIDER configuration list than any multiplet's CI.  That is what a 1s^2 initial state
+            # needs when its Green space occupies 2s and 2p:  measured 02-Nov-2026 on He-like Be, one SCF over
+            # [1s^2, 1s 2s, 1s 2p] carries a 1s^2 initial state and a [1s, 2s, 2p] Green space with condition (b) met, at
+            # a price of 3.3e-02 Ha (0.24 %) on the initial-state energy against its own dedicated SCF.
+            sharedOrbitals   = computation.orbitalSource.orbitals
+            BasicsAZ.checkFrozenOrbitalsSpan(sharedOrbitals, computation.initialConfigs, "initialConfigs", "orbitalSource")
+            BasicsAZ.checkFrozenOrbitalsSpan(sharedOrbitals, computation.finalConfigs,   "finalConfigs",   "orbitalSource")
+            initialMultiplet = Hamiltonian.performCIwithFrozenOrbitals(computation.initialConfigs, sharedOrbitals, nModel,
+                                                                       computation.grid, computation.initialAsfSettings)
+            LSjj.expandLevelsIntoLS(initialMultiplet, computation.initialAsfSettings.jjLS)
+            finalMultiplet   = Hamiltonian.performCIwithFrozenOrbitals(computation.finalConfigs, sharedOrbitals, nModel,
+                                                                       computation.grid, computation.finalAsfSettings)
+            LSjj.expandLevelsIntoLS(finalMultiplet, computation.finalAsfSettings.jjLS)
         else
             error("Basics.perform(): computation.orbitalSource is $(computation.orbitalSource), which this method does not "  *
-                  "know how to honour.  The supported values are Basics.SeparateOrbitals(), Basics.InitialStateOrbitals() "   *
-                  "and Basics.FinalStateOrbitals();  see Basics.AbstractOrbitalSource.")
+                  "know how to honour.  The supported values are Basics.SeparateOrbitals(), Basics.InitialStateOrbitals(), "  *
+                  "Basics.FinalStateOrbitals() and Basics.GivenOrbitals(orbitals);  see Basics.AbstractOrbitalSource.")
         end
         if  output   results["initialMultiplet"] = initialMultiplet;   results["finalMultiplet"] = finalMultiplet    end 
         # HOW A SECOND-ORDER CALLER REACHES THE SHARED SET, since its Green space must sit on these same orbitals and
