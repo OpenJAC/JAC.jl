@@ -2494,9 +2494,13 @@ export AbstractQuantizationAxis, DefaultQuantizationAxis, StaticQuantizationAxis
         `examples/example-Dj.jl`:  a Green space and an initial state from their own SCFs departed by 8.2e-02 at
         `<2s_green|1s_initial>`, and the dropped term came to 2.05x the matrix element it would have corrected.
 
-        ONE SET IS NOT MORE ACCURATE, IT IS MORE CONSISTENT, and the distinction is worth keeping:  a frozen basis is a WORSE
-        variational description of each individual state than that state's own SCF would be.  What it buys is that the operator JAC
-        evaluates equals the operator the physics asks for.  `TwoElectronOnePhoton` measures the trade as worth making -- on one set,
+        ONE SET IS NOT MORE ACCURATE, IT IS MORE CONSISTENT, and the distinction is worth keeping:  no single set can be optimal for
+        all three states at once, so sharing one is a deliberate COMPROMISE in the description of each of them.  What it buys is that
+        the operator JAC evaluates equals the operator the physics asks for.  It does NOT follow that a shared set must give a HIGHER
+        energy, and an earlier wording of this paragraph wrongly said so:  `SelfConsistent.performSCF` is a mean-field procedure and
+        not a level-specific variational minimisation, so neither number is a variational bound and the ordering can come out either
+        way.  Measured 02-Nov-2026 on Li-like Ne, initial [1s^2 2s, 1s^2 2p] against final [1s^2 2p], the frozen final level came out
+        1.4e-04 Ha BELOW its own separately converged SCF.  `TwoElectronOnePhoton` measures the trade as worth making -- on one set,
         explicit second order reproduces full CI to 0.3 % -- but nothing establishes that in general, so the default stays
         `SeparateOrbitals()` and no existing result moves.
 
