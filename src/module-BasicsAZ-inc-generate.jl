@@ -402,6 +402,32 @@ function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicSta
                                         ".") * " \n", color=:light_cyan)
         end
     else
+        # THE DUAL-ROLE SHELL CHECK, item 11.  A core-valence correlation layer -- one whose excitations
+        # originate from a shell this step itself FREEZES (so the excitation is from an already-settled,
+        # not-being-reoptimized shell -- the hallmark of a core-excitation source, as opposed to an
+        # ordinary valence step, which excites FROM its own active fromShells) -- must not send that
+        # excitation into a shell an EARLIER VARIATIONAL layer already built a correlation orbital for:
+        # that orbital was shaped for valence correlation, not for a core-hole virtual, and reusing it is
+        # exactly what produced the documented 16-Sep-2026 failure in example-Ar.jl -- two intruder levels,
+        # one 7 Ha below the ground state, from a 2p -> 4p "excitation" that should cost ~200 eV instead
+        # looking free. Hamiltonian.secondOrderBlock's own intruder guard catches the SYMPTOM after the
+        # fact; this stops the CAUSE before the layer runs.
+        refShells = Shell[]
+        for  conf in rep.refConfigs,  (sh, occ) in conf.shells
+            if  occ > 0  &&  !(sh in refShells)    push!(refShells, sh)    end
+        end
+        coreSources = unique( Shell[ sh  for sh in vcat(step.seFrom, step.deFrom)  if  sh in stepFrozenShells ] )
+        if  !isempty(coreSources)
+            priorShells = unique( Shell(sh.n, Basics.subshell_l(sh))  for sh in priorMultiplet.levels[1].basis.subshells )
+            claimed     = unique( Shell[ sh  for sh in vcat(step.seTo, step.deTo)
+                                             if  sh in priorShells  &&  !(sh in refShells) ] )
+            for  sh in claimed
+                Defaults.warn(AddWarning(), "Basics.generate(RasExpansion): step $istep sends a core-valence " *
+                              "excitation from $(join(string.(coreSources), ", ")) into $sh, which is already a " *
+                              "valence correlation orbital in this ladder -- add the core-valence excitation " *
+                              "into an unused shell instead (one no earlier variational layer has built).")
+            end
+        end
         printstyled(">> step $istep is treated to SECOND ORDER in its Q space; the orbitals of this layer are " *
                     "NOT re-optimized. \n", color=:light_yellow)
         (multiplet, partitions) = Hamiltonian.performCIwithSecondOrderQ(basis, priorMultiplet.levels[1].basis,

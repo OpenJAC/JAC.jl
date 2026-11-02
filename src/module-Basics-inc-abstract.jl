@@ -2485,6 +2485,46 @@ export AbstractQuantizationAxis, DefaultQuantizationAxis, StaticQuantizationAxis
 
 
 """
+`abstract type Basics.AbstractOrbitalSource` 
+    ... defines an abstract and three singleton types to say WHICH one-electron orbital set the multiplets of an `Atomic.Computation`
+        are built on.  It exists because an explicit second-order amplitude is valid only where its initial, intermediate (Green) and
+        final multiplets share ONE orthonormal set:  the matrix element such an amplitude needs at a junction whose two CSFs differ in
+        ONE orbital is `<r|H - E|s> = <r|h_D|s> + <r|V_ee|s> - E <r|s>`, and `ManyElectron.matrixElement_HminusE` drops the overlap
+        term on exactly that orthonormality assumption.  Separate SCF runs make the assumption false.  Measured 02-Nov-2026 on
+        `examples/example-Dj.jl`:  a Green space and an initial state from their own SCFs departed by 8.2e-02 at
+        `<2s_green|1s_initial>`, and the dropped term came to 2.05x the matrix element it would have corrected.
+
+        ONE SET IS NOT MORE ACCURATE, IT IS MORE CONSISTENT, and the distinction is worth keeping:  a frozen basis is a WORSE
+        variational description of each individual state than that state's own SCF would be.  What it buys is that the operator JAC
+        evaluates equals the operator the physics asks for.  `TwoElectronOnePhoton` measures the trade as worth making -- on one set,
+        explicit second order reproduces full CI to 0.3 % -- but nothing establishes that in general, so the default stays
+        `SeparateOrbitals()` and no existing result moves.
+
+    + struct SeparateOrbitals      ... every multiplet from its own SCF.  THE DEFAULT, and what JAC has always done:  correct for a
+                                       first-order amplitude whose CSFs differ in TWO orbitals, where a one-body operator cannot
+                                       contribute at all and `V_ee` is the whole answer.
+    + struct InitialStateOrbitals  ... one SCF on the initial configurations;  every other multiplet is a CI on those frozen orbitals.
+                                       The natural choice for an absorption or decay amplitude, since the series is referenced to
+                                       `E_i`, its denominators are `E_i - E_n`, and the dropped overlap term carries `E_i`.
+    + struct FinalStateOrbitals    ... one SCF on the final configurations, with the others frozen onto it;  the choice where the FINAL
+                                       state is the measured one.
+
+        A CONTINUUM orbital's generating field is a SEPARATE question and is not decided here:  it is resolved per module from the
+        relevant `AsfSettings.scField`, for which see `Continuum.resolveExchangeDefault`.
+"""
+abstract type  AbstractOrbitalSource                            end
+struct     SeparateOrbitals         <:  AbstractOrbitalSource   end
+struct     InitialStateOrbitals     <:  AbstractOrbitalSource   end
+struct     FinalStateOrbitals       <:  AbstractOrbitalSource   end
+
+export  AbstractOrbitalSource, FinalStateOrbitals, InitialStateOrbitals, SeparateOrbitals
+
+
+#################################################################################################################################
+#################################################################################################################################
+
+
+"""
 `abstract type Basics.AbstractScField` 
     ... defines an abstract and a number of singleton types to distinguish between different self-consistent fields
 
@@ -3032,6 +3072,48 @@ struct     Variational          <:  AbstractQTreatment  end
 
 
 """
+`abstract type  Basics.AbstractQSpacePerturbation`
+    ... how the Q-space's OWN internal coupling is treated before it is folded into the CI by
+        `Hamiltonian.secondOrderBlock` -- a question separate from `Basics.AbstractQTreatment`, which
+        decides promote/fold/discard for each configuration, and from `AtomicState.
+        AbstractRasStoppingPolicy`/`AbstractRasShellPolicy` (the automatic-RAS-ladder policies), but the
+        same shape: a small, deliberately open family, meant to grow by one new struct and one dispatch
+        method, never by a change to an existing one.
+
+    + struct DiagonalCSFPerturbation       ... every Q-space CSF folded as its own, isolated intermediate
+                                                state. The default, and what JAC has always done.
+    + struct BlockDiagonalizedPerturbation ... a folded Q-space configuration's own CSFs are diagonalized
+                                                together FIRST, and the fold then uses ITS eigenstates.
+"""
+abstract type  AbstractQSpacePerturbation                end
+
+
+"""
+`struct  Basics.DiagonalCSFPerturbation  <:  Basics.AbstractQSpacePerturbation`
+    ... every Q-space CSF is folded as its own, isolated intermediate state, using its own diagonal
+        Hamiltonian element as the Epstein-Nesbet denominator -- exactly what `Hamiltonian.secondOrderBlock`
+        has always done, validated against the exact CI on Cl III (`examples/example-Ar.jl` branch a) and
+        against `tools/probe-secondOrderQ.jl`'s own measurements. This ignores whether two Q-space CSFs
+        couple to EACH OTHER; see `Basics.BlockDiagonalizedPerturbation` for the alternative that does not.
+        The default, so every existing caller of `Basics.SecondOrder` is unaffected.
+"""
+struct     DiagonalCSFPerturbation       <:  AbstractQSpacePerturbation  end
+
+
+"""
+`struct  Basics.BlockDiagonalizedPerturbation  <:  Basics.AbstractQSpacePerturbation`
+    ... for each folded Q-space configuration, its own CSFs are diagonalized together FIRST, and the fold
+        then uses that configuration's own eigenstates and eigenvalues in place of its bare CSFs' diagonal
+        elements -- capturing correlation WITHIN one Q-space configuration that
+        `Basics.DiagonalCSFPerturbation` cannot see, since that route never asks whether two Q-space CSFs
+        couple to each other at all. More expensive than the diagonal route (one small diagonalization per
+        folded configuration, rather than none), named because the maintainer's own contact with the GRASP
+        community reports this can matter.
+"""
+struct     BlockDiagonalizedPerturbation  <:  AbstractQSpacePerturbation  end
+
+
+"""
 `struct  Basics.SecondOrder  <:  Basics.AbstractQTreatment`
     ... ranks every configuration of the step's Q space by `|c(K')|^2`, the fraction of the atomic state function
         that configuration carries, and routes it on that number alone:
@@ -3050,6 +3132,10 @@ struct     Variational          <:  AbstractQTreatment  end
     + discardBelow       ::Float64   ... weight below which a configuration is dropped entirely.
     + justifyBelow       ::Float64   ... the largest `Sum |c|^2` over the FOLDED part for which the fold-in is still
                                          called justified. INDEPENDENT of `promoteAbove` on purpose; see below.
+    + qSpacePerturbation ::Basics.AbstractQSpacePerturbation   ... how the FOLDED part's own internal coupling is
+                                         treated; `Basics.DiagonalCSFPerturbation()` by default, reproducing every
+                                         behaviour this struct had before this field existed. See
+                                         `Basics.AbstractQSpacePerturbation`.
 
     WHY A WEIGHT AND NOT AN ENERGY. `dE_PT` is an energy and equals `|c|^2 * D`, so at equal weight a configuration
     further away in energy ranks HIGHER -- which is the wrong way round for a spectrum. Measured on Cl III
@@ -3081,25 +3167,34 @@ struct     SecondOrder          <:  AbstractQTreatment
     promoteAbove         ::Float64
     discardBelow         ::Float64
     justifyBelow         ::Float64
+    qSpacePerturbation   ::Basics.AbstractQSpacePerturbation
 end
 
 
 # `Basics.SecondOrder()`  ... the calibrated starting point; see the caveat in the docstring above
 function SecondOrder()
-    SecondOrder(1.0e-4, 1.0e-12, 1.0e-2)
+    SecondOrder(1.0e-4, 1.0e-12, 1.0e-2, DiagonalCSFPerturbation())
 end
 
 
 # `Basics.SecondOrder(promoteAbove::Float64)`  ... sets the promotion threshold and keeps the default floor
 function SecondOrder(promoteAbove::Float64)
-    SecondOrder(promoteAbove, 1.0e-12, 1.0e-2)
+    SecondOrder(promoteAbove, 1.0e-12, 1.0e-2, DiagonalCSFPerturbation())
 end
 
 
 # `Basics.SecondOrder(promoteAbove::Float64, discardBelow::Float64)`  ... keeps the default justification bound,
 #   which is deliberately NOT tied to promoteAbove -- see the docstring above.
 function SecondOrder(promoteAbove::Float64, discardBelow::Float64)
-    SecondOrder(promoteAbove, discardBelow, 1.0e-2)
+    SecondOrder(promoteAbove, discardBelow, 1.0e-2, DiagonalCSFPerturbation())
+end
+
+
+# `Basics.SecondOrder(promoteAbove::Float64, discardBelow::Float64, justifyBelow::Float64)`  ... the three-threshold
+#   form every caller before this field existed could reach directly, via Julia's own default constructor; kept as
+#   an explicit method now that a fourth field means that default no longer matches three positional arguments.
+function SecondOrder(promoteAbove::Float64, discardBelow::Float64, justifyBelow::Float64)
+    SecondOrder(promoteAbove, discardBelow, justifyBelow, DiagonalCSFPerturbation())
 end
 
 

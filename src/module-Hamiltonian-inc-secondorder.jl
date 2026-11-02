@@ -188,6 +188,78 @@ end
 
 
 """
+`Hamiltonian.foldQGroup!(hNN::Array{Float64,2}, newIdx::Array{Int64,1}, hDiag::Array{Float64,1}, basis::Basis,
+                         qIndices::Array{Int64,1}, nm::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings,
+                         potential::Radial.Potential, cache::InteractionStrength.XLCache,
+                         perturbation::Basics.DiagonalCSFPerturbation)`
+    ... folds ONE Q-space configuration's CSFs (`qIndices`) into `hNN`, the growing CI matrix of the retained
+        (P + promoted) basis -- the body of `Hamiltonian.secondOrderBlock`'s own fold loop, taken out so that
+        HOW a folded configuration's own internal coupling is treated can be dispatched on `perturbation`; see
+        `Basics.AbstractQSpacePerturbation`. This method is `Basics.DiagonalCSFPerturbation`'s: every CSF of
+        `qIndices` is folded as its own, isolated intermediate state, using its own diagonal Hamiltonian
+        element as the Epstein-Nesbet denominator -- exactly what this loop has always done. Mutates `hNN` in
+        place. Nothing is returned.
+"""
+function foldQGroup!(hNN::Array{Float64,2}, newIdx::Array{Int64,1}, hDiag::Array{Float64,1}, basis::Basis,
+                      qIndices::Array{Int64,1}, nm::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings,
+                      potential::Radial.Potential, cache::InteractionStrength.XLCache,
+                      perturbation::Basics.DiagonalCSFPerturbation)
+    for  q in qIndices
+        vRow = [ Hamiltonian.matrixElement(basis, p, q, nm, grid, settings, potential, cache)  for p in newIdx ]
+        hqq  =   Hamiltonian.matrixElement(basis, q, q, nm, grid, settings, potential, cache)
+        for  a = 1:length(newIdx),  b = 1:length(newIdx)
+            da = hqq - hDiag[a];    db = hqq - hDiag[b]
+            if  abs(da) < 1.0e-10  ||  abs(db) < 1.0e-10    continue    end
+            hNN[a,b] = hNN[a,b] - vRow[a]*vRow[b] * 0.5 * (1/da + 1/db)
+        end
+    end
+
+    return( nothing )
+end
+
+
+"""
+`Hamiltonian.foldQGroup!(hNN::Array{Float64,2}, newIdx::Array{Int64,1}, hDiag::Array{Float64,1}, basis::Basis,
+                         qIndices::Array{Int64,1}, nm::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings,
+                         potential::Radial.Potential, cache::InteractionStrength.XLCache,
+                         perturbation::Basics.BlockDiagonalizedPerturbation)`
+    ... the `Basics.BlockDiagonalizedPerturbation` method: `qIndices`' own CSF block is built and diagonalized
+        FIRST (`Hamiltonian.matrixElement` to build it, `Hamiltonian.diagonalizeCiMatrix` to diagonalize it --
+        the same two primitives `Hamiltonian.secondOrderBlock` already uses elsewhere), then the coupling
+        vector to every retained CSF of `newIdx` is transformed into this configuration's OWN eigenbasis, and
+        the SAME Gaigalas-Eq.-(37)-style fold is applied summed over its eigenstates -- their eigenvalues in
+        place of each bare CSF's diagonal element -- rather than over its bare CSFs one at a time. This
+        captures correlation WITHIN `qIndices` that the diagonal method cannot see. Mutates `hNN` in place.
+        Nothing is returned.
+"""
+function foldQGroup!(hNN::Array{Float64,2}, newIdx::Array{Int64,1}, hDiag::Array{Float64,1}, basis::Basis,
+                      qIndices::Array{Int64,1}, nm::Nuclear.Model, grid::Radial.Grid, settings::AsfSettings,
+                      potential::Radial.Potential, cache::InteractionStrength.XLCache,
+                      perturbation::Basics.BlockDiagonalizedPerturbation)
+    nq   = length(qIndices)
+    hQQ  = [ Hamiltonian.matrixElement(basis, qIndices[i], qIndices[j], nm, grid, settings, potential, cache)
+             for i = 1:nq, j = 1:nq ]
+    hQQ  = (hQQ + transpose(hQQ)) / 2
+    fQ   = Hamiltonian.diagonalizeCiMatrix(hQQ, LevelSelection())
+    eQ   = fQ.values;    cQ = hcat(fQ.vectors...)
+    vP   = [ Hamiltonian.matrixElement(basis, p, qIndices[i], nm, grid, settings, potential, cache)
+             for p in newIdx, i = 1:nq ]
+    vEig = vP * cQ
+
+    for  k = 1:nq
+        hqq = eQ[k]
+        for  a = 1:length(newIdx),  b = 1:length(newIdx)
+            da = hqq - hDiag[a];    db = hqq - hDiag[b]
+            if  abs(da) < 1.0e-10  ||  abs(db) < 1.0e-10    continue    end
+            hNN[a,b] = hNN[a,b] - vEig[a,k]*vEig[b,k] * 0.5 * (1/da + 1/db)
+        end
+    end
+
+    return( nothing )
+end
+
+
+"""
 `Hamiltonian.secondOrderBlock(sym::LevelSymmetry, basis::Basis, pBasis::Basis,
                               refConfigs::Array{Configuration,1}, nm::Nuclear.Model, grid::Radial.Grid,
                               settings::AsfSettings, treatment::Basics.SecondOrder; printout::Bool=true)`
@@ -293,20 +365,15 @@ function secondOrderBlock(sym::LevelSymmetry, basis::Basis, pBasis::Basis, refCo
     hNN = (hNN + transpose(hNN)) / 2
 
     # -- and the folded remainder, through the effective Hamiltonian of Gaigalas Eq. (37) with the symmetrised
-    #    denominator of his Eq. (30), in Epstein-Nesbet form: each CSF's own diagonal element in place of a
-    #    configuration average.  The correction is symmetric in (a,b) by construction, so the matrix stays
-    #    Hermitian and a single diagonalization delivers energies and mixing coefficients together.
+    #    denominator of his Eq. (30).  The correction is symmetric in (a,b) by construction, so the matrix stays
+    #    Hermitian and a single diagonalization delivers energies and mixing coefficients together.  HOW each
+    #    folded configuration's own CSFs are treated -- isolated (Epstein-Nesbet) or diagonalized together first
+    #    -- is dispatched on treatment.qSpacePerturbation; see Hamiltonian.foldQGroup! and
+    #    Basics.AbstractQSpacePerturbation.
     hDiag = [ hNN[a,a]  for a = 1:length(newIdx) ]
     for  key in foldedKeys
-        for  q in qGroups[key]
-            vRow = [ Hamiltonian.matrixElement(basis, p, q, nm, grid, settings, potential, cache)  for p in newIdx ]
-            hqq  =   Hamiltonian.matrixElement(basis, q, q, nm, grid, settings, potential, cache)
-            for  a = 1:length(newIdx),  b = 1:length(newIdx)
-                da = hqq - hDiag[a];    db = hqq - hDiag[b]
-                if  abs(da) < 1.0e-10  ||  abs(db) < 1.0e-10    continue    end
-                hNN[a,b] = hNN[a,b] - vRow[a]*vRow[b] * 0.5 * (1/da + 1/db)
-            end
-        end
+        Hamiltonian.foldQGroup!(hNN, newIdx, hDiag, basis, qGroups[key], nm, grid, settings, potential, cache,
+                                 treatment.qSpacePerturbation)
     end
     fN  = Hamiltonian.diagonalizeCiMatrix(hNN, LevelSelection())
 
