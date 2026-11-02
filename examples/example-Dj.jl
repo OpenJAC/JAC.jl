@@ -29,13 +29,37 @@ if  true
     refConfigs  = [Configuration("1s"), Configuration("2s"), Configuration("2p")]
     mfSettings  = MeanFieldSettings()
     #
-    wa          = Representation(name, Nuclear.Model(4.01), Radial.Grid(true), refConfigs, MeanFieldMultiplet(mfSettings) )
+    ## THE GREEN SPACE MUST BE BUILT ON THE GRID THE COMPUTATION USES, and until 01-Nov-2026 this line passed
+    ## `Radial.Grid(true)` -- the global STANDARD grid, 392 points out to 614 a.u. -- while branch 2 computes on
+    ## the grid defined at the top of this file, 1302 points out to 10 a.u.  The orbitals come back with
+    ## `useStandardGrid = true` and an EMPTY stored grid, so their radial arrays were then read index by index
+    ## against a mesh they do not belong to.  MEASURED: <a|a> on the computation's own grid came out 0.3581
+    ## (1s_1/2), 0.1149 (2s_1/2), 0.1242 / 0.1241 (2p_1/2 / 2p_3/2) where it must be 1, i.e. norms wrong by
+    ## factors of 3 to 9.  That is not two legitimate orbital sets differing -- it is ONE set mis-indexed, and no
+    ## choice of transition operator can repair it.  Passing `grid` here restores <a|a> = 1.0000000000 exactly,
+    ## with length(P) matching the mesh;  `setDefaults("standard grid", grid)` would do the same.
+    wa          = Representation(name, Nuclear.Model(4.01), grid, refConfigs, MeanFieldMultiplet(mfSettings) )
     wb          = generate(wa, output=true)
     #
 elseif true
-    # Last visit:  01-Nov-2026 (NEEDS AN EARLIER BRANCH OF THIS FILE)   ## with the Green space corrected to the
-    #                            (N-1)-electron cores it now COMPLETES with no warning, at maxKappa = 1 and one
-    #                            photon energy: 400 eV gives 2.998258e+02 barn Coulomb, 1.701679e+02 Babushkin.
+    # Last visit:  01-Nov-2026 (NEEDS AN EARLIER BRANCH OF THIS FILE)
+    #
+    # THE maxKappa = 1 NUMBERS THIS COMMENT USED TO QUOTE -- 400 eV, 2.998258e+02 barn Coulomb and
+    # 1.701679e+02 Babushkin -- ARE WITHDRAWN, 01-Nov-2026.  They were computed with the Green orbitals read on
+    # the wrong radial mesh (see the note in branch 1), i.e. with norms wrong by factors of 3 to 9, so they were
+    # never a result.  With the Green space on ONE grid, at this branch's own maxKappa = 2 and both energies:
+    #
+    #     omega [eV]      Coulomb [barn]    Babushkin [barn]    Cou/Bab
+    #        400           8.024051e+02       1.268623e+03       0.632
+    #        500           7.132792e+02       2.485340e+03       0.287
+    #
+    # and for the record, the same run BEFORE the grid was fixed gave 7.802171e+02 / 5.444154e+02 (1.433) and
+    # 9.421547e+02 / 1.107223e+03 (0.851).  So the repair moves BABUSHKIN by a factor ~2.3 and Coulomb barely,
+    # and the gauge ratio gets WORSE rather than better.  **That is reported rather than explained away:** the
+    # fix is right on its own terms, since an orbital whose <a|a> reads 0.358 on the mesh it is integrated on is
+    # wrong whatever it is multiplied by -- but the worsening says this calculation's LARGER errors lie
+    # elsewhere (maxKappa = 2, three ionic cores, two sharings), and until those are addressed its gauge ratio
+    # is not a figure of merit that can be read in either direction.
     # Last successful:  unknown ...   ## and it stays unknown: a Coulomb/Babushkin ratio of 1.76 is not a
     #                            converged cross section.  Three ionic cores and maxKappa = 1 is a demonstration
     #                            of the pipeline, not a number to quote;  the convergence study is open work.
