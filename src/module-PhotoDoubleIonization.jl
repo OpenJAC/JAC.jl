@@ -472,6 +472,18 @@ function amplitude(::Absorption, Mp::EmMultipole, gauge::EmGauge, omega::Float64
                 nn     = length(nLevel.basis.csfs)
 
                 #   Compute <alpha_f J_f || O^(Mp, kind) || alpha_n J_i> <alpha_n J_i || V^(e-e) || alpha_i J_i>
+                #   THIS JUNCTION REACHES CSF PAIRS DIFFERING IN ONE ORBITAL, WHERE V^(e-e) IS NOT THE WHOLE
+                #   OPERATOR -- and it nevertheless STAYS, measured rather than assumed, 02-Nov-2026.  The
+                #   operator a one-orbital junction requires is H - E, and on example-Dj.jl's Green core 1s at
+                #   omega = 400 eV and equal sharing the two read V_ee = +2.470622e-01 against H - E =
+                #   +1.560546e-01, a factor 1.583, the one-body part contributing -9.100758e-02 with the right
+                #   sign.  But ManyElectron.matrixElement_HminusE drops the overlap term -E <r|s>, and here that
+                #   term is the LARGEST piece: the continuum orbital is generated in the field of the GREEN
+                #   level, so <101s_1/2|1s_initial> = -0.0235 rather than 0, and |E_i <r|s>| ~ 3.2e-01, i.e.
+                #   2.05x the whole H - E element.  Swapping the operator would add 0.091 and omit 0.32.  The
+                #   precondition is therefore CHECKED instead, in checkSecondOrderConditions, and the swap waits
+                #   for a case whose Green space shares the initial state's orbitals.  The junctions differing in
+                #   TWO orbitals are unaffected either way -- the two operators agree there to 1.000 exactly.
                 if  symn == symi
                     for  t = 1:nn
                         if  nLevel.mc[t] == 0.  continue    end
@@ -750,6 +762,62 @@ end
 
 
 """
+`PhotoDoubleIonization.checkSecondOrderConditions(initialMultiplet::Multiplet, gMultiplet::Multiplet, grid::Radial.Grid)`
+    ... tests whether the Green space and the initial state are built on ONE orbital set, and returns a list::Array{String,1} of the
+        problems found -- empty where they are.  This is the precondition under which the one-orbital junctions of the second-order sum
+        in `PhotoDoubleIonization.amplitude` mean what they say, and it is a property of the CALLER's input rather than of this module.
+
+        WHY IT IS CHECKED HERE AND WHY THE SUM NEVERTHELESS USES `ManyElectron.matrixElement_Vee`.  The operator a one-orbital junction
+        requires is `H - E`, and `ManyElectron.matrixElement_HminusE` computes it under a stated orthonormality assumption: it drops the
+        overlap term `-E <r|s>`, which vanishes identically on one orbital set.  Where the Green space carries its own SCF orbitals that
+        term does not vanish, and on this module's own example it is the LARGEST piece of all.  Measured 02-Nov-2026 on
+        `examples/example-Dj.jl` -- Green space [1s, 2s, 2p] of Be^3+, initial state 1s^2, each from its own SCF, both on the one grid
+        that branch now uses -- at the junction whose Green core is `1s`, omega = 400 eV and equal sharing:
+
+            V_ee  = +2.470622e-01        H - E = +1.560546e-01        one-body part = -9.100758e-02        V_ee/(H-E) = 1.583
+            <1s_green|1s_initial> = +0.994787      <2s_green|1s_initial> = +0.081996      worst departure 8.2e-02
+            <101s_1/2(eps = 0.5076)|1s_initial> = -0.023524, so  |E_i <r|s>| ~ 3.2e-01 = 2.05 x the whole H - E element
+
+        The one-body part has the right sign and a sensible size, so this is NOT the sign flip measured for
+        `TwoElectronOnePhoton`;  it fails the other way.  The continuum orbital is generated in the field of the GREEN level, hence
+        orthogonal to the GREEN bound set and not to the initial state's, and that single overlap of -0.0235 times `E_i` is twice the
+        matrix element it would correct.  Migrating this module's junctions to `H - E` would therefore ADD a 0.091 correction while
+        SILENTLY OMITTING a 0.32 term of the same origin -- a known factor 1.583 traded for an unquantified larger one.  So the sum
+        keeps `V_ee`, the ratio is recorded at the junction itself, and the migration waits for a case that satisfies this condition.
+        Building one needs the three multiplets on one frozen orbital set, which `Atomic.Computation` + `perform` cannot express today.
+
+        Only clearly BOUND orbitals are compared, since a continuum orbital follows a different normalisation convention entirely;  the
+        continuum-bound overlap above is the dominant term but is not reachable once per computation, as those orbitals are generated per
+        energy sharing and partial-wave pair.  Calibrated by mutation: the example-Dj case is reported, and the same case with the Green
+        multiplet replaced by the initial state's own basis is not.
+"""
+function checkSecondOrderConditions(initialMultiplet::Multiplet, gMultiplet::Multiplet, grid::Radial.Grid)
+    problems = String[]
+    if  length(gMultiplet.levels) == 0  ||  length(initialMultiplet.levels) == 0    return( problems )      end
+    gBasis = gMultiplet.levels[1].basis;        iBasis = initialMultiplet.levels[1].basis
+    worst  = 0.;                                worstName = ""
+    for  (sha, orba)  in  gBasis.orbitals,  (shb, orbb)  in  iBasis.orbitals
+        if  sha.kappa != shb.kappa                  continue     end
+        if  !(orba.isBound  &&  orbb.isBound)       continue     end
+        ovl = try   RadialIntegrals.overlap(orba, orbb, grid)   catch   NaN   end
+        dev = sha == shb  ?  abs(abs(ovl) - 1.)  :  abs(ovl)
+        if  !isnan(dev)  &&  dev > worst
+            worst = dev;    worstName = "<$(string(sha))_green | $(string(shb))_initial> = $(round(ovl, digits=6))"
+        end
+    end
+    if  worst > 1.0e-4
+        push!( problems, "the Green space and the initial state are not built on one orbital set -- worst departure "                  *
+                         "$(round(worst, digits=6)) at $worstName.  The one-orbital junctions of the second-order sum are then "        *
+                         "inexact by a factor of order unity, and the overlap term that would correct them is not available:  see "    *
+                         "PhotoDoubleIonization.checkSecondOrderConditions, where this is measured.  Build the Green space on the "    *
+                         "initial state's own orbitals with Hamiltonian.performCIwithFrozenOrbitals to remove this." )
+    end
+
+    return( problems )
+end
+
+
+"""
 `PhotoDoubleIonization.computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nuclear.Model, grid::Radial.Grid,
         nrContinuum::Int64, settings::PhotoDoubleIonization.Settings; nuclearPot::Union{Nothing,Radial.Potential}=nothing,
         primitives::Union{Nothing,Bsplines.Primitives}=nothing, printout::Bool=false)`
@@ -952,6 +1020,9 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     # ONCE PER COMPUTATION, not once per amplitude.  The first version of this check sat inside `amplitude` and fired 6656
     # times on one run of `examples/example-Dj.jl`, which is noise rather than a guard.
     for  problem in PhotoDoubleIonization.checkGreenSpaceOnGrid(settings.gMultiplet, grid)
+        @warn("PhotoDoubleIonization.computeLines(): " * problem)
+    end
+    for  problem in PhotoDoubleIonization.checkSecondOrderConditions(initialMultiplet, settings.gMultiplet, grid)
         @warn("PhotoDoubleIonization.computeLines(): " * problem)
     end
     lines = PhotoDoubleIonization.determineLines(finalMultiplet, initialMultiplet, settings)
