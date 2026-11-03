@@ -830,7 +830,7 @@ function virtualDirections(bVectors::Dict{Subshell, Vector{Float64}}, subshells:
         # the occupied orbitals of this kappa, S-orthonormalized so that the projection below is exact
         occSame = Vector{Float64}[]
         for  s2  in  subshells
-            if  s2.kappa != sh.kappa    continue    end
+            if  s2.kappa != sh.kappa  ||  s2.shape != sh.shape    continue    end
             v = copy(bVectors[s2])
             for  u in occSame    v = v - (transpose(u) * matrixB * v) * u    end
             nrm = sqrt( abs(transpose(v) * matrixB * v) )
@@ -1191,8 +1191,8 @@ function projectOntoPositiveBranch(bVectors::Dict{Subshell, Vector{Float64}}, su
     # an already-orthonormal set rotates the orbitals for nothing.  Measured on Li, doing it unconditionally
     # cost 8.5e-07 Ha while removing a negative-branch weight of only 3.4e-14 -- more than the entire
     # discrepancy that sent us looking.  Skip it when the block is orthonormal to tolerance.
-    for  kappa  in  unique( [sh.kappa for sh in subshells] )
-        shkAll = [ sh for sh in subshells if sh.kappa == kappa ]
+    for  (kappa, shape)  in  unique( [(sh.kappa, sh.shape) for sh in subshells] )
+        shkAll = [ sh for sh in subshells if sh.kappa == kappa  &&  sh.shape == shape ]
         frz    = [ sh for sh in shkAll if      sh in frozenSet ]
         shk    = [ sh for sh in shkAll if  !( sh in frozenSet ) ]
         # THE FROZEN MEMBERS OF THIS BLOCK ARE HELD FIXED, and the actives are made orthogonal to THEM before
@@ -3272,7 +3272,7 @@ function solveOptimizedLevelField(basis::Basis, nuclearModel::Nuclear.Model, pri
                                                               directKernels=directKernels,
                                                               exchangeKernels=exchangeKernels)
 
-            count = Base.count( sh2 -> sh2.kappa == subshell.kappa, keys(processedBVectors) )
+            count = Base.count( sh2 -> sh2.kappa == subshell.kappa  &&  sh2.shape == subshell.shape, keys(processedBVectors) )
             if  count > 0
                 matrix = Hamiltonian.projectHamiltonian(subshell, matrix, matrixB, processedBVectors)
             end
