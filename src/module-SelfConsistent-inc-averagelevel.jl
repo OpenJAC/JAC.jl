@@ -223,7 +223,7 @@ function solveAverageLevelField(basis::Basis, nuclearModel::Nuclear.Model, primi
 
             # Orthogonality: project against every ALREADY-PROCESSED lower same-kappa subshell's bVector,
             # directly inside the eigenvalue problem (DBSR_HF hf_eiv style), not post-hoc.
-            count = Base.count( sh2 -> sh2.kappa == subshell.kappa, keys(processedBVectors) )
+            count = Base.count( sh2 -> sh2.kappa == subshell.kappa  &&  sh2.shape == subshell.shape, keys(processedBVectors) )
             if  count > 0
                 matrix = Hamiltonian.projectHamiltonian(subshell, matrix, matrixB, processedBVectors)
             end
