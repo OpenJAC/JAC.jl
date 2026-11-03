@@ -81,7 +81,7 @@ end
     multithreading for the cascade steps), reserved for a separate session.  Do not delete it and do not
     merge it into the live path without asking.  Labelled 13-Aug-2026.
 
-    ... Beginning of Aloka's part ... for parallel computing via multiprocessing and multithreading
+    ... BEGINNING of the disabled block ... parallel computing via multiprocessing and multithreading
     
 """
 `Cascade.computeSteps(scheme::Cascade.StepwiseDecayScheme, comp::Cascade.Computation, stepList::Array{Cascade.Step,1})` 
@@ -194,7 +194,7 @@ function computeStepAugerAverageSCA(step::Cascade.Step, comp::Cascade.Computatio
     cOrbitals = Dict{Subshell, Orbital}();    cPhases = Dict{Subshell, Float64}()
     return newLines
 end
-... End of Aloka's part   ===============================================================#  
+... END of the disabled block   ==========================================================#  
 
 
 """
