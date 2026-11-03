@@ -3443,16 +3443,30 @@ function testModule_Continuum(; short::Bool=true)
         if printTest   info(iostream, "the l = 0 and l = 4 pure sine waves do not agree")   end
     end
 
-    # (4) GENERATE THEN NORMALIZE IS THE IDENTITY. A wave that is already energy-normalized must come back with the
-    #     phase 0 and the factor 1. The phase does so exactly; the FACTOR does not, and the reason is worth stating,
-    #     because it is the difference between a derived bound and a tolerance chosen to make a test pass: the routine
-    #     takes the DISCRETE maximum of |P|, and the nearest sample can sit half a step from the crest, so the maximum
-    #     falls short by at most (q*hp)^2/8. The honest assertion is therefore 1 <= N <= 1/(1 - (q*hp)^2/8).
-    for  (energy, sh)  in  [(1.0, Subshell("1000s_1/2")), (1.0, Subshell("1000p_3/2")),
-                            (2.5, Subshell("1000d_5/2")), (0.5, Subshell("1000f_5/2"))]
+    # (4) GENERATE THEN NORMALIZE IS THE IDENTITY, SWEPT ACROSS THREE AND A HALF DECADES OF ENERGY. A wave that is
+    #     already energy-normalized must come back with the phase 0 and the factor 1, and both now do so two-sidedly.
+    #     Until 03-Nov-2026 the amplitude was read as the DISCRETE maximum of |P| over a fixed 300 grid points, which
+    #     can only ever FALL SHORT of the crest -- by at most (q*hp)^2/8 -- so the honest assertion was the ONE-sided
+    #     1 <= N <= 1/(1 - (q*hp)^2/8). Continuum.asymptoticAmplitude fits the asymptotic form instead of reading a
+    #     maximum off it, so there is no sampling deficit and no one-sided bias: N scatters symmetrically about 1 at
+    #     the 1e-6 level, and the bound below is |N - 1| <= 5e-5, TIGHTER than the superseded one above 0.1 Hartree.
+    #
+    #     AND THE SWEEP IS THE POINT, not the two-sidedness. The four energies this loop ran until 03-Nov-2026 are
+    #     0.5 to 2.5 Hartree, where 300 points span 1.9 to 4.3 half-wavelengths on this grid, so the window ALWAYS
+    #     held a crest and the defect could not fire: the bound was derived correctly and then exercised only where
+    #     it was safe. The energies added below reach 0.001 Hartree, where 300 points span 0.09 of a half-wave and
+    #     the superseded code returned 1.2520 at 0.02 and the equivalent of 2.24 at 0.005 -- while being EXACT at
+    #     0.01 and at 0.002. That is why this is a sweep and not a case: whether a fixed window happens to catch a
+    #     crest depends on where the mesh ends relative to the phase, so it is not monotone in the energy and any
+    #     single added case can land on a lucky value and prove nothing.
+    for  (energy, sh)  in  [(1.0, Subshell("1000s_1/2")),   (1.0, Subshell("1000p_3/2")),
+                            (2.5, Subshell("1000d_5/2")),   (0.5, Subshell("1000f_5/2")),
+                            (0.137, Subshell("1000s_1/2")), (0.05, Subshell("1000p_3/2")),
+                            (0.02, Subshell("1000s_1/2")),  (0.01, Subshell("1000d_5/2")),
+                            (0.005, Subshell("1000s_1/2")), (0.002, Subshell("1000p_3/2")),
+                            (0.001, Subshell("1000s_1/2"))]
         cOrb = redirect_stdout(devnull) do;  Continuum.generateOrbitalPureSine(energy, sh, grid, settings)  end
         newOrb, phi, normF = redirect_stdout(devnull) do;  Continuum.normalizeOrbitalPureSine(cOrb, grid, settings)  end
-        q     = sqrt(2energy)
         # phi is returned modulo pi, so 0 and pi are the same answer and both must be accepted -- AND that reduction
         # is a REAL BLIND SPOT of this check, not an oversight in it. Flipping the sign of the centrifugal term in
         # normalizeOrbitalPureSine, +l*pi/2 -> -l*pi/2, moves the phase by exactly l*pi, an integer multiple of pi
@@ -3466,10 +3480,10 @@ function testModule_Continuum(; short::Bool=true)
                                           "phase $phi, which is neither 0 nor pi")   end
         end
         wa = maximum( abs.(newOrb.P) ) / maximum( abs.(cOrb.P) )
-        if  wa < 1.0 - 1.0e-12   ||   wa > 1/(1 - (q*grid.hp)^2/8)
+        if  abs(wa - 1.0) > 5.0e-5
             success = false
-            if printTest   info(iostream, "$sh at E = $energy: renormalizing gives N = $wa, outside the sampling " *
-                                          "bound [1, $(1/(1 - (q*grid.hp)^2/8))]")   end
+            if printTest   info(iostream, "$sh at E = $energy: renormalizing gives N = $wa, which departs from 1 " *
+                                          "by $(abs(wa-1.0)) and so by more than the asserted 5e-5")   end
         end
     end
 
@@ -3549,7 +3563,8 @@ function testModule_Continuum(; short::Bool=true)
 
     println(iostream, "Continuum: the energy-scale normalization and the centrifugal phase of the free wave as the " *
                       "exact invariant P^2 + (P'/q)^2 = 2/(pi q); generate-then-normalize as an identity, with the " *
-                      "renormalization factor held inside a bound DERIVED from the mesh; the Bessel wave and its "  *
+                      "renormalization factor equal to 1 two-sidedly over ELEVEN energies from 2.5 down to 0.001 "    *
+                      "Hartree, where a fixed window spans 4.3 down to 0.09 half-wavelengths; the Bessel wave and its "  *
                       "derivative against elementary sines and cosines; the asymptotic Coulomb wave's small and "   *
                       "large components tied by the free-Dirac ratio sqrt(E/(E+2c^2)); twoFzero against a "         *
                       "terminating 2F0; and all five refusals -- four in gridConsistency and one in "               *

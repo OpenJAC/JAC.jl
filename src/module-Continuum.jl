@@ -131,7 +131,7 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
     #
     # Normalize the continuum orbital and determine its phase
     if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSineNorm()
-        cOrbital, phase = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
+        cOrbital, phase = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings; Zbar = Radial.determineZbar(pot))
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSineNorm()
         cOrbital, phase = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussekNorm()
@@ -217,7 +217,7 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
     #
     # Normalize the continuum orbital and determine its phase
     if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSineNorm()
-        cOrbital, phase = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
+        cOrbital, phase = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings; Zbar = Radial.determineZbar(pot))
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSineNorm()
         cOrbital, phase = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussekNorm()
@@ -261,7 +261,7 @@ function generateOrbitalLocalPotential(energy::Float64, sh::Subshell, pot::Radia
     #
     # Normalize the continuum orbital and determine its phase
     if      Defaults.GBL_CONT_NORMALIZATION  ==  PureSineNorm()
-        cOrbital, phase, normFactor = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings)
+        cOrbital, phase, normFactor = Continuum.normalizeOrbitalPureSine(cOrbital, pot.grid, settings; Zbar = Radial.determineZbar(pot))
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombSineNorm()
         cOrbital, phase, normFactor = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussekNorm()
@@ -821,18 +821,84 @@ end
 
 
 """
-`Continuum.normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings::Continuum.Settings)`   
-    ... to normalize the given continuum orbital with regard to a (asymptotic) pure sine-function. 
-        An (on-energy-scale-normalized) orbital::Orbital and its relative phase phi w.r.t.  sin(kr + phi) is returned.
+`Continuum.asymptoticAmplitude(P::Array{Float64,1}, grid::Radial.Grid, mtp::Int64, energy::Float64, Zbar::Float64)`
+    ... to determine the asymptotic amplitude and phase of a continuum orbital's large component by FITTING it to its known
+        asymptotic form over the outer third of the mesh, instead of reading a maximum off it.  Asymptotically
+        `P(r) --> A sin(theta(r) + delta)` with `theta(r) = q*r + y*ln(2*q*r)`, where q is the relativistic wavenumber and y the
+        Coulomb parameter formed from the residual charge Zbar that the outgoing electron still feels;  every CONSTANT phase --
+        centrifugal, Coulomb gamma-function, relativistic -- is absorbed into delta and so need not be known here.  Writing the
+        form as `P = a*sin(theta) + b*cos(theta)` makes the extraction a two-parameter LINEAR least squares, solved below through
+        its 2x2 normal equations.  A named tuple `(A, delta, residual, nFitted)` is returned.
+
+        Why a fit and not a window.  Reading a maximum requires a crest inside the window, loses up to (q*hp)^2/8 to discrete
+        sampling, and must fail once half a wavelength exceeds the box, however the window is sized;  the fit requires no crest,
+        has no node to divide by, averages the discretization away and carries the logarithmic Coulomb phase exactly.  Measured
+        03-Nov-2026 against `Continuum.generateOrbitalPureSine`, whose amplitude is `sqrt(2/(pi*q))` in closed form, the fit is
+        exact to five or six digits from 68 eV down to 0.054 eV, whereas a fixed 300-point window returned 0.4462 of the true
+        amplitude at 0.136 eV -- a normalization 2.24 times too large -- while being exact at 0.272 eV.  That the error is
+        ERRATIC rather than monotone in the energy is the signature of the defect, and is why it survived so long.
+
+        `residual` is the rms misfit as a FRACTION of the amplitude, so it is free of the arbitrary scale that the Galerkin
+        eigenvector carries.  It measures whether the orbital has actually reached the form that was fitted:  measured on He+ it
+        falls from 7.0e-2 at 1.449 eV to 1.5e-3 at 120 eV, and fitting the same Coulomb wave with a FREE phase model (Zbar = 0)
+        raises it by a factor of 5 to 20 at every energy while biasing the amplitude by up to 14 %.  It is therefore the
+        scale-free quantity on which a refusal should rest.
 """
-function normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings::Continuum.Settings) 
+function asymptoticAmplitude(P::Array{Float64,1}, grid::Radial.Grid, mtp::Int64, energy::Float64, Zbar::Float64)
+    wc   = Defaults.getDefaults("speed of light: c")
+    q    = sqrt( 2*energy + energy/(wc*wc) )
+    y    = Zbar * (energy + wc^2) / (wc^2 * q)
+    ##  the outer third of the mesh, which keeps the inner, non-asymptotic region out of the fit
+    iLow = max(2, mtp - div(mtp, 3));     nFitted = mtp - iLow + 1
+    if  energy <= 0.0   ||   nFitted < 10   ||   grid.r[iLow] <= 0.0
+        return( (A = 0.0, delta = 0.0, residual = Inf, nFitted = nFitted) )
+    end
+    #
+    Saa = 0.0;   Sab = 0.0;   Sbb = 0.0;   va = 0.0;   vb = 0.0
+    for  i = iLow:mtp
+        theta = q*grid.r[i] + y*log(2q*grid.r[i]);    sn = sin(theta);    cs = cos(theta)
+        Saa = Saa + sn*sn;      Sab = Sab + sn*cs;    Sbb = Sbb + cs*cs
+        va  = va  + P[i]*sn;    vb  = vb  + P[i]*cs
+    end
+    det = Saa*Sbb - Sab*Sab
+    if  abs(det) < 1.0e-30   return( (A = 0.0, delta = 0.0, residual = Inf, nFitted = nFitted) )   end
+    a = (Sbb*va - Sab*vb) / det;    b = (Saa*vb - Sab*va) / det;    A = sqrt(a*a + b*b)
+    if  A <= 0.0             return( (A = 0.0, delta = 0.0, residual = Inf, nFitted = nFitted) )   end
+    #
+    wa = 0.0
+    for  i = iLow:mtp
+        theta = q*grid.r[i] + y*log(2q*grid.r[i])
+        wa    = wa + (P[i] - a*sin(theta) - b*cos(theta))^2
+    end
+
+    return( (A = A, delta = atan(b, a), residual = sqrt(wa/nFitted)/A, nFitted = nFitted) )
+end
+
+
+"""
+`Continuum.normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings::Continuum.Settings; Zbar::Float64=0.0)`
+    ... to normalize the given continuum orbital with regard to a (asymptotic) pure sine-function.
+        An (on-energy-scale-normalized) orbital::Orbital and its relative phase phi w.r.t.  sin(kr + phi) is returned.
+
+        + Zbar  ::Float64   ... the residual charge the outgoing electron still feels, which enters only the PHASE that
+                                `Continuum.asymptoticAmplitude` fits;  the target amplitude keeps this convention's own
+                                `sqrt(2/(pi*q))`.  It defaults to 0.0, the genuinely free wave, so that a caller holding
+                                only a grid -- as the test suite does -- gets the free-wave model;  the three callers in
+                                this module all have a potential and pass `Radial.determineZbar(pot)`.  Measured
+                                03-Nov-2026, fitting a Coulomb wave with the free model biases the amplitude by up to
+                                14 % at 1.449 eV and raises the fit residual by a factor of 5 to 20.
+"""
+function normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings::Continuum.Settings; Zbar::Float64=0.0) 
     mtp = size( cOrbital.P, 1);    q = sqrt( 2*cOrbital.energy );        l = Basics.subshell_l(cOrbital.subshell)
 
     PPprime = cOrbital.P[mtp] / cOrbital.Pprime[mtp];    kr  = q * grid.r[mtp];   at = atan( PPprime * q )
     phi = at - kr + l*pi/2; 
     phi = rem(phi+1000pi, pi)    # to bring phi in the interval 0. <= phi < pi
-    # For normalization, determine the maximum of the large component within the last 300 point
-    A = maximum( abs.(cOrbital.P[end-300:end]) );    N   = sqrt(2/(pi*q)) / A
+    # For normalization, FIT the asymptotic form rather than read a maximum off it;  see Continuum.asymptoticAmplitude
+    # for why no window can do this job at every energy.  Zbar is the residual charge the outgoing electron still feels:
+    # it enters only the fitted PHASE, while the target amplitude keeps this convention's own non-relativistic q.
+    wa = Continuum.asymptoticAmplitude(cOrbital.P, grid, mtp, cOrbital.energy, Zbar)
+    A  = wa.A;    N   = sqrt(2/(pi*q)) / A
     
     println(">> Pure-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",N) *
             " and phase phi=" * @sprintf("%.4e",phi) * " at r=" * @sprintf("%.4e",grid.r[mtp])   * " a.u." )
@@ -844,8 +910,8 @@ function normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
 
-    normF = maximum( abs.(P[end-300:end]) )   ## determine the maximum value of the P component as asymptotic measure for the amplitude
-                            
+    normF = N * wa.A   ## the fitted asymptotic amplitude of the P component after scaling, as a measure of the amplitude
+
     return( newOrbital, phi, normF )
 end
 
@@ -885,8 +951,15 @@ function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, s
         theta = q * pot.grid.r[mtp]  +  y * log(2q * pot.grid.r[mtp])  - atan(argG.im / argG.re)  -  pi*gammaBar/2 ##  +  eta.re
         phi = at - theta
         phi = rem(phi+1000pi, pi)    # to bring phi in the interval 0. <= phi < pi
-        ## A   = cOrbital.P[mtp] / cos(theta + phi);           N   = NP / A
-        A = maximum( abs.(cOrbital.P[end-300:end]) );    N   = NP / A
+        ##  A windowless form was tried here and REFUSED by measurement, 03-Nov-2026:  with phi = at - theta it
+        ##  reduces to A = sqrt(P^2 + (Q*NP/NQ)^2), the envelope built from the two components of the spinor, which
+        ##  are in quadrature only asymptotically.  Calibrated against this window ABOVE 14 eV, where the window is
+        ##  known to read the true amplitude, it missed by 1.4 to 4.2 % and non-monotonically, because at the radii
+        ##  used here -- about 22 a.u. -- the Coulomb tail has not yet left that quadrature exact.  The FIT below
+        ##  needs no such assumption:  it absorbs the phase as a free parameter and reads the amplitude from hundreds
+        ##  of points, which is why it succeeds where that one-point form failed.
+        wa = Continuum.asymptoticAmplitude(cOrbital.P, pot.grid, mtp, energy, Zbar)
+        A  = wa.A;    N   = NP / A
         
         println(">> (Relativistic) Coulomb-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",N) *
                 " and phase phi=" * @sprintf("%.4e",phi) * " at r=" * @sprintf("%.4e",pot.grid.r[mtp])   * " a.u." )
@@ -899,8 +972,8 @@ function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, s
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
 
-    normF = maximum( abs.(P[end-300:end]) )   ## determine the maximum value of the P component as asymptotic measure for the amplitude
-    
+    normF = N * wa.A   ## the fitted asymptotic amplitude of the P component after scaling, as a measure of the amplitude
+
     return( newOrbital, phi, normF )
 end
 
@@ -938,7 +1011,8 @@ function normalizeOrbitalOngRussek(cOrbital::Orbital, pot::Radial.Potential, set
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
 
-    normF = maximum( abs.(P[end-300:end]) )   ## determine the maximum value of the P component as asymptotic measure for the amplitude
+    ##  this routine's WKB envelope is phase-complete and stays;  the fit is used only for the REPORTED amplitude
+    normF = Continuum.asymptoticAmplitude(P, pot.grid, mtp, cOrbital.energy, Radial.determineZbar(pot)).A
 
     return( newOrbital, phi, normF )
 end
