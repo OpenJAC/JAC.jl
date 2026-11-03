@@ -7,8 +7,10 @@
 `SelfConsistent.orthonormalizeSameKappa(newOrbitals::Dict{Subshell, Orbital}, newbVectors::Dict{Subshell, Vector{Float64}},
                                               subshells::Array{Subshell,1}, primitives::Bsplines.Primitives,
                                               matrixB::Array{Float64,2})`
-    ... applies a Loewdin SYMMETRIC orthogonalization to every group of subshells sharing the same kappa, treating
-        them as a SIMULTANEOUSLY-valid set rather than the sequence in which they happen to have been refined --
+    ... applies a Loewdin SYMMETRIC orthogonalization to every group of subshells sharing the same kappa AND the
+        same shape (two differently-shaped realizations of one (n, kappa) are deliberately never orthogonalized
+        against each other -- see Basics.OrbitalShape), treating them as a SIMULTANEOUSLY-valid set rather than
+        the sequence in which they happen to have been refined --
         this is the explicit "orthonormalize the orbital set" step shown as its OWN, separate box (after, not
         instead of, the per-orbital "apply projection" step) in the block diagram of Zatsarinny \\& Froese
         Fischer, Comput. Phys. Commun. 202, 287-303 (2016), Fig. 1. The per-orbital
@@ -31,8 +33,8 @@ function orthonormalizeSameKappa(newOrbitals::Dict{Subshell, Orbital}, newbVecto
     orbitalsOut = deepcopy(newOrbitals)
     bVectorsOut = deepcopy(newbVectors)
 
-    for  kappa  in  unique( [sh.kappa for sh in subshells] )
-        group = [sh for sh in subshells if sh.kappa == kappa]
+    for  (kappa, shape)  in  unique( [(sh.kappa, sh.shape) for sh in subshells] )
+        group = [sh for sh in subshells if sh.kappa == kappa  &&  sh.shape == shape]
         if  length(group) < 2    continue    end
 
         B = hcat( [newbVectors[sh] for sh in group]... )        # (nsL+nsS) x n
