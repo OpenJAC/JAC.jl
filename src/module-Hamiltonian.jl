@@ -62,7 +62,7 @@ function projectHamiltonian(subshell::Subshell, matrix::Array{Float64,2}, matrix
     matrixI = zeros(nn, nn);   for i = 1:nn   matrixI[i,i] = 1.0   end
     
     for  (subsh, bVector)  in  bVectors
-        if  subsh != subshell  &&  subshell.kappa == subsh.kappa
+        if  subsh != subshell  &&  subshell.kappa == subsh.kappa  &&  subshell.shape == subsh.shape
             ## println(">>> Project $subshell  upon $subsh  vectors")
             bbtMatrix = bVector * transpose(bVector)
             matrixP   = (matrixI - matrixB * bbtMatrix) * matrixP * (matrixI - bbtMatrix * matrixB)
