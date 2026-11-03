@@ -90,7 +90,8 @@ elseif true
     #                            4.492780e+03 barn;  500 eV Coulomb 1.044199e+03 / Babushkin 3.157561e+03
     #                            barn  (13 of 13 numbers below, 94 s)
     # Last successful:  unknown ...   ## the pipeline is complete here and the ENERGIES are right, but the cross
-    #                            sections are not:  see THE GAUGE and WHAT IS NOT CONVERGED below.
+    #                            sections are NOT CONVERGED -- the sharing quadrature is the leading error, see
+    #                            WHAT IS NOT CONVERGED below.  The gauge split is NOT the reason;  see below.
     #
     # Photo-double ionization of he-like Be, 1s^2 --> epsilon1 kappa1 + epsilon2 kappa2, with ALL THREE multiplets
     # -- initial, final and Green -- carried on ONE orbital set.  This is the branch the file was missing:  branches
@@ -135,17 +136,26 @@ elseif true
     #     400 eV      1.299101e+03  against  1.298984e+03  barn/eV      9e-5 relative
     #     500 eV      2.211048e+02  against  2.210789e+02  barn/eV      1e-4 relative
     #
-    # THE GAUGE, and this is where the branch stops being a result.  Total cross sections on the shared set:
+    # THE TWO GAUGES, WHICH ARE NOT EXPECTED TO AGREE.  Total cross sections on the shared set:
     #
     #     omega [eV]      Coulomb [barn]    Babushkin [barn]    Cou/Bab
     #        400           1.361381e+03       4.492780e+03       0.303
     #        500           1.044199e+03       3.157561e+03       0.331
     #
-    # a factor of three apart.  What the shared set DID change is the SHAPE of the disagreement:  on separate
-    # orbital sets the ratio was 0.632 at 400 eV and 0.287 at 500 eV, i.e. strongly energy-dependent, and it is now
-    # nearly constant.  An energy-independent gauge ratio does not point at an energy-dependent error, so what
-    # remains is better read as a truncation scaling with the amplitude than as something the two orbital sets were
-    # causing.  That is a statement about WHERE to look next, not a defence of the number.
+    # A factor of three, and it is NOT the reason to distrust this branch.  Length and velocity are tied by the
+    # commutator identity <a|p|b> = i (E_a - E_b) <a|r|b>, i.e. by a LEVEL difference, whereas a second-order
+    # amplitude's photon operator carries the PHYSICAL omega against an intermediate state that is off shell.  The
+    # two forms then differ by the factor (E_i - E_n - omega), which vanishes only ON shell, and they are
+    # equivalent only through CLOSURE over a COMPLETE intermediate set -- four ionic cores are not that.  See the
+    # module's STATUS block and Fortun et al., arXiv:1610.03571:  extended gauge invariance holds only at exact
+    # resonance.  So READ THE COULOMB (velocity) COLUMN, and do NOT repair the split by substituting a level
+    # difference for omega -- that restores agreement matrix element by matrix element while making the amplitude
+    # wrong.
+    #
+    # What the shared orbital set DID change is the SHAPE of the split:  on separate sets the ratio was 0.632 at
+    # 400 eV and 0.287 at 500 eV, strongly energy-dependent, and it is now nearly constant at 0.303 / 0.331.  That
+    # is recorded as an observation and not as a figure of merit:  Babushkin is the unstable member of the pair, so
+    # the ratio cannot serve as a convergence indicator in either direction.
     #
     # WHAT IS NOT CONVERGED, in the module's own words as it runs:  the sharing integral drifts +29 % between 3 and
     # 21 Gauss-Legendre points and is still rising, so only the first digit carries information and the number of
@@ -153,6 +163,15 @@ elseif true
     # moving by under 1 % when the intermediate set is quadrupled, while Babushkin nearly doubles.  Prefer velocity,
     # and do NOT read the gauge ratio above as a convergence indicator.  With 2 sharings, maxKappa = 2 and four
     # ionic cores this branch demonstrates a pipeline;  it does not deliver a cross section.
+    #
+    # AND A SECOND THING IS NOT CONVERGED, found 03-Nov-2026 while chasing the same question in helium:  the
+    # continuum normalization itself.  Continuum.normalizeOrbitalPureSine scales an orbital by max|P| over a FIXED
+    # 300 grid points, which at hp = 1e-2 is 2.98 a.u. and so half a wavelength only ABOVE 14.9 eV;  below that the
+    # window need contain no crest and the scale is wrong by up to 23 %, differing between radial boxes with no
+    # pattern.  THIS BRANCH IS INSIDE THAT RANGE:  its 400 eV sharing puts eps_1 at 6.03 eV, a factor 2.5 below the
+    # floor, so the slower of the two electrons is normalized at an arbitrary phase of its own oscillation.  The
+    # 400 eV row is therefore the less trustworthy of the two, and the box dependence of a photo-double-ionization
+    # cross section should not be read as a box-convergence statement until that is repaired.
     #
     # WHAT IS STILL MISSING FROM src/.  The shared orbitals arrive through the public Representation route, but the
     # Green space does not:  no Representation carries a caller-supplied orbital set, so it is built here by a
