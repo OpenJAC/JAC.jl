@@ -589,17 +589,64 @@ end
 
 
 """
-`struct  Basics.Subshell`  ... defines a type for the allowed values of a relativistic subhell.  
+`Basics.OrbitalShape`  ... which job a (n, kappa)-labelled orbital's own radial contraction is for. Ordinarily
+    every orbital of a given label is SCFShape; a second, independently-contracted realization of the SAME
+    (n, kappa) -- never orthogonalized against the first -- is distinguished by a different value here, never
+    by a different (n, kappa). See the module docstring of SelfConsistent for where this is read.
+"""
+@enum  OrbitalShape   SCFShape  CoreValenceCorrelationShape
 
-    + n        ::Int64  ... principal quantum number 
-    + kappa    ::Int64  ... relativistic angular quantum number
+export  OrbitalShape, SCFShape, CoreValenceCorrelationShape
+
+
+"""
+`struct  Basics.Subshell`  ... defines a type for the allowed values of a relativistic subhell.
+
+    + n        ::Int64         ... principal quantum number
+    + kappa    ::Int64         ... relativistic angular quantum number
+    + shape    ::OrbitalShape  ... which job this orbital's own radial contraction is for; SCFShape unless this
+                                    is a second, independently-contracted realization of this (n, kappa).
 """
 struct  Subshell
-    n          ::Int64 
-    kappa      ::Int64 
+    n          ::Int64
+    kappa      ::Int64
+    shape      ::OrbitalShape
 end
 
+"""
+`Basics.Subshell(n::Int64, kappa::Int64)`  ... convenience constructor defaulting shape to SCFShape, so every
+    existing two-argument call site is unaffected.
+"""
+Subshell(n::Int64, kappa::Int64) = Subshell(n, kappa, SCFShape)
+
 export  Subshell, subshell_2j
+
+"""
+`Base.convert(::Type{Basics.Subshell}, x::JLD2.ReconstructedStatic)`  ... bridges a `.jld`/`.jld2` cascade file
+    written before the `shape` field existed, for a Subshell met as an ORDINARY STRUCT FIELD (as in
+    `Radial.Orbital.subshell`): JLD2 checks for exactly this `convert` method when deciding whether a
+    containing struct's own field-by-field reconstruction can proceed normally, so this one method is
+    enough for every struct that merely HOLDS a Subshell field, however deeply nested (`Orbital`, `Level`,
+    `Multiplet`, ...) -- no method is needed for each of those in turn. An old file's Subshell is read
+    exactly as the two-argument constructor above defaults it -- shape = SCFShape.
+"""
+Base.convert(::Type{Subshell}, x::JLD2.ReconstructedStatic{:Subshell, (:n, :kappa), Tuple{Int64,Int64}}) =
+    Subshell(x.n, x.kappa)
+
+"""
+`JLD2.rconvert(::Type{Dict{Basics.Subshell,V}}, x::Vector)`  ... the companion bridge for a Subshell met as a
+    Dict's TYPE PARAMETER rather than a field (`Dict{Subshell,Orbital}` for an orbital set, `Dict{Subshell,Int64}`
+    for an occupation, and every other `Dict{Subshell,V}` in the code share this one route). JLD2 resolves a
+    type PARAMETER by name, independently of the `convert` method above, so an old file's Subshell keys arrive
+    as `JLD2.ReconstructedStatic` values inside the pair vector regardless of V; this method bridges exactly
+    that vector for any V, so no method is needed for each value type V in turn. A `Dict{Subshell,V}` is
+    returned, with every key's shape defaulted to SCFShape as the two-argument constructor above does.
+"""
+function JLD2.rconvert(::Type{Dict{Subshell,V}}, x::Vector) where V
+    Dict{Subshell,V}(bridgeSubshellDictKey(p.first) => p.second   for p in x)
+end
+bridgeSubshellDictKey(s::Subshell) = s
+bridgeSubshellDictKey(s::JLD2.ReconstructedStatic{:Subshell, FN, NT}) where {FN,NT} = Subshell(s.n, s.kappa)
 
 """
 `Base.hash(sh::Basics.Shell, h::UInt)` and `Base.hash(sh::Basics.Subshell, h::UInt)`
@@ -616,7 +663,14 @@ export  Subshell, subshell_2j
 
         Hashing the quantum numbers with a literal seed removes the type identity from the calculation and makes the
         order a property of the physics. Consistency with equality is preserved: neither type defines its own `==`,
-        so equality is field-wise and these are exactly the fields.
+        so equality is field-wise, and `Subshell`'s equality now also compares `shape` -- but the hash deliberately
+        does NOT fold `shape` in. Two differently-shaped realizations of the same (n, kappa) are UNEQUAL and so
+        remain distinct Dict keys; they merely share a hash bucket, which `==` already disambiguates correctly.
+        Measured 03-Nov-2026: folding `shape` into the hash as well reorders every Dict keyed by Subshell, even
+        though every Subshell built anywhere today still has shape = SCFShape -- moving a Cl III test calculation's
+        printed energies in their 11th digit for no reason a reader could see, exactly the item-57 symptom the note
+        above describes. Leaving the hash as it was keeps this struct extension truly inert; a later plan that
+        actually puts two shapes in the same Dict can revisit this if the shared bucket ever matters for speed.
 """
 Base.hash(sh::Shell,    h::UInt) = hash(sh.l,     hash(sh.n, h ⊻ 0x5368656c6c000001))
 Base.hash(sh::Subshell, h::UInt) = hash(sh.kappa, hash(sh.n, h ⊻ 0x5375627368000002))
