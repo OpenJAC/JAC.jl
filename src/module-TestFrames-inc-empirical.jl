@@ -171,7 +171,7 @@ function testModule_Empirical(; short::Bool=true)
     ##   nothing happened -- 6.2617 -> 6.2618 and 0.3174 -> 0.3174 -- so the 15 % agreement with experiment
     ##   that this test is really about is untouched.
     Defaults.setDefaults("method: continuum, Galerkin")
-    Defaults.setDefaults("method: normalization, Alok")
+    Defaults.setDefaults("method: normalization, Coulomb functions")
     Defaults.setDefaults("nuclear: charge", 2.)
     ujOms = [Defaults.convertUnits("energy: from eV to atomic", e) for e in [26.0, 100.0]]
     ujCss = Empirical.photoionizationCrossSection(ujOms, Configuration("1s^2"), Configuration("1s^1"),

@@ -744,7 +744,7 @@ end
               produced spurious box resonances (92 Mb at 100 eV for Ne 2p) that invalidated all earlier results.
               The amplitudes further depend on the globally selected continuum method; the validation above refers
               to JAC's defaults, i.e. setDefaults("method: continuum, Galerkin") and
-              setDefaults("method: normalization, Alok").
+              setDefaults("method: normalization, Coulomb functions").
 """
 function photoionizationCrossSection(omegas::Array{Float64,1}, iConf::Configuration, fConf::Configuration,
                                      approx::Empirical.UsingJAC; printout::Bool=false)

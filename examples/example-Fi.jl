@@ -3,11 +3,11 @@ println("Fi) Cascade.ElectronIonizationScheme: excitation-autoionization of lith
 
 using JLD2, Printf
 #
-## As in example-Fh.jl, and for the same reasons: Galerkin continuum orbitals, Alok normalization, a box that
+## As in example-Fh.jl, and for the same reasons: Galerkin continuum orbitals, Coulomb-function normalization, a box that
 ## holds several wavelengths of the slowest electron.  See the note in example-Fg.jl on why "asymptotic Coulomb"
 ## is not usable here.
 setDefaults("method: continuum, Galerkin")
-setDefaults("method: normalization, Alok")
+setDefaults("method: normalization, Coulomb functions")
 setDefaults("unit: energy", "eV")
 
 grid = Radial.Grid(Radial.Grid(true); rnt = 4.0e-6, h = 5.0e-2, hp = 0.8e-2, rbox = 30.0)

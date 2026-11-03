@@ -247,23 +247,26 @@ end
 `abstract type Basics.ContinuumNormalization` 
     ... defines an abstract and a number of singleton types for dealing with the normalization of continuum orbitals.
 
-    + PureSineNorm       ... normalize with regard to an (asymtotic) pure sine funtion, sin(kr).
-    + CoulombSineNorm    ... normalize with regard to an (asymtotic) Coulombic-sine funtion, sin(kr + ...).
-    + OngRussekNorm      ... normalize by following Ong & Russek (1973).
-    + AlokNorm           ... normalize following Salvats Radial code
+    + PureSineNorm         ... normalize with regard to an (asymtotic) pure sine funtion, sin(kr).
+    + CoulombSineNorm      ... normalize with regard to an (asymtotic) Coulombic-sine funtion, sin(kr + ...).
+    + OngRussekNorm        ... normalize by following Ong & Russek (1973).
+    + CoulombFunctionNorm  ... normalize by matching the orbital's value AND derivative to the EXACT Coulomb
+                               (or spherical Bessel) functions, following Salvat's RADIAL code.  Unlike the two
+                               sine conventions above it assumes no asymptotic expansion, so it stays valid at
+                               small radii and large Coulomb parameter.  This is the shipped default.
 """
 abstract type  ContinuumNormalization                          end
 struct     PureSineNorm         <:  ContinuumNormalization     end
 struct     CoulombSineNorm      <:  ContinuumNormalization     end
 struct     OngRussekNorm        <:  ContinuumNormalization     end
-struct     AlokNorm             <:  ContinuumNormalization     end
+struct     CoulombFunctionNorm  <:  ContinuumNormalization     end
 
 @doc "... normalize with regard to an (asymtotic) pure sine funtion, sin(kr)."                                                            PureSineNorm
 @doc "... normalize with regard to an (asymtotic) Coulombic-sine funtion, sin(kr + ...)."                                              CoulombSineNorm
 @doc "... normalize by following Ong & Russek (1973)."                                                                                   OngRussekNorm
-@doc "... normalize following Salvats Radial code"                                                                                            AlokNorm
+@doc "... normalize by matching value and derivative to the EXACT Coulomb or Bessel functions (Salvat RADIAL)."                    CoulombFunctionNorm
 
-export  ContinuumNormalization,   PureSineNorm,   CoulombSineNorm,   OngRussekNorm,   AlokNorm
+export  ContinuumNormalization,   PureSineNorm,   CoulombSineNorm,   OngRussekNorm,   CoulombFunctionNorm
 
 #################################################################################################################################
 #################################################################################################################################

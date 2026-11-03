@@ -3535,7 +3535,7 @@ function testModule_Continuum(; short::Bool=true)
                ""
          catch err   sprint(showerror, err)
          end
-    for  needle  in  ["PureSineNorm", "GBL_CONT_NORMALIZATION", "aDispatcher", "setDefaults", "AlokNorm"]
+    for  needle  in  ["PureSineNorm", "GBL_CONT_NORMALIZATION", "aDispatcher", "setDefaults", "CoulombFunctionNorm"]
         if  !occursin(needle, wa)
             success = false
             if printTest   info(iostream, "Continuum.unsupportedScheme's message does not mention $needle, so it " *

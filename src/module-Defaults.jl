@@ -81,7 +81,7 @@ end
 GBL_FRAMEWORK                = "relativistic"
 GBL_CONT_POTENTIAL           = Basics.DFSField(0.42)
 GBL_CONT_SOLUTION            = BsplineGalerkin()         ###  ContBessel(), ContSine(), AsymptoticCoulomb(), NonrelativisticCoulomb(), BsplineGalerkin()
-GBL_CONT_NORMALIZATION       = AlokNorm()                ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm(), AlokNorm()
+GBL_CONT_NORMALIZATION       = CoulombFunctionNorm()     ###  PureSineNorm(), CoulombSineNorm(), OngRussekNorm(), CoulombFunctionNorm()
 GBL_QED_HYDROGENIC_LAMBDAC   = [1.0,  1.0,  1.0,  1.0,  1.0]
 GBL_QED_NUCLEAR_CHARGE       = 0.1
 GBL_WARNINGS                 = String[]
@@ -438,7 +438,7 @@ function setDefaults(sa::String)
     elseif    sa == "method: normalization, pure sine"                   GBL_CONT_NORMALIZATION  = PureSineNorm()   
     elseif    sa == "method: normalization, pure Coulomb"                GBL_CONT_NORMALIZATION  = CoulombSineNorm()  
     elseif    sa == "method: normalization, Ong-Russek"                  GBL_CONT_NORMALIZATION  = OngRussekNorm()
-    elseif    sa == "method: normalization, Alok"                        GBL_CONT_NORMALIZATION  = AlokNorm()
+    elseif    sa == "method: normalization, Coulomb functions"           GBL_CONT_NORMALIZATION  = CoulombFunctionNorm()
     elseif    sa == "method: Wigner symbols, exact"                      selectWignerMethod(:exact)
     elseif    sa == "method: Wigner symbols, floating-point"             selectWignerMethod(:floating)
     elseif    sa == "method: Wigner symbols, GSL"                        selectWignerMethod(:gsl)

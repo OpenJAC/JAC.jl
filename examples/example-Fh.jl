@@ -7,7 +7,7 @@ using JLD2, Printf
 ## reproduces the analytic Bethe limit to 0.5%). They are not interchangeable with the defaults used elsewhere
 ## in the F-series -- see the note on the continuum treatment further down.
 setDefaults("method: continuum, Galerkin")              ## NOT "asymptotic Coulomb"
-setDefaults("method: normalization, Alok")              ## NOT "pure sine"
+setDefaults("method: normalization, Coulomb functions")              ## NOT "pure sine"
 setDefaults("unit: energy", "eV")
 
 grid = Radial.Grid(Radial.Grid(true); rnt = 4.0e-6, h = 5.0e-2, hp = 0.8e-2, rbox = 30.0)
@@ -58,10 +58,16 @@ grid = Radial.Grid(Radial.Grid(true); rnt = 4.0e-6, h = 5.0e-2, hp = 0.8e-2, rbo
 #   + CONTINUUM METHOD. Use Galerkin. "asymptotic Coulomb", which the rest of the F-series inherited from the
 #     old example headers, gives erratic continuum orbitals for valence transitions in low-charge ions; see
 #     the extended note in example-Fg.jl, where it produced a temperature-independent recombination rate.
-#   + NORMALIZATION. Use "Alok", as example-Dl.jl does. "pure sine" normalizes on the LAST 300 GRID POINTS,
-#     and on a fine grid those span much less than one de Broglie wavelength, so a node there inflates the
-#     normalization constant and JAC aborts with "enlarge box-size" even when the box is perfectly adequate.
-#     Enlarging rbox from 10 to 22 made it worse, not better, which is the signature of that heuristic.
+#   + NORMALIZATION. Use "Coulomb functions", as example-Dl.jl does -- but NOT for the reason this note gave
+#     until 03-Nov-2026, because that reason was a DEFECT and it has since been repaired.  It read: "pure sine
+#     normalizes on the LAST 300 GRID POINTS, and on a fine grid those span much less than one de Broglie
+#     wavelength, so a node there inflates the normalization constant and JAC aborts with 'enlarge box-size'
+#     even when the box is perfectly adequate.  Enlarging rbox from 10 to 22 made it worse, not better."  That
+#     diagnosis was exactly right on both counts, and both are now fixed:  the asymptotic amplitude comes from a
+#     least-squares FIT to the known asymptotic form instead of a maximum over a fixed 300-point window, and the
+#     scale-dependent "enlarge box-size" refusal -- which grew more likely the LARGER the box, hence 10 to 22
+#     making it worse -- has been deleted.  "pure sine" is usable here now.  The reason to prefer "Coulomb
+#     functions" is now simply that it assumes no asymptotic expansion at all.
 #   + BOX. rbox must hold several wavelengths of the SLOWEST electron; 20 eV needs ~30 a.u.
 #   + THE SYSTEM ITSELF is a numerical choice here, not only a physical one. This file first used the
 #     2s -> 2p transition of LI-like C, a valence dipole line in a low-charge ion -- exactly the regime

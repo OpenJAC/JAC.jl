@@ -6,7 +6,9 @@ setDefaults("print summary: open", "zzz-ImpactExcitation.sum")
 setDefaults("unit: energy", "eV")
 setDefaults("method: continuum, Galerkin")           ## setDefaults("method: continuum, Galerkin")  "method: continuum, asymptotic Coulomb"
                                                      ## setDefaults("method: normalization, Ong-Russek")
-setDefaults("method: normalization, Alok")           ## setDefaults("method: normalization, pure Coulomb")    setDefaults("method: normalization, pure sine")
+setDefaults("method: normalization, Coulomb functions")
+                                                     ## setDefaults("method: normalization, pure Coulomb")
+                                                     ## setDefaults("method: normalization, pure sine")
 setDefaults("continuum: SCF potential", Basics.DFSField(0.50))  ## use GBL_CONT_POTENTIAL  ... to access this SCF potential internally, please
 
 ## hp = 0.8e-2, NOT the 2.5e-2 this file used before. A continuum orbital must be resolved out to the box boundary,

@@ -27,7 +27,7 @@
              follow the oscillation it did reach.
        ALL FOUR CONVENTIONS PASS THROUGH IT, BUT A MEASURE MAY ONLY GUARD THE ASSUMPTION ITS OWN ROUTINE MAKES.
        Three of them normalize against the ASYMPTOTIC FORM of the wave, so 3(a) is precisely their validity
-       criterion.  `normalizeOrbitalAlok` instead matches the EXACT Coulomb or Bessel functions, which hold at any
+       criterion.  `normalizeOrbitalCoulombFunctions` instead matches the EXACT Coulomb or Bessel functions, which hold at any
        radius, and is legitimately usable where the asymptotic expansion is not -- so it supplies no residual and
        3(a) is skipped for it.  Uniformity of the MEASURE was tried on 03-Nov-2026 and withdrawn the same day:  on
        Ne-like Kr at 16.7 eV in a 10 a.u. box, eta ~ 24 makes the asymptotic form meaningless and the residual 4.77,
@@ -38,7 +38,7 @@
        thresholds DERIVED from a stated measurement and quoted in the message, never chosen to make a case pass.
 
     So a new scheme needs: a branch at all three dispatchers (stage 2 names the sites if one is forgotten), and either
-    a residual for stage 3(a) or an explicit `NaN` with the reason stated, as `normalizeOrbitalAlok` once did.
+    a residual for stage 3(a) or an explicit `NaN` with the reason stated, as `normalizeOrbitalCoulombFunctions` once did.
 """
 module Continuum
 
@@ -135,11 +135,11 @@ end
 const  CONT_IMPLEMENTED_SOLUTION_LEVEL = "ContBessel, AsymptoticCoulomb, NonrelativisticCoulomb, BsplineGalerkin  " *
                                          "(NOT ContSine -- the level route has no branch for it)"
 const  CONT_IMPLEMENTED_SOLUTION_POT   = "ContBessel, ContSine, AsymptoticCoulomb, NonrelativisticCoulomb, BsplineGalerkin"
-const  CONT_IMPLEMENTED_NORMALIZATION  = "PureSineNorm, CoulombSineNorm, OngRussekNorm, AlokNorm"
+const  CONT_IMPLEMENTED_NORMALIZATION  = "PureSineNorm, CoulombSineNorm, OngRussekNorm, CoulombFunctionNorm"
 const  CONT_HOW_TO_SET_SOLUTION        = "setDefaults(\"method: continuum, ...\")  with  spherical Bessel | pure sine | " *
                                          "asymptotic Coulomb | nonrelativistic Coulomb | Galerkin"
 const  CONT_HOW_TO_SET_NORMALIZATION   = "setDefaults(\"method: normalization, ...\")  with  pure sine | pure Coulomb | " *
-                                         "Ong-Russek | Alok"
+                                         "Ong-Russek | Coulomb functions"
 
 
 """
@@ -215,8 +215,8 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
         cOrbital, phase = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussekNorm()
         cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
-    elseif  Defaults.GBL_CONT_NORMALIZATION  ==  AlokNorm()
-        cOrbital, phase = Continuum.normalizeOrbitalAlok(cOrbital, pot, settings)
+    elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombFunctionNorm()
+        cOrbital, phase = Continuum.normalizeOrbitalCoulombFunctions(cOrbital, pot, settings)
     else    Continuum.unsupportedScheme("generateOrbitalForLevel", "Defaults.GBL_CONT_NORMALIZATION", Defaults.GBL_CONT_NORMALIZATION,
                                         CONT_IMPLEMENTED_NORMALIZATION, CONT_HOW_TO_SET_NORMALIZATION)
     end
@@ -303,8 +303,8 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
         cOrbital, phase = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussekNorm()
         cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
-    elseif  Defaults.GBL_CONT_NORMALIZATION  ==  AlokNorm()
-        cOrbital, phase = Continuum.normalizeOrbitalAlok(cOrbital, pot, settings)
+    elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombFunctionNorm()
+        cOrbital, phase = Continuum.normalizeOrbitalCoulombFunctions(cOrbital, pot, settings)
     else    Continuum.unsupportedScheme("generateOrbitalForLevel", "Defaults.GBL_CONT_NORMALIZATION", Defaults.GBL_CONT_NORMALIZATION,
                                         CONT_IMPLEMENTED_NORMALIZATION, CONT_HOW_TO_SET_NORMALIZATION)
     end
@@ -349,8 +349,8 @@ function generateOrbitalLocalPotential(energy::Float64, sh::Subshell, pot::Radia
         cOrbital, phase, normFactor = Continuum.normalizeOrbitalCoulombSine(cOrbital, pot, settings)
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  OngRussekNorm()
         cOrbital, phase, normFactor = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
-    elseif  Defaults.GBL_CONT_NORMALIZATION  ==  AlokNorm()
-        cOrbital, phase             = Continuum.normalizeOrbitalAlok(cOrbital, pot, settings)
+    elseif  Defaults.GBL_CONT_NORMALIZATION  ==  CoulombFunctionNorm()
+        cOrbital, phase             = Continuum.normalizeOrbitalCoulombFunctions(cOrbital, pot, settings)
         normFactor                  = 1.0
     else    Continuum.unsupportedScheme("generateOrbitalLocalPotential", "Defaults.GBL_CONT_NORMALIZATION", Defaults.GBL_CONT_NORMALIZATION,
                                         CONT_IMPLEMENTED_NORMALIZATION, CONT_HOW_TO_SET_NORMALIZATION)
@@ -614,7 +614,7 @@ end
         regimes where a legitimately large interior amplitude might be expected -- the WORST ratio was 1.269, while the failing
         cases give 3.3e+09 and 2.3e+10.  So `required = 1.0e3` sits three orders above anything legitimate yet measured and six
         orders below the defect.  And because the ratio divides one amplitude by another, the normalization CONSTANT cancels:
-        the same good case gives 1.141 under all four of `PureSineNorm`, `CoulombSineNorm`, `OngRussekNorm` and `AlokNorm`, so
+        the same good case gives 1.141 under all four of `PureSineNorm`, `CoulombSineNorm`, `OngRussekNorm` and `CoulombFunctionNorm`, so
         one threshold serves every convention and the check cannot be evaded by changing the global.
 
         NOT CHECKED IS NOT PASSED, and `checked` is the field that keeps the two apart.  A grid with fewer than 400 points has
@@ -669,7 +669,7 @@ end
                                    amplitude, from `Continuum.asymptoticAmplitude`.  It is checked in two tiers before the
                                    amplitude ratio below, because it is the only one of the two that sees a non-asymptotic
                                    orbital at all.  `NaN`, the default, means the caller has no fit to offer -- which is the
-                                   case for `normalizeOrbitalAlok`, matching analytic functions instead -- and the tier is
+                                   case for `normalizeOrbitalCoulombFunctions`, matching analytic functions instead -- and the tier is
                                    then skipped rather than guessed at.
 
         THE WARNING GOES TO `stderr` AND IS THEREFORE NOT SUPPRESSED by a `printout = false` path or by a
@@ -697,7 +697,7 @@ function reportContinuumAmplitude(P::Array{Float64,1}, cOrbital::Orbital, grid::
     ##
     ##  Hence `required` 0.2 and `fatal` 1.0 below:  at a residual of 1.0 the misfit is as large as the amplitude it
     ##  is a fraction of, so the asymptotic form the normalization assumed does not describe this orbital.  A NaN
-    ##  means the caller has no fit to offer -- normalizeOrbitalAlok, which matches analytic functions instead --
+    ##  means the caller has no fit to offer -- normalizeOrbitalCoulombFunctions, which matches analytic functions instead --
     ##  and the tier is then skipped rather than guessed at.
     resRequired = 0.2;    resFatal = 1.0
     if       !isnan(residual)  &&  residual > resFatal
@@ -1210,12 +1210,12 @@ end
 
 
 """
-`Continuum.normalizeOrbitalAlok(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)`   
+`Continuum.normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)`   
     ... to normalize the given continuum orbital with regard to a (asymptotic) wave function as per Salvat Code. 
         The orbitasl are normalized to unit amplitude.
         An ( orbital::Orbital, (δ + Δ)::Float64, N::Float64 ) is returned.
 """
-function normalizeOrbitalAlok(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)
+function normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)
     mtp = size( cOrbital.P, 1)  ;             energy = cOrbital.energy;      
     kappa = cOrbital.subshell.kappa  ;        l = Basics.subshell_l(cOrbital.subshell) 
     Zbar = -Radial.determineZbar(pot)  ; 
@@ -1309,14 +1309,14 @@ function normalizeOrbitalAlok(cOrbital::Orbital, pot::Radial.Potential, settings
     ##  10 a.u. box gives eta ~ 24, where the logarithmic term eta*ln(2qr) ~ 76 dwarfs q*r ~ 11 and the asymptotic
     ##  form is meaningless -- the fit residual is 4.77 and refused four suite tests, while this normalization is
     ##  sound there and always has been.  A measure may only guard the assumption its own routine makes.
-    Continuum.reportContinuumAmplitude(P, cOrbital, pot.grid, "Alok")
+    Continuum.reportContinuumAmplitude(P, cOrbital, pot.grid, "CoulombFunctions")
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
     
     # The CONVENTION and its constant belong in this line, not only the phases.  The absolute scale of every
     # continuum-derived quantity depends on which of the four `Defaults.GBL_CONT_NORMALIZATION` conventions is in
     # force, and that is a session global a user never sees; a number printed without it cannot be read back.
-    println(">> Alok-normalized continuum orbital (" * sa * ") with normalization constant N=" * @sprintf("%.4e",N) *
+    println(">> Coulomb-function-normalized continuum orbital (" * sa * ") with normalization constant N=" * @sprintf("%.4e",N) *
             ":   r = $(pot.grid.r[mtp]),   iPhase = $δ,   cPhase = $Δ ")
 
     return( newOrbital, δ + Δ, N )

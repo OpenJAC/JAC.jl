@@ -4,7 +4,7 @@ println("Fj) Cascade.HollowIonScheme: formation and decay of a hollow carbon ion
 using JLD2, Printf
 #
 setDefaults("method: continuum, Galerkin")              ## see the note in example-Fg.jl on asymptotic Coulomb
-setDefaults("method: normalization, Alok")
+setDefaults("method: normalization, Coulomb functions")
 setDefaults("unit: energy", "eV")
 
 grid = Radial.Grid(Radial.Grid(true); rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 20.0)
