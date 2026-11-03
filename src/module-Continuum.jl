@@ -3,6 +3,42 @@
 `module  JAC.Continuum`  
 ... a submodel of JAC that contains all functions and methods for computing, either in a given potential or with
     regard to a well-defined bound state.
+
+    THE GUARD ORDER, agreed 03-Nov-2026, and a NEW SOLUTION METHOD OR NORMALIZATION CONVENTION IS EXPECTED TO FIT IT.
+    This module supplies the free electron to every process in the package and is called at a low level, often from
+    inside a cascade or a second-order sum, so a caller never names it and a wrong orbital here is silent and reaches
+    every observable downstream.  The guards are therefore LOUD and sit at four fixed stages, each raising with the
+    measurement that justifies it rather than with a marker:
+
+    1. BEFORE SOLVING -- can this grid represent an orbital at this energy at all?  `gridConsistency` tests the step
+       against the de Broglie wavelength (15 points per oscillation) and `checkNormalizationRadius` tests that the
+       point where the normalization is fixed lies outside the bound charge cloud, in the dimensionless Zeff*r.
+       Both are A-PRIORI: they examine the grid and the energy, never the orbital that comes out.
+    2. AT EVERY DISPATCH on one of the two session globals -- `GBL_CONT_SOLUTION` and `GBL_CONT_NORMALIZATION` --
+       the `else` branch calls `unsupportedScheme`, which names the value in force, the path that has no branch for
+       it, what that path does implement and how to change the setting.  The three dispatchers do NOT implement the
+       same set, so this is per site and not once for the module.
+    3. AFTER NORMALIZING -- does the orbital that was actually produced deserve the scaling just applied to it?
+       `reportContinuumAmplitude` asks two questions in this order, because they fail independently:
+         (a) the FORM -- the rms misfit of the large component against the asymptotic form the convention assumed,
+             as a FRACTION of the amplitude, from `asymptoticAmplitude`.  Only this measure sees an orbital that has
+             not reached its oscillation inside the box.
+         (b) the MAGNITUDE -- `checkContinuumAmplitude`'s interior/asymptotic ratio, which sees a mesh that cannot
+             follow the oscillation it did reach.
+       ALL FOUR CONVENTIONS PASS THROUGH IT, BUT A MEASURE MAY ONLY GUARD THE ASSUMPTION ITS OWN ROUTINE MAKES.
+       Three of them normalize against the ASYMPTOTIC FORM of the wave, so 3(a) is precisely their validity
+       criterion.  `normalizeOrbitalAlok` instead matches the EXACT Coulomb or Bessel functions, which hold at any
+       radius, and is legitimately usable where the asymptotic expansion is not -- so it supplies no residual and
+       3(a) is skipped for it.  Uniformity of the MEASURE was tried on 03-Nov-2026 and withdrawn the same day:  on
+       Ne-like Kr at 16.7 eV in a 10 a.u. box, eta ~ 24 makes the asymptotic form meaningless and the residual 4.77,
+       which refused four suite tests whose numbers were sound.  The consistency that matters is of the PRINCIPLE.
+       AND 3(a) ITSELF MUST FOLLOW THE SOLUTION METHOD, not only the potential:  `asymptoticCharge` drops the
+       logarithmic Coulomb phase for the two free-wave solvers, which otherwise read a hundred times too large.
+    4. EVERY CHECK HAS TWO TIERS -- `@warn` where the result is suspect and `error` where it is unusable -- with the
+       thresholds DERIVED from a stated measurement and quoted in the message, never chosen to make a case pass.
+
+    So a new scheme needs: a branch at all three dispatchers (stage 2 names the sites if one is forgotten), and either
+    a residual for stage 3(a) or an explicit `NaN` with the reason stated, as `normalizeOrbitalAlok` once did.
 """
 module Continuum
 
@@ -65,6 +101,48 @@ end
 
 
 """
+`Continuum.unsupportedScheme(fn::String, setting::String, scheme, implemented::String, howToSet::String)`
+    ... raises because a dispatch on one of the two session-wide continuum choices -- the SOLUTION method
+        `Defaults.GBL_CONT_SOLUTION` or the NORMALIZATION convention `Defaults.GBL_CONT_NORMALIZATION` -- reached its `else`
+        branch, i.e. the value in force is one that this code path has no branch for.  The message names the value, the path,
+        what that path does implement and how to change the setting;  nothing is returned, since it always raises.
+
+        WHY THIS IS A FUNCTION AND NOT SIX `error("stop a")` CALLS, which is what stood here until 03-Nov-2026.  These two
+        settings are SESSION GLOBALS that a user sets once and that are then read far below, inside a cascade or a
+        second-order sum, so an unhandled value surfaces as a bare `stop a` from a place the caller never named.  Worse, the
+        three dispatch sites do NOT implement the same set:  `generateOrbitalLocalPotential` handles `ContSine()` and the two
+        `generateOrbitalForLevel` methods do not, so `setDefaults("method: continuum, pure sine")` followed by the level
+        route is a reachable trap that said only `stop a`.  AND THE POINT IS THE NEXT SCHEME, not this one:  a scheme added
+        to `Basics.AbstractContinuumSolutions` or `Basics.ContinuumNormalization` compiles and runs until it reaches a
+        dispatcher, and it must then fail loudly, naming itself and the site that needs the new branch.
+"""
+function unsupportedScheme(fn::String, setting::String, scheme, implemented::String, howToSet::String)
+
+    error("\n\nContinuum." * fn * "():  STOP -- " * setting * " = " * string(scheme) *
+          " has no branch on this code path.\n" *
+          "    this path implements   : " * implemented * "\n" *
+          "    how to change it       : " * howToSet * "\n" *
+          "The two continuum choices are session globals, set once and read far below -- inside a cascade or a second-order\n" *
+          "sum -- so this is raised where the dispatch happens rather than passed on as a wrong number.  If you have just\n" *
+          "ADDED a scheme to Basics.AbstractContinuumSolutions or Basics.ContinuumNormalization, this is the site that needs\n" *
+          "the new branch;  the other dispatchers in this module need one too, and they do not all implement the same set.\n")
+end
+
+
+##  The wording of the six dispatch guards, written once so that they cannot drift apart.  Note that the two
+##  generateOrbitalForLevel methods implement a SMALLER set than generateOrbitalLocalPotential:  there is no
+##  level-route branch for ContSine, and a caller who selects it gets a named refusal rather than a marker.
+const  CONT_IMPLEMENTED_SOLUTION_LEVEL = "ContBessel, AsymptoticCoulomb, NonrelativisticCoulomb, BsplineGalerkin  " *
+                                         "(NOT ContSine -- the level route has no branch for it)"
+const  CONT_IMPLEMENTED_SOLUTION_POT   = "ContBessel, ContSine, AsymptoticCoulomb, NonrelativisticCoulomb, BsplineGalerkin"
+const  CONT_IMPLEMENTED_NORMALIZATION  = "PureSineNorm, CoulombSineNorm, OngRussekNorm, AlokNorm"
+const  CONT_HOW_TO_SET_SOLUTION        = "setDefaults(\"method: continuum, ...\")  with  spherical Bessel | pure sine | " *
+                                         "asymptotic Coulomb | nonrelativistic Coulomb | Galerkin"
+const  CONT_HOW_TO_SET_NORMALIZATION   = "setDefaults(\"method: normalization, ...\")  with  pure sine | pure Coulomb | " *
+                                         "Ong-Russek | Alok"
+
+
+"""
 `Continuum.generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm::Nuclear.Model, grid::Radial.Grid,
                                     settings::Continuum.Settings; nuclearPot::Union{Nothing,Radial.Potential}=nothing, 
                                     primitives::Union{Nothing,Bsplines.Primitives}=nothing, 
@@ -121,11 +199,12 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
     elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb()
         cOrbital = Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
     elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb()
-        cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
+        cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot, settings)
     elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin()
         cOrbital = Continuum.generateOrbitalGalerkin(energy, sh, pot, settings; primitives=primitives, storage=storage,
                                                        coreOrbitals=coreOrbitals, occupations=coreOccupations)
-    else    error("stop a")
+    else    Continuum.unsupportedScheme("generateOrbitalForLevel", "Defaults.GBL_CONT_SOLUTION", Defaults.GBL_CONT_SOLUTION,
+                                        CONT_IMPLEMENTED_SOLUTION_LEVEL, CONT_HOW_TO_SET_SOLUTION)
     end
     #
     #
@@ -138,7 +217,8 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
         cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  AlokNorm()
         cOrbital, phase = Continuum.normalizeOrbitalAlok(cOrbital, pot, settings)
-    else    error("stop b")
+    else    Continuum.unsupportedScheme("generateOrbitalForLevel", "Defaults.GBL_CONT_NORMALIZATION", Defaults.GBL_CONT_NORMALIZATION,
+                                        CONT_IMPLEMENTED_NORMALIZATION, CONT_HOW_TO_SET_NORMALIZATION)
     end
 
     #=open("continuum.txt","w") do file
@@ -208,11 +288,12 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
     elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb()
         cOrbital = Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
     elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb()
-        cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
+        cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot, settings)
     elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin()
         cOrbital = Continuum.generateOrbitalGalerkin(energy, sh, pot, settings; primitives=primitives, storage=storage,
                                                        coreOrbitals=coreOrbitals, occupations=coreOccupations)
-    else    error("stop a")
+    else    Continuum.unsupportedScheme("generateOrbitalForLevel", "Defaults.GBL_CONT_SOLUTION", Defaults.GBL_CONT_SOLUTION,
+                                        CONT_IMPLEMENTED_SOLUTION_LEVEL, CONT_HOW_TO_SET_SOLUTION)
     end
     #
     # Normalize the continuum orbital and determine its phase
@@ -224,7 +305,8 @@ function generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm
         cOrbital, phase = Continuum.normalizeOrbitalOngRussek(cOrbital, pot, settings)
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  AlokNorm()
         cOrbital, phase = Continuum.normalizeOrbitalAlok(cOrbital, pot, settings)
-    else    error("stop b")
+    else    Continuum.unsupportedScheme("generateOrbitalForLevel", "Defaults.GBL_CONT_NORMALIZATION", Defaults.GBL_CONT_NORMALIZATION,
+                                        CONT_IMPLEMENTED_NORMALIZATION, CONT_HOW_TO_SET_NORMALIZATION)
     end
 
     return( cOrbital, phase )
@@ -253,10 +335,11 @@ function generateOrbitalLocalPotential(energy::Float64, sh::Subshell, pot::Radia
     elseif  Defaults.GBL_CONT_SOLUTION  ==  AsymptoticCoulomb()
         cOrbital = Continuum.generateOrbitalAsymptoticCoulomb(energy, sh, pot, settings)
     elseif  Defaults.GBL_CONT_SOLUTION  ==  NonrelativisticCoulomb()
-        cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot.grid, settings)
+        cOrbital = Continuum.generateOrbitalNonrelativisticCoulomb(energy, sh, pot, settings)
     elseif  Defaults.GBL_CONT_SOLUTION  ==  BsplineGalerkin()
         cOrbital = Continuum.generateOrbitalGalerkin(energy, sh, pot, settings)
-    else    error("stop a")
+    else    Continuum.unsupportedScheme("generateOrbitalLocalPotential", "Defaults.GBL_CONT_SOLUTION", Defaults.GBL_CONT_SOLUTION,
+                                        CONT_IMPLEMENTED_SOLUTION_POT, CONT_HOW_TO_SET_SOLUTION)
     end
     #
     # Normalize the continuum orbital and determine its phase
@@ -269,7 +352,8 @@ function generateOrbitalLocalPotential(energy::Float64, sh::Subshell, pot::Radia
     elseif  Defaults.GBL_CONT_NORMALIZATION  ==  AlokNorm()
         cOrbital, phase             = Continuum.normalizeOrbitalAlok(cOrbital, pot, settings)
         normFactor                  = 1.0
-    else    error("stop b")
+    else    Continuum.unsupportedScheme("generateOrbitalLocalPotential", "Defaults.GBL_CONT_NORMALIZATION", Defaults.GBL_CONT_NORMALIZATION,
+                                        CONT_IMPLEMENTED_NORMALIZATION, CONT_HOW_TO_SET_NORMALIZATION)
     end
     #
     return( cOrbital, phase, normFactor )
@@ -406,14 +490,38 @@ end
 """
 `Continuum.generateOrbitalNonrelativisticCoulomb(energy::Float64, sh::Subshell, Zeff::Float64, grid::Radial.Grid, 
                                                     settings::Continuum.Settings)`   
-    ... to generate a simple, non-relativistic and non-normalized Coulomb wave for the (continuum) subshell sh, 
-        the small component is simply obtained by the kinetic-balance condition. A orbital::Orbital is returned.
-        *****
-        This function does not yet work because there is no Julia implementation of the hypergeometric function with 
-        complex arguments available.
+    ... RAISES.  It was intended to generate a simple, non-relativistic and non-normalized Coulomb wave for the (continuum)
+        subshell sh, with the small component from the kinetic-balance condition, but it has never produced an orbital and no
+        `orbital::Orbital` is returned:  the Coulomb wave needs a confluent hypergeometric function 1F1 with COMPLEX arguments,
+        `1F1(l+1+i*eta, 2l+2, 2iqr)`, and `GSL.hypergeom` accepts real arguments only.
+
+        WHY IT RAISES RATHER THAN WARNS, since 03-Nov-2026.  That limitation was already recorded here and at the head of the
+        function, but as a `println`, which goes to stdout and is suppressed by every `redirect_stdout(devnull)` path in the
+        package;  execution then continued into the loops, which assign the complex result into a `Float64` array and die on
+        an `InexactError` naming neither this function nor the setting that selected it.  Until the same date all three
+        dispatchers compounded it by passing a `Radial.Grid` into the `Radial.Potential` slot of the four-argument method, so
+        the branch raised a `MethodError` on a signature before ever reaching the physics.  Both are now a single explained
+        refusal that names the alternatives:  `AsymptoticCoulomb` for an analytic Coulomb wave, `BsplineGalerkin` to solve in
+        the actual potential.  The formulas are left in place for whoever supplies a complex 1F1.
 """
 function generateOrbitalNonrelativisticCoulomb(energy::Float64, sh::Subshell, Zeff::Float64, grid::Radial.Grid, settings::Continuum.Settings) 
-    println("\n error: presently, NO Julia implementation of the hypergeometric function with complex arguments available.")
+    ##  A LOUD STOP, WHERE A SWALLOWED println USED TO BE.  This was already the author's intent -- the line that
+    ##  stood here said "presently, NO Julia implementation of the hypergeometric function with complex arguments
+    ##  available" -- but as a `println` it goes to stdout, is suppressed by every `redirect_stdout(devnull)` path in
+    ##  the package, and execution then continued into the loops below, which pass COMPLEX arguments to GSL.hypergeom
+    ##  (a real-only 1F1) and assign a complex result into a Float64 array.  Measured 03-Nov-2026, that surfaces as
+    ##  `InexactError: Float64(1.0 + 0.9027im)` from inside this function, with nothing to connect it to the setting
+    ##  the user chose.  The formulas below are left in place as the intended implementation, for whoever supplies a
+    ##  complex 1F1;  they have never produced an orbital.
+    error("\n\nContinuum.generateOrbitalNonrelativisticCoulomb():  STOP -- this solution method is NOT implemented.\n" *
+          "    requested by           : setDefaults(\"method: continuum, nonrelativistic Coulomb\")\n" *
+          "    what is missing        : a confluent hypergeometric function 1F1 with COMPLEX arguments;  GSL.hypergeom\n" *
+          "                             accepts real arguments only, and the Coulomb wave needs 1F1(l+1+i*eta, 2l+2, 2iqr)\n" *
+          "    use instead            : AsymptoticCoulomb -- an analytic Coulomb wave, fitted to its own asymptotic form\n" *
+          "                             to 7e-16 -- or BsplineGalerkin, which solves in the actual potential\n" *
+          "This method has produced no orbital since the first commit of the public history:  until 03-Nov-2026 all three\n" *
+          "dispatchers also called it with a Radial.Grid in the Radial.Potential slot, so it raised a MethodError on a\n" *
+          "signature before reaching this point.  That call is now correct and the refusal is deliberate and explained.\n")
     
     # Define the derivative of the confluent hypergeometric function
     function hgPrime(a,b,z)    wa = a/z * (GSL.hypergeom(a+1,b,z) - GSL.hypergeom(a,b,z));   return(wa)   end
@@ -550,9 +658,19 @@ end
 
 
 """
-`Continuum.reportContinuumAmplitude(P::Array{Float64,1}, cOrbital::Orbital, grid::Radial.Grid, sa::String)`
-    ... applies `Continuum.checkContinuumAmplitude` to the normalized large component `P` of `cOrbital` and emits a warning
-        where the check fails, naming the convention `sa` that produced it; `nothing` is returned.
+`Continuum.reportContinuumAmplitude(P::Array{Float64,1}, cOrbital::Orbital, grid::Radial.Grid, sa::String; residual::Float64=NaN)`
+    ... validates the normalized large component `P` of `cOrbital` in the two stages of the module's guard order, naming the
+        convention `sa` that produced it:  first its FORM, against the `residual` of the asymptotic fit below, then its
+        MAGNITUDE, through `Continuum.checkContinuumAmplitude`'s interior/asymptotic ratio.  They fail independently, which is
+        why both are asked and in that order.  Each stage warns where the result is suspect and raises where it is unusable;
+        `nothing` is returned when neither fires.
+
+        + residual ::Float64   ... the rms misfit of the orbital against its fitted asymptotic form, as a FRACTION of the
+                                   amplitude, from `Continuum.asymptoticAmplitude`.  It is checked in two tiers before the
+                                   amplitude ratio below, because it is the only one of the two that sees a non-asymptotic
+                                   orbital at all.  `NaN`, the default, means the caller has no fit to offer -- which is the
+                                   case for `normalizeOrbitalAlok`, matching analytic functions instead -- and the tier is
+                                   then skipped rather than guessed at.
 
         THE WARNING GOES TO `stderr` AND IS THEREFORE NOT SUPPRESSED by a `printout = false` path or by a
         `redirect_stdout(devnull)`, which is deliberate: the orbital it concerns is unusable for every observable, and the
@@ -566,15 +684,39 @@ end
         reading the spike radius from it yields `NaN` and the most useful line of the warning says nothing.  Measured
         22-Oct-2026 while calibrating this check.
 """
-function reportContinuumAmplitude(P::Array{Float64,1}, cOrbital::Orbital, grid::Radial.Grid, sa::String)
+function reportContinuumAmplitude(P::Array{Float64,1}, cOrbital::Orbital, grid::Radial.Grid, sa::String;
+                                  residual::Float64=NaN)
+    ##  THE FIT RESIDUAL IS THE ONLY ONE OF THESE MEASURES THAT SEES A NON-ASYMPTOTIC ORBITAL, measured 03-Nov-2026
+    ##  and it is why `abs(N) > 30` could be deleted rather than merely corrected.  Over sixteen SOUND He+ orbitals,
+    ##  0.5 to 200 eV in 24 and 40 a.u. boxes, the interior/asymptotic ratio read 1.000 or 1.001 -- and it read
+    ##  1.000 for all seven DELIBERATELY ruined ones too, slow electrons in boxes far too small for them, so the
+    ##  ratio cannot separate the two cases at all.  The residual separates them by orders of magnitude:
+    ##
+    ##      sound     2.2e-04 (200 eV, 40 a.u.)  ...  1.8e-01 (0.5 eV, 24 a.u.)
+    ##      ruined    1.9e-01 (1.0 eV,  8 a.u.)  ...  1.8e+01 (0.05 eV, 12 a.u.)
+    ##
+    ##  Hence `required` 0.2 and `fatal` 1.0 below:  at a residual of 1.0 the misfit is as large as the amplitude it
+    ##  is a fraction of, so the asymptotic form the normalization assumed does not describe this orbital.  A NaN
+    ##  means the caller has no fit to offer -- normalizeOrbitalAlok, which matches analytic functions instead --
+    ##  and the tier is then skipped rather than guessed at.
+    resRequired = 0.2;    resFatal = 1.0
+    if       !isnan(residual)  &&  residual > resFatal
+        error("\n\nContinuum.normalizeOrbital" * sa * "():  STOP -- the orbital does not have the asymptotic form " *
+              "that this normalization assumes.\n" * Continuum.asymptoticFitReport(residual, resRequired, resFatal, cOrbital) )
+    elseif   !isnan(residual)  &&  residual > resRequired
+        @warn("\n\nContinuum.normalizeOrbital" * sa * "():  the orbital only approximately has the asymptotic form " *
+              "that this normalization assumes.\n" * Continuum.asymptoticFitReport(residual, resRequired, resFatal, cOrbital) )
+    end
+    #
     wa = Continuum.checkContinuumAmplitude(P, cOrbital.energy, grid)
     if  wa.checked  &&  wa.ratio > wa.fatal
         # THE TWO TIERS DO DIFFERENT JOBS AND THE SPLIT IS MEASURED, not a hedge.  The normalization is fixed by the
         # ASYMPTOTIC amplitude, so a ratio of a few means the observable is off by percent at worst -- refusing such a
         # run is the mistake `checkNormalizationRadius` below records as its own reason for warning rather than
         # raising.  A ratio of 1e2 or more cannot be read that way: the orbital carries no usable amplitude at all,
-        # the three sibling conventions already refuse the same grid on their `abs(N) > 30` test, and every number
-        # built from it is wrong by that factor or its square.
+        # and every number built from it is wrong by that factor or its square.  This note USED to add that the
+        # three sibling conventions refuse the same grid on their own `abs(N) > 30` test;  that test was deleted on
+        # 03-Nov-2026 as uncorrelated with usability, and the residual tier above is what now carries that duty.
         error("\n\nContinuum.normalizeOrbital" * sa * "():  STOP -- the continuum orbital is not represented on this grid.\n" *
               Continuum.continuumAmplitudeReport(wa, cOrbital, grid) )
     elseif  wa.checked  &&  !wa.ok
@@ -612,6 +754,31 @@ function continuumAmplitudeReport(wa::NamedTuple, cOrbital::Orbital, grid::Radia
             "which is an\na-priori test of the step against the energy and cannot see the orbital that was produced.\n" *
             ">>> Reduce grid.hp to at most " * @sprintf("%.3e", wavelgth/40.0) * " a.u. (about 40 points per oscillation " *
             "at this\n    energy), or lower the highest continuum energy.\n" )
+end
+
+
+"""
+`Continuum.asymptoticFitReport(residual::Float64, required::Float64, fatal::Float64, cOrbital::Orbital)`
+    ... formats the measurement behind the residual tier of `Continuum.reportContinuumAmplitude` into the explanatory block that
+        both its warning and its refusal print, so that the two cannot drift apart;  a `report::String` is returned.
+"""
+function asymptoticFitReport(residual::Float64, required::Float64, fatal::Float64, cOrbital::Orbital)
+
+    return( @sprintf("    subshell, energy         = %s,  %.4e Hartree\n", string(cOrbital.subshell), cOrbital.energy) *
+            @sprintf("    rms misfit / amplitude   = %.4e   (above %.2f is suspect, above %.2f unusable)\n",
+                     residual, required, fatal) *
+            "The normalization is fixed by requiring the orbital's asymptotic oscillation to carry a prescribed amplitude, so " *
+            "it is\nmeaningless unless the orbital HAS reached that oscillation inside the box.  This number is the rms " *
+            "departure of the\nlarge component from the fitted asymptotic form, as a fraction of the amplitude, and it is free " *
+            "of the arbitrary scale\nthe Galerkin eigenvector carries.  Measured 03-Nov-2026 on He+: 2.2e-04 at 200 eV to " *
+            "1.8e-01 at 0.5 eV for sound\norbitals, against 1.9e-01 to 1.8e+01 for orbitals in boxes far too small for the " *
+            "electron's wavelength.\n" *
+            "NOTE THAT A LARGER BOX IS THE CURE AND NEVER THE CAUSE HERE, since this measure is a FRACTION of the " *
+            "amplitude:\nenlarging the box lets the orbital reach its oscillation and the number falls -- measured 1.8e-01 " *
+            "to 1.4e-01 at\n0.5 eV on going from 24 to 40 a.u.  (The superseded `abs(N) > 30` test behaved the opposite way " *
+            "and is described in\nthis function's docstring.)\n" *
+            ">>> Enlarge rbox until at least one full oscillation of this electron fits outside the atom, or raise the " *
+            "energy.\n" )
 end
 
 
@@ -821,6 +988,30 @@ end
 
 
 """
+`Continuum.asymptoticCharge(Zbar::Float64)`
+    ... the residual charge that the ASYMPTOTIC FORM of the computed orbital actually carries, which is not always the charge in
+        the potential:  a FREE-wave solution method produces an orbital with no logarithmic Coulomb phase at all, whatever the
+        potential says.  `Zbar` is returned unchanged for the solution methods that solve in the potential, and 0.0 for those
+        that do not, so that `Continuum.asymptoticAmplitude` is handed the form the orbital really has.  A `Float64` is returned.
+
+        MEASURED 03-Nov-2026 on one He+ orbital at 16.7 eV, as the fit residual with and without the logarithmic term:
+
+            solution method           with Zbar     with 0
+            ContBessel                7.83e-02    2.49e-05
+            ContSine                  7.83e-02    2.49e-05
+            AsymptoticCoulomb         6.96e-16    7.85e-02
+
+        -- so each solver is described by exactly one of the two forms, and `AsymptoticCoulomb` is fitted to MACHINE PRECISION
+        by the right one.  Taking the phase model from the potential alone is therefore wrong for two of the five methods, and
+        the error does not announce itself:  it appears as a residual a hundred times too large on a perfectly sound orbital.
+"""
+function asymptoticCharge(Zbar::Float64)
+
+    return( Defaults.GBL_CONT_SOLUTION == ContBessel()  ||  Defaults.GBL_CONT_SOLUTION == ContSine()  ?  0.0  :  Zbar )
+end
+
+
+"""
 `Continuum.asymptoticAmplitude(P::Array{Float64,1}, grid::Radial.Grid, mtp::Int64, energy::Float64, Zbar::Float64)`
     ... to determine the asymptotic amplitude and phase of a continuum orbital's large component by FITTING it to its known
         asymptotic form over the outer third of the mesh, instead of reading a maximum off it.  Asymptotically
@@ -897,16 +1088,15 @@ function normalizeOrbitalPureSine(cOrbital::Orbital, grid::Radial.Grid, settings
     # For normalization, FIT the asymptotic form rather than read a maximum off it;  see Continuum.asymptoticAmplitude
     # for why no window can do this job at every energy.  Zbar is the residual charge the outgoing electron still feels:
     # it enters only the fitted PHASE, while the target amplitude keeps this convention's own non-relativistic q.
-    wa = Continuum.asymptoticAmplitude(cOrbital.P, grid, mtp, cOrbital.energy, Zbar)
+    wa = Continuum.asymptoticAmplitude(cOrbital.P, grid, mtp, cOrbital.energy, Continuum.asymptoticCharge(Zbar))
     A  = wa.A;    N   = sqrt(2/(pi*q)) / A
     
     println(">> Pure-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",N) *
             " and phase phi=" * @sprintf("%.4e",phi) * " at r=" * @sprintf("%.4e",grid.r[mtp])   * " a.u." )
 
-    if abs(N) > 30.0   error("Pure-sine normalized N=" * @sprintf("%.4e",N) * "==> enlarge box-size")   end
     
     P = N .* cOrbital.P;   Q = N .* cOrbital.Q;   Pprime = N .* cOrbital.Pprime;   Qprime = N .* cOrbital.Qprime;   
-    Continuum.reportContinuumAmplitude(P, cOrbital, grid, "PureSine")
+    Continuum.reportContinuumAmplitude(P, cOrbital, grid, "PureSine"; residual = wa.residual)
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
 
@@ -958,17 +1148,16 @@ function normalizeOrbitalCoulombSine(cOrbital::Orbital, pot::Radial.Potential, s
         ##  used here -- about 22 a.u. -- the Coulomb tail has not yet left that quadrature exact.  The FIT below
         ##  needs no such assumption:  it absorbs the phase as a free parameter and reads the amplitude from hundreds
         ##  of points, which is why it succeeds where that one-point form failed.
-        wa = Continuum.asymptoticAmplitude(cOrbital.P, pot.grid, mtp, energy, Zbar)
+        wa = Continuum.asymptoticAmplitude(cOrbital.P, pot.grid, mtp, energy, Continuum.asymptoticCharge(Zbar))
         A  = wa.A;    N   = NP / A
         
         println(">> (Relativistic) Coulomb-sine normalized continuum orbital with normalization constant N=" * @sprintf("%.4e",N) *
                 " and phase phi=" * @sprintf("%.4e",phi) * " at r=" * @sprintf("%.4e",pot.grid.r[mtp])   * " a.u." )
     end
 
-    if abs(N) > 30.0   error("Coulomb-sine normalized N=" * @sprintf("%.4e",N) * "==> enlarge box-size")   end
     
     P = N .* cOrbital.P;   Q = N .* cOrbital.Q;   Pprime = N .* cOrbital.Pprime;   Qprime = N .* cOrbital.Qprime;   
-    Continuum.reportContinuumAmplitude(P, cOrbital, pot.grid, "CoulombSine")
+    Continuum.reportContinuumAmplitude(P, cOrbital, pot.grid, "CoulombSine"; residual = wa.residual)
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
 
@@ -1004,15 +1193,17 @@ function normalizeOrbitalOngRussek(cOrbital::Orbital, pot::Radial.Potential, set
             " and phase phi=" * @sprintf("%.4e",phi) *
             " at r=" * @sprintf("%.4e",pot.grid.r[mtp])   * " a.u.  U/Pe = $(U/Pe)" )
 
-    if abs(N) > 100.0   error("WKB (Ong-Russek) normalized N=" * @sprintf("%.4e",N) * "==> enlarge box-size")   end
     
     P = N .* cOrbital.P;   Q = N .* cOrbital.Q;   Pprime = N .* cOrbital.Pprime;   Qprime = N .* cOrbital.Qprime;   
-    Continuum.reportContinuumAmplitude(P, cOrbital, pot.grid, "OngRussek")
+    ##  this routine's WKB envelope is phase-complete and stays;  the fit supplies the REPORTED amplitude and, through
+    ##  its residual, the check that the orbital has reached the asymptotic form at all
+    wa = Continuum.asymptoticAmplitude(P, pot.grid, mtp, cOrbital.energy,
+                                       Continuum.asymptoticCharge(Radial.determineZbar(pot)))
+    Continuum.reportContinuumAmplitude(P, cOrbital, pot.grid, "OngRussek"; residual = wa.residual)
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
 
-    ##  this routine's WKB envelope is phase-complete and stays;  the fit is used only for the REPORTED amplitude
-    normF = Continuum.asymptoticAmplitude(P, pot.grid, mtp, cOrbital.energy, Radial.determineZbar(pot)).A
+    normF = wa.A
 
     return( newOrbital, phi, normF )
 end
@@ -1110,6 +1301,14 @@ function normalizeOrbitalAlok(cOrbital::Orbital, pot::Radial.Potential, settings
     N = N * sqrt(q / pi / energy)
 
     P = N .* cOrbital.P  ;   Q = N .* cOrbital.Q  ;   Pprime = N .* cOrbital.Pprime  ;   Qprime = N .* cOrbital.Qprime  ;   
+    ##  NO ASYMPTOTIC-FIT TIER HERE, AND THE REASON IS THE CONVENTION ITSELF, not an oversight -- it was added on
+    ##  03-Nov-2026 for uniformity and WITHDRAWN the same day, which is worth recording.  The other three conventions
+    ##  normalize against the ASYMPTOTIC FORM of the wave, so a fit to that form is exactly their validity criterion.
+    ##  This one matches the orbital to the EXACT Coulomb (or Bessel) functions, which hold at any radius, so it is
+    ##  legitimately usable where the asymptotic expansion is not.  Measured: Ne-like Kr, Zbar ~ 27, 16.7 eV in a
+    ##  10 a.u. box gives eta ~ 24, where the logarithmic term eta*ln(2qr) ~ 76 dwarfs q*r ~ 11 and the asymptotic
+    ##  form is meaningless -- the fit residual is 4.77 and refused four suite tests, while this normalization is
+    ##  sound there and always has been.  A measure may only guard the assumption its own routine makes.
     Continuum.reportContinuumAmplitude(P, cOrbital, pot.grid, "Alok")
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)

@@ -3487,15 +3487,60 @@ function testModule_Continuum(; short::Bool=true)
         end
     end
 
-    # (5) AND THE NORMALIZATION REFUSES what it cannot reach. |N| > 30 means the orbital never grew to its asymptotic
-    #     amplitude inside the box, and the routine says so instead of returning a factor of a thousand.
+    # (5) AND THE NORMALIZATION REFUSES WHAT IT CANNOT NORMALIZE -- exercised from BOTH sides, since a refusal that
+    #     cannot fire and one that fires on sound input are equally useless.
+    #
+    #     WHAT THIS BLOCK ASSERTED UNTIL 03-Nov-2026, AND WHY IT WAS INVERTED. It fed a perfect sine divided by 1000
+    #     and required a refusal, because the guard was `abs(N) > 30` on the normalization constant. But N is the ratio
+    #     of a fixed physical target to the ARBITRARY scale of the Galerkin eigenvector, so that input is perfectly
+    #     asymptotic and N = 1000 is the CORRECT answer for it; meanwhile the real scale grows with the box, so the
+    #     test refused sound orbitals computed in a larger box while admitting ruined ones -- measured 03-Nov-2026, a
+    #     sound orbital at 0.5 eV in 40 a.u. reached N = 28.4, one step from refusal, and an orbital at 0.2 eV in
+    #     8 a.u. whose fit misses by 112 % gave N = 27.5 and was accepted. The guard is now the fit RESIDUAL, which is
+    #     a fraction of the amplitude and therefore free of that scale. So the 1/1000 case below must now be ACCEPTED,
+    #     and that reversal is asserted deliberately rather than quietly dropped.
     cOrb  = redirect_stdout(devnull) do;  Continuum.generateOrbitalPureSine(1.0, Subshell("1000s_1/2"), grid, settings)  end
     small = Orbital( cOrb.subshell, cOrb.isBound, cOrb.useStandardGrid, cOrb.energy,
                      cOrb.P/1000, cOrb.Q/1000, cOrb.Pprime/1000, cOrb.Qprime/1000, cOrb.grid )
-    if  !isRefused(() -> Continuum.normalizeOrbitalPureSine(small, grid, settings))
+    if  isRefused(() -> Continuum.normalizeOrbitalPureSine(small, grid, settings))
         success = false
-        if printTest   info(iostream, "normalizeOrbitalPureSine accepts an orbital needing N = 1000, although it " *
-                                      "refuses above 30")   end
+        if printTest   info(iostream, "normalizeOrbitalPureSine refuses a perfect sine scaled by 1/1000, although " *
+                                      "the eigenvector's scale is arbitrary and that orbital is fully asymptotic")   end
+    end
+
+    #     THE OTHER SIDE: two orbitals that genuinely do NOT have the asymptotic form the convention assumes. One
+    #     oscillates at q(1.0 Hartree) but is declared to be at 4.0, so the fitted phase is wrong by a factor two;
+    #     the other decays exponentially and never oscillates at all. Both must be refused, and neither can be caught
+    #     by any test on the amplitude's magnitude -- which is the whole reason the residual tier exists.
+    wrongE = Orbital( cOrb.subshell, cOrb.isBound, cOrb.useStandardGrid, 4.0,
+                      cOrb.P, cOrb.Q, cOrb.Pprime, cOrb.Qprime, cOrb.grid )
+    if  !isRefused(() -> Continuum.normalizeOrbitalPureSine(wrongE, grid, settings))
+        success = false
+        if printTest   info(iostream, "normalizeOrbitalPureSine accepts a wave of q(1.0 Hartree) declared to be at " *
+                                      "4.0 Hartree, although it cannot have the asymptotic form of that energy")   end
+    end
+    decay = Orbital( cOrb.subshell, cOrb.isBound, cOrb.useStandardGrid, cOrb.energy,
+                     [exp(-r) for r in grid.r[1:length(cOrb.P)]], cOrb.Q, cOrb.Pprime, cOrb.Qprime, cOrb.grid )
+    if  !isRefused(() -> Continuum.normalizeOrbitalPureSine(decay, grid, settings))
+        success = false
+        if printTest   info(iostream, "normalizeOrbitalPureSine accepts an exponentially decaying large component, " *
+                                      "which has no asymptotic oscillation to normalize against")   end
+    end
+
+    # (5b) AND THE DISPATCH GUARD SAYS WHAT IT MUST. The two continuum choices are session globals read far below the
+    #      caller, so an unhandled value must name itself, the setting that carries it and the way to change it --
+    #      otherwise a scheme added later surfaces as the bare `error("stop a")` this replaced on 03-Nov-2026.
+    wa = try   Continuum.unsupportedScheme("aDispatcher", "Defaults.GBL_CONT_NORMALIZATION", PureSineNorm(),
+                                            Continuum.CONT_IMPLEMENTED_NORMALIZATION, Continuum.CONT_HOW_TO_SET_NORMALIZATION)
+               ""
+         catch err   sprint(showerror, err)
+         end
+    for  needle  in  ["PureSineNorm", "GBL_CONT_NORMALIZATION", "aDispatcher", "setDefaults", "AlokNorm"]
+        if  !occursin(needle, wa)
+            success = false
+            if printTest   info(iostream, "Continuum.unsupportedScheme's message does not mention $needle, so it " *
+                                          "cannot be acted upon where it is raised")   end
+        end
     end
 
     # (6) THE BESSEL WAVE AGAINST ELEMENTARY CLOSED FORMS: P = r j_l(qr) and dP/dr = (l+1) j_l(z) - z j_{l+1}(z), with
@@ -3567,8 +3612,10 @@ function testModule_Continuum(; short::Bool=true)
                       "Hartree, where a fixed window spans 4.3 down to 0.09 half-wavelengths; the Bessel wave and its "  *
                       "derivative against elementary sines and cosines; the asymptotic Coulomb wave's small and "   *
                       "large components tied by the free-Dirac ratio sqrt(E/(E+2c^2)); twoFzero against a "         *
-                      "terminating 2F0; and all five refusals -- four in gridConsistency and one in "               *
-                      "normalizeOrbitalPureSine -- exercised from both sides. No approved data is used.")
+                      "terminating 2F0; and the refusals -- the four in gridConsistency, the asymptotic-form tier "  *
+                      "of normalizeOrbitalPureSine exercised from BOTH sides (a perfect sine scaled by 1/1000 must "  *
+                      "be accepted, a wave at the wrong energy and a decaying one refused), and the dispatch "        *
+                      "guard's message. No approved data is used.")
     Defaults.setDefaults("print summary: close", "")
     testPrint("testModule_Continuum()::", success)
     return( success )
