@@ -1703,8 +1703,10 @@ function testModule_PhotoDoubleIonization(; short::Bool=true)
     #   (2) MIRROR SYMMETRY OF THE SHARING DISTRIBUTION.  Exchanging the two electrons' energies must give the same
     #       differential cross section, because the pair set is exchange-closed by construction.  This tests the
     #       pair bookkeeping and the continuum orbitals, and it is independent of any prefactor.
-    #   (3) THE QUADRATURE ADDS UP.  The total must equal SUM_k weight_k * (dsigma/d eps_1)_k, which is how
-    #       computeAmplitudesProperties forms it; a mismatch means the weights and the integrand have parted company.
+    #   (3) THE QUADRATURE ADDS UP.  The total must equal 1/2 SUM_k weight_k * (dsigma/d eps_1)_k, which is how
+    #       computeAmplitudesProperties forms it; a mismatch means the weights and the integrand have parted company.  The
+    #       1/2 is the identical-particle factor, supplied there since 03-Nov-2026 because the sharing integral runs over
+    #       the FULL range and so counts every final state twice; `Basics.determineEnergySharings` deliberately omits it.
     #
     # WHAT IS DELIBERATELY **NOT** ASSERTED: gauge equality.  As for MultiPhotonIonization above, a second-order
     # amplitude is evaluated off shell at every intermediate step and the two gauge forms agree only through
@@ -1758,8 +1760,8 @@ function testModule_PhotoDoubleIonization(; short::Bool=true)
                                               "$a against $b at sharing $k")   end
             end
         end
-        # (3) the total is the weighted sum of the integrand
-        tot = sum(sh.weight * sh.differentialCs.Coulomb for sh in shs)
+        # (3) the total is the weighted sum of the integrand, halved for the two identical electrons
+        tot = 0.5 * sum(sh.weight * sh.differentialCs.Coulomb for sh in shs)
         if  abs(newLine.crossSection.Coulomb) < 1.0e-30  ||
             abs(tot - newLine.crossSection.Coulomb)/abs(newLine.crossSection.Coulomb) > 1.0e-8
             success = false

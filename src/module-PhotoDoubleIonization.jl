@@ -832,8 +832,9 @@ end
         The energy-differential cross section dsigma/depsilon1 of each sharing is the INCOHERENT sum of abs2 over pairs, channels and
         multipoles, times the same prefactor 4 pi^2 alpha omega / (2 (2J_i+1)) that photoionization uses -- the operator and the per-energy
         normalization of the continuum orbitals are the same, and here BOTH outgoing electrons carry it. The total cross section is the
-        sharing-integrated differential one; the exchange double counting is already handled by Basics.determineEnergySharings and is not
-        applied again. A newLine::PhotoDoubleIonization.Line with all amplitudes and both cross sections evaluated is returned.
+        sharing-integrated differential one TIMES 1/2, because the two electrons are identical and the sharing integral over the full
+        range therefore counts every final state twice; `Basics.determineEnergySharings` deliberately supplies no statistics factor and
+        says so. A newLine::PhotoDoubleIonization.Line with all amplitudes and both cross sections evaluated is returned.
 """
 function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nuclear.Model, grid::Radial.Grid,
                                             nrContinuum::Int64, settings::PhotoDoubleIonization.Settings;
@@ -979,10 +980,25 @@ function  computeAmplitudesProperties(line::PhotoDoubleIonization.Line, nm::Nucl
                                                          sharing.weight, dcs, newPairs))
     end
 
-    # The total is the sharing-integrated differential cross section.  The exchange double counting of
-    # eps1 <-> eps2 is already handled inside Basics.determineEnergySharings and must NOT be applied again.
+    # The total is the sharing-integrated differential cross section, TIMES 1/2 BECAUSE THE TWO ELECTRONS ARE IDENTICAL.
+    # dsigma/d eps1 is defined over the whole range [0, omega - I_double], so that integral counts each physical final state
+    # twice -- once as (eps1, eps2) and once as (eps2, eps1) -- and the total carries a further factor 1/2.
+    #
+    # THESE TWO LINES CLAIMED THE OPPOSITE UNTIL 03-Nov-2026, namely that the double counting was "already handled inside
+    # Basics.determineEnergySharings and must NOT be applied again".  That routine's own docstring denies it in as many words:
+    # "NO PARTICLE-STATISTICS FACTOR IS INCLUDED HERE, DELIBERATELY ... that factor belongs to the PHYSICS of the calling
+    # process, not to a quadrature rule, and it must be written at the point where the total is formed so that it can be read
+    # there."  The `/2` carried in its weights is the Jacobian of the map [-1,1] -> [0, energy] and would be there for
+    # distinguishable shares just the same.  Its 08-Aug-2026 audit of consumers recorded that PhotoDoubleIonization "store[s]
+    # and display[s] the weight but never integrate[s] with it", which was true on that date -- and then the 15-Aug rebuild
+    # added the integral below, making this module a consumer, while the statistics factor was never supplied.
+    #
+    # Kornberg & Miraglia state the same 1/2 for their own total.  Measured consequence at omega = 200 eV:
+    # sigma(2+)/sigma(+) goes 2.70 % -> 1.35 %, i.e. BELOW the measured 3-4 %, which is the direction a knock-out-only
+    # amplitude must err in because it carries no shake-off at all; 2.70 % overshot a measurement this model cannot reach.
     crossSection = EmProperty(0., 0.)
     for  sh in newSharings   crossSection = crossSection + sh.weight * sh.differentialCs   end
+    crossSection = 0.5 * crossSection
 
     newLine = PhotoDoubleIonization.Line(line.initialLevel, line.finalLevel, line.photonEnergy, crossSection, newSharings)
 
