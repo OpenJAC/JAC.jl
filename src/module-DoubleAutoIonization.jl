@@ -296,6 +296,18 @@ function  computeAmplitudesProperties(line::DoubleAutoIonization.Line, nm::Nucle
         push!( newSharings, DoubleAutoIonization.Sharing( sharing.epsilon1, sharing.epsilon2, sharing.weight, drate, newChannels) )
         trate = trate + sharing.weight * drate
     end
+
+    # THE TWO EMITTED ELECTRONS ARE IDENTICAL, so the total carries a further factor 1/2.  The differential rate is
+    # defined over the whole range [0, energy], so the sharing integral above counts every physical final state twice,
+    # once as (eps1, eps2) and once as (eps2, eps1).  `Basics.determineEnergySharings` deliberately supplies NO
+    # statistics factor -- the /2 in its weights is the Jacobian of the map [-1,1] -> [0, energy] and would be there
+    # for distinguishable shares just the same -- and its own 08-Aug-2026 audit of consumers named this very line:
+    # "DoubleAutoIonization -- `trate += sharing.weight * drate`; two ELECTRONS, hence identical, so the 1/2 applies
+    # and is NOT yet applied there."  Supplied 04-Nov-2026, the same defect and the same day's reasoning as the one
+    # removed from PhotoDoubleIonization on 03-Nov-2026 (`0f35d139`).  EVERY total rate from this module before that
+    # date is twice what it should be; the DIFFERENTIAL rates per sharing are unaffected.
+    trate = 0.5 * trate
+
     # Add the total decay rate
     newLine = DoubleAutoIonization.Line( line.initialLevel, line.finalLevel, trate, newSharings)
     return( newLine )
@@ -416,6 +428,11 @@ function  displayDifferentialRates(stream::IO, lines::Array{DoubleAutoIonization
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon1))           * "    "
             sb = sb * @sprintf("%.4e", Defaults.convertUnits("energy: from atomic", sharing.epsilon2))           * "    "
             sb = sb * @sprintf("%.4e",                                              sharing.weight)              * "     "
+            ## NOTE, 04-Nov-2026:  this is a rate PER UNIT ENERGY (per Hartree -- the weights of
+            ## Basics.determineEnergySharings are in a.u.), while the header above shows inUnits("rate") alone and so
+            ## omits the energy denominator.  PhotoDoubleIonization had the same defect and was fixed by switching to
+            ## `energy-diff. cross section`; there is no `energy-diff. rate` in Defaults yet, so fixing this properly
+            ## means adding one there -- a different module, deliberately not done here.
             sb = sb * @sprintf("%.5e", Defaults.convertUnits("rate: from atomic",   sharing.differentialRate))   * "   "
             println(stream,  sb )
         end
