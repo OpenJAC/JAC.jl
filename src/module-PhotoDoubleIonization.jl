@@ -97,8 +97,11 @@
        as the energy increases the expected U-shaped form is reached; at 1.0 keV the curve is parabolic." So the
        measured distribution at 120 eV IS U-shaped and C3 does not reproduce it. This module gives an
        outermost/midpoint ratio of 1.81 at 120 eV, i.e. a U of the right sense where C3 has none -- a qualitative
-       success, and NOT yet a quantitative one, because the experimental U depth has not been read off that
-       figure. Digitizing those circles is the cheapest real test left.
+       success, and not yet a quantitative one, on two counts. The 1.81 is itself a maxKappa = 2 number, and
+       completing the partial-wave sum FLATTENS the U -- 5.55 -> 4.42 at 200 eV -- so the 120 eV run has to be
+       repeated at maxKappa = 3 before its depth may be compared with anything. Fig. 2 was digitized on
+       04-Nov-2026 and the measured depth is in hand; whether read-off values belong in this repository at all
+       is the maintainer's call, so none are quoted here.
 
     ---------------------------------------------------------------------------------------------------------
     THE PARKING IS LIFTED, 15-Sep-2026, ON THE MAINTAINER'S DECISION. What changed, and what did not:
@@ -145,10 +148,16 @@
         03-Nov-2026, a fixed POINT count that spans less than half a wavelength below ~14 eV, and the added
         Gauss-Legendre nodes march towards exactly that slow-electron band. With the intermediate mesh held fixed
         and the amplitude FITTED, the total moves +0.58 % over 5 -> 21 points. The leading error is elsewhere.
-      * THE LENGTH (Babushkin) FORM. Measured 15-Sep: quadrupling the intermediate set moves the velocity
-        (Coulomb) cross section by under 1 % at 200 eV while the length one nearly DOUBLES. The gauge RATIO
-        is therefore not a convergence indicator here, because one of its two members is the unstable one.
-        This agrees with Kornberg & Miraglia, who find velocity the trustworthy form at high energy.
+      * THE LENGTH (Babushkin) FORM, AND WHICH TRUNCATION ACTUALLY MOVES IT. The 15-Sep reading -- that
+        quadrupling the intermediate set leaves velocity under 1 % at 200 eV while length nearly DOUBLES --
+        attributed the near-doubling to the wrong mesh, because maxKappa was never varied beside it. Measured
+        04-Nov-2026 at 200 eV, box 40 a.u., 9 sharings, one variable per run: 9 -> 17 -> 25 intermediate
+        energies move Coulomb -0.87 %, +0.24 % and Babushkin -1.09 %, +0.56 %, leaving the gauge ratio at
+        1.840, 1.836, 1.842 -- so THAT mesh is converged at 9, and it is blind to the gauge gap. maxKappa
+        2 -> 3 -> 4 moves Coulomb +21.6 %, +0.8 % and Babushkin +55.0 %, +2.9 %, and walks the gauge ratio to
+        2.346 then 2.395. The length form IS the unstable one and the gauge RATIO is still not a convergence
+        indicator, but what destabilizes it is the PARTIAL-WAVE sum and not the intermediate mesh. This agrees
+        with Kornberg & Miraglia, who find velocity the trustworthy form at high energy.
       * THE ENERGY TREND is not monotonic in either gauge; see the numbers above.
 
     WHY THE TWO GAUGES ARE NOT EXPECTED TO AGREE, which is a property of second-order amplitudes and not a
@@ -1076,14 +1085,21 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
                 ">>> ground-state correlation, so its DOMAIN IS NEAR THRESHOLD, where knock-out dominates. Knock-out\n" *
                 ">>> gives a nearly FLAT energy-sharing distribution; shake-off prevails at high energy and alone\n" *
                 ">>> sets the asymptotic 1.65-1.67 % ratio, which this module therefore cannot reach. Measured for\n" *
-                ">>> He at a 40 a.u. box, 9 sharings: the outermost/midpoint ratio of dsigma/d eps1 is 1.30 at\n" *
-                ">>> 100 eV, 1.81 at 120 eV, 3.32 at 150 eV and 5.55 at 200 eV, i.e. flat near threshold and deeply\n" *
-                ">>> U-shaped above it. Read shapes and trends here; quote an absolute number only with the box,\n" *
-                ">>> the sharing count, maxKappa and NoIntermediateEnergies stated beside it.\n" *
-                ">>> The COULOMB (velocity) form is the stable one: quadrupling the intermediate set moves it by\n" *
-                ">>> under 1 % while the Babushkin (length) one nearly doubles. Prefer velocity, and do not read\n" *
-                ">>> the gauge ratio as a convergence indicator -- Kornberg & Miraglia report a large length-velocity\n" *
-                ">>> discrepancy at ALL energies. See the STATUS block in the module docstring.\n",
+                ">>> He at a 40 a.u. box, 9 sharings, maxKappa = 2: the outermost/midpoint ratio of dsigma/d eps1\n" *
+                ">>> is 1.30 at 100 eV, 1.81 at 120 eV, 3.32 at 150 eV and 5.55 at 200 eV, i.e. flat near threshold\n" *
+                ">>> and deeply U-shaped above it. THOSE FOUR ARE maxKappa = 2 NUMBERS AND THE U IS TOO DEEP AT IT:\n" *
+                ">>> completing the partial-wave sum raises the EQUAL-sharing node by +36 % against +10 % at the\n" *
+                ">>> extreme one, so at 200 eV the ratio falls 5.55 -> 4.48 -> 4.42 over maxKappa 2 -> 3 -> 4. Read\n" *
+                ">>> shapes and trends here; quote an absolute number only with the box, the sharing count, maxKappa\n" *
+                ">>> and NoIntermediateEnergies stated beside it.\n" *
+                ">>> The COULOMB (velocity) form is the stable one, and WHICH TRUNCATION DESTABILIZES THE OTHER\n" *
+                ">>> was misattributed until 04-Nov-2026. Measured with one variable per run: 9 -> 17 -> 25 inter-\n" *
+                ">>> mediate energies move Coulomb -0.87 %, +0.24 % and Babushkin -1.09 %, +0.56 %, and leave the\n" *
+                ">>> gauge ratio at 1.840, 1.836, 1.842 -- that mesh is CONVERGED at 9. The near-doubling belongs\n" *
+                ">>> to maxKappa: 2 -> 3 -> 4 moves Coulomb +21.6 %, +0.8 % and Babushkin +55.0 %, +2.9 %, walking\n" *
+                ">>> the gauge ratio to 2.346 then 2.395. So prefer velocity, converge maxKappa to 3, and do not\n" *
+                ">>> read the gauge ratio as a convergence indicator -- Kornberg & Miraglia report a large length-\n" *
+                ">>> velocity discrepancy at ALL energies. See the STATUS block in the module docstring.\n",
                 color=:yellow)
 
     # The nuclear potential and the B-spline primitives are constant for the whole computation and are built once.
