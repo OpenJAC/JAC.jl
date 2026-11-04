@@ -38,22 +38,32 @@
     double-ionization amplitude, not to the machinery underneath it.
 
     THE REFERENCE THAT SETTLES THE NORMALIZATION is Kornberg & Miraglia, Phys. Rev. A 48, 3714 (1993),
-    "Double photoionization of helium: use of a correlated two-electron continuum wave function"
-    (examples/papers/1993.pra-kornberg-pdi-helium.pdf). Their Eq. (2) reads
+    "Double photoionization of helium: use of a correlated two-electron continuum wave function". Their Eq. (2) reads
 
         d^5 sigma(2+) / (d eps1 d Omega1 d Omega2)  =  4 pi^2 alpha a0^2 k1 k2 C^(G) |e.T_fi^(G)(k1,k2)|^2
 
-    with C^(L) = E_gamma, C^(V) = 1/E_gamma, C^(A) = E_gamma^(-3). THREE FACTORS ARE MISSING HERE:
-      1. the momentum product k1 k2, which this module does not apply at all. It is O(1) -- 1.90 at the end
-         sharing of the 200 eV case and 4.49 at the midpoint -- so it CANNOT close the gap, but it flattens
-         the U by a factor 2.4 and is therefore a shape prediction to test.
-      2. the gauge-dependent prefactor C^(G): length and velocity differ by E_gamma^2, whereas this module
-         applies ONE gauge-independent prefactor to both Coulomb and Babushkin.
-      3. a factor 1/2: "the correctly normalized total cross section is one half of the integral in the
-         shake-off region". This is NOT the same double counting that Basics.determineEnergySharings handles.
-    Their final state is normalized to a delta function in MOMENTUM space while JAC normalizes its continuum
-    orbitals per unit ENERGY; since dE = k dk that conversion generates k factors of its own and must be done
-    deliberately, not assumed. Doing it may absorb part or all of item 1.
+    with C^(L) = E_gamma, C^(V) = 1/E_gamma, C^(A) = E_gamma^(-3). This was read on 15-Aug-2026 as THREE missing factors.
+    SETTLED 03-Nov-2026: only ONE of the three was real, and the other two must NOT be applied. Re-deriving it cost
+    nothing and removed a factor of two from every number this module had produced, so the derivation is kept here.
+
+      1. k1 k2 IS NOT MISSING -- it is the momentum-to-energy conversion that JAC has already performed. K&M normalize
+         their final state to delta^3(k - k'); JAC normalizes its continuum orbitals to the amplitude sqrt(2/(pi q))
+         (see Continuum.jl), which is per unit ENERGY. Since dE = q dq the two differ by |eps,Omega> = sqrt(k) |k>,
+         hence |T_energy|^2 = k1 k2 |T_momentum|^2. Their k1 k2 IS that conversion. Applying it would convert twice.
+         The "flattens the U by a factor 2.4" shape prediction recorded with it is therefore VOID -- do not test it.
+      2. C^(G) IS NOT MISSING either -- JAC carries the gauge factor INSIDE the multipole operator, which is why ONE
+         gauge-independent prefactor correctly serves both Coulomb and Babushkin here. A missing E_gamma^2 would be a
+         factor 54 at 200 eV and could not hide behind a single-ionization cross section within 15% of the literature.
+      3. THE FACTOR 1/2 WAS REAL, and it was supplied on 03-Nov-2026: "the correctly normalized total cross section is
+         one half of the integral in the shake-off region". dsigma/d eps1 is defined over the whole range
+         [0, omega - I_double], so integrating it counts every physical final state twice, once as (eps1, eps2) and
+         once as (eps2, eps1). It is applied where the total is formed; see the comment there.
+
+    THE SIGN OF THE DISCREPANCY IS WHAT IDENTIFIED IT, with no computation at all, and that is the method worth reusing.
+    This amplitude carries knock-out (TS1) ONLY -- no shake-off, no ground-state correlation -- and an uncorrelated
+    initial state underestimates the high-energy shake-off asymptote by a factor of 3. A model missing an entire
+    mechanism cannot OVERSHOOT on physics. Ours overshot by 1.4-2.7x, which points at the prefactor and not at the
+    physics. Where a discrepancy has the wrong SIGN for the known deficiency, look for a factor before looking further.
 
     THE OTHER SUSPECT is the intermediate space, which is severely truncated: the numbers above used four
     Green levels, maxKappa=1 and a 5-point Gauss-Legendre integral over the WHOLE excess-energy range, for an
@@ -65,10 +75,30 @@
     about an order of magnitude over much of the range and velocity the trustworthy one at high energy.
     Do not spend time hunting it.
 
-    QUANTITATIVE TARGETS for the next attempt, both from that paper: Fig. 2 gives d sigma / d eps1 in Mb/eV
-    at 120, 150 and 200 eV and at 1, 2 and 3 keV; Fig. 3 gives sigma(2+)/sigma(+) against photon energy with
-    the 1.68% asymptote marked. Note their total cross section cost about 20 h on a 10-Mflop machine, so this
-    is an expensive calculation even when done correctly.
+    THE PAPER WAS READ ON 04-Nov-2026, and three things in it change how it may be used. Mb/eV is the unit of
+    their Fig. 2, and the column printed by `displayResults` was barn per HARTREE under a [barn]/[eV] header
+    until that date.
+
+    1. THEIR TABLE II HAS TWO DOUBLE-IONIZATION COLUMNS AND THE SMALLER ONE IS NOT THEIR MODEL. At 200 eV,
+       sigma(+) = 5.44e-02 Mb, sigma(2+)_C2 = 1.69e-03 Mb and sigma(2+)_C3 = 1.3e-02 Mb. C3 is the correlated
+       three-Coulomb-wave final state the paper is ABOUT; C2 is the independent-electron product of two Coulomb
+       waves. They differ by 7.7x here. Anything quoted as "the K&M value" must say WHICH, and earlier notes in
+       this repository used 1.69e-03 without saying it was C2.
+    2. NEITHER COLUMN IS A GOOD BENCHMARK AT 200 eV -- the paper says so itself. "At intermediate energies, the
+       calculated ratio is up to five times larger than the data", and C3 at 200 eV gives 23.9% against a
+       measured 3-4%. At the other end, "at E_gamma = 84 eV the theory gives a ratio of 0.004% while the data is
+       0.6%", a factor 140 low. Their velocity form is trustworthy only ABOVE about 1 keV, where it tends to
+       1.75% against the 1.68% asymptote (C2 gives 1.60%). SO COMPARE AGAINST THE DATA, NOT AGAINST K&M, and use
+       their Table II for sigma(+) and for the collected measurements rather than as a target.
+    3. AND THE SHAPE AT 120 eV IS THE ONE PLACE THIS MODULE CAN BE TESTED AGAINST EXPERIMENT DIRECTLY. Their
+       Fig. 2 plots d sigma(2+)/d eps1 at 120, 150 and 200 eV with the measured curve of Wehlitz et al. overlaid
+       at 120 eV. The paper's own verdict: "At lower energies, the theoretical shape does not agree with the
+       experimental U-shaped form, indicating the inadequacy of the present approximation in this range. However,
+       as the energy increases the expected U-shaped form is reached; at 1.0 keV the curve is parabolic." So the
+       measured distribution at 120 eV IS U-shaped and C3 does not reproduce it. This module gives an
+       outermost/midpoint ratio of 1.81 at 120 eV, i.e. a U of the right sense where C3 has none -- a qualitative
+       success, and NOT yet a quantitative one, because the experimental U depth has not been read off that
+       figure. Digitizing those circles is the cheapest real test left.
 
     ---------------------------------------------------------------------------------------------------------
     THE PARKING IS LIFTED, 15-Sep-2026, ON THE MAINTAINER'S DECISION. What changed, and what did not:
@@ -82,18 +112,39 @@
 
     THE ABSOLUTE SCALE IS NO LONGER 3-4 ORDERS OUT; THE 15-Aug TEXT ABOVE IS STALE ON THIS POINT. That figure
     predates the four fixes of 06-Sep, one of which was a cross-section constant wrong by 4 pi/(alpha^2 omega^2).
-    Measured 15-Sep-2026 for He with 9 sharings and maxKappa = 2, in the COULOMB gauge:
-        sigma(2+)/sigma(+)  =  2.70 % at 200 eV,  3.18 % at 400 eV,  2.28 % at 800 eV
-    against a measured 3-4 % near 200 eV falling towards an asymptotic 1.68 %. So the velocity-gauge ratio is
-    the right SIZE and falls between 400 and 800 eV, which is the right direction. It is not monotonic, and
-    nothing below is converged; but "three orders of magnitude too small" is no longer true and must not be
-    repeated.
+    THE RATIO, MEASURED SELF-CONSISTENTLY ON 04-Nov-2026 -- sigma(+) and sigma(2+) from the SAME orbitals, grid,
+    normalization and prefactor, He at 200 eV, box 40 a.u., 9 sharings, maxKappa = 2, NoIntermediateEnergies = 9
+    (tools/comparePdiHeliumKornberg.jl), against Kornberg & Miraglia Table II at 200 eV:
+
+                               JAC Coulomb     JAC Babushkin       K&M C2       K&M C3
+        sigma(+)   [Mb]         5.9499e-02        5.1565e-02     5.4400e-02   5.4400e-02
+        sigma(2+)  [Mb]         2.3015e-03        4.2347e-03     1.6900e-03   1.3000e-02
+        sigma(2+)/sigma(+)          3.868 %           8.212 %        3.107 %      23.90 %
+
+    THE COMPARISON THAT COUNTS IS WITH THE MEASUREMENT, not with either K&M column. In the VELOCITY (Coulomb)
+    form the ratio is 3.868 %, INSIDE the measured 3-4 % band near 200 eV, on a sigma(+) itself within 10 % of
+    theirs. K&M's own C3 model gives 23.9 % there -- their paper says the ratio is "up to five times larger than
+    the data" at intermediate energies -- so landing between C2 and the data is the right place to land, and
+    agreeing with C3 would have been a failure. This is the first self-consistent agreement this module has
+    produced. Three cautions, all of which matter more than the agreement does:
+      * NEITHER maxKappa = 2 NOR NoIntermediateEnergies = 9 is converged, so this is an order-and-sign statement.
+      * The LENGTH form is 8.2 % and far outside the band, exactly as K&M's own large length-velocity
+        discrepancy predicts. Only velocity is being compared.
+      * THE EARLIER "2.70 % at 200 eV" WAS NOT MERELY A FACTOR 2 OUT. Halving it to 1.35 % is correct arithmetic
+        and still wrong, because its sigma(+) was never checked and was about 3x the literature; the two errors
+        partly cancelled. A ratio is only worth quoting when BOTH members come from the same calculation, and the
+        04-Nov table above is the first time that has been true here. The 400 eV and 800 eV entries of that old
+        series are withdrawn rather than halved: they have no companion sigma(+).
+    "Three orders of magnitude too small" is long dead and must not be repeated.
 
     WHAT IS STILL NOT TRUSTWORTHY, and the caller is warned of it at run time rather than stopped:
-      * THE SHARING INTEGRAL IS NOT CONVERGED, and this is now the leading error. Measured at 200 eV: the total
-        moves +2.3 %, +12.4 % and +14.1 % as the Gauss-Legendre points go 5 -> 9 -> 15 -> 21, i.e. +29 % over
-        the whole scan and still rising. The round-1 statement that it was converged "to a few per cent, and
-        more points will not help" is WRONG on both counts and is corrected here.
+      * THE SHARING INTEGRAL CONVERGES; THE "+29 %" ABOVE WAS AN ARTEFACT OF TWO CONFOUNDS AND IS WITHDRAWN.
+        The 15-Sep scan varied two things at once. (a) `NoIntermediateEnergies` did not exist until 30-Sep-2026,
+        so asking for more sharings silently made the second-order sum more complete too -- worth a factor 2.7 at
+        FIXED sharing. (b) The asymptotic amplitude was read as a maximum over the last 300 grid points until
+        03-Nov-2026, a fixed POINT count that spans less than half a wavelength below ~14 eV, and the added
+        Gauss-Legendre nodes march towards exactly that slow-electron band. With the intermediate mesh held fixed
+        and the amplitude FITTED, the total moves +0.58 % over 5 -> 21 points. The leading error is elsewhere.
       * THE LENGTH (Babushkin) FORM. Measured 15-Sep: quadrupling the intermediate set moves the velocity
         (Coulomb) cross section by under 1 % at 200 eV while the length one nearly DOUBLES. The gauge RATIO
         is therefore not a convergence indicator here, because one of its two members is the unstable one.
@@ -1021,12 +1072,18 @@ function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, n
     # The 15-Aug-2026 barrier was removed on 15-Sep-2026 when the maintainer lifted the parking. It is replaced
     # by a WARNING and not by silence: the module is usable for shapes, ratios and trends, and is not usable for
     # a bare cross section. Saying so on every run is cheaper than a reader discovering it from a wrong number.
-    printstyled(">>> PhotoDoubleIonization: the SHARING INTEGRAL IS NOT CONVERGED -- measured 15-Sep-2026, the total\n" *
-                ">>> drifts +29 % between 3 and 21 Gauss-Legendre points and is still rising. Treat the first digit\n" *
-                ">>> only, and state the number of sharings with any number taken from here.\n" *
+    printstyled(">>> PhotoDoubleIonization: THIS AMPLITUDE IS KNOCK-OUT (TS1) ONLY -- it carries no shake-off and no\n" *
+                ">>> ground-state correlation, so its DOMAIN IS NEAR THRESHOLD, where knock-out dominates. Knock-out\n" *
+                ">>> gives a nearly FLAT energy-sharing distribution; shake-off prevails at high energy and alone\n" *
+                ">>> sets the asymptotic 1.65-1.67 % ratio, which this module therefore cannot reach. Measured for\n" *
+                ">>> He at a 40 a.u. box, 9 sharings: the outermost/midpoint ratio of dsigma/d eps1 is 1.30 at\n" *
+                ">>> 100 eV, 1.81 at 120 eV, 3.32 at 150 eV and 5.55 at 200 eV, i.e. flat near threshold and deeply\n" *
+                ">>> U-shaped above it. Read shapes and trends here; quote an absolute number only with the box,\n" *
+                ">>> the sharing count, maxKappa and NoIntermediateEnergies stated beside it.\n" *
                 ">>> The COULOMB (velocity) form is the stable one: quadrupling the intermediate set moves it by\n" *
                 ">>> under 1 % while the Babushkin (length) one nearly doubles. Prefer velocity, and do not read\n" *
-                ">>> the gauge ratio as a convergence indicator. See the STATUS block in the module docstring.\n",
+                ">>> the gauge ratio as a convergence indicator -- Kornberg & Miraglia report a large length-velocity\n" *
+                ">>> discrepancy at ALL energies. See the STATUS block in the module docstring.\n",
                 color=:yellow)
 
     # The nuclear potential and the B-spline primitives are constant for the whole computation and are built once.
@@ -1223,8 +1280,8 @@ function  displayResults(stream::IO, lines::Array{PhotoDoubleIonization.Line,1},
     sb = sb * TableStrings.center(12, TableStrings.inUnits("energy"); na=2)
     sa = sa * TableStrings.center(12, "weight";    na=3);                         sb = sb * TableStrings.hBlank(15)
     sa = sa * TableStrings.center(34, "Cou -- dsigma/d eps_1 -- Bab"; na=2)
-    sb = sb * TableStrings.center(34, TableStrings.inUnits("cross section") * "/" * TableStrings.inUnits("energy") *
-                                      "     " * TableStrings.inUnits("cross section") * "/" * TableStrings.inUnits("energy"); na=2)
+    sb = sb * TableStrings.center(34, TableStrings.inUnits("differential cross section") *
+                                      "        " * TableStrings.inUnits("differential cross section"); na=2)
     println(stream, sa);    println(stream, sb);    println(stream, "  ", TableStrings.hLine(nx))
     #
     for  line in lines
@@ -1234,8 +1291,16 @@ function  displayResults(stream::IO, lines::Array{PhotoDoubleIonization.Line,1},
             sb = sb * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", sharing.epsilon1)) * "  "
             sb = sb * @sprintf("%.5e", Defaults.convertUnits("energy: from atomic", sharing.epsilon2)) * "  "
             sb = sb * @sprintf("%.5e", sharing.weight)                                                 * "   "
-            sb = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", sharing.differentialCs.Coulomb))   * "   "
-            sb = sb * @sprintf("%.6e", Defaults.convertUnits("cross section: from atomic", sharing.differentialCs.Babushkin))
+            ## an ENERGY-DIFFERENTIAL cross section needs BOTH conversions.  Until 04-Nov-2026 only the cross-section one
+            ## was applied while the header read [barn]/[eV], so this column carried barn per HARTREE -- a factor 27.2114,
+            ## and the epsilon columns beside it were already in eV.  Caught by the quadrature identity, which is unit-blind:
+            ## the weights of Basics.determineEnergySharings sum to the excess in a.u., so 0.5*sum(w*d) reproduces the total
+            ## only if d is per Hartree.  `energy-diff. cross section` and TableStrings.inUnits("differential cross section")
+            ## existed for this from the start and were wired up by no module at all.
+            sb = sb * @sprintf("%.6e", Defaults.convertUnits("energy-diff. cross section: from atomic",
+                                                            sharing.differentialCs.Coulomb))     * "   "
+            sb = sb * @sprintf("%.6e", Defaults.convertUnits("energy-diff. cross section: from atomic",
+                                                            sharing.differentialCs.Babushkin))
             println(stream, sb)
         end
     end
