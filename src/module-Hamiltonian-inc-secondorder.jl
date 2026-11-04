@@ -628,6 +628,17 @@ end
         ONLY THE TARGET LEVELS OF P ARE CORRECTED -- those carrying weight >= 0.5 on `refConfigs`, the SAME
         rule `Hamiltonian.secondOrderBlock` uses and for the same reason.
 
+        THE DENOMINATOR GUARD IS A HARD EXCLUSION AT `abs(dd) < 1.0e-10` (literal degeneracy) PLUS A SOFT
+        WARNING BELOW `1.0e-2` Ha -- filed as priority item 5, 04-Nov-2026, after a dense Q space (Ti III
+        3d^2 -> 4d, 5371 genuinely-new CSFs against 9 target levels) gave a correction swinging -386 to
+        -537 mHa, LARGER than the whole NIST term span, with no warning printed anywhere: some P-level/Q-CSF
+        denominators there were small enough to inflate the Epstein-Nesbet sum without being literally
+        degenerate. The hard exclusion is UNCHANGED (removing a term changes the physics, which is not this
+        function's decision to make alone); the warning only REPORTS, listing how many denominators fell
+        under the soft threshold, the worst of them, and the single largest resulting contribution to its
+        own level's `deltaE` -- so a caller sees the risk rather than a confident, possibly wrong-ordered
+        number. The scheme is unaffected on a sparse Q space (Cl III's p^3 case, branch g, never trips it).
+
         A `Hamiltonian.ShapeCrossingPartition` is returned.
 """
 function secondOrderShapeCrossingCorrection(pMp::Multiplet, qMp::Multiplet, refConfigs::Array{Configuration,1},
@@ -706,10 +717,26 @@ function secondOrderShapeCrossingCorrection(pMp::Multiplet, qMp::Multiplet, refC
     end
 
     deltaE = zeros(length(targetLevels))
+    smallDenominatorThreshold = 1.0e-2   ## Ha; soft warning floor, item 5 -- NOT a term exclusion, see docstring
+    nSmallDenominators = 0;    worstDenominator = Inf;    worstContribution = 0.0
     for  (j, i)  in  enumerate(targetLevels),  s = 1:nNewQ
         dd = hqq[s] - pMp.levels[i].energy
         abs(dd) < 1.0e-10   &&   continue
-        deltaE[j] -= coupling[i,s]^2 / dd
+        contribution = coupling[i,s]^2 / dd
+        if  abs(dd) < smallDenominatorThreshold   &&   abs(dd) < abs(worstDenominator)
+            worstDenominator  = dd
+            worstContribution = contribution
+        end
+        abs(dd) < smallDenominatorThreshold   &&   (nSmallDenominators += 1)
+        deltaE[j] -= contribution
+    end
+    if  nSmallDenominators > 0
+        @warn("Hamiltonian.secondOrderShapeCrossingCorrection(): $nSmallDenominators of " *
+              "$(length(targetLevels)*nNewQ) P-level/Q-CSF denominator(s) fall under " *
+              "$smallDenominatorThreshold Ha (worst $worstDenominator Ha, contributing $worstContribution Ha " *
+              "to its own level's deltaE) -- the Epstein-Nesbet sum is sensitive to near-degenerate Q-CSFs " *
+              "that the hard 1.0e-10 exclusion does not catch, and this correction may not be physical (see " *
+              "priority item 5).  Inspect `hqq` and `coupling` directly before trusting `deltaE` here.")
     end
 
     return( ShapeCrossingPartition(targetLevels, deltaE, newQIndices, coupling) )
