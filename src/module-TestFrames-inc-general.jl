@@ -680,6 +680,86 @@ end
 
 
 """
+`TestFrames.testRepresentation_ShapeCrossingRasStep()`  ... tests the guard against a single CSF occupying
+    both the Basics.SCFShape and Basics.CoreValenceCorrelationShape realization of one label, and the
+    RasStep.shapedTo mechanism that builds a shape-crossing layer's Q space, on a cheap Be case.
+"""
+function testRepresentation_ShapeCrossingRasStep()
+    success = true
+    printTest, iostream = Defaults.getDefaults("test flag/stream")
+
+    # PART 1 -- THE STRUCTURAL GUARD ITSELF, direct and instant: a basis that (by construction, never by
+    # BasicsAZ.retagShapedSubshells alone -- see that function's own docstring) carries two subshells sharing
+    # one (n,kappa) label, one of each Basics.OrbitalShape, must be refused.  An ordinary, single-shape list
+    # must pass.
+    ordinary = [Subshell(1,-1), Subshell(2,-1), Subshell(2,1)]
+    try
+        JenaAtomicCalculator.BasicsAZ.assertNoDualShapeLabel(ordinary)
+    catch e
+        success = false
+        if printTest   info(iostream, "assertNoDualShapeLabel refused an ordinary, single-shape subshell " *
+                                      "list: $e")   end
+    end
+    dual = [Subshell(1,-1), Subshell(2,-1,Basics.SCFShape), Subshell(2,-1,Basics.CoreValenceCorrelationShape)]
+    caught = false
+    try
+        JenaAtomicCalculator.BasicsAZ.assertNoDualShapeLabel(dual)
+    catch e
+        caught = true
+    end
+    if  !caught
+        success = false
+        if printTest   info(iostream, "assertNoDualShapeLabel did NOT raise on a hand-built basis carrying " *
+                                      "both shapes of subshell 2, kappa = -1")   end
+    end
+
+    # PART 2 -- A REAL SHAPE-CROSSING LAYER, on the SAME cheap Be case and the SAME reused shell (2p) that
+    # TestFrames.testRepresentation_CoreValencePerturbation's own PART 2 built to TRIGGER the dual-role shell
+    # guard. Here the reuse is SANCTIONED (shapedTo = [2p]), so the guard must stay silent, the layer must
+    # refine its own, separate 2p without error, and -- being a leaf, like an ordinary second-order step --
+    # must leave the ladder's own P-progression (step 2's energy) exactly where it was.
+    refConfigs  = [Configuration("[He] 2s^2")]
+    rasSettings = RasSettings([1], Basics.RotationRoute(24), 1.0e-6, CoulombInteraction(), LevelSelection(true, indices=[1]))
+    steps3 = [ RasStep(),
+               RasStep(RasStep(); seFrom=[Shell("2s")], seTo=[Shell("2p")], deFrom=[Shell("2s")], deTo=[Shell("2p")],
+                                  frozen=[Shell("1s")]),
+               RasStep(RasStep(); seFrom=[Shell("1s"), Shell("2s")], seTo=[Shell("2p")],
+                                  deFrom=[Shell("1s"), Shell("2s")], deTo=[Shell("2p")],
+                                  shapedTo=[Shell("2p")], frozen=[Shell("1s"), Shell("2s")],
+                                  treatment=Basics.SecondOrder(1.0e-5, 1.0e-12)) ]
+    wa3 = Representation("Be -- shape-crossing RasStep test", Nuclear.Model(4.), refConfigs,
+                         RasExpansion([LevelSymmetry(0, Basics.plus)], 4, steps3, rasSettings))
+    wb3 = try
+        generate(wa3, output=true)
+    catch e
+        success = false
+        if printTest   info(iostream, "a sanctioned shape-crossing layer RAISED instead of running: $e")   end
+        nothing
+    end
+    if  !isnothing(wb3)
+        e2 = sort(wb3["step2"].levels, by = l -> l.energy)[1].energy
+        e3 = sort(wb3["step3"].levels, by = l -> l.energy)[1].energy
+        if  e2 != e3
+            success = false
+            if printTest   info(iostream, "a shape-crossing layer is supposed to be a LEAF: step 2 energy " *
+                                          "$e2 against step 3 (reported) energy $e3 -- these must be IDENTICAL")   end
+        end
+        let  report = "jac-warn.report"
+            text = isfile(report) ? read(report, String) : ""
+            if  occursin("already a valence correlation orbital in this ladder", text)
+                success = false
+                if printTest   info(iostream, "the dual-role shell guard fired on a SANCTIONED shape-crossing " *
+                                              "reuse of 2p; jac-warn.report holds: $text")   end
+            end
+        end
+    end
+
+    testPrint("testRepresentation_ShapeCrossingRasStep()::", success)
+    return(success)
+end
+
+
+"""
 `TestFrames.testMethod_SettingsCopyConstructors(; short::Bool=true)`
     ... exercises the keyword copy-constructor of EVERY submodule Settings that has one; returns success::Bool.
 """

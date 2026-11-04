@@ -94,8 +94,9 @@ end
     @testset "JAC representations" begin
         @test TestFrames.testRepresentation_MeanFieldBasis_CiExpansion() 
         @test TestFrames.testRepresentation_RasExpansion() 
-        @test TestFrames.testRepresentation_CoreValencePerturbation() 
-        @test TestFrames.testRepresentation_GreenExpansion() 
+        @test TestFrames.testRepresentation_CoreValencePerturbation()
+        @test TestFrames.testRepresentation_ShapeCrossingRasStep()
+        @test TestFrames.testRepresentation_GreenExpansion()
     end
 
     @testset "JAC amplitudes" begin

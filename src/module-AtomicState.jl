@@ -432,6 +432,17 @@ end
     + teTo              ::Array{Shell,1}        ... Triple-excitations to shells  [sh_1, sh_2, ...]
     + qeFrom            ::Array{Shell,1}        ... Quadrupole-excitations from shells   [sh_1, sh_2, ...]
     + qeTo              ::Array{Shell,1}        ... Quadrupole-excitations to shells  [sh_1, sh_2, ...]
+    + shapedTo          ::Array{Shell,1}        ... Which of this step's OWN *To shells get a separate,
+        independently-contracted `Basics.CoreValenceCorrelationShape` orbital rather than the ordinary
+        `Basics.SCFShape` -- see that type's own docstring. Empty (the default) leaves every shell this step
+        generates as `SCFShape`, exactly as before this field existed. When set: any OTHER shell this step's
+        own *To lists name (a core-valence DOUBLE needs the full valence+new-shell list to generate at all,
+        exactly as an ordinary second-order step already requires) must be in `frozenShells`, since this
+        step's own SCF re-optimizes only what is unfrozen and nothing may vary except the shaped shell(s);
+        and its `treatment` must not be `Basics.Variational()`: the refined, shaped orbital this step produces
+        is kept as a separate P/Q junction (`AtomicState.RasLayerVerdict.shapedBasis`) rather than merged into
+        the ladder's own running multiplet, since ordinary Slater-Condon CI assumes every subshell of a kappa
+        is mutually orthonormal, which a shaped realization of an existing label deliberately is not.
     + frozenShells      ::Array{Shell,1}        ... List of shells that are kept 'frozen' in this step.
     + constraints       ::Array{String,1}       ... List of Strings to define 'constraints/restrictions' 
                                                     to the generated CSF basis.
@@ -457,6 +468,7 @@ struct  RasStep
     teTo                ::Array{Shell,1}
     qeFrom              ::Array{Shell,1}
     qeTo                ::Array{Shell,1}
+    shapedTo            ::Array{Shell,1}
     frozenShells        ::Array{Shell,1}
     constraints         ::Array{String,1}
     treatment           ::Basics.AbstractQTreatment
@@ -467,7 +479,7 @@ end
 `AtomicState.RasStep()`  ... constructor for an 'empty' instance of a variable::AtomicState.RasStep
 """
 function RasStep()
-    RasStep(Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[],    Shell[], String[],
+    RasStep(Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[],    Shell[], Shell[], String[],
             Basics.Variational(), nothing)
 end
 
@@ -475,15 +487,16 @@ end
 """
 `AtomicState.RasStep(rasStep::AtomicState.RasStep;`
 
-                    seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[], 
-                    deFrom::Array{Shell,1}=Shell[], deTo::Array{Shell,1}=Shell[], 
-                    teFrom::Array{Shell,1}=Shell[], teTo::Array{Shell,1}=Shell[], 
-                    qeFrom::Array{Shell,1}=Shell[], qeTo::Array{Shell,1}=Shell[], 
+                    seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[],
+                    deFrom::Array{Shell,1}=Shell[], deTo::Array{Shell,1}=Shell[],
+                    teFrom::Array{Shell,1}=Shell[], teTo::Array{Shell,1}=Shell[],
+                    qeFrom::Array{Shell,1}=Shell[], qeTo::Array{Shell,1}=Shell[],
+                    shapedTo::Array{Shell,1}=Shell[],
                     frozen::Array{Shell,1}=Shell[], constraints::Array{String,1}=String[],
                     treatment::Union{Nothing,Basics.AbstractQTreatment}=nothing,
                     scfRoute::Union{Nothing,Basics.AbstractScfRoute}=nothing
-                    
-    ... constructor for modifying the given rasStep by specifying all excitations, frozen shells and 
+
+    ... constructor for modifying the given rasStep by specifying all excitations, frozen shells and
         constraints optionally.
 
         NOTE THAT `scfRoute` CANNOT BE CLEARED BACK TO `nothing` THROUGH THIS CONSTRUCTOR, since `nothing` is also how the
@@ -491,10 +504,11 @@ end
         field here.  Build a fresh `RasStep()` to drop an override.
 """
 function RasStep(rasStep::AtomicState.RasStep;
-                    seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[], 
-                    deFrom::Array{Shell,1}=Shell[], deTo::Array{Shell,1}=Shell[], 
-                    teFrom::Array{Shell,1}=Shell[], teTo::Array{Shell,1}=Shell[], 
-                    qeFrom::Array{Shell,1}=Shell[], qeTo::Array{Shell,1}=Shell[], 
+                    seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[],
+                    deFrom::Array{Shell,1}=Shell[], deTo::Array{Shell,1}=Shell[],
+                    teFrom::Array{Shell,1}=Shell[], teTo::Array{Shell,1}=Shell[],
+                    qeFrom::Array{Shell,1}=Shell[], qeTo::Array{Shell,1}=Shell[],
+                    shapedTo::Array{Shell,1}=Shell[],
                     frozen::Array{Shell,1}=Shell[], constraints::Array{String,1}=String[],
                     treatment::Union{Nothing,Basics.AbstractQTreatment}=nothing,
                     scfRoute::Union{Nothing,Basics.AbstractScfRoute}=nothing)
@@ -506,12 +520,13 @@ function RasStep(rasStep::AtomicState.RasStep;
     if  teTo   == Shell[]   txTo   = rasStep.teTo     else      txTo   = teTo        end
     if  qeFrom == Shell[]   qxFrom = rasStep.qeFrom   else      qxFrom = qeFrom      end
     if  qeTo   == Shell[]   qxTo   = rasStep.qeTo     else      qxTo   = qeTo        end
+    if  shapedTo == Shell[]      shapedx= rasStep.shapedTo      else      shapedx= shapedTo           end
     if  frozen == Shell[]        frozx  = rasStep.frozenShells   else      frozx  = frozen             end
     if  constraints ==String[]   consx  = rasStep.constraints    else      consx  = constraints        end
     if  isnothing(treatment)     treatx = rasStep.treatment      else      treatx = treatment          end
     if  isnothing(scfRoute)      routex = rasStep.scfRoute       else      routex = scfRoute           end
-    
-    RasStep( sxFrom, sxTo, dxFrom, dxTo, txFrom, txTo, qxFrom, qxTo, frozx, consx, treatx, routex)
+
+    RasStep( sxFrom, sxTo, dxFrom, dxTo, txFrom, txTo, qxFrom, qxTo, shapedx, frozx, consx, treatx, routex)
 end
 
 
@@ -542,9 +557,13 @@ function Base.show(io::IO, step::AtomicState.RasStep)
     end   
     if  length(step.qeFrom) > 0
         sa = "   Quadruples from:       { ";      for  sh in step.qeFrom   sa = sa * string(sh) * ", "  end
-        sa = sa[1:end-2] * " }   ... to { ";      for  sh in step.qeTo     sa = sa * string(sh) * ", "  end;   
+        sa = sa[1:end-2] * " }   ... to { ";      for  sh in step.qeTo     sa = sa * string(sh) * ", "  end;
         sa = sa[1:end-2] * " }";            print(io, sa, "\n")
-    end   
+    end
+    if  length(step.shapedTo) > 0
+        sa = "   Shaped to CoreValenceCorrelationShape: { ";      for  sh in step.shapedTo   sa = sa * string(sh) * ", "  end
+        sa = sa[1:end-2] * " }";             print(io, sa, "\n")
+    end
     # A variational step is the default and says nothing; a perturbative one must announce itself, since the
     # CSF count it reports is then no longer the size of the space it accounts for.
     if  typeof(step.treatment) != Basics.Variational
@@ -697,6 +716,13 @@ end
     + scfVerdict    ::Union{Nothing,SelfConsistent.ScfVerdict}   ... this layer's own SCF verdict, so a policy that
         wants the doubling-test drift, not only the increment, can read it; `nothing` for a layer treated to second
         order, since that layer's orbitals are never optimized and no SCF verdict exists for it.
+    + shapedBasis   ::Union{Nothing,Basis}   ... the refined, separate Q-space `Basis` a `RasStep.shapedTo`
+        layer built -- its own CSF space (the reference plus that layer's shaped excitation alone), with every
+        OTHER subshell's orbital the literal SAME object `priorMultiplet` already used, and the new shell(s)
+        tagged `Basics.CoreValenceCorrelationShape` and SCF-refined on this small space. `nothing` for every
+        ordinary layer. `energy` and `increment` above are NOT about this space -- they stay the ladder's own
+        P-progression, unchanged by a shaped layer, which is why this field exists separately rather than
+        folding Q's energy into them.
 """
 struct  RasLayerVerdict
     istep           ::Int64
@@ -706,6 +732,7 @@ struct  RasLayerVerdict
     energy          ::Float64
     increment       ::Float64
     scfVerdict      ::Union{Nothing,SelfConsistent.ScfVerdict}
+    shapedBasis     ::Union{Nothing,Basis}
 end
 
 
@@ -713,7 +740,8 @@ end
 function Base.show(io::IO, verdict::RasLayerVerdict)
     sa = "RAS layer $(verdict.istep), adding $(verdict.newShells): $(verdict.csfCount) CSF, " *
          @sprintf("%.1f s", verdict.wallTime) * ", energy = $(verdict.energy) Ha, increment = " *
-         (isnan(verdict.increment) ? "n/a (reference layer)" : @sprintf("%+.4f mHa", 1000*verdict.increment))
+         (isnan(verdict.increment) ? "n/a (reference layer)" : @sprintf("%+.4f mHa", 1000*verdict.increment)) *
+         (isnothing(verdict.shapedBasis) ? "" : "  (shape-crossing leaf: the ladder's own P-progression is untouched)")
     println(io, sa)
 end
 

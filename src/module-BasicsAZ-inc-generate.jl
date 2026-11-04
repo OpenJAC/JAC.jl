@@ -241,6 +241,88 @@ end
 
 
 """
+`BasicsAZ.assertNoDualShapeLabel(subshells::Array{Subshell,1})`
+    ... raises if `subshells` carries two entries that share the same (n, kappa) label -- which would let a
+        single CSF occupy both the `Basics.SCFShape` and `Basics.CoreValenceCorrelationShape` realization of
+        one label at once, breaking the antisymmetrization the CSF formalism assumes. This is a backstop, not
+        a limiter: a shape-crossing RAS step (`BasicsAZ.retagShapedSubshells`, below) builds its Q space as its
+        own separate `Basis` precisely so this cannot arise from retagging alone -- it exists against a FUTURE
+        caller that merges two shapes into one basis by mistake. `nothing` is returned when the check passes.
+"""
+function assertNoDualShapeLabel(subshells::Array{Subshell,1})
+    labels = [ (sh.n, sh.kappa)  for sh in subshells ]
+    for  lbl  in  unique(labels)
+        if  count(==(lbl), labels) > 1
+            error("BasicsAZ.assertNoDualShapeLabel(): two subshells share the label (n=$(lbl[1]), " *
+                  "kappa=$(lbl[2])) -- a single CSF could then occupy both the SCFShape and " *
+                  "CoreValenceCorrelationShape realization of this label at once, which breaks the " *
+                  "antisymmetrization the CSF formalism assumes.")
+        end
+    end
+
+    return( nothing )
+end
+
+
+"""
+`BasicsAZ.retagShapedSubshells(basis::Basis, shapedShells::Array{Shell,1})`
+    ... returns a new Basis, identical to `basis` except that every subshell whose (n, l) matches one of
+        `shapedShells` is retagged `Basics.CoreValenceCorrelationShape` instead of the default `Basics.SCFShape`.
+        `basis.csfs` is untouched: a CSF's occupation is indexed by POSITION in `basis.subshells`, not by the
+        Subshell value itself, so relabeling one entry in place changes no CSF. `basis.orbitals` comes back
+        empty, since the retagged subshells are new Dict KEYS (`Basics.Subshell`'s `==` compares shape, though
+        its `hash` deliberately does not) that the caller must still fill in -- see
+        `BasicsAZ.generateOrbitalsForShapedBasis`. `BasicsAZ.assertNoDualShapeLabel` is applied to the result
+        before it is returned. A basis::Basis is returned.
+"""
+function retagShapedSubshells(basis::Basis, shapedShells::Array{Shell,1})
+    retag(sh) = any(s -> s.n == sh.n  &&  Basics.subshell_l(sh) == s.l, shapedShells) ?
+                Subshell(sh.n, sh.kappa, Basics.CoreValenceCorrelationShape) : sh
+    newSubshells     = [ retag(sh)  for sh in basis.subshells ]
+    newCoreSubshells = [ retag(sh)  for sh in basis.coreSubshells ]
+    BasicsAZ.assertNoDualShapeLabel(newSubshells)
+
+    return( Basis(basis.isDefined, basis.NoElectrons, newSubshells, basis.csfs, newCoreSubshells, Dict{Subshell,Orbital}()) )
+end
+
+
+"""
+`BasicsAZ.generateOrbitalsForShapedBasis(basis::Basis, frozenShells::Array{Shell,1}, priorBasis::Basis,`
+                `startOrbitals::Dict{Subshell,Orbital}, nm::Nuclear.Model, grid::Radial.Grid)`
+    ... generates the orbitals dict for a basis returned by `BasicsAZ.retagShapedSubshells`. Every ORDINARY
+        (SCFShape) subshell is handled exactly as `Basics.generateOrbitalsForBasis` always has -- reused from
+        `priorBasis` where frozen or already present, from `startOrbitals` otherwise -- since those keys are
+        unchanged by the retagging. The newly CoreValenceCorrelationShape-tagged subshell(s) are a label
+        `priorBasis` and `startOrbitals` were never built to serve (their keys all carry `Basics.SCFShape`), so
+        each is instead given a fresh hydrogenic/warm start, generated here in the same mean potential
+        `Basics.generate(::AtomicState.RasExpansion, ...)` builds its own `startOrbitals` from -- cheap, since
+        it is one or a few orbitals, not a whole spectrum. A orbitals::Dict{Subshell,Orbital} is returned.
+"""
+function generateOrbitalsForShapedBasis(basis::Basis, frozenShells::Array{Shell,1}, priorBasis::Basis,
+                                         startOrbitals::Dict{Subshell,Orbital}, nm::Nuclear.Model, grid::Radial.Grid)
+    isShaped(sh)      = sh.shape == Basics.CoreValenceCorrelationShape
+    ordinarySubshells = Subshell[ sh  for sh in basis.subshells  if  !isShaped(sh) ]
+    shapedSubshells   = Subshell[ sh  for sh in basis.subshells  if   isShaped(sh) ]
+
+    ordinaryBasis = Basis(basis.isDefined, basis.NoElectrons, ordinarySubshells, CsfR[], Subshell[], Dict{Subshell,Orbital}())
+    orbitals      = Basics.generateOrbitalsForBasis(ordinaryBasis, frozenShells, priorBasis, startOrbitals)
+
+    if  !isempty(shapedSubshells)
+        nuclearPot    = Nuclear.nuclearPotential(nm, grid)
+        electronicPot = Basics.computePotential(Basics.DFSField(1.0), grid, priorBasis)
+        meanPot       = Basics.add(nuclearPot, electronicPot)
+        primitives    = Bsplines.generatePrimitives(grid)
+        println(">> [RAS] generating the fresh CoreValenceCorrelationShape start orbital(s) " *
+                join(string.(shapedSubshells), ", ") * " in the mean potential of the prior basis.")
+        shapedStart   = Bsplines.generateOrbitals(shapedSubshells, meanPot, nm, primitives; printout=false)
+        orbitals      = Base.merge(orbitals, shapedStart)
+    end
+
+    return( orbitals )
+end
+
+
+"""
 `BasicsAZ.runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicState.RasExpansion,
                       rep::AtomicState.Representation, priorMultiplet::Multiplet, priorIsLayer::Bool,
                       startOrbitals::Dict{Subshell,Orbital}, nModel::Nuclear.Model; newShells::Array{Shell,1}=Shell[])`
@@ -297,8 +379,47 @@ function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicSta
                     "end ABOVE the layer it sits on.")
         end
     end
+    # A SHAPE-CROSSING STEP RE-OPTIMIZES ONLY ITS SHAPED SHELL(S), checked before anything is built.  Its own
+    # *To lists may legitimately also name shells that already exist (generateConfigurations needs the FULL
+    # valence+new-shell list to build core-VALENCE doubles at all -- naming only the new shell would generate
+    # core-core excitations alone, exactly as the plain second-order case already requires), but every one of
+    # those OTHER shells must stay genuinely FROZEN: this step's own performSCF call below varies whatever is
+    # not frozen, and nothing may vary except the shaped shell(s), on pain of mixing a reused, already-settled
+    # orbital with a freshly-contracted one inside ONE combined CI/SCF.  And it must not be Basics.Variational(),
+    # since its refined orbital is kept as a SEPARATE P/Q junction (verdict.shapedBasis below) rather than
+    # merged into the ladder's running multiplet; merging it would run ordinary Slater-Condon CI across CSFs
+    # whose kappa block is deliberately NOT mutually orthonormal, which is exactly the case this field exists
+    # to keep out of that machinery.
+    if  !isempty(step.shapedTo)
+        isFrozenShell(sh)  = any(f -> f.n == sh.n  &&  f.l == sh.l, step.frozenShells)
+        allTo              = unique( vcat(step.seTo, step.deTo, step.teTo, step.qeTo) )
+        unshapedTo         = filter(sh -> !(sh in step.shapedTo), allTo)
+        if  !all(isFrozenShell, unshapedTo)
+            error("BasicsAZ.runRasStep!(): step $istep sets shapedTo = $(step.shapedTo) but its own *To lists " *
+                  "also name $(filter(!isFrozenShell, unshapedTo)), which is neither shaped NOR frozen -- this " *
+                  "step's own SCF would then re-optimize it alongside the shaped shell in one combined CI, " *
+                  "mixing a reused, already-settled orbital with a freshly-contracted one.  Freeze it, or add " *
+                  "it to shapedTo.")
+        end
+        if  any(isFrozenShell, step.shapedTo)
+            error("BasicsAZ.runRasStep!(): step $istep sets shapedTo = $(step.shapedTo) but " *
+                  "$(filter(isFrozenShell, step.shapedTo)) is also in frozenShells -- a shaped shell is the " *
+                  "one this step exists to re-optimize, so it cannot also be frozen.")
+        end
+        if  typeof(step.treatment) == Basics.Variational
+            error("BasicsAZ.runRasStep!(): step $istep sets shapedTo = $(step.shapedTo) but treatment is " *
+                  "Basics.Variational() -- a shape-crossing step must use a non-Variational treatment, so its " *
+                  "orbital is kept separate rather than merged into the ladder's running multiplet.")
+        end
+    end
     basis      = Basics.generateBasis(rep.refConfigs, repType.symmetries, step)
-    orbitals   = Basics.generateOrbitalsForBasis(basis, stepFrozenShells, priorMultiplet.levels[1].basis, startOrbitals)
+    if  !isempty(step.shapedTo)
+        basis    = BasicsAZ.retagShapedSubshells(basis, step.shapedTo)
+        orbitals = BasicsAZ.generateOrbitalsForShapedBasis(basis, stepFrozenShells, priorMultiplet.levels[1].basis,
+                                                            startOrbitals, nModel, rep.grid)
+    else
+        orbitals = Basics.generateOrbitalsForBasis(basis, stepFrozenShells, priorMultiplet.levels[1].basis, startOrbitals)
+    end
     basis      = Basis( true, basis.NoElectrons, basis.subshells, basis.csfs, basis.coreSubshells, orbitals )
 
     # step.frozenShells is a list of non-relativistic Shell(n,l); translate to the concrete, relativistic
@@ -353,6 +474,7 @@ function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicSta
     # SCF is the point rather than an economy: the layer exists to RECOVER what P leaves out, so optimizing
     # orbitals on the whole of it would pay for Q in the one place the treatment is meant to avoid, and the
     # virtuals of a perturbation belong in the field of the reference in any case.
+    shapedBasis = nothing
     if  typeof(step.treatment) == Basics.Variational
         multiplet  = SelfConsistent.performSCF(basis, nModel, rep.grid, stepSettings; printout=true)
         # THE RELEASE PHASE -- RasSettings.freezing, 06-Oct-2026.  A released policy runs the layer TWICE and
@@ -402,40 +524,76 @@ function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicSta
                                         ".") * " \n", color=:light_cyan)
         end
     else
-        # THE DUAL-ROLE SHELL CHECK, item 11.  A core-valence correlation layer -- one whose excitations
-        # originate from a shell this step itself FREEZES (so the excitation is from an already-settled,
-        # not-being-reoptimized shell -- the hallmark of a core-excitation source, as opposed to an
-        # ordinary valence step, which excites FROM its own active fromShells) -- must not send that
-        # excitation into a shell an EARLIER VARIATIONAL layer already built a correlation orbital for:
-        # that orbital was shaped for valence correlation, not for a core-hole virtual, and reusing it is
-        # exactly what produced the documented 16-Sep-2026 failure in example-Ar.jl -- two intruder levels,
-        # one 7 Ha below the ground state, from a 2p -> 4p "excitation" that should cost ~200 eV instead
-        # looking free. Hamiltonian.secondOrderBlock's own intruder guard catches the SYMPTOM after the
-        # fact; this stops the CAUSE before the layer runs.
-        refShells = Shell[]
-        for  conf in rep.refConfigs,  (sh, occ) in conf.shells
-            if  occ > 0  &&  !(sh in refShells)    push!(refShells, sh)    end
-        end
-        coreSources = unique( Shell[ sh  for sh in vcat(step.seFrom, step.deFrom)  if  sh in stepFrozenShells ] )
-        if  !isempty(coreSources)
-            priorShells = unique( Shell(sh.n, Basics.subshell_l(sh))  for sh in priorMultiplet.levels[1].basis.subshells )
-            claimed     = unique( Shell[ sh  for sh in vcat(step.seTo, step.deTo)
-                                             if  sh in priorShells  &&  !(sh in refShells) ] )
-            for  sh in claimed
-                Defaults.warn(AddWarning(), "Basics.generate(RasExpansion): step $istep sends a core-valence " *
-                              "excitation from $(join(string.(coreSources), ", ")) into $sh, which is already a " *
-                              "valence correlation orbital in this ladder -- add the core-valence excitation " *
-                              "into an unused shell instead (one no earlier variational layer has built).")
+        # THE DUAL-ROLE SHELL CHECK, item 11, EXEMPTED FOR A SHAPE-CROSSING STEP -- a step with shapedTo set
+        # sends its core-valence excitation into a shell an earlier layer already built a correlation orbital
+        # for ON PURPOSE, as its own, separately-tagged CoreValenceCorrelationShape realization: that is no
+        # longer the mistake this guard exists to catch, since the two realizations are kept as distinct,
+        # non-orthogonal subshells rather than one orbital pressed into two roles.
+        if  isempty(step.shapedTo)
+            # A core-valence correlation layer -- one whose excitations originate from a shell this step itself
+            # FREEZES (so the excitation is from an already-settled, not-being-reoptimized shell -- the
+            # hallmark of a core-excitation source, as opposed to an ordinary valence step, which excites FROM
+            # its own active fromShells) -- must not send that excitation into a shell an EARLIER VARIATIONAL
+            # layer already built a correlation orbital for: that orbital was shaped for valence correlation,
+            # not for a core-hole virtual, and reusing it is exactly what produced the documented 16-Sep-2026
+            # failure in example-Ar.jl -- two intruder levels, one 7 Ha below the ground state, from a 2p -> 4p
+            # "excitation" that should cost ~200 eV instead looking free. Hamiltonian.secondOrderBlock's own
+            # intruder guard catches the SYMPTOM after the fact; this stops the CAUSE before the layer runs.
+            refShells = Shell[]
+            for  conf in rep.refConfigs,  (sh, occ) in conf.shells
+                if  occ > 0  &&  !(sh in refShells)    push!(refShells, sh)    end
+            end
+            coreSources = unique( Shell[ sh  for sh in vcat(step.seFrom, step.deFrom)  if  sh in stepFrozenShells ] )
+            if  !isempty(coreSources)
+                priorShells = unique( Shell(sh.n, Basics.subshell_l(sh))  for sh in priorMultiplet.levels[1].basis.subshells )
+                claimed     = unique( Shell[ sh  for sh in vcat(step.seTo, step.deTo)
+                                                 if  sh in priorShells  &&  !(sh in refShells) ] )
+                for  sh in claimed
+                    Defaults.warn(AddWarning(), "Basics.generate(RasExpansion): step $istep sends a core-valence " *
+                                  "excitation from $(join(string.(coreSources), ", ")) into $sh, which is already a " *
+                                  "valence correlation orbital in this ladder -- add the core-valence excitation " *
+                                  "into an unused shell instead (one no earlier variational layer has built).")
+                end
             end
         end
-        printstyled(">> step $istep is treated to SECOND ORDER in its Q space; the orbitals of this layer are " *
-                    "NOT re-optimized. \n", color=:light_yellow)
-        (multiplet, partitions) = Hamiltonian.performCIwithSecondOrderQ(basis, priorMultiplet.levels[1].basis,
-                                            rep.refConfigs, nModel, rep.grid, stepSettings, step.treatment;
-                                            printout=true)
-        if  !all(p -> p.isJustified, partitions)
-            printstyled(">> step $istep: the second-order treatment was NOT justified in every symmetry; see " *
-                        "the configurations named above. \n", color=:light_red)
+        if  !isempty(step.shapedTo)
+            # THE SHAPE-CROSSING LEAF.  Q is `basis` -- already its own small Basis/orbital dict, tagged and
+            # populated above by BasicsAZ.retagShapedSubshells/generateOrbitalsForShapedBasis, reusing the
+            # literal SAME Orbital objects as priorMultiplet for every subshell except the new shaped one(s).
+            # It is refined by ORDINARY SCF -- exactly SelfConsistent.performSCF, the Variational branch's own
+            # call -- because Q's own CSF space (refConfigs plus this step's shaped excitation alone, enforced
+            # above) is internally orthonormal; what must NOT happen is merging it into the ladder's running
+            # multiplet, which stays untouched: like an ordinary second-order step, a shape-crossing step is a
+            # LEAF, reported in verdict.shapedBasis for a later consumer (a P/Q second-order coupling) rather
+            # than inherited by the next layer.
+            printstyled(">> step $istep refines a CoreValenceCorrelationShape orbital for " *
+                        join(string.(step.shapedTo), ", ") * " on its OWN Q space; the ladder's running " *
+                        "multiplet is NOT changed by this step. \n", color=:light_yellow)
+            shapedMp    = SelfConsistent.performSCF(basis, nModel, rep.grid, stepSettings; printout=true)
+            shapedBasis = shapedMp.levels[1].basis
+            # Q's OWN energy is reported here, separately from the ladder's bookkeeping below: its CI space
+            # (refConfigs plus the shaped excitation alone) is not the ladder's full accumulated space, so a
+            # P-vs-Q "increment" computed the usual way would compare two different-sized spaces and mislead.
+            # multiplet is set to priorMultiplet UNCHANGED, so energy/increment below read as the honest zero
+            # this leaf's choice not to touch the ladder's own P-progression actually is.
+            for  (sh, orb)  in  shapedBasis.orbitals
+                sh.shape != Basics.CoreValenceCorrelationShape  &&  continue
+                r0 = RadialIntegrals.rkDiagonal(0, orb, orb, rep.grid);   r1 = RadialIntegrals.rkDiagonal(1, orb, orb, rep.grid)
+                println(">>   refined $sh (CoreValenceCorrelationShape)   <r> = " * @sprintf("%.4f", r1/r0) *
+                        " a.u.   norm = " * @sprintf("%.6f", r0) * "   Q lowest energy = " *
+                        @sprintf("%.8f", minimum(lv.energy for lv in shapedMp.levels)) * " Ha")
+            end
+            multiplet   = priorMultiplet
+        else
+            printstyled(">> step $istep is treated to SECOND ORDER in its Q space; the orbitals of this layer are " *
+                        "NOT re-optimized. \n", color=:light_yellow)
+            (multiplet, partitions) = Hamiltonian.performCIwithSecondOrderQ(basis, priorMultiplet.levels[1].basis,
+                                                rep.refConfigs, nModel, rep.grid, stepSettings, step.treatment;
+                                                printout=true)
+            if  !all(p -> p.isJustified, partitions)
+                printstyled(">> step $istep: the second-order treatment was NOT justified in every symmetry; see " *
+                            "the configurations named above. \n", color=:light_red)
+            end
         end
     end
     # ITEM 25, ADDED 01-Sep-2026.  Until now a step printed one Multiplet and nothing else, so nothing in
@@ -566,7 +724,7 @@ function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicSta
     scfVerdict = typeof(step.treatment) == Basics.Variational  &&  repType.settings.scfRoute isa Basics.RotationRoute ?
                  SelfConsistent.lastScfVerdict() : nothing
     verdict    = AtomicState.RasLayerVerdict(istep, newShells, length(basis.csfs), time() - wallTime0, energy, increment,
-                                              scfVerdict)
+                                              scfVerdict, shapedBasis)
 
     return( multiplet, verdict )
 end
