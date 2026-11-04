@@ -448,5 +448,102 @@ elseif  false
     println(">> the physics-worded message (\"... which is already a valence correlation orbital in this")
     println(">> ladder ... add the core-valence excitation into an unused shell instead\").")
     #
+elseif  false
+    # Last visit:  04-Nov-2026
+    #
+    # g) Cl III 1s^2 2s^2 2p^6 3s^2 3p^3 -- THE FULL GROUND TERM, valence correlation plus the NEW
+    #    shape-crossing core-valence correction (AtomicState.RasStep.shapedTo).
+    #
+    #    THREE SYMMETRIES, ONE RUN: J = 1/2, 3/2, 5/2 odd together cover all five fine-structure levels of
+    #    the three LS terms of p^3 (4S, 2D, 2P).  Three steps, same pattern as branch (a):
+    #      step 1   the reference alone
+    #      step 2   VALENCE correlation 3s,3p -> 3d, variational.  3d is optimized HERE, as an ordinary
+    #               SCFShape correlation orbital.
+    #      step 3   shapedTo = [3d]: the core excitations 2s,2p -> 3d get their OWN, independently
+    #               contracted CoreValenceCorrelationShape realization of 3d, built and refined on its own
+    #               small Q space (BasicsAZ.retagShapedSubshells / generateOrbitalsForShapedBasis), then
+    #               coupled back to step 2's own P via Hamiltonian.secondOrderShapeCrossingCorrection --
+    #               BiOrthogonal.computeTransformation(ShapeCrossingJunction(), ...), summed over P's CI
+    #               mixing coefficients and Q's genuinely-new CSFs only.  Unlike branch (a)'s step 3, which
+    #               reuses step 2's 3d UNCHANGED and is correspondingly cheap but shape-blind, this is the
+    #               case the dual-role-shell guard WOULD refuse outside this sanctioned path -- see
+    #               BasicsAZ.runRasStep!'s own exemption for shapedTo.
+    #
+    #    MEASURED, 04-Nov-2026, Coulomb, rbox = 20 a.u., RotationRoute(24), ~5.5 min total for all three
+    #    symmetries in the ONE combined RasExpansion the code below actually runs:
+    #
+    #      #  term J     E(step2), no MBPT    MBPT          E(step2+MBPT)     cm^-1 no-MBPT  cm^-1 +MBPT   NIST cm^-1
+    #      1  4S  3/2   -459.77080847 Ha    -3.9346 mHa   -459.77474306 Ha        0.00           0.00          0.000
+    #      2  2D  3/2   -459.67457008 Ha    -4.1435 mHa   -459.67871357 Ha    21121.88       21076.04      18052.460
+    #      3  2D  5/2   -459.67423974 Ha    -4.1487 mHa   -459.67838841 Ha    21194.38       21147.40      18118.430
+    #      4  2P  1/2   -459.61915232 Ha    -4.1627 mHa   -459.62331503 Ha    33284.68       33234.61      29813.920
+    #      5  2P  3/2   -459.61877330 Ha    -4.1747 mHa   -459.62294802 Ha    33367.86       33315.16      29906.450
+    #
+    #    Term labels by energy order (unambiguous here: 4S lies far below 2D, which lies far below 2P, exactly
+    #    as expected for p^3) and NIST ASD observed energies (physics.nist.gov, via the CHIANTI cl_3.elvlc table,
+    #    which cites NIST ASD directly) are both NEW this visit.  THE EOL TARGET SET MATTERS: running J = 3/2
+    #    alone gives step 2 energies and a level 4/5 ORDER DIFFERENT from running all three symmetries together,
+    #    since EOL optimizes orbitals for a functional averaged over however many levels are named as targets --
+    #    three symmetries at once is a five-level average, one symmetry alone is a smaller, different average.
+    #    The numbers above are what THIS branch, as written, actually produces; a single-symmetry run is not a
+    #    cheaper way to get the same numbers.
+    #
+    #    THE CORRECTION IS OVERWHELMINGLY A COMMON SHIFT -- -3.93 to -4.17 mHa, a spread of only 0.24 mHa
+    #    across every level of all three terms -- which is what reusing the SAME orbital for the SAME
+    #    channel on every level should give.  What survives into the SPLITTINGS is much smaller and, here,
+    #    NARROWS both fine-structure intervals slightly: level 3 - level 2 by -1.1 cm^-1 (72.50 -> 71.36,
+    #    against NIST's 65.97), level 5 - level 4 by -2.6 cm^-1 (83.18 -> 80.55, against NIST's 92.53).  Against
+    #    run2.jl's own "clean but shell-starved" capture of -0.2478 mHa (a fresh, never-reused n5 shell, branch
+    #    (a)'s sibling scratch script), reshaping the ALREADY-CONTRACTED 3d instead of using a poorly-matched
+    #    fresh one captures roughly SIXTEEN TIMES as much core-valence correlation energy on the common shift
+    #    alone.
+    #
+    #    AGAINST NIST, THE TERM SEPARATIONS THEMSELVES ARE STILL TOO WIDE BY ~3000-3500 cm^-1 (about 15-17 %) --
+    #    4S-2D is 3069-3076 cm^-1 too high, 4S-2P is 3409-3471 cm^-1 too high, and MBPT closes only a small part
+    #    of that (45-52 cm^-1, under 2 %).  This is NOT a defect: the gap is the one-layer valence correlation
+    #    (3s,3p -> 3d only) being too small on its own to fix the term separations, which is exactly why the
+    #    user's own framing of this round asked for "1-2 correlation layers" rather than a converged result --
+    #    the shape-crossing core-valence piece corrects a DIFFERENT, smaller effect (the fine-structure splitting
+    #    within a term) than the missing valence layers would.  A converged comparison against NIST needs more
+    #    layers and is not what this branch sets out to show.
+    #
+    Z      = 17.0
+    refs   = [Configuration("1s^2 2s^2 2p^6 3s^2 3p^3")]
+    syms   = [LevelSymmetry(AngularJ64(1//2), Basics.minus), LevelSymmetry(AngularJ64(3//2), Basics.minus),
+              LevelSymmetry(AngularJ64(5//2), Basics.minus)]
+    val    = [Shell("3s"), Shell("3p")];    core = [Shell("2s"), Shell("2p")]
+    to     = [Shell("3s"), Shell("3p"), Shell("3d")]
+    frozen1 = [Shell("1s"), Shell("2s"), Shell("2p")]
+    frozen2 = [Shell("1s"), Shell("2s"), Shell("2p"), Shell("3s"), Shell("3p")]
+    steps  = [ RasStep(),
+               RasStep(RasStep(); seFrom=val, seTo=to, deFrom=val, deTo=to, frozen=frozen1),
+               RasStep(RasStep(); seFrom=vcat(core,val), seTo=to, deFrom=vcat(core,val), deTo=to,
+                                  shapedTo=[Shell("3d")], frozen=frozen2,
+                                  treatment = Basics.SecondOrder(1.0e-5, 1.0e-12)) ]
+    grid   = Basics.recommendedGrid(refs, Nuclear.Model(Z); rbox = 20.)
+    rasSettings = RasSettings(Int64[], Basics.RotationRoute(24), 1.0e-6, CoulombInteraction(),
+                              LevelSelection(true, configurations=refs))
+    wa     = Representation("Cl III -- full ground term, valence + shape-crossing core-valence MBPT",
+                            Nuclear.Model(Z), grid, refs, RasExpansion(syms, 15, steps, rasSettings) )
+    wb     = generate(wa, output=true)
+    refKeys = Set( Hamiltonian.configurationKey(c)  for c in refs )
+    refLevels = function(mp)
+        ls = Level[]
+        for  lv in mp.levels
+            bs = lv.basis
+            w  = sum( lv.mc[r]^2  for r = 1:length(bs.csfs)
+                      if  Hamiltonian.configurationKey(
+                              Basics.extractConfiguration(Basics.FromBasis(), bs, bs.csfs[r])) in refKeys )
+            if  w >= 0.5    push!(ls, lv)    end
+        end
+        return( sort(ls, by = l -> l.energy) )
+    end
+    println("\n>> step 2 (valence correlation only), reference-dominated levels, lowest first:")
+    for  (i, lv)  in  enumerate(refLevels(wb["step2"]))
+        println(">>   level $i   J = $(lv.J)   E = $(lv.energy) Ha")
+    end
+    println(">> step 3's own printout above carries the MBPT correction for each of these, in the same ")
+    println(">> energy order within each J -- see 'ShapeCrossingPartition' and the 'deltaE' lines.")
+    #
 
 end
