@@ -582,7 +582,8 @@ end
 function computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model, grid::Radial.Grid,
                             settings::AutoIonization.Settings; output=true, printout::Bool=true)
     if  settings.calcBiorthogonal
-        initialMultiplet, finalMultiplet = BiOrthogonal.computeTransformation(initialMultiplet, finalMultiplet, grid)
+        initialMultiplet, finalMultiplet = BiOrthogonal.computeTransformation(BiOrthogonal.ContinuumJunction(),
+                                                                                initialMultiplet, finalMultiplet, grid)
     end
     println("")
     printstyled("AutoIonization.computeLines(): The computation of Auger rates and properties starts now ... \n", color=:light_green)

@@ -384,7 +384,8 @@ end
 function computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid,
                             settings::PhotoEmission.Settings; output=true)
     if  settings.calcBiorthogonal
-        initialMultiplet, finalMultiplet = BiOrthogonal.computeTransformation(initialMultiplet, finalMultiplet, grid)
+        initialMultiplet, finalMultiplet = BiOrthogonal.computeTransformation(BiOrthogonal.BoundStatePair(),
+                                                                                initialMultiplet, finalMultiplet, grid)
     end
     subshellList = Basics.generate(OrderedSubshellList(), finalMultiplet.levels[1].basis, initialMultiplet.levels[1].basis)
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)

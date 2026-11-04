@@ -3158,7 +3158,7 @@ function testModule_BiOrthogonal(; short::Bool=true)
     # (3) Transforming a multiplet against ITSELF must leave every mixing coefficient where it was; the counter-
     #     rotation of the CI vectors is then the unit matrix as well.
     newLeftMp, newRightMp = redirect_stdout(devnull) do
-        BiOrthogonal.computeTransformation(leftMp, leftMp, grid)
+        BiOrthogonal.computeTransformation(BiOrthogonal.BoundStatePair(), leftMp, leftMp, grid)
     end
     for  i = 1:length(leftMp.levels)
         devs = max( maximum(abs.(newLeftMp.levels[i].mc  - leftMp.levels[i].mc)),
@@ -3291,7 +3291,7 @@ function testModule_BiOrthogonalRotation(; short::Bool=true)
     rotMp    = Multiplet(fMp.name, [Level(l.J, l.M, l.parity, l.index, l.energy, l.relativeOcc, l.hasStateRep,
                                           rotBasis, l.mc)  for l in fMp.levels])
     newLeftMp, newRightMp = redirect_stdout(devnull) do
-        BiOrthogonal.computeTransformation(iMp, rotMp, grid)
+        BiOrthogonal.computeTransformation(BiOrthogonal.ContinuumJunction(), iMp, rotMp, grid)
     end
 
     worstNorm = 0.;    worstLabel = ""

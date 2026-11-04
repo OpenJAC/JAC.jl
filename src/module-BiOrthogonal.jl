@@ -15,11 +15,63 @@
     This does NOT explain the puzzling near-identical gauge-ratio shift observed for a genuine K-hole
     SCF-relaxation case (Ne K-alpha, example-Da.jl branch 0) -- that remains open and is more likely a
     physical-relaxation or transition-operator question than a defect in this module.
+
+    `computeTransformation` carries an explicit `AbstractTransformKind` first argument since 04-Nov-2026,
+    replacing five independently-worded `calcBiorthogonal` docstrings with one checkable type; see the type's
+    own docstring. This is a caller-side bookkeeping change only -- no numerical kernel here dispatches on it.
+    The same date fixed a latent ordering gap in `computeTransformationMatrices` (ties on `n` within one
+    kappa were broken only by `Basics.OrbitalShape` after this fix), found while designing the shape-crossing
+    CI junction that the new `ShapeCrossingJunction` kind names; a toy-case validation (two 2-CSF multiplets,
+    real mixing coefficients, `work/clIII-corevalence/phase0-toy/validate2.jl`) confirmed this module needs no
+    other change for that junction: a BARE single-CSF-pair coupling extracted outside a real, weighted
+    multiplet sum is NOT a well-defined use of this machinery and showed a real, growing error, while the
+    same composition summed properly over a genuine multiplet reproduced an independent reference to machine
+    precision.
 """
 module BiOrthogonal
 
 
 using Printf, LinearAlgebra, ..Basics,  ..Defaults, ..ManyElectron, ..Radial, ..RadialIntegrals, ..SpinAngular
+
+
+"""
+`BiOrthogonal.AbstractTransformKind`
+    ... the trait a `computeTransformation` call carries, naming which caller-side assumption it is resolving.
+        Before 04-Nov-2026 this distinction lived only in five independently-worded `calcBiorthogonal` settings
+        docstrings (`PhotoEmission`, `PhotoExcitation`, `GeneralizedOscillatorStrength`, `AutoIonization`,
+        `PhotoIonization`), which is how `PhotoIonization`'s own flag went dead -- documented at length, never
+        actually wired to a call. Tagging the mode in the type system makes a mismatched caller raise a
+        `MethodError` naming both types instead of silently computing the wrong number. The trait picks an
+        ENTRY POINT only: no numerical kernel in this module (`appendixB`, `computeTransformationMatrices`,
+        `generateCounterRotatingCiMatrices`) dispatches on it, and none should -- see the module's own commit
+        history on why duplicating a kernel, rather than an entry point, is how this module's worst bug
+        (the unpivoted-LU norm defect) went unnoticed for months.
+"""
+abstract type  AbstractTransformKind  end
+
+"""
+`BiOrthogonal.BoundStatePair  <:  BiOrthogonal.AbstractTransformKind`
+    ... two bound multiplets of EQUAL electron count, each independently SCF-optimized -- the validated mode
+        used by `PhotoEmission`, `PhotoExcitation` and `GeneralizedOscillatorStrength`.
+"""
+struct  BoundStatePair          <: AbstractTransformKind end
+
+"""
+`BiOrthogonal.ContinuumJunction  <:  BiOrthogonal.AbstractTransformKind`
+    ... an N-electron multiplet against an (N-1)-electron ionic one. The transform covers the bound spectator
+        orbitals shared by the two sides only; the continuum orbital itself is generated afterward, per line,
+        directly in the field of the (possibly now bi-orthogonally-transformed) ionic core, and is never itself
+        passed through this module. Used by `AutoIonization` and `PhotoIonization`.
+"""
+struct  ContinuumJunction        <: AbstractTransformKind end
+
+"""
+`BiOrthogonal.ShapeCrossingJunction  <:  BiOrthogonal.AbstractTransformKind`
+    ... two CSF spaces of EQUAL electron count, built from orbital sets that coincide everywhere except in
+        however many kappa blocks carry a reshaped (`Basics.OrbitalShape`) orbital -- a second-order P/Q
+        junction between an `SCFShape` and a `CoreValenceCorrelationShape` realization of the same label.
+"""
+struct  ShapeCrossingJunction    <: AbstractTransformKind end
 
 
 """
@@ -84,18 +136,21 @@ end
 
 
 """
-`BiOrthogonal.computeTransformation(leftMp::Multiplet, rightMp::Multiplet, grid::Radial.Grid)`
+`BiOrthogonal.computeTransformation(kind::AbstractTransformKind, leftMp::Multiplet, rightMp::Multiplet, grid::Radial.Grid)`
     ... computes the bi-orthogonal transformation of the two given multiplets by rotating the radial functions
         and by counter-rotating the corresponding CI coefficients. leftMp and rightMp must have the same
         number of electrons and be generated on the same radial grid; grid must be passed explicitly (an
         orbital's own `.grid` field is only a placeholder whenever `useStandardGrid == true`, which is the
-        normal case). A warning (not an error) is issued if either multiplet's CSF list is not closed
-        under de-excitation (see `checkClosureUnderDeexcitation`), in which case the transformation is only
-        approximate. A tuple of two multiplets tpl(newLeftMp::Multiplet, newRightMp::Multiplet) is
-        returned: same levels (J, parity, index, energy, relativeOcc) as the input, but each with a new,
-        shared, biorthonormal `Basis` and a counter-rotated `mc` vector.
+        normal case). `kind` names which caller-side assumption this call resolves (`BoundStatePair`,
+        `ContinuumJunction` or `ShapeCrossingJunction`) and is not otherwise used inside this function -- it
+        documents the call and lets a wrong pairing raise a `MethodError` naming both types, rather than
+        silently returning a number. A warning (not an error) is issued if either multiplet's CSF list is
+        not closed under de-excitation (see `checkClosureUnderDeexcitation`), in which case the
+        transformation is only approximate. A tuple of two multiplets tpl(newLeftMp::Multiplet,
+        newRightMp::Multiplet) is returned: same levels (J, parity, index, energy, relativeOcc) as the
+        input, but each with a new, shared, biorthonormal `Basis` and a counter-rotated `mc` vector.
 """
-function  computeTransformation(leftMp::Multiplet, rightMp::Multiplet, grid::Radial.Grid)
+function  computeTransformation(kind::AbstractTransformKind, leftMp::Multiplet, rightMp::Multiplet, grid::Radial.Grid)
     leftBasis  = leftMp.levels[1].basis
     rightBasis = rightMp.levels[1].basis
 
@@ -225,15 +280,19 @@ end
         downstream, which only forms linear combinations within one side, is unaffected.
         A Dict{Int64, Tuple{Array{Subshell,1},
         Array{Subshell,1}, Matrix{Float64}, Matrix{Float64}}}, keyed by kappa and giving the (ordered)
-        subshell lists together with (Cleft, Cright) for that symmetry block, is returned.
+        subshell lists together with (Cleft, Cright) for that symmetry block, is returned. THE ORDERING KEY IS
+        `(n, shape)`, not `n` alone (fixed 04-Nov-2026): two subshells sharing both `n` and `kappa` but differing
+        in `Basics.OrbitalShape` -- an `SCFShape` and a `CoreValenceCorrelationShape` realization of the same
+        label -- are a real, supported case since the shape-aware `Subshell` extension, and `sort` is not
+        guaranteed stable across such a tie without a second key.
 """
 function  computeTransformationMatrices(leftBasis::Basis, rightBasis::Basis, grid::Radial.Grid)
     kappas = unique( [sh.kappa for sh in leftBasis.subshells] ∪ [sh.kappa for sh in rightBasis.subshells] )
     result = Dict{Int64, Tuple{Array{Subshell,1},Array{Subshell,1},Matrix{Float64},Matrix{Float64}}}()
 
     for  kappa  in  kappas
-        lList = sort( [sh for sh in leftBasis.subshells  if sh.kappa == kappa], by = sh -> sh.n )
-        rList = sort( [sh for sh in rightBasis.subshells if sh.kappa == kappa], by = sh -> sh.n )
+        lList = sort( [sh for sh in leftBasis.subshells  if sh.kappa == kappa], by = sh -> (sh.n, sh.shape) )
+        rList = sort( [sh for sh in rightBasis.subshells if sh.kappa == kappa], by = sh -> (sh.n, sh.shape) )
         nl = length(lList);   nr = length(rList)
         (nl == 0  ||  nr == 0)  &&  continue
         S  = zeros(nl, nr)

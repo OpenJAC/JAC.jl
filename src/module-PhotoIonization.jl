@@ -707,6 +707,10 @@ end
 """
 function computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, nm::Nuclear.Model,
                             grid::Radial.Grid, settings::PhotoIonization.Settings; output::Bool=true)
+    if  settings.calcBiorthogonal
+        initialMultiplet, finalMultiplet = BiOrthogonal.computeTransformation(BiOrthogonal.ContinuumJunction(),
+                                                                                initialMultiplet, finalMultiplet, grid)
+    end
     println("")
     printstyled("PhotoIonization.computeLines(): The computation of photoionization amplitudes starts now ... \n", color=:light_green)
     printstyled("-------------------------------------------------------------------------------------------------- \n", color=:light_green)

@@ -233,7 +233,8 @@ end
 function  computeLines(finalMultiplet::Multiplet, initialMultiplet::Multiplet, grid::Radial.Grid,
                         settings::PhotoExcitation.Settings; output=true)
     if  settings.calcBiorthogonal
-        initialMultiplet, finalMultiplet = BiOrthogonal.computeTransformation(initialMultiplet, finalMultiplet, grid)
+        initialMultiplet, finalMultiplet = BiOrthogonal.computeTransformation(BiOrthogonal.BoundStatePair(),
+                                                                                initialMultiplet, finalMultiplet, grid)
     end
     println("")
     printstyled("PhotoExcitation.computeLines(): The computation of the excitation cross sections, etc. starts now ... \n", color=:light_green)
