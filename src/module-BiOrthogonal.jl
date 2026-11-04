@@ -285,6 +285,16 @@ end
         in `Basics.OrbitalShape` -- an `SCFShape` and a `CoreValenceCorrelationShape` realization of the same
         label -- are a real, supported case since the shape-aware `Subshell` extension, and `sort` is not
         guaranteed stable across such a tie without a second key.
+
+        A KAPPA PRESENT ON ONLY ONE SIDE IS NOW ITS OWN CASE, not skipped (fixed 04-Nov-2026, found by the
+        shape-crossing CI junction's own first real-data test: P's deeper layer can add a kappa -- there,
+        4f_5/2 and 4f_7/2 -- that Q's own excitation space never touches at all). There is then nothing to
+        biorthogonalize against on the empty side, so that side's transform is the IDENTITY and the other
+        side's is the (empty, 0x0) matrix of a side with no orbitals for this kappa: a kappa absent from BOTH
+        sides is still skipped, since there is then nothing to return for it either. Skipping the one-sided
+        case outright -- the previous behaviour -- silently dropped the untouched side's own subshells from
+        the dictionaries `generateBiorthogonalShellMatrices` returns, which is what produced a `KeyError` two
+        functions downstream rather than a correct, unchanged orbital.
 """
 function  computeTransformationMatrices(leftBasis::Basis, rightBasis::Basis, grid::Radial.Grid)
     kappas = unique( [sh.kappa for sh in leftBasis.subshells] ∪ [sh.kappa for sh in rightBasis.subshells] )
@@ -294,23 +304,33 @@ function  computeTransformationMatrices(leftBasis::Basis, rightBasis::Basis, gri
         lList = sort( [sh for sh in leftBasis.subshells  if sh.kappa == kappa], by = sh -> (sh.n, sh.shape) )
         rList = sort( [sh for sh in rightBasis.subshells if sh.kappa == kappa], by = sh -> (sh.n, sh.shape) )
         nl = length(lList);   nr = length(rList)
-        (nl == 0  ||  nr == 0)  &&  continue
-        S  = zeros(nl, nr)
-        for  i = 1:nl,  j = 1:nr
-            S[i,j] = RadialIntegrals.overlap(leftBasis.orbitals[lList[i]], rightBasis.orbitals[rList[j]], grid)
-        end
-
-        # THE SQUARE CASE GOES THROUGH appendixB TOO, rather than carrying its own copy of the factorisation.
-        # With m == n that function's Z block is empty and it reduces to exactly the square problem, so this is
-        # one implementation instead of two -- and the two had drifted: the inline copy here kept the unpivoted
-        # LU after appendixB moved to a symmetric split on 01-Nov-2026, which left the defect that change was
-        # made to remove alive on every equal-dimension block, i.e. on the common case.
-        if      nl <= nr
-            Cleft, Cright = BiOrthogonal.appendixB(S)
+        if      nl == 0  &&  nr == 0
+            continue
+        elseif  nl == 0
+            ## right-only kappa -- nothing on the left to biorthogonalize against; pass the right side
+            ## through as its own identity and leave the (empty) left side as a 0 x 0 matrix
+            Cleft, Cright = zeros(0,0), Matrix{Float64}(LinearAlgebra.I, nr, nr)
+        elseif  nr == 0
+            ## the mirror case: a kappa only P carries
+            Cleft, Cright = Matrix{Float64}(LinearAlgebra.I, nl, nl), zeros(0,0)
         else
-            ## the mirror case: transpose, solve with the two sides exchanged, and hand back swapped
-            Crm, Clm      = BiOrthogonal.appendixB( Matrix(S') )
-            Cleft, Cright = Clm, Crm
+            S  = zeros(nl, nr)
+            for  i = 1:nl,  j = 1:nr
+                S[i,j] = RadialIntegrals.overlap(leftBasis.orbitals[lList[i]], rightBasis.orbitals[rList[j]], grid)
+            end
+
+            # THE SQUARE CASE GOES THROUGH appendixB TOO, rather than carrying its own copy of the factorisation.
+            # With m == n that function's Z block is empty and it reduces to exactly the square problem, so this
+            # is one implementation instead of two -- and the two had drifted: the inline copy here kept the
+            # unpivoted LU after appendixB moved to a symmetric split on 01-Nov-2026, which left the defect that
+            # change was made to remove alive on every equal-dimension block, i.e. on the common case.
+            if      nl <= nr
+                Cleft, Cright = BiOrthogonal.appendixB(S)
+            else
+                ## the mirror case: transpose, solve with the two sides exchanged, and hand back swapped
+                Crm, Clm      = BiOrthogonal.appendixB( Matrix(S') )
+                Cleft, Cright = Clm, Crm
+            end
         end
         result[kappa] = (lList, rList, Cleft, Cright)
     end
@@ -327,7 +347,9 @@ end
         (different last tabulated grid point) can occur for the same kappa, each is zero-padded up to the
         longest orbital of its own side before the linear combination is formed. A tuple
         tpl(newLeftOrbitals::Dict{Subshell,Orbital}, newRightOrbitals::Dict{Subshell,Orbital}) is returned,
-        with the SAME subshell keys as the original bases -- only the radial functions have changed.
+        with the SAME subshell keys as the original bases -- only the radial functions have changed. A
+        kappa present on only one side (fixed 04-Nov-2026, see `computeTransformationMatrices`) passes that
+        side through with its orbitals exactly unchanged, since its transform there is the identity.
 """
 function  generateBiorthogonalShellMatrices(leftBasis::Basis, rightBasis::Basis, grid::Radial.Grid)
     transformation = BiOrthogonal.computeTransformationMatrices(leftBasis, rightBasis, grid)
@@ -339,30 +361,36 @@ function  generateBiorthogonalShellMatrices(leftBasis::Basis, rightBasis::Basis,
     ## THE TWO SIDES ARE LOOPED SEPARATELY, each with its OWN dimension.  A single n taken from the
     ## left list was correct only while the two sides were required to have equally many orbitals per
     ## kappa; with Appendix B in place they need not, and sharing n would silently skip right-hand
-    ## orbitals (n_right > n_left) or index past the end of the left list (n_left > n_right).
+    ## orbitals (n_right > n_left) or index past the end of the left list (n_left > n_right).  A side
+    ## with nl == 0 or nr == 0 for this kappa (the one-sided case) simply has nothing to build, and is
+    ## skipped -- its own dictionary never claimed that kappa's subshells in the first place.
     for  (_, (lList, rList, Cleft, Cright))  in  transformation
         nl    = length(lList);   nr = length(rList)
-        lOrbs = [leftBasis.orbitals[sh]  for sh in lList]
-        rOrbs = [rightBasis.orbitals[sh] for sh in rList]
-        lenL  = maximum( length(o.P) for o in lOrbs )
-        lenR  = maximum( length(o.P) for o in rOrbs )
 
-        for  i = 1:nl
-            newP  = sum( padTo(lOrbs[j].P,      lenL) * Cleft[j,i]  for j = 1:nl )
-            newQ  = sum( padTo(lOrbs[j].Q,      lenL) * Cleft[j,i]  for j = 1:nl )
-            newPp = sum( padTo(lOrbs[j].Pprime, lenL) * Cleft[j,i]  for j = 1:nl )
-            newQp = sum( padTo(lOrbs[j].Qprime, lenL) * Cleft[j,i]  for j = 1:nl )
-            newLeft[lList[i]]  = Radial.Orbital(lList[i], lOrbs[i].isBound, lOrbs[i].useStandardGrid,
-                                                    lOrbs[i].energy, newP, newQ, newPp, newQp, grid)
+        if  nl > 0
+            lOrbs = [leftBasis.orbitals[sh]  for sh in lList]
+            lenL  = maximum( length(o.P) for o in lOrbs )
+            for  i = 1:nl
+                newP  = sum( padTo(lOrbs[j].P,      lenL) * Cleft[j,i]  for j = 1:nl )
+                newQ  = sum( padTo(lOrbs[j].Q,      lenL) * Cleft[j,i]  for j = 1:nl )
+                newPp = sum( padTo(lOrbs[j].Pprime, lenL) * Cleft[j,i]  for j = 1:nl )
+                newQp = sum( padTo(lOrbs[j].Qprime, lenL) * Cleft[j,i]  for j = 1:nl )
+                newLeft[lList[i]]  = Radial.Orbital(lList[i], lOrbs[i].isBound, lOrbs[i].useStandardGrid,
+                                                        lOrbs[i].energy, newP, newQ, newPp, newQp, grid)
+            end
         end
 
-        for  i = 1:nr
-            newP  = sum( padTo(rOrbs[j].P,      lenR) * Cright[j,i] for j = 1:nr )
-            newQ  = sum( padTo(rOrbs[j].Q,      lenR) * Cright[j,i] for j = 1:nr )
-            newPp = sum( padTo(rOrbs[j].Pprime, lenR) * Cright[j,i] for j = 1:nr )
-            newQp = sum( padTo(rOrbs[j].Qprime, lenR) * Cright[j,i] for j = 1:nr )
-            newRight[rList[i]] = Radial.Orbital(rList[i], rOrbs[i].isBound, rOrbs[i].useStandardGrid,
-                                                    rOrbs[i].energy, newP, newQ, newPp, newQp, grid)
+        if  nr > 0
+            rOrbs = [rightBasis.orbitals[sh] for sh in rList]
+            lenR  = maximum( length(o.P) for o in rOrbs )
+            for  i = 1:nr
+                newP  = sum( padTo(rOrbs[j].P,      lenR) * Cright[j,i] for j = 1:nr )
+                newQ  = sum( padTo(rOrbs[j].Q,      lenR) * Cright[j,i] for j = 1:nr )
+                newPp = sum( padTo(rOrbs[j].Pprime, lenR) * Cright[j,i] for j = 1:nr )
+                newQp = sum( padTo(rOrbs[j].Qprime, lenR) * Cright[j,i] for j = 1:nr )
+                newRight[rList[i]] = Radial.Orbital(rList[i], rOrbs[i].isBound, rOrbs[i].useStandardGrid,
+                                                        rOrbs[i].energy, newP, newQ, newPp, newQp, grid)
+            end
         end
     end
 
@@ -443,6 +471,9 @@ function  generateCounterRotatingCiMatrices(basis::Basis, transformation::Dict, 
 
     for  (_, (lList, rList, Cleft, Cright))  in  transformation
         shellList = side == :left ? lList : (side == :right ? rList : error("side must be :left or :right"))
+        isempty(shellList)   &&   continue    ## a kappa this side carries no orbitals for (04-Nov-2026); its
+                                               ## transform is the 0 x 0 matrix of an empty block, contributing
+                                               ## nothing to Gmap -- there is no C to take a logarithm of
         C         = side == :left ? Cleft : Cright
         # A REAL LOGARITHM EXISTS ONLY WHERE NO EIGENVALUE IS NEGATIVE, and `BiOrthogonal.alignOrbitalSigns` is
         # what normally ensures it.  Should one survive -- an overlap matrix far enough from the identity that a

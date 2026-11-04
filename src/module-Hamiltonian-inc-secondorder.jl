@@ -639,6 +639,16 @@ end
         own level's `deltaE` -- so a caller sees the risk rather than a confident, possibly wrong-ordered
         number. The scheme is unaffected on a sparse Q space (Cl III's p^3 case, branch g, never trips it).
 
+        P MAY CARRY MORE SUBSHELLS THAN Q -- priority item 5's second half, also closed 04-Nov-2026. A prior
+        RAS layer can deepen P's own ladder beyond the fixed subshell set Q's own `shapedTo` step touches
+        (branch h's n3+n4 ladder is exactly this). Q's subshells are now remapped by (n,kappa) SEARCH and
+        then RE-EXPANDED onto P's (possibly longer) subshell list via `ManyElectron.Basis(basis, subshells)`,
+        the already-existing zero-padding re-expansion constructor, rather than requiring the two lists to
+        match length-for-length and position-for-position. This is exact, not approximate: every CSF of Q
+        genuinely has zero electrons on the extra slots, and `ManyElectron.matrixElement_HminusE`'s angular
+        coefficients are driven by CSF OCCUPATION, never by subshell-list length, so a slot no CSF occupies
+        is never looked up. A no-op (bit-identical) when P and Q already agree, as on branch g.
+
         A `Hamiltonian.ShapeCrossingPartition` is returned.
 """
 function secondOrderShapeCrossingCorrection(pMp::Multiplet, qMp::Multiplet, refConfigs::Array{Configuration,1},
@@ -674,22 +684,29 @@ function secondOrderShapeCrossingCorrection(pMp::Multiplet, qMp::Multiplet, refC
     # pBasis's reshaped label is `SCFShape`, qBasis's own is `CoreValenceCorrelationShape`, so a direct call
     # raises a KeyError -- qBasis's dict genuinely holds the orbital, just under the OTHER tag. Fixed by
     # PRESENTING qBasis's orbitals under pBasis's own subshell objects for this call only (same physical
-    # orbitals, same (n,kappa) positions, matched by POSITION-INDEPENDENT search rather than assumed order):
-    # this is a pure relabelling for the angular machinery's benefit, not a change to any radial content.
-    # qBasis.subshells is REPLACED by pBasis.subshells below, which is safe ONLY because every CSF's occupation
-    # is indexed by POSITION against that list -- so the two must agree, (n,kappa) for (n,kappa), position for
-    # position, or the replacement would silently scramble which occupation number belongs to which subshell.
-    if  [(sh.n,sh.kappa) for sh in pBasis.subshells] != [(sh.n,sh.kappa) for sh in qBasis.subshells]
-        error("Hamiltonian.secondOrderShapeCrossingCorrection(): P's and Q's subshell lists do not agree " *
-              "(n,kappa) for (n,kappa), position for position -- $(pBasis.subshells) against " *
-              "$(qBasis.subshells).  The two must be built from the SAME label set in the SAME canonical " *
-              "order for this function's subshell-relabelling to be safe.")
+    # orbitals, same (n,kappa) label), matched by (n,kappa) SEARCH rather than assumed position: this is a
+    # pure relabelling for the angular machinery's benefit, not a change to any radial content.
+    #
+    # P MAY CARRY MORE SUBSHELLS THAN Q (priority item 5, 04-Nov-2026: a prior RAS layer deepened P's own
+    # ladder beyond the fixed core-valence excitation space Q's own step built) -- so Q's subshell list is
+    # remapped label-for-label, NOT forced to `pBasis.subshells` wholesale, and then RE-EXPANDED onto the
+    # (possibly longer) `pBasis.subshells` via `ManyElectron.Basis(basis, subshells)`, the already-existing
+    # zero-padding re-expansion constructor. This is a no-op when the two already agree (its own first line
+    # returns `basis` unchanged), so the equal-length case (branch g) is untouched; it is exact rather than
+    # approximate on the extra slots, since every CSF of Q genuinely has ZERO electrons there, and the
+    # occupation-driven coefficient generation never needs an orbital at a subshell no CSF occupies.
+    remapToP(sh::Subshell) = pBasis.subshells[ findfirst(s -> (s.n,s.kappa) == (sh.n,sh.kappa), pBasis.subshells) ]
+    if  any( findfirst(s -> (s.n,s.kappa) == (sh.n,sh.kappa), pBasis.subshells) === nothing  for sh in qBasis.subshells )
+        error("Hamiltonian.secondOrderShapeCrossingCorrection(): some (n,kappa) label of Q's subshells " *
+              "$(qBasis.subshells) is absent from P's $(pBasis.subshells) altogether -- P must carry at " *
+              "least every label Q's own excitation space touches, even if P carries others besides.")
     end
-    remapToP(sh::Subshell) = pBasis.subshells[ findfirst(==(sh), qBasis.subshells) ]
-    qOrbitalsPresented = Dict{Subshell,Orbital}( remapToP(sh) => orb  for (sh, orb) in qBasis.orbitals )
+    qSubshellsPresented     = [ remapToP(sh)  for sh in qBasis.subshells ]
+    qOrbitalsPresented      = Dict{Subshell,Orbital}( remapToP(sh) => orb  for (sh, orb) in qBasis.orbitals )
     qCoreSubshellsPresented = [ remapToP(sh)  for sh in qBasis.coreSubshells ]
-    qBasis = Basis(qBasis.isDefined, qBasis.NoElectrons, pBasis.subshells, qBasis.csfs, qCoreSubshellsPresented,
-                   qOrbitalsPresented)
+    qBasisPresented = Basis(qBasis.isDefined, qBasis.NoElectrons, qSubshellsPresented, qBasis.csfs,
+                             qCoreSubshellsPresented, qOrbitalsPresented)
+    qBasis = ManyElectron.Basis(qBasisPresented, pBasis.subshells)
 
     nP = length(pBasis.csfs);    nNewQ = length(newQIndices)
     M  = [ ManyElectron.matrixElement_HminusE(op, pBasis, r, qBasis, newQIndices[j], grid, nuclearPot)
