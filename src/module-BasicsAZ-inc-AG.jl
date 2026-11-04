@@ -252,13 +252,36 @@ end
         silently carried a factor 2 which happened to cancel one convention in one caller is precisely how such
         a factor stops being visible at all.
 
-        THE CONSUMERS, checked 08-Aug-2026. Only two of the four form an integral from these weights:
-          * DoubleAutoIonization  -- `trate += sharing.weight * drate`; two ELECTRONS, hence identical, so the
-                                     1/2 applies and is NOT yet applied there.
-          * MultiPhotonTransition -- two-photon emission `totalRate`; two PHOTONS, hence identical, so the 1/2
-                                     applies; see the note at its computeProperties_2pEmission.
-          * PhotoDoubleIonization and RadiativeAuger store and display the weight but never integrate with it,
-            so the correction changes a printed column there and no physical result.
+        THE CONSUMERS, re-derived 04-Nov-2026. THREE of the four form an integral from these weights, and all
+        three now carry the 1/2:
+          * PhotoDoubleIonization -- `crossSection += sh.weight * sh.differentialCs`; two ELECTRONS, hence
+                                     identical. Applied 03-Nov-2026 (`0f35d139`).
+          * DoubleAutoIonization  -- `trate += sharing.weight * drate`; two ELECTRONS, hence identical.
+                                     Applied 04-Nov-2026 (`4b59a6e9`).
+          * MultiPhotonTransition -- two-photon emission `totalRate`; two PHOTONS, hence identical. Applied
+                                     08-Aug-2026; see the note at its computeProperties_2pEmission.
+          * RadiativeAuger        -- stores and displays the weight but does NOT integrate with it, so no
+                                     physical result there depends on this factor.
+
+        AND THE PREVIOUS VERSION OF THIS LIST IS WHY THE PHOTODOUBLEIONIZATION DEFECT SURVIVED ELEVEN WEEKS.
+        It said PhotoDoubleIonization "store[s] and display[s] the weight but never integrate[s] with it", which
+        was TRUE on 08-Aug-2026 and FALSE a week later: the 15-Aug rebuild added the integral, nothing re-read
+        this list, and that module's own comment then asserted the opposite of the paragraph above -- that the
+        double counting was "already handled inside Basics.determineEnergySharings". Its sigma(2+) was twice
+        what it should be until 03-Nov-2026.
+
+        SO RE-DERIVE THIS LIST RATHER THAN TRUST IT, and derive it from the CALL rather than from the weight:
+
+            grep -n 'determineEnergySharings' src/*.jl        ... bounds the consumers;  there are four
+            grep -nE 'sh(aring)?[.]weight [*]' src/*.jl      ... says which of those four integrate
+
+        The obvious search is the one to avoid: `grep -n 'weight [*]' src/*.jl` returns about a hundred lines,
+        nearly all of them `RacahExpression.weight` in the RacahAlgebra files -- an unrelated quantity carrying
+        the same name. Two hits of the recommended search are also NOT consumers, and are worth recognising as
+        such: `MultiPhotonTransition.determineSharings_3p` builds its own three-photon simplex grid rather than
+        calling this routine, and the `TestFrames` hit is this very factor's test. A caller that integrates and
+        is not named above is either a new consumer or a stale entry here, and a statement about what a CALLER
+        does is exactly the kind that goes quietly false when the caller changes.
 """
 function Basics.determineEnergySharings(energy::Float64, NoEnergySharings::Int64)
     xx, ww = GaussQuadrature.legendre(NoEnergySharings)
