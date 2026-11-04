@@ -6,8 +6,8 @@
 """
 module Hamiltonian
 
-using  Printf, LinearAlgebra, ..Basics, ..Bsplines, ..Defaults, ..InteractionStrength, ..InteractionStrengthQED,
-       ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals, ..SpinAngular
+using  Printf, LinearAlgebra, JenaAtomicCalculator, ..Basics, ..Bsplines, ..Defaults, ..InteractionStrength,
+       ..InteractionStrengthQED, ..ManyElectron, ..Nuclear, ..Radial, ..RadialIntegrals, ..SpinAngular
 
 
 """

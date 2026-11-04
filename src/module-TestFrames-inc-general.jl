@@ -729,13 +729,20 @@ function testRepresentation_ShapeCrossingRasStep()
                                   treatment=Basics.SecondOrder(1.0e-5, 1.0e-12)) ]
     wa3 = Representation("Be -- shape-crossing RasStep test", Nuclear.Model(4.), refConfigs,
                          RasExpansion([LevelSymmetry(0, Basics.plus)], 4, steps3, rasSettings))
+    tmpOut3 = tempname()
     wb3 = try
-        generate(wa3, output=true)
+        open(tmpOut3, "w") do f
+            redirect_stdout(f) do
+                generate(wa3, output=true)
+            end
+        end
     catch e
         success = false
         if printTest   info(iostream, "a sanctioned shape-crossing layer RAISED instead of running: $e")   end
         nothing
     end
+    captured3 = isfile(tmpOut3) ? read(tmpOut3, String) : ""
+    rm(tmpOut3, force=true)
     if  !isnothing(wb3)
         e2 = sort(wb3["step2"].levels, by = l -> l.energy)[1].energy
         e3 = sort(wb3["step3"].levels, by = l -> l.energy)[1].energy
@@ -751,6 +758,23 @@ function testRepresentation_ShapeCrossingRasStep()
                 if printTest   info(iostream, "the dual-role shell guard fired on a SANCTIONED shape-crossing " *
                                               "reuse of 2p; jac-warn.report holds: $text")   end
             end
+        end
+        # THE ACTUAL PHYSICS NUMBER, not just "it ran": the second-order shift for the target level must be
+        # NEGATIVE (a correlation correction lowers the energy -- see Hamiltonian.rankQspace's own sign
+        # convention) and of a SANE, mHa-scale magnitude. A sign or scale defect here is exactly what slipped
+        # through silently while this function was being built: an early version, coupling P against ALL of
+        # Q's CSFs (including those Q shares with P, where the missing -E<r|s> term in
+        # ManyElectron.matrixElement_HminusE is NOT harmless), gave +5.7e7 Ha on the real Cl III case.
+        deltaEs = [ parse(Float64, m.captures[1])
+                    for m in eachmatch(r"deltaE = ([+-][0-9.]+e[+-][0-9]+) Ha", captured3) ]
+        if  isempty(deltaEs)
+            success = false
+            if printTest   info(iostream, "no ShapeCrossingPartition deltaE line was printed at all")   end
+        elseif  !all(d -> d < 0.0, deltaEs)  ||  !all(d -> abs(d) < 0.1, deltaEs)
+            success = false
+            if printTest   info(iostream, "the second-order shift(s) $deltaEs Ha are not all negative and " *
+                                          "below 0.1 Ha in magnitude, as a sane mHa-scale correlation " *
+                                          "correction on this toy case must be")   end
         end
     end
 

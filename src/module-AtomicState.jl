@@ -7,7 +7,7 @@ module AtomicState
 
 
 # using Interact
-using  Printf, ..Basics, ..ManyElectron, ..Nuclear, ..Radial, ..SelfConsistent, ..SpinAngular, ..ResultKeys
+using  Printf, ..Basics, ..Hamiltonian, ..ManyElectron, ..Nuclear, ..Radial, ..SelfConsistent, ..SpinAngular, ..ResultKeys
 
 export  MeanFieldSettings, MeanFieldBasis, MeanFieldMultiplet, OneElectronSettings, OneElectronSpectrum, CiSettings, CiExpansion,
         RasSettings, RasStep, RasLayer, RasExpansion, GreenSettings, GreenChannel, GreenExpansion, Representation,
@@ -723,6 +723,10 @@ end
         ordinary layer. `energy` and `increment` above are NOT about this space -- they stay the ladder's own
         P-progression, unchanged by a shaped layer, which is why this field exists separately rather than
         folding Q's energy into them.
+    + shapedPartition ::Union{Nothing,Hamiltonian.ShapeCrossingPartition}   ... the second-order P/Q coupling
+        this shape-crossing layer is actually FOR -- `Hamiltonian.secondOrderShapeCrossingCorrection` applied
+        between `priorMultiplet` (P) and `shapedBasis`'s own multiplet (Q), biorthogonalized first. `nothing`
+        for every ordinary layer, and whenever `shapedBasis` is `nothing`.
 """
 struct  RasLayerVerdict
     istep           ::Int64
@@ -733,6 +737,7 @@ struct  RasLayerVerdict
     increment       ::Float64
     scfVerdict      ::Union{Nothing,SelfConsistent.ScfVerdict}
     shapedBasis     ::Union{Nothing,Basis}
+    shapedPartition ::Union{Nothing,Hamiltonian.ShapeCrossingPartition}
 end
 
 
@@ -741,7 +746,10 @@ function Base.show(io::IO, verdict::RasLayerVerdict)
     sa = "RAS layer $(verdict.istep), adding $(verdict.newShells): $(verdict.csfCount) CSF, " *
          @sprintf("%.1f s", verdict.wallTime) * ", energy = $(verdict.energy) Ha, increment = " *
          (isnan(verdict.increment) ? "n/a (reference layer)" : @sprintf("%+.4f mHa", 1000*verdict.increment)) *
-         (isnothing(verdict.shapedBasis) ? "" : "  (shape-crossing leaf: the ladder's own P-progression is untouched)")
+         (isnothing(verdict.shapedBasis) ? "" : "  (shape-crossing leaf: the ladder's own P-progression is untouched)") *
+         (isnothing(verdict.shapedPartition) ? "" :
+          @sprintf("; P/Q second order %+.4f mHa over %d target level(s)", 1000*sum(verdict.shapedPartition.deltaE),
+                   length(verdict.shapedPartition.targetLevels)))
     println(io, sa)
 end
 

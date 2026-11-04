@@ -474,7 +474,8 @@ function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicSta
     # SCF is the point rather than an economy: the layer exists to RECOVER what P leaves out, so optimizing
     # orbitals on the whole of it would pay for Q in the one place the treatment is meant to avoid, and the
     # virtuals of a perturbation belong in the field of the reference in any case.
-    shapedBasis = nothing
+    shapedBasis     = nothing
+    shapedPartition = nothing
     if  typeof(step.treatment) == Basics.Variational
         multiplet  = SelfConsistent.performSCF(basis, nModel, rep.grid, stepSettings; printout=true)
         # THE RELEASE PHASE -- RasSettings.freezing, 06-Oct-2026.  A released policy runs the layer TWICE and
@@ -583,6 +584,11 @@ function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicSta
                         " a.u.   norm = " * @sprintf("%.6f", r0) * "   Q lowest energy = " *
                         @sprintf("%.8f", minimum(lv.energy for lv in shapedMp.levels)) * " Ha")
             end
+            # THE ACTUAL PAYOFF: the second-order P/Q coupling this layer exists to supply, via BiOrthogonal --
+            # never a bare CSF-pair value (Phase 0's own finding), always the full mc-weighted multiplet sum.
+            shapedPartition = Hamiltonian.secondOrderShapeCrossingCorrection(priorMultiplet, shapedMp, rep.refConfigs,
+                                                                             rep.grid, nModel, stepSettings)
+            printstyled(string(shapedPartition), color=:light_yellow)
             multiplet   = priorMultiplet
         else
             printstyled(">> step $istep is treated to SECOND ORDER in its Q space; the orbitals of this layer are " *
@@ -724,7 +730,7 @@ function runRasStep!(istep::Int64, step::AtomicState.RasStep, repType::AtomicSta
     scfVerdict = typeof(step.treatment) == Basics.Variational  &&  repType.settings.scfRoute isa Basics.RotationRoute ?
                  SelfConsistent.lastScfVerdict() : nothing
     verdict    = AtomicState.RasLayerVerdict(istep, newShells, length(basis.csfs), time() - wallTime0, energy, increment,
-                                              scfVerdict, shapedBasis)
+                                              scfVerdict, shapedBasis, shapedPartition)
 
     return( multiplet, verdict )
 end

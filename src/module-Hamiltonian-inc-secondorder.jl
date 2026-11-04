@@ -549,3 +549,168 @@ function displayQPartition(stream::IO, partition::Hamiltonian.QPartition, treatm
 
     return( nothing )
 end
+
+
+#####################################################################################################################
+#####  Second-order treatment of a SHAPE-CROSSING Q space (AtomicState.RasStep.shapedTo)  ##########################
+#####################################################################################################################
+
+"""
+`struct  Hamiltonian.ShapeCrossingPartition`
+    ... what one shape-crossing second-order junction (`AtomicState.RasStep.shapedTo`) is worth, returned by
+        `Hamiltonian.secondOrderShapeCrossingCorrection`.
+
+    + targetLevels   ::Array{Int64,1}    ... which levels of P (by index into the ladder's own priorMultiplet)
+        this correction was computed for -- those carrying weight >= 0.5 on the reference configurations, the
+        SAME rule `Hamiltonian.secondOrderBlock` uses, for the same reason: P carries the whole accumulated
+        ladder, most of whose levels are correlation states nobody asked for.
+    + deltaE         ::Array{Float64,1}  ... the second-order energy shift for each of `targetLevels`, in the
+        SAME order.
+    + newQIndices    ::Array{Int64,1}    ... which CSFs of Q's OWN basis are genuinely NEW -- not already
+        present (by non-relativistic configuration key) in P -- and therefore the ones actually summed over.
+        Q's basis always re-includes `refConfigs` and typically re-includes much of what P already built
+        (`Basics.generateBasis` was written for a P-like space, not a bare "new excitations only" one), and
+        coupling P against one of THOSE would be a near-diagonal, not a genuine off-diagonal, term.
+    + coupling       ::Array{Float64,2}  ... the `<P level i|H-E|Q CSF s>` coupling, P's levels (rows) against
+        `newQIndices` (columns, in the SAME order), for a caller who wants more than the target levels alone.
+"""
+struct  ShapeCrossingPartition
+    targetLevels    ::Array{Int64,1}
+    deltaE          ::Array{Float64,1}
+    newQIndices     ::Array{Int64,1}
+    coupling        ::Array{Float64,2}
+end
+
+
+# `Base.show(io::IO, part::Hamiltonian.ShapeCrossingPartition)`  ... prepares a proper printout of part.
+function Base.show(io::IO, part::Hamiltonian.ShapeCrossingPartition)
+    println(io, "ShapeCrossingPartition: second-order correction for $(length(part.targetLevels)) target " *
+                "level(s) of P against $(length(part.newQIndices)) genuinely new CSF(s) of Q.")
+    for  (j, i)  in  enumerate(part.targetLevels)
+        println(io, @sprintf("  P level %d:  deltaE = %+.6e Ha  (%+.4f mHa)", i, part.deltaE[j], 1000*part.deltaE[j]))
+    end
+end
+
+
+"""
+`Hamiltonian.secondOrderShapeCrossingCorrection(pMp::Multiplet, qMp::Multiplet, refConfigs::Array{Configuration,1},
+                                                 grid::Radial.Grid, nm::Nuclear.Model, settings::AsfSettings)`
+    ... the shape-crossing counterpart of `Hamiltonian.secondOrderBlock`, for a Q space built by a
+        `AtomicState.RasStep.shapedTo` layer (`BasicsAZ.retagShapedSubshells`/`generateOrbitalsForShapedBasis`
+        -- its own, separately SCF-refined `Basis`, never merged into P). P and Q are biorthogonalized via
+        `BiOrthogonal.computeTransformation(BiOrthogonal.ShapeCrossingJunction(), pMp, qMp, grid)`, and every
+        P-Q coupling then goes through `ManyElectron.matrixElement_HminusE` on the RESULTING biorthonormal
+        bases, summed over P's own CI mixing coefficients -- never a bare, unweighted CSF-pair value, which
+        Phase 0's toy validation (`work/clIII-corevalence/phase0-toy/validate2.jl`; see the module docstring
+        of `BiOrthogonal.jl`) showed is not a well-defined quantity on its own.
+
+        ONLY Q'S GENUINELY NEW CSFs ENTER THE SUM -- those whose non-relativistic configuration is NOT already
+        present in P. `Basics.generateBasis` (used to build Q in `BasicsAZ.runRasStep!`) was written for a
+        P-LIKE space and always re-includes `refConfigs`, and typically much of P's own valence-correlation
+        excitation set besides (it has no "new excitations only" mode); treating Q's WHOLE CSF space, or its
+        own full diagonalization, as "the Q space" therefore couples P against configurations P ALREADY HAS.
+        For such a pair the biorthogonal overlap after transformation is exactly 1 (same spectators, same
+        shape, no reshaping at that label), so the coupling is really a DIAGONAL-like term, equal to roughly
+        the CSF's own total energy (`ManyElectron.matrixElement_HminusE` carries no `-E<r|s>` term -- see its
+        own docstring -- which is harmless only where the overlap is exactly 0, as it is for a genuinely new
+        CSF). Measured while building this function: including P's own CSFs on the Q side gave a "correction"
+        of +5.7e7 Ha; restricting to the genuinely new CSFs, as this function now does, is what removes it.
+
+        For each of Q's new CSFs `s` the Epstein-Nesbet denominator is ITS OWN diagonal Hamiltonian element,
+        computed on Q's OWN, untransformed, internally-orthonormal basis (a single-basis quantity, exactly
+        `Hamiltonian.rankQspace`'s own per-CSF Epstein-Nesbet formula) -- NOT on the biorthogonal-transformed
+        one, since the transform is not norm-preserving in general (`BiOrthogonal.jl`'s own module docstring)
+        and the denominator needs Q's true, physical self-energy. The second-order shift for target P level
+        `i` is `- sum_s |<Psi_Pi|H-E|s>|^2 / (h_ss - E_Pi)`, the same sign convention as `Hamiltonian.rankQspace`
+        and `Hamiltonian.foldQGroup!` -- a state lying ABOVE the reference (`h_ss > E_Pi`, the normal case)
+        LOWERS it, as a correlation correction must.
+
+        ONLY THE TARGET LEVELS OF P ARE CORRECTED -- those carrying weight >= 0.5 on `refConfigs`, the SAME
+        rule `Hamiltonian.secondOrderBlock` uses and for the same reason.
+
+        A `Hamiltonian.ShapeCrossingPartition` is returned.
+"""
+function secondOrderShapeCrossingCorrection(pMp::Multiplet, qMp::Multiplet, refConfigs::Array{Configuration,1},
+                                             grid::Radial.Grid, nm::Nuclear.Model, settings::AsfSettings)
+    # WHICH OF Q'S OWN CSFs ARE GENUINELY NEW, decided on the ORIGINAL (untransformed) bases -- configuration
+    # keys do not depend on orbitals at all, so the biorthogonal transform below has nothing to do with this.
+    pBasis0 = pMp.levels[1].basis;    qBasis0 = qMp.levels[1].basis
+    (pGroups, _) = Hamiltonian.groupCsfsByConfiguration(pBasis0, collect(1:length(pBasis0.csfs)))
+    pKeys        = Set(keys(pGroups))
+    newQIndices  = Int64[ s  for s = 1:length(qBasis0.csfs)
+                             if !(Hamiltonian.configurationKey(
+                                      Basics.extractConfiguration(Basics.FromBasis(), qBasis0, qBasis0.csfs[s])) in pKeys) ]
+    if  isempty(newQIndices)
+        error("Hamiltonian.secondOrderShapeCrossingCorrection(): every CSF of Q's basis already belongs to a " *
+              "configuration P has -- there is nothing genuinely new to couple against, which likely means " *
+              "this step's *To lists never reached beyond what P already built.")
+    end
+
+    # THE DENOMINATOR, on Q's OWN untransformed basis -- a single-basis diagonal element, so no cross-basis issue.
+    nuclearPot = Nuclear.nuclearPotential(nm, grid)
+    op         = Basics.HminusE(settings.eeInteractionCI)
+    hqq        = [ ManyElectron.matrixElement_HminusE(op, qBasis0, s, qBasis0, s, grid, nuclearPot)  for s in newQIndices ]
+
+    # THE NUMERATOR needs the biorthogonal transform, since P's and Q's reshaped orbital genuinely differ.
+    newPMp, newQMp = JenaAtomicCalculator.BiOrthogonal.computeTransformation(
+                         JenaAtomicCalculator.BiOrthogonal.ShapeCrossingJunction(), pMp, qMp, grid)
+    pBasis = newPMp.levels[1].basis;    qBasis = newQMp.levels[1].basis
+
+    # `ManyElectron.matrixElement_HminusE` generates its angular coefficients from `leftBasis.subshells` ALONE
+    # (see its own code) and then looks each `coeff.a`/`coeff.b` up in BOTH orbital dicts -- correct wherever the
+    # two bases share the SAME Subshell objects label for label, which every OTHER BiOrthogonal consumer does,
+    # since nothing there ever differs in `.shape`. A shape-crossing P/Q pair is the first case where it does:
+    # pBasis's reshaped label is `SCFShape`, qBasis's own is `CoreValenceCorrelationShape`, so a direct call
+    # raises a KeyError -- qBasis's dict genuinely holds the orbital, just under the OTHER tag. Fixed by
+    # PRESENTING qBasis's orbitals under pBasis's own subshell objects for this call only (same physical
+    # orbitals, same (n,kappa) positions, matched by POSITION-INDEPENDENT search rather than assumed order):
+    # this is a pure relabelling for the angular machinery's benefit, not a change to any radial content.
+    # qBasis.subshells is REPLACED by pBasis.subshells below, which is safe ONLY because every CSF's occupation
+    # is indexed by POSITION against that list -- so the two must agree, (n,kappa) for (n,kappa), position for
+    # position, or the replacement would silently scramble which occupation number belongs to which subshell.
+    if  [(sh.n,sh.kappa) for sh in pBasis.subshells] != [(sh.n,sh.kappa) for sh in qBasis.subshells]
+        error("Hamiltonian.secondOrderShapeCrossingCorrection(): P's and Q's subshell lists do not agree " *
+              "(n,kappa) for (n,kappa), position for position -- $(pBasis.subshells) against " *
+              "$(qBasis.subshells).  The two must be built from the SAME label set in the SAME canonical " *
+              "order for this function's subshell-relabelling to be safe.")
+    end
+    remapToP(sh::Subshell) = pBasis.subshells[ findfirst(==(sh), qBasis.subshells) ]
+    qOrbitalsPresented = Dict{Subshell,Orbital}( remapToP(sh) => orb  for (sh, orb) in qBasis.orbitals )
+    qCoreSubshellsPresented = [ remapToP(sh)  for sh in qBasis.coreSubshells ]
+    qBasis = Basis(qBasis.isDefined, qBasis.NoElectrons, pBasis.subshells, qBasis.csfs, qCoreSubshellsPresented,
+                   qOrbitalsPresented)
+
+    nP = length(pBasis.csfs);    nNewQ = length(newQIndices)
+    M  = [ ManyElectron.matrixElement_HminusE(op, pBasis, r, qBasis, newQIndices[j], grid, nuclearPot)
+           for r = 1:nP, j = 1:nNewQ ]
+
+    # THE FULL LEVEL-TO-CSF COUPLING is one matrix product away once M is in hand -- no new physics here, just
+    # P's own mixing coefficients (unchanged by the transform's own counter-rotation, which acts on newPMp's
+    # mc, not on pMp's own).
+    mcP      = hcat( [ lv.mc  for lv in newPMp.levels ]... )
+    coupling = mcP' * M
+
+    refKeysTarget = [ Hamiltonian.configurationKey(conf)  for conf in refConfigs ]
+    targetLevels  = Int64[]
+    for  i = 1:length(pMp.levels)
+        w = sum( pMp.levels[i].mc[r]^2  for r = 1:length(pBasis0.csfs)
+                 if  Hamiltonian.configurationKey(
+                         Basics.extractConfiguration(Basics.FromBasis(), pBasis0, pBasis0.csfs[r])) in refKeysTarget )
+        if  w >= 0.5    push!(targetLevels, i)    end
+    end
+    if  isempty(targetLevels)
+        @warn("Hamiltonian.secondOrderShapeCrossingCorrection(): no level of P carries a weight of 0.5 on the " *
+              "reference configurations, so every level is treated as a target and the selection is " *
+              "CONSERVATIVE (it will promote more than it needs).")
+        targetLevels = collect(1:length(pMp.levels))
+    end
+
+    deltaE = zeros(length(targetLevels))
+    for  (j, i)  in  enumerate(targetLevels),  s = 1:nNewQ
+        dd = hqq[s] - pMp.levels[i].energy
+        abs(dd) < 1.0e-10   &&   continue
+        deltaE[j] -= coupling[i,s]^2 / dd
+    end
+
+    return( ShapeCrossingPartition(targetLevels, deltaE, newQIndices, coupling) )
+end
