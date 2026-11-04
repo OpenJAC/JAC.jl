@@ -1021,9 +1021,27 @@ rewrites.
    and say which items were removed and why, in one line each.
 4. Items carrying a `verify` or `memory only` marker have not been re-checked against `src/`. Do not remove
    one on the strength of the marker alone; either check it or leave it, and say which.
-5. **THE REGISTER CHECK -- NO ITEM IS ADDED TO THE PRIORITY LIST WITHOUT IT.** The list opens with a section
-   called `THE SETTLED REGISTER`, one line per thing already decided, and it is deliberately short so that it
-   can be read in full every time. Before an item is added:
+5. **THE REGISTER CHECK -- NO ITEM IS ADDED TO THE PRIORITY LIST WITHOUT IT, AND IT FIRES EARLIER THAN THAT
+   AS WELL.** The list opens with a section called `THE SETTLED REGISTER`, one line per thing already decided,
+   held in lettered topic sections so that the one section a question belongs to can be read in seconds.
+
+   **THE EARLIER TRIGGER, added 04-Nov-2026 because filing is too late: BEFORE BUILDING A DETECTOR, A
+   DIAGNOSTIC, A GUARD OR A SCAN -- AND AGAIN BEFORE ACTING ON WHAT ONE REPORTS -- GREP THE REGISTER FOR THE
+   QUANTITY IT MEASURES.** Not for the conclusion expected from it. The register is keyed by "symptom a
+   detector would report", and that IS the quantity: a column name, a ratio, a unit, a threshold. The check as
+   written below fires at the moment of REPORTING, while the machine time and the wrong turn are spent at the
+   moment of MEASURING -- so the duty at filing is necessary and arrives after the cost.
+
+   **AND THE REFRAMING THAT MAKES IT WORTH DOING RATHER THAN MERELY OWED: the register is not only a guard
+   against re-filing settled work, it is a LIBRARY OF CALIBRATED INSTRUMENTS.** Measured 04-Nov-2026: a
+   radial-extent orbital diagnostic was written, believed and acted upon across two job launches and about two
+   hours of machine, while section D already carried the calibrated form of that same instrument -- `extent/box`
+   OVER-WARNS because it measures where a tail EXISTS and not its WEIGHT, and the discriminator is `Z_eff`
+   together with `n >= 3` -- settled 17-Oct-2026 and amended 21-Oct-2026, with its two false-positive classes
+   enumerated. Grepping `extent/box` or `fraction of box` lands on that row at once; grepping the conclusion in
+   view all afternoon returned nothing, which is why the key must be the quantity and not the conclusion.
+
+   Before an item is added:
 
    a. **Write the SYMPTOM first** -- what a detector, a grep or a sweep actually reported, in its words
       ("100 `error("stop aa")` markers remain", "`measureRydbergExponent` gives p = 1.3"). Not the conclusion
