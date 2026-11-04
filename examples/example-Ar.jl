@@ -545,5 +545,182 @@ elseif  false
     println(">> step 3's own printout above carries the MBPT correction for each of these, in the same ")
     println(">> energy order within each J -- see 'ShapeCrossingPartition' and the 'deltaE' lines.")
     #
+elseif  false
+    # Last visit:  04-Nov-2026
+    #
+    # h) Cl III -- DEEPENING THE VALENCE LADDER ALONE, n3 -> n3+n4, NO shape-crossing MBPT step.  Answers a
+    #    narrower, separate question from branch (g): how much of the ~3000-3500 cm^-1 NIST gap left after ONE
+    #    valence layer (3s,3p -> 3d) closes once a SECOND valence layer (-> 4s,4p,4d,4f) is added -- "more
+    #    valence layers, a separate well-understood scope question", independent of how close the result
+    #    lands to experiment.
+    #
+    #    THREE STEPS: step 1 reference, step 2 the SAME n3 layer as branch (g) (3s,3p -> 3d, variational),
+    #    step 3 a SECOND layer, 3s,3p -> 3d,4s,4p,4d,4f, freezing the n3 layer's own 3d (so only the NEW n4
+    #    shells vary here).  No shapedTo step is attached: STACKING THE SHAPE-CROSSING MBPT CORRECTION ON TOP
+    #    OF A DEEPENED LADDER HIT A NEW, GENUINE LIMITATION, measured this visit, NOT fixed -- once the PRIOR
+    #    step carries more subshells than the MBPT step's own 2s,2p -> 3d excitation space touches (9 here,
+    #    against this ladder's 16), Hamiltonian.secondOrderShapeCrossingCorrection's own safety assertion
+    #    (P and Q must agree (n,kappa) for (n,kappa), position for position) correctly REFUSES rather than
+    #    silently relabelling the wrong orbitals -- branch (g) never hit this because there P WAS step 2's own
+    #    9-subshell basis.  Composing the shape-crossing step with a deeper ladder is an open question for
+    #    `src/` (priority item 5), not attempted here.
+    #
+    #    MEASURED, 04-Nov-2026, Coulomb, rbox = 28 a.u., RotationRoute(32), combined 3 symmetries, 3m18s total:
+    #    the n4 layer's own doubling test: -52.1556 mHa at 32 iterations against -48.3675 mHa at 16, a 7.3 %
+    #    change -- CONVERGED in its budget, unlike an earlier n4-alone probe at RotationRoute(24) (16.1 %,
+    #    not yet converged).
+    #
+    #      #  term J     E(n3) [Ha]          E(n3+n4) [Ha]       NIST cm^-1   gap(n3) cm^-1  gap(n3+n4) cm^-1  closes
+    #      1  4S  3/2   -459.77079156 Ha    -459.80175423 Ha         0.000          0.00           0.00         --
+    #      2  2D  3/2   -459.67457044 Ha    -459.71494778 Ha     18052.460       3065.63         999.35       67.4 %
+    #      3  2D  5/2   -459.67423456 Ha    -459.71460272 Ha     18118.430       3073.38        1009.12       67.2 %
+    #      4  2P  1/2   -459.61915520 Ha    -459.65991407 Ha     29813.920       3466.41        1316.40       62.0 %
+    #      5  2P  3/2   -459.61876353 Ha    -459.65949487 Ha     29906.450       3459.85        1315.87       62.0 %
+    #
+    #    ONE LAYER OF n4 CLOSES ROUGHLY TWO THIRDS OF THE GAP left after n3 alone -- a clean, LAYER-BY-LAYER
+    #    convergence (Rule 21: compare increments, not just endpoints), the 2D and 2P pairs each closing by
+    #    near-identical amounts, which is itself evidence the residual ~1000-1350 cm^-1 is further CORRELATION
+    #    rather than noise.  Whether a THIRD layer (n5) would close most of the rest, or hit diminishing
+    #    returns, is left open: n4's own CSF count already grew 12.5x over n3 alone (172 -> 2151, J=3/2 block),
+    #    and extrapolating that growth rate to n5 risks a run that would not finish, or not converge, inside a
+    #    reasonable time budget -- STOPPED HERE deliberately rather than attempted and left unconverged.
+    #
+    Z      = 17.0
+    refs   = [Configuration("1s^2 2s^2 2p^6 3s^2 3p^3")]
+    syms   = [LevelSymmetry(AngularJ64(1//2), Basics.minus), LevelSymmetry(AngularJ64(3//2), Basics.minus),
+              LevelSymmetry(AngularJ64(5//2), Basics.minus)]
+    val    = [Shell("3s"), Shell("3p")]
+    to3    = [Shell("3s"), Shell("3p"), Shell("3d")]
+    to4    = [Shell("3s"), Shell("3p"), Shell("3d"), Shell("4s"), Shell("4p"), Shell("4d"), Shell("4f")]
+    frozen1 = [Shell("1s"), Shell("2s"), Shell("2p")]
+    frozen2 = [Shell("1s"), Shell("2s"), Shell("2p"), Shell("3s"), Shell("3p")]
+    frozen3 = vcat(frozen2, [Shell("3d")])
+    steps  = [ RasStep(),
+               RasStep(RasStep(); seFrom=val, seTo=to3, deFrom=val, deTo=to3, frozen=frozen1),
+               RasStep(RasStep(); seFrom=val, seTo=to4, deFrom=val, deTo=to4, frozen=frozen3) ]
+    grid   = Basics.recommendedGrid(refs, Nuclear.Model(Z); rbox = 28.)
+    rasSettings = RasSettings(Int64[], Basics.RotationRoute(32), 1.0e-6, CoulombInteraction(),
+                              LevelSelection(true, configurations=refs))
+    wa     = Representation("Cl III -- two valence layers, n3+n4, no MBPT",
+                            Nuclear.Model(Z), grid, refs, RasExpansion(syms, 15, steps, rasSettings) )
+    wb     = generate(wa, output=true)
+    refKeys = Set( Hamiltonian.configurationKey(c)  for c in refs )
+    refLevels = function(mp)
+        ls = Level[]
+        for  lv in mp.levels
+            bs = lv.basis
+            w  = sum( lv.mc[r]^2  for r = 1:length(bs.csfs)
+                      if  Hamiltonian.configurationKey(
+                              Basics.extractConfiguration(Basics.FromBasis(), bs, bs.csfs[r])) in refKeys )
+            if  w >= 0.5    push!(ls, lv)    end
+        end
+        return( sort(ls, by = l -> l.energy) )
+    end
+    println("\n>> step 2 (n3 valence only), reference-dominated levels, lowest first:")
+    for  (i, lv)  in  enumerate(refLevels(wb["step2"]))
+        println(">>   level $i   J = $(lv.J)   E = $(lv.energy) Ha")
+    end
+    println("\n>> step 3 (n3+n4 valence), reference-dominated levels, lowest first:")
+    for  (i, lv)  in  enumerate(refLevels(wb["step3"]))
+        println(">>   level $i   J = $(lv.J)   E = $(lv.energy) Ha")
+    end
+    #
+
+elseif  false
+    # Last visit:  04-Nov-2026
+    #
+    # i) Ti III 1s^2 2s^2 2p^6 3s^2 3p^6 3d^2 -- THE FULL GROUND TERM on a d^2 CONFIGURATION, same
+    #    shape-crossing core-valence architecture as branch (g), tried on a DIFFERENT angular case.
+    #
+    #    FIVE SYMMETRIES, ONE RUN: J = 0,1,2,3,4 even together cover all nine fine-structure levels of
+    #    the five LS terms of d^2 (3F, 1D, 3P, 1G, 1S).  Three steps, same pattern as branch (g), one
+    #    shell up: 3d plays the role 3s,3p played for Cl III (the correlated VALENCE shell), 3s,3p play
+    #    the role 2s,2p played (the CORE being correlated into the valence correlation orbital):
+    #      step 1   the reference alone
+    #      step 2   VALENCE correlation 3d -> 4d, variational.  4d is optimized HERE, an ordinary
+    #               SCFShape correlation orbital.
+    #      step 3   shapedTo = [4d]: the core excitations 3s,3p -> 4d get their OWN, independently
+    #               contracted CoreValenceCorrelationShape realization of 4d, coupled back to step 2's
+    #               own P via Hamiltonian.secondOrderShapeCrossingCorrection, exactly as in branch (g).
+    #
+    #    MEASURED, 04-Nov-2026, Coulomb, rbox = 24 a.u. (Rule 12: r_+ ~ 9.55 a.u. for 4d at Z_eff = 3,
+    #    2.5x that is 23.9), RotationRoute(24), 980 s (16.3 min) for all five symmetries in the ONE
+    #    combined RasExpansion the code below actually runs:
+    #
+    #      #  term J     E(step2), no MBPT    MBPT          E(step2+MBPT)     cm^-1 no-MBPT  cm^-1 +MBPT   NIST cm^-1
+    #      1  3F  2     -852.18031725 Ha   -386.1516 mHa  -852.56646885 Ha        0.00           0.00          0.000
+    #      2  3F  3     -852.17947578 Ha   -386.7165 mHa  -852.56619228 Ha      184.68          60.70        184.900
+    #      3  3F  4     -852.17838493 Ha   -388.3614 mHa  -852.56674633 Ha      424.10         -60.90        420.400
+    #      4  1D  2     -852.13107813 Ha   -431.4523 mHa  -852.56253043 Ha    10806.74         864.38       8473.500
+    #      5  3P  0     -852.12108194 Ha   -414.9108 mHa  -852.53599274 Ha    13000.65        6688.73      10538.400
+    #      6  3P  1     -852.12080630 Ha   -434.1391 mHa  -852.55494540 Ha    13061.15        2529.11      10603.600
+    #      7  3P  2     -852.12024151 Ha   -434.0010 mHa  -852.55424251 Ha    13185.10        2683.37      10721.200
+    #      8  1G  4     -852.10401746 Ha   -400.1674 mHa  -852.50418486 Ha    16745.87       13669.76      14397.600
+    #      9  1S  0     -851.99825540 Ha   -537.3595 mHa  -852.53561490 Ha    39957.96        6771.66      32475.500
+    #
+    #    (NIST: Sugar & Corliss, "Energy Levels of Titanium, Ti I through Ti XXII", J. Phys. Chem. Ref.
+    #    Data, the NIST compiled Ti III table.)
+    #
+    #    STEP 2 ALONE IS A GOOD, REPRODUCIBLE RESULT: term separations come out 16-28 % too wide against
+    #    NIST -- the SAME ballpark and direction as branch (g)'s Cl III result (15-17 % too wide), one
+    #    valence layer behaving consistently across a p^3 AND a d^2 case.
+    #
+    #    THE MBPT LAYER DOES NOT BEHAVE THE SAME WAY HERE, AND THE HONEST READING IS THAT IT IS NOT
+    #    SPECTROSCOPICALLY USEFUL ON THIS CASE AS IT STANDS.  Unlike Cl III's -3.93 to -4.17 mHa common
+    #    shift (spread 0.24 mHa), the Ti III correction ranges -386 to -537 mHa -- a 151 mHa SPREAD, i.e.
+    #    ~33200 cm^-1, LARGER than the entire NIST term span (32476 cm^-1 to 1S0).  It does not merely
+    #    fail to help: it DESTROYS the ordering step 2 already had right -- level 3 (3F4) drops BELOW
+    #    the nominal ground level (-60.90 cm^-1), and 1S0 collapses from 39958 to 6772 cm^-1, landing
+    #    inside the 3P cluster instead of far above it.
+    #
+    #    MOST LIKELY CAUSE, recorded for whoever next touches this (priority item 5): Q here holds 5371
+    #    genuinely-new CSFs (printed by ShapeCrossingPartition) against Cl III's far smaller p^3-derived
+    #    Q space, because a d^2 -> (3d,4d) manifold is intrinsically much denser.  With 9 target levels
+    #    each weighed against that whole pool, some terms plausibly sit at SMALL-BUT-NOT-TINY denominators
+    #    (hqq[s] - E_level) -- small enough to inflate the 1/Delta sum, but not caught by
+    #    secondOrderShapeCrossingCorrection's existing `abs(dd) < 1.0e-10` floor, which only guards the
+    #    literally-degenerate case.  This is NOT a box-size artifact (rbox matched Rule 12's own formula to
+    #    within 0.1 a.u., and the run produced no box or convergence warnings at all).  A genuine repair --
+    #    a denominator floor wide enough to exclude near-degenerate Q-CSFs, or restricting Q the way
+    #    condition (a) for explicit second-order amplitudes already asks for elsewhere in JAC -- is
+    #    separate, deliberate work, not attempted here.
+    #
+    Z      = 22.0
+    refs   = [Configuration("1s^2 2s^2 2p^6 3s^2 3p^6 3d^2")]
+    syms   = [ LevelSymmetry(AngularJ64(j), Basics.plus)  for j = 0:4 ]
+    val    = [Shell("3d")];    core = [Shell("3s"), Shell("3p")]
+    to     = [Shell("3d"), Shell("4d")]
+    frozen1 = [Shell("1s"), Shell("2s"), Shell("2p"), Shell("3s"), Shell("3p")]
+    frozen2 = [Shell("1s"), Shell("2s"), Shell("2p"), Shell("3s"), Shell("3p"), Shell("3d")]
+    steps  = [ RasStep(),
+               RasStep(RasStep(); seFrom=val, seTo=to, deFrom=val, deTo=to, frozen=frozen1),
+               RasStep(RasStep(); seFrom=vcat(core,val), seTo=to, deFrom=vcat(core,val), deTo=to,
+                                  shapedTo=[Shell("4d")], frozen=frozen2,
+                                  treatment = Basics.SecondOrder(1.0e-5, 1.0e-12)) ]
+    grid   = Basics.recommendedGrid(refs, Nuclear.Model(Z); rbox = 24.)
+    rasSettings = RasSettings(Int64[], Basics.RotationRoute(24), 1.0e-6, CoulombInteraction(),
+                              LevelSelection(true, configurations=refs))
+    wa     = Representation("Ti III -- full 3d^2 ground term, valence + shape-crossing core-valence MBPT",
+                            Nuclear.Model(Z), grid, refs, RasExpansion(syms, 15, steps, rasSettings) )
+    wb     = generate(wa, output=true)
+    refKeys = Set( Hamiltonian.configurationKey(c)  for c in refs )
+    refLevels = function(mp)
+        ls = Level[]
+        for  lv in mp.levels
+            bs = lv.basis
+            w  = sum( lv.mc[r]^2  for r = 1:length(bs.csfs)
+                      if  Hamiltonian.configurationKey(
+                              Basics.extractConfiguration(Basics.FromBasis(), bs, bs.csfs[r])) in refKeys )
+            if  w >= 0.5    push!(ls, lv)    end
+        end
+        return( sort(ls, by = l -> l.energy) )
+    end
+    println("\n>> step 2 (valence correlation only), reference-dominated levels, lowest first:")
+    for  (i, lv)  in  enumerate(refLevels(wb["step2"]))
+        println(">>   level $i   J = $(lv.J)   E = $(lv.energy) Ha")
+    end
+    println(">> step 3's own printout above carries the MBPT correction for each of these, in the same ")
+    println(">> energy order within each J -- see 'ShapeCrossingPartition' and the 'deltaE' lines.")
+    #
 
 end
