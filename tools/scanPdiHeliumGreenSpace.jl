@@ -217,12 +217,18 @@ println("\n" * "="^128)
 println("TABLE 2 -- WHERE IT ACTS.  The partial-wave sum fills the MIDDLE of the U;  if the Green space is the")
 println("missing support for those channels, it must take the middle back out again.")
 println("="^128)
+##  `differentialCs` is held in ATOMIC UNITS (a_0^2 per Hartree).  The run of 04-Nov-2026 printed the raw
+##  field under a "[barn/eV]" header and at %.4f, so the middle of the U came out as 0.0000 and the table
+##  was unreadable -- the same unit-label defect that was fixed in this module's own displayResults that
+##  morning, reproduced here within hours.  Convert with the module's OWN conversion rather than a
+##  hand-rolled factor, so that the two cannot drift apart.  The CHANGE column and the U-ratio were and
+##  remain unaffected, being ratios of like quantities.
 @printf("  %12s %16s %16s %12s\n", "eps1 [eV]", "B [barn/eV]", "C [barn/eV]", "change")
 for i in 1:length(results[1][5])
     e1 = Defaults.convertUnits("energy: from atomic to eV", results[1][5][i].epsilon1)
-    dB = results[1][5][i].differentialCs.Coulomb
-    dC = results[2][5][i].differentialCs.Coulomb
-    @printf("  %12.3f %16.4f %16.4f %11.2f %%\n", e1, dB, dC, 100*(dC-dB)/dB)
+    dB = Defaults.convertUnits("energy-diff. cross section: from atomic", results[1][5][i].differentialCs.Coulomb)
+    dC = Defaults.convertUnits("energy-diff. cross section: from atomic", results[2][5][i].differentialCs.Coulomb)
+    @printf("  %12.3f %16.6e %16.6e %11.2f %%\n", e1, dB, dC, 100*(dC-dB)/dB)
 end
 @printf("\n  U-ratio, outermost/equal sharing:  B = %.3f,  C = %.3f   (narrow orbitals at this maxKappa: 4.481)\n",
         results[1][5][1].differentialCs.Coulomb / results[1][5][cld(NSHARE,2)].differentialCs.Coulomb,
