@@ -223,6 +223,16 @@ function  buildRegister()
                 "\"DR\" will also match \"quaDRupole\"; that is a known, accepted limit of keeping the tool " *
                 "genuinely simple, not a defect.")
     println(io)
+    println(io, "**Once you have found your branch, the next question is how to turn it into a number worth " *
+                "quoting** -- and that is a different document. `docs/UserSteps-JAC.txt` walks an occasional " *
+                "user through ten steps from a physics question to a publishable result: classifying the " *
+                "problem against JAC's seven kinds of computation, choosing the mean field and the " *
+                "correlation model as a PHYSICS decision rather than a default, running the smallest case " *
+                "first and then scaling ONE axis at a time, reading JAC's own printed verdicts before " *
+                "reading the number itself, and finally comparing against something JAC did not compute. " *
+                "This register answers WHETHER and WHERE; those ten steps answer HOW -- and their step 2 is " *
+                "the one that sends a reader back here.")
+    println(io)
     println(io, "---")
     println(io)
 

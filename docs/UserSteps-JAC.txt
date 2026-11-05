@@ -26,10 +26,18 @@ PART 1 -- THE TEN STEPS, IN BRIEF
       tool today -- say so before writing any input.
 
    2. Search for the SAME PHYSICS among the examples, not the same function
-      name.  Look in examples/examples.jl and the example-Xx.jl branch files
-      for the process or property in question.  A branch carrying a dated
-      "Last successful" line, with its own numbers written on that line, is
-      worth more than any manual: a human has already judged that physics.
+      name.  START WITH CAPABILITIES.md in the JAC root directory: one entry
+      per example branch, giving the physics it covers and the date a human
+      last judged its numbers, so that "can JAC do this, and where do I
+      start?" is answered in one place.  Search it with
+
+         julia tools/searchCapabilities.jl "<term>"
+
+      and fall back to grepping examples/examples.jl and the example-Xx.jl
+      files for whatever its one-line entries do not settle.  A branch
+      carrying a dated "Last successful" line, with its own numbers written
+      on that line, is worth more than any manual: a human has already
+      judged that physics.
 
    3. Check the size and accuracy ceiling before committing to the case.
       How many open shells, how many configuration state functions (CSF)
@@ -143,7 +151,45 @@ JAC's own convention is to call a QUALIFIED name, such as
 PhotoEmission.Settings or MultipolePolarizibility.computeAmplitudes, almost
 never a bare exported function.  Searching the source tree for a half-
 remembered bare name therefore tends to find almost nothing.  Searching for
-the PHYSICS works far better.  From a shell, inside the JAC directory:
+the PHYSICS works far better.
+
+THE FIRST PLACE TO LOOK IS CAPABILITIES.md, in the JAC root directory.  It
+holds one entry for every branch listed by examples/examples.jl, giving the
+physics that branch covers, the module it exercises, any restriction worth
+knowing before starting, and the date on which a human last judged its
+numbers.  Search it with
+
+   julia tools/searchCapabilities.jl "hyperfine"
+
+which prints each matching entry together with its context, or grep it
+directly:
+
+   grep -i -B1 -A5 "hyperfine" CAPABILITIES.md
+
+BOTH SEARCHES ARE LITERAL SUBSTRING MATCHES, so use the physics word and
+expect to try more than one spelling.  A real case: the register says
+"Polarizibility", which is how JAC spells it throughout, so a search for
+the standard "polarizability" matches NOTHING here even though it does
+match the example files themselves.  If a term you are sure about comes
+back empty, shorten it or try the spelling JAC's own module names use
+before concluding the capability is absent.
+
+An entry marked "unknown/undated" is telling you something rather than
+failing to: the module exists and the branch runs, but nobody has yet
+judged the physics, or an earlier judgement was withdrawn.  That is the
+riskier situation described at the end of this step, and the register puts
+it in front of you instead of leaving you to discover it.
+
+One limit worth knowing, so that the register is not trusted past its
+reach: it is re-derived from the examples at each release and never hand-
+edited in between, so between releases a branch's OWN "Last successful"
+line is the final authority and the register may lag it.  Its dates are
+also per FILE rather than per branch -- the most recent judged date found
+anywhere in that file -- so a file with several branches may show a date
+belonging to a different one than you want.
+
+IF THE REGISTER'S ONE-LINE ENTRIES DO NOT SETTLE IT, grep the examples
+themselves.  From a shell, inside the JAC directory:
 
    grep -il "polarizability" examples/examples.jl examples/example-*.jl
 
@@ -157,8 +203,9 @@ a human already ran this exact kind of case and judged the physics to be
 right -- not merely that the code did not crash.  That example is then the
 best possible starting template: copy its structure, not just its idea.
 
-If nothing resembling the physics in question appears in any example, it is
-honest to say so plainly: the capability may exist in src/ but has never
+If nothing resembling the physics in question appears in the register or in
+any example, it is honest to say so plainly: the capability may exist in
+src/ but has never
 been exercised end to end, which is a different (and riskier) situation
 from reusing a dated, trusted recipe.
 
