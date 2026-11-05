@@ -187,10 +187,15 @@ elseif true
     # still missing from src/ is a check of the FORM rather than the amplitude:  the misfit is reported, but nothing
     # refuses an orbital on it, so a catastrophically wrong orbital would still be scaled confidently.
     #
-    # WHAT IS STILL MISSING FROM src/.  The shared orbitals arrive through the public Representation route, but the
-    # Green space does not:  no Representation carries a caller-supplied orbital set, so it is built here by a
-    # direct Hamiltonian.performCIwithFrozenOrbitals call.  That is the remaining half of the gap this branch was
-    # written for, and it sits on the priority list rather than being worked around silently.
+    # BOTH HALVES NOW GO THROUGH THE PUBLIC ROUTE (05-Nov-2026).  Until then the shared orbitals arrived through
+    # Representation but the Green space did not -- no Representation carried a caller-supplied orbital set, so it
+    # had to be built by a direct Hamiltonian.performCIwithFrozenOrbitals call, outside generate and perform alike.
+    # AtomicState.Representation now carries orbitalSource, the same field Atomic.Computation has carried since
+    # 02-Nov-2026, so the Green space below is an ordinary generate(Representation) call and a reader can reproduce
+    # this branch without leaving the documented interface.  The numbers did not move, and BOTH branches were run
+    # to establish it rather than one:  branch (c) reproduced 8.659709e+02 / 2.874448e+03 barn at 400 eV and
+    # 5.411607e+02 / 1.637261e+03 at 500 eV, and branch (d) all 7 numbers on its own dated claim line, each
+    # digit for digit against the pre-change run.  That is what licenses this note.
     name        = "He-like Be, one orbital set"
     nm          = Nuclear.Model(4.01)
     spanConfigs = [Configuration("1s^2"), Configuration("1s 2s"), Configuration("1s 2p")]
@@ -200,8 +205,10 @@ elseif true
     #
     ## the (N-1)-electron ionic cores, as a CI on that SAME set;  generateIntermediateLevels then attaches one
     ## continuum orbital to each, which is what makes the intermediates two-electron states again
-    gMultiplet  = Hamiltonian.performCIwithFrozenOrbitals([Configuration("1s"), Configuration("2s"), Configuration("2p")],
-                                                          orbitals, nm, grid, AsfSettings() )
+    wg          = Representation(name * " -- Green space", nm, grid,
+                                 [Configuration("1s"), Configuration("2s"), Configuration("2p")],
+                                 MeanFieldMultiplet(MeanFieldSettings()); orbitalSource = Basics.GivenOrbitals(orbitals) )
+    gMultiplet  = generate(wg, output=true)[ResultKeys.MeanFieldMultiplet]
     #
     doubleSettings = PhotoDoubleIonization.Settings(PhotoDoubleIonization.Settings();
                          multipoles=[E1], gauges=[UseCoulomb, UseBabushkin], photonEnergies=[400., 500.],
@@ -346,8 +353,10 @@ elseif true
     #
     ## the (N-1)-electron ionic cores on that SAME set, exactly as in branch (c);  four levels, which the 4 -> 9
     ## null above licenses and which is what makes a run of this size affordable
-    gMultiplet  = Hamiltonian.performCIwithFrozenOrbitals([Configuration("1s"), Configuration("2s"), Configuration("2p")],
-                                                          orbitals, nmHe, gridHe, AsfSettings() )
+    wg          = Representation(name * " -- Green space", nmHe, gridHe,
+                                 [Configuration("1s"), Configuration("2s"), Configuration("2p")],
+                                 MeanFieldMultiplet(MeanFieldSettings()); orbitalSource = Basics.GivenOrbitals(orbitals) )
+    gMultiplet  = generate(wg, output=true)[ResultKeys.MeanFieldMultiplet]
     #
     doubleSettings = PhotoDoubleIonization.Settings(PhotoDoubleIonization.Settings();
                          multipoles=[E1], gauges=[UseCoulomb, UseBabushkin], photonEnergies=[200.],

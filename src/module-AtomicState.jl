@@ -1475,6 +1475,24 @@ end
     + grid             ::Radial.Grid                 ... The radial grid to be used for the computation.
     + refConfigs       ::Array{Configuration,1}      ... List of references configurations, at least 1.
     + repType          ::AbstractRepresentationType  ... Specifies the particular representation.
+    + orbitalSource    ::Basics.AbstractOrbitalSource
+        ... says WHICH one-electron orbital set the representation is generated on.  `SeparateOrbitals()` is the default and is what JAC has
+            always done:  the generator runs its own SCF on `refConfigs`.  `GivenOrbitals(orbitals)` instead hands the generator a set the
+            CALLER already holds, and every multiplet of the representation is then a CI on it, built by
+            `Hamiltonian.performCIwithFrozenOrbitals` with no further orbital optimization.
+
+            WHY IT IS HERE AS WELL AS ON `Atomic.Computation` (added 05-Nov-2026).  An explicit SECOND-ORDER amplitude is valid only
+            on ONE orthonormal set, because `ManyElectron.matrixElement_HminusE` drops the overlap term `-E <r|s>`, which vanishes
+            identically only then.  `Atomic.Computation` has carried `orbitalSource` since 02-Nov-2026, so the PROCESS half of such a
+            computation could be put on one set -- but its Green space is a `Representation`, which could not be, and a caller who
+            wanted both halves consistent had to leave the `generate` route and call `Hamiltonian.performCIwithFrozenOrbitals` by
+            hand.  That is what every second-order harness in `tools/` and both second-order branches of `examples/example-Dj.jl`
+            did.  Both halves are now reachable through the ordinary route.
+
+            ONLY `SeparateOrbitals()` AND `GivenOrbitals(...)` MEAN ANYTHING HERE.  A representation has no initial/final pair, so
+            `InitialStateOrbitals()` and `FinalStateOrbitals()` have nothing to refer to, and `Basics.generate` raises on them
+            rather than quietly picking one of the two.  Not every representation can honour a given set either -- one whose whole
+            purpose is to OPTIMIZE orbitals cannot -- and those generators raise as well;  see `Basics.generate` for which do what.
 """
 struct  Representation
     name               ::String  
@@ -1482,6 +1500,7 @@ struct  Representation
     grid               ::Radial.Grid
     refConfigs         ::Array{Configuration,1} 
     repType            ::AbstractRepresentationType
+    orbitalSource      ::Basics.AbstractOrbitalSource
 end
 
 
@@ -1489,7 +1508,26 @@ end
 `AtomicState.Representation()`  ... constructor for an 'empty' instance of the a variable::AtomicState.Representation
 """
 function Representation()
-    Representation("", Nuclear.Model(1.0), Radial.Grid(), ManyElectron.Configuration[], CiExpansion())
+    Representation("", Nuclear.Model(1.0), Radial.Grid(), ManyElectron.Configuration[], CiExpansion(), Basics.SeparateOrbitals())
+end
+
+
+"""
+`AtomicState.Representation(name::String, nuclearModel::Nuclear.Model, grid::Radial.Grid, refConfigs::Array{Configuration,1},
+                            repType::AbstractRepresentationType; orbitalSource::Basics.AbstractOrbitalSource=Basics.SeparateOrbitals())`
+    ... the five-argument constructor, which is how a representation has always been written down and goes on meaning exactly what it
+        meant: the generator runs its own SCF on `refConfigs`.  The sixth field is reached by the keyword, so that a caller who holds an
+        orbital set already -- the one case where a second-order amplitude is valid at all -- can hand it over without the positional
+        form.  A `rep::AtomicState.Representation` is returned.
+
+            orbitals = res[ResultKeys.MeanFieldMultiplet].levels[1].basis.orbitals
+            rep      = Representation(name, nm, grid, [Configuration("1s"), Configuration("2s"), Configuration("2p")],
+                                      MeanFieldMultiplet(MeanFieldSettings()); orbitalSource = Basics.GivenOrbitals(orbitals) )
+"""
+function Representation(name::String, nuclearModel::Nuclear.Model, grid::Radial.Grid, refConfigs::Array{Configuration,1},
+                        repType::AbstractRepresentationType; orbitalSource::Basics.AbstractOrbitalSource=Basics.SeparateOrbitals())
+
+    return( AtomicState.Representation(name, nuclearModel, grid, refConfigs, repType, orbitalSource) )
 end
 
 
@@ -1594,10 +1632,11 @@ end
     + repType       ::AbstractRepresentationType         ... the expansion to be generated.
 """
 function Representation(name::String, nuclearModel::Nuclear.Model, refConfigs::Array{Configuration,1},
-                        repType::AbstractRepresentationType; printout::Bool=true)
+                        repType::AbstractRepresentationType; printout::Bool=true,
+                        orbitalSource::Basics.AbstractOrbitalSource=Basics.SeparateOrbitals())
     grid = Basics.recommendedGrid(refConfigs, nuclearModel, printout=printout)
 
-    return( AtomicState.Representation(name, nuclearModel, grid, refConfigs, repType) )
+    return( AtomicState.Representation(name, nuclearModel, grid, refConfigs, repType, orbitalSource) )
 end
 
 
@@ -1616,6 +1655,9 @@ function Base.show(io::IO, rep::Representation)
     println(io, "representation type:   $(rep.repType)  ")
     println(io, "nuclearModel:          $(rep.nuclearModel)  ")
     println(io, "grid:                  $(rep.grid)  ")
+    if  rep.orbitalSource != Basics.SeparateOrbitals()
+        println(io, "orbitalSource:         $(rep.orbitalSource)  ")
+    end
 end
 
 

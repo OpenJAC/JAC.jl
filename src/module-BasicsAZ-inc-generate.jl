@@ -22,6 +22,47 @@ function Basics.generate(representation::AtomicState.Representation; output::Boo
 end
 
 
+"""
+`BasicsAZ.representationOrbitals(rep::AtomicState.Representation, repTypeName::String)`
+    ... resolves `rep.orbitalSource` for a generator that CAN be put on an orbital set the caller already holds.  `nothing` is
+        returned for `Basics.SeparateOrbitals()`, which means the generator runs its own SCF exactly as it always has, and the
+        orbital dictionary is returned for `Basics.GivenOrbitals(orbitals)`, which means the generator instead builds every
+        multiplet as a CI on that set.  Any other source RAISES, naming the two that mean something for a representation.  An
+        `orbitals::Union{Nothing,Dict{Subshell,Orbital}}` is returned.
+"""
+function representationOrbitals(rep::AtomicState.Representation, repTypeName::String)
+    source = rep.orbitalSource
+    if      source isa Basics.SeparateOrbitals    orbitals = nothing
+    elseif  source isa Basics.GivenOrbitals       orbitals = source.orbitals
+    else
+        error("Basics.generate(): rep.orbitalSource is $(source), which a representation cannot honour -- a $repTypeName has "   *
+              "no initial/final pair for Basics.InitialStateOrbitals() or Basics.FinalStateOrbitals() to refer to.  The two "    *
+              "values that mean something here are Basics.SeparateOrbitals(), where the generator runs its own SCF on "         *
+              "refConfigs, and Basics.GivenOrbitals(orbitals), where every multiplet becomes a CI on the set you hand it.  "    *
+              "See Basics.AbstractOrbitalSource.")
+    end
+
+    return( orbitals )
+end
+
+
+"""
+`BasicsAZ.requireSeparateOrbitals(rep::AtomicState.Representation, repTypeName::String, why::String)`
+    ... guards a generator that CANNOT be put on a caller-supplied orbital set, and raises an error quoting `why` whenever
+        `rep.orbitalSource` asks for one;  `nothing` is returned.  It exists so that `orbitalSource` is never a SILENT no-op:
+        a field that some generators honour and others ignore without saying so is worse than no field at all, because the
+        calculation then runs on the orbitals the user believes they replaced.
+"""
+function requireSeparateOrbitals(rep::AtomicState.Representation, repTypeName::String, why::String)
+    if  !(rep.orbitalSource isa Basics.SeparateOrbitals)
+        error("Basics.generate(): rep.orbitalSource is $(rep.orbitalSource), but a $repTypeName cannot be generated on a "  *
+              "caller-supplied orbital set -- " * why * ".  Leave rep.orbitalSource at its default "                        *
+              "Basics.SeparateOrbitals();  see Basics.AbstractOrbitalSource.")
+    end
+
+    return( nothing )
+end
+
 
 """
 `Basics.generate(repType::AtomicState.MeanFieldBasis, representation::AtomicState.Representation)`  
@@ -31,6 +72,11 @@ end
 `Basics.generate(repType::AtomicState.MeanFieldBasis, representation::AtomicState.Representation; output::Bool=false)`  
     ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
         specifications of the representation but can easily accessed by the keys of this dictionary.
+
+        EITHER THE GENERATOR RUNS ITS OWN SCF OR IT IS GIVEN THE ORBITALS, according to `rep.orbitalSource`:  the default
+        `Basics.SeparateOrbitals()` is what this generator has always done, while `Basics.GivenOrbitals(orbitals)` builds
+        the result as a CI on a set the caller already holds, which is the one case where an explicit second-order amplitude
+        through these levels is valid at all.  See the `orbitalSource` note in `AtomicState.Representation`.
 """
 function Basics.generate(repType::AtomicState.MeanFieldBasis, rep::AtomicState.Representation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
@@ -42,7 +88,16 @@ function Basics.generate(repType::AtomicState.MeanFieldBasis, rep::AtomicState.R
     asfSettings = AsfSettings(AsfSettings(); scField=repType.settings.scField,
                                               gridStopper=repType.settings.gridStopper) 
     
-    multiplet      = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    # WHICH ORBITAL SET THIS BASIS IS BUILT ON -- rep.orbitalSource, see Basics.AbstractOrbitalSource.  The
+    # SeparateOrbitals() branch is character for character what this generator always did.
+    frozenOrbitals = BasicsAZ.representationOrbitals(rep, "MeanFieldBasis")
+    if  isnothing(frozenOrbitals)
+        multiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    else
+        BasicsAZ.checkFrozenOrbitalsSpan(frozenOrbitals, rep.refConfigs, "refConfigs", "rep.orbitalSource")
+        multiplet  = Hamiltonian.performCIwithFrozenOrbitals(rep.refConfigs, frozenOrbitals, nModel, rep.grid,
+                                                             asfSettings; printout=true)
+    end
     basis          = multiplet.levels[1].basis
     if output    results = Base.merge( results, Dict("mean-field basis" => basis) )          end
     
@@ -58,6 +113,11 @@ end
 `Basics.generate(repType::AtomicState.MeanFieldMultiplet, representation::AtomicState.Representation; output::Bool=false)`  
     ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
         specifications of the representation but can easily accessed by the keys of this dictionary.
+
+        EITHER THE GENERATOR RUNS ITS OWN SCF OR IT IS GIVEN THE ORBITALS, according to `rep.orbitalSource`:  the default
+        `Basics.SeparateOrbitals()` is what this generator has always done, while `Basics.GivenOrbitals(orbitals)` builds
+        the result as a CI on a set the caller already holds, which is the one case where an explicit second-order amplitude
+        through these levels is valid at all.  See the `orbitalSource` note in `AtomicState.Representation`.
 """
 function Basics.generate(repType::AtomicState.MeanFieldMultiplet, rep::AtomicState.Representation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
@@ -69,7 +129,18 @@ function Basics.generate(repType::AtomicState.MeanFieldMultiplet, rep::AtomicSta
     asfSettings = AsfSettings(AsfSettings(); scField=repType.settings.scField,
                                               gridStopper=repType.settings.gridStopper) 
     
-    multiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    # WHICH ORBITAL SET THIS MULTIPLET IS BUILT ON -- rep.orbitalSource, see Basics.AbstractOrbitalSource.  This
+    # is the route a SECOND-ORDER caller needs:  it holds the orbitals already, and its Green space must sit on
+    # the same ones as its initial and final states, because ManyElectron.matrixElement_HminusE drops the overlap
+    # term -E <r|s> and that vanishes identically only on ONE orthonormal set.
+    frozenOrbitals = BasicsAZ.representationOrbitals(rep, "MeanFieldMultiplet")
+    if  isnothing(frozenOrbitals)
+        multiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+    else
+        BasicsAZ.checkFrozenOrbitalsSpan(frozenOrbitals, rep.refConfigs, "refConfigs", "rep.orbitalSource")
+        multiplet  = Hamiltonian.performCIwithFrozenOrbitals(rep.refConfigs, frozenOrbitals, nModel, rep.grid,
+                                                             asfSettings; printout=true)
+    end
     if output    
         ## `levels`, not `level` (fixed 06-Aug-2026): this typo made generate(MeanFieldMultiplet, ...) raise a
         ## FieldError for every call with output=true, i.e. the only useful call. It survived because the one
@@ -97,6 +168,9 @@ function Basics.generate(repType::AtomicState.OneElectronSpectrum, rep::AtomicSt
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     nModel    = rep.nuclearModel
     settings  = repType.settings
+    BasicsAZ.requireSeparateOrbitals(rep, "OneElectronSpectrum",
+                 "its reference SCF is there to BUILD the mean potential that the spectrum is then generated in, and a "  *
+                 "set of orbitals carries no potential to generate anything in")
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
     asfSettings   = AsfSettings()   ## Use default settings to define a first multiplet from the reference configurations;
                                     ## all further details are specified for each step
@@ -153,6 +227,14 @@ function Basics.generate(repType::AtomicState.CiExpansion, rep::AtomicState.Repr
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     nModel    = rep.nuclearModel
     orbitals  = repType.applyOrbitals
+    # A CiExpansion ALREADY takes the orbital set outright and runs no SCF at all, so rep.orbitalSource would be a
+    # second and conflicting way to say the same thing.  Pointing at the field that works beats honouring both.
+    if  !(rep.orbitalSource isa Basics.SeparateOrbitals)
+        error("Basics.generate(): a CiExpansion already takes its orbital set OUTRIGHT, as repType.applyOrbitals, and runs "  *
+              "no SCF at all -- so rep.orbitalSource would be a second, conflicting way to say the same thing.  Put the "     *
+              "set into CiExpansion(orbitals, excitations, settings) and leave rep.orbitalSource at its default "             *
+              "Basics.SeparateOrbitals();  see Basics.AbstractOrbitalSource.")
+    end
     
     # Generate a list of relativistic configurations and  CSF's for the given subshell list
     relconfList = ConfigurationR[]
@@ -749,6 +831,9 @@ end
 function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Representation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     nModel   = rep.nuclearModel
+    BasicsAZ.requireSeparateOrbitals(rep, "RasExpansion",
+                 "a RAS expansion exists to OPTIMIZE orbitals layer by layer, so freezing the whole set would reduce "  *
+                 "every layer to a plain CI and leave the expansion with nothing to vary")
     # First perform a SCF+CI computations for the reference configurations below to generate a spectrum of start orbitals
     asfSettings    = AsfSettings()  ## Use default settings to define a first multiplet from the reference configurations;
                                     ## all further details are specified for each step
@@ -833,6 +918,9 @@ function Basics.generate(repType::AtomicState.RasExpansion, rep::AtomicState.Rep
                           auto::AtomicState.RasAutoSettings; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     nModel   = rep.nuclearModel
+    BasicsAZ.requireSeparateOrbitals(rep, "RasExpansion",
+                 "a RAS expansion exists to OPTIMIZE orbitals layer by layer, so freezing the whole set would reduce "  *
+                 "every layer to a plain CI and leave the expansion with nothing to vary")
     asfSettings    = AsfSettings()
     priorMultiplet = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
     nuclearPot     = Nuclear.nuclearPotential(nModel, rep.grid)
@@ -939,6 +1027,11 @@ end
 `Basics.generate(repType::AtomicState.GreenExpansion, representation::AtomicState.Representation; output::Bool=false)`  
     ... to generate the same but to return the complete output in a dictionary; the particular output depends on the type and 
         specifications of the representation but can easily accessed by the keys of this dictionary.
+
+        EITHER THE GENERATOR RUNS ITS OWN SCF OR IT IS GIVEN THE ORBITALS, according to `rep.orbitalSource`:  the default
+        `Basics.SeparateOrbitals()` is what this generator has always done, while `Basics.GivenOrbitals(orbitals)` builds
+        the result as a CI on a set the caller already holds, which is the one case where an explicit second-order amplitude
+        through these levels is valid at all.  See the `orbitalSource` note in `AtomicState.Representation`.
 """
 function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.Representation; output::Bool=false)
     if  output    results = Dict{String, Any}()    else    results = nothing    end
@@ -950,18 +1043,27 @@ function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.R
     ## matched to the potential of the computation that consumes it. That matters because a Green expansion is
     ## normally used as the INTERMEDIATE spectrum of a second-order calculation, where gauge invariance requires
     ## the same one-body Hamiltonian throughout.
-    asfSettings   = AsfSettings(AsfSettings(); scField=settings.scField)
-    refMultiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
-    refBasis      = refMultiplet.levels[1].basis
-    nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
-    ## A NuclearField carries no electronic part at all; adding a DFS screening term on top of it would silently
-    ## reintroduce the very mismatch this field exists to remove.
-    if  typeof(settings.scField) == Basics.NuclearField
-        electronicPot = Radial.Potential("zero", zeros(length(rep.grid.r)), rep.grid)
-    else
-        electronicPot = Basics.computePotential(Basics.DFSField(1.0), rep.grid, refBasis)
+    # WHICH ORBITAL SET THE GREEN CHANNELS ARE BUILT ON -- rep.orbitalSource, see Basics.AbstractOrbitalSource.
+    # On SeparateOrbitals(), the default, everything below runs as it always has: a reference SCF, a mean potential
+    # from it, and a B-spline spectrum generated in that potential.  On GivenOrbitals(...) none of that is wanted --
+    # the caller holds the set, the whole point being that the Green space and the states it connects are then
+    # eigenfunctions of ONE one-body Hamiltonian, which is what makes a second-order amplitude gauge-invariant.
+    # So the SCF, the potential and the spectrum are all skipped, and the given orbitals are used directly.
+    frozenOrbitals = BasicsAZ.representationOrbitals(rep, "GreenExpansion")
+    if  isnothing(frozenOrbitals)
+        asfSettings   = AsfSettings(AsfSettings(); scField=settings.scField)
+        refMultiplet  = SelfConsistent.performSCF(rep.refConfigs, nModel, rep.grid, asfSettings; printout=true)
+        refBasis      = refMultiplet.levels[1].basis
+        nuclearPot    = Nuclear.nuclearPotential(nModel, rep.grid)
+        ## A NuclearField carries no electronic part at all; adding a DFS screening term on top of it would silently
+        ## reintroduce the very mismatch this field exists to remove.
+        if  typeof(settings.scField) == Basics.NuclearField
+            electronicPot = Radial.Potential("zero", zeros(length(rep.grid.r)), rep.grid)
+        else
+            electronicPot = Basics.computePotential(Basics.DFSField(1.0), rep.grid, refBasis)
+        end
+        meanPot       = Basics.add(nuclearPot, electronicPot)
     end
-    meanPot       = Basics.add(nuclearPot, electronicPot)
     
     println("")
     printstyled("Compute an approximate Green function expansion ... \n", color=:light_green)
@@ -976,8 +1078,15 @@ function Basics.generate(repType::AtomicState.GreenExpansion, rep::AtomicState.R
     
     # Generate shell list abd a full single-electron spectrum for this potential
     subshellList = Basics.extractRelativisticSubshellList(confList)                      ## extract all subshells that occur in confList
-    primitives   = Bsplines.generatePrimitives(rep.grid)
-    orbitals     = Bsplines.generateOrbitals(subshellList, meanPot, nModel, primitives, printout=true) ## generate a spectrum of sufficient size
+    if  isnothing(frozenOrbitals)
+        primitives   = Bsplines.generatePrimitives(rep.grid)
+        # generate a spectrum of sufficient size
+        orbitals     = Bsplines.generateOrbitals(subshellList, meanPot, nModel, primitives, printout=true)
+    else
+        ## The given set must SPAN the Green space, or the CI below fails with a bare KeyError from inside Dict.
+        BasicsAZ.checkFrozenOrbitalsSpan(frozenOrbitals, confList, "the Green-space configurations", "rep.orbitalSource")
+        orbitals     = frozenOrbitals
+    end
     Defaults.setDefaults("relativistic subshell list", subshellList; printout=true)
     Basics.display(stdout, orbitals, rep.grid)
 
