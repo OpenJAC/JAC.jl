@@ -138,7 +138,11 @@
     Landing between C2 and the data is still the right place to land -- K&M's own C3 gives 23.9 % there, and
     their paper says the ratio is "up to five times larger than the data" at intermediate energies, so agreeing
     with C3 would still have been a failure -- but this is an ORDER-AND-SIGN result and must not be quoted as
-    agreement. It is carried as priority item 6 (Nov-2026 numbering). Three cautions:
+    agreement. IT IS NO LONGER AN OPEN DEFECT ON THE PRIORITY LIST: it was carried as item 6 (Nov-2026
+    numbering) and CLOSED on 05-Nov-2026, parked as challenge S35 with the question OPEN, after BOTH of its
+    named suspects had been tested and exonerated -- the bound Green space and the shared orbital set, below.
+    It returns if an explicit application needs an absolute helium double-ionization cross section, or any
+    absolute second-order amplitude from this junction. Three cautions:
       * EVERY NUMERICAL TRUNCATION IS NOW MEASURED AND EVERY ONE IS UNDER 1 %: box 0.05 % over 24 -> 40 a.u.,
         sharings +0.58 % over 5 -> 21, intermediate mesh -0.87 % then +0.24 % over 9 -> 17 -> 25 (non-monotone,
         hence converged), partial waves +0.8 % over maxKappa 3 -> 4. Against a 20-50 % discrepancy with the
@@ -151,9 +155,38 @@
         0.13 %. It accounts for NEITHER the overshoot nor the gauge gap. One caveat on that null: the
         n = 3 orbitals the configuration-averaged mean field generates are over-screened -- Z_eff = 0.67,
         0.56, 0.44 for 3s, 3p, 3d against the 2 a He+ state should see -- so what is exonerated is the
-        Green space AS THIS SHARED ORBITAL SET CAN REPRESENT IT, and a V^(N-1) set would be the clean
-        test. Widening the span itself did move the total, +3.7 % Coulomb and +5.1 % Babushkin, which is
-        a basis effect and not a Green-space one.
+        Green space AS THIS SHARED ORBITAL SET CAN REPRESENT IT. Widening the span itself did move the
+        total, +3.7 % Coulomb and +5.1 % Babushkin, which is a basis effect and not a Green-space one.
+      * AND THE SHARED ORBITAL SET IS NOT THE LEVER EITHER. The V^(N-1) test that the caveat above asked for
+        was built and run on 05-Nov-2026, together with four further sets, each converged at maxKappa = 3:
+
+            set        mean field / span       eps(1s)   1st-order gauge   2nd-order gap   Bab/Cou   sigma(2+)
+            V^(N-1)    AL on 1s,2s,2p,n=3      -2.0001        4.19 %          138.56 %      2.386    4582 barn
+            AL n=3     AL on 1s^2 + n=2,n=3    -1.7144        6.99 %          121.29 %      2.213    3933
+            DFS n=3    DFS on 1s^2 + n=2,n=3   -1.2103       13.13 %          137.70 %      2.377    2902
+            DFS n=2    DFS on 1s^2 + n=2       -1.1008       13.33 %          132.70 %      2.346    2798
+            HS n=2     HS on 1s^2 + n=2        -1.0033       17.47 %          147.85 %      2.479    2268
+
+        The first-order gauge deviation falls by a FACTOR 4.2 and the second-order gap does not follow it:
+        121-148 %, a factor 1.11, and not even monotone -- the best first-order set gives 138.56 % while
+        DFS n=2, three times worse at first order, gives 132.70 %. A straight-line fit gives r = 0.551,
+        which on five points is indistinguishable from noise, and a slope of 0.999 points per point. Take
+        that trend entirely at face value -- the reading most generous to the orbital hypothesis -- and the
+        gap at ZERO first-order error is still 124.6 %, so the conclusion survives whether or not the trend
+        is believed: THE ORBITAL AXIS CANNOT CLOSE THIS GAP.
+      * WHAT THE ORBITAL SET DOES CONTROL IS THE MAGNITUDE, and that is the more useful half: sigma(2+) runs
+        2268 -> 4582 barn, a factor 2.02, STRICTLY MONOTONE in eps(1s), while the gauge gap wanders in a
+        10 % band. The two symptoms therefore SEPARATE -- whatever is wrong multiplies both gauges by an
+        orbital-independent ~2.4 while the absolute scale rides on the 1s binding -- so a candidate
+        mechanism must be nearly gauge-symmetric and nearly orbital-independent. That is a sharper
+        constraint on the defect than the overshoot alone.
+      * AND THE TWO ANCHORS CANNOT BE SATISFIED TOGETHER, which anyone retuning the orbitals must know
+        first. Gauge consistency of <eps|r|1s> optimizes at the He+ limit, eps(1s) = -2.0; the observable
+        sigma(+) optimizes near eps(1s) = -1.0, where HS reproduces K&M to -0.0 % and gives the closest
+        ratio of the five, 4.172 %; and the exact He ground state (AL on 1s^2 alone, eps(1s) = -0.917942)
+        is at the wrong end of BOTH. No single shared set satisfies both, and the proper treatment -- two
+        sets with a biorthogonal transformation -- collides head-on with the one-shared-orbital-set
+        precondition this construction rests on. The worked record is examples/example-Dj.jl branch (d).
       * The LENGTH form is far outside the band and CONVERGING THE SUM MAKES IT WORSE: 8.2 % at maxKappa = 2
         against 13.10 % at maxKappa = 4, where velocity moved 3.868 -> 4.741 %. That is the direction K&M's own
         large length-velocity discrepancy predicts. Only velocity is being compared -- and Babushkin/Coulomb
