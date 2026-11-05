@@ -109,4 +109,97 @@ elseif  true
     println("     reference mc = $refMcSub")
     println("     best match (allowing for the usual overall-sign ambiguity of an eigenvector) = $(min(diffPlus,diffMinus))")
     #
+elseif  false
+    # Last visit:  05-Nov-2026
+    # Branch c: TERM-DEPENDENT orbitals (competition item 14's first test case). The SAME 2p shell of
+    #   carbon-like 1s^2 2s^2 2p^2 is optimized SEPARATELY for two different LS terms of the SAME
+    #   configuration: orbital set "D", an EOL field targeted (levelSelectionCI) on the ^1D_2 level alone,
+    #   and orbital set "P", an EOL field targeted on the ^3P term (its three J-levels together). Both
+    #   sides share the identical configuration and CSF space but carry genuinely different, mutually
+    #   non-orthogonal 2p orbitals -- precisely the case BiOrthogonal.jl's already-validated BoundStatePair
+    #   mode exists for. NO new src/ code: this is purely a new example branch over existing, already-
+    #   validated machinery (Atomic.Computation's independent initial-/final-side SCF, LevelSelection by
+    #   indices, PhotoEmission's calcBiorthogonal). The indices assume the textbook Hund's-rule order for a
+    #   p^2 ground configuration, ^3P_0 < ^3P_1 < ^3P_2 < ^1D_2 < ^1S_0 (indices 1..5) -- CONFIRMED by this
+    #   run's own printed J/parity/energy tables below, in BOTH orbital sets (levels 1-3 cluster within a
+    #   few meV, level 4 sits ~1.59 eV above as the lone J=2, level 5 ~2.38-3.98 eV above as the lone J=0).
+    #
+    #   REPORT (run via a scratch copy with this branch's guard flipped true, the others false; this branch
+    #   itself stays `elseif false` pending the maintainer's own physical judgement -- see below):
+    #   2p orbital overlaps BEFORE bi-orthogonalization (the term-dependence signal itself): 1s 1-<i|f>=
+    #   5.7e-9, 2s 1.2e-5, 2p_1/2 5.55e-4, 2p_3/2 5.60e-4 -- the 2p shell (the one actually driving the
+    #   1D2/3P term split) shows ~100x the non-orthogonality of the untouched 1s core, exactly the expected
+    #   signature. AFTER BiOrthogonal.generateBiorthogonalShellMatrices: every overlap is 1 to 1e-15.
+    #   The real [C I] 1D2 -> 3P2 forbidden line (the astrophysical 9850/9824 A auroral-type doublet's
+    #   analogue here, M1+E2, same parity, both levels from this one configuration), WITH vs WITHOUT
+    #   term-dependent orbitals:
+    #     Quantity            WITH (calcBiorthogonal)      WITHOUT (one shared EOL set)      change
+    #     Energy [eV]              1.556163                     1.586375                    -1.9%
+    #     M1 [1/s]                 4.702e-04                    4.030e-04                   +16.7%
+    #     E2 Coulomb [1/s]         5.947e-06                    5.955e-07                    +899%  (~10x)
+    #     E2 Babushkin [1/s]       2.621e-01                    6.698e-02                    +291%  (~3.9x)
+    #   Term-dependence is NOT a small correction here: the E2 rate (in either gauge) changes by a factor of
+    #   several, which is itself a believable result for a p^2 forbidden line -- this exact class of
+    #   transition is a textbook example of strong correlation/term sensitivity. BUT the Babushkin/Coulomb
+    #   gauge ratio is enormous in BOTH cases (551 WITH, 167 WITHOUT) and the module's own quality flags both
+    #   read "CF critical" -- an uncorrelated single-configuration DHF calculation is known to be a poor
+    #   description of this kind of forbidden line, so the ABSOLUTE rates above are not to be trusted, only
+    #   the mechanism (independent EOL targets + BoundStatePair biorthogonalization, end to end, no new
+    #   src/ code) and the qualitative conclusion that term-dependence materially changes the computed rate.
+    #   `# Last successful` is deliberately left blank: this needs a human physics judgement (whether the
+    #   relative shift is itself believable, whether a correlated reference configuration would be a fairer
+    #   test), not a mechanical one -- see Rule 7.
+    grid = Radial.Grid(true)
+    nm   = Nuclear.Model(6.)
+    config = [Configuration("1s^2 2s^2 2p^2")]
+
+    asfD = AsfSettings(AsfSettings(); scField=Basics.EOLField(), levelSelectionCI=LevelSelection(true, indices=[4]))
+    asfP = AsfSettings(AsfSettings(); scField=Basics.EOLField(), levelSelectionCI=LevelSelection(true, indices=[1,2,3]))
+
+    compD = Atomic.Computation(Atomic.Computation(), name="An: 2p^2, EOL on 1D2 alone", grid=grid, nuclearModel=nm,
+                                configs=config, asfSettings=asfD)
+    compP = Atomic.Computation(Atomic.Computation(), name="An: 2p^2, EOL on the 3P term", grid=grid, nuclearModel=nm,
+                                configs=config, asfSettings=asfP)
+    wbD = perform(compD; output=true);   wbP = perform(compP; output=true)
+    mpD = wbD[ResultKeys.Multiplet];      mpP = wbP[ResultKeys.Multiplet]
+
+    println("\n>> Orbital set D (EOL on 1D2) -- level table (index, J, parity, energy):")
+    for (i, lev) in enumerate(mpD.levels)    println("     $i:  J=$(lev.J)  parity=$(lev.parity)  energy=$(lev.energy)")    end
+    println(">> Orbital set P (EOL on the 3P term) -- level table (index, J, parity, energy):")
+    for (i, lev) in enumerate(mpP.levels)    println("     $i:  J=$(lev.J)  parity=$(lev.parity)  energy=$(lev.energy)")    end
+
+    bD = mpD.levels[1].basis;   bP = mpP.levels[1].basis
+    println("\n>> 2p orbital overlaps BEFORE bi-orthogonalization (the TERM-DEPENDENCE signal -- should deviate from 1):")
+    for sh in intersect(bD.subshells, bP.subshells)
+        ov = RadialIntegrals.overlap(bD.orbitals[sh], bP.orbitals[sh], grid)
+        println("     <$sh (1D2-optimized)|$sh (3P-optimized)> = $ov")
+    end
+
+    newD, newP = BiOrthogonal.generateBiorthogonalShellMatrices(bD, bP, grid)
+    println(">> 2p orbital overlaps AFTER bi-orthogonalization (should be exactly 1):")
+    for sh in bD.subshells
+        println("     <$sh (new-D)|$sh (new-P)> = $(RadialIntegrals.overlap(newD[sh], newP[sh], grid))")
+    end
+
+    println("\n>> The real [C I] forbidden line, 1D2 -> 3P2 (M1+E2), WITH term-dependent orbitals (calcBiorthogonal):")
+    photoSettings = PhotoEmission.Settings(PhotoEmission.Settings(), multipoles=[M1,E2], gauges=[UseCoulomb,UseBabushkin],
+                                            lineSelection=LineSelection(true, indexPairs=[(4,3)]),
+                                            printBefore=true, calcBiorthogonal=true)
+    compTD = Atomic.Computation(Atomic.Computation(), name="An: 1D2 -> 3P2, term-dependent orbitals",
+                grid=grid, nuclearModel=nm,
+                initialConfigs=config, initialAsfSettings=asfD,
+                finalConfigs=config,   finalAsfSettings=asfP,
+                processSettings=photoSettings)
+    perform(compTD; output=true)
+
+    println("\n>> SAME line, ONE shared EOL orbital set over all 5 levels (no term-dependence -- baseline):")
+    asfShared = AsfSettings(AsfSettings(); scField=Basics.EOLField())
+    photoSettingsShared = PhotoEmission.Settings(photoSettings; calcBiorthogonal=false)
+    compShared = Atomic.Computation(Atomic.Computation(), name="An: 1D2 -> 3P2, shared orbitals",
+                grid=grid, nuclearModel=nm,
+                initialConfigs=config, initialAsfSettings=asfShared,
+                finalConfigs=config,   finalAsfSettings=asfShared,
+                processSettings=photoSettingsShared)
+    perform(compShared; output=true)
+    #
 end
