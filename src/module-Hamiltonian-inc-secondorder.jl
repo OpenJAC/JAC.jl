@@ -593,6 +593,34 @@ end
 
 
 """
+`Hamiltonian.foldNearDegenerateQCluster(ePLevel::Float64, hqqCluster::Array{Float64,1}, couplingCluster::Array{Float64,1})`
+    ... folds a P target level together with a cluster of Q-CSFs whose Epstein-Nesbet denominator with it is too
+        small for ordinary non-degenerate perturbation theory to be trusted (see
+        `secondOrderShapeCrossingCorrection`'s own classification, priority item 5's dense-Q half). Builds the
+        small `(1+n) x (1+n)` matrix with `ePLevel` and `hqqCluster` on the diagonal and `couplingCluster` in the
+        first row/column -- Q-Q off-diagonals are zero, since no such matrix element is ever computed by the
+        caller -- diagonalizes it, and returns the shift of the eigenvalue closest to `ePLevel`, relative to
+        `ePLevel` itself. Validated against a hand-built toy case before being wired in: reduces to the ordinary
+        `-coupling^2/dd` sum to machine precision in the well-separated limit, matches the closed-form 2x2
+        degenerate-PT result for a single flagged CSF, and matches a direct external diagonalization for a
+        multi-CSF cluster. A `shift::Float64` is returned.
+"""
+function foldNearDegenerateQCluster(ePLevel::Float64, hqqCluster::Array{Float64,1}, couplingCluster::Array{Float64,1})
+    n = length(hqqCluster)
+    M = zeros(1+n, 1+n)
+    M[1,1] = ePLevel
+    for  s = 1:n
+        M[1,1+s] = couplingCluster[s];   M[1+s,1] = couplingCluster[s]
+        M[1+s,1+s] = hqqCluster[s]
+    end
+    vals = eigvals(Symmetric(M))
+    iMin = argmin(abs.(vals .- ePLevel))
+
+    return( vals[iMin] - ePLevel )
+end
+
+
+"""
 `Hamiltonian.secondOrderShapeCrossingCorrection(pMp::Multiplet, qMp::Multiplet, refConfigs::Array{Configuration,1},
                                                  grid::Radial.Grid, nm::Nuclear.Model, settings::AsfSettings)`
     ... the shape-crossing counterpart of `Hamiltonian.secondOrderBlock`, for a Q space built by a
@@ -628,16 +656,33 @@ end
         ONLY THE TARGET LEVELS OF P ARE CORRECTED -- those carrying weight >= 0.5 on `refConfigs`, the SAME
         rule `Hamiltonian.secondOrderBlock` uses and for the same reason.
 
-        THE DENOMINATOR GUARD IS A HARD EXCLUSION AT `abs(dd) < 1.0e-10` (literal degeneracy) PLUS A SOFT
-        WARNING BELOW `1.0e-2` Ha -- filed as priority item 5, 04-Nov-2026, after a dense Q space (Ti III
-        3d^2 -> 4d, 5371 genuinely-new CSFs against 9 target levels) gave a correction swinging -386 to
-        -537 mHa, LARGER than the whole NIST term span, with no warning printed anywhere: some P-level/Q-CSF
-        denominators there were small enough to inflate the Epstein-Nesbet sum without being literally
-        degenerate. The hard exclusion is UNCHANGED (removing a term changes the physics, which is not this
-        function's decision to make alone); the warning only REPORTS, listing how many denominators fell
-        under the soft threshold, the worst of them, and the single largest resulting contribution to its
-        own level's `deltaE` -- so a caller sees the risk rather than a confident, possibly wrong-ordered
-        number. The scheme is unaffected on a sparse Q space (Cl III's p^3 case, branch g, never trips it).
+        THE DENOMINATOR GUARD IS A HARD EXCLUSION AT `abs(dd) < 1.0e-10` (literal degeneracy, UNCHANGED) PLUS
+        A QUASI-DEGENERATE FOLD, added 05-Nov-2026 -- filed as priority item 5, 04-Nov-2026, after a dense Q
+        space (Ti III 3d^2 -> 4d, 5371 genuinely-new CSFs against 9 target levels) gave a correction swinging
+        -386 to -537 mHa, LARGER than the whole NIST term span, with no warning printed anywhere. For each
+        target level, every surviving Q-CSF `s` is classified by `abs(coupling[i,s]/dd)`: non-degenerate PT is
+        trusted (`ratioThreshold`, default 0.4, below which a Taylor expansion in the coupling is a fair
+        description) and stays in the ordinary `-coupling^2/dd` sum; above it, the CSF is FLAGGED and its
+        whole flagged cluster for that level is folded instead -- `foldNearDegenerateQCluster` diagonalizes
+        the small matrix of the target level plus its flagged Q-CSFs (Q-Q off-diagonals zero, since this
+        function never computes them) and takes the eigenvalue closest to the unperturbed level as the
+        correction, which stays bounded as `dd -> 0` where the ordinary sum diverges.
+
+        THE FOLD IS VALIDATED AND HARMLESS, BUT DOES NOT REPAIR THE TI III CASE IT WAS BUILT FOR -- state this
+        plainly rather than letting the mechanism's correctness stand in for the fix having worked. Measured
+        05-Nov-2026: on the real Ti III 3d^2 run, `abs(coupling[i,s]/dd)` never exceeds `ratioThreshold` for a
+        SINGLE one of the 9x5371 pairs, so nothing is ever flagged, the `@warn` below never fires, and the
+        nine `deltaE` values are UNCHANGED from before this fold existed (-386.2 to -537.4 mHa, still larger
+        than the whole NIST term span). The diagnosis behind this fold -- a few outlier near-degenerate
+        denominators -- was WRONG for this case: the blowup is a DENSE ACCUMULATION of many only-moderately-
+        small denominators across those 5371 CSFs, none individually near-degenerate enough to trip a ratio
+        test, which is a different failure mode that a per-term classifier cannot catch by construction. The
+        dense-Q half of item 5 is UNFIXED and is held on the challenges list (see `src/` `CLAUDE.md`'s working
+        lists) rather than carried here as an open priority item; this fold stays in `src/` because it is
+        correct, toy-validated (see the helper's own docstring) and a byte-identical no-op everywhere tested
+        (Cl III's sparse p^3 Q space, branch g: nothing is ever flagged there either, and the five dated
+        `deltaE` values reproduce exactly), so it is ready for whatever genuinely isolated near-degeneracy
+        turns up in a future case -- it is simply not that case.
 
         P MAY CARRY MORE SUBSHELLS THAN Q -- priority item 5's second half, also closed 04-Nov-2026. A prior
         RAS layer can deepen P's own ladder beyond the fixed subshell set Q's own `shapedTo` step touches
@@ -734,26 +779,40 @@ function secondOrderShapeCrossingCorrection(pMp::Multiplet, qMp::Multiplet, refC
     end
 
     deltaE = zeros(length(targetLevels))
-    smallDenominatorThreshold = 1.0e-2   ## Ha; soft warning floor, item 5 -- NOT a term exclusion, see docstring
-    nSmallDenominators = 0;    worstDenominator = Inf;    worstContribution = 0.0
-    for  (j, i)  in  enumerate(targetLevels),  s = 1:nNewQ
-        dd = hqq[s] - pMp.levels[i].energy
-        abs(dd) < 1.0e-10   &&   continue
-        contribution = coupling[i,s]^2 / dd
-        if  abs(dd) < smallDenominatorThreshold   &&   abs(dd) < abs(worstDenominator)
-            worstDenominator  = dd
-            worstContribution = contribution
+    ratioThreshold = 0.4   ## |coupling/dd| above this is folded rather than summed, item 5 -- see the module docstring
+    nFolded = 0;    worstRatio = 0.0;    worstDenominator = Inf
+    for  (j, i)  in  enumerate(targetLevels)
+        ePLevel      = pMp.levels[i].energy
+        unflaggedIdx = Int64[];    flaggedIdx = Int64[]
+        for  s = 1:nNewQ
+            dd = hqq[s] - ePLevel
+            abs(dd) < 1.0e-10   &&   continue                       ## literal degeneracy, UNCHANGED hard exclusion
+            if  abs(coupling[i,s] / dd) > ratioThreshold
+                push!(flaggedIdx, s)
+                if  abs(coupling[i,s]/dd) > worstRatio
+                    worstRatio = abs(coupling[i,s]/dd);    worstDenominator = dd
+                end
+            else
+                push!(unflaggedIdx, s)
+            end
         end
-        abs(dd) < smallDenominatorThreshold   &&   (nSmallDenominators += 1)
-        deltaE[j] -= contribution
+        for  s  in  unflaggedIdx
+            deltaE[j] -= coupling[i,s]^2 / (hqq[s] - ePLevel)
+        end
+        if  !isempty(flaggedIdx)
+            nFolded += length(flaggedIdx)
+            deltaE[j] += foldNearDegenerateQCluster(ePLevel, hqq[flaggedIdx], coupling[i,flaggedIdx])
+        end
     end
-    if  nSmallDenominators > 0
-        @warn("Hamiltonian.secondOrderShapeCrossingCorrection(): $nSmallDenominators of " *
-              "$(length(targetLevels)*nNewQ) P-level/Q-CSF denominator(s) fall under " *
-              "$smallDenominatorThreshold Ha (worst $worstDenominator Ha, contributing $worstContribution Ha " *
-              "to its own level's deltaE) -- the Epstein-Nesbet sum is sensitive to near-degenerate Q-CSFs " *
-              "that the hard 1.0e-10 exclusion does not catch, and this correction may not be physical (see " *
-              "priority item 5).  Inspect `hqq` and `coupling` directly before trusting `deltaE` here.")
+    if  nFolded > 0
+        @warn("Hamiltonian.secondOrderShapeCrossingCorrection(): $nFolded of $(length(targetLevels)*nNewQ) " *
+              "P-level/Q-CSF denominator(s) were too small for ordinary perturbation theory (worst " *
+              "|coupling/dd| = $worstRatio at dd = $worstDenominator Ha) and were FOLDED (quasi-degenerate " *
+              "diagonalization, see foldNearDegenerateQCluster) rather than summed term by term -- see " *
+              "priority item 5.  Q-Q coupling WITHIN a flagged cluster is not included, since this function " *
+              "never computes it;  if a flagged cluster is a large fraction of Q, that omission may itself " *
+              "become the dominant remaining error, which would point at real multi-reference work rather " *
+              "than this fold.  Inspect `hqq` and `coupling` directly before trusting `deltaE` here.")
     end
 
     return( ShapeCrossingPartition(targetLevels, deltaE, newQIndices, coupling) )
