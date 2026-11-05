@@ -124,15 +124,41 @@
         sigma(2+)  [Mb]         2.3015e-03        4.2347e-03     1.6900e-03   1.3000e-02
         sigma(2+)/sigma(+)          3.868 %           8.212 %        3.107 %      23.90 %
 
-    THE COMPARISON THAT COUNTS IS WITH THE MEASUREMENT, not with either K&M column. In the VELOCITY (Coulomb)
-    form the ratio is 3.868 %, INSIDE the measured 3-4 % band near 200 eV, on a sigma(+) itself within 10 % of
-    theirs. K&M's own C3 model gives 23.9 % there -- their paper says the ratio is "up to five times larger than
-    the data" at intermediate energies -- so landing between C2 and the data is the right place to land, and
-    agreeing with C3 would have been a failure. This is the first self-consistent agreement this module has
-    produced. Three cautions, all of which matter more than the agreement does:
-      * NEITHER maxKappa = 2 NOR NoIntermediateEnergies = 9 is converged, so this is an order-and-sign statement.
-      * The LENGTH form is 8.2 % and far outside the band, exactly as K&M's own large length-velocity
-        discrepancy predicts. Only velocity is being compared.
+    THE COMPARISON THAT COUNTS IS WITH THE MEASUREMENT, not with either K&M column -- AND IT DOES NOT AGREE ONCE
+    THE PARTIAL-WAVE SUM IS CONVERGED. The maxKappa = 2 row above gives 3.868 % in velocity, inside the measured
+    3-4 % band. That reading was written here on 04-Nov-2026 and WITHDRAWN the same day: converging maxKappa
+    (2 -> 3 -> 4 moves the total +21.6 %, then +0.8 %, with a tail under 0.1 %) gives
+
+        sigma(2+)                2.8208e-03 Mb velocity      6.7563e-03 Mb length
+        sigma(2+)/sigma(+)           4.741 % velocity            13.10 % length      (5.185 % on K&M's sigma(+))
+
+    so velocity sits ABOVE the measured band by about a fifth rather than inside it. What looked like agreement
+    was a 22 % truncation error cancelling part of a real overshoot -- and the lesson outlasts the number: A
+    RESULT LANDING INSIDE A MEASURED BAND IS NOT EVIDENCE UNTIL THE CONVERGENCE ERROR IS SMALLER THAN THE BAND.
+    Landing between C2 and the data is still the right place to land -- K&M's own C3 gives 23.9 % there, and
+    their paper says the ratio is "up to five times larger than the data" at intermediate energies, so agreeing
+    with C3 would still have been a failure -- but this is an ORDER-AND-SIGN result and must not be quoted as
+    agreement. It is carried as priority item 6 (Nov-2026 numbering). Three cautions:
+      * EVERY NUMERICAL TRUNCATION IS NOW MEASURED AND EVERY ONE IS UNDER 1 %: box 0.05 % over 24 -> 40 a.u.,
+        sharings +0.58 % over 5 -> 21, intermediate mesh -0.87 % then +0.24 % over 9 -> 17 -> 25 (non-monotone,
+        hence converged), partial waves +0.8 % over maxKappa 3 -> 4. Against a 20-50 % discrepancy with the
+        measurement, so THE REMAINING ERROR IS IN THE MODEL AND NOT IN THE ARITHMETIC. The module is knock-out
+        only and a model missing a mechanism cannot overshoot on physics, WHICH LEAVES THE SECOND-ORDER
+        CONSTRUCTION ITSELF. The four-level (N-1) Green space was the other candidate and was TESTED late
+        on 04-Nov-2026: opened to nine levels (He+ n = 3) on an orbital span widened to n = 3 and held
+        COMMON to both runs, so that the Green space was the only thing varied, it moved sigma(2+) by
+        -0.01 % and Babushkin/Coulomb from 2.377 to 2.374, and no energy-sharing node by more than
+        0.13 %. It accounts for NEITHER the overshoot nor the gauge gap. One caveat on that null: the
+        n = 3 orbitals the configuration-averaged mean field generates are over-screened -- Z_eff = 0.67,
+        0.56, 0.44 for 3s, 3p, 3d against the 2 a He+ state should see -- so what is exonerated is the
+        Green space AS THIS SHARED ORBITAL SET CAN REPRESENT IT, and a V^(N-1) set would be the clean
+        test. Widening the span itself did move the total, +3.7 % Coulomb and +5.1 % Babushkin, which is
+        a basis effect and not a Green-space one.
+      * The LENGTH form is far outside the band and CONVERGING THE SUM MAKES IT WORSE: 8.2 % at maxKappa = 2
+        against 13.10 % at maxKappa = 4, where velocity moved 3.868 -> 4.741 %. That is the direction K&M's own
+        large length-velocity discrepancy predicts. Only velocity is being compared -- and Babushkin/Coulomb
+        was itself STILL MOVING at the edge of the scan, 2.346 -> 2.395 over maxKappa 3 -> 4, so the gauge
+        ratio is not converged even where the TOTAL is.
       * THE EARLIER "2.70 % at 200 eV" WAS NOT MERELY A FACTOR 2 OUT. Halving it to 1.35 % is correct arithmetic
         and still wrong, because its sigma(+) was never checked and was about 3x the literature; the two errors
         partly cancelled. A ratio is only worth quoting when BOTH members come from the same calculation, and the
@@ -147,7 +173,8 @@
         FIXED sharing. (b) The asymptotic amplitude was read as a maximum over the last 300 grid points until
         03-Nov-2026, a fixed POINT count that spans less than half a wavelength below ~14 eV, and the added
         Gauss-Legendre nodes march towards exactly that slow-electron band. With the intermediate mesh held fixed
-        and the amplitude FITTED, the total moves +0.58 % over 5 -> 21 points. The leading error is elsewhere.
+        and the amplitude FITTED, the total moves +0.58 % over 5 -> 21 points. THE LEADING ERROR IS THE
+        PARTIAL-WAVE SUM, identified 04-Nov-2026 and converged at maxKappa = 3; everything else is under 1 %.
       * THE LENGTH (Babushkin) FORM, AND WHICH TRUNCATION ACTUALLY MOVES IT. The 15-Sep reading -- that
         quadrupling the intermediate set leaves velocity under 1 % at 200 eV while length nearly DOUBLES --
         attributed the near-doubling to the wrong mesh, because maxKappa was never varied beside it. Measured
