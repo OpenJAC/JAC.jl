@@ -97,6 +97,7 @@ elseif  char == 'D'
     println("Dw) Apply & test the GeneralizedOscillatorStrength module: generalized oscillator strengths f_n(K) of the Bethe theory, for bound-bound transitions.")
     println("Dx) Apply & test the PhotoRecombinationInterference module: RR and DR amplitudes added coherently; interference in the cross section, beta_2 and the photon polarization.")
     println("Dy) Apply & test the PhotoIonizationInterference module: direct PI and resonant (excitation+autoionization) amplitudes added coherently; the Fano interference term in the cross section.")
+    println("Dz) Apply & test the PhotoIonizationPseudostates module: a diagonalize-once CI mixing bound autoionizing CSFs with a box-discretized continuum pseudostate ladder -- the alternative to Dy's amplitude-sum route.")
     #
 elseif  char == 'E'
     println("E)  Examples, tests & development of composed atomic processes")
