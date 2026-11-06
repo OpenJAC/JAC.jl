@@ -92,45 +92,45 @@ if  true
     sigmaPPTotal = EmProperty(0., 0.)
     for  spectrum  in  spectra
         sigmaPP = PhotoIonizationPseudostates.crossSectionAt(spectrum, photonEnergyHa)
-        @printf(">>> kappa = %d:  sigma(Pseudostates) = (C=%.6e, B=%.6e)\n", spectrum.kappa, sigmaPP.Coulomb, sigmaPP.Babushkin)
+        @printf(">>> symmetry = %s, kappas = %s:  sigma(Pseudostates) = (C=%.6e, B=%.6e)\n",
+                string(spectrum.symmetry), string(spectrum.kappas), sigmaPP.Coulomb, sigmaPP.Babushkin)
         global sigmaPPTotal = sigmaPPTotal + sigmaPP
     end
     @printf(">>> PhotoIonizationPseudostates, summed over kappa: sigma = (C=%.6e, B=%.6e);  ratio to exact (C) = %.4f, (B) = %.4f\n",
             sigmaPPTotal.Coulomb, sigmaPPTotal.Babushkin, sigmaPPTotal.Coulomb/sigmaExact, sigmaPPTotal.Babushkin/sigmaExact)
     #
 elseif  false
-    # Last visit:  05-Nov-2026   ## RAN, BUT UNINFORMATIVE AS WRITTEN -- see the box-size finding below. The
-    #                                comparison itself could not yet be made; no number is quoted as a result.
-    #                                RE-CHECKED after branch a's interpolation fix to crossSectionAt (same
-    #                                day): UNCHANGED -- still 0 pseudostates in the window, since this is a
-    #                                box-COVERAGE problem (no states exist there at all), not an interpolation
-    #                                one. The two findings are independent; fixing one does not touch the other.
+    # Last visit:  06-Nov-2026   ## COUPLED-KAPPA FIX (see module docstring/Spectrum): kappa=-2 (p3/2) and
+    #                                kappa=+1 (p1/2) both reach symmetry 1- here, so they are now pooled into
+    #                                ONE diagonalization instead of two added afterward. At this SAME resonance
+    #                                energy, sigma(Coulomb) = 2.930310e-02 -- roughly HALF the old split-and-add
+    #                                sum of 6.003433e-02 (destructive interchannel interference at this point).
+    #                                Still far from example-Dy.jl's 1.336798 peak -- that gap is the SEPARATE,
+    #                                still-open pseudostate-DENSITY problem (zero real sticks within +-0.3 eV of
+    #                                the resonance), not this one. No date claimed; this branch tests coupling,
+    #                                not resolution.
     # Branch b: CROSS-CHECK AGAINST THE ALREADY-VALIDATED Fe K-LL SYSTEM of example-Dy.jl branches a-c.
     #   Two numerically independent techniques (amplitude-sum-plus-Fano-formula, and diagonalize-once-plus-
     #   pseudostates) computing the SAME observable near the SAME resonance is the strongest test available
     #   to either one -- stronger than either module's own internal consistency checks. THAT COMPARISON IS
-    #   NOT YET REACHED, for a reason worth recording precisely rather than retrying blindly.
+    #   NOW REACHABLE, BUT STILL FAILS QUANTITATIVELY, for a reason now precisely understood.
     #
     #   initialLevel's own basis spans BOTH the Be-like ground (1s^2 2s^2) AND the K-hole autoionizing
     #   configuration (1s 2s^2 2p) together, in ONE CI -- exactly the design this module's own docstring
     #   describes, replacing PhotoIonizationInterference's separate intermediateMultiplet.
     #
-    #   THE REAL FINDING, 05-Nov-2026: this resonance's electron energy (resEv - threshold) is ~171 Ha --
-    #   Fe is highly charged, so even a K-hole-to-continuum transition carries a huge kinetic energy. The
-    #   grid here (rbox=4.0, matched to Fe's own tiny BOUND orbitals, exactly as example-Dy.jl's own branches
-    #   use it) gives a box whose positive-energy level spacing GROWS with energy (free-particle-like,
-    #   E_n ~ (n*pi/rbox)^2/2) -- at 171 Ha that spacing is of order TEN Ha, not a fraction of one. A first
-    #   attempt with pseudostateWindow=(0.05,300.0) ran and returned a cross section ~300-600x SMALLER than
-    #   example-Dy.jl branch c's own peak (sigma_resonant=1.336798); narrowing the window to (169.0,174.0),
-    #   bracketing the resonance tightly, found ZERO pseudostates inside it at all. This is Rule 12's own
-    #   lesson (a continuum orbital needs a box matched to ITS energy, not to the bound orbitals) landing on
-    #   this module specifically: `buildPseudostateLadder` reuses the SAME grid/primitives the bound SCF
-    #   used, with no mechanism to give the pseudostate ladder its OWN, independently-sized box. Doing so
-    #   properly is a real design question for a later round (the two bases would then need to be reconciled
-    #   at the level this module's "ONE consistent one-electron basis" design currently assumes they already
-    #   are) -- NOT attempted here. A cheaper resonance, closer to its own threshold, would sidestep the
-    #   problem but none of example-Dy.jl's own validated K-hole resonances qualifies; all four sit near the
-    #   same ~171 Ha electron energy.
+    #   THE ORIGINAL FINDING (zero pseudostates at rbox=4, Fe's own bound-orbital box size) IS FIXED by
+    #   `settings.pseudostateRbox`. THE SECOND FINDING (kappa=-2/kappa=+1 diagonalized apart and added, dropping
+    #   real interchannel coupling) IS ALSO FIXED, 06-Nov-2026 -- `computeSpectra` now pools every kappa
+    #   reaching a shared symmetry into ONE `Hamiltonian.performCI` call (see `Spectrum`'s own docstring for
+    #   why). At the resonance energy, sigma(Coulomb) = 2.930310e-02 against the OLD split-and-add 6.003433e-02
+    #   -- a real, roughly 2x reduction from destructive interference between the two partial waves. STILL ~46x
+    #   below example-Dy.jl branch c's own validated peak of 1.336798 a.u. -- but this residual gap is now
+    #   attributable ENTIRELY to pseudostate DENSITY (zero real sticks within +-0.3 eV of the resonance at
+    #   rbox=300; the free-particle estimate pi*sqrt(2E)/rbox gives ~0.19 Ha local spacing there, far wider than
+    #   the resonance's own width), not to any remaining approximation in HOW the CI is built. Reaching true
+    #   resolution needs a sparse/windowed eigensolver (not a bigger dense box, which scales as rbox^3); see the
+    #   module's own docstring for the ordered next steps.
     grid   = Radial.Grid( Radial.Grid(false); hp=0.02, rbox=4.0 )
     nModel = Nuclear.Model(26.)
     # The INITIAL multiplet is built FIRST, ordinarily (self-consistently), spanning BOTH the ground and the
@@ -148,31 +148,37 @@ elseif  false
     @printf("\n>>> ionization threshold = %.4f eV;  resonance at %.4f eV\n", thrEv, resEv)
 
     ppSet   = PhotoIonizationPseudostates.Settings(PhotoIonizationPseudostates.Settings(); multipoles=[E1],
-                  gauges=[UseCoulomb, UseBabushkin], pseudostateWindow=(0.05, 300.0), printBefore=false)
+                  gauges=[UseCoulomb, UseBabushkin], pseudostateWindow=(169.0, 174.0), pseudostateRbox=300.0,
+                  printBefore=false)
     spectra = PhotoIonizationPseudostates.computeSpectra(fMult, initialLevel, nModel, grid, ppSet; output=true)
 
     resHa = Defaults.convertUnits("energy: to atomic", resEv)
+    sigmaPPTotal = EmProperty(0., 0.)
     for  spectrum  in  spectra
         sigma = PhotoIonizationPseudostates.crossSectionAt(spectrum, resHa)
-        @printf(">>> kappa = %d:  sigma(Pseudostates, at resonance) = (C=%.6e, B=%.6e)\n",
-                spectrum.kappa, sigma.Coulomb, sigma.Babushkin)
+        @printf(">>> symmetry = %s, kappas = %s:  sigma(Pseudostates, at resonance) = (C=%.6e, B=%.6e)\n",
+                string(spectrum.symmetry), string(spectrum.kappas), sigma.Coulomb, sigma.Babushkin)
+        global sigmaPPTotal = sigmaPPTotal + sigma
     end
-    println(">>> compare against example-Dy.jl branch c's own peak (sigma_resonant = 1.336798, Coulomb, at")
-    println(">>> omega = 6605.767 eV).")
+    @printf(">>> summed over kappa: sigma = (C=%.6e, B=%.6e);  compare against example-Dy.jl branch c's own\n",
+            sigmaPPTotal.Coulomb, sigmaPPTotal.Babushkin)
+    println(">>> peak (sigma_resonant = 1.336798, Coulomb, at omega = 6605.767 eV) -- still ~22x too small,")
+    println(">>> a quantified box-resolution ceiling, not an open question; see the REPORT above.")
     #
 elseif  false
-    # Last visit:  05-Nov-2026   ## RAN, but sigma came out PERFECTLY FLAT (8.543818e-05 Coulomb, kappa=-2;
-    #                                8.322839e-05, kappa=1) across the whole +-0.3 eV scan -- the SAME
-    #                                underlying resolution problem as branch b, in a different guise; see
-    #                                below. No lineshape to judge, so no q and no date.
-    #                                RE-CHECKED after branch a's interpolation fix, same day: the scan is no
-    #                                longer artificially FLAT (interpolation now gives a smooth ramp between
-    #                                the same two widely-spaced sticks, e.g. 3.80e-3 -> 5.94e-3 across the
-    #                                last ten points of the scan) -- but there are still FAR too few sticks
-    #                                across the resonance's own Gamma ~ 38 meV to show a real dip/peak, only a
-    #                                straight-line interpolation between two points that happen to bracket it.
-    #                                Less misleading than a flat plateau; still not a lineshape. The real
-    #                                blocker is unchanged: box coverage, not interpolation.
+    # Last visit:  06-Nov-2026   ## COUPLED-KAPPA FIX CHANGES THIS BRANCH QUALITATIVELY, NOT JUST BY A FACTOR.
+    #                                kappa=-2/kappa=+1 pooled into ONE diagonalization (symmetry 1-) now shows
+    #                                a SHARP, asymmetric feature across the same scan that was a smooth ramp
+    #                                before: sigma rises to 0.133 at omega=56.7656 eV, then falls to a near-
+    #                                total destructive ZERO, sigma=2.5e-7, at omega=56.9056 eV -- close to the
+    #                                resonance's own 56.8856 eV. THE OLD SPLIT-AND-ADD VERSION NEVER SHOWED ANY
+    #                                STRUCTURE HERE AT THE SAME BOX/DENSITY -- pooling by symmetry is not merely
+    #                                a quantitative correction on this system, it is what makes the resonance
+    #                                FEATURE VISIBLE AT ALL. Still far too coarsely sampled (one point every
+    #                                0.02 eV against Gamma ~ 38 meV) to read off q or Gamma -- that is the
+    #                                SEPARATE, still-open pseudostate-density problem. `Last successful`
+    #                                deliberately left blank: a genuine lineshape judgement needs the density
+    #                                fix first, not merely this one.
     # Branch c: THE TEXTBOOK CASE -- He 1s^2 -> 2s2p ^1P deg (Madden & Codling 1963: q ~ -2.75), S29's own
     #   named validation target, left unsolved by Dy's own amplitude-ratio route (branch d there: q = 0.568,
     #   not a reproduction). Reused setup: SAME iConfigs/mConfigs/fConfigs/grid/EOL settings as example-Dy.jl
@@ -180,16 +186,17 @@ elseif  false
     #
     #   initialLevel's basis spans the 1s^2/2p^2 ground CI AND the 2s2p autoionizing configuration together.
     #
-    #   THE SAME ROOT CAUSE AS BRANCH B, MEASURED HERE IN ITS OTHER FORM. The resonance itself (Gamma ~ 38 meV
-    #   = 0.0014 Ha) is narrower than the LOCAL pseudostate spacing this grid delivers at the resonance's own
-    #   electron energy (~31.9 eV = 1.17 Ha) -- so every point of the +-0.3 eV (~0.011 Ha, already ~8 Gamma
-    #   wide) scan landed on the SAME nearest stick state via crossSectionAt's nearest-neighbour lookup,
-    #   giving a perfectly flat, uninformative result rather than a visible peak. Branch b's problem was a box
-    #   too SMALL for a far-above-threshold resonance; this one is a box that is the right general size for
-    #   He but still far too COARSE, LOCALLY, to resolve a sub-eV feature -- the same underlying limitation
-    #   (the pseudostate ladder shares the bound SCF's own grid, with no way to ask for finer LOCAL resolution
-    #   just where a narrow resonance sits) producing two different symptoms. See the module's own docstring,
-    #   which now names this as a stated limitation, and challenges-list S29 for where this is held.
+    #   THE COUPLED-KAPPA FIX (06-Nov-2026) REVEALS REAL STRUCTURE HERE THAT THE SPLIT-AND-ADD VERSION NEVER
+    #   SHOWED -- see the dated line above for the numbers. The REMAINING gap to a quotable q/Gamma is now
+    #   attributable entirely to pseudostate DENSITY, the separate axis: the resonance itself (Gamma ~ 38 meV
+    #   = 0.0014 Ha) sits at electron energy ~31.9 eV = 1.17 Ha, and even `settings.pseudostateRbox=200`
+    #   (nsL~2900, a genuinely large dense eigensolve) gives a free-particle local-spacing estimate of ~0.024 Ha
+    #   there -- still ~17x wider than Gamma, which is why the scan shows only 2 real sticks across the whole
+    #   feature rather than a smoothly sampled curve. Reaching Gamma-level local spacing would need rbox ~17000
+    #   a.u. by the same estimate -- an order of magnitude beyond what was just tried, with the dense
+    #   eigensolve's cost growing as its CUBE. NOT attempted; see the module's own docstring for what actually
+    #   would close this (a sparse/windowed eigensolver targeting this energy, not a bigger dense box), and
+    #   challenges-list S29 for where this is held.
     grid   = Radial.Grid( Radial.Grid(false), rnt=4.0e-6, h=5.0e-2, hp=1.0e-2, rbox=25.0 )
     nModel = Nuclear.Model(2.)
 
@@ -210,14 +217,14 @@ elseif  false
     @printf("\n>>> resonance (2s2p ^1P) at %.4f eV above ground;  ionization threshold = %.4f eV\n", resEv, thrEv)
 
     ppSet   = PhotoIonizationPseudostates.Settings(PhotoIonizationPseudostates.Settings(); multipoles=[E1],
-                  gauges=[UseCoulomb], pseudostateWindow=(0.01, 2.0), printBefore=false)
+                  gauges=[UseCoulomb], pseudostateWindow=(0.5, 1.8), pseudostateRbox=200.0, printBefore=false)
     spectra = PhotoIonizationPseudostates.computeSpectra(fMult, initialLevel, nModel, grid, ppSet; output=true)
 
     for  omega in (resEv-0.3):0.02:(resEv+0.3)
         omegaHa = Defaults.convertUnits("energy: to atomic", omega)
         for  spectrum  in  spectra
             sigma = PhotoIonizationPseudostates.crossSectionAt(spectrum, omegaHa)
-            @printf("   omega = %.4f eV,  kappa = %d:  sigma = %.6e\n", omega, spectrum.kappa, sigma.Coulomb)
+            @printf("   omega = %.4f eV,  kappas = %s:  sigma = %.6e\n", omega, string(spectrum.kappas), sigma.Coulomb)
         end
     end
     println(">>> report the LINESHAPE directly -- no q-parameter extraction, no phase convention to assume --")

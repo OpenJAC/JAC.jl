@@ -64,20 +64,100 @@
     never caught. `examples/example-Dz.jl` branch a's own PI-limit check is what found this, giving ratios of
     order 1e-4 before the fix and order 1 after it.
 
-    **A SECOND LIMITATION, FOUND THE SAME WAY, NOT YET SOLVED: the pseudostate ladder shares the SAME grid the
-    bound SCF used, with no mechanism to give it its OWN, independently-sized or independently-resolved box.**
-    `buildPseudostateLadder` calls `Bsplines.generatePrimitives(grid)` on whatever `grid` the caller's bound
-    orbitals were generated on. This is adequate near threshold but fails in two different, now-measured ways
-    away from it (`examples/example-Dz.jl` branches b and c, 05-Nov-2026): a resonance far above threshold (Fe
-    K-LL, ~171 Ha electron energy) sits where a box sized for Fe's own tiny bound orbitals (rbox ~ 4 a.u.) gives
-    free-particle-like level spacing of order TEN Ha -- too coarse to hold even one pseudostate in a 5 Ha window
-    there; and a genuinely NARROW resonance (He 2s2p, Gamma ~ 38 meV) sits inside a window whose LOCAL spacing,
-    even on a more generous He-sized box (rbox = 25 a.u.), is still far coarser than Gamma itself, so an 8-Gamma-
-    wide scan around it returns a single, perfectly flat stick with no visible lineshape at all. Both are the
-    SAME root cause -- one shared grid asked to resolve a LOCAL feature far from where it was sized -- and
-    fixing it properly means decoupling the pseudostate ladder's own box from the bound SCF's, which in turn
-    means reconciling two different one-electron bases rather than the one this module currently assumes
-    throughout. NOT attempted in this round; held at challenges-list S29.
+    **A SECOND LIMITATION, FOUND THE SAME WAY: the pseudostate ladder used to share the SAME grid the bound
+    SCF used, with no mechanism to give it its OWN box -- PARTLY FIXED 05-Nov-2026, AND THE FIX EXPOSES A
+    DEEPER, QUANTIFIED COMPUTATIONAL CEILING RATHER THAN SOLVING THE PROBLEM OUTRIGHT.** `settings.pseudostateRbox`
+    now lets the ladder's own grid EXTEND the caller's (`ladderGridFor`), verified to need no basis
+    reconciliation at all: `Radial.Grid(gr; rbox=...)` reproduces the smaller grid's own mesh points EXACTLY
+    (checked numerically, max|diff| = 0.0), so a bound orbital's existing array is already a valid, exact
+    prefix of the larger grid and ordinary zero-padding (already how every radial-integral routine here treats
+    differing array lengths) is all that is needed.
+
+    **MEASURED, NOT ASSUMED, WHAT THIS ACTUALLY BUYS.** Fe K-LL (branch b): going from rbox=4 (Fe's own bound
+    box, ZERO pseudostates in a 5 Ha window at the resonance's ~171 Ha electron energy) to rbox=300 (nsL~2200,
+    a dense eigensolve of several thousand that still completes) gives REAL pseudostates there -- but the cross
+    section comes out ~22x smaller than `example-Dy.jl`'s own validated peak, because the LOCAL spacing even at
+    rbox=300 (~0.19 Ha, estimated from the free-particle law pi*sqrt(2E)/rbox) is still far wider than the
+    resonance's own physical width. He 2s2p (branch c): rbox=200 (nsL~2900) still returns a smooth, structureless
+    RAMP, not a lineshape -- reaching Gamma = 38 meV-level local spacing there would need rbox of order 17000
+    a.u. by the same estimate, which would need a dense eigensolve of a basis roughly 10x larger again, a cubic-
+    scaling cost increase that is not a reasonable next box size to simply try.
+
+    **06-Nov-2026 -- INSTRUMENTING THE REAL STICK STATES DIRECTLY (NOT THE PRINTED SCAN CURVE) SHOWS THE ABOVE
+    TWO PARAGRAPHS WERE PRECISE ABOUT THE SYMPTOM BUT IMPRECISE ABOUT WHAT A "SCAN" ACTUALLY MEASURES, AND THE
+    CORRECTED PICTURE FOUND A REAL, ENCOURAGING SIGNAL.** A printed scan point is one `crossSectionAt` call,
+    which LINEARLY INTERPOLATES between whichever two real stick states happen to bracket that one energy -- it
+    is not independent physics, however many points are printed. Checked directly against `Spectrum.states`:
+    Fe's "~22x too small at resonance" is a SINGLE interpolated point between two sticks 2.86 eV apart with
+    ZERO real sticks within +-0.3 eV of the resonance -- a background value, not a diluted resonance. He DOES
+    have two real sticks inside its scanned 0.6 eV window, and they already show the right physics: one
+    (omega=56.741 eV) is background-like (dipole strength 3.09e-4, 1.6% weight on the 2s2p reference); the other
+    (omega=56.889 eV, almost exactly the literature 56.8856 eV) carries dipole strength 6.34e-6 -- 50x SMALLER --
+    with 98% weight on the 2s2p reference. A sharp dipole-strength suppression exactly at the state carrying the
+    resonance's own character is the textbook Fano destructive-interference signature. **The "smooth ramp" was
+    the interpolated curve through 2-3 real points; the real points underneath it already show the effect, just
+    far too sparsely (one point per ~0.35-0.4 eV against a 38 meV width) to trace a lineshape or extract q.**
+
+    **06-Nov-2026 -- A SECOND CHECK, PROMPTED DIRECTLY: IS THE FROZEN ION CORE ITSELF A GOOD SINGLE CSF?**
+    `buildPseudostateLadder` uses only `finalIonLevel`'s DOMINANT CSF's occupation to build every pseudostate
+    configuration (see `computeSpectrum`'s own `coreCsf`/`coreOccupation`), discarding any other CSF the ion
+    might carry -- a real approximation IF the ion has its own configuration mixing, separate from the box-
+    resolution problem above. Tested directly for the Fe Li-like ion ("1s^2 2s", used in branch b): adding a
+    realistic correlating partner (`1s 2p^2`, same frozen 1s/2s/2p orbitals, same J=1/2 even symmetry) and
+    re-diagonalizing gives a ground-level weight of 0.999995 on the pure "1s^2 2s" CSF (0.0005% mixing, 0.03 eV
+    energy shift). For He's "1s" ion core this question doesn't even arise -- a one-electron ion cannot mix.
+    So, against the one plausible partner tried, the single-CSF ion-core approximation is MEASURED accurate
+    here, not merely assumed for convenience; this is not exhaustive (only one correlating configuration was
+    tried), and a different final-ion system should not inherit this result without its own check.
+
+    **06-Nov-2026 -- A THIRD, STRUCTURAL LIMITATION, FOUND BY A DIRECT QUESTION ABOUT WHY `computeSpectra` RAN
+    ONE DIAGONALIZATION PER KAPPA RATHER THAN ONE DIAGONALIZATION TOTAL -- FIXED, SAME DAY.** The atomic
+    Hamiltonian conserves total J and parity exactly, so CSFs of DIFFERENT (J,parity) are exactly block-diagonal
+    and splitting those costs nothing. But checked directly via `PhotoIonization.determineChannels` for both
+    test systems: kappa=-2 (p3/2) and kappa=+1 (p1/2) BOTH reach the SAME symmetry, `LevelSymmetry(1,-)`, for
+    this E1 process from a J=0 even initial level -- the GENERIC case for single-photon ionization, since the
+    dipole selection rule fixes the final (J,parity) independent of which partial wave carries it. The earlier
+    version of `computeSpectra` built a SEPARATE `Spectrum` (a separate `Hamiltonian.performCI` call) per
+    `(finalIonLevel, kappa)` pair and simply ADDED the resulting cross sections afterward -- dropping the real
+    Hamiltonian matrix elements connecting a p1/2-built CSF to a p3/2-built CSF of that SAME (J=1,-) block, an
+    approximation rather than an exact symmetry decomposition.
+
+    **FIXED, 06-Nov-2026: `computeSpectra` now inverts `determineChannels`' own (kappa -> symmetries) map into
+    (symmetry -> kappas), and `computeSpectrum` takes the FULL SET of kappas reaching one symmetry, pools every
+    one of their pseudostate ladders into ONE `combinedBasis`, and diagonalizes ONCE** (`Spectrum.kappas`,
+    `Spectrum.symmetry` replace the old scalar `kappa` field; `StickState.weightByKappa` is the new, genuinely
+    useful by-product -- each eigenstate's own weight broken down by WHICH partial wave's pseudostate CSFs it
+    sits on, computed for free from the CSF index ranges already tracked while building `combinedCsfs`). The
+    single-kappa case (e.g. bare hydrogen, where kappa alone fixes (J,parity) one-to-one) is simply
+    `length(kappas) == 1`, not a separately-maintained code path -- confirmed by re-running `example-Dz.jl`
+    branch a: ratio unchanged at 1.0068, byte-identical to before this fix.
+
+    **MEASURED, NOT ASSUMED, WHAT COUPLING ACTUALLY CHANGES.** Fe K-LL (branch b), at the resonance energy:
+    coupled sigma(Coulomb) = 2.930310e-02, against the OLD split-and-add sum of 6.003433e-02 -- roughly HALVED
+    by destructive interference between the two partial waves, at a point with zero real sticks nearby (pure
+    background; the resolution gap to `example-Dy.jl`'s 1.336798 peak remains, but is now attributable entirely
+    to pseudostate DENSITY, not to this approximation). He 2s2p (branch c) is the striking case: **the coupled
+    scan shows a SHARP, asymmetric feature that was completely ABSENT from the old split-and-add scan at the
+    SAME box and density** -- rising to sigma=0.133 at omega=56.7656 eV, then falling to a near-total
+    destructive ZERO, sigma=2.5e-7, at omega=56.9056 eV, close to the resonance's own 56.8856 eV. Coupling the
+    partial waves was not merely a quantitative correction here; it is what makes the resonance feature VISIBLE
+    AT ALL at this density. The scan is still far too coarse (one point per 0.02 eV against Gamma ~ 38 meV) to
+    read off q or Gamma -- that is the separate, still-open density problem below.
+
+    **SO THE RECOMMENDED NEXT STEPS, IN ORDER (held at challenges-list S29):**
+    1. ~~Couple same-symmetry kappas into one diagonalization~~ -- DONE, 06-Nov-2026, above.
+    2. **Raise the local pseudostate DENSITY near one target energy** via a sparse/shift-invert eigensolver
+       targeting a narrow window (cost scales with the window's own state count, not the whole basis) rather
+       than a bigger dense box -- reuses the existing B-spline primitive basis with a different, targeted solve,
+       not new theory. Brute-force box enlargement under DENSE diagonalization has a genuine, quantified
+       computational ceiling (rbox~300 for Fe, ~200 for He already near-practical; reaching either resonance's
+       own width would need an order of magnitude more, at cubic cost, now compounded by step 1's own larger
+       pooled basis) -- NOT a reasonable next box size to simply try.
+    3. **Re-validate the ion-core single-CSF approximation (point above) for any NEW final-ion system** before
+       trusting its pseudostate ladder -- cheap to check (one extra `performCIwithFrozenOrbitals` call with a
+       plausible correlating configuration), not yet shown to generalize beyond the two cases tested.
+    Alternative, not attempted: genuine R-matrix outer-region propagation, which handles the asymptotic
+    continuum analytically rather than by sampling it densely -- a larger, separate undertaking than 2-3 above.
 
     VALIDATED, before any `src/` code existed: two independent toy cases (see `work/photoionization-pseudostates-
     toy/`, Phase 0, 05-Nov-2026) -- a closed-form Fano two-level-plus-flat-continuum model (exact in the trivial
@@ -125,6 +205,16 @@ using  Printf, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..Hamiltonian, ..M
                                                             range `photonEnergies` implies, with margin on both sides --
                                                             `crossSectionAt` is only trustworthy away from the window's own
                                                             edges, exactly as the Phase-0 toy validations were restricted.
+    + pseudostateRbox          ::Union{Nothing,Float64} ... Box radius [a.u.] for the pseudostate ladder's OWN grid,
+                                                            built by EXTENDING the caller's own grid (same rnt/h/hp,
+                                                            larger rbox only) -- see `buildPseudostateLadder`'s own
+                                                            docstring for why this is exact, not an approximation, over
+                                                            the smaller grid's own range. `nothing` -- the default --
+                                                            reuses the caller's grid unchanged (its own rbox), which is
+                                                            adequate only near threshold; a resonance far above
+                                                            threshold or narrower than that grid's local level spacing
+                                                            needs this set explicitly, larger than the bound SCF's own
+                                                            box ever needed to be.
     + continuumExchange        ::Union{Nothing,Bool}    ... True/false to add the frozen nonlocal Dirac-Fock exchange
                                                             operator (`Bsplines.setupExchangeMatrix`, item 99's mechanism)
                                                             to the pseudostate ladder's own generating potential;
@@ -140,8 +230,9 @@ struct Settings  <:  AbstractProcessSettings
     photonEnergies               ::Array{Float64,1}
     lValues                       ::Array{Int64,1}
     pseudostateWindow              ::Tuple{Float64,Float64}
-    continuumExchange                ::Union{Nothing,Bool}
-    printBefore                        ::Bool
+    pseudostateRbox                  ::Union{Nothing,Float64}
+    continuumExchange                  ::Union{Nothing,Bool}
+    printBefore                          ::Bool
 end
 
 
@@ -150,15 +241,15 @@ end
     ... constructor for an `empty` instance of PhotoIonizationPseudostates.Settings; a settings::Settings is returned.
 """
 function Settings()
-    Settings( EmMultipole[E1], UseGauge[UseCoulomb], Float64[], [0,1,2,3,4,5], (0., 1.), nothing, false )
+    Settings( EmMultipole[E1], UseGauge[UseCoulomb], Float64[], [0,1,2,3,4,5], (0., 1.), nothing, nothing, false )
 end
 
 
 """
 `PhotoIonizationPseudostates.Settings(set::PhotoIonizationPseudostates.Settings;`
 
-        multipoles=..,          gauges=..,              photonEnergies=..,      lValues=..,
-        pseudostateWindow=..,   continuumExchange=..,   printBefore=..)
+        multipoles=..,          gauges=..,              photonEnergies=..,       lValues=..,
+        pseudostateWindow=..,   pseudostateRbox=..,     continuumExchange=..,   printBefore=..)
 
     ... keyword copy-constructor for re-defining selected values of a settings::PhotoIonizationPseudostates.Settings; a
         settings::Settings is returned.
@@ -167,17 +258,20 @@ function Settings(set::PhotoIonizationPseudostates.Settings;
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,        gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
     photonEnergies::Union{Nothing,Array{Float64,1}}=nothing,        lValues::Union{Nothing,Array{Int64,1}}=nothing,
     pseudostateWindow::Union{Nothing,Tuple{Float64,Float64}}=nothing,
-    continuumExchange::Union{Nothing,Bool}=nothing,                  printBefore::Union{Nothing,Bool}=nothing)
+    pseudostateRbox::Union{Nothing,Float64}=nothing,                 continuumExchange::Union{Nothing,Bool}=nothing,
+    printBefore::Union{Nothing,Bool}=nothing)
 
     if  isnothing(multipoles)          multipolesx         = set.multipoles         else   multipolesx         = multipoles         end
     if  isnothing(gauges)              gaugesx             = set.gauges             else   gaugesx             = gauges             end
     if  isnothing(photonEnergies)      photonEnergiesx     = set.photonEnergies     else   photonEnergiesx     = photonEnergies     end
     if  isnothing(lValues)             lValuesx            = set.lValues            else   lValuesx            = lValues            end
     if  isnothing(pseudostateWindow)   pseudostateWindowx  = set.pseudostateWindow  else   pseudostateWindowx  = pseudostateWindow  end
+    if  isnothing(pseudostateRbox)     pseudostateRboxx    = set.pseudostateRbox    else   pseudostateRboxx    = pseudostateRbox    end
     if  isnothing(continuumExchange)   continuumExchangex  = set.continuumExchange  else   continuumExchangex  = continuumExchange  end
     if  isnothing(printBefore)         printBeforex        = set.printBefore        else   printBeforex        = printBefore        end
 
-    Settings( multipolesx, gaugesx, photonEnergiesx, lValuesx, pseudostateWindowx, continuumExchangex, printBeforex )
+    Settings( multipolesx, gaugesx, photonEnergiesx, lValuesx, pseudostateWindowx, pseudostateRboxx, continuumExchangex,
+              printBeforex )
 end
 
 
@@ -188,6 +282,7 @@ function Base.show(io::IO, settings::PhotoIonizationPseudostates.Settings)
     println(io, "photonEnergies:           $(settings.photonEnergies)  ")
     println(io, "lValues:                  $(settings.lValues)  ")
     println(io, "pseudostateWindow:        $(settings.pseudostateWindow)  ")
+    println(io, "pseudostateRbox:          $(settings.pseudostateRbox)  ")
     println(io, "continuumExchange:        $(settings.continuumExchange)  ")
     println(io, "printBefore:              $(settings.printBefore)  ")
 end
@@ -207,12 +302,21 @@ end
                                                             added pseudostate-ladder CSF) -- a resonant-vs-background
                                                             diagnostic: close to 1 marks a state dominated by the bound,
                                                             autoionizing character, close to 0 a smooth background state.
+    + weightByKappa                ::Dict{Int64,Float64}    ... |c|^2 summed over the pseudostate-ladder CSFs of EACH
+                                                            contributing partial wave separately (06-Nov-2026, added
+                                                            when same-symmetry kappas were pooled into one combined
+                                                            diagonalization rather than diagonalized apart and added --
+                                                            see `Spectrum`'s own docstring) -- a genuine partial-channel
+                                                            diagnostic: how much of this eigenstate's own character sits
+                                                            in each outgoing partial wave, not merely whether it is
+                                                            bound-like or continuum-like.
 """
 struct StickState
     energy                      ::Float64
     dipoleStrength                ::EmProperty
     localSpacing                    ::Float64
     weightOnReference                 ::Float64
+    weightByKappa                       ::Dict{Int64,Float64}
 end
 
 
@@ -221,7 +325,7 @@ end
     ... constructor for an `empty` instance of PhotoIonizationPseudostates.StickState; a state::StickState is returned.
 """
 function StickState()
-    StickState( 0., EmProperty(0., 0.), 0., 0. )
+    StickState( 0., EmProperty(0., 0.), 0., 0., Dict{Int64,Float64}() )
 end
 
 
@@ -231,26 +335,44 @@ function Base.show(io::IO, state::PhotoIonizationPseudostates.StickState)
     println(io, "dipoleStrength:           $(state.dipoleStrength)  ")
     println(io, "localSpacing:             $(state.localSpacing)  ")
     println(io, "weightOnReference:        $(state.weightOnReference)  ")
+    println(io, "weightByKappa:            $(state.weightByKappa)  ")
 end
 
 
 """
 `struct  PhotoIonizationPseudostates.Spectrum`
-    ... defines a type for the full stick spectrum of the combined diagonalization, for ONE (initial level,
-        final-ion level, kappa) combination.
+    ... defines a type for the full stick spectrum of ONE combined diagonalization, for ONE (initial level,
+        final-ion level, symmetry) combination -- spanning EVERY partial wave that reaches that symmetry,
+        pooled into the SAME `Hamiltonian.performCI` call.
 
-    + kappa                     ::Int64                  ... Partial wave of the ejected electron this spectrum was
-                                                            built for.
-    + initialLevel               ::Level                  ... Initial (bound, possibly correlated) level.
-    + finalIonLevel                ::Level                  ... Final-ion level, one electron fewer than initialLevel.
-    + states                         ::Array{StickState,1}   ... Every eigenstate of the combined diagonalization, sorted
-                                                            by energy.
+        WHY POOLED BY SYMMETRY, NOT BY KAPPA (06-Nov-2026) -- the atomic Hamiltonian conserves total J and
+        parity exactly, so CSFs of DIFFERENT (J,parity) are exactly block-diagonal and splitting those costs
+        nothing; but two DIFFERENT partial waves of the SAME (J,parity) are NOT exactly block-diagonal from
+        each other -- their mutual Hamiltonian matrix elements are, in general, nonzero. Checked directly for
+        both test systems in `example-Dz.jl` (He 2s2p, Fe K-LL): kappa=-2 (p3/2) and kappa=+1 (p1/2) both reach
+        the SAME symmetry there, the generic case for single-photon ionization since the dipole selection rule
+        fixes the final (J,parity) independent of which partial wave carries it. An earlier version of this
+        module diagonalized each kappa SEPARATELY and added the resulting cross sections afterward -- dropping
+        those real matrix elements, an approximation rather than an exact decomposition. `computeSpectrum`
+        now takes the FULL SET of kappas reaching one symmetry and diagonalizes them together; a system where
+        only one kappa ever reaches a given symmetry (e.g. bare hydrogen, where kappa alone fixes (J,parity)
+        one-to-one) is simply the special case `length(kappas) == 1`, not a separate code path.
+
+    + symmetry                   ::LevelSymmetry          ... Total (J,parity) this spectrum's combined CI was
+                                                            restricted to.
+    + kappas                       ::Array{Int64,1}         ... Every partial wave of the ejected electron pooled into
+                                                            this ONE diagonalization (all reaching `symmetry`).
+    + initialLevel                   ::Level                  ... Initial (bound, possibly correlated) level.
+    + finalIonLevel                     ::Level                  ... Final-ion level, one electron fewer than initialLevel.
+    + states                               ::Array{StickState,1}   ... Every eigenstate of the combined diagonalization,
+                                                            sorted by energy.
 """
 struct Spectrum
-    kappa                        ::Int64
-    initialLevel                   ::Level
-    finalIonLevel                     ::Level
-    states                               ::Array{StickState,1}
+    symmetry                      ::LevelSymmetry
+    kappas                           ::Array{Int64,1}
+    initialLevel                        ::Level
+    finalIonLevel                          ::Level
+    states                                    ::Array{StickState,1}
 end
 
 
@@ -259,13 +381,14 @@ end
     ... constructor for an `empty` instance of PhotoIonizationPseudostates.Spectrum; a spectrum::Spectrum is returned.
 """
 function Spectrum()
-    Spectrum( 0, Level(), Level(), StickState[] )
+    Spectrum( LevelSymmetry(AngularJ64(0), Basics.plus), Int64[], Level(), Level(), StickState[] )
 end
 
 
 # `Base.show(io::IO, spectrum::PhotoIonizationPseudostates.Spectrum)`  ... prepares a proper printout of spectrum.
 function Base.show(io::IO, spectrum::PhotoIonizationPseudostates.Spectrum)
-    println(io, "kappa:                    $(spectrum.kappa)  ")
+    println(io, "symmetry:                 $(spectrum.symmetry)  ")
+    println(io, "kappas:                   $(spectrum.kappas)  ")
     println(io, "initialLevel:             $(spectrum.initialLevel)  ")
     println(io, "finalIonLevel:            $(spectrum.finalIonLevel)  ")
     println(io, "states:                   $(length(spectrum.states)) stick state(s)  ")
@@ -338,6 +461,29 @@ end
 
 
 """
+`PhotoIonizationPseudostates.ladderGridFor(grid::Radial.Grid, settings::PhotoIonizationPseudostates.Settings)`
+    ... builds the grid the pseudostate ladder itself is generated on -- the caller's own `grid` UNCHANGED if
+        `settings.pseudostateRbox` is `nothing` (the default), or that same grid EXTENDED to the larger box via
+        `Radial.Grid(grid; rbox=settings.pseudostateRbox)` otherwise.
+
+        **WHY EXTENDING rbox, WITH rnt/h/hp UNCHANGED, NEEDS NO BASIS RECONCILIATION -- VERIFIED NUMERICALLY,
+        05-Nov-2026, NOT ASSUMED.** `Radial.Grid(gr; rbox=...)` recomputes only the NUMBER of points needed to
+        reach the new box at the SAME point-spacing law; the mesh points inside the OLD box are reproduced
+        EXACTLY (checked: two grids built with `hp=0.02` and `rbox=4.0` vs `rbox=40.0` agree on their first 497
+        points to `max|diff| = 0.0`). An orbital tabulated on the smaller grid is therefore already a valid,
+        exact prefix of the larger grid's own mesh -- extending it is zero-padding, not interpolation, and
+        every radial-integral routine already used here (`RadialIntegrals.overlap`, `removeOccupiedComponent`)
+        already loops to `min(length(...))`, so nothing further is needed to mix the two. A `grid::Radial.Grid`
+        is returned.
+"""
+function ladderGridFor(grid::Radial.Grid, settings::PhotoIonizationPseudostates.Settings)
+    isnothing(settings.pseudostateRbox)   &&   return( grid )
+
+    return( Radial.Grid(grid; rbox=settings.pseudostateRbox) )
+end
+
+
+"""
 `PhotoIonizationPseudostates.buildPseudostateLadder(kappa::Int64, finalIonLevel::Level, nm::Nuclear.Model,
                                                       grid::Radial.Grid, settings::PhotoIonizationPseudostates.Settings)`
     ... builds the box-discretized continuum pseudostate ladder of the given kappa, in the frozen local
@@ -347,7 +493,9 @@ end
         Each retained state is labelled `Subshell(1000+k, kappa)` (k = 1, 2, ..., purely a bookkeeping label,
         chosen far above any physical principal quantum number so it can never collide with an ordinary bound
         subshell) and Gram-Schmidt orthogonalized against finalIonLevel's own occupied orbitals of the same
-        kappa via `removeOccupiedComponent`. A `ladder::Dict{Subshell,Orbital}` is returned.
+        kappa via `removeOccupiedComponent`. `grid` here is already `ladderGridFor`'s own result, not
+        necessarily the caller's original grid -- see that function's docstring. A
+        `ladder::Dict{Subshell,Orbital}` is returned.
 """
 function buildPseudostateLadder(kappa::Int64, finalIonLevel::Level, nm::Nuclear.Model, grid::Radial.Grid,
                                 settings::PhotoIonizationPseudostates.Settings)
@@ -374,8 +522,9 @@ function buildPseudostateLadder(kappa::Int64, finalIonLevel::Level, nm::Nuclear.
     idxWindow = findall(E -> windowLo <= E <= windowHi, eig.values)
     length(idxWindow) < 3   &&   error("PhotoIonizationPseudostates.buildPseudostateLadder(): only " *
                                         "$(length(idxWindow)) pseudostate(s) fall inside pseudostateWindow = " *
-                                        "$(settings.pseudostateWindow) for kappa = $kappa -- widen the window " *
-                                        "or check that it is given in the ejected electron's OWN energy units.")
+                                        "$(settings.pseudostateWindow) for kappa = $kappa -- widen the window, " *
+                                        "set settings.pseudostateRbox larger, or check that the window is given " *
+                                        "in the ejected electron's OWN energy units.")
 
     ladder = Dict{Subshell,Orbital}()
     mtp    = primitives.grid.NoPoints
@@ -414,22 +563,38 @@ end
 
 
 """
-`PhotoIonizationPseudostates.computeSpectrum(initialLevel::Level, finalIonLevel::Level, kappa::Int64,
-        symmetries::Array{LevelSymmetry,1}, nm::Nuclear.Model, grid::Radial.Grid,
+`PhotoIonizationPseudostates.computeSpectrum(initialLevel::Level, finalIonLevel::Level, kappas::Array{Int64,1},
+        symmetry::LevelSymmetry, nm::Nuclear.Model, grid::Radial.Grid,
         settings::PhotoIonizationPseudostates.Settings)`
-    ... builds the pseudostate ladder of the given kappa (`buildPseudostateLadder`), merges it with
-        initialLevel's own CSFs into ONE combined basis (re-expanding initialLevel.basis onto the extended
-        subshell list via `ManyElectron.Basis(basis, subshells)`'s existing zero-padding constructor, then
-        appending the new pseudostate CSFs, both restricted to `symmetries`), diagonalizes it ONCE via
+    ... builds the pseudostate ladder of EVERY kappa in `kappas` (one `buildPseudostateLadder` call per kappa --
+        this is the ONLY place that calls it), merges ALL of them together with initialLevel's own CSFs into
+        ONE combined basis restricted to the SINGLE `symmetry` (re-expanding initialLevel.basis onto the
+        extended subshell list via `ManyElectron.Basis(basis, subshells)`'s existing zero-padding constructor,
+        then appending the pseudostate CSFs of every pooled kappa), diagonalizes it ONCE via
         `Hamiltonian.performCI`, and computes the dipole amplitude from initialLevel onto every resulting
         eigenstate via `PhotoEmission.amplitude(Absorption(), ...)` -- which already tolerates the two levels
         carrying different subshell lists/orbital dicts, so no further basis surgery is needed here. A
         spectrum::Spectrum is returned.
+
+        POOLING EVERY KAPPA REACHING `symmetry` INTO ONE DIAGONALIZATION IS THE POINT, NOT AN OPTION -- see
+        `Spectrum`'s own docstring for why diagonalizing them apart (an earlier version of this function) drops
+        real Hamiltonian matrix elements between same-symmetry partial waves. `length(kappas) == 1` (e.g. bare
+        hydrogen, where kappa alone fixes (J,parity)) is simply the special case where that pooling has nothing
+        to do, not a separate code path.
 """
-function computeSpectrum(initialLevel::Level, finalIonLevel::Level, kappa::Int64, symmetries::Array{LevelSymmetry,1},
+function computeSpectrum(initialLevel::Level, finalIonLevel::Level, kappas::Array{Int64,1}, symmetry::LevelSymmetry,
                          nm::Nuclear.Model, grid::Radial.Grid, settings::PhotoIonizationPseudostates.Settings)
-    PhotoIonizationPseudostates.checkFrozenOrbitalConsistency(initialLevel, finalIonLevel, grid)
-    ladder = PhotoIonizationPseudostates.buildPseudostateLadder(kappa, finalIonLevel, nm, grid, settings)
+    # ladderGrid is grid itself unless settings.pseudostateRbox asks for a larger box -- see ladderGridFor's own
+    # docstring for why extending rbox this way needs no basis reconciliation. EVERYTHING below uses ladderGrid,
+    # not grid, so the pseudostate ladder's full extent is correctly integrated over wherever it actually reaches.
+    ladderGrid = PhotoIonizationPseudostates.ladderGridFor(grid, settings)
+    PhotoIonizationPseudostates.checkFrozenOrbitalConsistency(initialLevel, finalIonLevel, ladderGrid)
+    # ONE ladder PER kappa, kept separate here (not yet merged) so the CSF index range each kappa contributes to
+    # combinedCsfs, below, can be recorded for weightByKappa -- Subshell(1000+k, kappa) never collides ACROSS
+    # kappas, since kappa itself is part of a Subshell's identity, so merging the ladders themselves is safe.
+    laddersByKappa = Dict{Int64,Dict{Subshell,Orbital}}( kappa => PhotoIonizationPseudostates.buildPseudostateLadder(
+                                                          kappa, finalIonLevel, nm, ladderGrid, settings) for kappa in kappas )
+    ladderAll = merge( values(laddersByKappa)... )
 
     # The final ion's own DOMINANT CSF supplies the core occupation every pseudostate configuration shares.
     dominantIdx = argmax( abs.(finalIonLevel.mc) )
@@ -446,26 +611,36 @@ function computeSpectrum(initialLevel::Level, finalIonLevel::Level, kappa::Int64
     # MUST be in Base.isless(::Subshell,...)'s own canonical (n, then |kappa|, then kappa) order -- not a bare
     # vcat/Dict-key order -- since PhotoEmission.amplitude's own internal Basics.merge(...) produces exactly
     # that sorted order and then requires THIS list to appear, in order, as a subsequence of it.
-    extendedSubshells = Base.sort( vcat(initialLevel.basis.subshells, collect(keys(ladder))), lt=Base.isless )
+    extendedSubshells = Base.sort( vcat(initialLevel.basis.subshells, collect(keys(ladderAll))), lt=Base.isless )
     paddedBasis       = ManyElectron.Basis(initialLevel.basis, extendedSubshells)
     boundCsfs         = CsfR[];   for  csf in paddedBasis.csfs
-                                      LevelSymmetry(csf.J, csf.parity) in symmetries   &&   push!(boundCsfs, csf)   end
+                                      LevelSymmetry(csf.J, csf.parity) == symmetry   &&   push!(boundCsfs, csf)   end
 
-    pseudoRelConfs = ConfigurationR[]
-    for  sh  in  keys(ladder)
-        subshells = merge( coreOccupation, Dict(sh => 1) )
-        push!( pseudoRelConfs, ConfigurationR(subshells, finalIonLevel.basis.NoElectrons + 1) )
+    # APPEND each kappa's own pseudostate CSFs in turn, recording the index RANGE it occupies in combinedCsfs --
+    # this range is what lets weightByKappa, below, read off a per-eigenstate partial-channel weight directly
+    # from the already-computed mixing vector, with no further matrix element machinery.
+    combinedCsfs = copy(boundCsfs);   nBound = length(boundCsfs)
+    kappaRanges  = Dict{Int64,UnitRange{Int64}}()
+    for  kappa  in  kappas
+        pseudoRelConfs = ConfigurationR[]
+        for  sh  in  keys(laddersByKappa[kappa])
+            subshells = merge( coreOccupation, Dict(sh => 1) )
+            push!( pseudoRelConfs, ConfigurationR(subshells, finalIonLevel.basis.NoElectrons + 1) )
+        end
+        pseudoCsfs = CsfR[]
+        for  relconf in pseudoRelConfs
+            newCsfs = Basics.generateCsfRs(relconf, extendedSubshells)
+            for  csf in newCsfs    LevelSymmetry(csf.J, csf.parity) == symmetry   &&   push!(pseudoCsfs, csf)    end
+        end
+        length(pseudoCsfs) == 0   &&   error("PhotoIonizationPseudostates.computeSpectrum(): no pseudostate CSF " *
+                                              "of kappa = $kappa reaches symmetry $symmetry from this ion core, " *
+                                              "although PhotoIonization.determineChannels said it should.")
+        startIdx = length(combinedCsfs) + 1
+        append!( combinedCsfs, pseudoCsfs )
+        kappaRanges[kappa] = startIdx:length(combinedCsfs)
     end
-    pseudoCsfs = CsfR[]
-    for  relconf in pseudoRelConfs
-        newCsfs = Basics.generateCsfRs(relconf, extendedSubshells)
-        for  csf in newCsfs    LevelSymmetry(csf.J, csf.parity) in symmetries   &&   push!(pseudoCsfs, csf)    end
-    end
-    length(pseudoCsfs) == 0   &&   error("PhotoIonizationPseudostates.computeSpectrum(): no pseudostate CSF of " *
-                                          "kappa = $kappa reaches any of $symmetries from this ion core.")
 
-    combinedCsfs      = vcat(boundCsfs, pseudoCsfs);   nBound = length(boundCsfs)
-    combinedOrbitals  = merge(initialLevel.basis.orbitals, ladder)
+    combinedOrbitals  = merge(initialLevel.basis.orbitals, ladderAll)
     coreSubshellList  = Subshell[]
     for  (k, sh)  in  enumerate(extendedSubshells)
         mocc = Basics.subshell_2j(sh) + 1;    isFilled = true
@@ -475,22 +650,23 @@ function computeSpectrum(initialLevel::Level, finalIonLevel::Level, kappa::Int64
     combinedBasis = Basis(true, initialLevel.basis.NoElectrons, extendedSubshells, combinedCsfs, coreSubshellList,
                           combinedOrbitals)
 
-    mp = Hamiltonian.performCI(combinedBasis, nm, grid, AsfSettings(); printout=settings.printBefore, writeSummary=false)
+    mp = Hamiltonian.performCI(combinedBasis, nm, ladderGrid, AsfSettings(); printout=settings.printBefore, writeSummary=false)
 
     sortedLevels = sort(mp.levels, by = lev -> lev.energy)
     gi = Basics.twice(initialLevel.J) + 1.0
     states = StickState[]
     for  (n, lev)  in  enumerate(sortedLevels)
         weightOnReference = sum( lev.mc[1:nBound] .^ 2 )
+        weightByKappa      = Dict{Int64,Float64}( kappa => sum( lev.mc[kappaRanges[kappa]] .^ 2 ) for kappa in kappas )
         omega = lev.energy - initialLevel.energy
         dipoleStrength = EmProperty(0., 0.)
         for  mp_ in settings.multipoles
             if  string(mp_)[1] == 'E'
-                aC = PhotoEmission.amplitude(Absorption(), mp_, Basics.Coulomb,   omega, lev, initialLevel, grid; printout=false)
-                aB = PhotoEmission.amplitude(Absorption(), mp_, Basics.Babushkin, omega, lev, initialLevel, grid; printout=false)
+                aC = PhotoEmission.amplitude(Absorption(), mp_, Basics.Coulomb,   omega, lev, initialLevel, ladderGrid; printout=false)
+                aB = PhotoEmission.amplitude(Absorption(), mp_, Basics.Babushkin, omega, lev, initialLevel, ladderGrid; printout=false)
                 dipoleStrength = dipoleStrength + EmProperty(abs2(aC), abs2(aB))
             else
-                aM = PhotoEmission.amplitude(Absorption(), mp_, Basics.Magnetic, omega, lev, initialLevel, grid; printout=false)
+                aM = PhotoEmission.amplitude(Absorption(), mp_, Basics.Magnetic, omega, lev, initialLevel, ladderGrid; printout=false)
                 dipoleStrength = dipoleStrength + EmProperty(abs2(aM), abs2(aM))
             end
         end
@@ -508,21 +684,23 @@ function computeSpectrum(initialLevel::Level, finalIonLevel::Level, kappa::Int64
         elseif  n == length(sortedLevels)   localSpacing = sortedLevels[end].energy - sortedLevels[end-1].energy
         else                           localSpacing = (sortedLevels[n+1].energy - sortedLevels[n-1].energy) / 2
         end
-        push!( states, StickState(lev.energy, dipoleStrength, localSpacing, weightOnReference) )
+        push!( states, StickState(lev.energy, dipoleStrength, localSpacing, weightOnReference, weightByKappa) )
     end
 
-    return( Spectrum(kappa, initialLevel, finalIonLevel, states) )
+    return( Spectrum(symmetry, kappas, initialLevel, finalIonLevel, states) )
 end
 
 
 """
 `PhotoIonizationPseudostates.computeSpectra(finalMultiplet::Multiplet, initialLevel::Level, nm::Nuclear.Model,
         grid::Radial.Grid, settings::PhotoIonizationPseudostates.Settings; output::Bool=true)`
-    ... the standard entry point of this module: for every final-ion level of finalMultiplet and every kappa
-        that `PhotoIonization.determineChannels` finds reachable from initialLevel under settings.multipoles/
-        lValues, builds and diagonalizes the combined CI (`computeSpectrum`) and collects the resulting stick
-        spectra. A list of spectra::Array{PhotoIonizationPseudostates.Spectrum,1} is returned if output = true,
-        and nothing otherwise.
+    ... the standard entry point of this module: for every final-ion level of finalMultiplet, groups every
+        partial wave `PhotoIonization.determineChannels` finds reachable from initialLevel (under
+        settings.multipoles/lValues) by the TOTAL SYMMETRY it reaches -- not by kappa -- and builds and
+        diagonalizes ONE combined CI per (finalIonLevel, symmetry) pooling every kappa that shares it
+        (`computeSpectrum`; see its own and `Spectrum`'s docstring for why pooling by symmetry, not kappa, is
+        the point). A list of spectra::Array{PhotoIonizationPseudostates.Spectrum,1} is returned if output =
+        true, and nothing otherwise.
 
         TAKES ONE initialLevel, NOT A WHOLE initialMultiplet -- deliberately, unlike `PhotoIonizationInterference
         .computePathways`. Looping over every level of a multiplet that may ALSO contain the autoionizing
@@ -543,11 +721,16 @@ function computeSpectra(finalMultiplet::Multiplet, initialLevel::Level, nm::Nucl
     spectra = PhotoIonizationPseudostates.Spectrum[]
     for  finalIonLevel  in  finalMultiplet.levels
         partialWaves = PhotoIonization.determineChannels(finalIonLevel, initialLevel, piSettings)
-        for  pw  in  partialWaves
-            symmetries = [ch.symmetry for ch in pw.channels]
-            length(symmetries) == 0   &&   continue
-            push!( spectra, PhotoIonizationPseudostates.computeSpectrum(initialLevel, finalIonLevel, pw.kappa,
-                                                                        symmetries, nm, grid, settings) )
+        # INVERT the (kappa -> symmetries) map determineChannels returns into (symmetry -> kappas): every
+        # kappa reaching the SAME symmetry must be pooled into ONE computeSpectrum call, not one call each --
+        # see Spectrum's own docstring for why.
+        kappasBySymmetry = Dict{LevelSymmetry,Array{Int64,1}}()
+        for  pw  in  partialWaves,  ch  in  pw.channels
+            kappasBySymmetry[ch.symmetry] = push!( get(kappasBySymmetry, ch.symmetry, Int64[]), pw.kappa )
+        end
+        for  (symmetry, kappas)  in  kappasBySymmetry
+            push!( spectra, PhotoIonizationPseudostates.computeSpectrum(initialLevel, finalIonLevel,
+                                                                        unique(kappas), symmetry, nm, grid, settings) )
         end
     end
     PhotoIonizationPseudostates.displayResults(stdout, spectra, settings)
@@ -576,7 +759,8 @@ function displayResults(stream::IO, spectra::Array{PhotoIonizationPseudostates.S
     sa = "  "
     sa = sa * TableStrings.center(10, "i-level"; na=2)
     sa = sa * TableStrings.center(10, "f-level"; na=2)
-    sa = sa * TableStrings.center(8,  "kappa"; na=2)
+    sa = sa * TableStrings.center(10, "symmetry"; na=2)
+    sa = sa * TableStrings.center(10, "kappas"; na=2)
     sa = sa * TableStrings.center(16, "E_photon"; na=2)
     sa = sa * TableStrings.center(16, "sigma (Coulomb)"; na=2)
     println(stream, sa);    println(stream, "  ", TableStrings.hLine(nx))
@@ -586,7 +770,8 @@ function displayResults(stream::IO, spectra::Array{PhotoIonizationPseudostates.S
         sigma   = PhotoIonizationPseudostates.crossSectionAt(spectrum, omegaAu)
         sa = "  " * TableStrings.center(10, string(spectrum.initialLevel.index); na=2)
         sa = sa * TableStrings.center(10, string(spectrum.finalIonLevel.index); na=2)
-        sa = sa * TableStrings.center(8,  string(spectrum.kappa); na=2)
+        sa = sa * TableStrings.center(10, string(spectrum.symmetry); na=2)
+        sa = sa * TableStrings.center(10, string(spectrum.kappas); na=2)
         sa = sa * @sprintf("%14.6e", omega) * "  "
         sa = sa * @sprintf("%14.6e", sigma.Coulomb)
         println(stream, sa)
