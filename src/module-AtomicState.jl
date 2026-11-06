@@ -106,6 +106,17 @@ struct   MeanFieldBasis  <:  AbstractRepresentationType
 end
 
 
+"""
+`AtomicState.MeanFieldBasis()`  
+    ... constructor for an 'empty' instance of a variable::AtomicState.MeanFieldBasis, i.e. a mean-field basis built with
+        the default `MeanFieldSettings()`.  It completes the set of zero-argument forms of the representation types, so that
+        each of them can be written down before its settings are chosen.  A basis::AtomicState.MeanFieldBasis is returned.
+"""
+function MeanFieldBasis()
+    MeanFieldBasis( AtomicState.MeanFieldSettings() )
+end
+
+
 # `Base.string(basis::MeanFieldBasis)`  ... provides a String notation for the variable basis::MeanFieldBasi.
 function Base.string(basis::MeanFieldBasis)
     if !(basis.settings.scField  in [DFSField(), HSField()])
@@ -130,6 +141,18 @@ end
 """
 struct   MeanFieldMultiplet  <:  AbstractRepresentationType
     settings           ::AtomicState.MeanFieldSettings
+end
+
+
+"""
+`AtomicState.MeanFieldMultiplet()`  
+    ... constructor for an 'empty' instance of a variable::AtomicState.MeanFieldMultiplet, i.e. a mean-field multiplet
+        built with the default `MeanFieldSettings()`.  It completes the set of zero-argument forms of the representation
+        types, so that each of them can be written down before its settings are chosen.  A
+        multiplet::AtomicState.MeanFieldMultiplet is returned.
+"""
+function MeanFieldMultiplet()
+    MeanFieldMultiplet( AtomicState.MeanFieldSettings() )
 end
 
 
@@ -207,6 +230,18 @@ end
 """
 struct  OneElectronSpectrum     <:  AbstractRepresentationType
     settings           ::AtomicState.OneElectronSettings
+end
+
+
+"""
+`AtomicState.OneElectronSpectrum()`  
+    ... constructor for an 'empty' instance of a variable::AtomicState.OneElectronSpectrum, i.e. a one-electron spectrum
+        built with the default `OneElectronSettings()`.  It completes the set of zero-argument forms of the representation
+        types, so that each of them can be written down before its settings are chosen.  A
+        spectrum::AtomicState.OneElectronSpectrum is returned.
+"""
+function OneElectronSpectrum()
+    OneElectronSpectrum( AtomicState.OneElectronSettings() )
 end
 
 
