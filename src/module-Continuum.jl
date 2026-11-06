@@ -1017,13 +1017,22 @@ end
         tail rather than only asymptotically, and there Zeff*r = 46 at the matching point, so the tail condition is met
         well inside one oscillation.  A measure may only guard the assumption its own routine makes.
 
-        THE TWO TIERS WANT OPPOSITE ENDS OF THE ENERGY RANGE, which is what `minEnergy` is for.  The mesh must
-        sample the SHORTEST oscillation, so it is tested at the fastest electron, `maxEnergy`;  the box must
-        CONTAIN the longest, so it belongs to the slowest.  A caller that knows its range passes `minEnergy` and
-        gets both;  one that passes only a maximum gets the mesh tier fully and the box tier evaluated at the
-        wrong end, which is how every call site behaved before 06-Nov-2026 and how most still do.  A `minEnergy`
-        of zero or below -- an energy range that starts AT threshold, or an empty line list -- SKIPS the box tier
-        rather than failing it, since there is then no oscillation to count.
+        THE TESTS WANT OPPOSITE ENDS OF THE ENERGY RANGE, which is what `minEnergy` is for.  The mesh must sample
+        the SHORTEST oscillation, so it is tested at the fastest electron, `maxEnergy`;  the box must CONTAIN the
+        longest, so that belongs to the slowest.  A caller that knows its range passes `minEnergy` and is told
+        about both ends;  one that passes only a maximum is told about the fast end alone, which is how every
+        call site behaved before 06-Nov-2026 and how most still do.
+
+        AND THE TWO ENDS CARRY DIFFERENT SEVERITIES, which is a decision and not an oversight -- the maintainer's,
+        06-Nov-2026.  The fast end may be REFUSED, because at a fixed energy "enlarge the box to four wavelengths"
+        is an instruction that can be carried out.  The slow end only WARNS, because the wavelength grows as
+        1/sqrt(E) without bound:  no box of any size holds one wave at threshold, and several of JAC's own
+        calculations place their lowest energy AT threshold deliberately, a rate coefficient being the obvious one.
+        A refusal there would forbid the calculation rather than ask for a larger box.  Nor can the offending
+        energies be dismissed as negligible:  the colder the plasma, the more the slowest electrons contribute to
+        the very average they would be dropped from.  So the slow end reports WHICH PART of the output is affected
+        and leaves the run to proceed.  A `minEnergy` of zero or below, and an empty line list arriving as
+        `maxEnergy = 0`, are NOT ASKED rather than failed, since there is then no oscillation to count.
 
         AND A FIXED POINTS-PER-OSCILLATION NUMBER CANNOT BE CALIBRATED, which is why the sampling test refuses at 15 and
         only WARNS at 40 rather than refusing there.  Three convergence studies in this repository demand three widely
@@ -1062,13 +1071,12 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; minEnergy::Union
     wavenb      = sqrt( 2maxEnergy + maxEnergy * Defaults.getDefaults("alpha")^2 )
     wavelgth    = 2pi / wavenb
     nrContinuum = grid.NoPoints - 200
-    # The two tiers below want OPPOSITE extrema of the energy range, so the box tier carries its own
-    # wavelength:  the mesh must sample the SHORTEST oscillation and the box must contain the LONGEST.
-    # A caller that passes no minimum gets the behaviour of every version before 06-Nov-2026, in which both
-    # tiers read `maxEnergy` and the box tier therefore bit only by accident.
-    boxEnergy   = isnothing(minEnergy) ? maxEnergy : minEnergy
-    boxWavenb   = boxEnergy > 0.  ?  sqrt( 2boxEnergy + boxEnergy * Defaults.getDefaults("alpha")^2 )  :  0.
-    boxWavelgth = boxWavenb > 0.  ?  2pi / boxWavenb  :  0.
+    # The tests below want OPPOSITE extrema of the energy range, so the slow end carries its own wavelength:
+    # the mesh must sample the SHORTEST oscillation and the box must contain the LONGEST.  A caller that passes
+    # no minimum reproduces the behaviour of every version before 06-Nov-2026 exactly.
+    slowEnergy   = isnothing(minEnergy) ? maxEnergy : minEnergy
+    slowWavenb   = slowEnergy  > 0.  ?  sqrt( 2slowEnergy + slowEnergy * Defaults.getDefaults("alpha")^2 )  :  0.
+    slowWavelgth = slowWavenb  > 0.  ?  2pi / slowWavenb  :  0.
     
     ptsPerOsc = wavelgth / grid.hp
     #
@@ -1150,8 +1158,9 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; minEnergy::Union
     # maintainer rather than a stop to be introduced here.
     # A non-positive energy has no oscillation to count, so the box tier is NOT ASKED rather than failed:
     # a caller whose energy range starts AT threshold, and one whose line list came out empty, both reach
-    # here with boxEnergy = 0 and must not be refused for it.
-    boxWaves = boxWavelgth > 0.  ?  grid.r[grid.NoPoints] / boxWavelgth  :  Inf
+    # here with a zero energy and must not be refused for it.
+    boxWaves  = wavenb       > 0.  ?  grid.r[grid.NoPoints] / wavelgth      :  Inf
+    slowWaves = slowWavelgth > 0.  ?  grid.r[grid.NoPoints] / slowWavelgth  :  Inf
     iOne     = something( findfirst(k -> grid.r[k] >= grid.r[nrContinuum] - wavelgth, 1:nrContinuum), 1 )
     ptsCount = Float64(nrContinuum - iOne + 1)
     if  ptsCount < 40.0
@@ -1208,14 +1217,26 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; minEnergy::Union
     #   `module-ImpactExcitation.jl` IS WHERE TO LOOK FIRST:  it already computes the minimum and already tests it, in
     # a module-local `checkLowEnergyGrid` applying the same `lambda > rbox` criterion -- but only WARNS, and only there.
     # Its warning predates the measurement behind the refusal below.
-    #   AND THE MIGRATION IS NOT MECHANICAL, which is why no caller is changed in the same commit.  A module whose
-    # energy grid STARTS AT THRESHOLD has a minimum near zero by construction -- `Cascade-inc-photorecombination`
-    # builds a Gauss-Legendre grid from 0.0 upward, and `ImpactExcitation` says the same of `calcRateCoefficient =
-    # true` -- so handing over the honest minimum would refuse nearly every rate-coefficient run under a sine
-    # convention.  Per module the choice is the lowest energy that CARRIES WEIGHT, or a warning rather than a refusal.
+    #   THE MIGRATION IS THEREFORE SAFE AND MECHANICAL, now that the slow end only warns:  a module passes the
+    # minimum it already has beside the maximum, and no run that works today can be stopped by it.  That was NOT
+    # true of the first design, in which `minEnergy` fed the refusal:  `Cascade-inc-photorecombination` builds a
+    # Gauss-Legendre energy grid from 0.0 upward and `ImpactExcitation` says the same of `calcRateCoefficient =
+    # true`, so the honest minimum would have refused nearly every rate-coefficient run under a sine convention.
+    #   AND HERE IS WHY THE SLOW END IS WORTH REPORTING AT ALL, measured 06-Nov-2026 rather than argued.
+    # `examples/example-Dd.jl` branch (b) -- bare Z = 18, K-shell radiative recombination, `rbox` = 10 a.u.,
+    # electron energies 1, 10, 100, 1000 and 10000 eV -- hands this function its MAXIMUM, 367 Ha, where the
+    # box holds 43 waves.  Every tier passes.  The run then dies inside `normalizeOrbitalPureSine` on the
+    # asymptotic-form residual, with nothing pointing at the energy that caused it.  The box holds 0.43 waves
+    # at 1 eV and 1.37 at 10 eV;  dropping those two points makes the branch complete, keeping either makes it
+    # raise, and from 100 eV up (4.34 waves) it is fine.  So the slow end was the whole story and the box
+    # tier, asked about the fast end, had nothing to say.  The branch carries a `Last successful` date of
+    # 28-Aug-2026 QUOTING ITS 1 eV CROSS SECTION, which the residual guard now says was never trustworthy.
+    #   NOTE ALSO, because two instruments agreeing is worth more than either alone:  `CONT_BOX_WAVES_WARN`
+    # was calibrated at 4 waves on a BARE POINT PROTON, knowing nothing of this example, and the independent
+    # asymptotic-form residual starts refusing between 1.37 and 4.34 waves on it.
     if  boxWaves < CONT_BOX_WAVES_FATAL  &&  Defaults.GBL_CONT_NORMALIZATION != CoulombFunctionNorm()
         error("Continuum.gridConsistency(): STOP -- this box holds only " * @sprintf("%.2f", boxWaves) *
-              " oscillations of the continuum orbital at " * @sprintf("%.4e", boxEnergy) * " Ha, i.e. NOT ONE " *
+              " oscillations of the continuum orbital at " * @sprintf("%.4e", maxEnergy) * " Ha, i.e. NOT ONE " *
               "COMPLETE WAVE, and the selected normalization fixes the orbital's scale by fitting an asymptotic " *
               "sine.  There is no complete oscillation inside the box to fit it to.  Measured 06-Nov-2026 on a " *
               "bare point proton, where the exact solution is known: below one wave the normalized orbital is " *
@@ -1223,19 +1244,19 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; minEnergy::Union
               "Coulomb-function convention reproduces itself to 7e-8 over the same boxes.  THE FIT RESIDUAL DOES " *
               "NOT WARN YOU HERE: it reads 0.04 at the 75 % error, below its own 0.20 limit, because with less " *
               "than one wave the fit has almost nothing to satisfy.  REMEDY: enlarge grid.rbox to at least " *
-              @sprintf("%.2f", CONT_BOX_WAVES_WARN*boxWavelgth) * " a.u. (" * @sprintf("%.0f", CONT_BOX_WAVES_WARN) *
-              " waves at this energy; " * @sprintf("%.2f", boxWavelgth) * " a.u. would be the bare minimum of one), " *
+              @sprintf("%.2f", CONT_BOX_WAVES_WARN*wavelgth) * " a.u. (" * @sprintf("%.0f", CONT_BOX_WAVES_WARN) *
+              " waves at this energy; " * @sprintf("%.2f", wavelgth) * " a.u. would be the bare minimum of one), " *
               "or lower the continuum energy, or select " *
               "setDefaults(\"method: normalization, Coulomb functions\"), which matches exact Coulomb functions " *
               "instead of an asymptotic sine and was measured insensitive to the box.")
     end
     if  boxWaves < CONT_BOX_WAVES_WARN  &&  Defaults.GBL_CONT_NORMALIZATION != CoulombFunctionNorm()
         Defaults.warn(AddWarning(), "Continuum.gridConsistency(): the box holds only " *
-                      @sprintf("%.2f", boxWaves) * " oscillations at " * @sprintf("%.4e", boxEnergy) *
+                      @sprintf("%.2f", boxWaves) * " oscillations at " * @sprintf("%.4e", maxEnergy) *
                       " Ha, below the 4 above which the box can be ruled out as a cause; the continuum phase and " *
                       "normalization may be wrong by several percent to 20 %.")
         @warn("Continuum.gridConsistency(): the box reaches " * @sprintf("%.2f", boxWaves) *
-              " oscillations of the continuum orbital at " * @sprintf("%.4e", boxEnergy) * " Ha.  THIS IS " *
+              " oscillations of the continuum orbital at " * @sprintf("%.4e", maxEnergy) * " Ha.  THIS IS " *
               "INDEPENDENT OF THE STEP SIZE and is not implied by it: the phase and the normalization are read " *
               "near the outer boundary, so there must be complete oscillations out there to read them FROM, " *
               "however finely each one is sampled.  Measured 06-Nov-2026 on a bare point proton, at a FIXED " *
@@ -1244,10 +1265,48 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; minEnergy::Union
               "same boxes.  Above 4 waves this experiment can no longer attribute the residual few percent to " *
               "the box, which is why 4 is the level here -- it is where the box stops being demonstrably the " *
               "cause, NOT a level above which the answer is known to be converged.  Enlarge grid.rbox to about " *
-              @sprintf("%.2f", CONT_BOX_WAVES_WARN*boxWavelgth) * " a.u., or lower the continuum energy.  This " *
+              @sprintf("%.2f", CONT_BOX_WAVES_WARN*wavelgth) * " a.u., or lower the continuum energy.  This " *
               "applies to the asymptotic-sine conventions;  " *
               "setDefaults(\"method: normalization, Coulomb functions\") matches " *
               "exact Coulomb functions instead and was measured insensitive to the box.", maxlog=3)
+    end
+    # THE SLOW END WARNS AND NEVER REFUSES, and the asymmetry with the two tiers above is the whole point --
+    # the maintainer's decision, 06-Nov-2026.  A refusal has to name a remedy that can be carried out.  At the
+    # PRINCIPAL energy it can:  the wavelength is fixed, so `enlarge grid.rbox to 4 lambda` is a finite
+    # instruction.  At the SLOW end it cannot:  the wavelength grows as 1/sqrt(E) without bound, so NO FINITE
+    # BOX holds one wave at threshold, and several of JAC's own calculations put their lowest energy AT zero on
+    # purpose -- a rate coefficient needs the slow electrons.  Refusing there would not ask for a larger box, it
+    # would forbid the calculation.
+    #   AND THE OBVIOUS ESCAPE DOES NOT EXIST:  one cannot drop the offending energies as negligible, because
+    # the colder the plasma the more the slowest electrons carry -- in a cold case they dominate the very
+    # average they would be dropped from.  So what is owed to the caller is the TRUTH ABOUT WHICH PART OF THE
+    # OUTPUT IS AFFECTED, not a stop.  A caller holding a list of energies should additionally say HOW MANY of
+    # them fall below the line;  this function sees only the extremes and reports the extreme.
+    if  !isnothing(minEnergy)  &&  slowWaves < CONT_BOX_WAVES_WARN  &&  slowWaves < boxWaves  &&
+        Defaults.GBL_CONT_NORMALIZATION != CoulombFunctionNorm()
+        if  slowWaves < CONT_BOX_WAVES_FATAL
+            sa = "NOT ONE COMPLETE WAVE, so its normalization is read from a wave the box never shows;  " *
+                 "measured 15 to 75 % wrong on a bare point proton, a factor 1.3 to 3 in a cross section"
+        else
+            sa = "fewer than the 4 waves above which the box can be ruled out as a cause;  percent to " *
+                 "20 % in the phase and the normalization"
+        end
+        Defaults.warn(AddWarning(), "Continuum.gridConsistency(): THE SLOW END OF THIS RUN IS NOT "             *
+                      "REPRESENTED. The slowest continuum electron, at " * @sprintf("%.4e", slowEnergy)        *
+                      " Ha, reaches " * @sprintf("%.2f", slowWaves) * " oscillations in this box -- " * sa     *
+                      ". The faster energies of the same run are unaffected.")
+        @warn("Continuum.gridConsistency(): THE SLOW END OF THIS RUN IS NOT REPRESENTED.  The slowest "         *
+              "continuum electron, at " * @sprintf("%.4e", slowEnergy) * " Ha, reaches only "                  *
+              @sprintf("%.2f", slowWaves) * " oscillations inside a box of "                                   *
+              @sprintf("%.2f", grid.r[grid.NoPoints]) * " a.u., where the selected normalization fits an "      *
+              "asymptotic sine -- " * sa * ".  The faster energies of the same run are unaffected, so this "   *
+              "is a statement about PART of the output.  THIS IS A WARNING AND NOT A REFUSAL BY DESIGN: the "   *
+              "wavelength grows without bound as the energy falls, so no box of any size holds one wave at "    *
+              "threshold, and a calculation that deliberately starts at threshold -- a rate coefficient -- "    *
+              "cannot be given a box that would satisfy it.  WHAT DOES HELP: "                                  *
+              "setDefaults(\"method: normalization, Coulomb functions\"), which matches exact Coulomb "        *
+              "functions rather than an asymptotic sine and was measured insensitive to the box, or raising "   *
+              "the lowest energy of the run if the slow end is not needed.", maxlog=3)
     end
 
     return( nrContinuum )
