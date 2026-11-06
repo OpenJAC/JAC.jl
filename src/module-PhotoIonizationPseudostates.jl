@@ -181,8 +181,8 @@
 module PhotoIonizationPseudostates
 
 
-using  Printf, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..Hamiltonian, ..ManyElectron, ..Nuclear,
-       ..PhotoEmission, ..PhotoIonization, ..Radial, ..RadialIntegrals, ..TableStrings
+using  Printf, SparseArrays, ..Basics, ..Bsplines, ..Continuum, ..Defaults, ..Hamiltonian, ..ManyElectron,
+       ..Nuclear, ..PhotoEmission, ..PhotoIonization, ..Radial, ..RadialIntegrals, ..TableStrings
 
 
 """
@@ -484,53 +484,161 @@ end
 
 
 """
+`PhotoIonizationPseudostates.solveWindowBySegments(kappa::Int64, matrixA::AbstractMatrix{Float64},
+        matrixB::AbstractMatrix{Float64}, primitives::Bsplines.Primitives, window::Tuple{Float64,Float64})`
+    ... covers the WHOLE energy `window` with real eigenpairs via several small shift-invert calls
+        (`Bsplines.diagonalizeLocalMatrixNearEnergy`) rather than one call asking for however many eigenpairs
+        the whole window needs -- Arnoldi/Lanczos converges best for eigenvalues NEAR the shift, so a wide
+        window is split into `nSegments` equal-width sub-ranges, each solved by its OWN shift-invert call
+        centred on its own midpoint. `nSegments` is estimated from the free-particle local-spacing formula
+        `pi*sqrt(2E)/rbox` (the same estimate used throughout `Bsplines`' own development today) at the
+        window's own midpoint, targeting `targetStatesPerSegment` states per segment -- a heuristic, not a
+        derived bound -- and NATURALLY degenerates to 1 for a window already narrow relative to the local
+        spacing, so there is no separate code path for that common, near-threshold case. Each segment's own
+        `nev` is estimated the SAME way from its OWN midpoint, since spacing itself varies with E, and
+        doubled, up to 5 times, if the returned eigenvalues do not cover the segment -- fewer than 3 kept, or
+        the kept range falls short of either edge by more than one local spacing. A
+        `(values::Array{Float64,1}, vectors::Array{Vector{Float64},1})` pair, sorted by value and covering the
+        whole window, is returned.
+"""
+function solveWindowBySegments(kappa::Int64, matrixA::AbstractMatrix{Float64}, matrixB::AbstractMatrix{Float64},
+                                primitives::Bsplines.Primitives, window::Tuple{Float64,Float64})
+    windowLo, windowHi     = window
+    rbox                   = primitives.grid.r[end]
+    targetStatesPerSegment = 30
+
+    midE         = max( (windowLo+windowHi)/2, 1.0e-6 )
+    spacingAtMid = pi * sqrt(2*midE) / rbox
+    nSegments    = max( 1, ceil(Int64, (windowHi-windowLo) / (targetStatesPerSegment*spacingAtMid)) )
+    edges        = range(windowLo, windowHi, length=nSegments+1)
+
+    allValues  = Float64[];    allVectors = Vector{Float64}[]
+    for  seg = 1:nSegments
+        eLo = edges[seg];   eHi = edges[seg+1]
+        sigma        = (eLo+eHi)/2
+        localSpacing = pi * sqrt(2*max(sigma,1.0e-6)) / rbox
+        nev          = max( 6, ceil(Int64, 1.5*(eHi-eLo)/localSpacing) )
+
+        attempt = 0
+        while true
+            eig        = Bsplines.diagonalizeLocalMatrixNearEnergy(kappa, matrixA, matrixB, primitives, sigma, nev)
+            keepRightEdge = seg == nSegments
+            keptIdx    = findall( E -> (eLo <= E < eHi)  ||  (keepRightEdge && E == eHi),  eig.values )
+            covered    = length(keptIdx) >= 3   &&   minimum(eig.values[keptIdx]) <= eLo + localSpacing   &&
+                                                       maximum(eig.values[keptIdx]) >= eHi - localSpacing
+            if  covered
+                append!(allValues, eig.values[keptIdx]);   append!(allVectors, eig.vectors[keptIdx])
+                break
+            end
+            attempt = attempt + 1
+            attempt > 5   &&   error("PhotoIonizationPseudostates.solveWindowBySegments(): segment [$eLo, " *
+                                      "$eHi) for kappa = $kappa did not reach full coverage after $attempt " *
+                                      "attempts (last nev = $nev) -- check pseudostateRbox and " *
+                                      "pseudostateWindow units, or that the box is matched to this energy range.")
+            nev = nev * 2
+        end
+    end
+
+    order = sortperm(allValues)
+
+    return( allValues[order], allVectors[order] )
+end
+
+
+"""
 `PhotoIonizationPseudostates.buildPseudostateLadder(kappa::Int64, finalIonLevel::Level, nm::Nuclear.Model,
-                                                      grid::Radial.Grid, settings::PhotoIonizationPseudostates.Settings)`
+                                                      grid::Radial.Grid, boundGrid::Radial.Grid,
+                                                      settings::PhotoIonizationPseudostates.Settings)`
     ... builds the box-discretized continuum pseudostate ladder of the given kappa, in the frozen local
         potential of finalIonLevel (nuclear + `Basics.DFSField(1.0)` mean field, the same combination
-        `Continuum.generateOrbitalForLevel` already uses), keeping every eigenstate of
-        `Bsplines.diagonalizeLocalMatrix`'s positive-energy branch that falls inside settings.pseudostateWindow.
-        Each retained state is labelled `Subshell(1000+k, kappa)` (k = 1, 2, ..., purely a bookkeeping label,
-        chosen far above any physical principal quantum number so it can never collide with an ordinary bound
-        subshell) and Gram-Schmidt orthogonalized against finalIonLevel's own occupied orbitals of the same
-        kappa via `removeOccupiedComponent`. `grid` here is already `ladderGridFor`'s own result, not
-        necessarily the caller's original grid -- see that function's docstring. A
-        `ladder::Dict{Subshell,Orbital}` is returned.
+        `Continuum.generateOrbitalForLevel` already uses), keeping every eigenstate inside
+        settings.pseudostateWindow. Each retained state is labelled `Subshell(1000+k, kappa)` (k = 1, 2, ...,
+        purely a bookkeeping label, chosen far above any physical principal quantum number so it can never
+        collide with an ordinary bound subshell) and Gram-Schmidt orthogonalized against finalIonLevel's own
+        occupied orbitals of the same kappa via `removeOccupiedComponent`. `grid` here is already
+        `ladderGridFor`'s own result, not necessarily the caller's original grid -- see that function's
+        docstring; `boundGrid` is that ORIGINAL, small grid, needed for one thing only -- see next.
+
+        **WHY THE MEAN FIELD IS BUILT ON `boundGrid`, THEN EXTENDED ONTO `grid`, RATHER THAN BUILT ON `grid`
+        DIRECTLY.** `Basics.computePotential(DFSField(...), ...)` integrates via a brute-force O(npoints^2)
+        double loop -- harmless on the small `boundGrid` (npoints ~ hundreds) but, measured 06-Nov-2026,
+        ~7e11 operations and effectively unaffordable on the large ladder `grid` a resolved resonance needs
+        (npoints ~ 850000 at rbox~17000) -- see priority-list item 7, where fixing this PROPERLY (inside
+        `Basics` itself) is held as its own, separate, deliberately deferred task. This function instead
+        computes the mean field on the cheap, small `boundGrid` (exactly as before today's work), then hands
+        `Basics.add` a `Radial.Potential` whose `Zr` array is that short result but whose `grid` field points
+        at the LARGE ladder `grid` -- `Basics.add`'s own existing logic (`Zr[nmin+1:nmax] .= Zr[nmin]`,
+        `module-BasicsAZ-inc-AG.jl`) already extends a shorter potential as a CONSTANT past its own end. This
+        is not a new approximation invented here: it is the EXACT physical behaviour for a mean field from a
+        charge density that is itself exactly zero beyond `boundGrid`'s own extent (the core's charge seen
+        from far away is just its total enclosed charge, a constant, no further integration needed) -- it is
+        the existing convention `Basics.add` was already written to exploit, not a shortcut specific to this
+        module. `boundGrid` and `grid` share the same `rnt`/`h`/`hp` by construction of `ladderGridFor`, so
+        `Basics.add`'s own grid-consistency check passes exactly.
+
+        **TWO PATHS, SPLIT ON `settings.continuumExchange`, NOT ONE.** Exchange (`Bsplines.setupExchangeMatrix`)
+        is genuinely NONLOCAL, so it cannot be represented by the sparse/banded assembly the default path
+        uses -- `Bsplines.diagonalizeLocalMatrixNearEnergy`'s own guard would refuse it anyway, for the right
+        reason. When `continuumExchange == true` this function falls back to the ORIGINAL dense
+        `generateTTpMatrix!`/`setupLocalMatrix`/`diagonalizeLocalMatrix` route, filtering the full positive-
+        energy branch to the window exactly as before -- that is the only path that can carry exchange, not
+        a kept-around fallback for its own sake. Otherwise (the common, default case) it builds the matrices
+        directly as sparse (`Bsplines.generateTTpMatrixSparse!`/`setupLocalMatrixSparse`) and covers the
+        window via `PhotoIonizationPseudostates.solveWindowBySegments`'s segmented shift-invert solve, rather
+        than one dense diagonalization of the whole positive-energy branch -- this is what makes a box
+        genuinely matched to a resonance's own width (rbox in the thousands, not capped near rbox~300 by a
+        dense diagonalization's memory cost) practical.
 """
 function buildPseudostateLadder(kappa::Int64, finalIonLevel::Level, nm::Nuclear.Model, grid::Radial.Grid,
-                                settings::PhotoIonizationPseudostates.Settings)
-    nuclearPot = Nuclear.nuclearPotential(nm, grid)
-    meanPot    = Basics.computePotential(Basics.DFSField(1.0), grid, finalIonLevel)
-    pot        = Basics.add(nuclearPot, meanPot)
-
-    primitives = Bsplines.generatePrimitives(grid)
-    storage    = Dict{String,Array{Float64,2}}()
-    nsL        = primitives.grid.nsL;   nsS = primitives.grid.nsS
-    overlap    = zeros(nsL+nsS, nsL+nsS)
-    overlap[1:nsL,1:nsL]                 = Bsplines.generateTTpMatrix!("LL-overlap", 0, primitives, storage)
-    overlap[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = Bsplines.generateTTpMatrix!("SS-overlap", 0, primitives, storage)
-
-    localMatrix = Bsplines.setupLocalMatrix(kappa, primitives, pot, storage)
-    if  settings.continuumExchange == true
-        coreOccupations = Basics.extractMeanOccupation(finalIonLevel.basis)
-        localMatrix      = localMatrix + Bsplines.setupExchangeMatrix(kappa, primitives, finalIonLevel.basis.orbitals,
-                                                                       coreOccupations)
-    end
-    eig = Bsplines.diagonalizeLocalMatrix(kappa, localMatrix, overlap, primitives)
-
+                                boundGrid::Radial.Grid, settings::PhotoIonizationPseudostates.Settings)
+    nuclearPot    = Nuclear.nuclearPotential(nm, grid)
+    meanPotSmall  = Basics.computePotential(Basics.DFSField(1.0), boundGrid, finalIonLevel)
+    meanPot       = Radial.Potential(meanPotSmall.name, meanPotSmall.Zr, grid)
+    pot           = Basics.add(nuclearPot, meanPot)
     windowLo, windowHi = settings.pseudostateWindow
-    idxWindow = findall(E -> windowLo <= E <= windowHi, eig.values)
-    length(idxWindow) < 3   &&   error("PhotoIonizationPseudostates.buildPseudostateLadder(): only " *
-                                        "$(length(idxWindow)) pseudostate(s) fall inside pseudostateWindow = " *
-                                        "$(settings.pseudostateWindow) for kappa = $kappa -- widen the window, " *
-                                        "set settings.pseudostateRbox larger, or check that the window is given " *
-                                        "in the ejected electron's OWN energy units.")
+
+    if  settings.continuumExchange == true
+        # The ONLY path that can represent exchange -- see this function's own docstring. Unchanged from
+        # before today's sparse/shift-invert work.
+        primitives = Bsplines.generatePrimitives(grid)
+        storage    = Dict{String,Array{Float64,2}}()
+        nsL        = primitives.grid.nsL;   nsS = primitives.grid.nsS
+        overlap    = zeros(nsL+nsS, nsL+nsS)
+        overlap[1:nsL,1:nsL]                 = Bsplines.generateTTpMatrix!("LL-overlap", 0, primitives, storage)
+        overlap[nsL+1:nsL+nsS,nsL+1:nsL+nsS] = Bsplines.generateTTpMatrix!("SS-overlap", 0, primitives, storage)
+
+        localMatrix     = Bsplines.setupLocalMatrix(kappa, primitives, pot, storage)
+        coreOccupations = Basics.extractMeanOccupation(finalIonLevel.basis)
+        localMatrix     = localMatrix + Bsplines.setupExchangeMatrix(kappa, primitives, finalIonLevel.basis.orbitals,
+                                                                      coreOccupations)
+        eig = Bsplines.diagonalizeLocalMatrix(kappa, localMatrix, overlap, primitives)
+
+        idxWindow = findall(E -> windowLo <= E <= windowHi, eig.values)
+        length(idxWindow) < 3   &&   error("PhotoIonizationPseudostates.buildPseudostateLadder(): only " *
+                                            "$(length(idxWindow)) pseudostate(s) fall inside pseudostateWindow = " *
+                                            "$(settings.pseudostateWindow) for kappa = $kappa -- widen the window, " *
+                                            "set settings.pseudostateRbox larger, or check that the window is given " *
+                                            "in the ejected electron's OWN energy units.")
+        values  = eig.values[idxWindow];    vectors = eig.vectors[idxWindow]
+    else
+        # The default path, sparse/shift-invert throughout -- see this function's own docstring.
+        primitives = Bsplines.generatePrimitives(grid)
+        storage    = Dict{String,SparseMatrixCSC{Float64,Int64}}()
+        nsL        = primitives.grid.nsL;   nsS = primitives.grid.nsS
+        oLL        = Bsplines.generateTTpMatrixSparse!("LL-overlap", 0, primitives, storage)
+        oSS        = Bsplines.generateTTpMatrixSparse!("SS-overlap", 0, primitives, storage)
+        overlap    = [ oLL  spzeros(nsL,nsS) ;  spzeros(nsS,nsL)  oSS ]
+
+        localMatrix = Bsplines.setupLocalMatrixSparse(kappa, primitives, pot, storage)
+        values, vectors = PhotoIonizationPseudostates.solveWindowBySegments(kappa, localMatrix, overlap, primitives,
+                                                                             settings.pseudostateWindow)
+    end
 
     ladder = Dict{Subshell,Orbital}()
     mtp    = primitives.grid.NoPoints
-    for  (k, idx)  in  enumerate(idxWindow)
+    for  (k, (value, vector))  in  enumerate(zip(values, vectors))
         sh  = Subshell(1000+k, kappa)
-        raw = Bsplines.generateOrbitalFromPrimitives(sh, eig.values[idx], mtp, eig.vectors[idx], primitives)
+        raw = Bsplines.generateOrbitalFromPrimitives(sh, value, mtp, vector, primitives)
         ladder[sh] = PhotoIonizationPseudostates.removeOccupiedComponent(raw, finalIonLevel.basis.orbitals, grid)
     end
 
@@ -593,7 +701,7 @@ function computeSpectrum(initialLevel::Level, finalIonLevel::Level, kappas::Arra
     # combinedCsfs, below, can be recorded for weightByKappa -- Subshell(1000+k, kappa) never collides ACROSS
     # kappas, since kappa itself is part of a Subshell's identity, so merging the ladders themselves is safe.
     laddersByKappa = Dict{Int64,Dict{Subshell,Orbital}}( kappa => PhotoIonizationPseudostates.buildPseudostateLadder(
-                                                          kappa, finalIonLevel, nm, ladderGrid, settings) for kappa in kappas )
+                                                          kappa, finalIonLevel, nm, ladderGrid, grid, settings) for kappa in kappas )
     ladderAll = merge( values(laddersByKappa)... )
 
     # The final ion's own DOMINANT CSF supplies the core occupation every pseudostate configuration shares.
