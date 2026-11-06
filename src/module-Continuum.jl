@@ -1167,6 +1167,22 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; Zeff::Union{Noth
     # grid.hp moves r[NoPoints-200] and hence Zeff*r, and that docstring records Z = 1 and Z = 10 falling on the SAME
     # curve in Zeff*r -- which is the evidence that Zeff*r is the right parameterisation and oscillations-in-box a
     # disguised version of it.  This tier is therefore kept narrow deliberately.
+    # AND THIS TIER IS ONLY AS GOOD AS THE ENERGY IT IS HANDED, which is a real limitation and not a quibble.
+    # `maxEnergy` is the right extremum for the MESH tier above -- the FASTEST electron has the shortest wavelength
+    # and is the hardest to resolve -- and it is the WRONG one here, because the SLOWEST electron has the longest
+    # wavelength and is the one that may not fit in the box.  The two tiers want opposite extrema and this function
+    # receives only one.
+    #   SO THE BOX TIER BITES ONLY WHERE THE CALLER HAPPENS TO PASS A SLOW ENERGY, and whether it does is a property
+    # of the caller rather than of the grid.  `Cascade-inc-stepwise-decay` calls this per STEP with that step's own
+    # mean energy, which is how a 0.1 Ha Auger channel of neon was caught;  a photoionization run at a fixed photon
+    # energy passes one fast energy and a slow partner hidden in an energy SHARING -- photo-double-ionization is the
+    # case -- is never seen at all.  Measured 06-Nov-2026: `example-Fb.jl` branch (a), the same scheme and a 10 a.u.
+    # box, only WARNS because Mg's slowest step sits at 0.997 Ha, while the neon cascade of
+    # `testModule_Cascade_StepwiseDecay` refuses at 0.1 Ha in a 9.5 a.u. box.  The difference is the level structure,
+    # not the grid.
+    #   GIVING THIS FUNCTION A MINIMUM ENERGY AS WELL is the fix, and it is deliberately NOT done here:  about
+    # fifteen call sites across as many modules pass only a maximum, so it is its own task under the
+    # one-module-per-task rule.  Until then, read a silent box tier as "not asked" rather than as "checked".
     if  boxWaves < CONT_BOX_WAVES_FATAL  &&  Defaults.GBL_CONT_NORMALIZATION != CoulombFunctionNorm()
         error("Continuum.gridConsistency(): STOP -- this box holds only " * @sprintf("%.2f", boxWaves) *
               " oscillations of the continuum orbital at " * @sprintf("%.4e", maxEnergy) * " Ha, i.e. NOT ONE " *
