@@ -1255,6 +1255,17 @@ struct         CiExpansion     <:  AbstractRepresentationType
 end
 
 
+"""
+`AtomicState.CiExpansion()`  
+    ... constructor for an 'empty' instance of a variable::AtomicState.CiExpansion, i.e. one with no orbitals, no excitations beyond
+        the reference configurations and the default settings.  It is also what `AtomicState.Representation()` is built from, so the
+        zero-argument form of a representation depends on this one existing.  A ciExpansion::AtomicState.CiExpansion is returned.
+"""
+function CiExpansion()
+    CiExpansion( Dict{Subshell, Orbital}(), AtomicState.RasStep(), AtomicState.CiSettings() )
+end
+
+
 # `Base.string(expansion::CiExpansion)`  ... provides a String notation for the variable expansion::CiExpansion.
 function Base.string(expansion::CiExpansion)
     sa = "CI expansion with (additional) excitations:"
