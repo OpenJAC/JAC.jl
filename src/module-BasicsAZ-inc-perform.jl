@@ -330,13 +330,13 @@ function checkFrozenOrbitalsSpan(frozenOrbitals::Dict{Subshell,Radial.Orbital}, 
     end
     absent = setdiff( Basics.generateSubshellList(relconfs), collect(keys(frozenOrbitals)) )
     if  !isempty(absent)
-        error("Basics.perform(): the orbital set taken from $sourceName does not span $configName -- it has no "           *
-              "$(join(string.(absent), ", ")).  ONE shared orbital set is usable only where it SPANS every subshell the "  *
-              "other multiplets occupy, so widen the configuration list that PRODUCED $sourceName until it generates "    *
-              "those subshells "                                                                                          *
-              "(for a 1s^2 initial state and a 2s/2p Green space that is [1s^2, 1s 2s, 1s 2p] rather than [1s^2]), or "   *
-              "use Basics.SeparateOrbitals() and accept that a second-order amplitude through these multiplets carries "   *
-              "the dropped -E <r|s> term.  See Basics.AbstractOrbitalSource.")
+        error("BasicsAZ.checkFrozenOrbitalsSpan(): the orbital set taken from $sourceName does not span $configName -- "    *
+              "it has no $(join(string.(absent), ", ")).  ONE shared orbital set is usable only where it SPANS every "       *
+              "subshell the other multiplets occupy, so widen the configuration list that PRODUCED $sourceName until it "   *
+              "generates those subshells (for a 1s^2 initial state and a 2s/2p Green space that is "                        *
+              "[1s^2, 1s 2s, 1s 2p] rather than [1s^2]), or use Basics.SeparateOrbitals() and accept that a "               *
+              "second-order amplitude through these multiplets carries the dropped -E <r|s> term.  "                        *
+              "See Basics.AbstractOrbitalSource.")
     end
 
     return( nothing )
