@@ -10,7 +10,18 @@ function testModule_AutoIonization(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-AutoIonization-new.sum")
     printstyled("\n\nTest the module  AutoIonization  ... \n", color=:cyan)
     ### Make the tests
-    grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, rbox = 9.5)
+    # THE MESH WAS REFINED AND THE REFERENCE RE-APPROVED ON 06-Nov-2026, by the maintainer's decision.  The previous
+    # grid carried hp = 1.5e-2, i.e. only 16.1 points per oscillation of the 3.36e+02 Hartree Auger electron, and
+    # Continuum.checkMatchingRadius now refuses it:  no radius in the outer two wavelengths gives a settled phase.
+    # The old approved rate was NOT merely unverified but wrong -- measured by refining hp alone at fixed rbox:
+    #
+    #     wavelength/hp        16.1        32.3           48.5           80.8
+    #     rate [a.u.]          refused     5.399878e-04   5.402065e-04   5.402100e-04
+    #
+    # The rate is converged to 0.04 % from 32 points onward, so 5.4021e-04 a.u. = 2.2333e+13 1/s is the value, and
+    # the superseded reference held 2.064739e+13 1/s -- 7.5 % low.  hp = 5.0e-3 is chosen rather than the cheaper
+    # 7.5e-3 so that the test also clears Continuum.gridConsistency's 40-point warning and runs silently.
+    grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 5.0e-3, rbox = 9.5)
     wa = Atomic.Computation(Atomic.Computation(), name="xx", grid=grid, nuclearModel=Nuclear.Model(36.),
                             initialConfigs=[Configuration("1s^2 2s^2 2p"), Configuration("1s 2s^2 2p^2")],
                             finalConfigs  =[Configuration("1s^2 2s^2"), Configuration("1s^2 2p^2")],
@@ -824,7 +835,11 @@ end
 """
 function testModule_AutoIonization_partialWaveDivision(; short::Bool=true)
     printstyled("\n\nTest the module  AutoIonization  ... partial-wave division of the amplitude \n", color=:cyan)
-    grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 6.0)
+    # THE MESH WAS REFINED ON 06-Nov-2026:  hp = 1.0e-2 is 13.0 points per oscillation of this 7.2478e+02 Hartree
+    # Auger electron and Continuum.checkMatchingRadius refuses it.  The ratio is nearly normalization-independent,
+    # as a ratio of two amplitudes at ONE energy must be, and it converges quickly -- 0.2412 at hp = 5.0e-3, then
+    # 0.2413 at both 3.0e-3 and 2.0e-3.  hp = 3.0e-3 also clears the 40-point warning, so the test runs silently.
+    grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-6, h = 5.0e-2, hp = 3.0e-3, rbox = 6.0)
     aSet = AutoIonization.Settings(AutoIonization.Settings(); calcAnisotropy=false, printBefore=false,
                                    maxKappa=4, lineSelection=LineSelection(), operator=CoulombBreit(0.))
     wa   = Atomic.Computation(Atomic.Computation(); name="Li-like Z=53 KLL", grid=grid,
@@ -849,8 +864,8 @@ function testModule_AutoIonization_partialWaveDivision(; short::Bool=true)
             end
         end
     end
-    success = found  &&  abs(ratio - 0.2445) / 0.2445 < 0.05
-    @printf("   |A(kappa=-2)/A(kappa=+1)| = %.4f   against 0.2445 on this grid (FAC: 0.2458)   %s\n",
+    success = found  &&  abs(ratio - 0.2413) / 0.2413 < 0.05
+    @printf("   |A(kappa=-2)/A(kappa=+1)| = %.4f   against 0.2413 on this grid (FAC: 0.2458)   %s\n",
             ratio, success ? "" : "  <-- OUTSIDE 5 %")
     testPrint("testModule_AutoIonization_partialWaveDivision()::", success)
 

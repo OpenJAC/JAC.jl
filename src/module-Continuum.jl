@@ -142,6 +142,60 @@ const  CONT_HOW_TO_SET_NORMALIZATION   = "setDefaults(\"method: normalization, .
                                          "Ong-Russek | Coulomb functions"
 
 
+##  THRESHOLDS FOR THE MATCHING-RADIUS CHECK of the Coulomb-function normalization, in RADIANS of inner phase shift.
+##  MEASURED 05-Nov-2026 by tools/probeContinuumMatchingRadius.jl over Z = 2, 18, 36, 92 at 0.05, 0.5, 5 and 50 Ha
+##  for kappa = -1, 1, -2, each on a box of 10 wavelengths with 40 mesh points per oscillation.
+##    33 SOUND orbitals spread between 6.0e-05 and 5.4e-04 rad -- so the worst sound case sits a factor 3.7 below
+##  the warn level, and all 33 reproduce the pre-guard normalization constant and phase EXACTLY.
+##    THE SPREAD IS CONVERTIBLE INTO WHAT A USER CARES ABOUT, which is why these numbers can be defended:  across
+##  the whole set the normalization constant's own variation over the probed radii is 2.4x the phase spread for a
+##  sound orbital and 3.5x for a bad one.  So `warn` is the point at which the normalization becomes uncertain at
+##  about the half-percent level, and `fatal` the point at which it exceeds ~30 % and is no longer a property of
+##  the solution at all.
+const  CONT_MATCH_WARN                 = 2.0e-3
+const  CONT_MATCH_FATAL                = 1.0e-1
+##  AND THE PHASE ALONE IS HALF-BLIND, which the mutation pass of 05-Nov-2026 found and no amount of looking at
+##  sound orbitals could have:  the inner phase shift is extracted as the ANGLE of a complex number built from `P`
+##  and `Pprime`, so multiplying BOTH by the same factor leaves it EXACTLY unchanged.  A 30 % multiplicative
+##  distortion of the outer half of an orbital, and 2 % point-to-point noise, each left the phase spread identical
+##  to the tenth digit and passed as sound -- while the NORMALIZATION CONSTANT extracted at those same radii moved
+##  by 4.8 % and 4.0 % against 1.5e-04 for the sound orbital, a separation of more than a factor 300.
+##    So the normalization constant's own spread across the probed radii is the second, independent measure, and it
+##  is the one that answers the question a user actually asks:  is the normalization well defined?  Sound orbitals
+##  run to 1.2e-03;  the ruined ones to between 2.0e-02 and 1.8e-01.
+const  CONT_SCALE_WARN                 = 5.0e-3
+const  CONT_SCALE_FATAL                = 1.0e-1
+
+##  THE MESH DENSITY BELOW WHICH MOVING THE MATCHING RADIUS IS NOT A REPAIR, in mesh points COUNTED over one
+##  oscillation of the de Broglie wavelength at the matching point.
+##    WHY THIS IS A BRACKET AND NOT A CROSSING, and the measurement is worth reading before anyone tightens it.
+##  MEASURED 06-Nov-2026 over four systems -- Ar and Kr at 5 Ha, U at 50 Ha, Ar at 0.5 Ha, each kappa = -1 -- with
+##  the box held fixed and grid.hp swept over thirteen values, comparing the normalization constant against the
+##  finest mesh of its own system.  THE ERROR IS NOT MONOTONE IN THE MESH DENSITY:
+##
+##      Ar  5 Ha    counted  16     19     21     21     22     23     24     27     30     36     48
+##                  error   +11.5  +9.4   +1.5   -1.9   +1.7   -0.9   +0.1   +0.1   -0.1   -0.5   -0.3  %
+##      U  50 Ha    counted  15     20     20     21     22     23     25     29     35     46     62
+##                  error    +0.0  +3.4   +1.8   -1.2   +2.3   -0.3   +0.0   +0.1   +0.0   +0.0   -0.1  %
+##
+##  TWO MESHES AT THE SAME COUNTED DENSITY, 21, DIFFER BY 3.3 % (+1.5 and -1.9), AND U AT 15 POINTS IS EXACT WHILE U
+##  AT 20 IS 3.4 % OUT.  So the counted density does NOT determine the error, and no single value of it can be a
+##  calibrated threshold -- which is the same non-monotone signature `Continuum.checkNormalizationRadius` already
+##  records for the normalization RADIUS (0.085 then 3.78 on a FINER grid), and has the same cause:  the matching
+##  point landing at an arbitrary phase of the oscillation.
+##    WHAT THE SAME SWEEP DOES ESTABLISH, strongly, is that THE VERDICT IS THE RELIABLE SIGNAL AND THE DENSITY IS
+##  NOT.  Every mesh judged `:sound` reproduced its system's converged constant to better than 0.5 %, and most to
+##  better than 0.2 %, in all four systems;  the meshes judged `:poor` scatter by up to 12 %.  That is what the
+##  phase-settling measure was built to do and it does it.
+##    HENCE WHAT THIS CONSTANT IS FOR, narrowly:  it decides only whether a MOVE of the matching radius may be
+##  taken, never whether an orbital is good.  Two measured points bracket it.  A move at 30 counted points returned
+##  -0.09 %, i.e. the repair worked;  the move that the dielectronic-recombination test case took at about 18
+##  counted points turned a +6.0 % error into a -5.6 % one, i.e. it relocated the error rather than removing it and
+##  reported success while doing so.  28 lies inside that bracket.  The crossing is not resolved more finely, and
+##  the scatter above shows why it cannot be from this quantity alone.
+const  CONT_MESH_SOUND                 = 28.0
+
+
 """
 `Continuum.generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm::Nuclear.Model, grid::Radial.Grid,
                                     settings::Continuum.Settings; nuclearPot::Union{Nothing,Radial.Potential}=nothing, 
@@ -904,6 +958,38 @@ end
         is to be determined. This number is currently set to nrContinuum = grid.NoPoints - 200  ... to correct for the wrong
         'phase behaviour' at large r-values.
 
+        TWO QUANTITIES ARE TESTED, NOT ONE, AND THEY ARE INDEPENDENT.  The first is the familiar one, the asymptotic step
+        against the de Broglie wavelength -- how finely one oscillation is SAMPLED.  The second is how many oscillations
+        the grid holds at all, and it is the criterion this function lacked until 06-Nov-2026.  Measured 01-Sep-2026 on H
+        1s photoionization at eps = 0.5 Ha, where the two gauges are equal for exact wavefunctions so every departure
+        from 1.00000 is error, with grid.hp held FIXED at 0.060 and only the box changed:
+
+            rbox      wavelengths in box    points per oscillation    Cou/Bab
+            18.09     2.88                  104.7                     1.067
+            30.00     4.77                  104.7                     1.00001
+
+        THE SAMPLING IS IDENTICAL ON BOTH ROWS and one is 6.7 % wrong, so no criterion on grid.hp alone can separate
+        them.  The phase and the normalization are read near the outer boundary, and reading them needs several complete
+        oscillations to read FROM;  2.88 is not enough and 4.77 is.  Below 4 this function warns.
+
+        BUT THAT SECOND CRITERION APPLIES ONLY TO THE ASYMPTOTIC-SINE CONVENTIONS, and the warning is withheld for
+        `CoulombFunctionNorm`, the shipped default.  Measured 06-Nov-2026 on Mg^10+ (1s^2) with a self-consistent
+        screened potential and a 10 eV electron:  enlarging rbox from 6.5 to 30.0 a.u., i.e. from 0.89 to 4.09
+        oscillations, left the inner phase shift, the normalization constant and the orbital identical to six decimals
+        for kappa = -1, 1 and -2 alike.  Exact Coulomb functions hold wherever the potential has reached its -Zbar/r
+        tail rather than only asymptotically, and there Zeff*r = 46 at the matching point, so the tail condition is met
+        well inside one oscillation.  A measure may only guard the assumption its own routine makes.
+
+        AND A FIXED POINTS-PER-OSCILLATION NUMBER CANNOT BE CALIBRATED, which is why the sampling test refuses at 15 and
+        only WARNS at 40 rather than refusing there.  Three convergence studies in this repository demand three widely
+        different densities:  34 points converge a 4.66 keV Auger rate to 0.02 % (06-Nov-2026), 104 are not enough for
+        neutral H in a small box (01-Sep-2026), and 463 are needed for radiative recombination into H-like Bi at 1 eV
+        (17-Sep-2026).  The ordering follows the Sommerfeld parameter eta = Zbar/q -- about 1 for the first two and 306
+        for the last -- because the asymptotic wavelength is the LONGEST one in the problem and therefore flatters a
+        heavy ion at low energy.  So 40 is the value below which the published measurements show percent-level error and
+        is worth saying out loud;  it is not a value above which anything is guaranteed, and only halving grid.hp until
+        the answer stops moving establishes that.
+
         OPEN POINT, stated here rather than emitted as a per-call warning as it was until 12-Aug-2026: the grid
         point at which the normalization and phase are fixed deserves a better choice than the present fixed
         offset. It is a property of the method, not of any particular run.
@@ -982,7 +1068,86 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; Zeff::Union{Noth
                 "landing at an arbitrary\nplace in the oscillation rather than of insufficient resolution.\n" *
                 @sprintf(">>> Enlarge rbox until grid.r[NoPoints-200] exceeds %.3f a.u.\n", 10.0/Zeff))
     end
-    
+
+    # TWO WARNING TIERS SIT ABOVE THE REFUSALS, and they are warnings rather than refusals on purpose.  The refusals
+    # above mark grids on which nothing can be computed;  these two mark grids on which the published measurements
+    # show percent-level error, which is a different statement and one the user may legitimately accept.  Raising
+    # either refusal to the warning level would reject grids in current use -- and, for the sampling test, would
+    # still not be sufficient, since 104 points per oscillation is measurably too few for neutral H in a small box.
+    #   `maxlog=1` is deliberate:  the cascade modules call this once per decay step with the SAME grid, so an
+    # unguarded warning would print dozens of identical lines and be read past.  The AddWarning() record is what
+    # carries it into the summary file, where it cannot be scrolled away.
+    # THE DENSITY IS COUNTED HERE RATHER THAN DIVIDED, for the reason given at Continuum.checkMatchingRadius:  the
+    # mesh is a B-spline knot sequence sampled at Gauss-Legendre points, so no single step represents it.  The mean
+    # step over a wavelength is 0.87 to 1.00 times grid.hp on the systems measured 06-Nov-2026, so `wavelength/hp`
+    # and the counted density agree to a few percent and the refusal above needs no change on this account.
+    #   AND THIS TIER WARNS RATHER THAN REFUSES BECAUSE THE QUANTITY IS NOT A PREDICTOR.  Over four systems and
+    # thirteen meshes each, the error in the normalization constant is NON-MONOTONE in the density:  two meshes at
+    # 21 counted points differ by 3.3 %, and uranium at 15 points is exact while at 20 points it is 3.4 % out.  So a
+    # low density is a reason to doubt a number, not a proof that it is wrong -- and a high one is no guarantee.  The
+    # reliable signal is the posterior verdict of Continuum.checkMatchingRadius, which this cannot anticipate.
+    # THE BOX IS MEASURED IN WAVELENGTHS OF ITS OWN FULL EXTENT, not of the normalization radius.  The measurement
+    # behind this test varied grid.rbox, so rbox is the quantity it calibrates;  r[NoPoints-200] sits short of the
+    # box end and testing THAT against the same number is a harsher criterion than anything measured.
+    #   AND IT IS A WARNING, NOT A REFUSAL, DELIBERATELY.  Written first as a refusal at 2 oscillations on
+    # 06-Nov-2026, it stopped four tests that carry approved references -- PhotoRecombination at 0.63 oscillations
+    # of the normalization radius, Cascade_StepwiseDecay at 0.51, PhotoIonizationInterference at 1.47 -- which says
+    # that a substantial part of JAC's low-energy continuum work sits below that line.  Whether JAC should refuse it
+    # is a decision about what the code accepts, and it rests on ONE measurement;  that makes it a question for the
+    # maintainer rather than a stop to be introduced here.
+    boxWaves = grid.r[grid.NoPoints] / wavelgth
+    iOne     = something( findfirst(k -> grid.r[k] >= grid.r[nrContinuum] - wavelgth, 1:nrContinuum), 1 )
+    ptsCount = Float64(nrContinuum - iOne + 1)
+    if  ptsCount < 40.0
+        Defaults.warn(AddWarning(), "Continuum.gridConsistency(): " *
+                      @sprintf("%.1f", ptsCount) * " counted points per oscillation at " *
+                      @sprintf("%.4e", maxEnergy) * " Ha, below the 40 that measurements show to be sound; " *
+                      "continuum amplitudes may carry percent-level error.")
+        @warn("Continuum.gridConsistency(): the mesh holds " * @sprintf("%.0f", ptsCount) *
+              " points across one oscillation at the highest continuum energy " * @sprintf("%.4e", maxEnergy) *
+              " Ha, below the 40 that measurements show to be sound.  Measured 06-Nov-2026 on three systems with " *
+              "the box held fixed, the normalization constant is 4 to 6 % out at 13 counted points and about 1 % " *
+              "out at 15, while a 4.66 keV Auger rate converges to 0.02 % by 34 points of wavelength/grid.hp.  " *
+              "Reduce grid.hp by a factor of about " * @sprintf("%.1f", 40.0/max(ptsCount,1.0)) * ", from " *
+              @sprintf("%.3e", grid.hp) * " to about " * @sprintf("%.3e", grid.hp*max(ptsCount,1.0)/40.0) *
+              " a.u., or accept the error knowingly.  Note that 40 is NOT a guarantee -- 104 points per " *
+              "oscillation is measurably too few for neutral hydrogen in a small box -- and that halving grid.hp " *
+              "until the answer stops moving is the only real check.  For reference, wavelength/grid.hp here is " *
+              @sprintf("%.1f", ptsPerOsc) * ", which is the quantity the refusal above tests.", maxlog=3)
+    end
+    # AND THE BOX CRITERION BELONGS TO THE ASYMPTOTIC-SINE CONVENTIONS ONLY.  This is a CORRECTION to the first form
+    # of this warning rather than a refinement of it.  MEASURED 06-Nov-2026 on Mg^10+ (1s^2) with a self-consistent
+    # SCREENED potential, a 10 eV electron and kappa = -1, 1, -2:  enlarging rbox from 6.5 to 30.0 a.u., i.e. from
+    # 0.89 to 4.09 oscillations, left the inner phase shift, the normalization constant AND the orbital itself
+    # identical to six decimals in every case.
+    #   THE REASON IS THE CONVENTION.  normalizeOrbitalCoulombFunctions matches EXACT Coulomb functions, which are
+    # valid wherever the potential has reached its -Zbar/r tail and not merely asymptotically;  there Zeff*r = 46 at
+    # the matching point, so the tail condition is amply met INSIDE ONE OSCILLATION.  "A few oscillations in the box"
+    # is the requirement of a routine that FITS AN ASYMPTOTIC SINE, which is what normalizeOrbitalPureSine does.  A
+    # measure may only guard the assumption its own routine makes, so the warning is raised for those conventions
+    # and withheld for this one.
+    #   NOTE ALSO, because it bears on whether this test adds anything at all:  the 01-Sep-2026 box measurement it
+    # was built on is better explained by the variable checkNormalizationRadius ALREADY uses.  Varying rbox at fixed
+    # grid.hp moves r[NoPoints-200] and hence Zeff*r, and that docstring records Z = 1 and Z = 10 falling on the SAME
+    # curve in Zeff*r -- which is the evidence that Zeff*r is the right parameterisation and oscillations-in-box a
+    # disguised version of it.  This tier is therefore kept narrow deliberately.
+    if  boxWaves < 4.0  &&  Defaults.GBL_CONT_NORMALIZATION != CoulombFunctionNorm()
+        Defaults.warn(AddWarning(), "Continuum.gridConsistency(): the box holds only " *
+                      @sprintf("%.2f", boxWaves) * " oscillations at " * @sprintf("%.4e", maxEnergy) *
+                      " Ha, below the 4 that measurements show to be sound; the continuum phase and " *
+                      "normalization may be wrong.")
+        @warn("Continuum.gridConsistency(): the box reaches " * @sprintf("%.2f", boxWaves) *
+              " oscillations of the continuum orbital at " * @sprintf("%.4e", maxEnergy) * " Ha, below the 4 " *
+              "that measurements show to be sound.  THIS IS INDEPENDENT OF THE STEP SIZE and is not implied by " *
+              "it: the phase and the normalization are read near the outer boundary, so there must be complete " *
+              "oscillations out there to read them FROM, however finely each one is sampled.  Measured " *
+              "01-Sep-2026 on H 1s photoionization with grid.hp held FIXED at 0.060, a box of 2.88 wavelengths " *
+              "put the two gauges 6.7 % apart while 4.77 wavelengths gave 1.00001.  Enlarge grid.rbox to about " *
+              @sprintf("%.2f", 4.0*wavelgth) * " a.u., or lower the continuum energy.  This applies to the " *
+              "asymptotic-sine conventions;  setDefaults(\"method: normalization, Coulomb functions\") matches " *
+              "exact Coulomb functions instead and was measured insensitive to the box.", maxlog=3)
+    end
+
     return( nrContinuum )
 end
 
@@ -1210,29 +1375,26 @@ end
 
 
 """
-`Continuum.normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)`   
-    ... to normalize the given continuum orbital with regard to a (asymptotic) wave function as per Salvat Code. 
-        The orbitasl are normalized to unit amplitude.
-        An ( orbital::Orbital, (δ + Δ)::Float64, N::Float64 ) is returned.
+`Continuum.coulombMatchingPair(i::Int64, pot::Radial.Potential, energy::Float64, kappa::Int64, l::Int64, Zbar::Float64)`
+    ... evaluates, AT THE SINGLE MESH POINT `i`, the pair of reference solutions onto which the Coulomb-function
+        normalization matches the numerical orbital:  the regular and irregular relativistic Coulomb functions where the
+        residual charge is appreciable, and the spherical Bessel pair where it is not.  Both large components and their
+        radial derivatives are returned, together with `x = q r_i`, the classical turning point `xTP` in the same
+        variable, and the Coulomb phase -- which depends on `eta`, `lambda`, `l` and `kappa` but NOT on the radius, and
+        is therefore the same whichever point is matched at.  Nothing is printed, so the function may be called at many
+        radii in turn.  A `(fu, gu, fup, gup, cPhase, kind, x, xTP)::NamedTuple` is returned.
 """
-function normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)
-    mtp = size( cOrbital.P, 1)  ;             energy = cOrbital.energy;      
-    kappa = cOrbital.subshell.kappa  ;        l = Basics.subshell_l(cOrbital.subshell) 
-    Zbar = -Radial.determineZbar(pot)  ; 
+function coulombMatchingPair(i::Int64, pot::Radial.Potential, energy::Float64, kappa::Int64, l::Int64, Zbar::Float64)
     α = Defaults.getDefaults("alpha")  ;      wc = 1/α
-    q  = sqrt( energy * (energy + 2 * wc^2) ) / wc  ;    x  = q * pot.grid.r[mtp]
-
-    ## println("r ", pot.grid.r[mtp])
+    q  = sqrt( energy * (energy + 2 * wc^2) ) / wc  ;    x  = q * pot.grid.r[i]
 
     if abs(Zbar) > 0.1
-        ## println("Normalization with Coulomb functions")
         sa = "Normalization with Coulomb functions"
         λ  = sqrt(kappa^2 - Zbar^2 / wc^2)  ; λm1 = λ - 1.0
         η  = Zbar * α * (energy + wc^2) / sqrt( energy * (energy + 2 * wc^2) ) 
 
         xTP = η + sqrt(η^2 + λ*(λ+1.0))
-        if x < xTP println("The kr is less than the Coulomb turning point") end
-    
+
         Δ = angle(SpecialFunctions.gamma(λm1 + 1 + im * η))
         if Δ >= 0.0 Δ = mod(Δ, 2pi) else Δ = -mod(-Δ, 2pi) end
     
@@ -1269,12 +1431,11 @@ function normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potenti
         fl = -N * ( α * Zbar * sqrt(λ^2 + η^2) * wc * q * f + (kappa + λ) * (λ * wc^2 - kappa * (energy + wc^2)) * fm_1 )
         gl = -N * ( α * Zbar * sqrt(λ^2 + η^2) * wc * q * g + (kappa + λ) * (λ * wc^2 - kappa * (energy + wc^2)) * gm_1 )
     
-        fup = -kappa * fu / pot.grid.r[mtp] + fl * (energy + pot.Zr[mtp]/pot.grid.r[mtp] + 2.0 * wc^2 ) / wc
-        gup = -kappa * gu / pot.grid.r[mtp] + gl * (energy + pot.Zr[mtp]/pot.grid.r[mtp] + 2.0 * wc^2 ) / wc
+        fup = -kappa * fu / pot.grid.r[i] + fl * (energy + pot.Zr[i]/pot.grid.r[i] + 2.0 * wc^2 ) / wc
+        gup = -kappa * gu / pot.grid.r[i] + gl * (energy + pot.Zr[i]/pot.grid.r[i] + 2.0 * wc^2 ) / wc
 
     else
         
-        ## println("Normalization with Bessel functions")
         sa = "Normalization with Bessel functions"
 
         if kappa < 0 ksign = 1 else ksign = -1 end
@@ -1284,21 +1445,382 @@ function normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potenti
         fl = -sqrt(energy / ( energy + 2*wc^2 )) * ksign * x * SpecialFunctions.sphericalbesselj(l + ksign, x)
         gl =  sqrt(energy / ( energy + 2*wc^2 )) * ksign * x * SpecialFunctions.sphericalbessely(l + ksign, x)
 
-        fup = -kappa * fu / pot.grid.r[mtp] + fl * (energy + pot.Zr[mtp]/pot.grid.r[mtp] + 2.0 * wc^2 ) / wc
-        gup = -kappa * gu / pot.grid.r[mtp] + gl * (energy + pot.Zr[mtp]/pot.grid.r[mtp] + 2.0 * wc^2 ) / wc
+        fup = -kappa * fu / pot.grid.r[i] + fl * (energy + pot.Zr[i]/pot.grid.r[i] + 2.0 * wc^2 ) / wc
+        gup = -kappa * gu / pot.grid.r[i] + gl * (energy + pot.Zr[i]/pot.grid.r[i] + 2.0 * wc^2 ) / wc
 
-        Δ = 0.0
+        Δ   = 0.0
+        # A free wave has no classical turning point;  0.0 makes the `x < xTP` test below vacuous, which is correct.
+        xTP = 0.0
     end
 
-    p = cOrbital.P[mtp]    ;   pPrime = cOrbital.Pprime[mtp]
+    return( (fu=fu, gu=gu, fup=fup, gup=gup, cPhase=Δ, kind=sa, x=x, xTP=xTP) )
+end
 
-    δ = angle((p*gup - pPrime*gu) + im*(pPrime*fu - p*fup))
+
+"""
+`Continuum.matchAtRadius(i::Int64, cOrbital::Orbital, pot::Radial.Potential, l::Int64, Zbar::Float64)`
+    ... extracts, from the single mesh point `i`, the two numbers the Coulomb-function normalization is built on:  the
+        inner (non-Coulomb) phase shift `iPhase` and the normalization constant `N`, obtained by matching the orbital's
+        large component and its derivative to the reference pair at that point.  THE POINT OF HAVING THIS AS ITS OWN
+        FUNCTION is that `iPhase` must be INDEPENDENT of `i` wherever the match is legitimate -- the numerical solution
+        is `cos(iPhase) F + sin(iPhase) G` exactly, once the potential has reached its `-Zbar/r` tail -- so calling it
+        at several radii turns an unverifiable one-point match into a measurement.  A
+        `(N, iPhase, cPhase, kind, x, xTP)::NamedTuple` is returned.
+"""
+function matchAtRadius(i::Int64, cOrbital::Orbital, pot::Radial.Potential, l::Int64, Zbar::Float64)
+    energy = cOrbital.energy  ;   kappa = cOrbital.subshell.kappa
+    α = Defaults.getDefaults("alpha")  ;   wc = 1/α
+    q = sqrt( energy * (energy + 2 * wc^2) ) / wc
+    pair = Continuum.coulombMatchingPair(i, pot, energy, kappa, l, Zbar)
+
+    p = cOrbital.P[i]    ;   pPrime = cOrbital.Pprime[i]
+
+    δ = angle((p*pair.gup - pPrime*pair.gu) + im*(pPrime*pair.fu - p*pair.fup))
     if  ( abs(δ) > pi/2 )   δ = δ * ( 1.0 - pi/abs(δ))     end
 
-    if  ( abs(p) > 1e-15 )  N = ( cos(δ) * fu + sin(δ) * gu ) / p else N = ( cos(δ) * fup + sin(δ) * gup ) / pPrime    end
+    if  ( abs(p) > 1e-15 )  N = ( cos(δ) * pair.fu + sin(δ) * pair.gu ) / p
+    else                    N = ( cos(δ) * pair.fup + sin(δ) * pair.gup ) / pPrime    end
 
     # Normalize wrt energy
     N = N * sqrt(q / pi / energy)
+
+    return( (N=N, iPhase=δ, cPhase=pair.cPhase, kind=pair.kind, x=pair.x, xTP=pair.xTP) )
+end
+
+
+"""
+`Continuum.checkMatchingRadius(cOrbital::Orbital, pot::Radial.Potential, l::Int64, Zbar::Float64, mtp::Int64;`
+                              `warn::Float64=CONT_MATCH_WARN, fatal::Float64=CONT_MATCH_FATAL,`
+                              `warnN::Float64=CONT_SCALE_WARN, fatalN::Float64=CONT_SCALE_FATAL,`
+                              `meshSound::Float64=CONT_MESH_SOUND)`
+    ... asks whether the ONE radius at which `normalizeOrbitalCoulombFunctions` matches the orbital was a fair place to
+        do it, and moves it if not.  TWO quantities are extracted by `Continuum.matchAtRadius` over the outer two
+        wavelengths and BOTH must be constant there, because each is blind to what the other catches:
+
+        * the INNER PHASE SHIFT, a constant of the solution wherever the potential has reached its `-Zbar/r` tail.  Its
+          spread catches an orbital whose `P` and `Pprime` are mutually inconsistent, i.e. one that does not satisfy the
+          equation it is supposed to;
+        * the NORMALIZATION CONSTANT itself, whose RELATIVE spread catches a distorted SHAPE.  This second measure is
+          necessary rather than decorative:  the phase is the ANGLE of a complex number built from `P` and `Pprime`, so
+          scaling both by the same factor leaves it EXACTLY unchanged.  Measured 05-Nov-2026 -- a 30 % multiplicative
+          distortion of the outer half of an orbital, and 2 % point-to-point noise, each moved the phase spread by
+          NOTHING and the normalization spread by 4.8 % and 4.0 % against 1.5e-04 for the sound orbital.
+
+        A sound orbital has both near zero.  Either one large says the matching point carries something that is not the
+        Coulomb solution, and the constant returned is then untrustworthy however confidently it was produced.
+
+        WHAT THIS DOES NOT CATCH, stated because a guard claiming to catch everything is the suspicious kind:  a single
+        enormous INTERIOR spike leaves both measures untouched, since neither looks inside the matching region.  That is
+        what `Continuum.checkContinuumAmplitude` is for, and the two tiers are complementary, not alternatives.
+        
+        THE MEASURE IS SCALE-FREE AND NEEDS NO REFERENCE DATA.  `iPhase` is an angle, so its spread is in radians
+        regardless of the orbital's arbitrary eigenvector scale, and the comparison is between radii of ONE orbital
+        rather than against a tabulated value.
+        
+        IT ALSO SAYS WHICH GRID IS AT FAULT, which a single number cannot.  The ratio of the total variation of
+        `iPhase` to its net change over the window separates the two failure modes:  near 1 the phase drifts
+        SMOOTHLY, meaning the potential has not reached its tail inside the box and the BOX IS TOO SMALL;  far above 1
+        it jitters from point to point, meaning the mesh does not resolve the oscillation and the MESH IS TOO COARSE.
+        
+        AND THE REPAIR MOVES INWARD, NOT OUTWARD, which is worth stating because it is the opposite of what one
+        expects:  the matching point is `size(cOrbital.P, 1)`, the OUTERMOST mesh point of the orbital, so there is no
+        larger radius to move to -- and that point is precisely where a B-spline Galerkin solution is most constrained
+        by the boundary condition at the box wall.  So the repair is to step AWAY FROM THE WALL to the outermost radius
+        at which the phase has settled.  Where no such radius exists on this grid, nothing in the code can repair it
+        and the function RAISES, naming the grid change needed, rather than returning a number.
+        
+        AND THE MOVE IS GATED ON MESH DENSITY, which is a CORRECTION to the first form of this check rather than a
+        refinement of it.  A move is taken only where the mesh carries at least `meshSound` points, counted, across one
+        oscillation.  Measured 06-Nov-2026:  a move at 30 counted points reproduced the converged normalization to
+        0.09 %, while the move the dielectronic-recombination test case took at about 18 turned a +6.0 % error into a
+        -5.6 % one and reported success.  Below the gate the move is therefore DECLINED -- the ORIGINAL radius is kept,
+        `declined` is set, and the verdict is `:poor`, so the caller is told loudly with the uncertainty quoted.  It
+        does not raise:  the defect measured was a move that relocated an error while reporting success, and declining
+        the move removes exactly that and nothing more.
+        An orbital already sound at the box wall is untouched by this gate;  it bites only where a radius would
+        otherwise have been moved.  Note what the gate does NOT claim:  the same sweep shows the error is non-monotone
+        in the density, so a coarse mesh is a reason to distrust a MOVE rather than proof that the orbital is bad.
+
+        A `(index, moved, declined, spread, jitter, scaleDrift, ppo, nProbes, inside, rTP, verdict)::NamedTuple` is
+        returned, with `verdict` one of `:sound`, `:moved`, `:poor`, `:unfair` or `:tooFewPoints`.
+"""
+function checkMatchingRadius(cOrbital::Orbital, pot::Radial.Potential, l::Int64, Zbar::Float64, mtp::Int64;
+                             warn::Float64=CONT_MATCH_WARN,   fatal::Float64=CONT_MATCH_FATAL,
+                             warnN::Float64=CONT_SCALE_WARN,  fatalN::Float64=CONT_SCALE_FATAL,
+                             meshSound::Float64=CONT_MESH_SOUND)
+    energy = cOrbital.energy
+    α  = Defaults.getDefaults("alpha")  ;   wc = 1/α
+    q  = sqrt( energy * (energy + 2 * wc^2) ) / wc
+    λr = 2pi / q                                             ## the de Broglie wavelength, in a.u.
+    rOuter = pot.grid.r[mtp]
+
+    # POINTS PER OSCILLATION IS COUNTED OVER THE OUTER WAVELENGTH, NOT OBTAINED BY DIVIDING BY A LOCAL STEP, and the
+    # difference is a factor of two rather than a nicety.  JAC's radial mesh is a B-spline knot sequence sampled at
+    # Gauss-Legendre points, so consecutive differences are NOT equal:  measured 06-Nov-2026 on a 25 a.u. box with
+    # grid.hp = 0.0497, individual steps near the boundary run 0.70, 1.13 and 1.37 times grid.hp depending on which
+    # sub-point of the pattern they span.  Dividing the wavelength by ONE such step therefore reports anything from
+    # 0.7x to 1.4x the true sampling according to where the matching point happens to fall, which is noise rather
+    # than a measurement.  Counting is what the name says and is immune to it.
+    #   THE MEAN step over a whole wavelength is a steadier 0.87 to 1.00 times grid.hp across the systems measured,
+    # so `wavelength/grid.hp` -- the quantity Continuum.gridConsistency tests and Radial.generateGrid constructs from
+    # -- is a fair proxy for the counted density, running a few percent BELOW it.  It is the per-point quotient, not
+    # that proxy, which is unusable.
+    iOne = something( findfirst(k -> pot.grid.r[k] >= rOuter - λr, 1:mtp), 1 )
+    ppo  = Float64(mtp - iOne + 1)                           ## counted points per oscillation, carried to the caller
+
+    # THE WINDOW IS THE OUTER TWO WAVELENGTHS, not a fixed number of mesh points.  A fixed point count is the error
+    # that cost weeks on the sibling guard (see the amplitude note in Continuum.asymptoticAmplitude):  at a fine mesh
+    # it spans a fraction of one oscillation and samples the wave at an arbitrary phase.
+    rInner = max( pot.grid.r[2], rOuter - 2.0 * λr )
+    iInner = something( findfirst(k -> pot.grid.r[k] >= rInner, 1:mtp), 1 )
+    nAvail = mtp - iInner + 1
+    if  nAvail < 16
+        ## Too few points in the outer two wavelengths to say anything;  that is itself a coarse-mesh statement,
+        ## and it is reported rather than silently passed.
+        return( (index=mtp, moved=false, declined=false, spread=NaN, jitter=NaN, scaleDrift=NaN, ppo=ppo,
+                 nProbes=nAvail, inside=false, rTP=0.0, verdict=:tooFewPoints) )
+    end
+
+    nProbes = min(24, nAvail)
+    idx     = unique( round.(Int, range(iInner, mtp, length=nProbes)) )
+    ms      = [ Continuum.matchAtRadius(i, cOrbital, pot, l, Zbar)  for i in idx ]
+    δs      = [ m.iPhase  for m in ms ]
+    Ns      = [ abs(m.N)  for m in ms ]
+
+    # `iPhase` is folded into (-pi/2, pi/2] by matchAtRadius, so it lives on a circle of period pi and its spread
+    # must be measured there.  A plain standard deviation reports a spurious pi/2 whenever the true phase sits near
+    # the fold, which is a value the wave itself never has.
+    spreadOf(v) = begin
+        z = sum(exp.(2im .* v)) / length(v)
+        μ = angle(z) / 2
+        maximum( abs(rem(d - μ, pi, RoundNearest))  for d in v )
+    end
+    totalVariation(v) = sum( abs(rem(v[k+1] - v[k], pi, RoundNearest))  for k = 1:length(v)-1 )
+    # The normalization constant's spread is taken RELATIVE to its own mean, so it is scale-free in the same sense
+    # the phase is:  the orbital's arbitrary eigenvector scale divides out and what is left is the fractional
+    # uncertainty the user would carry into a cross section.
+    relSpread(v)      = (maximum(v) - minimum(v)) / max(sum(v)/length(v), 1.0e-300)
+
+    worst  = spreadOf(δs)
+    # `jitter` is the total variation measured AGAINST THE SPREAD, not against the net change.  Dividing by the net
+    # change was the first form and it is useless:  for a sound orbital the net change is ~0 by construction, so the
+    # ratio ran to 400 on orbitals that were perfectly fine.  Against the spread a monotone drift gives ~2 and
+    # point-to-point noise gives much more, which is the distinction wanted.
+    jitter = totalVariation(δs) / max(worst, 1.0e-12)
+    sDrift = (maximum(Ns) - minimum(Ns)) / max(sum(Ns)/length(Ns), 1.0e-300)
+    # WHETHER THE OUTERMOST MATCHING POINT LIES INSIDE THE CLASSICAL TURNING POINT is the physically unambiguous
+    # half of the diagnosis, and it is what every badly-behaved case in the calibration set had in common:  inside
+    # the turning point the wave does not oscillate at all, so no radius there can carry an asymptotic match.  It
+    # is reported rather than inferred from the phase behaviour.
+    inside = ms[end].x < ms[end].xTP
+    rTP    = ms[end].xTP / q
+
+    # THE REPAIR, IN THREE TIERS.  Walk inward from the box wall and take the OUTERMOST window of 8 consecutive probes
+    # over which the phase has settled;  8 of 24 spans a quarter of the window, enough that one bad point cannot carry
+    # it.  Below `warn` the match is fair and the orbital is used silently.  Between `warn` and `fatal` it is used but
+    # said out loud, because the error it implies is percent-level rather than ruinous.  Above `fatal` there is no fair
+    # radius on this grid at all and the caller must be stopped.
+    # Below `meshSound` points per oscillation a moved radius is not a repair but a differently wrong answer; see
+    # the measurement at CONT_MESH_SOUND.  The gate bites only on a MOVE, so an orbital that is sound at the wall is
+    # unaffected however coarse the mesh.
+    coarse = ppo < meshSound
+    win  = 8
+    # BOTH measures are judged per window, and `bad` expresses each in units of its OWN tolerance so that the worse
+    # of the two decides.  That keeps the two thresholds independent -- they guard different failures and were
+    # measured separately -- while leaving one number to compare windows by.
+    best = (b=0, sp=Inf, sc=Inf, bad=Inf)
+    for  b  in  length(idx):-1:win
+        sp  = spreadOf(δs[b-win+1:b])
+        sc  = relSpread(Ns[b-win+1:b])
+        bad = max(sp/warn, sc/warnN)
+        if  bad < best.bad    best = (b=b, sp=sp, sc=sc, bad=bad)    end
+        if  bad < 1.0
+            chosen = idx[b]
+            # THE GATE DECLINES THE MOVE AND KEEPS THE ORIGINAL RADIUS;  it does not raise.  Raising was the first
+            # form and it stopped six tests carrying approved references, which makes it a decision about what JAC
+            # accepts rather than a correction.  Declining is the whole of what the measurement supports:  the
+            # defect found was a move that RELOCATED an error and reported success, and not moving removes exactly
+            # that.  The caller is told loudly, with the uncertainty quoted, through the `:poor` verdict.
+            if  coarse  &&  chosen != mtp
+                return( (index=mtp, moved=false, declined=true, spread=sp, jitter=jitter, scaleDrift=sc, ppo=ppo,
+                         nProbes=length(idx), inside=inside, rTP=rTP, verdict=:poor) )
+            end
+            return( (index=chosen, moved=(chosen != mtp), declined=false, spread=sp, jitter=jitter, scaleDrift=sc,
+                     ppo=ppo, nProbes=length(idx), inside=inside, rTP=rTP,
+                     verdict=(chosen == mtp ? :sound : :moved)) )
+        end
+    end
+
+    if  best.b > 0  &&  best.sp < fatal  &&  best.sc < fatalN
+        chosen = coarse ? mtp : idx[best.b]
+        return( (index=chosen, moved=(chosen != mtp), declined=(coarse && idx[best.b] != mtp), spread=best.sp,
+                 jitter=jitter, scaleDrift=best.sc, ppo=ppo, nProbes=length(idx), inside=inside, rTP=rTP,
+                 verdict=:poor) )
+    end
+
+    return( (index=mtp, moved=false, declined=false, spread=min(worst, best.sp), jitter=jitter,
+             scaleDrift=(best.b > 0 ? best.sc : sDrift), ppo=ppo, nProbes=length(idx), inside=inside, rTP=rTP,
+             verdict=:unfair) )
+end
+
+
+"""
+`Continuum.matchingRadiusReport(wa::NamedTuple, cOrbital::Orbital, pot::Radial.Potential, mtp::Int64)`
+    ... says out loud what `Continuum.checkMatchingRadius` found, and RAISES where the matching radius cannot be made
+        fair on the given grid;  `nothing` is returned when the orbital may be used.  A sound orbital prints nothing,
+        so the check is silent in the normal case and unmissable otherwise.
+        
+        WHY IT RAISES RATHER THAN WARNS IN THE LAST CASE.  A warning on a continuum orbital is read past:  the orbital
+        is consumed inside an amplitude loop that may run thousands of times, and the resulting cross section carries
+        no trace of it.  Where the phase never settles, the normalization constant is not a property of the solution
+        at all, and every number built on it is wrong by an unknown factor -- which is the failure mode that reads as
+        box dependence and has twice been mistaken for physics in this code.  The grid is NOT repaired here:  it
+        belongs to the whole `Atomic.Computation`, and a silent re-solve would contract a continuum orbital from one
+        grid against bound orbitals from another.
+"""
+function matchingRadiusReport(wa::NamedTuple, cOrbital::Orbital, pot::Radial.Potential, mtp::Int64)
+    wa.verdict == :sound   &&   return( nothing )
+
+    energy = cOrbital.energy
+    α  = Defaults.getDefaults("alpha")  ;   wc = 1/α
+    q  = sqrt( energy * (energy + 2 * wc^2) ) / wc  ;   λr = 2pi / q
+    box = pot.grid.r[mtp] / λr                               ## box, in wavelengths
+    sh  = string(cOrbital.subshell)
+
+    # WHICH GRID IS AT FAULT, and the order of these tests is the measured one rather than a guess.  EVERY badly
+    # behaved case in the 05-Nov-2026 calibration set had its outermost matching point INSIDE the classical turning
+    # point, which is physically decisive:  there the wave does not oscillate, so no radius in the box can carry the
+    # match and only a larger box can help.  That is tested first and quotes the radius actually needed.  Only when
+    # the turning point is comfortably inside the box is a coarse mesh the remaining explanation, and then the points
+    # per oscillation says so directly -- ~40 is the measured sound value and 15.7 fails catastrophically.
+    sPpo = @sprintf("%.1f", wa.ppo)   ;   sBox = @sprintf("%.1f", box)   ;   sJit = @sprintf("%.1f", wa.jitter)
+    if      wa.inside
+        cause  = "THE BOX IS TOO SMALL -- the outermost matching point lies INSIDE the classical turning point "  *
+                 "(q*r = " * @sprintf("%.1f", pot.grid.r[mtp]*q) * " against a turning point at "                 *
+                 @sprintf("%.1f", wa.rTP*q) * "), so the electron is still in the tunnelling region there and no " *
+                 "radius in this box carries an oscillating wave to match onto"
+        remedy = "enlarge grid.rbox to at least " * @sprintf("%.0f", 1.5*wa.rTP) * " a.u. (the turning point is "  *
+                 "at " * @sprintf("%.0f", wa.rTP) * " a.u. and this box reaches "                                  *
+                 @sprintf("%.0f", pot.grid.r[mtp]) * " a.u.)"
+    elseif  wa.ppo < CONT_MESH_SOUND
+        cause  = "THE MESH IS TOO COARSE -- this mesh carries only " * sPpo * " points per oscillation at this "   *
+                 "energy, below the " * @sprintf("%.0f", CONT_MESH_SOUND) * " below which a MOVED matching "      *
+                 "radius has been measured to relocate the error rather than remove it, and the extracted phase "  *
+                 "varies " * sJit * "x its own spread from point to point"
+        remedy = "reduce grid.hp by a factor of about " * @sprintf("%.1f", 40.0/max(wa.ppo, 1.0)) * ", from "     *
+                 @sprintf("%.3e", pot.grid.hp) * " to about " * @sprintf("%.3e", pot.grid.hp*max(wa.ppo,1.0)/40.0) *
+                 " a.u., which brings the counted density to about 40.  The factor is scaled from the COUNTED "   *
+                 "density rather than assumed from grid.hp, since the mesh is sampled at Gauss-Legendre points and " *
+                 "no single step represents it"
+    else
+        cause  = "NEITHER STANDARD CAUSE APPLIES -- the turning point is inside the box and the mesh carries "     *
+                 sPpo * " points per oscillation, yet the phase still does not settle (varying " * sJit         *
+                 "x its own spread)"
+        remedy = "treat this orbital as suspect and report it:  the box holds " * sBox * " wavelengths, so the "   *
+                 "usual two remedies do not obviously apply and the cause is worth finding"
+    end
+
+    if      wa.verdict == :tooFewPoints
+        @warn("Continuum.checkMatchingRadius(): the outer two wavelengths of $sh at " *
+              @sprintf("%.4e Ha hold only %d mesh points", energy, wa.nProbes) * ", too few to test whether the " *
+              "normalization's matching radius is fair.  The orbital is used as it stands.  " * remedy * ".")
+    elseif  wa.verdict == :moved
+        printstyled("\n>> Continuum: THE MATCHING RADIUS WAS MOVED for $sh at " * @sprintf("%.4e", energy) *
+                    " Ha.\n", color=:light_yellow)
+        printstyled(">>   The outermost mesh point (index " * string(mtp) * ", r = " *
+                    @sprintf("%.4f", pot.grid.r[mtp]) * " a.u.) did not give a settled phase;  matching moved "  *
+                    "inward to index " * string(wa.index) * ", r = " * @sprintf("%.4f", pot.grid.r[wa.index])   *
+                    " a.u., where the spread over 8 probes is " * @sprintf("%.2e", wa.spread) * " rad.\n",
+                    color=:light_yellow)
+        printstyled(">>   There the inner phase is constant to " * @sprintf("%.2e", wa.spread) *
+                    " rad and the normalization constant to " * @sprintf("%.2f", 100*wa.scaleDrift) * " %.\n",
+                    color=:light_yellow)
+        printstyled(">>   This is normal close to a box wall, where a B-spline solution is constrained by its " *
+                    "boundary condition.  The orbital IS usable;  the phase and normalization below are the moved " *
+                    "ones.\n", color=:light_yellow)
+    elseif  wa.verdict == :poor
+        printstyled("\n>> Continuum: THE NORMALIZATION OF $sh AT " * @sprintf("%.4e", energy) *
+                    " Ha IS ONLY APPROXIMATELY DEFINED.\n", color=:light_red)
+        printstyled(">>   On the best window this grid offers, the inner phase spreads by " *
+                    @sprintf("%.2e", wa.spread) * " rad (limit " * @sprintf("%.2e", CONT_MATCH_WARN) *
+                    ") and the normalization constant by " * @sprintf("%.2f", 100*wa.scaleDrift) * " % (limit " *
+                    @sprintf("%.2f", 100*CONT_SCALE_WARN) * " %).\n", color=:light_red)
+        printstyled(">>   SO TREAT EVERY CROSS SECTION BUILT ON THIS ORBITAL AS CARRYING ABOUT " *
+                    @sprintf("%.1f", 100*wa.scaleDrift) * " % UNCERTAINTY FROM THE NORMALIZATION ALONE.\n",
+                    color=:light_red)
+        if  wa.declined
+            printstyled(">>   A RADIUS AT WHICH THE PHASE SETTLES DOES EXIST HERE AND WAS DELIBERATELY NOT USED, " *
+                        "because this mesh carries only " * sPpo * " counted points per oscillation, below the " *
+                        @sprintf("%.0f", CONT_MESH_SOUND) * " at which moving the radius has been measured to be " *
+                        "a repair rather than a relocation of the error.\n", color=:light_red)
+            printstyled(">>   The ORIGINAL matching radius is kept, so this number is the one the mesh gives;  it " *
+                        "is not improved and not disguised.\n", color=:light_red)
+        end
+        printstyled(">>   DIAGNOSIS: " * cause * ".\n", color=:light_red)
+        printstyled(">>   REMEDY: " * remedy * ".\n", color=:light_red)
+        printstyled(">>   The orbital IS used.  Treat any cross section built on it as carrying this uncertainty.\n",
+                    color=:light_red)
+    elseif  wa.verdict == :unfair
+        # WHY THERE ARE TWO WORDINGS HERE.  The gate at CONT_MESH_SOUND refuses a grid on which a settled radius DOES
+        # exist, and saying "no radius works" in that case would be false and would send the reader looking for the
+        # wrong thing.  The two endings are therefore kept apart:  one reports that nothing fair was found, the other
+        # that something fair was found and deliberately not used.
+        if  wa.ppo < CONT_MESH_SOUND
+            sWhy = "The mesh carries only " * sPpo * " counted points per oscillation AND no radius in the outer "  *
+                   "two wavelengths gives a settled phase, so the two failures coincide:  there is nothing fair to " *
+                   "move to, and the mesh would not make a move trustworthy if there were.  The inner phase "       *
+                   "spreads by " * @sprintf("%.2e", wa.spread) * " rad and the normalization constant by "          *
+                   @sprintf("%.1f", 100*wa.scaleDrift) * " % over " * string(wa.nProbes) * " probes."
+        else
+            sWhy = "The inner phase shift, which is a CONSTANT of the solution wherever the match is legitimate, "  *
+                   "spreads by " * @sprintf("%.2e", wa.spread) * " rad over the outer two wavelengths ("           *
+                   string(wa.nProbes) * " probes) against a limit of " * @sprintf("%.2e", CONT_MATCH_WARN)         *
+                   ", and the normalization constant itself varies by " * @sprintf("%.1f", 100*wa.scaleDrift)      *
+                   " % across them against a limit of " * @sprintf("%.2f", 100*CONT_SCALE_FATAL) * " %.  So there " *
+                   "is NO radius on this grid at which the orbital is the Coulomb solution it is being matched "    *
+                   "to, and the constant returned would be an arbitrary number rather than a property of the "      *
+                   "solution."
+        end
+        error("Continuum.normalizeOrbitalCoulombFunctions(): the normalization of $sh at " *
+              @sprintf("%.4e", energy) * " Ha CANNOT BE TRUSTED on this grid.  " * sWhy * "  " *
+              "DIAGNOSIS: " * cause * ".  REMEDY: " * remedy * ".  The grid is not changed here because it belongs " *
+              "to the whole computation;  change it in the Radial.Grid you pass in.  To proceed anyway and accept " *
+              "an unverified normalization, select another convention with " *
+              "setDefaults(\"method: normalization, pure sine\"), which carries its own asymptotic-form guard.")
+    end
+
+    return( nothing )
+end
+
+
+"""
+`Continuum.normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)`   
+    ... to normalize the given continuum orbital with regard to a (asymptotic) wave function as per Salvat Code. 
+        The orbitasl are normalized to unit amplitude.
+        An ( orbital::Orbital, (δ + Δ)::Float64, N::Float64 ) is returned.
+        
+        THE MATCHING RADIUS IS NOW TESTED BEFORE IT IS TRUSTED (05-Nov-2026).  This convention pins the orbital to the
+        exact Coulomb functions at ONE radius, and for a long time nothing asked whether that radius was a fair place
+        to do it:  where the potential had not reached its `-Zbar/r` tail there, or where the orbital was corrupted,
+        the match still succeeded and returned a confident number.  `Continuum.checkMatchingRadius` now extracts the
+        inner phase shift over the outer two wavelengths and requires it to be CONSTANT, which it is wherever the
+        match is legitimate;  the matching point is moved away from the box wall when that helps, and the routine
+        RAISES when no radius on the grid will do.  See that function for the measure and `Continuum.matchAtRadius`
+        for the one-radius extraction this was factored out of.
+"""
+function normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potential, settings::Continuum.Settings)
+    mtp   = size( cOrbital.P, 1)     ;    energy = cOrbital.energy
+    kappa = cOrbital.subshell.kappa  ;    l      = Basics.subshell_l(cOrbital.subshell) 
+    Zbar  = -Radial.determineZbar(pot)
+
+    # THE GUARD RUNS FIRST and may move the matching point or raise;  `matchAtRadius` then does at the chosen radius
+    # exactly what this routine used to do at `mtp`, so a sound orbital follows the old path number for number.
+    wa = Continuum.checkMatchingRadius(cOrbital, pot, l, Zbar, mtp)
+    Continuum.matchingRadiusReport(wa, cOrbital, pot, mtp)
+    m  = Continuum.matchAtRadius(wa.index, cOrbital, pot, l, Zbar)
+    if  m.x < m.xTP    println("The kr is less than the Coulomb turning point")    end
+
+    N = m.N  ;    δ = m.iPhase  ;    Δ = m.cPhase  ;    sa = m.kind
 
     P = N .* cOrbital.P  ;   Q = N .* cOrbital.Q  ;   Pprime = N .* cOrbital.Pprime  ;   Qprime = N .* cOrbital.Qprime  ;   
     ##  NO ASYMPTOTIC-FIT TIER HERE, AND THE REASON IS THE CONVENTION ITSELF, not an oversight -- it was added on
@@ -1309,6 +1831,11 @@ function normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potenti
     ##  10 a.u. box gives eta ~ 24, where the logarithmic term eta*ln(2qr) ~ 76 dwarfs q*r ~ 11 and the asymptotic
     ##  form is meaningless -- the fit residual is 4.77 and refused four suite tests, while this normalization is
     ##  sound there and always has been.  A measure may only guard the assumption its own routine makes.
+    ##    AND THAT IS WHY THE GUARD ABOVE TAKES THE FORM IT DOES (05-Nov-2026).  The assumption THIS routine makes is
+    ##  not that the wave is asymptotic but that ONE radius suffices, so the measure asks exactly that: the inner
+    ##  phase shift is radius-independent wherever the match is legitimate, and its spread over the outer two
+    ##  wavelengths is therefore the convention's own validity criterion -- needing no asymptotic form, no reference
+    ##  data, and no absolute scale.
     Continuum.reportContinuumAmplitude(P, cOrbital, pot.grid, "CoulombFunctions")
     newOrbital = Orbital( cOrbital.subshell, cOrbital.isBound, cOrbital.useStandardGrid, cOrbital.energy, 
                             P, Q, Pprime, Qprime, cOrbital.grid)
@@ -1317,7 +1844,7 @@ function normalizeOrbitalCoulombFunctions(cOrbital::Orbital, pot::Radial.Potenti
     # continuum-derived quantity depends on which of the four `Defaults.GBL_CONT_NORMALIZATION` conventions is in
     # force, and that is a session global a user never sees; a number printed without it cannot be read back.
     println(">> Coulomb-function-normalized continuum orbital (" * sa * ") with normalization constant N=" * @sprintf("%.4e",N) *
-            ":   r = $(pot.grid.r[mtp]),   iPhase = $δ,   cPhase = $Δ ")
+            ":   r = $(pot.grid.r[wa.index]),   iPhase = $δ,   cPhase = $Δ ")
 
     return( newOrbital, δ + Δ, N )
 end

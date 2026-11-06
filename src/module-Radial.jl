@@ -880,9 +880,36 @@ end
                 a plausible-looking wrong answer.
         maximumFreeElectronEnergy
             ... give a maximum free-electron energy [Hartree]; the asymptotic step hp is set so that the
-                shortest de Broglie wavelength is sampled with 20 points.  This is the constructive
-                counterpart of Continuum.gridConsistency, which checks the same quantity and requires at
-                least 15 points per oscillation.
+                shortest de Broglie wavelength is sampled with 40 points, the BOX IS HELD at its incoming
+                size, and the box is reported in wavelengths.  This is the constructive counterpart of
+                Continuum.gridConsistency, which refuses below 15 points per oscillation and warns below 40.
+
+                THE BOX IS HELD DELIBERATELY, because Radial.Grid(grid; hp=...) keeps NoPoints fixed and so
+                lets the box follow hp.  Refining hp alone would SHRINK the box in proportion -- measured
+                06-Nov-2026, from 15.3 to 8.0 wavelengths on the helium grid at 42 Hartree -- which buys
+                the sampling by spending the other requirement.  Here the sampling is paid for in grid
+                points instead, so NoPoints rises (616 -> 945 on that case) and the box does not move.
+
+                WHY 40 AND NOT THE 20 THIS USED UNTIL 06-Nov-2026.  Three convergence studies in this
+                repository put the 20 beyond defending.  A 4.66 keV Auger rate is 5.6 % out at 17 points
+                per oscillation and converged to 0.02 % at 34 (06-Nov-2026); the 207Pb internal-conversion
+                orbital at 15.65 points comes back with an interior amplitude 3.3e+09 times its asymptotic
+                one, against 1.14 at 46.94 (22-Oct-2026); and across four systems the normalization constant
+                is 4 to 6 % out at 13 counted points and about 1 % out at 15 (06-Nov-2026).  At 40 all four
+                of those systems are judged sound and reproduce their converged constant to better than
+                0.5 %.  The cost is the point of stating it: halving hp roughly doubles the number of mesh
+                points in the asymptotic region, so this scheme is now about twice as expensive as it was.
+
+                AND 40 IS NOT A GUARANTEE, which matters more than the number.  The error in a continuum
+                quantity is NOT monotone in the sampling density: measured 06-Nov-2026, two meshes at the
+                same 21 counted points per oscillation differ by 3.3 %, and uranium at 15 points is exact
+                while at 20 points it is 3.4 % out -- the matching point landing at an arbitrary phase of
+                the oscillation, the same signature Continuum.checkNormalizationRadius records for the
+                normalization radius.  Nor is the sampling density the only requirement: measured
+                01-Sep-2026 on H 1s photoionization, a grid with 104 points per oscillation puts the two
+                gauges 6.7 % apart in a box of 2.88 wavelengths and 0.001 % apart in one of 4.77, at
+                IDENTICAL hp.  So this scheme sets hp and reports the box, and HALVING hp UNTIL THE ANSWER
+                STOPS MOVING remains the only real check.
         maximumPrincipalQN
             ... give the largest principal quantum number n to be represented; the box is set from the
                 hydrogenic outer turning point,
@@ -952,9 +979,46 @@ function generateGrid(grid::Radial.Grid; boxSize::Union{Nothing,Float64}=nothing
         #
     elseif  !isnothing(maximumFreeElectronEnergy)
         wavenb      = sqrt( 2maximumFreeElectronEnergy + maximumFreeElectronEnergy * Defaults.getDefaults("alpha")^2 )
-        wavelgth    = 2pi / wavenb;     hp = wavelgth / 20
-        newGrid     = Radial.Grid(grid; hp=hp)
-        println(">> Generate a new grid for the minium wavelength = $wavelgth a.u. of free electrons and  hp = $hp")
+        wavelgth    = 2pi / wavenb;     hp = wavelgth / 40
+        # THE BOX IS PRESERVED EXPLICITLY, AND NOT PRESERVING IT WAS A REAL DEFECT OF THE FIRST VERSION OF THIS
+        # SCHEME.  Radial.Grid(grid; hp=...) holds NoPoints FIXED, so the box follows hp:  measured 06-Nov-2026 on
+        # the helium grid at 42 Hartree, refining hp from wavelength/20 to wavelength/40 shrank the box from 10.47
+        # to 5.46 a.u., i.e. from 15.3 to 8.0 wavelengths.  That buys the sampling by spending the box, and the box
+        # is the OTHER requirement -- 01-Sep-2026, at identical hp, 2.88 wavelengths put the two gauges 6.7 % apart
+        # against 0.001 % at 4.77.  So a scheme that silently traded one for the other could make a marginal case
+        # worse while appearing to improve it, which is precisely what the note at Basics.recommendedGrid records
+        # against the 20-point version of this very function.  Passing rbox as well pays for the sampling in grid
+        # POINTS instead:  616 -> 945 on that case, with the box held at 15.8 wavelengths.
+        rboxOld     = grid.r[grid.NoPoints]
+        newGrid     = Radial.Grid(grid; hp=hp, rbox=rboxOld)
+        boxWaves    = newGrid.r[newGrid.NoPoints] / wavelgth
+        println(">> Generate a new grid for the minimum wavelength = " * @sprintf("%.4e", wavelgth) *
+                " a.u. of free electrons and  hp = " * @sprintf("%.4e", hp) *
+                " a.u. (40 points per oscillation)" *
+                "\n>> The box is HELD at " * @sprintf("%.4e", newGrid.r[newGrid.NoPoints]) * " a.u., i.e. " *
+                @sprintf("%.2f", boxWaves) * " wavelengths at that energy, which costs grid.NoPoints = " *
+                string(grid.NoPoints) * " -> " * string(newGrid.NoPoints) * "." *
+                "\n>> NOTE that 40 points is where measurements stop moving, NOT a guarantee; halving hp until " *
+                "the answer stops moving is the only real check.")
+        # THE BOX IS A SEPARATE REQUIREMENT AND THIS SCHEME DOES NOT SET IT, so it says so rather than leaving the
+        # caller to believe the grid is now fit.  Measured 01-Sep-2026 on H 1s photoionization with hp held FIXED at
+        # 0.060, i.e. 104 points per oscillation throughout:  a box of 2.88 wavelengths puts the two gauges 6.7 %
+        # apart, while 4.77 wavelengths gives 1.00001.  The phase and the normalization are read near the outer
+        # boundary, so there must be complete oscillations out there to read them FROM however finely each is sampled.
+        # WHETHER THAT BOX IS ENOUGH DEPENDS ON THE NORMALIZATION CONVENTION, so this is said rather than warned.
+        # A routine that fits an ASYMPTOTIC SINE needs several complete oscillations in the box -- measured
+        # 01-Sep-2026 at identical hp, 2.88 wavelengths put the two photoionization gauges 6.7 % apart against
+        # 0.001 % at 4.77.  The shipped default instead matches EXACT Coulomb functions, which hold wherever the
+        # potential has reached its -Zbar/r tail:  measured 06-Nov-2026 on Mg^10+ with a screened potential, going
+        # from 0.89 to 4.09 oscillations left the phase, the normalization and the orbital identical to six
+        # decimals.  So a warning here would be a false alarm under the default convention, and the number is
+        # simply reported for the reader who has selected another one.
+        if  boxWaves < 4.0
+            println(">> NOTE that this box holds under 4 oscillations.  That matters for the asymptotic-sine " *
+                    "normalizations, which need several;\n>>   rbox of at least " *
+                    @sprintf("%.2f", 4.0*wavelgth) * " a.u. would give 4.  It does NOT matter for the default " *
+                    "Coulomb-function normalization,\n>>   which was measured insensitive to the box.")
+        end
         #
     elseif  !isnothing(maximumPrincipalQN)
         n = maximumPrincipalQN
