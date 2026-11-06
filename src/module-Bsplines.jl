@@ -639,7 +639,10 @@ LinearAlgebra.mul!(y::AbstractVector{Float64}, op::ShiftInvertOperator, x::Abstr
         the target window already fixed in advance, not for an iterating SCF. Nothing here reopens route (c) for
         that other use case.
         An eigen::Basics.Eigen is returned, with exactly `nev` entries (fewer only if the sparse solve itself
-        converges short, which Arnoldi reports rather than silently returning).
+        converges short, which Arnoldi reports rather than silently returning); every eigenvector is
+        normalized in the B-METRIC (`v' * matrixB * v = 1`), the SAME convention
+        `Bsplines.diagonalizeLocalMatrix` already returns, NOT the Euclidean norm Arnoldi/`partialeigen`
+        return natively -- this is corrected before the vector is handed back, not left for the caller to fix.
 """
 function diagonalizeLocalMatrixNearEnergy(kappa::Int64, matrixA::AbstractMatrix{Float64}, matrixB::AbstractMatrix{Float64},
                                            primitives::Bsplines.Primitives, sigma::Float64, nev::Int64)
@@ -670,9 +673,17 @@ function diagonalizeLocalMatrixNearEnergy(kappa::Int64, matrixA::AbstractMatrix{
     values      = sigma .+ 1.0 ./ real.(theta)
     order       = sortperm(values)
 
+    # NORMALIZE IN THE B-METRIC (v'*Bsparse*v = 1), NOT the Euclidean norm Arnoldi/partialeigen returns
+    # (v'*v = 1) -- the generalized eigenproblem's physical normalization, which Bsplines.diagonalizeLocalMatrix
+    # (LAPACK's generalized eigensolver) already returns by convention and every downstream consumer
+    # (Bsplines.generateOrbitalFromPrimitives, dipole matrix elements) assumes. MEASURED, not assumed: on a
+    # bare-hydrogen case this convention mismatch gave v'*v=1 but v'*Bsparse*v=0.135 -- an uncorrected factor
+    # of 1/sqrt(0.135) = 2.72 in the orbital amplitude, which is exactly what broke branch a of
+    # example-Dz.jl's cross sections before this fix.
     vectors = Vector{Float64}[]
     for  i  in  order
-        full = zeros(nsL+nsS);   full[keep] = real.(vecs[:,i]);   push!(vectors, full)
+        v   = real.(vecs[:,i]);   v = v / sqrt(v' * Bsparse * v)
+        full = zeros(nsL+nsS);   full[keep] = v;   push!(vectors, full)
     end
 
     return( Basics.Eigen(values[order], vectors) )
