@@ -344,6 +344,119 @@ end
 
 
 """
+`Basics.checkGridConvergence(computation::Atomic.Computation, extract::Function; factor::Float64=2.0, 
+                                tolerance::Float64=1.0e-2, printout::Bool=true)`  
+    ... re-performs `computation` on a twin grid whose outer step `hp` is finer by `factor`, with the radial BOX held, and
+        compares whatever number(s) `extract` pulls out of the two result dictionaries.  It is the check that both measured
+        tables in `Basics.recommendedGrid` end on -- halve `hp` until the answer stops moving -- and it is here because
+        nothing else in JAC performs it:  every other grid and continuum guard is A PRIORI, read off the grid before the
+        answer exists, while the failure this one catches is POSTERIOR.  `extract` is handed the `Basics.PerformResults` of
+        `Basics.perform(...; output=true)` -- an `AbstractDict{String,Any}` read by TYPED keys -- and may return a number or a
+        collection of numbers.  A value::NamedTuple with the fields `converged`, `relative`, `index`, `coarse`, `fine`,
+        `coarseGrid` and `fineGrid` is returned.
+
+            Basics.checkGridConvergence(comp, r -> [lev.energy for lev in r[ResultKeys.Multiplet].levels])
+            Basics.checkGridConvergence(comp, r -> [ln.crossSection.Coulomb for ln in r[PhotoIonization.Settings]])
+
+        WHY THE MEAN FIELD IS RE-DERIVED RATHER THAN THE ORBITALS CARRIED OVER.  A halved `hp` shares NO mesh with the
+        original -- measured 06-Nov-2026, 2 of 1330 points survive and both lie at r ~ 1e-8 -- because the harmonic blend of
+        `h*r` and `hp` carries the step change inward to every radius, not only to the outer linear part.  So nothing can be
+        restricted onto the finer mesh, and JAC has no interpolation either (`Basics.interpolateOnGridGrasp92` is a stub that
+        raises).  Re-performing the whole computation is therefore the only honest route, and it is what both of those tables
+        actually did.  The cost is that the computation runs TWICE.
+
+        THE DEFAULT `tolerance` IS MEASURED, and the calibration is the second table in that same docstring:  RR into 1s 4s of
+        H-like Bi with the box fixed at 142 a.u. gives sigma_C = 3.8338e-10, 5.0133e-09, 9.7472e-03, 1.1324e-02, 1.1324e-02 b
+        at hp = 0.472, 0.200, 0.100, 0.050, 0.025.  Read as this check reads it -- each grid against its own halving -- those
+        are relative changes of 1.00, 1.00, 0.139 and 0.000, so EVERY threshold in (0, 0.139) separates the three unconverged
+        grids from the converged one and none outside it does.  1.0e-2 sits inside that interval.  Note what the same table
+        says about the alternatives:  the two gauges agree to better than 2 % at every row, so a gauge comparison is BLIND
+        here while the answer is wrong by seven orders.
+
+        AND THE BOX IS HELD ONLY TO WITHIN ONE OUTER STEP, since `Radial.Grid` lands on the first mesh point beyond the
+        requested `rbox`:  20.1267 against 20.0046 a.u. for hp = 2e-2 against 1e-2, i.e. 0.6 %.  That is harmless under
+        `CoulombFunctionNorm`, measured insensitive to the box, and is NOT harmless under a sine convention, where the number
+        of oscillations in the box is what the normalization fits -- so under those conventions a failed verdict may mean
+        "the box moved" rather than "the answer has not converged".
+
+    + computation   ::Atomic.Computation   ... the computation to be repeated; its own grid is the coarse one of the pair.
+    + extract       ::Function             ... pulls the number(s) to be compared out of the result dictionary of `Basics.perform`.
+    + factor        ::Float64              ... factor by which the outer step `hp` is refined; it must exceed 1.
+    + tolerance     ::Float64              ... largest relative change that still counts as converged.
+    + printout      ::Bool                 ... whether the two grids and the comparison are printed.
+"""
+function Basics.checkGridConvergence(computation::Atomic.Computation, extract::Function; factor::Float64=2.0, 
+                                        tolerance::Float64=1.0e-2, printout::Bool=true)
+    if  factor <= 1.0      error("Basics.checkGridConvergence(): factor = $factor must exceed 1;  it is the factor by "  *
+                                 "which the outer step hp is REFINED.")                                                   end
+    if  tolerance <= 0.0   error("Basics.checkGridConvergence(): tolerance = $tolerance must be positive.")               end
+
+    coarseGrid = computation.grid
+    rbox       = coarseGrid.r[coarseGrid.NoPoints]
+    fineGrid   = Radial.Grid(coarseGrid; hp = coarseGrid.hp/factor, rbox = rbox)
+
+    if  printout
+        println("\n>> Basics.checkGridConvergence():  hp = "       * @sprintf("%.4e", coarseGrid.hp)                      *
+                " -> "                                             * @sprintf("%.4e", fineGrid.hp)                        *
+                " a.u., NoPoints = "                               * string(coarseGrid.NoPoints)                          *
+                " -> "                                             * string(fineGrid.NoPoints)                            *
+                ", nsL = "                                         * string(coarseGrid.nsL)                                *
+                " -> "                                             * string(fineGrid.nsL)                                 *
+                ", box "                                           * @sprintf("%.4f", rbox)                               *
+                " -> "                                             * @sprintf("%.4f", fineGrid.r[fineGrid.NoPoints])      *
+                " a.u.\n>> The computation now runs TWICE.")
+    end
+
+    coarseRes = Basics.perform(computation; output=true)
+    fineRes   = Basics.perform( Atomic.Computation(computation; grid=fineGrid); output=true )
+
+    wa      = extract(coarseRes);                                 wb    = extract(fineRes)
+    vCoarse = wa isa Number ? Float64[wa] : collect(Float64, wa); vFine = wb isa Number ? Float64[wb] : collect(Float64, wb)
+    if  length(vCoarse) == 0
+        error("Basics.checkGridConvergence(): `extract` returned nothing on the given grid, so there is nothing to "      *
+              "compare;  check the key it reads against the result dictionary of Basics.perform.")
+    end
+    if  length(vCoarse) != length(vFine)
+        error("Basics.checkGridConvergence(): `extract` returned $(length(vCoarse)) number(s) on the given grid and "     *
+              "$(length(vFine)) on the refined one, so the two cannot be compared term by term.  A finer grid may "       *
+              "legitimately yield a different NUMBER of lines or levels, in which case `extract` must select the ones "   *
+              "to be compared rather than return all of them.")
+    end
+
+    relative = zeros( length(vCoarse) )
+    for  k = 1:length(vCoarse)
+        den         = max( abs(vFine[k]), abs(vCoarse[k]) )
+        relative[k] = den > 0.0  ?  abs(vFine[k] - vCoarse[k]) / den  :  0.0
+    end
+    worst = maximum(relative);    index = argmax(relative);    converged = (worst <= tolerance)
+
+    if  printout
+        for  k = 1:length(vCoarse)
+            if  length(vCoarse) <= 10  ||  k == index
+                println("   [" * string(k) * "]  " * @sprintf("%16.8e", vCoarse[k]) * "  ->  "                            *
+                        @sprintf("%16.8e", vFine[k]) * "    relative change " * @sprintf("%.3e", relative[k])             *
+                        (k == index  ?  "   <-- worst"  :  ""))
+            end
+        end
+        println(">> Worst relative change " * @sprintf("%.3e", worst) * " against a tolerance of "                        *
+                @sprintf("%.3e", tolerance) * ":  "                                                                       *
+                (converged  ?  "CONVERGED on the given grid."                                                             :
+                               "NOT CONVERGED -- the answer is still moving with hp, so the given grid is too coarse "    *
+                               "for the quantity compared.  Refine it and repeat."))
+    end
+    if  !converged
+        Defaults.warn(AddWarning(), "Basics.checkGridConvergence(): the quantity compared moved by "                      *
+                      @sprintf("%.3e", worst) * " when hp was refined by " * @sprintf("%.2f", factor)                     *
+                      ", above the tolerance of " * @sprintf("%.3e", tolerance) * ";  the given grid is too coarse "      *
+                      "for it.")
+    end
+
+    return( (converged=converged, relative=worst, index=index, coarse=vCoarse, fine=vFine,
+             coarseGrid=coarseGrid, fineGrid=fineGrid) )
+end
+
+
+"""
 `Basics.perform(computation::Atomic.Computation)`  
     ... to perform the computation as prescribed by comp. All relevant intermediate and final results are printed to screen (stdout). 
         Nothing is returned.

@@ -28,6 +28,7 @@ function analyze                                                end
 function analyzeConvergence                                     end
 function analyzeGrid                                            end
 function checkConfigurations                                    end
+function checkGridConvergence                                   end
 function compute                                                end
 function computeDensity                                         end
 function densityAtNucleus                                       end
