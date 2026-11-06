@@ -987,8 +987,9 @@ end
 
 
 """
-`Continuum.gridConsistency(maxEnergy::Float64, grid::Radial.Grid)`   
-    ... to check the consistency of the given grid with the maximum energy of the required continuum electrons; 
+`Continuum.gridConsistency(maxEnergy::Float64, grid::Radial.Grid; minEnergy::Union{Nothing,Float64}=nothing,
+                            Zeff::Union{Nothing,Float64}=nothing)`   
+    ... to check the consistency of the given grid with the energies of the required continuum electrons; 
         an error message is issued if the grid.hp = 0.   or  15 * grid.hp < wavelength(maxEnergy)   or  if the grid has 
         less than 600 grid points. The function also returns the recommended grid point where the normalization and phase 
         is to be determined. This number is currently set to nrContinuum = grid.NoPoints - 200  ... to correct for the wrong
@@ -1015,6 +1016,14 @@ end
         for kappa = -1, 1 and -2 alike.  Exact Coulomb functions hold wherever the potential has reached its -Zbar/r
         tail rather than only asymptotically, and there Zeff*r = 46 at the matching point, so the tail condition is met
         well inside one oscillation.  A measure may only guard the assumption its own routine makes.
+
+        THE TWO TIERS WANT OPPOSITE ENDS OF THE ENERGY RANGE, which is what `minEnergy` is for.  The mesh must
+        sample the SHORTEST oscillation, so it is tested at the fastest electron, `maxEnergy`;  the box must
+        CONTAIN the longest, so it belongs to the slowest.  A caller that knows its range passes `minEnergy` and
+        gets both;  one that passes only a maximum gets the mesh tier fully and the box tier evaluated at the
+        wrong end, which is how every call site behaved before 06-Nov-2026 and how most still do.  A `minEnergy`
+        of zero or below -- an energy range that starts AT threshold, or an empty line list -- SKIPS the box tier
+        rather than failing it, since there is then no oscillation to count.
 
         AND A FIXED POINTS-PER-OSCILLATION NUMBER CANNOT BE CALIBRATED, which is why the sampling test refuses at 15 and
         only WARNS at 40 rather than refusing there.  Three convergence studies in this repository demand three widely
@@ -1048,10 +1057,18 @@ end
         that guards it, and the table above shows that 2.0 establishes nothing: at Z = 1 it admits grids that are
         wrong by two orders of magnitude.
 """
-function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; Zeff::Union{Nothing,Float64}=nothing)
+function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; minEnergy::Union{Nothing,Float64}=nothing,
+                            Zeff::Union{Nothing,Float64}=nothing)
     wavenb      = sqrt( 2maxEnergy + maxEnergy * Defaults.getDefaults("alpha")^2 )
     wavelgth    = 2pi / wavenb
     nrContinuum = grid.NoPoints - 200
+    # The two tiers below want OPPOSITE extrema of the energy range, so the box tier carries its own
+    # wavelength:  the mesh must sample the SHORTEST oscillation and the box must contain the LONGEST.
+    # A caller that passes no minimum gets the behaviour of every version before 06-Nov-2026, in which both
+    # tiers read `maxEnergy` and the box tier therefore bit only by accident.
+    boxEnergy   = isnothing(minEnergy) ? maxEnergy : minEnergy
+    boxWavenb   = boxEnergy > 0.  ?  sqrt( 2boxEnergy + boxEnergy * Defaults.getDefaults("alpha")^2 )  :  0.
+    boxWavelgth = boxWavenb > 0.  ?  2pi / boxWavenb  :  0.
     
     ptsPerOsc = wavelgth / grid.hp
     #
@@ -1131,7 +1148,10 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; Zeff::Union{Noth
     # that a substantial part of JAC's low-energy continuum work sits below that line.  Whether JAC should refuse it
     # is a decision about what the code accepts, and it rests on ONE measurement;  that makes it a question for the
     # maintainer rather than a stop to be introduced here.
-    boxWaves = grid.r[grid.NoPoints] / wavelgth
+    # A non-positive energy has no oscillation to count, so the box tier is NOT ASKED rather than failed:
+    # a caller whose energy range starts AT threshold, and one whose line list came out empty, both reach
+    # here with boxEnergy = 0 and must not be refused for it.
+    boxWaves = boxWavelgth > 0.  ?  grid.r[grid.NoPoints] / boxWavelgth  :  Inf
     iOne     = something( findfirst(k -> grid.r[k] >= grid.r[nrContinuum] - wavelgth, 1:nrContinuum), 1 )
     ptsCount = Float64(nrContinuum - iOne + 1)
     if  ptsCount < 40.0
@@ -1180,12 +1200,22 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; Zeff::Union{Noth
     # box, only WARNS because Mg's slowest step sits at 0.997 Ha, while the neon cascade of
     # `testModule_Cascade_StepwiseDecay` refuses at 0.1 Ha in a 9.5 a.u. box.  The difference is the level structure,
     # not the grid.
-    #   GIVING THIS FUNCTION A MINIMUM ENERGY AS WELL is the fix, and it is deliberately NOT done here:  about
-    # fifteen call sites across as many modules pass only a maximum, so it is its own task under the
-    # one-module-per-task rule.  Until then, read a silent box tier as "not asked" rather than as "checked".
+    #   HENCE THE OPTIONAL `minEnergy`, added 06-Nov-2026, which is the fix for exactly that:  when it is given, the
+    # box tier is evaluated at the SLOWEST electron of the run while the mesh tier stays at the fastest.  It is optional
+    # for the same reason `Zeff` below is -- 27 call sites in 21 modules pass only a maximum and cannot be changed from
+    # here, so they migrate one module at a time.  UNTIL A CALLER PASSES IT, READ A SILENT BOX TIER AS "NOT ASKED"
+    # RATHER THAN AS "CHECKED".
+    #   `module-ImpactExcitation.jl` IS WHERE TO LOOK FIRST:  it already computes the minimum and already tests it, in
+    # a module-local `checkLowEnergyGrid` applying the same `lambda > rbox` criterion -- but only WARNS, and only there.
+    # Its warning predates the measurement behind the refusal below.
+    #   AND THE MIGRATION IS NOT MECHANICAL, which is why no caller is changed in the same commit.  A module whose
+    # energy grid STARTS AT THRESHOLD has a minimum near zero by construction -- `Cascade-inc-photorecombination`
+    # builds a Gauss-Legendre grid from 0.0 upward, and `ImpactExcitation` says the same of `calcRateCoefficient =
+    # true` -- so handing over the honest minimum would refuse nearly every rate-coefficient run under a sine
+    # convention.  Per module the choice is the lowest energy that CARRIES WEIGHT, or a warning rather than a refusal.
     if  boxWaves < CONT_BOX_WAVES_FATAL  &&  Defaults.GBL_CONT_NORMALIZATION != CoulombFunctionNorm()
         error("Continuum.gridConsistency(): STOP -- this box holds only " * @sprintf("%.2f", boxWaves) *
-              " oscillations of the continuum orbital at " * @sprintf("%.4e", maxEnergy) * " Ha, i.e. NOT ONE " *
+              " oscillations of the continuum orbital at " * @sprintf("%.4e", boxEnergy) * " Ha, i.e. NOT ONE " *
               "COMPLETE WAVE, and the selected normalization fixes the orbital's scale by fitting an asymptotic " *
               "sine.  There is no complete oscillation inside the box to fit it to.  Measured 06-Nov-2026 on a " *
               "bare point proton, where the exact solution is known: below one wave the normalized orbital is " *
@@ -1193,19 +1223,19 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; Zeff::Union{Noth
               "Coulomb-function convention reproduces itself to 7e-8 over the same boxes.  THE FIT RESIDUAL DOES " *
               "NOT WARN YOU HERE: it reads 0.04 at the 75 % error, below its own 0.20 limit, because with less " *
               "than one wave the fit has almost nothing to satisfy.  REMEDY: enlarge grid.rbox to at least " *
-              @sprintf("%.2f", CONT_BOX_WAVES_WARN*wavelgth) * " a.u. (" * @sprintf("%.0f", CONT_BOX_WAVES_WARN) *
-              " waves at this energy; " * @sprintf("%.2f", wavelgth) * " a.u. would be the bare minimum of one), " *
+              @sprintf("%.2f", CONT_BOX_WAVES_WARN*boxWavelgth) * " a.u. (" * @sprintf("%.0f", CONT_BOX_WAVES_WARN) *
+              " waves at this energy; " * @sprintf("%.2f", boxWavelgth) * " a.u. would be the bare minimum of one), " *
               "or lower the continuum energy, or select " *
               "setDefaults(\"method: normalization, Coulomb functions\"), which matches exact Coulomb functions " *
               "instead of an asymptotic sine and was measured insensitive to the box.")
     end
     if  boxWaves < CONT_BOX_WAVES_WARN  &&  Defaults.GBL_CONT_NORMALIZATION != CoulombFunctionNorm()
         Defaults.warn(AddWarning(), "Continuum.gridConsistency(): the box holds only " *
-                      @sprintf("%.2f", boxWaves) * " oscillations at " * @sprintf("%.4e", maxEnergy) *
+                      @sprintf("%.2f", boxWaves) * " oscillations at " * @sprintf("%.4e", boxEnergy) *
                       " Ha, below the 4 above which the box can be ruled out as a cause; the continuum phase and " *
                       "normalization may be wrong by several percent to 20 %.")
         @warn("Continuum.gridConsistency(): the box reaches " * @sprintf("%.2f", boxWaves) *
-              " oscillations of the continuum orbital at " * @sprintf("%.4e", maxEnergy) * " Ha.  THIS IS " *
+              " oscillations of the continuum orbital at " * @sprintf("%.4e", boxEnergy) * " Ha.  THIS IS " *
               "INDEPENDENT OF THE STEP SIZE and is not implied by it: the phase and the normalization are read " *
               "near the outer boundary, so there must be complete oscillations out there to read them FROM, " *
               "however finely each one is sampled.  Measured 06-Nov-2026 on a bare point proton, at a FIXED " *
@@ -1214,7 +1244,7 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; Zeff::Union{Noth
               "same boxes.  Above 4 waves this experiment can no longer attribute the residual few percent to " *
               "the box, which is why 4 is the level here -- it is where the box stops being demonstrably the " *
               "cause, NOT a level above which the answer is known to be converged.  Enlarge grid.rbox to about " *
-              @sprintf("%.2f", CONT_BOX_WAVES_WARN*wavelgth) * " a.u., or lower the continuum energy.  This " *
+              @sprintf("%.2f", CONT_BOX_WAVES_WARN*boxWavelgth) * " a.u., or lower the continuum energy.  This " *
               "applies to the asymptotic-sine conventions;  " *
               "setDefaults(\"method: normalization, Coulomb functions\") matches " *
               "exact Coulomb functions instead and was measured insensitive to the box.", maxlog=3)
