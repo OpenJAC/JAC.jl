@@ -1124,6 +1124,29 @@ end
 
 
 """
+`Bsplines.gridWindowForSupport(bl, r::Array{Float64,1})`
+    ... the fix behind `Bsplines.generatePrimitives` -- `BSplineKit.support(bl)` returns a `UnitRange{Int64}`
+        of KNOT indices into `bl`'s own parent basis (`knots(bl)` reaches that knot vector directly, with no
+        need to carry the basis object separately), and a B-spline is EXACTLY zero outside that interval (not
+        merely small -- B-spline theory, not an approximation), so it is a guaranteed superset of where
+        `bl(r) > 0.` can ever hold. `searchsortedfirst`/`searchsortedlast` on the already-sorted `r` then find
+        the matching grid-index window in O(log length(r)), with one point of margin on each side so the
+        subsequent exact `bl(r) > 0.` test -- unchanged, and still the one deciding inclusion -- never misses a
+        genuine boundary point; the margin can only cost a few wasted evaluations, never a wrong result. A
+        tuple (irLo::Int64, irHi::Int64) is returned.
+"""
+function gridWindowForSupport(bl, r::Array{Float64,1})
+    knotRange = BSplineKit.support(bl)
+    kn   = knots(bl)
+    rLo  = kn[knotRange.start];   rHi = kn[knotRange.stop]
+    irLo = max(1, searchsortedfirst(r, rLo) - 1)
+    irHi = min(length(r), searchsortedlast(r, rHi) + 1)
+
+    return( irLo, irHi )
+end
+
+
+"""
 `Bsplines.generatePrimitives(grid::Radial.Grid)`
     ... generates the breaks, knots and the B-spline primitives of order k, both for the large and small components. The function applies
         the given grid parameters; no primitive is defined beyond grid[n_max]. The definition of the primitives follows the work of
@@ -1147,7 +1170,12 @@ function generatePrimitives(grid::Radial.Grid)
     BL = BSplineKit.BSplineBasis(BSplineOrder(grid.orderL), breaks)
     for  (ib, bL)  in  enumerate(BL)
         bs = Float64[];   bp = Float64[];   needlower = true
-        for  (ir,r)  in  enumerate(grid.r)
+        # bL(r) can be nonzero ONLY inside its own knot support -- the search below finds the matching
+        # window of grid indices (with one point of margin) so the scan does not have to visit every grid
+        # point for every spline; the bL(r) > 0. test and everything inside it is otherwise unchanged.
+        irLo, irHi = Bsplines.gridWindowForSupport(bL, grid.r)
+        for  ir = irLo:irHi
+            r = grid.r[ir]
             if  bL(r) > 0.    push!(bs, bL(r));  push!(bp, bL(r, Derivative(1)) )
                               upper = ir;        if needlower   lower = ir;   needlower = false   end
             end
@@ -1160,7 +1188,9 @@ function generatePrimitives(grid::Radial.Grid)
     BL = BSplineKit.BSplineBasis(BSplineOrder(grid.orderS), breaks)
     for  (ib, bL)  in  enumerate(BL)
         bs = Float64[];   bp = Float64[];   needlower = true
-        for  (ir,r)  in  enumerate(grid.r)
+        irLo, irHi = Bsplines.gridWindowForSupport(bL, grid.r)
+        for  ir = irLo:irHi
+            r = grid.r[ir]
             if  bL(r) > 0.    push!(bs, bL(r));  push!(bp, bL(r, Derivative(1)) )
                               upper = ir;        if needlower   lower = ir;   needlower = false   end
             end
