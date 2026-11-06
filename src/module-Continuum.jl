@@ -196,6 +196,42 @@ const  CONT_SCALE_FATAL                = 1.0e-1
 const  CONT_MESH_SOUND                 = 28.0
 
 
+##  HOW MANY OSCILLATIONS OF THE OUTGOING WAVE MUST FIT IN THE BOX, for a convention that FITS AN ASYMPTOTIC SINE.
+##  Both numbers were measured 06-Nov-2026, and the experiment is `tools/probeSineBoxWaves.jl`:  a bare POINT proton,
+##  so the exact solution is the Coulomb function and `CoulombFunctionNorm` is correct at any radius and serves as
+##  the CONTROL.  The statistic is the norm of the NORMALIZED large component over a radial window both boxes
+##  contain, which is scale-free -- the Galerkin eigenvector's arbitrary scale cancels, and after normalization the
+##  same physical orbital must come out of any adequate box.  `hp` is equal in the two boxes of a pair, so the
+##  grids NEST and the window carries identical mesh points and identical weights.
+##
+##      series A, box fixed at 12 a.u. and the ENERGY varied (eta = 5.0 ... 0.33):
+##          waves  0.54   0.76   1.05   1.43   1.91   2.67   3.82   5.73
+##          error  14.6%  61.2%  23.1%  11.3%   5.6%   9.1%   3.4%   0.8%      control 0.5 ... 3.6 %
+##      series B, ENERGY fixed (eta = 1.818) and only the box varied -- the confound removed:
+##          waves  0.54   0.71   0.97   1.23   1.76   2.46   3.51   5.27
+##          error  74.6%  57.7%  26.2%  10.2%  19.3%   2.6%  13.2%   6.0%      control 7e-8 above 8 a.u.
+##
+##  THE CONTROL IS WHAT MAKES THIS A MEASUREMENT.  In series B the default convention reproduces its own value to
+##  7e-8 across a factor seven in box size, so the box, the mesh and the solve are all innocent and the error
+##  belongs to the sine fit alone.  A first version of this experiment compared the normalization CONSTANT between
+##  boxes and was discarded:  N absorbs the eigenvector's arbitrary scale, so that comparison has no meaning, and
+##  its "control" drifted by factors of two.
+##
+##  SO THE FATAL LEVEL IS ONE FULL OSCILLATION, and it is where the two series agree:  below one wave the error is
+##  15-75 %, which squares into a cross section wrong by a factor of 1.3 to 3.  The WARN level stays at four waves
+##  but claims LESS than it looks:  above one wave the error is an erratic 2.6-19.3 % at fixed eta and does NOT
+##  settle by 5.3 waves, and the 240 a.u. reference itself carries a fit residual of 0.337 -- so four waves is the
+##  level above which this experiment cannot certify anything, NOT a level above which the answer is known good.
+##
+##  AND THE FIT RESIDUAL CANNOT DO THIS JOB, which is the finding that decided there should be a box tier at all.
+##  It is ANTI-correlated at the dangerous end:  74.6 % error at residual 0.038 and 61.2 % at 0.140, both BELOW its
+##  own 0.20 warning, while 2.6 % error reads 0.387 and warns.  The mechanism is plain once seen -- with less than
+##  one wave in the box the fit has almost nothing to satisfy, so it matches the stub nearly perfectly.  A small
+##  residual there means the fit is unconstrained, not that it is right.
+const  CONT_BOX_WAVES_FATAL            = 1.0
+const  CONT_BOX_WAVES_WARN             = 4.0
+
+
 """
 `Continuum.generateOrbitalForLevel(energy::Float64, sh::Subshell, level::Level, nm::Nuclear.Model, grid::Radial.Grid,
                                     settings::Continuum.Settings; nuclearPot::Union{Nothing,Radial.Potential}=nothing, 
@@ -1131,20 +1167,40 @@ function gridConsistency(maxEnergy::Float64, grid::Radial.Grid; Zeff::Union{Noth
     # grid.hp moves r[NoPoints-200] and hence Zeff*r, and that docstring records Z = 1 and Z = 10 falling on the SAME
     # curve in Zeff*r -- which is the evidence that Zeff*r is the right parameterisation and oscillations-in-box a
     # disguised version of it.  This tier is therefore kept narrow deliberately.
-    if  boxWaves < 4.0  &&  Defaults.GBL_CONT_NORMALIZATION != CoulombFunctionNorm()
+    if  boxWaves < CONT_BOX_WAVES_FATAL  &&  Defaults.GBL_CONT_NORMALIZATION != CoulombFunctionNorm()
+        error("Continuum.gridConsistency(): STOP -- this box holds only " * @sprintf("%.2f", boxWaves) *
+              " oscillations of the continuum orbital at " * @sprintf("%.4e", maxEnergy) * " Ha, i.e. NOT ONE " *
+              "COMPLETE WAVE, and the selected normalization fixes the orbital's scale by fitting an asymptotic " *
+              "sine.  There is no complete oscillation inside the box to fit it to.  Measured 06-Nov-2026 on a " *
+              "bare point proton, where the exact solution is known: below one wave the normalized orbital is " *
+              "15 to 75 % wrong, which squares into a cross section wrong by a factor of 1.3 to 3, while the " *
+              "Coulomb-function convention reproduces itself to 7e-8 over the same boxes.  THE FIT RESIDUAL DOES " *
+              "NOT WARN YOU HERE: it reads 0.04 at the 75 % error, below its own 0.20 limit, because with less " *
+              "than one wave the fit has almost nothing to satisfy.  REMEDY: enlarge grid.rbox to at least " *
+              @sprintf("%.2f", CONT_BOX_WAVES_WARN*wavelgth) * " a.u. (" * @sprintf("%.0f", CONT_BOX_WAVES_WARN) *
+              " waves at this energy; " * @sprintf("%.2f", wavelgth) * " a.u. would be the bare minimum of one), " *
+              "or lower the continuum energy, or select " *
+              "setDefaults(\"method: normalization, Coulomb functions\"), which matches exact Coulomb functions " *
+              "instead of an asymptotic sine and was measured insensitive to the box.")
+    end
+    if  boxWaves < CONT_BOX_WAVES_WARN  &&  Defaults.GBL_CONT_NORMALIZATION != CoulombFunctionNorm()
         Defaults.warn(AddWarning(), "Continuum.gridConsistency(): the box holds only " *
                       @sprintf("%.2f", boxWaves) * " oscillations at " * @sprintf("%.4e", maxEnergy) *
-                      " Ha, below the 4 that measurements show to be sound; the continuum phase and " *
-                      "normalization may be wrong.")
+                      " Ha, below the 4 above which the box can be ruled out as a cause; the continuum phase and " *
+                      "normalization may be wrong by several percent to 20 %.")
         @warn("Continuum.gridConsistency(): the box reaches " * @sprintf("%.2f", boxWaves) *
-              " oscillations of the continuum orbital at " * @sprintf("%.4e", maxEnergy) * " Ha, below the 4 " *
-              "that measurements show to be sound.  THIS IS INDEPENDENT OF THE STEP SIZE and is not implied by " *
-              "it: the phase and the normalization are read near the outer boundary, so there must be complete " *
-              "oscillations out there to read them FROM, however finely each one is sampled.  Measured " *
-              "01-Sep-2026 on H 1s photoionization with grid.hp held FIXED at 0.060, a box of 2.88 wavelengths " *
-              "put the two gauges 6.7 % apart while 4.77 wavelengths gave 1.00001.  Enlarge grid.rbox to about " *
-              @sprintf("%.2f", 4.0*wavelgth) * " a.u., or lower the continuum energy.  This applies to the " *
-              "asymptotic-sine conventions;  setDefaults(\"method: normalization, Coulomb functions\") matches " *
+              " oscillations of the continuum orbital at " * @sprintf("%.4e", maxEnergy) * " Ha.  THIS IS " *
+              "INDEPENDENT OF THE STEP SIZE and is not implied by it: the phase and the normalization are read " *
+              "near the outer boundary, so there must be complete oscillations out there to read them FROM, " *
+              "however finely each one is sampled.  Measured 06-Nov-2026 on a bare point proton, at a FIXED " *
+              "energy so that only the box varied: the normalized orbital came out 26 % wrong at 0.97 waves and " *
+              "10 to 19 % wrong between 1.2 and 1.8, against 7e-8 for the Coulomb-function convention over the " *
+              "same boxes.  Above 4 waves this experiment can no longer attribute the residual few percent to " *
+              "the box, which is why 4 is the level here -- it is where the box stops being demonstrably the " *
+              "cause, NOT a level above which the answer is known to be converged.  Enlarge grid.rbox to about " *
+              @sprintf("%.2f", CONT_BOX_WAVES_WARN*wavelgth) * " a.u., or lower the continuum energy.  This " *
+              "applies to the asymptotic-sine conventions;  " *
+              "setDefaults(\"method: normalization, Coulomb functions\") matches " *
               "exact Coulomb functions instead and was measured insensitive to the box.", maxlog=3)
     end
 

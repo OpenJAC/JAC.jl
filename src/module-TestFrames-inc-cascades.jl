@@ -369,7 +369,29 @@ function testModule_Cascade_StepwiseDecay(; short::Bool=true)
     printstyled("\n\nTest the module  Cascade for the StepwiseDecayScheme ... \n", color=:cyan)
     ## Make the tests
     name = "Cascade after neon 1s --> 3p excitation"
-    grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, rbox = 9.5)
+    # THE BOX WAS ENLARGED FROM 9.5 TO 57.0 a.u. ON 06-Nov-2026 and the reference re-approved with it.  The 9.5 a.u.
+    # box could not support this cascade's SLOWEST Auger electron, an f_7/2 wave at 0.1 Ha, UNDER ANY NORMALIZATION
+    # CONVENTION -- which is the finding, since nothing checked before and the superseded reference encoded a
+    # normalization that was never trustworthy.
+    #   THE ARITHMETIC THAT DECIDES IT.  That electron's wavelength is 14.05 a.u., so `Continuum.checkMatchingRadius`
+    # judges the phase over an outer window of TWO wavelengths, 28.1 a.u., which must itself lie beyond the
+    # centrifugal turning point of an l = 3 wave.  A box of 9.5, 14, 18, 22 or 28 a.u. cannot give that window room
+    # to exist, so all five refuse and the run time barely moves between them.  57.0 a.u. is four wavelengths and is
+    # the first size with room to spare.
+    #   TWO CHEAPER ROUTES WERE MEASURED AND BOTH FAILED, so they are not worth retrying.  `Coulomb functions` with
+    # the box kept at 9.5 a.u.:  the inner phase spreads 1.55e-01 rad against a limit of 2.00e-03 and the constant
+    # varies 10.8 %, with the guard itself reporting that neither standard cause applies -- the turning point is
+    # inside the box and the mesh carries 953 points per oscillation.  `Galerkin` as well, still at 9.5 a.u.:  worse,
+    # 4.33e-01 rad and 94.4 %.  The convention is NOT an independent knob here;  it is the box.
+    #   THE RE-APPROVAL RESTS ON CONVERGENCE, not on one wider box.  Over all 3036 numbers of the summary file, 57.0
+    # against 78.0 a.u. agree to 1.14e-04 and 52.0 against 78.0 to 2.75e-04, and the region this test compares is
+    # IDENTICAL between 57.0 and 78.0, so the comparison does not sit on a knife edge.  What moved against the old
+    # reference is the step ENERGY WINDOWS, by about 1 eV in 30:  holding hp at 1.5e-2 while widening the box takes
+    # the basis from nsL = 130 to 544, so those energies are better converged than before.
+    #   THE COST IS 63 s AGAINST ABOUT 5 s, accepted by the maintainer on 06-Nov-2026, and it is intrinsic:  this
+    # cascade carries a fast electron needing a fine step AND a slow one needing a wide box, so one grid must satisfy
+    # both and reaches 4100 points.
+    grid = Radial.Grid(Radial.Grid(false), rnt = 2.0e-5, h = 5.0e-2, hp = 1.5e-2, rbox = 57.0)
     decayShells = [Shell(1,0), Shell(2,0), Shell(2,1), Shell(3,1)]
     wa   = Cascade.Computation(Cascade.Computation(); name=name, nuclearModel=Nuclear.Model(10.), grid=grid, approach=Cascade.AverageSCA(),
                                 scheme=Cascade.StepwiseDecayScheme([Auger(), Radiative()], 1, Dict{Int64,Float64}(), 0, decayShells, Shell[], Shell[]),
