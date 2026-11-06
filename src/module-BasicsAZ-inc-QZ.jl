@@ -475,9 +475,11 @@ function Basics.recommendedGrid(occupations::Dict{Shell,Int64}, Z::Float64;
     # gridConsistency REFUSED the run; here nothing refuses and the numbers are merely wrong.
     #
     # WHAT NOT TO DO ABOUT IT, tried and rejected the same day: `Radial.generateGrid(grid;
-    # maximumFreeElectronEnergy = ...)` is the obvious remedy and makes this case WORSE.  It targets 20 points per
-    # wavelength, so for eps = 0.5 Ha it returns hp = 0.314 -- five times COARSER than the 0.060 that already
-    # fails -- with nsL unchanged at 95.  It is calibrated for a criterion this measurement refutes.
+    # maximumFreeElectronEnergy = ...)` is the obvious remedy and makes this case WORSE.  RE-MEASURED 06-Nov-2026,
+    # after that routine was rebuilt to target 40 points per wavelength and to HOLD the box rather than let it grow:
+    # for eps = 0.5 Ha it now returns hp = 0.157 -- still 2.6 times COARSER than the 0.060 that already fails -- and,
+    # because the box is held while the step grows, nsL FALLS from 95 to 69.  Raising the target did not make this
+    # the right remedy here; it is calibrated against the WAVELENGTH, which is the criterion this measurement refutes.
     #
     # AND A SECOND MEASUREMENT, 17-Sep-2026, BECAUSE THE ONE ABOVE IS NEUTRAL HYDROGEN AND ITS DIAGNOSTIC DOES NOT
     # CARRY OVER.  RR into 1s 4s of H-like Bi at 1 eV, with the box held FIXED at 142 a.u. and only hp refined:
