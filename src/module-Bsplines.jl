@@ -612,6 +612,17 @@ LinearAlgebra.mul!(y::AbstractVector{Float64}, op::ShiftInvertOperator, x::Abstr
         to sigma, via lambda = sigma + 1/theta; `ArnoldiMethod.partialschur` is asked for those directly, so cost
         scales with `nev` and the sparse LU's own fill-in, not with the full matrix dimension cubed.
 
+        **THIS ASSUMES `matrixA` CARRIES NO NONLOCAL TERM, AND THAT ASSUMPTION IS CHECKED, NOT TRUSTED.**
+        `Bsplines.setupExchangeMatrix` (the Dirac-Fock exchange, `settings.continuumExchange=true` in
+        `PhotoIonizationPseudostates.buildPseudostateLadder`) is genuinely NONLOCAL -- its own docstring says so
+        -- so an exchange-bearing `matrixA` is NOT banded and `sparse(...)` would silently discard real physics
+        as if it were exact zero. MEASURED on real overlap/local matrices (no exchange): 2.1% and 4.1% nonzero
+        after sparsification -- a genuinely dense or exchange-bearing matrix sits nowhere near that. This
+        function therefore checks the nonzero FRACTION after sparsifying and raises, rather than silently
+        returning a wrong answer, if it exceeds 20% (five times the measured local-matrix figure) -- it does not
+        try to verify sparsity index-by-index from spline-order theory, which would need to be re-derived for
+        every block layout; it tests the actual assumption being relied on.
+
         THIS IS A FRESH, SEPARATE ROUTE FROM THE THREE ALREADY MEASURED AND RECORDED IN diagonalizeLocalMatrix'S
         OWN DOCSTRING (12-Aug-2026) -- read that note before changing anything here. Route (a), a range-
         restricted dense solve, saturates at 3-4x. Route (b), the true banded structure (bandwidth 15 once large/
@@ -633,6 +644,14 @@ function diagonalizeLocalMatrixNearEnergy(kappa::Int64, matrixA::Array{Float64,2
     keep = vcat( collect(dropP+1:nsL-trailP), collect(nsL+dropQ+1:nsL+nsS-trailQ) )
 
     Asparse = sparse( matrixA[keep,keep] );    Bsparse = sparse( matrixB[keep,keep] )
+    nzFraction = nnz(Asparse) / length(Asparse)
+    pctNonzero = round(100*nzFraction, digits=1)
+    nzFraction > 0.2   &&   error("Bsplines.diagonalizeLocalMatrixNearEnergy(): matrixA is $pctNonzero% nonzero " *
+                                   "after sparsification -- far above the 2-4% measured for a genuinely banded " *
+                                   "overlap/local matrix. This function assumes matrixA carries NO nonlocal term " *
+                                   "(in particular, no Bsplines.setupExchangeMatrix contribution); sparsifying " *
+                                   "one that does would silently discard real physics. Do not pass an " *
+                                   "exchange-bearing matrix through this route.")
     F       = lu( Asparse - sigma*Bsparse )
     op      = Bsplines.ShiftInvertOperator( F, Bsparse, length(keep) )
     decomp, history = partialschur(op; nev=nev, which=:LM)
