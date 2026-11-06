@@ -7,7 +7,8 @@
 module Bsplines
 
 
-using  BSplineKit, Printf, ..AngularMomentum, ..Basics, ..Defaults, ..Nuclear, ..Radial, JenaAtomicCalculator
+using  ArnoldiMethod, BSplineKit, LinearAlgebra, Printf, SparseArrays, ..AngularMomentum, ..Basics, ..Defaults,
+       ..Nuclear, ..Radial, JenaAtomicCalculator
 
 
 """
@@ -570,6 +571,88 @@ function diagonalizeLocalMatrix(kappa::Int64, matrixA::Array{Float64,2}, matrixB
         full = zeros(nsL+nsS);   full[keep] = v;   push!(vectors, full)
     end
     return( Basics.Eigen(wc.values, vectors) )
+end
+
+
+"""
+`struct  Bsplines.ShiftInvertOperator`  ... the linear operator x -> (matrixA - sigma*matrixB)^-1 * matrixB * x that
+    `Bsplines.diagonalizeLocalMatrixNearEnergy` hands to `ArnoldiMethod.partialschur`, which accepts any object
+    implementing `Base.size`, `Base.eltype` and `LinearAlgebra.mul!` -- this is the minimal such object, not a
+    general-purpose type.
+
+    + F         ::SparseArrays.UMFPACK.UmfpackLU   ... sparse LU factorization of (matrixA - sigma*matrixB).
+    + Bsparse   ::SparseMatrixCSC{Float64,Int64}   ... the sparse overlap-side matrix, applied before F is used.
+    + n         ::Int64                            ... the operator's dimension (both ways), i.e. length(keep).
+"""
+struct ShiftInvertOperator
+    F         ::SparseArrays.UMFPACK.UmfpackLU
+    Bsparse   ::SparseMatrixCSC{Float64,Int64}
+    n         ::Int64
+end
+
+Base.size(op::ShiftInvertOperator)             = (op.n, op.n)
+Base.size(op::ShiftInvertOperator, i::Int64)   = op.n
+Base.eltype(::ShiftInvertOperator)             = Float64
+
+LinearAlgebra.mul!(y::AbstractVector{Float64}, op::ShiftInvertOperator, x::AbstractVector{Float64}) =
+    (y .= op.F \ (op.Bsparse * x);   y)
+
+
+"""
+`Bsplines.diagonalizeLocalMatrixNearEnergy(kappa::Int64, matrixA::Array{Float64,2}, matrixB::Array{Float64,2},
+                                            primitives::Bsplines.Primitives, sigma::Float64, nev::Int64)`
+    ... solves the SAME generalized eigenvalue problem as Bsplines.diagonalizeLocalMatrix (same boundary-condition
+        elimination via Bsplines.boundaryDropCounts, same re-embedding of each eigenvector into the full
+        (nsL+nsS)-length space), but returns only the `nev` eigenpairs CLOSEST to `sigma`, found by a sparse
+        shift-invert Arnoldi solve rather than a full dense decomposition. `matrixA`/`matrixB` are already
+        structurally sparse -- every entry outside a B-spline pair's compact support is an exact (not merely
+        small) 0.0, because `Bsplines.generateTTpMatrix!` never writes to it -- so `sparse(...)` recovers this
+        at no cost to accuracy. The shift-inverted operator x -> (matrixA - sigma*matrixB)^-1 * matrixB * x has
+        its LARGEST-magnitude eigenvalues theta exactly where the ORIGINAL problem has eigenvalues lambda closest
+        to sigma, via lambda = sigma + 1/theta; `ArnoldiMethod.partialschur` is asked for those directly, so cost
+        scales with `nev` and the sparse LU's own fill-in, not with the full matrix dimension cubed.
+
+        THIS IS A FRESH, SEPARATE ROUTE FROM THE THREE ALREADY MEASURED AND RECORDED IN diagonalizeLocalMatrix'S
+        OWN DOCSTRING (12-Aug-2026) -- read that note before changing anything here. Route (a), a range-
+        restricted dense solve, saturates at 3-4x. Route (b), the true banded structure (bandwidth 15 once large/
+        small components are interleaved), was left unimplemented because Julia's LinearAlgebra.LAPACK exposes
+        no banded driver and the vector-producing one gets slower, not faster, with n. Route (c), an energy-
+        windowed LAPACK solve on the Cholesky-reduced standard form, was WITHDRAWN for the SCF bound-state use
+        case specifically because the wanted window is not reliably known during SCF ITERATION (an unconverged
+        neutral atom can have zero bound states in a symmetry) -- a trap that does not apply here: this function
+        is meant for a ONE-SHOT diagonalization in a FIXED external potential (a frozen ion-core mean field) with
+        the target window already fixed in advance, not for an iterating SCF. Nothing here reopens route (c) for
+        that other use case.
+        An eigen::Basics.Eigen is returned, with exactly `nev` entries (fewer only if the sparse solve itself
+        converges short, which Arnoldi reports rather than silently returning).
+"""
+function diagonalizeLocalMatrixNearEnergy(kappa::Int64, matrixA::Array{Float64,2}, matrixB::Array{Float64,2},
+                                           primitives::Bsplines.Primitives, sigma::Float64, nev::Int64)
+    nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
+    dropP, dropQ, trailP, trailQ = Bsplines.boundaryDropCounts(kappa, primitives.grid)
+    keep = vcat( collect(dropP+1:nsL-trailP), collect(nsL+dropQ+1:nsL+nsS-trailQ) )
+
+    Asparse = sparse( matrixA[keep,keep] );    Bsparse = sparse( matrixB[keep,keep] )
+    F       = lu( Asparse - sigma*Bsparse )
+    op      = Bsplines.ShiftInvertOperator( F, Bsparse, length(keep) )
+    decomp, history = partialschur(op; nev=nev, which=:LM)
+    history.converged   ||   @warn("Bsplines.diagonalizeLocalMatrixNearEnergy(): the Arnoldi solve for kappa = " *
+                                    "$kappa, sigma = $sigma did not fully converge after $(history.mvproducts) " *
+                                    "matrix-vector products -- only $(history.nconverged) of $nev eigenpair(s) " *
+                                    "converged.")
+
+    # partialeigen, not a bare diag(decomp.R), because R is only QUASI-upper-triangular -- a real nonsymmetric
+    # operator can carry complex-conjugate eigenvalue pairs in 2x2 blocks on its diagonal.
+    theta, vecs = partialeigen(decomp)
+    values      = sigma .+ 1.0 ./ real.(theta)
+    order       = sortperm(values)
+
+    vectors = Vector{Float64}[]
+    for  i  in  order
+        full = zeros(nsL+nsS);   full[keep] = real.(vecs[:,i]);   push!(vectors, full)
+    end
+
+    return( Basics.Eigen(values[order], vectors) )
 end
 
 
