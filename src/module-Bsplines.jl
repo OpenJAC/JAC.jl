@@ -599,18 +599,22 @@ LinearAlgebra.mul!(y::AbstractVector{Float64}, op::ShiftInvertOperator, x::Abstr
 
 
 """
-`Bsplines.diagonalizeLocalMatrixNearEnergy(kappa::Int64, matrixA::Array{Float64,2}, matrixB::Array{Float64,2},
+`Bsplines.diagonalizeLocalMatrixNearEnergy(kappa::Int64, matrixA::AbstractMatrix{Float64}, matrixB::AbstractMatrix{Float64},
                                             primitives::Bsplines.Primitives, sigma::Float64, nev::Int64)`
     ... solves the SAME generalized eigenvalue problem as Bsplines.diagonalizeLocalMatrix (same boundary-condition
         elimination via Bsplines.boundaryDropCounts, same re-embedding of each eigenvector into the full
         (nsL+nsS)-length space), but returns only the `nev` eigenpairs CLOSEST to `sigma`, found by a sparse
-        shift-invert Arnoldi solve rather than a full dense decomposition. `matrixA`/`matrixB` are already
-        structurally sparse -- every entry outside a B-spline pair's compact support is an exact (not merely
-        small) 0.0, because `Bsplines.generateTTpMatrix!` never writes to it -- so `sparse(...)` recovers this
-        at no cost to accuracy. The shift-inverted operator x -> (matrixA - sigma*matrixB)^-1 * matrixB * x has
-        its LARGEST-magnitude eigenvalues theta exactly where the ORIGINAL problem has eigenvalues lambda closest
-        to sigma, via lambda = sigma + 1/theta; `ArnoldiMethod.partialschur` is asked for those directly, so cost
-        scales with `nev` and the sparse LU's own fill-in, not with the full matrix dimension cubed.
+        shift-invert Arnoldi solve rather than a full dense decomposition. `matrixA`/`matrixB` are structurally
+        sparse -- every entry outside a B-spline pair's compact support is an exact (not merely small) 0.0,
+        because `Bsplines.generateTTpMatrix!`/`Bsplines.generateTTpMatrixSparse!` never write to it -- so
+        `sparse(...)` recovers this at no cost to accuracy. `matrixA`/`matrixB` MAY be passed in already sparse
+        (`Bsplines.setupLocalMatrixSparse`'s own return type) -- `sparse(...)` on an already-sparse matrix is a
+        cheap copy, not a wasteful round-trip through a dense array -- or still dense (`Bsplines.setupLocalMatrix`'s
+        return type, as before); `AbstractMatrix{Float64}` accepts either with no other code change. The
+        shift-inverted operator x -> (matrixA - sigma*matrixB)^-1 * matrixB * x has its LARGEST-magnitude
+        eigenvalues theta exactly where the ORIGINAL problem has eigenvalues lambda closest to sigma, via
+        lambda = sigma + 1/theta; `ArnoldiMethod.partialschur` is asked for those directly, so cost scales with
+        `nev` and the sparse LU's own fill-in, not with the full matrix dimension cubed.
 
         **THIS ASSUMES `matrixA` CARRIES NO NONLOCAL TERM, AND THAT ASSUMPTION IS CHECKED, NOT TRUSTED.**
         `Bsplines.setupExchangeMatrix` (the Dirac-Fock exchange, `settings.continuumExchange=true` in
@@ -637,7 +641,7 @@ LinearAlgebra.mul!(y::AbstractVector{Float64}, op::ShiftInvertOperator, x::Abstr
         An eigen::Basics.Eigen is returned, with exactly `nev` entries (fewer only if the sparse solve itself
         converges short, which Arnoldi reports rather than silently returning).
 """
-function diagonalizeLocalMatrixNearEnergy(kappa::Int64, matrixA::Array{Float64,2}, matrixB::Array{Float64,2},
+function diagonalizeLocalMatrixNearEnergy(kappa::Int64, matrixA::AbstractMatrix{Float64}, matrixB::AbstractMatrix{Float64},
                                            primitives::Bsplines.Primitives, sigma::Float64, nev::Int64)
     nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
     dropP, dropQ, trailP, trailQ = Bsplines.boundaryDropCounts(kappa, primitives.grid)
@@ -1224,6 +1228,76 @@ end
 
 
 """
+`Bsplines.bandedSparseTriplets(rowSplines::Array{Bsplines.Bspline,1}, colSplines::Array{Bsplines.Bspline,1}, f::Function)`
+    ... the shared two-pointer sweep behind `Bsplines.generateTTpMatrixSparse!` and `Bsplines.setupLocalMatrixSparse`:
+        visits only the `(i,j)` pairs whose B-splines have overlapping support -- `rowSplines`/`colSplines` are
+        each assumed enumerated in knot order (`Bsplines.generatePrimitives`), so `lower`/`upper` are
+        monotonically non-decreasing in index and the overlapping columns for a given row form ONE contiguous
+        range. `jLo` only ever advances: once column `j` stops overlapping row `i` (its `upper <= ` row `i`'s
+        `lower`), it can never overlap any LATER row either, so the total work is O(n + band entries), not
+        O(n^2) comparisons. Calls `f(rowSplines[i], colSplines[j])` for each candidate pair and keeps it only if
+        nonzero. A `(Is::Array{Int64,1}, Js::Array{Int64,1}, Vs::Array{Float64,1})` triplet, ready for
+        `sparse(Is, Js, Vs, nrows, ncols)`, is returned.
+"""
+function bandedSparseTriplets(rowSplines::Array{Bsplines.Bspline,1}, colSplines::Array{Bsplines.Bspline,1}, f::Function)
+    Is = Int64[];   Js = Int64[];   Vs = Float64[];   ncols = length(colSplines)
+
+    jLo = 1
+    for  i = 1:length(rowSplines)
+        while  jLo <= ncols  &&  colSplines[jLo].upper <= rowSplines[i].lower
+            jLo = jLo + 1
+        end
+        j = jLo
+        while  j <= ncols  &&  colSplines[j].lower < rowSplines[i].upper
+            v = f(rowSplines[i], colSplines[j])
+            v != 0.0   &&   ( push!(Is, i);   push!(Js, j);   push!(Vs, v) )
+            j = j + 1
+        end
+    end
+
+    return( Is, Js, Vs )
+end
+
+
+"""
+`Bsplines.generateTTpMatrixSparse!(TTp::String, kappa::Int64, primitives::Bsplines.Primitives,
+                                    storage::Dict{String,SparseMatrixCSC{Float64,Int64}})`
+    ... the SAME four blocks as `Bsplines.generateTTpMatrix!` (same cases, same cache-dictionary pattern, same
+        `Bsplines.computeOverlap`/`Bsplines.computeNondiagonalD` calls, UNCHANGED), but built directly as a
+        `SparseMatrixCSC` via `Bsplines.bandedSparseTriplets` -- no dense (nsL+nsS)-scale array is ever
+        allocated, even transiently. A matrix::SparseMatrixCSC{Float64,Int64} is returned.
+"""
+function generateTTpMatrixSparse!(TTp::String, kappa::Int64, primitives::Bsplines.Primitives,
+                                   storage::Dict{String,SparseMatrixCSC{Float64,Int64}})
+    key = string(kappa) * ":" * TTp;      nsL = primitives.grid.nsL;   nsS = primitives.grid.nsS;
+    wc  = Defaults.getDefaults("speed of light: c")
+
+    haskey(storage, key)   &&   return( storage[key] )
+
+    if      TTp == "LL-overlap"
+        nrows = nsL;   ncols = nsL;   rowSplines = primitives.bsplinesL;   colSplines = primitives.bsplinesL
+        f = (bi, bj) -> Bsplines.computeOverlap(bi, bj, primitives.grid)
+    elseif  TTp == "SS-overlap"
+        nrows = nsS;   ncols = nsS;   rowSplines = primitives.bsplinesS;   colSplines = primitives.bsplinesS
+        f = (bi, bj) -> Bsplines.computeOverlap(bi, bj, primitives.grid)
+    elseif  TTp == "LS-D_kappa^-"
+        nrows = nsL;   ncols = nsS;   rowSplines = primitives.bsplinesL;   colSplines = primitives.bsplinesS
+        f = (bi, bj) -> wc * Bsplines.computeNondiagonalD(-1, kappa, bi, bj, primitives.grid)
+    elseif  TTp == "SL-D_kappa^+"
+        nrows = nsS;   ncols = nsL;   rowSplines = primitives.bsplinesS;   colSplines = primitives.bsplinesL
+        f = (bi, bj) -> wc * Bsplines.computeNondiagonalD( 1, kappa, bi, bj, primitives.grid)
+    else   println("TTp = $TTp ");    error("stop a")
+    end
+
+    Is, Js, Vs = Bsplines.bandedSparseTriplets(rowSplines, colSplines, f)
+    wa = sparse(Is, Js, Vs, nrows, ncols)
+    storage[key] = wa
+
+    return( wa )
+end
+
+
+"""
 `Bsplines.setupExchangeMatrix(kappa::Int64, primitives::Bsplines.Primitives, coreOrbitals::Dict{Subshell,Orbital},
                               occupations::Dict{Subshell,Float64}; factor::Float64=1.0)`
     ... sets up the NONLOCAL exchange term of the Dirac-Fock operator for the symmetry block kappa, in the same B-spline basis and
@@ -1410,7 +1484,53 @@ function setupLocalMatrix(kappa::Int64, primitives::Bsplines.Primitives, pot::Ra
     =====#
     
     return( wa )
-end   
+end
+
+
+"""
+`Bsplines.setupLocalMatrixSparse(kappa::Int64, primitives::Bsplines.Primitives, pot::Radial.Potential,
+                                  storage::Dict{String,SparseMatrixCSC{Float64,Int64}}; mass::Float64=1.0)`
+    ... the SAME four steps as `Bsplines.setupLocalMatrix` (same `Bsplines.generateTTpMatrixSparse!` fetches,
+        same rest-mass subtraction on the SS block, same `Bsplines.computeVlocal` potential terms via
+        `Bsplines.bandedSparseTriplets` -- UNCHANGED physics), but every block stays sparse throughout: no
+        dense `(nsL+nsS) x (nsL+nsS)` array is ever allocated, even transiently, which is the whole point --
+        that allocation is what made a box matched to a resonance's own width (rbox~17000 for He's 2s2p,
+        measured 472 GB dense) impossible regardless of how the eigenproblem itself was then solved. The four
+        blocks are assembled with ONE sparse concatenation (`[A B; C D]`, which `SparseArrays` keeps sparse,
+        not `Base`'s dense fallback). Exchange is deliberately NOT supported here -- `Bsplines.setupExchangeMatrix`
+        is genuinely nonlocal (its own docstring), so it stays on the existing dense
+        `Bsplines.setupLocalMatrix`+`Bsplines.setupExchangeMatrix` path; nothing here accepts it.
+        A matrix::SparseMatrixCSC{Float64,Int64} of dimension (nsL+nsS) x (nsL+nsS) is returned.
+"""
+function setupLocalMatrixSparse(kappa::Int64, primitives::Bsplines.Primitives, pot::Radial.Potential,
+                                 storage::Dict{String,SparseMatrixCSC{Float64,Int64}}; mass::Float64=1.0)
+    nsL = primitives.grid.nsL;    nsS = primitives.grid.nsS
+
+    # (1) Compute or fetch the 'SS-overlap' block, exactly as Bsplines.setupLocalMatrix step (1).
+    ssOverlap = Bsplines.generateTTpMatrixSparse!("SS-overlap", 0, primitives, storage)
+
+    # (2) The local-potential diagonal blocks, via the SAME two-pointer sweep generateTTpMatrixSparse! uses.
+    IsL, JsL, VsL = Bsplines.bandedSparseTriplets(primitives.bsplinesL, primitives.bsplinesL,
+                        (bi, bj) -> Bsplines.computeVlocal(bi, bj, pot, primitives.grid))
+    vLL = sparse(IsL, JsL, VsL, nsL, nsL)
+    IsS, JsS, VsS = Bsplines.bandedSparseTriplets(primitives.bsplinesS, primitives.bsplinesS,
+                        (bi, bj) -> Bsplines.computeVlocal(bi, bj, pot, primitives.grid))
+    vSS = sparse(IsS, JsS, VsS, nsS, nsS)
+
+    # (3) Subtract the rest mass from the 'SS' block, exactly as Bsplines.setupLocalMatrix step (3).
+    twoCsq = 2 * mass * Defaults.getDefaults("speed of light: c")^2
+    vSS = vSS - twoCsq * ssOverlap
+
+    # (4) Compute or fetch the 'D_kappa' cross blocks, exactly as Bsplines.setupLocalMatrix step (4).
+    lsD = Bsplines.generateTTpMatrixSparse!("LS-D_kappa^-", kappa, primitives, storage)
+    slD = Bsplines.generateTTpMatrixSparse!("SL-D_kappa^+", kappa, primitives, storage)
+
+    wa = [ vLL  lsD ;  slD  vSS ]
+
+    return( wa )
+end
+
+
 """
 `Bsplines.ykOnGrid(k::Int64, rho::Array{Float64,1}, lower::Int64, upper::Int64, mtp::Int64, grid::Radial.Grid)`
     ... computes the Coulomb kernel Y_ab^k(r)/r on EVERY grid point r[1:mtp] at once, for a density rho that is nonzero only on
