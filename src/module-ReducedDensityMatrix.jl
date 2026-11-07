@@ -391,7 +391,7 @@ function  computeOrbitalInteractions(naturalSubshells::Array{Subshell,1}, natura
     # NOT IMPLEMENTED, and it REFUSES rather than returning zeros.  Until 28-Aug-2026 it printed one line and
     # returned zeros(ns,ns), which displayResults then tabulated under the heading "Orbital interactions I_pq" --
     # a full, well-formatted table of zeros that says nothing about its own emptiness.  That is the same defect
-    # class as the 2pRDM table fixed in 26f1d2c, which printed orbitalInteraction in place of the rho_pprr it had
+    # class as the 2pRDM table fixed on 27-Aug-2026, which printed orbitalInteraction in place of the rho_pprr it had
     # just built.  settings.calcIpq now fails loudly instead.
     error("\n\nReducedDensityMatrix.computeOrbitalInteractions() is NOT IMPLEMENTED, and settings.calcIpq = true\n" *
           "therefore cannot be honoured.  It formerly returned a zero matrix, which was printed as a table of\n"     *

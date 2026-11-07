@@ -392,7 +392,7 @@ function buildCIMatrixEOL(cache::PairCoefficientCache, orbitals::Dict{Subshell, 
     # just safe, since this matrix feeds diagonalizeBlockEOL -> Basics.diagonalize(MatrixWithLinearAlgebra(),
     # ...), whose Symmetric(matrix) wrapper (default uplo=:U) already discards the lower triangle. See
     # Hamiltonian.setupMatrix's identical note for the confirming test.
-    # JAC_NO_VKCACHE restores the pre-`cebc08f3` behaviour -- the UNCACHED method, one screened potential per
+    # JAC_NO_VKCACHE restores the behaviour before 05-Oct-2026 -- the UNCACHED method, one screened potential per
     # quadruple -- so that the saving can be measured A/B on ONE build rather than against a number remembered
     # from another tree.  It exists for that measurement and for re-taking it on a new system; it is not a tuning
     # knob and nothing reads it by default.  Read ONCE here rather than per coefficient: an ENV lookup is a Dict
@@ -2884,7 +2884,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         stagnationWindow = 20
         # THE ITERATION NOW ENDS WHEN THE ENERGY STOPS IMPROVING, NOT WHEN THE GRADIENT DOES -- 07-Sep-2026.
         # This reverses the decision of 03-Sep, and it reverses it because the surface changed underneath it.
-        # THEN: |grad| was pinned by a discontinuity (the orbital sign could flip mid-line-search, 559c3ea), so
+        # THEN: |grad| was pinned by a discontinuity (the orbital sign could flip mid-line-search, found 07-Sep-2026), so
         # a stationary energy really did mean "stuck" and the gradient was the better signal.
         # NOW: the functional is differentiable and the analytic gradient matches a central difference to
         # 1.0000, and on that surface the ordering is the other way round.  MEASURED on C-like U layer 2 with
@@ -2913,7 +2913,7 @@ function solveOptimizedLevelFieldByRotation(basis::Basis, nuclearModel::Nuclear.
         # the carbon case, 3.5e-11 with |grad| still 0.998 -- could end the run 65 mHa short of where it goes
         # when allowed to continue.  The guard can only let a run continue, never stop it earlier.
         # A COLLAPSE THAT NEVER RECOVERS IS NOT A TEMPORARY ONE -- 06-Sep-2026, and this bounds the guard added
-        # in d0d66fc.  That guard exists because a collapse CAN be temporary: a carbon case fell to 3.5e-11 with
+        # on 05-Sep-2026.  That guard exists because a collapse CAN be temporary: a carbon case fell to 3.5e-11 with
         # |grad| still 0.998 and, allowed to continue, recovered a step of 0.125 and converged 65 mHa lower.  But
         # unbounded it turns a dead run into a full iteration budget: MEASURED on C-like U at 1e-8, the step
         # collapsed to ~2e-08 at iteration 47 and stayed there for 350 more iterations with |grad| frozen at

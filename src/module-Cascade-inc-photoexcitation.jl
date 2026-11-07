@@ -85,7 +85,7 @@ function generateBlocks(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Com
         end
         # Cascade.generateBoundOrbitals prints the bound-orbital assumption itself, to stdout and to the
         # summary file, so that what is announced can never drift from what is done.
-        # It takes the APPROACH, not its conditions: that signature changed in 46dd775 and this call site was
+        # It takes the APPROACH, not its conditions: that signature changed on 05-Aug-2026 and this call site was
         # missed, so every photoexcitation cascade has raised a MethodError since. Nothing caught it because
         # testModule_Cascade_PhotonExcitation is hollow -- it computes nothing and hardcodes success=true.
         orbitals = Cascade.generateBoundOrbitals(comp.approach, comp, confs; printout=printout)
@@ -104,7 +104,7 @@ function generateBlocks(scheme::Cascade.PhotoExcitationScheme, comp::Cascade.Com
             if  printSummary   println(iostream, "\n*  Multiplet computations for $(string(confa)[1:end])   with $(confa.NoElectrons) electrons ... ")   end
             # generateBoundOrbitals returns one orbital set PER CHARGE STATE, keyed by the electron count,
             # so it has to be indexed here; passing the whole dictionary was the second half of the same
-            # signature change missed in 46dd775.
+            # signature change of 05-Aug-2026, missed then.
             multiplet = Hamiltonian.performCIwithFrozenOrbitals([confa], orbitals[confa.NoElectrons], comp.nuclearModel, comp.grid,
                                                                 Cascade.asfSettingsForApproach(comp.approach, comp.asfSettings); printout=false)
             push!( blockList, Cascade.Block(confa.NoElectrons, [confa], true, multiplet) )

@@ -309,7 +309,7 @@ function generateCaptureConfigurations(multiplets::Array{Multiplet,1},  coreConf
             elseif true
                 # Screening step only: the multiplet is used solely for its lowest/highest level energy, to decide
                 # whether this capture configuration falls into the requested window. Single-CSF levels are
-                # sufficient here (and were the behaviour before commit 7cc164b), so the cheap representation is
+                # sufficient here (and were the behaviour before 04-Aug-2026), so the cheap representation is
                 # requested explicitly rather than inherited -- this is deliberately independent of comp.approach,
                 # which is not available in this function anyway.
                 mp      = Hamiltonian.performCIwithFrozenOrbitals([conf], orbitals, nm, grid,

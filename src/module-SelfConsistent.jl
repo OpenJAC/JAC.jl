@@ -58,7 +58,7 @@ GBL_SCF_REORTHONORMALIZE = true
 # On Be 4-config it is also the more STABLE of the two: across accuracyScf = 1e-6, 1e-9, 1e-12 it drifts by
 # 1e-5 where the plain iteration swings 6.5e-5 NON-MONOTONICALLY, and it gets there in 211 s against 1093 s.
 
-# It could not be switched on until 18aaf5f.  Anderson perturbs the orbital tails just enough to move the
+# It could not be switched on until 17-Aug-2026.  Anderson perturbs the orbital tails just enough to move the
 # old mtp cut, which made TestFrames.testMethod_OrbitalOrthonormality report 6.5e-08 where the plain
 # iteration gave 6.8e-10 -- an artefact of the truncated integral, not of the orbitals, which were
 # orthonormal to 1e-17 throughout.  With the tails kept, both give ~1e-16.

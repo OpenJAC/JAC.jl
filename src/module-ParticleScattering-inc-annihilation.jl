@@ -45,7 +45,7 @@
 
 # What was retired to get here: src/module-PairAnnihilation1Photon.jl and src/module-PairAnnihilation2Photon.jl, two stubs that
 # had never been compiled -- they sat inside the "#= Further processes, not yet included =#" block of JenaAtomicCalculator.jl --
-# and that contained no physics at all (amplitude = 1.0, an undefined `phase`, the module used as a type). Commit 6ba9985.
+# and that contained no physics at all (amplitude = 1.0, an undefined `phase`, the module used as a type). Removed 21-Aug-2026.
 
 
 """

@@ -113,7 +113,7 @@ function computeEnergyDiffCs(sharing::MultiPhotonTransition.Sharing_2pEmission, 
             # INITIAL symmetry and mpB to the FINAL one.  Ordering 1 emits mp1 first, so its intermediates are (symf, mp2, mp1, symi);
             # ordering 2 emits mp2 first, so they are (symf, mp1, mp2, symi).  FOR mp1 == mp2 THE TWO SETS COINCIDE -- which is why every
             # pure-E1E1 result is bit-identical (every MultiPhotonTransition branch in `examples/` is pure E1E1) and why this could not be
-            # seen at all until mixed multipoles computed anything (`94fb9cc5`, 30-Oct-2026).
+            # seen at all until mixed multipoles computed anything (30-Oct-2026).
 
             # MEASURED, H-like 3d_3/2 -> 1s_1/2 with [E1, M2]:  the pair (E1,M2) admits {3/2-, 5/2-} one way and {1/2-, 3/2-} the other, so
             # the single list summed 5/2- in both orderings, never summed 1/2- in either, and asked the stored channels for 80 combinations
@@ -385,7 +385,7 @@ function computeReducedAmplitudeEmission(K::AngularJ64, finalLevel::Level, omega
                                         selfTolerance::Float64=1.0e-8)
     # **WHY THIS SUM CANNOT REACH AN EXACT RATE, AND WHAT TO USE WHEN YOU NEED ONE -- measured 14-Oct-2026,
     # priority item 66.**  The sum below is over the intermediate LEVELS the caller supplies, and the scale of
-    # it is now right: after the prefactor fix of 13-Oct (`b399f5ff`) it agrees with Drake at MATCHED
+    # it is now right: after the prefactor fix of 13-Oct-2026 it agrees with Drake at MATCHED
     # truncation, 10.046 /s against his 10.0466 /s over the same n_max = 20 bound set.  What it cannot do is
     # converge, and the reason is the intermediate SPACE rather than anything here:
 

@@ -500,76 +500,30 @@ function testRepresentation_RasExpansion(; short::Bool=true)
     wa          = Representation(name, Nuclear.Model(4.), refConfigs,
                                  RasExpansion([LevelSymmetry(0, Basics.plus)], 4, coreShells, fromShells, layers, rasSettings) )
     wb = generate(wa, output=true)
-    # The expected value changed TWICE on 16-Aug-2026. First when Basics.EOLField was wired to the
-    # orbital-rotation solver, and again when computeOrbitalGradient was corrected: it contracted a screened
-    # potential built from the sign-canonicalized ORBITALS with a RAW b-vector, so an off-diagonal CSF pair
-    # carried an odd power of a correlating orbital's sign and the gradient drifted from the functional --
-    # 2.5x, then 19x, then SIGN-WRONG as the 2p weight grew, which stalled the line search at iteration 3 of
-    # 24.  With the full s/wN factor on every slot the analytic slope matches a finite difference to five
-    # digits, the driver runs to its iteration limit, and this case reached -14.617216 instead of -14.612567.
-    #   THIRD change, same day: the search direction became conjugate (Polak-Ribiere+).  Plain preconditioned
-    # steepest descent zigzagged -- |grad| stayed flat near 0.057 over 40 iterations while the energy crept
-    # down -- and conjugacy drives it to 0.013 for the same cost, reaching -14.619313 here.  That value was a
-    # converging upper bound rather than a converged number, and moved with the iteration limit; see the FIFTH
-    # change below, after which it no longer does.  The former -14.589901130961 was the COLLAPSED answer: with the old solver this very case
-    # converged cleanly, to its own 1e-8, onto a degenerate stationary point whose mixing vector was
-    # [0.971, -0.0000482, 0.238] -- the 2p_3/2 correlation channel eliminated outright.  An independent
-    # DFS-Field run of the identical layer structure gave -14.605300 Ha with both channels contributing.
-    # The rotation solver reaches -14.612567, i.e. BELOW that reference, so this test previously asserted
-    # the defect.  Do not restore the old number.
-    # 17-Aug-2026, the FOURTH change and the reason for the two above: the box now comes from refConfigs and the
-    # EOL default became L-BFGS.  Those are connected.  L-BFGS had been rejected for "losing to conjugate
-    # gradients" in every earlier RAS test, and every earlier RAS test ran on the 614 a.u. grid, where it does
-    # lose -- by 1.46 mHa.  On the reference-sized box it WINS by 0.26 mHa and runs three times faster (8 s
-    # against 23 s), and with the iteration budget varied it wins at every budget: 24 iterations reach what
-    # conjugacy needs about 70 to reach.  A quasi-Newton method builds its curvature model from gradient
-    # DIFFERENCES, so it was punished twice over, first by the gradient defect fixed the day before and then by
-    # a basis too starved to be worth modelling.  Benchmarking an optimiser on a basis that cannot represent
-    # the problem measures the basis.
-
-    # 27-Aug-2026, the FIFTH change, and the first that alters WHICH PROBLEM is being solved rather than how
-    # well it is solved: solveOptimizedLevelFieldByRotation now honours AsfSettings.frozenSubshells, which it
-    # had ignored entirely.  Every layer of this expansion sets it -- step 1 freezes 1s, step 2 freezes 1s and
-    # 2s -- so until now no layer froze anything and each re-optimized every orbital, which is not what a RAS
-    # layer means.  The energy therefore RISES, as a constrained minimum must: -14.619380954693 -> -14.618871269,
-    # i.e. +5.10e-04 Ha, while |grad| at the iteration limit falls from 2.99e-02 to 4.45e-05, a factor of 670.
-    #   THE NEW VALUE IS CONVERGED, which the old one was not, and that is the reason for preferring it rather
-    # than mere novelty.  Run at 24, 60 and 120 iterations it gives -14.618871268972836, -14.618871275673818
-    # and -14.618871275673818 -- identical at the last two, so the residual iteration-limit dependence is
-    # 6.7e-09 Ha, five orders below the shift itself.  Step 1 is unmoved across all three budgets and now exits
-    # on a stationary energy at iteration 15 instead of running out at 24.  The tolerance below is left at
-    # 1.0e-3, which is now very loose for a number stable to 6.7e-09; tightening it is a separate decision.
-
-    # 31-Aug-2026, the SIXTH change, and the same KIND of change as the fifth: solveAverageLevelField now
-    # honours AsfSettings.frozenSubshells, which it too had ignored entirely -- only the DFS mean-field driver
-    # observed the field.  That mattered here because performSCF runs an AL pass as the STARTING POINT of every
-    # EOL computation (the :optimizedLevel branch), and the EOL solver pins its frozen orbitals to what it finds
-    # ON ENTRY.  So although Basics.generate hands each RAS step the previous step's converged orbitals for the
-    # shells it freezes, that AL pass then re-optimized them anyway -- on THIS layer's basis, whose flat CSF
-    # average includes the 2p correlation configurations.  Step 2's "frozen" 1s and 2s were therefore neither
-    # step 1's orbitals nor free ones, and the minimum was less constrained than a RAS layer means.
-    #   The energy RISES accordingly, as a constrained minimum must: -14.618871268972836 -> -14.614058864452650,
-    # i.e. +4.81e-03 Ha.  It is a CONVERGED number and a better-behaved one: both layers now reach the gradient
-    # tolerance outright, step 1 at iteration 12 and step 2 at 44, with |grad| = 8.5e-07 and 8.7e-07, where the
-    # fifth change left step 2 at 4.45e-05 on the iteration limit.  Run at 24, 60 and 120 iterations it gives
-    # -14.614058793496298, -14.614058864452650 and -14.614058864452650 -- identical at the last two, so the
-    # residual budget dependence is 7.1e-08 Ha, five orders below the shift itself; step 1 is bit-identical at
-    # all three.
-
-    # Do not restore any earlier number: each was obtained on a grid, a gradient or an unconstrained layer that
-    # no longer exists here.
-    # REFERENCE MOVED 06-Sep-2026, from -14.614058864452650 to -14.614059017048 (1.5e-07 Ha LOWER), and
-    # re-approved by the maintainer on evidence rather than on the improvement itself -- monotone lowering is
-    # exactly what misled the reverted attempt of 03-Sep.  What changed: virtualDirections accepted a projected
-    # reference vector whenever its residual norm exceeded 1e-8 and then DIVIDED BY that residue, so a vector
-    # 99.999999 % inside the occupied space was admitted with its round-off amplified up to 1e8.  The threshold
-    # is now 0.1, chosen from the measured gap in the residues (3.9e-03, 1.3e-02 | 4.3e-01 ... 8.2e-01).
-    # THE EVIDENCE THAT THIS IS NOT DRIFT, which is the failure mode that reverted the last attempt:
-    #   orthonormality holds to machine precision -- worst |<a|a>-1| = 2.2e-16, worst same-kappa |<a|b>| =
-    #     6.3e-15, against 2.4e-06 in the recorded drift case;
-    #   the five "no descent found" line-search failures of a twelve-run census become ZERO;
-    #   the answer stops depending on accuracyScf -- Be-like U returns IDENTICAL digits at 1e-6, 1e-8, 1e-10
-    #     (spread was 3.4e-05 Ha) and C-like U's spread falls from 0.137 Ha to 8.3e-04.
+    # WHY THE REFERENCE IS -14.614059017048 AND WHY NO EARLIER NUMBER MAY BE RESTORED.  Seven changes moved
+    # this value between 16-Aug and 06-Sep-2026;  the chronology is in the commit history and is not repeated
+    # here, because a superseded number is not an alternative but a defect (Rule 21).  What a reader needs is
+    # WHY the present one is trustworthy and WHY the old ones are not:
+    #   * both the EOL solver and the AL pass that starts it now honour `AsfSettings.frozenSubshells`.  Each
+    #     layer of this expansion freezes something -- step 1 the 1s, step 2 the 1s and 2s -- so until they
+    #     did, every layer silently re-optimized every orbital, which is not what a RAS layer means.  The
+    #     energy RISES when the constraint is applied, as a constrained minimum must, and every earlier number
+    #     was obtained on a layer less constrained than it claimed to be.
+    #   * `virtualDirections` accepted a projected reference vector whenever its residual norm exceeded 1e-8
+    #     and then DIVIDED BY that residue, admitting a vector 99.999999 % inside the occupied space with its
+    #     round-off amplified up to 1e8.  The threshold is 0.1, taken from the measured gap in the residues
+    #     (3.9e-03, 1.3e-02 | 4.3e-01 ... 8.2e-01).
+    # THE PRESENT NUMBER IS CONVERGED, which several of the earlier ones were not, and that is the reason for
+    # preferring it rather than its being lower: run at 24, 60 and 120 iterations it is identical at the last
+    # two, a residual budget dependence near 1e-07 Ha, and both layers reach the gradient tolerance outright
+    # instead of running out of iterations.  Orthonormality holds to machine precision (worst |<a|a>-1| =
+    # 2.2e-16, worst same-kappa |<a|b>| = 6.3e-15, against 2.4e-06 in the recorded drift case), the line
+    # search's "no descent found" failures fall to zero across a twelve-run census, and the answer stops
+    # depending on `accuracyScf` -- Be-like U gives identical digits at 1e-6, 1e-8 and 1e-10.
+    # ONE LESSON WORTH KEEPING FROM THE HISTORY: this case once ran on a 614 a.u. grid, and an optimiser
+    # benchmarked on a basis that cannot represent the problem measures the basis and not the optimiser.
+    # STILL OPEN: the tolerance below is 1.0e-3, very loose for a number stable to 1e-07.  Tightening it is a
+    # separate decision and has not been taken.
     if  abs(wb["step2"].levels[1].energy + 14.614059017048)  > 1.0e-3
         success = false
         if printTest   info(iostream, "levels[1].energy $(wb["step2"].levels[1].energy) != -14.614059017048")   end

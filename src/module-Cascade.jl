@@ -1297,7 +1297,7 @@ end
 
 # THE CONSEQUENCE, measured on 14-Aug-2026 rather than assumed: a file written on 5-Aug-2026 CANNOT be loaded
 # by today's JAC.  Not because of anything in the cascade, but because Radial.Grid lost a field and
-# Radial.MeshNone ceased to exist in the Radial rework (cfc1848, d2722fe, 968d269).  JLD2 reconstructs what it
+# Radial.MeshNone ceased to exist in the Radial rework of 12-Aug-2026.  JLD2 reconstructs what it
 # can and then dies with a MethodError about a ReconstructedMutable, six frames deep, saying nothing about the
 # cause.  ANY struct change anywhere in that graph does this, and there have already been several.
 

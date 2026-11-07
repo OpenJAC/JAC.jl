@@ -977,7 +977,7 @@ function XL_Breit_coefficients(L::Int64, a::Orbital, b::Orbital, c::Orbital, d::
     # carries lbar_c = l_c +- 1, so the angular factor there is <kappa_a || C^L || -kappa_c> and its parity
     # condition is the OPPOSITE of the one that governs the other blocks.  CL_reduced_me depends on kappa
     # only through 2j = 2|kappa|-1, so flipping the sign leaves the VALUE untouched and moves only the
-    # selection rule; xcFlip is therefore exactly the number this code used before 8f0930b.
+    # selection rule; xcFlip is therefore exactly the number this code used before 10-Aug-2026.
 
     # THAT COMMIT (10-Aug-2026) gave CL_reduced_me the parity rule it had genuinely been missing -- correct
     # in itself, and needed for the Coulomb and multipole call sites -- but here it silently zeroed the
@@ -1190,7 +1190,7 @@ function XL_Breit_densities(xcList::Array{XLCoefficient,1}, factor::Float64, gri
     # HISTORY.  What stood here before 13-Aug-2026 was equation (6) with the factor omega missing from its
     # first term and that term's sign reversed, so the cancellation failed outright; measured, neither W,
     # W*omega nor W*omega^2 converged, and two bare catch blocks then substituted wx = 1.0.  The rewrite of
-    # bd0e9fb replaced it with equation (4) instead, which is a different function -- corrected here.
+    # a change of 13-Aug-2026 replaced it with equation (4) instead, which is a different function -- corrected here.
     function W(nu::Int64, r1::Float64, r2::Float64, omega::Float64)
         nu < 1  &&  return( 0.0 )
         nn = 2nu + 1
@@ -1513,7 +1513,7 @@ end
 
 # THE FULL-LENGTH-ARRAY PATTERN IN THIS METHOD AND THE EXCHANGE ONE BELOW IS DELIBERATE, AND WAS MEASURED.
 # Both materialise each B-spline into an array as long as the grid before integrating, which is what the
-# kink-aware kernels did until 971199c -- there, integrating over each spline's own support instead cut a RAS
+# kink-aware kernels did until 15-Sep-2026 -- there, integrating over each spline's own support instead cut a RAS
 # ladder's allocation from 99.4 to 46.7 GB. The ten instances that remain here are NOT an oversight: the arrays
 # are handed to RadialIntegrals.SlaterRkComponent, whose length acts as the integration bound.
 

@@ -952,9 +952,7 @@ end
 # never added as a dependency, the menu was never written, and the only method printed a placeholder.
 
 
-# RETIRED 14-Aug-2026: `yesno(question::String, sa::String)`, an interactive yes/no prompt.  It had no
-# caller anywhere in JAC, and it could not have run if it had: its body read `readline(STDIN)`, and STDIN
-# was renamed to stdin in Julia 1.0, so the first call would have raised UndefVarError.  It also carried a
-# docstring header reading `Basics.yesno` although the function was written plainly and therefore landed in
-# BasicsAZ -- which is how it was found, by the docstring-pointer check of 2c1cd5d.
+# RETIRED 14-Aug-2026: an interactive yes/no prompt, uncalled anywhere in JAC and unable to run if it had
+# been -- its body read `readline(STDIN)`, and STDIN became stdin in Julia 1.0.  Recorded so that an
+# interactive prompt is not helpfully re-added.
 

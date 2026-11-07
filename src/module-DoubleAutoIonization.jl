@@ -306,7 +306,7 @@ function  computeAmplitudesProperties(line::DoubleAutoIonization.Line, nm::Nucle
     # for distinguishable shares just the same -- and its own 08-Aug-2026 audit of consumers named this very line:
     # "DoubleAutoIonization -- `trate += sharing.weight * drate`; two ELECTRONS, hence identical, so the 1/2 applies
     # and is NOT yet applied there."  Supplied 04-Nov-2026, the same defect and the same day's reasoning as the one
-    # removed from PhotoDoubleIonization on 03-Nov-2026 (`0f35d139`).  EVERY total rate from this module before that
+    # removed from PhotoDoubleIonization on 03-Nov-2026.  EVERY total rate from this module before that
     # date is twice what it should be; the DIFFERENTIAL rates per sharing are unaffected.
     trate = 0.5 * trate
 
