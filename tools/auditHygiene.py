@@ -27,7 +27,19 @@ reading a sample of what it changes.
     6. THE TWO `RacahAlgebra-inc-` FILES ARE OUT OF SCOPE ENTIRELY -- the maintainer's
        decision of 28-Aug-2026.  Their `#` lines are structural to how the sum rules are
        written out.
-    7. AN APPENDED `##` IN A DATA TABLE IS A ROW INDEX.  `module-LSjj-inc.jl` alone carries
+    7. A `struct` BLOCK MAKES A NESTED `function` AN INNER CONSTRUCTOR, which is correctly
+       indented by four.  Counting those reported 10 top-level definitions off column 1 where
+       there are 8.
+    8. THE BLANK-LINE RULE IS ABOUT THE GAP BETWEEN TWO CODE BLOCKS, so the line above the gap
+       must be an `end`.  Counting a gap after a `using`, `include` or `export` line as well
+       reported 101 defects that the rule does not cover, and made the sweep look as though it
+       had left work behind when it had correctly skipped them.
+    9. `=== nothing` AND `!== nothing` ARE THE IDIOMATIC FORM, and are what `isnothing`
+       compiles to.  A regex for `== nothing` matches the tail of both and reported 19 guards
+       to repair where `src/` holds none at all.
+   10. A COMMENT INSIDE A `#= ... =#` BLOCK is part of a deliberately disabled block, which
+       Rule 15 keeps verbatim;  it is counted separately rather than offered as work.
+   11. AN APPENDED `##` IN A DATA TABLE IS A ROW INDEX.  `module-LSjj-inc.jl` alone carries
        20541 of them, numbering the jj-LS coefficient rows against the published tables.
        They are reported separately from ordinary appended comments and are never swept.
 """
@@ -90,10 +102,22 @@ def splitSig(s):
     return name, re.sub(r'\s+', '', args)
 
 
+def disabledMask(L):
+    """-> flag per line: inside a `#= ... =#` block, which Rule 15 keeps verbatim."""
+    out, depth = [False]*len(L), 0
+    for i, l in enumerate(L):
+        out[i] = depth > 0
+        if depth:
+            depth = max(0, depth + l.count("#=") - l.count("=#"));  continue
+        if "#=" in l and "=#" not in l.split("#=", 1)[1]:  depth = 1
+    return out
+
+
 def audit(path):
     fn = os.path.basename(path)
     L  = open(path, errors="replace").read().split("\n")
     doc, opener = docMask(L)
+    dis = disabledMask(L)
     r = collections.Counter()
     r["lines"] = len(L)
     sites = collections.defaultdict(list)
@@ -107,6 +131,7 @@ def audit(path):
             elif fn in DATA:                 r["longData"]  += 1
             else:                            r["longCode"]  += 1
         if doc[i]:  continue
+        if dis[i]:  r["inDisabledBlock"] += 1;  continue
         if re.match(r'^\s*#\s*$', l):        r["emptyHash"] += 1;  sites["emptyHash"].append(i+1)
         if re.match(r'^\s*#{5,}\s*$', l):    r["hashRule"]  += 1
         elif re.match(r'^\s*#{5,}', l) and re.sub(r'[#\s]', '', l):
@@ -114,7 +139,8 @@ def audit(path):
         elif re.match(r'^\s*##[^#]', l):     r["standalone2"] += 1;  sites["standalone2"].append(i+1)
         elif re.search(r'\S\s+##[^#]', l) and not s.startswith("#"):
             r["appended2Data" if fn in DATA else "appended2"] += 1
-        if re.search(r'==\s*nothing', l):    r["eqNothing"] += 1;  sites["eqNothing"].append(i+1)
+        if re.search(r'(?<![=!])==\s*nothing', l):
+            r["eqNothing"] += 1;  sites["eqNothing"].append(i+1)
         if s and not s.startswith("#") and depth == 0:
             ind = len(l) - len(l.lstrip())
             if ind % 4 and ind < 40:  r["indentOdd"] += 1
@@ -132,7 +158,7 @@ def audit(path):
             name = m.group(2)
             r["qualified" if "." in name else "bare"] += 1
             if not m.group(1):                 pass
-            elif "function" in stack:          r["nestedFunc"] += 1
+            elif "function" in stack or "struct" in stack:  r["nestedFunc"] += 1
             else:  r["indentedTop"] += 1;      sites["indentedTop"].append(i+1)
             args = splitArgs(signature(L, i).split("(", 1)[-1].rsplit(")", 1)[0])
             if args and not all("::" in a or "=" in a or "..." in a for a in args):
@@ -146,7 +172,8 @@ def audit(path):
             else:                      r["noDoc"] += 1;  sites["noDoc"].append(i+1)
         if doc[i] or l.strip().startswith("#"):  continue
         if BLOCK.match(l) and not re.search(r'\bend\b\s*$', l) and not re.match(r'^\s*\w+\s*\(.*\)\s*=', l):
-            stack.append("function" if re.match(r'^\s*function\b', l) else "other")
+            stack.append("function" if re.match(r'^\s*function\b', l) else
+                         "struct"   if re.match(r'^\s*(mutable\s+)?struct\b', l) else "other")
         elif re.match(r'^\s*end\b', l) and stack:
             stack.pop()
 
@@ -181,6 +208,7 @@ def audit(path):
         n, j = 0, i-1
         while j >= 0 and L[j].strip() == "":  n += 1;  j -= 1
         if j < 0 or re.match(r'^\s*#', L[j]) or L[j].strip().startswith("export"):  continue
+        if not re.match(r'^\s*end\b', L[j]):  r["sepNotAfterEnd"] += 1;  continue
         if   n == 0:  r["sep0"] += 1;  sites["sep0"].append(i+1)
         elif n == 1:  r["sep1"] += 1;  sites["sep1"].append(i+1)
         else:         r["sep2plus"] += 1
@@ -195,10 +223,12 @@ ROWS = [("funcs",           "function definitions"),
         ("emptyHash",       "empty `#` lines                      -> a blank line"),
         ("sep1",            "definitions with only 1 blank line   -> 2"),
         ("sep0",            "definitions with no blank line above"),
+        ("sepNotAfterEnd",  "   gaps not after an `end`, so out of scope"),
         ("longProse",       "docstring/comment lines over 140     -> re-flow"),
         ("eqNothing",       "`== nothing` guards                  -> `isnothing`"),
         ("indentedTop",     "top-level functions not at column 1"),
         ("textBanner",      "`#####` separators carrying a sentence"),
+        ("inDisabledBlock",  "   comment lines inside `#= ... =#`, kept"),
         ("", ""),
         ("noDoc",           "functions with no docstring"),
         ("noDocTrivial",    "   of those, trivial Base.* methods (exempt)"),
