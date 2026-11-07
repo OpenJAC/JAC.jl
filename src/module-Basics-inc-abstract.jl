@@ -1734,7 +1734,12 @@ end
 `Basics.LinearMesh()`  ... constructor for the default settings of LinearMesh.
 """
 function LinearMesh()
-    GLegenreMesh( 0., 1.0, 10)
+    # THE TYPE HERE WAS `GLegenreMesh` UNTIL 07-Nov-2026 and the call ran, because the two structs
+    # share a field shape -- two Float64 and an Int64 -- so `LinearMesh()` returned a Gauss-Legendre
+    # mesh, with different nodes and different weights, and said nothing.  Nothing called it, so no
+    # number moves.  The comment below `Base.show` records the same confusion between these two
+    # types, found and fixed on 09-Aug-2026;  the constructor was missed then.
+    LinearMesh( 0., 1.0, 10)
 end
 
 

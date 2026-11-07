@@ -340,7 +340,12 @@ end
 `Pulse.GaussianSimplified()`  ... constructor for an `empty` instance of Pulse.GaussianSimplified().
 """
 function GaussianSimplified()
-    Gaussian( 0., 0., 0., 0., 0.)
+    # THE TYPE HERE WAS `Gaussian` UNTIL 07-Nov-2026, and unlike the sibling slip in
+    # `Basics.LinearMesh` this one could never construct: `GaussianSimplified` has five Float64
+    # fields while `Gaussian`'s first, fourth and fifth are a SolidAngle, an Array{EmMultipole,1}
+    # and a GaussianEnvelope, so the call raised `MethodError: Cannot convert an object of type
+    # Float64 to an object of type SolidAngle`.  Nothing called it, so no number moves.
+    GaussianSimplified( 0., 0., 0., 0., 0.)
 end
 
 
