@@ -795,7 +795,7 @@ function SlaterRkKinkAware(k::Int64, a::Radial.Orbital, b::Radial.Orbital, c::Ra
     # min(mtp_ac, length(Vk)) -- dropping the whole r > r_max(bd) tail, where V_k(r) is not zero but falls off
     # as the multipole const/r^(k+1).  That is the exact trap the docstring of buildScreenedPotential
     # warns about, and this was its one caller that walked into it.
-    ##
+
     # IT WAS INVISIBLE FOR AS LONG AS THIS FUNCTION SERVED ONLY THE SCF, where (a,c) and (b,d) are both bound
     # and of comparable extent, so the truncation removed almost nothing.  It surfaced the moment the
     # function was put on the Auger path, where (a,c) may contain a CONTINUUM orbital reaching the box

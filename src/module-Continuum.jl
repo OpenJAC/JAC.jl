@@ -172,12 +172,12 @@ const  CONT_SCALE_FATAL                = 1.0e-1
 #  MEASURED 06-Nov-2026 over four systems -- Ar and Kr at 5 Ha, U at 50 Ha, Ar at 0.5 Ha, each kappa = -1 -- with
 #  the box held fixed and grid.hp swept over thirteen values, comparing the normalization constant against the
 #  finest mesh of its own system.  THE ERROR IS NOT MONOTONE IN THE MESH DENSITY:
-##
+
 #      Ar  5 Ha    counted  16     19     21     21     22     23     24     27     30     36     48
 #                  error   +11.5  +9.4   +1.5   -1.9   +1.7   -0.9   +0.1   +0.1   -0.1   -0.5   -0.3  %
 #      U  50 Ha    counted  15     20     20     21     22     23     25     29     35     46     62
 #                  error    +0.0  +3.4   +1.8   -1.2   +2.3   -0.3   +0.0   +0.1   +0.0   +0.0   -0.1  %
-##
+
 #  TWO MESHES AT THE SAME COUNTED DENSITY, 21, DIFFER BY 3.3 % (+1.5 and -1.9), AND U AT 15 POINTS IS EXACT WHILE U
 #  AT 20 IS 3.4 % OUT.  So the counted density does NOT determine the error, and no single value of it can be a
 #  calibrated threshold -- which is the same non-monotone signature `Continuum.checkNormalizationRadius` already
@@ -203,26 +203,26 @@ const  CONT_MESH_SOUND                 = 28.0
 #  contain, which is scale-free -- the Galerkin eigenvector's arbitrary scale cancels, and after normalization the
 #  same physical orbital must come out of any adequate box.  `hp` is equal in the two boxes of a pair, so the
 #  grids NEST and the window carries identical mesh points and identical weights.
-##
+
 #      series A, box fixed at 12 a.u. and the ENERGY varied (eta = 5.0 ... 0.33):
 #          waves  0.54   0.76   1.05   1.43   1.91   2.67   3.82   5.73
 #          error  14.6%  61.2%  23.1%  11.3%   5.6%   9.1%   3.4%   0.8%      control 0.5 ... 3.6 %
 #      series B, ENERGY fixed (eta = 1.818) and only the box varied -- the confound removed:
 #          waves  0.54   0.71   0.97   1.23   1.76   2.46   3.51   5.27
 #          error  74.6%  57.7%  26.2%  10.2%  19.3%   2.6%  13.2%   6.0%      control 7e-8 above 8 a.u.
-##
+
 #  THE CONTROL IS WHAT MAKES THIS A MEASUREMENT.  In series B the default convention reproduces its own value to
 #  7e-8 across a factor seven in box size, so the box, the mesh and the solve are all innocent and the error
 #  belongs to the sine fit alone.  A first version of this experiment compared the normalization CONSTANT between
 #  boxes and was discarded:  N absorbs the eigenvector's arbitrary scale, so that comparison has no meaning, and
 #  its "control" drifted by factors of two.
-##
+
 #  SO THE FATAL LEVEL IS ONE FULL OSCILLATION, and it is where the two series agree:  below one wave the error is
 #  15-75 %, which squares into a cross section wrong by a factor of 1.3 to 3.  The WARN level stays at four waves
 #  but claims LESS than it looks:  above one wave the error is an erratic 2.6-19.3 % at fixed eta and does NOT
 #  settle by 5.3 waves, and the 240 a.u. reference itself carries a fit residual of 0.337 -- so four waves is the
 #  level above which this experiment cannot certify anything, NOT a level above which the answer is known good.
-##
+
 #  AND THE FIT RESIDUAL CANNOT DO THIS JOB, which is the finding that decided there should be a box tier at all.
 #  It is ANTI-correlated at the dangerous end:  74.6 % error at residual 0.038 and 61.2 % at 0.140, both BELOW its
 #  own 0.20 warning, while 2.6 % error reads 0.387 and warns.  The mechanism is plain once seen -- with less than
@@ -782,10 +782,10 @@ function reportContinuumAmplitude(P::Array{Float64,1}, cOrbital::Orbital, grid::
     #  0.5 to 200 eV in 24 and 40 a.u. boxes, the interior/asymptotic ratio read 1.000 or 1.001 -- and it read
     #  1.000 for all seven DELIBERATELY ruined ones too, slow electrons in boxes far too small for them, so the
     #  ratio cannot separate the two cases at all.  The residual separates them by orders of magnitude:
-    ##
+
     #      sound     2.2e-04 (200 eV, 40 a.u.)  ...  1.8e-01 (0.5 eV, 24 a.u.)
     #      ruined    1.9e-01 (1.0 eV,  8 a.u.)  ...  1.8e+01 (0.05 eV, 12 a.u.)
-    ##
+
     #  Hence `required` 0.2 and `fatal` 1.0 below:  at a residual of 1.0 the misfit is as large as the amplitude it
     #  is a fraction of, so the asymptotic form the normalization assumed does not describe this orbital.  A NaN
     #  means the caller has no fit to offer -- normalizeOrbitalCoulombFunctions, which matches analytic functions instead --

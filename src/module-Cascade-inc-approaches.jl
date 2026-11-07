@@ -1,6 +1,6 @@
 
 # Cascade approaches: the CONDITIONS that define them.
-##
+
 # A cascade approach fixes FOUR conditions and nothing else. Which processes are included, which multipoles
 # are applied, whether shake configurations are added, whether the Breit interaction or QED enter the
 # Hamiltonian -- all of that stays with the cascade SCHEME and with AsfSettings, where it already lives.
@@ -8,18 +8,18 @@
 # shakeToShells fields that Cascade.StepwiseDecayScheme already carried, and "only E1 transitions" was
 # written into an approach while being a property of the requested processes; in both cases two places could
 # disagree about the same question with nothing to arbitrate.
-##
+
 # Each approach differs from the one below it in exactly TWO of the conditions, and every approach is
 # reported to the user as the same six lines in the same order, stated absolutely (never as "as SCA, but
 # ..."), so that reading one block tells you what you got without holding another approach in your head:
-##
+
 #      (1) level representation      <- from .levels
 #      (2) configurations per block  <- from .levels
 #      (3) bound orbitals            <- from .bound
 #      (4) continuum orbitals        <- from .continuum
 #      (5) continuum potential       <- from .continuumPotential
 #      (6) e-e interaction           <- from .levels plus the caller's AsfSettings
-##
+
 # Cascade.displayApproach generates all six lines FROM the conditions. That is the point: the previous
 # free-text blocks in each -inc- file kept announcing "single-CSF levels and without any configuration
 # mixing" for months while the code underneath was doing full configuration interaction.

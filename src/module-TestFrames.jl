@@ -105,7 +105,7 @@ function testParseSummaryRow(line::String)
     isP(sa) = sa in ["+", "-"]
     numbersOf(tokenList) = Float64[ tryparse(Float64, ta)  for ta in tokenList  if !isnothing(tryparse(Float64, ta)) ]
     labelsOf(tokenList)  = String[ ta  for ta in tokenList  if isnothing(tryparse(Float64, ta)) ]
-    ##
+
     # A transition row:  i  --  f   J^P  -->  J^P   <energy> [<multipole> <gauge>] <values>
     if  length(tokens) > 8   &&   tokens[2] == "--"   &&   tokens[6] == "-->"   &&
         isJ(tokens[4])  &&  isP(tokens[5])  &&  isJ(tokens[7])  &&  isP(tokens[8])
@@ -116,7 +116,7 @@ function testParseSummaryRow(line::String)
         identity = "transition  " * tokens[4] * tokens[5] * " --> " * tokens[7] * tokens[8]
         return( (identity=identity, labels=labelsOf(rest), indices=[iIndex, fIndex], values=values) )
     end
-    ##
+
     # A level row:  level   J  parity   <energies> [<gauge>] <values>
     if  length(tokens) > 3   &&   isJ(tokens[2])   &&   isP(tokens[3])
         lIndex = tryparse(Int64, tokens[1])
@@ -125,7 +125,7 @@ function testParseSummaryRow(line::String)
         length(values) == 0   &&   return( nothing )
         return( (identity="level  " * tokens[2] * tokens[3], labels=labelsOf(rest), indices=[lIndex], values=values) )
     end
-    ##
+
     # A continuation row:  <labels> <values>, with the identity inherited from the row above
     if  length(tokens) > 1   &&   isnothing(tryparse(Float64, tokens[1]))
         ifirst = findfirst(ta -> !isnothing(tryparse(Float64, ta)), tokens)
@@ -133,7 +133,7 @@ function testParseSummaryRow(line::String)
         all(ta -> !isnothing(tryparse(Float64, ta)), tokens[ifirst:end])            ||   return( nothing )
         return( (identity="", labels=tokens[1:ifirst-1], indices=Int64[], values=numbersOf(tokens[ifirst:end])) )
     end
-    ##
+
     return( nothing )
 end
 
@@ -163,7 +163,7 @@ function testCollectSummaryRows(lines::Array{String,1}, ianchor::Int64, noLines:
         occursin(r"^[\s\-=]+$", line)                                &&   continue
         all(ta -> isnothing(tryparse(Float64, ta)), split(line))     &&   continue
         row  = TestFrames.testParseSummaryRow(line)
-        ##
+
         # Resolve a continuation row against the row above, or refuse the line
         if  !isnothing(row)  &&  row.identity == ""
             if  isnothing(previous)                             ||   isempty(previous.labels)  ||

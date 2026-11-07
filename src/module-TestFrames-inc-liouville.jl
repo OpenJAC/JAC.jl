@@ -13,7 +13,7 @@ function testModule_Liouville(; short::Bool=true)
     # REWRITTEN 08-Aug-2026; it previously asserted nothing at all -- an empty body and an unconditional
     # success = true, so the suite counted a pass for a module it never touched. See the note in
     # testModule_CoulombExcitation for what these scaffold checks cover.
-    ##
+
     # NOT COVERED: any density-matrix evolution, Raman amplitude or level population.
     success = true
     settings = Liouville.Settings()

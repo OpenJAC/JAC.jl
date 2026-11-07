@@ -702,7 +702,7 @@ function  computeLinesFromOrbitals(finalMultiplet::Multiplet, initialMultiplet::
         end
         totalRate = 2pi* rate;   angularAlpha = 0.
         newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, angularAlpha, newPartialWaves)
-        ##
+
         # if  settings.calcAnisotropy    angularAlpha = AutoIonization.computeIntrinsicAlpha(2, newLine)
         #  newLine   = AutoIonization.Line(line.initialLevel, line.finalLevel, line.electronEnergy, totalRate, real(angularAlpha), newChannels)
         # end

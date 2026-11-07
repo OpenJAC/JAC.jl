@@ -12,7 +12,7 @@ function testModule_DeepLearning(; short::Bool=true)
     ### Make the tests
     # REWRITTEN 08-Aug-2026; it previously asserted nothing at all. See the note in
     # testModule_CoulombExcitation for what these scaffold checks cover.
-    ##
+
     # NOT COVERED: any network, any training, any level estimate. Stage 2 of this work produced an honest
     # NEGATIVE result (the computed-energy baseline beat both the MLP and the GBT), so there is no accuracy
     # claim here to protect -- but the plumbing should at least be known to construct.

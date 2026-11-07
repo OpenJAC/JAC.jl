@@ -548,7 +548,7 @@ function testModule_Empirical(; short::Bool=true)
 
     # Restore the global nuclear charge for all subsequent tests.
     Defaults.setDefaults("nuclear: charge", oldZ)
-    ###
+
     Defaults.setDefaults("print summary: close", "")
     _, iostream = Defaults.getDefaults("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-Empirical-new.sum")
@@ -564,7 +564,7 @@ function testModule_ImpactIonization(; short::Bool=true)
     Defaults.setDefaults("print summary: open", "test-ImpactIonization-new.sum")
     printstyled("\n\nTest the module  ImpactIonization  ... \n", color=:cyan)
     ### Make the tests: total EII cross sections for He I (1s^2) with the BEB model.
-    ##
+
     # THIS WAS A SMOKE TEST until 09-Aug-2026 -- it ran the computation and compared nothing, so it could only
     # fail by raising. Writing real assertions for it exposed a factor-3 error in the absolute scale, which has
     # since been fixed (the EII path now runs its SCF in the AL-Field rather than the DFS field; see the note in
@@ -654,7 +654,7 @@ function testModule_Semiempirical(; short::Bool=true)
     # Test 6: EstimateBindingEnergyNist2025 for He IP_1 = 24.587 eV (well-known textbook value)
     e6 = Defaults.convertUnits("energy: from atomic", Semiempirical.estimate(Basics.EstimateBindingEnergyNist2025(), 2, 1))
     success = success && abs(e6 - 24.587) < 0.001
-    ###
+
     Defaults.setDefaults("print summary: close", "")
     _, iostream = Defaults.getDefaults("test flag/stream")
     println(iostream, "Make the comparison with approved data for ... test-Semiempirical-new.sum")

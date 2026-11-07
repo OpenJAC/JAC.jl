@@ -50,7 +50,7 @@ function testModule_CoulombExcitation(; short::Bool=true)
     # file comparison was commented out -- and pointed at the AutoIonization approved file, a copy-paste
     # artifact -- and it returned success = true unconditionally. It therefore reported a pass for a module
     # that was never exercised, in every run of the suite.
-    ##
+
     # WHAT IS CHECKED NOW is the SCAFFOLD, not the physics: that the settings construct, copy-construct and
     # print. That is a deliberately modest bar, and it is not nothing -- three bug classes met this month would
     # have been caught by exactly these lines: a `Base.show` declared without its `io` argument while using it
@@ -58,7 +58,7 @@ function testModule_CoulombExcitation(; short::Bool=true)
     # and a copy-constructor that silently fails to carry a value through. The last of those was found HERE:
     # the ionEnergies guard assigned the parameter instead of the local, so every copy-construction that did
     # not pass ionEnergies explicitly raised an UndefVarError.
-    ##
+
     # NOT COVERED: any Coulomb-excitation amplitude, cross section or alignment parameter. When an approved
     # reference exists, it belongs here.
     success = true
@@ -70,15 +70,15 @@ function testModule_CoulombExcitation(; short::Bool=true)
     if  newSettings.zerosGL != 7                success = false;   println("** zerosGL not carried by the copy-constructor")       end
     if  newSettings.calcAlignment != settings.calcAlignment
                                                 success = false;   println("** calcAlignment altered by an unrelated keyword")     end
-    ##
+
     # THE PHYSICS CHECK, added 09-Aug-2026: sigma(Mi,Mf) = sigma(-Mi,-Mf), EXACTLY.
-    ##
+
     # This is the very symmetry whose violation exposed the root-cause bug of the July work on this module --
     # computeAmplitude's magnetic term was missing the -i prefactor that RATIP's coulex_pure_matrix() applies
     # to every magnetic contribution but which Eq. (8) of Surzhykov et al., PRA 77, 042722 (2008) does not show.
     # With the factor restored the equality holds to the last bit; without it, it fails visibly. It is
     # parameter-free, needs no reference data, and is precisely the guard that would catch a reintroduction.
-    ##
+
     # COST: about 50 s, dominated by the Z = 92 self-consistent field, not by the Coulomb-excitation quadrature
     # (verified -- shrinking the grid and halving zerosGL changed nothing). One impact energy is used.
     ceSettings = CoulombExcitation.Settings(CoulombExcitation.Settings(); ionEnergies=[100.], calcAlignment=true,
@@ -965,7 +965,7 @@ function testModule_RayleighCompton(; short::Bool=true)
     ### Make the tests
     # REWRITTEN 08-Aug-2026; it previously asserted nothing at all. See the note in testModule_CoulombExcitation
     # for what these scaffold checks do and do not cover.
-    ##
+
     # NOT COVERED: any Rayleigh or Compton scattering amplitude, cross section or Stokes parameter.
     success = true
     settings = RayleighCompton.Settings()
@@ -995,7 +995,7 @@ function testModule_HyperfineInduced(; short::Bool=true)
     # chain: two nuclear states in one hyperfine basis, the mixing that follows, both terms of the amplitude
     # (nuclear radiation and the borrowed electronic one), and the level lifetimes. One electron, one electronic
     # level, four hyperfine levels, five lines -- it runs in seconds.
-    ##
+
     # Basics.NuclearField() rather than the default DFS: a DFS potential self-interacts badly on a one-electron
     # system (H 1s comes out at -0.194 instead of -0.5 a.u.) and would corrupt exactly the hyperfine matrix
     # elements under test.

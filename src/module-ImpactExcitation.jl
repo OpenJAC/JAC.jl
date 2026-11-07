@@ -605,7 +605,7 @@ function  computeLinesCascade(finalMultiplet::Multiplet, initialMultiplet::Multi
     # which already threads the very same computeAmplitudesProperties(); the cascade variant was serial and
     # thereby left the expensive part of every cascade on a single thread.  Start Julia with `julia -t N` to
     # use it; with the default of one thread the loop below behaves exactly as the serial one did.
-    ##
+
     # NB the results are written BY INDEX into a pre-allocated vector rather than push!-ed: push! is not
     # thread-safe, and indexing also preserves the order of the lines, which the rate-coefficient machinery
     # relies on (ImpactExcitation.groupLines reshapes the list into an energies x transitions block).

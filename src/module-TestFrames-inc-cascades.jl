@@ -147,7 +147,7 @@ function testModule_Cascade_DielectronicCapture(; short::Bool=true)
     # Make the tests
     # The KLL group of helium-like carbon, as in examples/example-Fm.jl.  ~1.3 s warm, the cheapest cascade
     # test in the file.
-    ##
+
     # THIS ONE CARRIES AN EXACT INTERNAL CHECK, which is unusual here and is the reason to prefer it over a
     # plain smoke run.  Dielectronic recombination IS capture followed by radiative stabilization, so the two
     # schemes must produce the SAME resonances with the SAME Auger widths; they differ only in what happens
@@ -156,7 +156,7 @@ function testModule_Cascade_DielectronicCapture(; short::Bool=true)
     # nine Auger steps, the recombination scheme a different block set with three Auger and nine radiative
     # steps.  Agreement to the last bit therefore constrains the resonance identification, the block
     # generation and the continuum orbitals at once.
-    ##
+
     # The approved comparison remains a photograph of this code's own output and establishes no physics; the
     # capture-against-recombination identity above is the part that could actually fail for a real reason.
     grid   = Radial.Grid(Radial.Grid(false); rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, rbox = 8.0)
@@ -224,19 +224,19 @@ function testModule_Cascade_ResonantIonization(; short::Bool=true)
     # Lithium-like carbon: an incident electron is CAPTURED into a doubly-excited resonance, which then sheds two
     # electrons and leaves the ion one charge state higher.  A cut-down version of examples/example-Fl.jl -- one
     # capture shell instead of two -- which brings it to ~10 s, the same order as the photo-absorption test.
-    ##
+
     # THIS IS A SANITY TEST, NOT A TEST OF THE PHYSICS, and the distinction matters here more than usual.  What it
     # pins down is that the scheme still runs end to end, that the resonances are still FOUND and still lie at the
     # same energies, and that the strengths and branchings do not move.  It does NOT establish that the numbers are
     # right: nothing in the suite compares them against an independent source.
-    ##
+
     # THE SHELL LISTS ARE NOT ARBITRARY.  A resonance converges to the threshold it was built on FROM BELOW, so it
     # can never autoionize into that same threshold; capture into 2s/2p while exciting 1s -> 2p closes the
     # sequential route entirely and every strength comes out zero.  The excitation list therefore spans 2p AND 3s
     # while the capture goes into 3s, so that the resonances sit on the 1s2s3s threshold and can reach 1s2s2p,
     # which still carries the K hole and autoionizes again.  A test on the closed configuration would pass just as
     # happily on a column of zeros, which is exactly the kind of check this file should not contain.
-    ##
+
     # Both steps are exercised, the computation and the simulation, and the results are handed over IN MEMORY,
     # wrapped as JLD2.load() would return them, so that no file with a run-date in its name enters the comparison.
     grid = Radial.Grid(Radial.Grid(false); rnt = 2.0e-5, h = 5.0e-2, hp = 2.0e-2, rbox = 10.0)
@@ -284,15 +284,15 @@ function testModule_Cascade_EiiRateCoefficients(; short::Bool=true)
     # the shell lists are what they are -- but carried one step further: the energy-integrated strengths are folded
     # with a Maxwellian to give the plasma rate coefficient alpha^EII (T), which is the quantity an ionization
     # balance consumes and the one that can be compared with other codes.
-    ##
+
     # WHAT THIS ADDS OVER THE STRENGTH TEST, stated narrowly because it is easy to overclaim, and this comment has
     # already been wrong twice.  It pins the Maxwellian FOLD -- the exponent, the sign of the exponential, the
     # Kelvin-to-Hartree conversion -- and it does so through the APPROVED NUMBERS, which change wholesale if any of
     # those is wrong.  That is where the regression power lives.
-    ##
+
     # It does NOT check that the resonances were correctly identified: prediction and curve are built from the same
     # energies, so a misplaced set moves both together and passes.
-    ##
+
     # THE SIX TEMPERATURES ARE CHOSEN, NOT ROUNDED OFF.  The printed bracket check -- is the tabulated maximum one
     # of the two grid points around kT = 2E/3? -- can only discriminate if the grid resolves the peak.  Measured on
     # this system, E = 306.6 eV and the maximum sits at 204.4 eV: with the four temperatures this test first used,

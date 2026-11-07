@@ -12,14 +12,14 @@ export Grid, Potential, Orbital, SingleElecSpectrum
 
 
 # Radial.AbstractMesh, with MeshNone, MeshGrasp and MeshGL, was REMOVED on 12-Aug-2026.
-##
+
 # Nothing in JAC could ever produce anything but a Gauss-Legendre mesh: meshType was assigned in exactly one
 # place, Radial.Grid(exponential::Bool), always to MeshGL(), and no file in src/, examples/ or test/ ever
 # passed the meshType= keyword.  All 26 MeshGrasp comparisons were therefore permanently false, and what
 # hung off them was substantial: 25 dead branches in module-RadialIntegrals.jl, the grid fields rp and rpor
 # (empty arrays on every grid that has ever existed), Math.integrateFit/integrateFitTransform, and the
 # Basics.integrate(::NewtonCotes/::SimpsonRule/::TrapezRule) family with its four exported type names.
-##
+
 # That region had been unreachable long enough for a one-character typo to sit undetected in its central
 # routine -- Math.derivative read `JenaAtomicCalculatorDefaults.weights`, so its interior-point branch, the
 # common case, raised UndefVarError.  All of it is now gone, and Radial.Grid describes one thing: a
@@ -750,7 +750,7 @@ end
 
 # Radial.OrbitalBunge1993, Radial.compute_McLean1981 and Radial.OrbitalPrimitiveSlater were REMOVED on
 # 12-Aug-2026.  None of the three could run, and none had a caller:
-##
+
 #   * the first two called Basics.store("orbital functions: NR, Bunge (1993)" / "... McLean (1981)", Z),
 #     and Basics.store is DEFINED NOWHERE IN JAC.  It was meant to hold the Roothaan-Hartree-Fock
 #     coefficient tables of Bunge et al., ADNDT 53 (1993) 113 and McLean & McLean, ADNDT 26 (1981) 197;
@@ -758,7 +758,7 @@ end
 #   * OrbitalBunge1993 and OrbitalPrimitiveSlater additionally read grid.rp -- an array that was empty on
 #     every grid JAC ever built and no longer exists at all -- and constructed Radial.Orbital with SEVEN
 #     arguments where it has nine fields.
-##
+
 # DECIDED 13-Aug-2026 by the maintainer: the Bunge and McLean routes are RETIRED, not deferred, and the
 # compute themes RadialOrbitalBunge1993 and RadialOrbitalMcLean1981 have been removed with them.  Three
 # reasons, none of them the missing table itself: both sets are NON-RELATIVISTIC while JAC is a Dirac code,
@@ -768,7 +768,7 @@ end
 # start orbitals be wanted, use ManyElectron.StartFromThomasFermi with the screened potential
 # Basics.ThomasFermiField (added 13-Aug-2026) -- it needs no external data and works at any Z, including the
 # superheavy region these tables cannot reach.
-##
+
 # The working route to hydrogenic start orbitals remains Bsplines.generateOrbitalsHydrogenic, which is what
 # AsfSettings(..., StartFromHydrogenic(), ...) already uses throughout JAC.
 

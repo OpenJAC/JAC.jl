@@ -286,7 +286,7 @@ end
 function solveCollisionalRadiativeBalance(matrixA::Array{Float64,2})
     N = size(matrixA, 1)
     fullMatrix = collect(transpose(matrixA))
-    ##
+
     # Which equation to sacrifice is NOT arbitrary in floating-point arithmetic, even though all N choices
     # are equivalent in exact arithmetic. Whichever level's equation is replaced loses its own balance
     # relation and is then determined only indirectly, through its appearance as a source term in the other
@@ -305,7 +305,7 @@ function solveCollisionalRadiativeBalance(matrixA::Array{Float64,2})
     fullMatrix[1, :] .= 1.0
     rhs               = zeros(N);   rhs[1] = 1.0
     populations       = fullMatrix \ rhs
-    ##
+
     # Residual cleanup, applied to NEGATIVE components ONLY. Positive populations are never touched, however
     # small: in a coronal-limit balance the genuinely-populated levels span many orders of magnitude (for
     # He-like carbon, example-Je.jl branch a, the n=2 levels sit near ~1e-16 at Te=1e5 K purely because of the
@@ -327,7 +327,7 @@ function solveCollisionalRadiativeBalance(matrixA::Array{Float64,2})
               "indicates an inconsistent rate matrix, not a numerical artefact -- treat these populations as " *
               "invalid.")
     end
-    ##
+
     # Renormalize: zeroing the roundoff components perturbs the sum only at the popFloor level, but the
     # returned vector is documented to sum to 1, so restore that exactly.
     return( populations / sum(populations) )

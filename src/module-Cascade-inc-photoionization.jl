@@ -155,8 +155,8 @@ end
         cascade simulation. The particular output depends on the specifications of the cascade.
 """
 function perform(scheme::PhotoIonizationScheme, comp::Cascade.Computation; output::Bool=false, outputToFile::Bool=true, outputDirectory::String="")
-    ##
-    ##
+
+
     if  output    results = Dict{String, Any}()    else    results = nothing    end
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
 

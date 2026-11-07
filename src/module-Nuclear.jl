@@ -639,7 +639,7 @@ function computeDeformedFermiC(R::Float64, a::Float64, model::Nuclear.DeformedFe
     R <= 0.  &&  error("Nuclear.computeDeformedFermiC(): R_rms = $R fm must be positive.")
     cFloor = 4.0 * a
     c0     = sqrt(5/3) * R
-    ##
+
     cUpp = max(c0, cFloor);   nUpp = 0
     while  Nuclear.deformedFermiRrms(cUpp, a, model) < R   &&   nUpp < 60
         cUpp = 1.5 * cUpp;    nUpp = nUpp + 1
@@ -653,7 +653,7 @@ function computeDeformedFermiC(R::Float64, a::Float64, model::Nuclear.DeformedFe
                   "$cFloor fm.  Use UniformNucleus() for such a small radius.")
         end
     end
-    ##
+
     tolAccept = 1.0e-10
     for  i = 1:200
         cMid = 0.5 * (cLow + cUpp)
@@ -688,7 +688,7 @@ function computeThreeParameterFermiC(R::Float64, a::Float64, w::Float64)
     R <= 0.  &&  error("Nuclear.computeThreeParameterFermiC(): R_rms = $R fm must be positive.")
     cFloor = 4.0 * a          # below this the w-weight competes with the Fermi factor; see the docstring
     c0     = sqrt(5/3) * R    # sharp-sphere estimate, always slightly above the true c
-    ##
+
     # Grow the bracket outwards from c0 until it straddles R.
     cUpp = max(c0, cFloor);   nUpp = 0
     while  threeParameterFermiRrms(cUpp, a, w) < R   &&   nUpp < 60
@@ -704,7 +704,7 @@ function computeThreeParameterFermiC(R::Float64, a::Float64, w::Float64)
                   "factor itself; use UniformNucleus() for such a small radius.")
         end
     end
-    ##
+
     tolAccept = 1.0e-12
     for  i = 1:200
         cMid = 0.5 * (cLow + cUpp)
@@ -745,7 +745,7 @@ function computeFermiBParameter(R::Float64)
     # The loop above exits on EITHER the target eps or the iteration cap, and the caller could not tell the
     # two apart, so a b-parameter the fixed-point step never resolved was handed back silently and used to
     # build a potential.  The iteration itself is unchanged.
-    ##
+
     # THE TEST IS AGAINST A PHYSICALLY MEANINGFUL RESIDUAL, NOT AGAINST eps, and the distinction is not
     # academic: helium (R_rms = 1.8993 fm) stalls at a residual of 5.9e-8 fm and never reaches eps = 1e-14
     # at all.  That was found the first time this check ran, and it is worth knowing -- the loop's stated
@@ -919,7 +919,7 @@ function deformedFermiNucleus(Rrms::Float64, Z::Float64, model::Nuclear.Deformed
     # Nuclear.deformedShape.  These are computed ONCE, not inside the radial quadratures below.
     tGrid = Radial.GridGL(Radial.GridGaussLegendreFinite(), -1., 1., 24; printout=false)
     cx    = [ fermiC_au * Nuclear.deformedShape(tGrid.t[j], model)  for j = 1:tGrid.nt ]
-    ##
+
     function  monopole(r::Float64)
         wa = 0.
         for  j = 1:tGrid.nt   wa = wa + tGrid.wt[j] / (1.0 + exp( (r - cx[j])/fermiA_au ))   end

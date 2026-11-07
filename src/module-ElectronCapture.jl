@@ -232,16 +232,16 @@ function computeAmplitudesProperties(line::ElectronCapture.Line, nm::Nuclear.Mod
         push!( newChannels, ElectronCapture.Channel(newChannel.kappa, newChannel.symmetry, newChannel.phase, amplitude) )
     end
     # Fritzsche, Kabachnik & Surzhykov, PRA 78, 032703 (2008), Eq. (3):
-    ##
+
     #     P_cap(0 -> d) = 2pi / (2(2J_0+1)) * SUM_lj |<a_d J_d || V || a_0 J_0, lj : J_d>|^2
     #                   = (2J_d+1) / (2(2J_0+1)) * P_A(d -> 0)
-    ##
+
     # WHERE THE (2J_d+1) COMES FROM, since this is a Rule 18 site and was got wrong once.  AutoIonization forms its
     # Auger rate as 2pi * SUM |A|^2 with NO 1/(2J_d+1), and that is CORRECT: for autoionization the scattering state
     # (f + eps kappa) is coupled to exactly J_i, so the full and the reduced matrix element coincide and no such
     # factor arises.  Comparing with Eq. (3) therefore fixes the relation between the two normalizations,
     # <...>_paper = sqrt(2J_d+1) * A_JAC, and the capture rate must carry the (2J_d+1) explicitly.
-    ##
+
     # The ALIGNMENT below is untouched by this: Eq. (4) carries the same amplitudes in its numerator and in N, so
     # the factor cancels exactly and A_k0 is the same either way.  Only the RATE changes.
     totalRate = 2pi * rate * (Basics.twice(line.finalLevel.J) + 1) / (2 * (Basics.twice(line.initialLevel.J) + 1))

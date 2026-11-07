@@ -409,14 +409,14 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     # RE-ENABLED 09-Aug-2026, and deliberately SHORT. This test had been disabled since 31-Jul because a parallel
     # session was editing the module; that reason expired, but the old test then failed for a different one -- it
     # passed six positional arguments to a Settings that has had five fields since the Angel-Sandars rewrite.
-    ##
+
     # WHAT IT CHECKS: the static E1 polarizability of hydrogen 1s, against two facts that need no reference data.
     #   (1) THE TENSOR POLARIZABILITY MUST VANISH for J = 1/2. alpha2 is a rank-2 quantity and a level with
     #       J < 1 cannot carry one. An exact zero, in both gauges.
     #   (2) THE SCALAR POLARIZABILITY IS BOUNDED. For the hydrogen ground state every term of the sum over
     #       perturbers is positive, so a sum over a FINITE, BOUND-ONLY set of np states is a strict lower bound
     #       on the exact 4.5 a.u. Hence 0 < alpha0 < 4.5, which catches both a sign error and a runaway.
-    ##
+
     # THE "B-SPLINE PSEUDO-CONTINUUM BUG" THAT BLOCKED THIS MODULE WAS NEVER A BUG -- it was this test's own
     # radial box (10-Aug-2026). With rbox = 20 a.u. the np perturbers came out at -0.12500, -0.05160 and
     # +0.00817 a.u.; the 4p pair is POSITIVE, which is exactly the "pseudo-continuum orbitals get near-zero
@@ -428,13 +428,13 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     # 0.5 s -- i.e. the wider box costs nothing once hp is matched to it. The new grid check in
     # Bsplines.checkGridRepresentation flags precisely this and recommends 77.4 a.u.; it was that check,
     # on its first run over the suite, which found it.
-    ##
+
     # THE SIX-ORDER GAUGE GAP THIS COMMENT USED TO DESCRIBE IS GONE, and the paragraph is replaced rather than
     # kept, because it describes code that no longer exists. It recorded alpha_0(Coulomb) ~ 1.5e-6 against
     # 1.164 (Babushkin) and diagnosed it correctly: the Coulomb column was evaluating the frequency-DEPENDENT
     # MabEmission at omega = 0. The module now uses MultipoleMoment.emmStaticAmplitude -- Johnson's r^k C_k,
     # with no omega and no gauge -- so the two columns are identical BY CONSTRUCTION, and both give 3.491829.
-    ##
+
     # **AND THE NUMBERS BELOW ARE NOW ASSERTED AGAINST EXACT HYDROGEN, which is what makes this a real test.**
     # For H 1s the sum-over-states alpha = sum_i f_i/omega_i^2 is known in closed form, term by term:
     #     2p   f = 0.41620,  omega = 0.375      ->  2.9596        (and the 1/2 : 3/2 pair splits 1 : 2)
@@ -552,7 +552,7 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     # THE RANK-2 BRANCH, ASSERTED AGAINST AN EXACT NUMBER -- added 14-Oct-2026, item 68.  Everything above
     # checks that alpha_2 VANISHES (J = 1/2, and J < 1 generally), and a vanishing test cannot detect a wrong
     # rank-2 prefactor, a wrong 6-j or a sign.  This can, and it needs no reference data.
-    ##
+
     # WITH EXACTLY ONE INTERMEDIATE LEVEL the two Angel-Sandars formulae share the same radial factor,
     #     alpha_0 = -2/(3(2J+1)) * R ,
     #     alpha_2 = -2 sqrt(10/3) G(J) (-1)^(2J) (-1)^(J-J') {J J' 1; 1 2 J} * R ,
@@ -561,7 +561,7 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     #     J = 3/2, J' = 1/2  ->  -1          J = 3/2, J' = 3/2  ->  +4/5
     #     J = 3/2, J' = 5/2  ->  -1/5        J = 5/2, J' = 5/2  ->  +8/7
     # Measured 14-Oct-2026 at -1.00000000 (2.2e-16 off), +0.80000000 (bit-exact) and -0.20000000 (2.8e-17).
-    ##
+
     # TWO CONSEQUENCES WORTH KNOWING.  Because the radial factor cancels, THE GRID IS IRRELEVANT here -- the
     # coarse, cheap basis below gives the exact ratio, so this costs the suite almost nothing.  And together
     # with the hydrogen checks above the pair is complete: those validate the RADIAL part of alpha_0 against
@@ -600,7 +600,7 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     # runs at omega = 0, so until now NOTHING in the suite touched the frequency dependence: `Settings.omegas`,
     # `MultipolePolarizibility.frequencyFactor` and the entire imaginary axis were held only by a `tools/` probe,
     # which the suite never runs.
-    ##
+
     # WITH EXACTLY ONE INTERMEDIATE LEVEL the frequency dependence is a pure RATIO in which the radial integral,
     # the angular factor and the oscillator strength all cancel, leaving the denominator alone:
     #     alpha(omega)   / alpha(0) = dE^2 / (dE^2 - omega^2)     on the real axis,
@@ -608,7 +608,7 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     # So this tests `frequencyFactor` and nothing else -- which is the whole point, since the frequency enters the
     # module ONLY through that one function.  As with the rank-2 ratio above the grid is therefore irrelevant, and
     # the perturber here is the SAME 3s level, so the test costs one extra multiplet and nothing more.
-    ##
+
     # THE TWO AXES MUST ALSO MEET AT omega = 0, exactly:  dE/(dE^2 +- 0) is 1/dE either way, and that is the
     # identity the omega = 0 fast path rests on.
     gridDy = Radial.Grid(Radial.Grid(false), rnt = 4.0e-06, h = 5.0e-2, hp = 1.2, rbox = 60.0)
@@ -680,7 +680,7 @@ function testModule_MultipolePolarizibility(; short::Bool=true)
     # CL(a,1,t)^2 summed over both p channels, the 1/3 + 1/3 split of the two solves, the radial-drive correction
     # and the Pauli projection -- against a number that owes nothing to JAC.  It is computed DIRECTLY rather than
     # through perform, so that it writes nothing to the summary file the comparison below reads.
-    ##
+
     # AND THE SECOND ASSERTION IS THE FREQUENCY, which the first one cannot see at all: the two energy
     # denominators dE -+ omega give alpha(omega) = alpha(0) + S3 omega^2 + O(omega^4), so the enhancement at 2w
     # must be FOUR TIMES the enhancement at w.  A ratio of enhancements has every radial factor cancelled out of
