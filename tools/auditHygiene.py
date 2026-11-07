@@ -43,7 +43,15 @@ reading a sample of what it changes.
        defines the Slater kernel as a two-line `ul(r, s)` inside each parent whose docstring
        already states the integral;  all ten of that file's reported missing docstrings are of
        that kind.  Counting them put the tree-wide figure at 154 against a true 36.
-   12. AN APPENDED `##` IN A DATA TABLE IS A ROW INDEX.  `module-LSjj-inc.jl` alone carries
+   12. A DOCSTRING MAY WRAP ITS OWN RETURN STATEMENT ACROSS A LINE BREAK, so the text must be
+       flattened before the search.  83 do, and counting line by line put the missing-return
+       figure at 602 where it is 519 -- and would have appended a SECOND return sentence to
+       docstrings that already carried one.
+   13. A DOCSTRING'S SIGNATURE MAY SPAN MANY LINES, so the search window is the whole docstring.
+       A four-line window saw an opening backtick with no closing one and reported 148 docstrings
+       as carrying no signature where 88 do -- and the 60 extra were the very docstrings this
+       project had just corrected to reproduce the function's full typed header.
+   14. AN APPENDED `##` IN A DATA TABLE IS A ROW INDEX.  `module-LSjj-inc.jl` alone carries
        20541 of them, numbering the jj-LS coefficient rows against the published tables.
        They are reported separately from ordinary appended comments and are never swept.
 """
@@ -193,10 +201,18 @@ def audit(path):
         while k < len(L) and L[k].strip() == "":  k += 1
         if k < len(L) and FUNCOL.match(L[k]):
             r["funcDocs"] += 1
-            body = "\n".join(L[i:j+1])
+            ## THE WHITESPACE IS NORMALISED BEFORE THE SEARCH.  A docstring may wrap its own return
+            ## statement across a line break -- "Nothing is\n              returned." -- and 83 of
+            ## them do;  searching line by line put the figure at 602 where it was 519.
+            body = re.sub(r'\s+', ' ', "\n".join(L[i:j+1]))
             if not RETURNED.search(body):  r["noReturnStated"] += 1;  sites["noReturnStated"].append(k+1)
-            head = " ".join(L[i:min(i+4, j)])
-            cand = next((c for c in re.findall(r'`([^`]+)`', head) if "(" in c), None)
+            ## THE WINDOW IS THE WHOLE DOCSTRING, not its first four lines.  A copy-constructor
+            ## signature reproduced from the code can run to eight lines, and a four-line window
+            ## then sees an opening backtick with no closing one and reports "no signature at
+            ## all" -- it put the figure at 148 where it is 88, and every one of the 60 extra was
+            ## a docstring this project had just CORRECTED.
+            head = "\n".join(L[i:j])
+            cand = next((c for c in re.findall(r'`([^`]+)`', head, re.S) if "(" in c), None)
             if cand is None:
                 r["noSigInDoc"] += 1;  sites["noSigInDoc"].append(k+1)
             else:
