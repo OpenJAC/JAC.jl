@@ -110,7 +110,7 @@ end
 
 
 """
-`LSjjSettings(makeIt::Bool)`  ... constructor for the default values of jj-LS transformations.
+`ManyElectron.LSjjSettings(makeIt::Bool)`  ... constructor for the default values of jj-LS transformations.
 """
 function LSjjSettings(makeIt::Bool)
     LSjjSettings(makeIt, 0.05, 0.1, LevelSelection() )
@@ -508,7 +508,7 @@ end
 
 
 """
-`function parseA(x::AbstractString)`
+`ManyElectron.parseA(x::AbstractString)`
     ... helper function for `ManyElectron.CsfRGrasp92`
 """
 function parseA(x::AbstractString)

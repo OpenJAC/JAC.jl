@@ -231,7 +231,7 @@ end
 
 
 """
-` + amplitude(::ZeemanDeltaN1, rLevel::Level, sLevel::Level, grid::Radial.Grid)`
+`LandeZeeman.amplitude(::ZeemanDeltaN1, rLevel::Level, sLevel::Level, grid::Radial.Grid)`
     ... to compute the Delta N^(1) Zeeman amplitude <alpha_r J_r || Delta N^(1) || alpha_s J_s>
         for a given pair of levels. A value::ComplexF64 is returned.
 """

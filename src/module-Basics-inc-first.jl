@@ -729,7 +729,7 @@ end
 
 
 """
-`subshellGrasp(sa::AbstractString)`  ... returns a sh::Subshell if sa denotes a (relativistic) Subshell in Grasp-notation.
+`Basics.subshellGrasp(sa::AbstractString)`  ... returns a sh::Subshell if sa denotes a (relativistic) Subshell in Grasp-notation.
 """
 function subshellGrasp(sa::AbstractString)
         if   sa == "1s"   return( Subshell("1s_1/2")  )   

@@ -265,7 +265,7 @@ end
 
 
 """
-` + amplitude(::Absorption, Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level,
+`PhotoEmission.amplitude(::Absorption, Mp::EmMultipole, gauge::EmGauge, omega::Float64, finalLevel::Level, initialLevel::Level,
                 grid::Radial.Grid; display::Bool=false, printout::Bool=false)`
     ... to compute the photon absorption amplitude as the conjugate of the emission amplitude with swapped levels, i.e. conj( <initialLevel
         || O^(Mp) || finalLevel> ).  A value::ComplexF64 is returned.

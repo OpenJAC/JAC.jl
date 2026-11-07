@@ -599,7 +599,7 @@ end
 
 
 """
-+ `("relativistic subshell list", subshells::Array{Subshell,1}; printout::Bool=true)`  
+`Defaults.setDefaults("relativistic subshell list", subshells::Array{Subshell,1}; printout::Bool=true)`  
     ... to (pre-) define internally the standard relativistic subshell list on which the standard order of orbitals is based.
 """
 function setDefaults(sa::String, subshells::Array{Subshell,1}; printout::Bool=true)
@@ -640,7 +640,7 @@ end
 
 
 """
-+ `("standard grid", grid::Radial.Grid; printout::Bool=true)`  
+`Defaults.setDefaults("standard grid", grid::Radial.Grid; printout::Bool=true)`  
     ... to (pre-) define internally the standard radial grid which is used to represent most orbitals.
 """
 function setDefaults(sa::String, grid::Radial.Grid; printout::Bool=true)
@@ -658,7 +658,7 @@ end
 
 
 """
-+ `("continuum: potential", scField::Basics.AbstractScField)`  
+`Defaults.setDefaults("continuum: potential", scField::Basics.AbstractScField)`  
     ... to (re-) define the potential that is applied for the generation of the continuum orbitals.
 """
 function setDefaults(sa::String, scField::Basics.AbstractScField)
@@ -675,7 +675,7 @@ end
 
 
 """
-+ `("QED: damped-hydrogenic", Znuc::Float64, wa::Array{Float64,1})`  
+`Defaults.setDefaults("QED: damped-hydrogenic", Znuc::Float64, wa::Array{Float64,1})`  
     ... to (re-) define the lambda-C damped overlap integrals of the lowest kappa-orbitals 
         [ wa_1s_1/2, wa_2p_1/2, wa_2p_3/2, wa_3d_3/2, wa_3d_5/2 ] for the (new) nuclear charge Znuc; 
         nothing is returned.
@@ -765,7 +765,7 @@ end
 
 
 """
-+ `("ordered shell list: non-relativistic", n_max::Int64)`  
+`Defaults.getDefaults("ordered shell list: non-relativistic", n_max::Int64)`  
     ... to give an ordered list of non-relativistic shells::Array{Shell,1} up to the (maximum) principal number n_max.
         
 + `("ordered subshell list: relativistic", n_max::Int64)`   

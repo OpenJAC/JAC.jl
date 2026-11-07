@@ -640,7 +640,7 @@ end
 
 
 """
-+ `(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`   
+`Continuum.generateOrbitalNonrelativisticCoulomb(energy::Float64, sh::Subshell, pot::Radial.Potential, settings::Continuum.Settings)`   
     ... to generate a simple, non-relativistic and non-normalized Coulomb wave for the (continuum) subshell sh, 
         the small component is simply obtained by the kinetic-balance condition. A orbital::Orbital is returned.
 """
@@ -2015,7 +2015,7 @@ end
 
 
 """
-`function twoFzero(CA::ComplexF64, CB::ComplexF64, CZ::ComplexF64)`
+`Continuum.twoFzero(CA::ComplexF64, CB::ComplexF64, CZ::ComplexF64)`
     ... Calculates the Hypergeometric function 2F0(CA,CB;1/CZ) hypergeometric asymptotic series.
         Taken from Radial package by Salvat et al.
         A ComplexF64 value is returned.  

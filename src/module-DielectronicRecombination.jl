@@ -397,7 +397,7 @@ end
 
 
 """
-` (set::DielectronicRecombination.Settings;
+`DielectronicRecombination.Settings(set::DielectronicRecombination.Settings;
     multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,               gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
     calcOnlyPassages::Union{Nothing,Bool}=nothing,                         calcRateAlpha::Union{Nothing,Bool}=nothing,
     calcHyperfineResolved::Union{Nothing,Bool}=nothing,                     hfDrivenCapture::Union{Nothing,Bool}=nothing,

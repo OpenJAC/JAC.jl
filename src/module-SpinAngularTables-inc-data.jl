@@ -274,7 +274,7 @@ end
 
 
 """
-` + (jx, Qx, Jx, Nr::Int64)` ... to returns the same but without type binding apart from N.
+`SpinAngularTables.getTermNumber(jx, Qx, Jx, Nr::Int64)` ... to returns the same but without type binding apart from N.
 """
 function  getTermNumber(jx, Qx, Jx, Nr::Int64)
     if  typeof(jx) == AngularJ64      j = jx   else  jz = convert(Int64, 2 * jx);   j  = AngularJ64(jz//2)   end

@@ -392,7 +392,7 @@ end
 
 
 """
-`function  Beam.constructSuperposition(key::String)`   
+`Beam.constructSuperposition(key::String)`   
     ... to construct various (vector) beams with well-defined polarization properties; allowed keys are:
 
     + "radially-polarized LG vector beam"      ... to define a radially-polarized LG vector beam.         
@@ -462,7 +462,7 @@ end
 
 
 """
-`function  Beam.redefineEnergy(energy::Float64, beam::AbstractBeamType)`   
+`Beam.redefineEnergy(energy::Float64, beam::AbstractBeamType)`   
     ... to re-define the energy (i.e. the components of the k-vector) in Hartree for a given beam to a well-defined value.
         A newBeam of the same (concrete) type as beam is returned.
 """

@@ -398,7 +398,7 @@ end
 
 
 """
-`meanEnergyInClosedForm(conf::Configuration, orbitals::Dict{Subshell, Orbital}, nm::Nuclear.Model,
+`BasicsAZ.meanEnergyInClosedForm(conf::Configuration, orbitals::Dict{Subshell, Orbital}, nm::Nuclear.Model,
                         grid::Radial.Grid)`
     ... to determine the average energy of a configuration in CLOSED FORM, touching no CSF at all: the cost is set by
         the number of subshell PAIRS and is independent of how many CSFs the configuration carries. A value::Float64
@@ -538,7 +538,7 @@ end
 
 
 """
-`Basics..determineNonorthogonalShellOverlap(finalSubshells::Array{Subshell,1}, initialSubshells::Array{Subshell,1}, 
+`Basics.determineNonorthogonalShellOverlap(finalSubshells::Array{Subshell,1}, initialSubshells::Array{Subshell,1}, 
                                             grid::Radial.Grid)`  
     ... determines the overlap of those shells that do not agree in both sets but have the same symmetry; a zero
         overlap and Subshell(99,-1) are returned in cases that no such pair can be found.
@@ -955,7 +955,7 @@ end
 
 
 """
-`   + (stream::IO, channels::Array{AtomicState.GreenChannel,1}; N::Int64=10)`  
+`Basics.displayLevels(stream::IO, channels::Array{AtomicState.GreenChannel,1}; N::Int64=10)`  
     ... display on stream the lowest N level energies of all levels from the (Green) channles in ascending order, and together with the 
         configuration of most leading term in the level expansion. A neat table is printed but nothing is returned otherwise.
 """
