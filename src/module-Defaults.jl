@@ -601,6 +601,7 @@ end
 """
 `Defaults.setDefaults("relativistic subshell list", subshells::Array{Subshell,1}; printout::Bool=true)`  
     ... to (pre-) define internally the standard relativistic subshell list on which the standard order of orbitals is based.
+        Nothing is returned;  the default is set internally.
 """
 function setDefaults(sa::String, subshells::Array{Subshell,1}; printout::Bool=true)
     if        sa == "relativistic subshell list"
@@ -642,6 +643,7 @@ end
 """
 `Defaults.setDefaults("standard grid", grid::Radial.Grid; printout::Bool=true)`  
     ... to (pre-) define internally the standard radial grid which is used to represent most orbitals.
+        Nothing is returned;  the default is set internally.
 """
 function setDefaults(sa::String, grid::Radial.Grid; printout::Bool=true)
     global GBL_STANDARD_GRID
@@ -660,6 +662,7 @@ end
 """
 `Defaults.setDefaults("continuum: potential", scField::Basics.AbstractScField)`  
     ... to (re-) define the potential that is applied for the generation of the continuum orbitals.
+        Nothing is returned;  the default is set internally.
 """
 function setDefaults(sa::String, scField::Basics.AbstractScField)
     global GBL_CONT_POTENTIAL
@@ -770,6 +773,7 @@ end
         
 + `("ordered subshell list: relativistic", n_max::Int64)`   
     ... to give an ordered list of relativistic subshells::Array{Subshell,1} up to the (maximum) principal number n_max.
+        An Array{Shell,1} or an Array{Subshell,1}, depending on the keystring, is returned.
 """
 function getDefaults(sa::String, n_max::Int64)
 
@@ -807,6 +811,7 @@ end
 + `(PrintWarnings)`  ... to print all warnings that are currently kept in the global array GBL_WARNINGS.
 
 + `(ResetWarnings)`  ... to reset the global array GBL_WARNINGS.
+        Nothing is returned;  the warning is appended to the global list.
 """
 function warn(wa::AbstractWarning)
     global GBL_WARNINGS, GBL_WARNINGS_COUNT

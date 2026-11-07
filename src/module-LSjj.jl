@@ -65,6 +65,7 @@ end
 `LSjj.shellStateString(shell::String, occ::Int64, w::Int64, Q::AngularJ64, 
                        L::AngularJ64, S::AngularJ64, LX::AngularJ64, SX::AngularJ64)`  
     ... to provide a string of a given shell state in the form !!To be worked out !! '[2p_1/2^occ]_(seniorityNr, J_sub), X=Xo' ... .
+        A sa::String is returned.
 """
 function shellStateString(shell::String, occ::Int64, w::Int64, Q::AngularJ64, L::AngularJ64, S::AngularJ64, LX::AngularJ64, SX::AngularJ64)
     error("LSjj.shellStateString(): the string form of a shell state is not yet written for this case; "  *
@@ -124,6 +125,7 @@ end
 """
 `Base.:(==)(csfa::CsfNR, csfb::CsfNR)`  
     ... compares (recursively) two nonrelativistic CSFs and return true if all subfields are equal, and false otherwise.
+        A value::Bool is returned.
 """
 function  Base.:(==)(csfa::CsfNR, csfb::CsfNR)
     # It is assumed that both csf's are defined with regard to the same shell list.
@@ -1153,6 +1155,7 @@ end
     ... to return the value of the LS-jj transformation matrix element for a given set of quantum numbers.
         Note that all (generalized) angular momentum quantum numbers except of l must be given twice the original numbers, 
         i.e. for the quantum numbers Q, L, S, J, Qm, Jm, Qp, Jp.
+        A value::Float64 is returned.
 """
 function getLSjjCoefficient(l::Int64, N::Int64, qn::LS_jj_qn)
     global  LS_jj_p_3,  LS_jj_p_4,  LS_jj_p_5,  LS_jj_p_6,  LS_jj_d_3,  LS_jj_d_4,  LS_jj_d_5,  LS_jj_d_6,  LS_jj_d_7,

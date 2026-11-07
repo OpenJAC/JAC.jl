@@ -123,6 +123,7 @@ end
 
 + `("chemical hardness", Z::Int64)`  or  `("chemical hardness", symbol::Symbol)`   
     ... to get the chemical hardness of the neutral atom with nuclear charge Z or symbol.
+        A value::Float64 for every key but "configuration", which gives a conf::Configuration, is returned.
 """
 function getData(sa::String, zsymbol::Union{Int64,Symbol})
     if  typeof(zsymbol) == Symbol   Z = PeriodicTable.getAtomicNumber(zsymbol)    else    Z = zsymbol     end
@@ -152,6 +153,7 @@ end
 + `("mass", Z::Int64)`  or  `("mass", symbol::Symbol)`   
     ... to get mean mass value of the element with nuclear charge Z or symbol
 
+        A value::Float64 is returned -- but ONLY the fine-structure constant, which is the single key this method accepts; every other key RAISES, including the `("mass", Z)` call its own docstring above advertises, and `zsymbol` is never read. Reported to the maintainer 07-Nov-2026.
 """
 function getIsotopeData(sa::String, zsymbol::Union{Int64,Symbol})
 
@@ -494,6 +496,7 @@ const isotopes = Dict{Int64,Array{PeriodicTable.Isotope,1}}(
 """
 `PeriodicTable.bindingEnergies_Larkins1977(Z::Int64)`  
     ... to return the `stored values' of Larkins (1977) which are based on Sevier and others for an element with nuclear charge Z.
+        An Array{Float64,1} of binding energies [in eV] is returned, with -1.0 standing for a subshell whose value this compilation does not give.
 """
 function bindingEnergies_Larkins1977(Z::Int64)
     # This procedure 'stores' the binding energies of the inner-shell electrons 1s, ..., 3d for all elements from Z = 1, ..., 45;
@@ -560,6 +563,7 @@ end
 """
 `PeriodicTable.bindingEnergies_Williams2000(Z::Int64)`  ... former  `store_Williams2000(Z::Int64)`
     ... to return the `stored values' of Williams et al. (2000), ... for the element with nuclear charge Z.
+        An Array{Float64,1} of binding energies [in eV] is returned, with -1.0 standing for a subshell whose value this compilation does not give.
 """
 function bindingEnergies_Williams2000(Z::Int64)
     # This procedure 'stores' the binding energies of the inner-shell electrons 1s, ..., 4p for all elements from Z = 1, ..., 36
@@ -620,6 +624,7 @@ end
 `PeriodicTable.bindingEnergies_XrayDataBooklet(Z::Int64)` 
     ... to return the `stored values' of Bearden et al. (1967), Cardona et al. (1978) and Fuggle et al. (1980) 
         for the element with nuclear charge Z; all binding energies are given in eV.
+        An Array{Float64,1} of binding energies [in eV] is returned, with -1.0 standing for a subshell whose value this compilation does not give.
 """
 function bindingEnergies_XrayDataBooklet(Z::Int64)
 
@@ -825,6 +830,7 @@ end
 """
 `PeriodicTable.ionizationPotentials_Nist2025(Z::Int64)`  
     ... to return the `stored values' of the ionization potentials from NIST (2025) to readily estimate total and relative energies of atoms and ions.
+        An Array{Float64,1} of ionization potentials [in eV] is returned, with -1.0 standing for a subshell whose value this compilation does not give.
 """
 function ionizationPotentials_Nist2025(Z::Int64)
     # This procedure 'stores' the 1st, 2nd, 3rd, ... ionization potentials from NIST database 

@@ -25,6 +25,7 @@ end
 """
 `Basics.read(::ReadMixingFileGrasp18, filename::String)`
     ... reads energies & mixing coefficients from the Grasp18 mixing file filename.
+        NOTHING is returned, because this method cannot run: it calls `Basics.readMixingFileGrasp18(filename)` while the only such method takes `(filename::String, basis::Basis)`, so every call raises `MethodError`. A Grasp18 mixing file carries coefficients indexed against a CSF list, so the basis is genuinely needed. Reported to the maintainer 07-Nov-2026.
 """
 function Basics.read(::ReadMixingFileGrasp18, filename::String)
     return( Basics.readMixingFileGrasp18(filename) )
@@ -812,6 +813,7 @@ end
 """
 `Basics.subshellStateString(subshell::String, occ::Int64, seniorityNr::Int64, Jsub::AngularJ64, X::AngularJ64)`  
     ... to provide a string of a given subshell state in the form '[2p_1/2^occ]_(seniorityNr, J_sub), X=Xo' ... .
+        A sa::String is returned.
 """
 function Basics.subshellStateString(subshell::String, occ::Int64, seniorityNr::Int64, Jsub::AngularJ64, X::AngularJ64)
     sa = "[" * subshell * "^$occ]_($seniorityNr, " * string(Jsub) * ") X=" * string(X)
