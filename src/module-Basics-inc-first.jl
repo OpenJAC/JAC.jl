@@ -315,11 +315,11 @@ Base.:*(a::EmPropertyC, b) = EmPropertyC(a.Coulomb * b, a.Babushkin * b)
 Base.:/(a::EmPropertyC, b::EmPropertyC) = EmPropertyC(a.Coulomb / b.Coulomb, a.Babushkin / b.Babushkin)
 Base.:/(a, b::EmPropertyC) = EmPropertyC(a / b.Coulomb, a / b.Babushkin)
 
-## Completed 13-Aug-2026 so that EmPropertyC can carry an AMPLITUDE, of which EmProperty is the observable.
-## Both act componentwise, which is the point: two gauges are two parallel calculations of the same quantity
-## and must never mix.  A product amplitude * conj(amplitude') therefore keeps Coulomb with Coulomb and
-## Babushkin with Babushkin BY CONSTRUCTION -- where a code that carries the gauge as a label has to
-## remember to compare it (see PhotoIonization.computeAngularBeta, which does exactly that by hand).
+# Completed 13-Aug-2026 so that EmPropertyC can carry an AMPLITUDE, of which EmProperty is the observable.
+# Both act componentwise, which is the point: two gauges are two parallel calculations of the same quantity
+# and must never mix.  A product amplitude * conj(amplitude') therefore keeps Coulomb with Coulomb and
+# Babushkin with Babushkin BY CONSTRUCTION -- where a code that carries the gauge as a label has to
+# remember to compare it (see PhotoIonization.computeAngularBeta, which does exactly that by hand).
 Base.conj(a::EmPropertyC) = EmPropertyC(conj(a.Coulomb), conj(a.Babushkin))
 Base.abs2(a::EmPropertyC) = EmProperty(abs2(a.Coulomb), abs2(a.Babushkin))
 Base.abs(a::EmPropertyC)  = EmProperty(abs(a.Coulomb),  abs(a.Babushkin))
@@ -518,7 +518,7 @@ function shellNotation(l::Int64)
     !(0 <= l <= 21)      &&   return (string(l))
     wa = [ "s", "p", "d", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "q", "r", "t", "u", "v", "w", "x", "y", "z"]
     return( wa[l+1] )  
-    #
+
 end
 
 
@@ -570,8 +570,8 @@ function shellSplitOccupation(sh::Shell, occ::Int64)
                     if  k1 <= j2_1 + 1   &&    k2 <= j2_2 + 1    
                     wb = Dict( subshells[1] => k1, subshells[2] => k2 )
                     # Delete contributions with zero occupation
-                    ## if  k1 == 0    delete!(wb, subshells[1])   end
-                    ## if  k2 == 0    delete!(wb, subshells[2])   end
+                    # if  k1 == 0    delete!(wb, subshells[1])   end
+                    # if  k2 == 0    delete!(wb, subshells[2])   end
                     push!(wa, wb)
                     end
                 else    error("Basics.generate(): this branch handles one or two subshells only; got " *
@@ -613,6 +613,7 @@ struct  Subshell
     shape      ::OrbitalShape
 end
 
+
 """
 `Basics.Subshell(n::Int64, kappa::Int64)`  ... convenience constructor defaulting shape to SCFShape, so every
     existing two-argument call site is unaffected.
@@ -641,8 +642,28 @@ Base.convert(::Type{Subshell}, x::JLD2.ReconstructedStatic{:Subshell, (:n, :kapp
     as `JLD2.ReconstructedStatic` values inside the pair vector regardless of V; this method bridges exactly
     that vector for any V, so no method is needed for each value type V in turn. A `Dict{Subshell,V}` is
     returned, with every key's shape defaulted to SCFShape as the two-argument constructor above does.
+
+    THIS BROAD `x::Vector` METHOD MUST STAY, EVEN THOUGH IT LOOKS REDUNDANT WITH THE NARROWER ONE BELOW.
+    `testModule_Cascade_Simulation` reaches this bridge with x as a concrete `Vector{Any}`, which is not a
+    `Vector{<:Pair}` and so only THIS method matches it. Narrowing or removing this one breaks that path --
+    measured directly, 06-Nov-2026 (see priority list item 10): the saved-dict-as-`Vector{Any}` case failed
+    with `MethodError: Cannot convert an object of type Vector{Any} to an object of type Dict{Subshell, Orbital}`
+    once this method was narrowed instead of kept alongside the new one.
 """
 function JLD2.rconvert(::Type{Dict{Subshell,V}}, x::Vector) where V
+    Dict{Subshell,V}(bridgeSubshellDictKey(p.first) => p.second   for p in x)
+end
+
+
+"""
+`JLD2.rconvert(::Type{Dict{Basics.Subshell,V}}, x::Vector{<:Pair})`  ... the same bridge as the method above, but
+    for the OTHER shape JLD2 hands back when loading a real saved file: a concrete `Vector{Pair{Subshell,Orbital}}`
+    (or similar), which JLD2's own `rconvert(::Type{T}, x::Vector{<:Pair}) where T<:Union{Dict,IdDict}` also claims,
+    making the broad method above ambiguous against it. This method is strictly more specific in BOTH arguments
+    than either competing method, so it resolves the ambiguity without touching the broad method's own case. A
+    `Dict{Subshell,V}` is returned, exactly as the method above returns one.
+"""
+function JLD2.rconvert(::Type{Dict{Subshell,V}}, x::Vector{<:Pair}) where V
     Dict{Subshell,V}(bridgeSubshellDictKey(p.first) => p.second   for p in x)
 end
 bridgeSubshellDictKey(s::Subshell) = s
@@ -1026,7 +1047,7 @@ function Base.string(conf::Configuration, open::Bool)
         for  (shell,occ)  in conf.shells
             if  occ <  2*(2*shell.l + 1)  &&  shell < openShell    openShell = shell   end 
         end
-        #
+
         NoElectrons = 0;       newShells  = Dict{Shell,Int64}()
         CoreElectrons = 0;     coreShells = Dict{Shell,Int64}()
         for  (shell,occ)  in conf.shells
@@ -1059,7 +1080,7 @@ function Base.string(conf::Configuration, open::Bool)
         elseif  coreConf == Configuration("[Hg]")                   sb = "[Hg] "
         else                                                        sb = "[Core] "
         end 
-        #
+
         sa = sb * Base.string(newConf)
     end
 
