@@ -296,16 +296,20 @@ end
         @test TestFrames.testModule_DeepLearning()
     end
 
-    ## ADDED 07-Nov-2026.  These six modules were the ONLY ones in src/ that nothing else in src/
-    ## calls and that no test reached, so nothing but this testset can execute them at all -- the
-    ## four external-format writers, which exist to be called by a user rather than by JAC, and
-    ## SpinAngularTables, which appears in exactly one comment and in no executable line.
-    @testset "JAC exports and tables" begin
+    ## ADDED 07-Nov-2026.  These SEVEN modules were the only ones in src/ that nothing else in src/
+    ## executes and that no test reached, so nothing but this testset can enter them at all: the four
+    ## external-format writers, which exist to be called by a user rather than by JAC;
+    ## SpinAngularTables, which appears in exactly one comment and in no executable line; and
+    ## InteractionStrengthQED, whose five call sites are every one guarded by
+    ## `settings.qedModel != NoneQed()` while every test and every example runs with that default --
+    ## so its two QED models had never been entered by anything.
+    @testset "JAC exports, tables and QED" begin
         @test TestFrames.testModule_ExportDataSet()
         @test TestFrames.testModule_ExportAdas()
         @test TestFrames.testModule_ExportChianti()
         @test TestFrames.testModule_ExportVamdc()
         @test TestFrames.testModule_SpinAngularTables()
+        @test TestFrames.testModule_InteractionStrengthQED()
     end
 
 end

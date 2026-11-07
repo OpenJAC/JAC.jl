@@ -1,5 +1,8 @@
-# Functions in this file cover: the external-format writers and the spin-angular term tables --
-# the modules that nothing else in src/ calls, so that nothing else can exercise them.
+# Functions in this file cover THE MODULES THAT NOTHING ELSE IN src/ EXECUTES, so that nothing but
+# a test can exercise them at all: the four external-format writers, which exist to be called by a
+# user rather than by JAC; the spin-angular term tables, named in exactly one comment and in no
+# executable line; and the two QED models, whose every call site is guarded by
+# `settings.qedModel != NoneQed()` while every test and every example runs with that default.
 # Alphabetical order within this file.
 
 
@@ -271,5 +274,99 @@ function testModule_SpinAngularTables(; short::Bool=true)
     printTest, iostream = Defaults.getDefaults("test flag/stream")
     println(iostream, "Quasispin laws for SpinAngularTables; no coefficient of fractional parentage is compared.")
     testPrint("testModule_SpinAngularTables()::", success)
+    return( success )
+end
+
+
+"""
+`TestFrames.testModule_InteractionStrengthQED(; short::Bool=true)`
+    ... tests on module InteractionStrengthQED, whose two QED models were executed by NOTHING before this
+        test existed:  all five call sites of `qedLocal` in `src/` are guarded by
+        `settings.qedModel != NoneQed()`, and every test and every example runs with the `NoneQed()`
+        default, so the module was loaded and never entered.  A `success::Bool` is returned.
+"""
+function testModule_InteractionStrengthQED(; short::Bool=true)
+    Defaults.setDefaults("print summary: open", "test-InteractionStrengthQED-new.sum")
+    printstyled("\n\nTest the module  InteractionStrengthQED  ... \n", color=:cyan)
+    success = true
+    QED     = JenaAtomicCalculator.InteractionStrengthQED
+
+    # THE CHECKS ARE LAWS, NOT ABSOLUTE VALUES, because the local QED amplitude depends on the grid while
+    # none of the laws below does.  Measured 07-Nov-2026 on rbox = 10 a.u. (Z = 40) and 6 a.u. (Z = 80):
+    #
+    #   1s_1/2  QedSydney      +0.5105   ->  +3.4936      a ratio of 6.84 over Z = 40 -> 80
+    #   1s_1/2  QedPetersburg  +0.5995   ->  +5.9372      a ratio of 9.90
+    #   2p_1/2  QedSydney      -0.0119   ->  -0.3444
+    #   2p_1/2  QedPetersburg  -0.0015   ->  +0.0865
+    #
+    # The numbers are recorded so that a later reader can see what the laws were calibrated against, and
+    # are NOT asserted:  a different box would move them and none of the laws would notice.
+    amp = Dict{Tuple{Int64,String,String},Float64}()
+    for  (Z, rbox)  in  [(40.0, 10.0), (80.0, 6.0)]
+        nm   = Nuclear.Model(Z)
+        grid = Radial.Grid(Radial.Grid(false); rnt = 2.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = rbox)
+        pot  = Nuclear.nuclearPotential(nm, grid)
+        for  sh  in  [Subshell("1s_1/2"), Subshell("2p_1/2")]
+            orbital = redirect_stdout(devnull) do
+                HydrogenicIon.radialOrbital(sh, nm, grid)   end
+            for  (name, model)  in  [("Sydney", QedSydney()), ("Petersburg", QedPetersburg())]
+                wa = redirect_stdout(devnull) do
+                    QED.qedLocal(orbital, orbital, nm, model, pot, grid)   end
+                amp[(round(Int64, Z), string(sh), name)] = wa
+                if  !isfinite(wa)  ||  wa == 0.
+                    success = false;   println("** qedLocal gives $wa for $sh, $name at Z = $Z")        end
+            end
+        end
+    end
+
+    for  name  in  ["Sydney", "Petersburg"]
+        # THE 1s SHIFT IS POSITIVE.  The self-energy dominates the local QED correction and it REDUCES the
+        # binding, so a negative 1s amplitude is a sign error rather than a small number.
+        for  Z  in  [40, 80]
+            if  amp[(Z, "1s_1/2", name)] <= 0.
+                success = false
+                println("** the 1s QED shift is not positive for $name at Z = $Z:  $(amp[(Z,"1s_1/2",name)])")  end
+        end
+        # 1s IS FAR LARGER THAN 2p_1/2, because the local correction is concentrated at the nucleus and a
+        # 2p electron is hardly there.  A factor of at least four is well inside the measured 10 to 400.
+        for  Z  in  [40, 80]
+            if  abs(amp[(Z, "1s_1/2", name)]) < 4 * abs(amp[(Z, "2p_1/2", name)])
+                success = false
+                println("** 1s does not dominate 2p_1/2 for $name at Z = $Z")                           end
+        end
+        # AND IT GROWS STEEPLY WITH Z.  A self-energy goes as Z^4 F(Z alpha) with F falling, so doubling Z
+        # multiplies the 1s amplitude by rather less than 16;  measured 6.84 and 9.90.  The band 3 to 20
+        # catches a broken Z dependence or a constant standing in for one, and tolerates either model.
+        ratio = amp[(80, "1s_1/2", name)] / amp[(40, "1s_1/2", name)]
+        if  !(3.0 < ratio < 20.0)
+            success = false;   println("** the 1s Z-growth for $name is $ratio, outside 3 to 20")        end
+    end
+
+    # THE TWO MODELS MUST DIFFER.  They share the Uehling term and differ in the self-energy, so equal
+    # amplitudes would mean one model had silently fallen through to the other.
+    for  Z  in  [40, 80]
+        if  amp[(Z, "1s_1/2", "Sydney")] == amp[(Z, "1s_1/2", "Petersburg")]
+            success = false;   println("** the two QED models give the same 1s amplitude at Z = $Z")     end
+    end
+
+    # AND `NoneQed()` MUST RAISE.  That is why all five call sites in `src/` carry a
+    # `settings.qedModel != NoneQed()` guard, and a caller who removed one would get an error rather than
+    # a silent zero -- which is the right behaviour and worth pinning.
+    nm   = Nuclear.Model(40.0)
+    grid = Radial.Grid(Radial.Grid(false); rnt = 2.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
+    orbital = redirect_stdout(devnull) do
+        HydrogenicIon.radialOrbital(Subshell("1s_1/2"), nm, grid)   end
+    try    redirect_stdout(devnull) do
+               QED.qedLocal(orbital, orbital, nm, NoneQed(), Nuclear.nuclearPotential(nm, grid), grid)   end
+           success = false;   println("** qedLocal accepted NoneQed() instead of raising")
+    catch  ex
+        if  !isa(ex, ErrorException)
+            success = false;   println("** qedLocal(NoneQed()) raised $(typeof(ex)), not an error")      end
+    end
+
+    Defaults.setDefaults("print summary: close", "")
+    printTest, iostream = Defaults.getDefaults("test flag/stream")
+    println(iostream, "Sign, ordering and Z-growth laws for both QED models; no absolute value is compared.")
+    testPrint("testModule_InteractionStrengthQED()::", success)
     return( success )
 end
