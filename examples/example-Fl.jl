@@ -29,7 +29,7 @@ function resonantCascadeFile()
         catch e println(">> skipping $f -- it cannot be loaded: ", first(split(sprint(showerror, e), "\n")));   continue
         end
         res = d["results"]
-        if  !( haskey(res, "impact-excitation lines:")  &&  length(res[ImpactExcitation.Settings]) > 0 )
+        if  !( haskey(res, "impact-excitation lines:")  &&  length(res["impact-excitation lines:"]) > 0 )
             println(">> resonant cascade data from  $f");    return( (f, d) )
         end
     end
@@ -79,6 +79,10 @@ if  true
 elseif  false
     # Last visit:  07-Nov-2026   (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last visit:  20-Oct-2026 (NEEDS AN EARLIER BRANCH OF THIS FILE)
+    # Last reproduced:  07-Nov-2026 (2 of 2 totals on the claim line, plus 79 of 79 branching sums at 1.00000000)
+    #   -- this run also fixed a real bug in resonantCascadeFile() (defined near the top of this file, before
+    #   branch a) that had been crashing every branch past branch a with a KeyError; see priority list item 11's
+    #   Fl.jl entry.
     # Last successful:  23-Aug-2026
     #   [PROVENANCE: as branch a.]  Seconds; no amplitude is recomputed.
     #   79 resonances.  Totals, energy-integrated and in atomic units:
@@ -183,7 +187,7 @@ elseif  false
             println(">> skipping $f -- it cannot be loaded: ", first(split(sprint(showerror, e), "\n")))
         end
     end
-    hasExc(d) = haskey(d["results"], "impact-excitation lines:")  &&  length(d["results"][ImpactExcitation.Settings]) > 0
+    hasExc(d) = haskey(d["results"], "impact-excitation lines:")  &&  length(d["results"]["impact-excitation lines:"]) > 0
     iEA  = findfirst(p ->  hasExc(p[2]), loaded)
     iRes = findfirst(p -> !hasExc(p[2]), loaded)
     if  iEA  === nothing  error("No loadable cascade file with impact-excitation lines: run example-Fi.jl branch a.")  end
