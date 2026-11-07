@@ -39,7 +39,11 @@ reading a sample of what it changes.
        to repair where `src/` holds none at all.
    10. A COMMENT INSIDE A `#= ... =#` BLOCK is part of a deliberately disabled block, which
        Rule 15 keeps verbatim;  it is counted separately rather than offered as work.
-   11. AN APPENDED `##` IN A DATA TABLE IS A ROW INDEX.  `module-LSjj-inc.jl` alone carries
+   11. A NESTED LOCAL HELPER NEEDS NO DOCSTRING OF ITS OWN.  `module-RadialIntegrals.jl`
+       defines the Slater kernel as a two-line `ul(r, s)` inside each parent whose docstring
+       already states the integral;  all ten of that file's reported missing docstrings are of
+       that kind.  Counting them put the tree-wide figure at 154 against a true 36.
+   12. AN APPENDED `##` IN A DATA TABLE IS A ROW INDEX.  `module-LSjj-inc.jl` alone carries
        20541 of them, numbering the jj-LS coefficient rows against the published tables.
        They are reported separately from ordinary appended comments and are never swept.
 """
@@ -157,8 +161,9 @@ def audit(path):
             r["funcs"] += 1
             name = m.group(2)
             r["qualified" if "." in name else "bare"] += 1
+            nested = bool(m.group(1)) and ("function" in stack or "struct" in stack)
             if not m.group(1):                 pass
-            elif "function" in stack or "struct" in stack:  r["nestedFunc"] += 1
+            elif nested:                       r["nestedFunc"] += 1
             else:  r["indentedTop"] += 1;      sites["indentedTop"].append(i+1)
             args = splitArgs(signature(L, i).split("(", 1)[-1].rsplit(")", 1)[0])
             if args and not all("::" in a or "=" in a or "..." in a for a in args):
@@ -169,6 +174,7 @@ def audit(path):
             if j >= 0 and L[j].strip().endswith('"""') and doc[j]:
                 pass
             elif TRIVIAL.match(name):  r["noDocTrivial"] += 1
+            elif nested:               r["noDocNested"] += 1
             else:                      r["noDoc"] += 1;  sites["noDoc"].append(i+1)
         if doc[i] or l.strip().startswith("#"):  continue
         if BLOCK.match(l) and not re.search(r'\bend\b\s*$', l) and not re.match(r'^\s*\w+\s*\(.*\)\s*=', l):
@@ -231,7 +237,8 @@ ROWS = [("funcs",           "function definitions"),
         ("inDisabledBlock",  "   comment lines inside `#= ... =#`, kept"),
         ("", ""),
         ("noDoc",           "functions with no docstring"),
-        ("noDocTrivial",    "   of those, trivial Base.* methods (exempt)"),
+        ("noDocTrivial",    "   also: trivial Base.* methods (exempt)"),
+        ("noDocNested",     "   also: nested local helpers (exempt)"),
         ("noReturnStated",  "docstrings not stating the return value"),
         ("sigMismatch",     "docstring signatures disagreeing with the code"),
         ("noSigInDoc",      "docstrings carrying no signature at all"),
