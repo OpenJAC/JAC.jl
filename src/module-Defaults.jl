@@ -135,7 +135,7 @@ GBL_STANDARD_GRID            = Radial.Grid(true, printout=false)
 + `("cross section: from predefined to atomic unit", value::Float64)`  or  `("cross section: to atomic", value::Float64)`
     ... to convert a cross section value from the predefined to the atomic cross section unit; a Float64 is returned.
 
-+ `("einstein B: from atomic", value::Float64)`  
++ `("Einstein B: from atomic", value::Float64)`  
     ... to convert a Einstein B coefficient from atomic to the speficied energy units; a Float64 is returned.
 
 + `("density: from [g/cm^3] to atomic", value::Float64)`  
@@ -406,9 +406,6 @@ end
         re-run the SCF/CI machinery at a slightly shifted alpha. Defaults.FINE_STRUCTURE_CONSTANT and
         Defaults.INVERSE_FINE_STRUCTURE_CONSTANT are updated together so they never go out of sync.
 
-+ `("QED model: Petersburg")`  or  `("QED model: Sydney")`   
-    ... to define a model for the computation of the QED corrections following the work by Shabaev et al. (2011; Petersburg) 
-        or Flambaum and Ginges (2004; Syney).
 
 + `("unit: energy", "eV")`  or  `("unit: energy", "Kayser")`  or  `("unit: energy", "Hartree")`  or  
     `("unit: energy", "Hz")`  or  `("unit: energy", "Hz")`  
@@ -419,8 +416,9 @@ end
 
 + `("unit: rate", "a.u.")`  or  `("unit: rate", "1/s")`  ... to (pre-) define the unit for the printout of rates.
 
-+ `("unit: resonance strength", "a.u.")`  or  `("unit: resonance strength", "barn eV")`  or  
-    `("unit: resonance strength", "cm^2 eV")`  ... to (pre-) define the unit for the printout of resonance strengths.
++ `("unit: strength", "a.u.")`  or  `("unit: strength", "barn eV")`  or  `("unit: strength", "cm^2 eV")`
+    ... to (pre-) define the unit for the printout of resonance strengths.  The keystring is `"unit: strength"`;
+        until 07-Nov-2026 this block offered `"unit: resonance strength"`, which the code has never accepted.
 
 + `("unit: time", "a.u.")`  or  `("unit: time", "sec")`  or  `("unit: time", "fs")`  or  `("unit: time", "as")`  
     ... to (pre-) define the unit for the printout and communications of times with the JAC module.
@@ -660,7 +658,7 @@ end
 
 
 """
-`Defaults.setDefaults("continuum: potential", scField::Basics.AbstractScField)`  
+`Defaults.setDefaults("continuum: SCF potential", scField::Basics.AbstractScField)`  
     ... to (re-) define the potential that is applied for the generation of the continuum orbitals.
         Nothing is returned;  the default is set internally.
 """

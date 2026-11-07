@@ -802,8 +802,6 @@ end
     ... to construct an instance::Multiplet from the Grasp92/Ratip2012 .csl, .rwf and .mix files.  Some consistency 
         checks are made and the method terminates with an error message if the files don't fit together. 
     
-+ `("from Grasp2018", cslFilename::String, rwfFilename::String, mixFilename::String)` 
-    ... to do the same but for files from Grasp2018.
         A `multiplet::ManyElectron.Multiplet` is returned.
 """
 function Multiplet(sa::String, cslFilename::String, rwfFilename::String, mixFilename::String)

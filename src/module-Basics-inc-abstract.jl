@@ -3718,6 +3718,14 @@ export  AbstractEstimateTheme, EstimateIonizationPotentialInnerShell,
 abstract type  AbstractReadFileTheme                                           end
 struct         ReadCslFileGrasp92     <:  AbstractReadFileTheme                end
 struct         ReadOrbitalFileGrasp92 <:  AbstractReadFileTheme                end
+# ReadMixingFileGrasp18 IS CURRENTLY USED BY NOTHING, and that is a known state rather than an
+# oversight.  Its `Basics.read(::ReadMixingFileGrasp18, filename::String)` method was DELETED on
+# 07-Nov-2026 at the maintainer's decision, because it could never run: it passed one argument to
+# `Basics.readMixingFileGrasp18`, whose only method takes `(filename::String, basis::Basis)`, and
+# a Grasp18 mixing file carries coefficients indexed against a CSF list, so the basis cannot be
+# invented.  A caller reads such a file with `Basics.readMixingFileGrasp18(filename, basis)`.
+# The type is kept and still exported;  whether it should be retired is a separate question and
+# the maintainer's.
 struct         ReadMixingFileGrasp18  <:  AbstractReadFileTheme                end
 
 @doc "... read a CSF list from a Grasp92 .csl / GRASP18 .c file."                                                                   ReadCslFileGrasp92

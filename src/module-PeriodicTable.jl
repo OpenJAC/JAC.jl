@@ -147,13 +147,16 @@ end
 
 
 """
-`PeriodicTable.getIsotopeData()`  
-    ... provides various data from the periodic table of elements. Not yet implemented.
-
-+ `("mass", Z::Int64)`  or  `("mass", symbol::Symbol)`   
-    ... to get mean mass value of the element with nuclear charge Z or symbol
-
-        A value::Float64 is returned -- but ONLY the fine-structure constant, which is the single key this method accepts; every other key RAISES, including the `("mass", Z)` call its own docstring above advertises, and `zsymbol` is never read. Reported to the maintainer 07-Nov-2026.
+`PeriodicTable.getIsotopeData(sa::String, zsymbol::Union{Int64,Symbol})`
+    ... A STUB, and the docstring says so rather than advertising a call that raises.  THE ONLY
+        ACCEPTED KEYSTRING is "alpha" or "fine-structure constant alpha", which gives back
+        `FINE_STRUCTURE_CONSTANT`;  every other keystring raises, and `zsymbol` IS NOT READ AT
+        ALL.  Isotope data is not implemented here -- `PeriodicTable.Isotope` is the type meant
+        to carry it, and filling it needs isotope masses and abundances from a source still to
+        be chosen and cited.  Until 07-Nov-2026 this docstring offered a mass keystring, which
+        has never existed -- written here in words rather than as a call, because
+        `tools/checkDocstringKeystrings.py` cannot tell an offer from a record of a withdrawn
+        one and would read the example back as a live promise.  A value::Float64 is returned.
 """
 function getIsotopeData(sa::String, zsymbol::Union{Int64,Symbol})
 

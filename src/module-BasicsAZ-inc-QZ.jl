@@ -23,16 +23,6 @@ end
 
 
 """
-`Basics.read(::ReadMixingFileGrasp18, filename::String)`
-    ... reads energies & mixing coefficients from the Grasp18 mixing file filename.
-        NOTHING is returned, because this method cannot run: it calls `Basics.readMixingFileGrasp18(filename)` while the only such method takes `(filename::String, basis::Basis)`, so every call raises `MethodError`. A Grasp18 mixing file carries coefficients indexed against a CSF list, so the basis is genuinely needed. Reported to the maintainer 07-Nov-2026.
-"""
-function Basics.read(::ReadMixingFileGrasp18, filename::String)
-    return( Basics.readMixingFileGrasp18(filename) )
-end
-
-
-"""
 Basics.readCslFileGrasp92(filename::String)`  
     ... reads in the CSF list from a Grasp92 .csl / GRASP18 .c file; a basis::Basis is returned.
 """
