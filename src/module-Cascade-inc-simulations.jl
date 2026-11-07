@@ -57,6 +57,7 @@ end
 """
 `Cascade.assignOccupation!(levels::Array{Cascade.Level,1}, property::AbstractSimulationProperty)` 
     ... assigns the occupation due to the given property
+        Nothing is returned;  the levels are modified in place.
 """
 function assignOccupation!(levels::Array{Cascade.Level,1}, property::AbstractSimulationProperty)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
@@ -732,6 +733,7 @@ end
     ... carries out the simulation that the given property asks for, by the given method. A method is defined
         for every supported (property, method) combination; this fallback catches the rest and names what is
         missing, rather than letting the request pass silently.
+        NOTHING is returned because this method RAISES:  it is the fallback for a property and method combination that is not implemented.
 """
 function simulate(property::Cascade.AbstractSimulationProperty, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)
@@ -746,6 +748,7 @@ end
 """
 `Cascade.simulate(property::Cascade.PhotoAbsorptionSpectrum, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)`   ... simulates the photo-absorption spectrum.
+        The absorption cross sections are returned as lists, as `Cascade.simulatePhotoAbsorptionSpectrum` gives them.
 """
 function simulate(property::Cascade.PhotoAbsorptionSpectrum, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)
@@ -772,6 +775,7 @@ end
 """
 `Cascade.simulate(property::Cascade.IonDistribution, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)`   ... simulates the final ion (charge-state) distribution.
+        Nothing is returned.
 """
 function simulate(property::Cascade.IonDistribution, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)
@@ -783,6 +787,7 @@ end
 """
 `Cascade.simulate(property::Cascade.FinalLevelDistribution, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)`   ... simulates the final level distribution.
+        Nothing is returned.
 """
 function simulate(property::Cascade.FinalLevelDistribution, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)
@@ -794,6 +799,7 @@ end
 """
 `Cascade.simulate(property::Cascade.PhotonIntensities, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)`   ... simulates the emitted photon (fluorescence) spectrum.
+        Nothing is returned.
 """
 function simulate(property::Cascade.PhotonIntensities, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)
@@ -805,6 +811,7 @@ end
 """
 `Cascade.simulate(property::Cascade.ElectronIntensities, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)`   ... simulates the emitted electron (Auger) spectrum.
+        An `energiesInts::Array{Tuple{Float64,Float64},1}` of (energy, relative intensity) is returned.
 """
 function simulate(property::Cascade.ElectronIntensities, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)
@@ -816,6 +823,7 @@ end
 """
 `Cascade.simulate(property::Cascade.RelaxationCurve, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)`   ... simulates the mean relaxation time of the cascade.
+        A tuple of two `Array{Float64,1}` -- the relaxation percentages and the mean relaxation times belonging to them -- is returned.
 """
 function simulate(property::Cascade.RelaxationCurve, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)
@@ -827,6 +835,7 @@ end
 """
 `Cascade.simulate(property::Cascade.ParticleCoincidences, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)`   ... simulates a coincidence spectrum.
+        An `Array{Tuple{Float64,Float64},1}` of (energy, intensity) is returned.
 """
 function simulate(property::Cascade.ParticleCoincidences, method::Cascade.ProbPropagation,
                   simulation::Cascade.Simulation)
@@ -838,6 +847,7 @@ end
 """
 `Cascade.simulate(property::Cascade.DrRateCoefficients, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)`   ... simulates dielectronic-recombination rate coefficients.
+        Nothing is returned.
 """
 function simulate(property::Cascade.DrRateCoefficients, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)
@@ -849,6 +859,7 @@ end
 """
 `Cascade.simulate(property::Cascade.ResonantIonizationStrengths, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)`   ... simulates the resonant contribution to electron-impact ionization.
+        Nothing is returned.
 """
 function simulate(property::Cascade.ResonantIonizationStrengths, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)
@@ -988,6 +999,7 @@ end
 """
 `Cascade.simulate(property::Cascade.RrRateCoefficients, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)`   ... simulates radiative-recombination rate coefficients.
+        An `Array{Basics.EmProperty,1}` of RR plasma rate coefficients is returned.
 """
 function simulate(property::Cascade.RrRateCoefficients, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)
@@ -1002,6 +1014,7 @@ end
 """
 `Cascade.simulate(property::Cascade.ExpansionOpacities, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)`   ... simulates expansion opacities.
+        An `Array{Basics.EmProperty,1}` in [cm^2/g], one entry per `property.dependencyValues`, is returned.
 """
 function simulate(property::Cascade.ExpansionOpacities, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)
@@ -1013,6 +1026,7 @@ end
 """
 `Cascade.simulate(property::Cascade.MeanOpacities, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)`   ... simulates mean (Rosseland or Planck) opacities.
+        An `Array{Basics.EmProperty,1}` carrying the mean opacities, in the order they are printed, is returned.
 """
 function simulate(property::Cascade.MeanOpacities, method::Cascade.AbstractSimulationMethod,
                   simulation::Cascade.Simulation)
@@ -1024,6 +1038,7 @@ end
 """
 `Cascade.propagateOccupationInTime!(levels::Array{Cascade.Level,1}, dt::Float64)` 
     ... propagates the occupation of the levels by dt in time. 
+        Nothing is returned;  the levels' occupations are modified in place.
 """
 function propagateOccupationInTime!(levels::Array{Cascade.Level,1}, dt::Float64)
     # Exact for one time step, at ANY dt: the probability that a level has decayed at all after dt is
@@ -2324,8 +2339,11 @@ end
 """
 `Cascade.simulateRelaxationCurve(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)` 
     ... determine the mean relaxation time until 70%, 80%, 90%  of the initially occupied levels decay down to
-        the ground configurations. An relaxTimes::Array{Float64,1} is returned that contains the
-        mean relaxation times for 70%, 80%, 90%, ...
+        the ground configurations.  A TUPLE of two `Array{Float64,1}` is returned: the relaxation
+        percentages [0.7, 0.8, 0.9] and the mean relaxation times belonging to them.  Until
+        07-Nov-2026 this said an `relaxTimes::Array{Float64,1}` alone, which the code has never
+        returned -- `return( relaxPercentage, relaxTimes )` -- so a caller taking the value as one
+        array got the percentages and silently lost the times.
 """
 function simulateRelaxationCurve(levels::Array{Cascade.Level,1}, simulation::Cascade.Simulation)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
@@ -2824,6 +2842,7 @@ end
 `Cascade.simulateRrRateCoefficients(lines::Array{PhotoRecombination.Line,1}, simulation)` 
     ... Integrates over all selected cross sections in order to determine the RR plasma rate coefficients for a Maxwellian
         distribution.
+        An `alphaRR::Array{Basics.EmProperty,1}` of RR plasma rate coefficients is returned.
 """
 function simulateRrRateCoefficients(lines::Array{PhotoRecombination.Line,1}, simulation)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
@@ -2882,6 +2901,7 @@ end
 """
 `Cascade.sortByEnergy(levels::Array{Cascade.Level,1}; ascendingOrder::Bool=false)` 
     ... sorts all levels by energy and assigns the occupation as given by the simulation
+        An `Array{Cascade.Level,1}`, sorted by energy, is returned.
 """
 function sortByEnergy(levels::Array{Cascade.Level,1}; ascendingOrder::Bool=false)
     printSummary, iostream = Defaults.getDefaults("summary flag/stream")
