@@ -141,6 +141,9 @@ if  true
     #
 elseif  false
     # Last visit:  07-Nov-2026
+    # Last reproduced:  07-Nov-2026 (4000 A: 5.311601e-02 against the quoted 5.311656e-02, last-digit only;
+    #   2000/3000/5000/12000-17000 A all match within rounding) -- also confirms the "BOX TOO SMALL" warning
+    #   this branch prints (priority list item 11) is a false positive.
     # Last visit:  20-Oct-2026
     # Last successful:  09-Aug-2026
     #
@@ -187,6 +190,10 @@ elseif  false
     #
 elseif  false
     # Last visit:  07-Nov-2026
+    # Last reproduced:  07-Nov-2026 (thick end exact to all printed digits at scale 1e0/1e2; thin end 4000A
+    #   9.473817e+05 against quoted 9.474e+05, 15000A Cou/Bab 1.136490e+03/3.791241e+03 against quoted
+    #   1.137e+03/3.791e+03) -- also confirms the "BOX TOO SMALL" warning this branch prints (priority list
+    #   item 11) is a false positive.
     # Last visit:  20-Oct-2026
     # Last successful:  09-Aug-2026
     #

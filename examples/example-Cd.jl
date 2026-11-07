@@ -45,6 +45,10 @@ elseif  false
 elseif  false
     # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
+    # Last reproduced:  07-Nov-2026 (2 of 2 g_J values to 6 decimals: 1.14318192, 0.856804696)
+    #   -- also confirms the "BOX TOO SMALL" warning this branch prints (priority list item 11, Z_eff=2 on the
+    #   naive screen) is a false positive: the already carefully-matched rbox=30 box still triggers the
+    #   extent/box heuristic (0.973 against the 0.90 limit) while the six-decimal literature match is intact.
     # Last successful:  10-Aug-2026
     # Branch c: Ge II (Z=32) 4s^2 4f (2)F_5/2,7/2, the paper's own single-f-electron test case (their label
     #   "4s^2 4f^2" cannot literally mean two f-electrons -- equivalent f^2 gives only singlet/triplet terms,

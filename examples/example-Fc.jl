@@ -166,6 +166,9 @@ elseif  false
     #
 elseif  false
     # Last visit:  07-Nov-2026
+    # Last reproduced:  07-Nov-2026 (same 2 configs excluded, same energy -69.67304049145234 a.u., 11 lines)
+    #   -- also confirms the "BOX TOO SMALL" warning this branch prints (priority list item 11) is a false
+    #   positive: the dated result is unaffected by it.
     # Last visit:      06-Aug-2026
     # Last successful: 06-Aug-2026 ... filter verified to act, but far more loosely than intended; 2 of 3
     #                  configurations excluded, 1 step and 11 lines survive.  Warm cost ~4 s.
