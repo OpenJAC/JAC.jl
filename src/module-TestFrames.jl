@@ -234,6 +234,7 @@ include("module-TestFrames-inc-plasma.jl")
 include("module-TestFrames-inc-strongfield.jl")
 include("module-TestFrames-inc-liouville.jl")
 include("module-TestFrames-inc-deep-learning.jl")
+include("module-TestFrames-inc-export.jl")
 
 
 end # module

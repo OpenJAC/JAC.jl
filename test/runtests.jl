@@ -296,6 +296,18 @@ end
         @test TestFrames.testModule_DeepLearning()
     end
 
+    ## ADDED 07-Nov-2026.  These six modules were the ONLY ones in src/ that nothing else in src/
+    ## calls and that no test reached, so nothing but this testset can execute them at all -- the
+    ## four external-format writers, which exist to be called by a user rather than by JAC, and
+    ## SpinAngularTables, which appears in exactly one comment and in no executable line.
+    @testset "JAC exports and tables" begin
+        @test TestFrames.testModule_ExportDataSet()
+        @test TestFrames.testModule_ExportAdas()
+        @test TestFrames.testModule_ExportChianti()
+        @test TestFrames.testModule_ExportVamdc()
+        @test TestFrames.testModule_SpinAngularTables()
+    end
+
 end
 
 ## Clean the run debris.  Each cascade computation dumps its results to a zzz-*.jld file whose name carries the date and the
