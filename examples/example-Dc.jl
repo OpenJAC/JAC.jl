@@ -145,6 +145,16 @@ elseif false
     #
 elseif false
     # Last successful:  2-Aug-2026
+    #   CAUTION, 07-Nov-2026 (priority list item 9): this branch now raises `Continuum.normalizeOrbitalPureSine():
+    #   STOP` under the file's own "pure sine" default (line 6) at e_p = 19.8 eV, the exact point quoted two lines
+    #   below. Switching this branch alone to `setDefaults("method: normalization, Coulomb functions")` clears the
+    #   crash, but the Coulomb cross section at that SAME point comes out 2.366243e-02 Mbarn, not the 0.10862 Mbarn
+    #   quoted below -- a factor ~4.6, not a rounding difference. VERIFIED BOX-INSENSITIVE: identical to the last
+    #   printed digit at rbox = 10 and rbox = 20. So the NEW number is the one that does not depend on an arbitrary
+    #   box size; the OLD quoted number almost certainly does, exactly the failure item 9 describes elsewhere. THE
+    #   DATE BELOW IS NOT CONFIRMED BY THIS -- it is left for a human to judge whether the new number should
+    #   replace it (Rule 7). The `setDefaults("method: normalization, Coulomb functions")` line needed for this
+    #   branch to run at all IS now added below, just before `useBiorthogonal = false`.
     # Branch E: Li-like iron photoionization (test case from the FAC/User Guide), WITHOUT vs. WITH the
     #   bi-orthogonal transformation (calcBiorthogonal) -- the vehicle for the continuum-electron
     #   biorthogonal discussion at the top of this file. finalConfigs EXPANDED to also include "1s 2s" and
@@ -166,6 +176,9 @@ elseif false
     #   genuinely changing gauge agreement, not just uniformly rescaling both gauges) -- an encouraging,
     #   though not yet rigorously proven (see discussion above), result for the N-vs-(N-1)-electron case.
     useBiorthogonal = false
+    setDefaults("method: normalization, Coulomb functions")  ## item 9: the file's own "pure sine" default (line 6)
+                                                               ## cannot represent this branch's lowest photoelectron
+                                                               ## energy; Coulomb functions are box-insensitive (Rule 12)
     setDefaults("unit: energy", "eV")
     setDefaults("unit: cross section", "Mbarn")
     e1 = 1.01 * 75.20911382458269  * 27.21

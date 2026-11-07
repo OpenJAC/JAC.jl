@@ -110,6 +110,16 @@ if  true
     wb = perform(wa)
     #
 elseif  false
+    # CAUTION, 07-Nov-2026 (priority list item 9): under the file's own "pure sine" default (line 6) this branch
+    # raises `Continuum.normalizeOrbitalPureSine(): STOP` at 1 and 10 eV. Switched to
+    # `setDefaults("method: normalization, Coulomb functions")` below, box-insensitive per Rule 12; the full
+    # 1/10/100/1000/10000 eV run then completes with Coulomb/Babushkin = 6.978810e5/6.759488e5, 6.968704e4/
+    # 6.749030e4, 6.869268e3/6.646336e3, 6.012328e2/5.775417e2, 2.610175e1/2.488880e1 barn. AT LOW ENERGY THESE
+    # DIFFER HUGELY from the quoted claim below (1 eV: factor 7.5x; 10 eV: factor 2.6x; 100 eV: 21 %), shrinking
+    # to near-agreement at high energy (1000 eV: 2.7 %; 10 keV: 0.3 %) -- exactly the box-sensitivity item 9
+    # predicts, and the SAME pattern independently confirmed on `example-Dc.jl`'s branch E (there verified
+    # box-insensitive to the last printed digit at rbox=10 and rbox=20). THE DATE BELOW IS NOT CONFIRMED BY
+    # THIS -- left for a human to judge (Rule 7) whether some or all of these five points should be replaced.
     # Last successful:  28-Aug-2026 -- Coulomb/Babushkin 5.255384e6/5.089325e6, 1.823885e5/1.766079e5,
     # 8683.07/8399.78, 617.688/593.243, 26.0111/24.7985 barn @ 1/10/100/1000/10000 eV; gauge agreement 3.2, 3.2,
     # 3.3, 4.0, 4.7 %. THE PRE-FIX BABUSHKIN DIGITS THIS BRANCH USED TO CARRY ARE NOW REPLACED: Coulomb is
@@ -127,6 +137,8 @@ elseif  false
     # Comparison: Ichihara & Eichler, Atomic Data and Nuclear Data Tables (2000), "Cross sections for radiative
     # recombination and the photoelectric effect in the K, L, and M shells of one-electron systems with 1 <= Z <= 112" --
     # Z=18 is one of their tabulated benchmark charges (also used in the angle-differential follow-up, ADNDT 79, 187 (2001)).
+    setDefaults("method: normalization, Coulomb functions")  ## item 9: the file's own "pure sine" default (line 6)
+                                                               ## raises STOP at 1/10 eV; see the CAUTION note above.
     gridDd2 = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.8e-2, rbox = 10.0)
     pSettings = PhotoRecombination.Settings(PhotoRecombination.Settings(), multipoles = [E1, M1, E2, M2], gauges = [UseCoulomb, UseBabushkin],
                                             electronEnergies = [1., 10., 100., 1000., 10000.], calcTotalCs = true, printBefore = true, maxKappa = 4 )
@@ -142,6 +154,13 @@ elseif  false
     # Last visit:  07-Nov-2026   (RAISED -- see priority item 9)
     # Last visit:  20-Oct-2026
     # Last reproduced:  20-Oct-2026 (10 of 10 numbers on the claim line)
+    # CAUTION, 07-Nov-2026 (priority list item 9): same STOP as the K-shell branch above, same fix (
+    # `setDefaults("method: normalization, Coulomb functions")` below). Full run completes: Coulomb/Babushkin =
+    # 1.922227e5/1.862215e5, 1.904260e4/1.844395e4, 1747.034/1688.912, 103.4863/99.44345, 2.450204/2.421295 barn
+    # @ 1/10/100/1000/10000 eV. SAME RATIO PATTERN as the K-shell branch, almost point for point: 1 eV low by a
+    # factor 7.7x, 10 eV by 2.5x, 100 eV by 20 %, 1000 eV by 2.5 %, 10 keV AGREEING to 0.3 % -- strong evidence
+    # of one systematic mechanism (item 9's box-sensitivity), not noise. THE DATE BELOW IS NOT CONFIRMED BY
+    # THIS -- left for a human to judge (Rule 7).
     # Last successful:  28-Aug-2026 -- total (all 5 final shells summed) Coulomb/Babushkin 1.487028e6/1.440833e6,
     # 4.745413e4/4.596358e4, 2171.93/2099.70, 106.140/101.994, 2.44322/2.41439 barn @ 1/10/100/1000/10000 eV, i.e.
     # gauge agreement 3.1, 3.1, 3.3, 3.9, 1.2 %. THIS BRANCH HAD NEVER QUOTED BABUSHKIN AT ALL; those digits are new
@@ -155,6 +174,7 @@ elseif  false
     # same energies as the K-shell branch above. Same reference (Ichihara & Eichler, ADNDT 2000) -- this and the
     # previous branch together restore that reference's original K+L+M-shell comparison intent (previously only the
     # K-shell part was active, and at an inconsistent Z between the code and its comment).
+    setDefaults("method: normalization, Coulomb functions")  ## item 9: see the CAUTION note above
     gridDd3 = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.8e-2, rbox = 10.0)
     pSettings = PhotoRecombination.Settings(PhotoRecombination.Settings(), multipoles = [E1, M1, E2, M2], gauges = [UseCoulomb, UseBabushkin],
                                             electronEnergies = [1., 10., 100., 1000., 10000.], calcTotalCs = true, printBefore = true, maxKappa = 4 )
@@ -169,6 +189,14 @@ elseif  false
     #
 elseif  false
     # Last visit:  20-Oct-2026
+    # CAUTION, 07-Nov-2026 (priority list item 9): raises the same STOP under "pure sine" normalization; same
+    # fix below. Result: Coulomb/Babushkin = 1117.031/1120.096, 109.1157/109.1782, 6.987381/6.948167 barn @
+    # 1.196/11.96/119.6 keV. UNLIKE THE K/L-SHELL BRANCHES ABOVE, THIS IS NOT ONE CLEAN LOW-ENERGY MECHANISM:
+    # 1.196 keV is only 9.5 % low (not a multi-x factor), 11.96 keV agrees to 0.6 %, but 119.6 keV is 7.5 % HIGH
+    # -- the opposite sign. `Continuum.gridConsistency` separately warned that the mesh carries only 23 points
+    # per oscillation at the highest energy, below the 40 it recommends, which may be a SEPARATE mesh-coarseness
+    # (hp) effect layered on top of the box-size one and was NOT investigated further here. THE DATE BELOW IS
+    # NOT CONFIRMED BY THIS, and this branch needs more care than the other three before any claim is rewritten.
     # Last successful:  28-Aug-2026 -- Coulomb/Babushkin 1234.09/1237.48, 109.778/109.841, 6.49946/6.46310 barn
     # @ 1.196/11.96/119.6 keV; gauge agreement 0.27, 0.06, 0.56 %. Against the 9-Aug run (1117.8/1120.8, 109.24/
     # 109.30, 7.076/7.037) Coulomb moved +10.4 %, +0.5 % and -8.1 % -- the 27-Aug parity correction, see the head
@@ -209,6 +237,7 @@ elseif  false
     # at 120 keV.
     # Z=92 (U), He-like 1s^2 -> Li-like 1s^2 2s: capture into 2s at given ion energies.
     # Comparison: Fritzsche, Phys. Rev. A 72, 012704 (2005); Ichihara & Eichler, ADNDT 2000 (bare-ion proxy, see above).
+    setDefaults("method: normalization, Coulomb functions")  ## item 9: see the CAUTION note above
     gridDd4 = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.3e-2, rbox = 10.0)
     pSettings = PhotoRecombination.Settings(PhotoRecombination.Settings(), multipoles = [E1, M1, E2, M2, E3, M3], gauges = [UseCoulomb, UseBabushkin],
                                             ionEnergies = [2.18, 21.8, 218.0], useIonEnergies = true, calcTotalCs = true, printBefore = true, maxKappa = 3 )
@@ -223,6 +252,14 @@ elseif  false
 elseif  false
     # Last visit:  18-Oct-2026
     # Last reproduced:  18-Oct-2026 (1 of 12 to 1e-5, 5 more to 1e-3;  6 are the superseded 9-Aug values)
+    # CAUTION, 07-Nov-2026 (priority list item 9): same STOP, same fix below. Result: Coulomb/Babushkin =
+    # 544.7825/538.0175, 21.17059/20.85123, 0.8990928/0.8926171 barn @ 10/100/500 keV. THE MIRROR IMAGE of the
+    # Z=92 branch above: LOW energy agrees well here (10 keV: 0.3 %), but it WORSENS at high energy (100 keV:
+    # 4.7 % high; 500 keV: 34 % high) -- together with that branch's own high-energy mesh-coarseness warning
+    # (gridConsistency: 22 points/oscillation, below 40, at the highest energy here too), this points at a
+    # SECOND, DISTINCT mechanism from the K/L-shell branches above: mesh coarseness (hp too large), not box
+    # size, dominating at multi-keV energies. NOT investigated further -- worth its own follow-up rather than a
+    # quick fix. THE DATE BELOW IS NOT CONFIRMED BY THIS.
     # Last successful:  28-Aug-2026 -- Coulomb/Babushkin 546.201/539.408 barn @10 keV (1.24 %), 20.2192/19.9138
     # @100 keV (1.51 %), 0.670034/0.665195 @500 keV (0.72 %). Against 9-Aug (545.5/538.7, 21.35/21.03,
     # 0.9988/0.9923) the shift is +0.1 %, -5.3 % and -32.9 %: the 27-Aug parity correction, growing with the
@@ -242,6 +279,7 @@ elseif  false
     # Z=92 branch above) and the Empirical.photorecombinationCrossSection cross-check.
     # Z=54 (Xe), bare H-like 1s -> He-like 1s^2: K-shell REC at 10/100/500 keV -- one of the Ichihara & Eichler
     # benchmark charges (ADNDT 2000 / angle-differential ADNDT 79, 187 (2001)).
+    setDefaults("method: normalization, Coulomb functions")  ## item 9: see the CAUTION note above
     gridDd5 = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.15e-2, rbox = 10.0)
     pSettings = PhotoRecombination.Settings(PhotoRecombination.Settings(), multipoles = [E1, M1, E2, M2], gauges = [UseCoulomb, UseBabushkin],
                                             electronEnergies = [10000., 100000., 500000.], calcTotalCs = true, printBefore = true, maxKappa = 4 )
