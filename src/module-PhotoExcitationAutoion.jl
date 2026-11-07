@@ -108,8 +108,6 @@ function Settings(set::PhotoExcitationAutoion.Settings;
 end
 
 
-# `Base.show(io::IO, settings::PhotoExcitationAutoion.Settings)`  
-# 	... prepares a proper printout of the variable settings::PhotoExcitationAutoion.Settings.  
 function Base.show(io::IO, settings::PhotoExcitationAutoion.Settings) 
     println(io, "multipoles:              $(settings.multipoles)  ")
     println(io, "gauges:                  $(settings.gauges)  ")
@@ -166,8 +164,6 @@ function Pathway()
 end
 
 
-# `Base.show(io::IO, pathway::PhotoExcitationAutoion.Pathway)`  
-#		... prepares a proper printout of the variable pathway::PhotoExcitationAutoion.Pathway.
 function Base.show(io::IO, pathway::PhotoExcitationAutoion.Pathway) 
     println(io, "initialLevel:               $(pathway.initialLevel)  ")
     println(io, "intermediateLevel:          $(pathway.intermediateLevel)  ")

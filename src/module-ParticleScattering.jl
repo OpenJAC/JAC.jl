@@ -131,8 +131,6 @@ function Settings(set::ParticleScattering.Settings;
 end
 
 
-# `Base.show(io::IO, settings::ParticleScattering.Settings)`
-#       ... prepares a proper printout of the variable settings::ParticleScattering.Settings.
 function Base.show(io::IO, settings::ParticleScattering.Settings)
     println(io, "projectile:            $(settings.projectile)  ")
     println(io, "process:               $(settings.process)  ")

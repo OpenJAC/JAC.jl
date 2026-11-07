@@ -62,7 +62,6 @@ function ResonanceR()
 end
 
 
-# `Base.show(io::IO, resonance::Statistical.ResonanceR)`  ... prepares a proper printout of the variable resonance::Statistical.ResonanceR.
 function Base.show(io::IO, resonance::Statistical.ResonanceR) 
     println(io, "isBound:              $(resonance.isBound)  ")
     println(io, "ionLevel:             $(resonance.ionLevel)  ")
@@ -114,7 +113,6 @@ function Tensor(k::Int64, q::Int64, a::LevelKey, value::ComplexF64;
 end
 
 
-# `Base.show(io::IO, tensor::Statistical.Tensor)`  ... prepares a proper printout of the variable tensor::Statistical.Tensor.
 function Base.show(io::IO, tensor::Statistical.Tensor) 
     println(io, "rho_($(tensor.k),$(tensor.q)) = $(tensor.value)   [about $(tensor.axis)]  ")
 end

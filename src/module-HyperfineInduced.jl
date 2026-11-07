@@ -160,7 +160,6 @@ function Settings(set::HyperfineInduced.Settings;
 end
 
 
-# `Base.show(io::IO, settings::HyperfineInduced.Settings)`  ... prepares a proper printout.
 function Base.show(io::IO, settings::HyperfineInduced.Settings)
     println(io, "multipoles (radiation):    $(settings.multipoles)  ")
     println(io, "hfMultipoles (interaction):$(settings.hfMultipoles)  ")
@@ -195,7 +194,6 @@ struct Channel
 end
 
 
-# `Base.show(io::IO, channel::HyperfineInduced.Channel)`  ... prepares a proper printout.
 function Base.show(io::IO, channel::HyperfineInduced.Channel)
     println(io, "multipole: $(channel.multipole), gauge: $(channel.gauge), amplitude: $(channel.amplitude), " *
                 "rate: $(channel.rate)")
@@ -230,7 +228,6 @@ function Line(initialLevel::Hfs.HfLevel, finalLevel::Hfs.HfLevel, omega::Float64
 end
 
 
-# `Base.show(io::IO, line::HyperfineInduced.Line)`  ... prepares a proper printout.
 function Base.show(io::IO, line::HyperfineInduced.Line)
     println(io, "initialLevel (F):   $(line.initialLevel.F)  ")
     println(io, "finalLevel (F):     $(line.finalLevel.F)  ")

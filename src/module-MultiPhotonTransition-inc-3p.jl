@@ -52,8 +52,6 @@ struct  Sharing_3p
 end
 
 
-# `Base.show(io::IO, sharing::MultiPhotonTransition.Sharing_3p)`
-#   ... prepares a proper printout of the variable sharing::MultiPhotonTransition.Sharing_3p.
 function Base.show(io::IO, sharing::MultiPhotonTransition.Sharing_3p)
     println(io, "omega1:            $(sharing.omega1)  ")
     println(io, "omega2:            $(sharing.omega2)  ")
@@ -268,8 +266,6 @@ struct  Line_3pAbsorption
 end
 
 
-# `Base.show(io::IO, line::MultiPhotonTransition.Line_3pAbsorption)`
-#   ... prepares a proper printout of the variable line::MultiPhotonTransition.Line_3pAbsorption.
 function Base.show(io::IO, line::MultiPhotonTransition.Line_3pAbsorption)
     println(io, "initialLevel:      $(line.initialLevel)  ")
     println(io, "finalLevel:        $(line.finalLevel)  ")

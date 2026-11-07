@@ -108,7 +108,6 @@ function Settings(set::ResonantInelastic.Settings;
 end
 
 
-# `Base.show(io::IO, settings::ResonantInelastic.Settings)`  ... prepares a proper printout of the variable settings::ResonantInelastic.Settings.
 function Base.show(io::IO, settings::ResonantInelastic.Settings) 
     println(io, "multipoles:             $(settings.multipoles)  ")
     println(io, "gauges:                 $(settings.gauges)  ")
@@ -152,7 +151,6 @@ struct  Pathway
 end 
 
 
-# `Base.show(io::IO, pathway::ResonantInelastic.Pathway)`  ... prepares a proper printout of the variable pathway::ResonantInelastic.Pathway
 function Base.show(io::IO, pathway::ResonantInelastic.Pathway) 
     println(io, "initialLevel:         $(pathway.initialLevel)  ")
     println(io, "intermediateLevel:    $(pathway.intermediateLevel)  ")

@@ -51,13 +51,11 @@ struct  ShellStateNR
 end     
 
 
-# `Base.show(io::IO, state::ShellStateNR)`  ... prepares a proper printout of the variable state::ShellStateNR.
 function Base.show(io::IO, state::ShellStateNR) 
     print(io, string(state) )
 end
 
 
-# `Base.string(state::ShellStateNR)`  ... provides a proper printout of the variable state::ShellStateNR.
 function Base.string(state::ShellStateNR)
     sa = "ShellState: [" * string(state.shell) * "^$(state.occ), w=$(state.w), 2*Q=$(state.QQ), 2*L=$(state.LL), 2*S=$(state.SS)]"
 end
@@ -198,7 +196,6 @@ struct  LevelNR
 end 
 
 
-# `Base.show(io::IO, level::LevelNR)`  ... prepares a proper printout of the variable level::LevelNR.
 function Base.show(io::IO, level::LevelNR) 
     println(io, "Level: L = $(level.L), S = $(level.S), J = $(level.J), parity = $(level.parity), index = $(level.index) ")
     println(io, "energy:         $(level.energy)  ")
@@ -220,7 +217,6 @@ struct  MultipletNR
 end 
 
 
-# `Base.show(io::IO, multiplet::MultipletNR)`  ... prepares a proper printout of the variable multiplet::MultipletNR.
 function Base.show(io::IO, multiplet::MultipletNR) 
     println(io, "name:        $(multiplet.name)  ")
     println(io, "levels:      $(multiplet.levels)  ")

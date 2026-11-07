@@ -76,7 +76,6 @@ function Settings(set::BeamPhotoExcitation.Settings;
 end
 
 
-# `Base.show(io::IO, settings::BeamPhotoExcitation.Settings)`  ... prepares a proper printout of the variable settings::BeamPhotoExcitation.Settings.
 function Base.show(io::IO, settings::BeamPhotoExcitation.Settings) 
     println(io, "beamType:                 $(settings.beamType)  ")
     println(io, "observable:               $(settings.observable)  ")
@@ -123,7 +122,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::BeamPhotoExcitation.Outcome)`  ... prepares a proper printout of the variable outcome::BeamPhotoExcitation.Outcome.
 function Base.show(io::IO, outcome::BeamPhotoExcitation.Outcome) 
     println(io, "initialLevel:         $(outcome.initialLevel)  ")
     println(io, "finalLevel:           $(outcome.finalLevel)  ")

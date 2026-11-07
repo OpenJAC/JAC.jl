@@ -119,7 +119,6 @@ function Settings(set::WeakInteractionEnhancement.Settings;
 end
 
 
-# `Base.show(io::IO, settings::WeakInteractionEnhancement.Settings)`  ... prepares a proper printout of settings.
 function Base.show(io::IO, settings::WeakInteractionEnhancement.Settings)
     println(io, "calcPncE1:                $(settings.calcPncE1)  ")
     println(io, "calcEdmEnhancement:       $(settings.calcEdmEnhancement)  ")
@@ -159,7 +158,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::WeakInteractionEnhancement.Outcome)`  ... prepares a proper printout of outcome.
 function Base.show(io::IO, outcome::WeakInteractionEnhancement.Outcome)
     println(io, "level:                   $(outcome.level)  ")
     println(io, "edmEnhancement:          $(outcome.edmEnhancement)  ")

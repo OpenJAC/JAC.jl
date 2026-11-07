@@ -102,8 +102,6 @@ function Settings(set::PhotoExcitationFluores.Settings;
 end
 
 
-# `Base.show(io::IO, settings::PhotoExcitationFluores.Settings)`
-# 	 ... prepares a proper printout of the variable settings::PhotoExcitationFluores.Settings.  
 function Base.show(io::IO, settings::PhotoExcitationFluores.Settings) 
     println(io, "multipoles:              $(settings.multipoles)  ")
     println(io, "gauges:                  $(settings.gauges)  ")
@@ -154,8 +152,6 @@ function Pathway()
 end
 
 
-# `Base.show(io::IO, pathway::PhotoExcitationFluores.Pathway)` 
-#		 ... prepares a proper printout of the variable pathway::PhotoExcitationFluores.Pathway.
 function Base.show(io::IO, pathway::PhotoExcitationFluores.Pathway) 
     println(io, "initialLevel:               $(pathway.initialLevel)  ")
     println(io, "intermediateLevel:          $(pathway.intermediateLevel)  ")

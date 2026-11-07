@@ -196,7 +196,6 @@ function Settings(set::StarkZeeman.Settings;
 end
 
 
-# `Base.show(io::IO, settings::StarkZeeman.Settings)`  ... prepares a proper printout of the variable settings::StarkZeeman.Settings.
 function Base.show(io::IO, settings::StarkZeeman.Settings)
     println(io, "includeEField:            $(settings.includeEField)  ")
     println(io, "includeBField:            $(settings.includeBField)  ")

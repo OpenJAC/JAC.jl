@@ -85,8 +85,6 @@ function Settings(set::PhotoEmission.Settings;
 end
 
 
-# `Base.show(io::IO, settings::PhotoEmission.Settings)`  ... prepares a proper printout of the variable settings::PhotoEmissionSettings.
-# `Base.show(io::IO, settings::PhotoEmission.Settings)`  ... prepares a proper printout of the given settings.
 function Base.show(io::IO, settings::PhotoEmission.Settings)
     println(io, "multipoles:             $(settings.multipoles)  ")
     println(io, "gauges:                 $(settings.gauges)  ")
@@ -128,7 +126,6 @@ struct  LineQuality
 end
 
 
-# `Base.show(io::IO, lq::PhotoEmission.LineQuality)`  ... prepares a proper printout of lq::PhotoEmission.LineQuality.
 function Base.show(io::IO, lq::PhotoEmission.LineQuality)
     println(io, "$(lq.multipole):  cancellation factor = $(lq.cancellation)")
 end

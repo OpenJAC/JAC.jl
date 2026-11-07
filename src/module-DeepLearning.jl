@@ -92,7 +92,6 @@ function Application(app::DeepLearning.Application;
 end
 
 
-# `Base.string(applic::DeepLearning.Application)`  ... provides a String notation for the variable applic::DeepLearning.Application.
 function Base.string(applic::DeepLearning.Application)
     if     typeof(applic.request) == DeepLearning.LevelEstimationRequest     sb = "request for level estimation"
     else   error("unknown typeof(applic.request)")
@@ -105,7 +104,6 @@ function Base.string(applic::DeepLearning.Application)
 end
 
 
-# `Base.show(io::IO, applic::DeepLearning.Application)`  ... prepares a proper printout applic::DeepLearning.Application.
 function Base.show(io::IO, applic::DeepLearning.Application)
     sa = Base.string(applic)
     print(io, sa, "\n")

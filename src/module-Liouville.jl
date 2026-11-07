@@ -66,14 +66,12 @@ function StimulatedRamanScheme()
 end
 
 
-# `Base.string(scheme::StimulatedRamanScheme)`  ... provides a String notation for the variable scheme::StimulatedRamanScheme.
 function Base.string(scheme::StimulatedRamanScheme)
     sa = "Stimulated Raman scattering at FEL computation:\n"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::StimulatedRamanScheme)`  ... prepares a proper printout of the scheme::StimulatedRamanScheme.
 function Base.show(io::IO, scheme::StimulatedRamanScheme)
     sa = Base.string(scheme);                print(io, sa)
     println(io, "levelSelection:          $(scheme.levelSelection)  ")
@@ -131,7 +129,6 @@ function Settings(set::Liouville.Settings;
 end
 
 
-# `Base.show(io::IO, settings::Liouville.Settings)`  ... prepares a proper printout of the variable settings::Liouville.Settings.
 function Base.show(io::IO, settings::Liouville.Settings) 
     println(io, "printBefore:         $(settings.printBefore)  ")
 end
@@ -228,14 +225,12 @@ function Computation(wa::Bool)
 end
 
 
-# `Base.string(comp::Liouville.Computation)`  ... provides a String notation for the variable comp::Liouville.Computation.
 function Base.string(comp::Liouville.Computation)
     sa = "Liouville evolution computation:  for Z = $(comp.nuclearModel.Z), "
     return( sa )
 end
 
 
-# `Base.show(io::IO, comp::Liouville.Computation)`  ... prepares a printout of comp::Liouville.Computation.
 function Base.show(io::IO, comp::Liouville.Computation)
     sa = Base.string(comp);             print(io, sa, "\n")
     println(io, "scheme:                $(comp.scheme)  ")
@@ -270,7 +265,6 @@ function DensityMatrixData()
 end
 
 
-# `Base.show(io::IO, data::Liouville.DensityMatrixData)`  ... prepares a proper printout of the variable settings::Liouville.DensityMatrixData.
 function Base.show(io::IO, data::Liouville.DensityMatrixData) 
     println(io, "time:          $(data.time)  ")
     println(io, "dm:            $(data.dm)  ")

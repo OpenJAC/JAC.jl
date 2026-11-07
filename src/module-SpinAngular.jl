@@ -161,7 +161,6 @@ function OneParticleOperator()
 end
 
 
-# `Base.show(io::IO, op::SpinAngular.OneParticleOperator)`  ... prepares a proper printout of op.
 function Base.show(io::IO, op::SpinAngular.OneParticleOperator)
     print(io, "one-particle operator O^($(op.rank)) [$(string(op.parity))]")
 end
@@ -207,7 +206,6 @@ struct  Coefficient1p{K<:AbstractOneElectronKind}
 end
 
 
-# `Base.show(io::IO, coeff::SpinAngular.Coefficient1p)`  ... prepares a proper printout of coeff.
 function Base.show(io::IO, coeff::SpinAngular.Coefficient1p{K})  where K<:AbstractOneElectronKind
     print(io, "   T^$(coeff.nu) [$(coeff.a), $(coeff.b)] = $(coeff.T)   ($(K.name.name))")
 end

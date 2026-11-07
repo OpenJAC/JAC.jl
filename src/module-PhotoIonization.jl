@@ -142,8 +142,6 @@ function Settings(set::PhotoIonization.Settings;
 end
 
 
-# `Base.show(io::IO, settings::PhotoIonization.Settings)`
-# ... prepares a proper printout of the variable settings::PhotoIonization.Settings.
 function Base.show(io::IO, settings::PhotoIonization.Settings)
     println(io, "multipoles:                    $(settings.multipoles)  ")
     println(io, "gauges:                        $(settings.gauges)  ")
@@ -192,8 +190,6 @@ function PlasmaSettings()
 end
 
 
-# `Base.show(io::IO, settings::PhotoIonization.PlasmaSettings)`
-# ... prepares a proper printout of the settings::PhotoIonization.PlasmaSettings.
 function Base.show(io::IO, settings::PhotoIonization.PlasmaSettings)
     println(io, "multipoles:              $(settings.multipoles)  ")
     println(io, "gauges:                  $(settings.gauges)  ")
@@ -267,7 +263,6 @@ struct  Line
 end
 
 
-# `Base.show(io::IO, line::PhotoIonization.Line)`  ... prepares a proper printout of the variable line::PhotoIonization.Line.
 function Base.show(io::IO, line::PhotoIonization.Line)
     println(io, "initialLevel:      $(line.initialLevel)  ")
     println(io, "finalLevel:        $(line.finalLevel)  ")

@@ -209,7 +209,6 @@ function  W6j(a::AngMomentum, b::AngMomentum, c::AngMomentum,
 end
 
 
-# `Base.show(io::IO, w::W6j)`  ... prepares a proper printout of the variable  w6j::W6j.
 function Base.show(io::IO, w::W6j)
     print(io, "W6j{$(w.a), $(w.b), $(w.c); $(w.d), $(w.e), $(w.f)}")
 end
@@ -261,7 +260,6 @@ function  W9j(a::AngMomentum, b::AngMomentum, c::AngMomentum,
 end
 
 
-# `Base.show(io::IO, w::W9j)`  ... prepares a proper printout of the variable  w::W9j.
 function Base.show(io::IO, w::W9j)
     print(io, "W9j{$(w.a), $(w.b), $(w.c); $(w.d), $(w.e), $(w.f); $(w.g), $(w.h), $(w.i)}")
 end
@@ -324,7 +322,6 @@ function  Ylm(wl::Basic, wm::Basic, theta::Basic, phi::Basic, star::Bool)
 end
 
 
-# `Base.show(io::IO, y::Ylm)`  ... prepares a proper printout of the variable  ylm::Ylm.
 function Base.show(io::IO, y::Ylm)
     print(io, "Y_{$(y.l), $(y.m)} ($(y.theta), $(y.phi))")
 end
@@ -367,7 +364,6 @@ function  Djpq(j::AngMomentum, p::AngMomentum, q::AngMomentum, beta::Basic)
 end
 
 
-# `Base.show(io::IO, d::Djpq)`  ... prepares a proper printout of the variable  d::Djpq.
 function Base.show(io::IO, d::Djpq)
     print(io, "d^($(d.j))_{$(d.p), $(d.q)} ($(d.beta))")
 end
@@ -399,7 +395,6 @@ struct  Integral
 end
 
 
-# `Base.show(io::IO, ntg::Integral)`  ... prepares a proper printout of the variable  ntg::Integral.
 function Base.show(io::IO, ntg::Integral)
     print(io, "Int_$(ntg.low)^$(ntg.up) d$(ntg.var)")
 end
@@ -489,7 +484,6 @@ end
 
 
 
-# `Base.show(io::IO, rex::RacahExpression)`  ... prepares a proper printout of the variable  rex::RacahExpression.
 function Base.show(io::IO, rex::RacahExpression)
     sa = ""
     if  rex.summations != Basic[]    sa = sa * "Sum_[$(rex.summations)]  "      end
@@ -591,7 +585,6 @@ end
 
 
 
-# `Base.show(io::IO, csq::RacahAlgebra.Csq)`  ... prepares a proper printout of the variable  csq::RacahAlgebra.Csq.
 function Base.show(io::IO, csq::RacahAlgebra.Csq)
     sa = "($(csq.a), $(csq.b)) $(csq.c)"
     print(io, sa)

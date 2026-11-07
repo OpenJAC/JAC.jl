@@ -133,7 +133,6 @@ function Settings(set::ImpactExcitation.Settings;
 end
 
 
-# `Base.show(io::IO, settings::ImpactExcitation.Settings)`  ... prepares a proper printout of the variable settings::ImpactExcitation.Settings.
 function Base.show(io::IO, settings::ImpactExcitation.Settings)
     println(io, "lineSelection:              $(settings.lineSelection)  ")
     println(io, "electronEnergies:           $(settings.electronEnergies)  ")
@@ -171,7 +170,6 @@ struct  Channel
 end
 
 
-# `Base.show(io::IO, channel::ImpactExcitation.Channel)`  ... prepares a proper printout of the variable channel::ImpactExcitation.Channel.
 function Base.show(io::IO, channel::ImpactExcitation.Channel) 
     println(io, "initialKappa:       $(channel.initialKappa)  ")
     println(io, "finalKappa:         $(channel.finalKappa)  ")
@@ -225,7 +223,6 @@ function Line(initialLevel::Level, finalLevel::Level, crossSection::Float64)
 end
 
 
-# `Base.show(io::IO, line::ImpactExcitation.Line)`  ... prepares a proper printout of the variable line::ImpactExcitation.Line.
 function Base.show(io::IO, line::ImpactExcitation.Line) 
     println(io, "initialLevel:            $(line.initialLevel)  ")
     println(io, "finalLevel:              $(line.finalLevel)  ")

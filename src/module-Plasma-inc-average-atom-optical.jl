@@ -26,7 +26,6 @@ struct  ConductivityLine
 end
 
 
-# `Base.show(io::IO, line::Plasma.ConductivityLine)`  ... prepares a proper printout of line::Plasma.ConductivityLine.
 function Base.show(io::IO, line::Plasma.ConductivityLine)
     println(io, "ConductivityLine($(line.kind)):  omega = " * @sprintf("%.5e", line.omega) * " Ha, sigma = " *
                 @sprintf("%.5e", line.sigma) * " a.u., " * @sprintf("%.5e", line.electrons) * " electrons;  " *

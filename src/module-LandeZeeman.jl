@@ -36,7 +36,6 @@ struct SublevelJ
 end 
 
 
-# `Base.show(io::IO, Jsublevel::LandeZeeman.SublevelJ)`  ... prepares a proper printout of the variable Jsublevel::LandeZeeman.SublevelJ.
 function Base.show(io::IO, Jsublevel::LandeZeeman.SublevelJ) 
     println(io, "Sublevel [M=$(Jsublevel.M); energy = $(Jsublevel.energy); C_2 = $(Jsublevel.c2Coeff)]")
 end
@@ -59,7 +58,6 @@ struct SublevelF
 end 
 
 
-# `Base.show(io::IO, Fsublevel::LandeZeeman.SublevelF)`  ... prepares a proper printout of the variable Fsublevel::LandeZeeman.SublevelF.
 function Base.show(io::IO, Fsublevel::LandeZeeman.SublevelF) 
     println(io, "Sublevel [F=$(Fsublevel.F); M=$(Fsublevel.M); energy = $(Fsublevel.energy); C_2 = $(Fsublevel.c2Coeff)]")
 end
@@ -98,7 +96,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::LandeZeeman.Outcome)`  ... prepares a proper printout of the variable LandeZeeman.Outcome.
 function Base.show(io::IO, outcome::LandeZeeman.Outcome) 
     println(io, "Jlevel:           $(outcome.Jlevel)  ")
     println(io, "LandeJ:           $(outcome.LandeJ)  ")
@@ -174,7 +171,6 @@ function Settings(set::LandeZeeman.Settings;
 end
 
 
-# `Base.show(io::IO, settings::LandeZeeman.Settings)`  ... prepares a proper printout of the variable settings::LandeZeeman.Settings.
 function Base.show(io::IO, settings::LandeZeeman.Settings) 
     println(io, "calcLandeJ:               $(settings.calcLandeJ)  ")
     println(io, "calcLandeF:               $(settings.calcLandeF)  ")

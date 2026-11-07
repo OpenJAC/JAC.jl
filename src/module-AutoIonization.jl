@@ -138,7 +138,6 @@ function Settings(set::AutoIonization.Settings;
 end
 
 
-# `Base.show(io::IO, settings::AutoIonization.Settings)`  ... prepares a proper printout of the variable settings::AutoIonization.Settings.
 function Base.show(io::IO, settings::AutoIonization.Settings)
     println(io, "calcAnisotropy:                $(settings.calcAnisotropy)  ")
     println(io, "calcTeAuger:                   $(settings.calcTeAuger)  ")
@@ -179,7 +178,6 @@ function PlasmaSettings()
 end
 
 
-# `Base.show(io::IO, settings::AutoIonization.PlasmaSettings)`  ... prepares a proper printout of the settings::AutoIonization.PlasmaSettings.
 function Base.show(io::IO, settings::AutoIonization.PlasmaSettings)
     println(io, "printBefore:             $(settings.printBefore)  ")
     println(io, "lineSelection:           $(settings.lineSelection)  ")

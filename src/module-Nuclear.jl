@@ -287,7 +287,6 @@ function Model(nm::Nuclear.Model;            Z::Union{Nothing,Float64}=nothing, 
 end
 
 
-# `Base.show(io::IO, m::Model)`  ... prepares a proper printout of the variable  m::Model.
 function Base.show(io::IO, m::Model) 
     print(io, "$(Nuclear.name(m.model)) nuclear model for Z = $(m.Z) with mass = $(m.mass), " *
               "radius R = $(m.radius) fm and ")
@@ -454,7 +453,6 @@ function  reducedTransitionAmplitude(mp::EmMultipole, B::Float64, A::Int64, spin
 end
 
 
-# `Base.show(io::IO, isomer::Nuclear.Isomer)`  ... prepares a proper printout of the variable isomer:Nuclear.Isomer.
 function Base.show(io::IO, isomer::Nuclear.Isomer) 
     println(io, "spinI:          $(isomer.spinI)  ")
     println(io, "parity:         $(isomer.parity)  ")

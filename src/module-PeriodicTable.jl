@@ -230,7 +230,6 @@ function Element(charge::Int64, symbol::Symbol)
 end
 
 
-# `Base.show(io::IO, element::PeriodicTable.Element)`  ... prepares a proper printout of the variable element::PeriodicTable.Element.
 function Base.show(io::IO, element::PeriodicTable.Element) 
     println(io, "Element  $(element.name) ($(element.symbol), Z=$(element.nuclearCharge), mass=$(element.mass))  ")
     println(io, "configuration:            $(element.configuration)  ")

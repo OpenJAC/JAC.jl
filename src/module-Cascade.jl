@@ -123,14 +123,12 @@ function DielectronicCaptureScheme()
 end
 
 
-# `Base.string(scheme::DielectronicCaptureScheme)`  ... provides a String notation for the variable scheme::DielectronicCaptureScheme.
 function Base.string(scheme::DielectronicCaptureScheme)
     sa = "Dielectronic capture (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::DielectronicCaptureScheme)`  ... prepares a proper printout of the scheme::DielectronicCaptureScheme.
 function Base.show(io::IO, scheme::DielectronicCaptureScheme)
     sa = Base.string(scheme);                print(io, sa, "\n")
     println(io, "maxExcitationEnergy:        $(scheme.maxExcitationEnergy)  ")
@@ -204,14 +202,12 @@ function DielectronicRecombinationScheme()
 end
 
 
-# `Base.string(scheme::DielectronicRecombinationScheme)`  ... provides a String notation for the variable scheme::DielectronicRecombinationScheme.
 function Base.string(scheme::DielectronicRecombinationScheme)
     sa = "Dielectronic capture & stabilization (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::DielectronicRecombinationScheme)`  ... prepares a proper printout of the scheme::DielectronicRecombinationScheme.
 function Base.show(io::IO, scheme::DielectronicRecombinationScheme)
     sa = Base.string(scheme);                print(io, sa, "\n")
     println(io, "multipoles:                 $(scheme.multipoles)  ")
@@ -281,14 +277,12 @@ function ElectronExcitationScheme()
 end
 
 
-# `Base.string(scheme::ElectronExcitationScheme)`  ... provides a String notation for the variable scheme::ElectronExcitationScheme.
 function Base.string(scheme::ElectronExcitationScheme)
     sa = "Electron-impact excitation (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::ElectronExcitationScheme)`  ... prepares a proper printout of the scheme::ElectronExcitationScheme.
 function Base.show(io::IO, scheme::ElectronExcitationScheme)
     sa = Base.string(scheme);                 print(io, sa, "\n")
     println(io, "processes:                   $(scheme.processes)  ")
@@ -440,14 +434,12 @@ function ElectronIonizationScheme(electronEnergies::Array{Float64,1}, excitation
 end
 
 
-# `Base.string(scheme::ElectronIonizationScheme)`  ... provides a String notation for the variable scheme::ElectronIonizationScheme.
 function Base.string(scheme::ElectronIonizationScheme)
     sa = "Electron-impact ionization (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::ElectronIonizationScheme)`  ... prepares a proper printout of the scheme::ElectronIonizationScheme.
 function Base.show(io::IO, scheme::ElectronIonizationScheme)
     sa = Base.string(scheme);                 print(io, sa, "\n")
     println(io, "electronEnergies:            $(scheme.electronEnergies)  ")
@@ -510,14 +502,12 @@ function ExpansionOpacityScheme()
 end
 
 
-# `Base.string(scheme::ExpansionOpacityScheme)`  ... provides a String notation for the variable scheme::ExpansionOpacityScheme.
 function Base.string(scheme::ExpansionOpacityScheme)
     sa = "Expansion opacity calculation (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::ExpansionOpacityScheme)`  ... prepares a proper printout of the scheme::ExpansionOpacityScheme.
 function Base.show(io::IO, scheme::ExpansionOpacityScheme)
     sa = Base.string(scheme);                print(io, sa, "\n")
     println(io, "multipoles:                 $(scheme.multipoles)  ")
@@ -565,14 +555,12 @@ function HollowIonScheme()
 end
 
 
-# `Base.string(scheme::HollowIonScheme)`  ... provides a String notation for the variable scheme::HollowIonScheme.
 function Base.string(scheme::HollowIonScheme)
     sa = "Hollow ion (scheme) due to processes:"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::HollowIonScheme)`  ... prepares a proper printout of the scheme::HollowIonScheme.
 function Base.show(io::IO, scheme::HollowIonScheme)
     sa = Base.string(scheme);                print(io, sa, "\n")
     println(io, "processes:                  $(scheme.processes)  ")
@@ -636,14 +624,12 @@ function ImpactExcitationScheme()
 end
 
 
-# `Base.string(scheme::ImpactExcitationScheme)`  ... provides a String notation for the variable scheme::ImpactExcitationScheme.
 function Base.string(scheme::ImpactExcitationScheme)
     sa = "Direct electron-impact excitation (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::ImpactExcitationScheme)`  ... prepares a proper printout of the scheme::ImpactExcitationScheme.
 function Base.show(io::IO, scheme::ImpactExcitationScheme)
     sa = Base.string(scheme);                 print(io, sa, "\n")
     println(io, "fromShells:                  $(scheme.fromShells)  ")
@@ -700,14 +686,12 @@ function ImpactIonizationScheme()
 end
 
 
-# `Base.string(scheme::ImpactIonizationScheme)`  ... provides a String notation for the variable scheme::ImpactIonizationScheme.
 function Base.string(scheme::ImpactIonizationScheme)
     sa = "Direct electron-impact ionization (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::ImpactIonizationScheme)`  ... prepares a proper printout of the scheme::ImpactIonizationScheme.
 function Base.show(io::IO, scheme::ImpactIonizationScheme)
     sa = Base.string(scheme);                 print(io, sa, "\n")
     println(io, "processes:                   $(scheme.processes)  ")
@@ -776,14 +760,12 @@ function PhotoAbsorptionScheme()
 end
 
 
-# `Base.string(scheme::PhotoAbsorptionScheme)`  ... provides a String notation for the variable scheme::PhotoAbsorptionScheme.
 function Base.string(scheme::PhotoAbsorptionScheme)
     sa = "Photoabsorption (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::PhotoAbsorptionScheme)`  ... prepares a proper printout of the scheme::PhotoAbsorptionScheme.
 function Base.show(io::IO, scheme::PhotoAbsorptionScheme)
     sa = Base.string(scheme);                print(io, sa, "\n")
     println(io, "multipoles:                 $(scheme.multipoles)  ")
@@ -856,14 +838,12 @@ function PhotoExcitationScheme()
 end
 
 
-# `Base.string(scheme::PhotoExcitationScheme)`  ... provides a String notation for the variable scheme::PhotoExcitationScheme.
 function Base.string(scheme::PhotoExcitationScheme)
     sa = "Photon-excitation (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::PhotoExcitationScheme)`  ... prepares a proper printout of the scheme::PhotoExcitationScheme.
 function Base.show(io::IO, scheme::PhotoExcitationScheme)
     sa = Base.string(scheme);                print(io, sa, "\n")
     println(io, "multipoles:                 $(scheme.multipoles)  ")
@@ -930,14 +910,12 @@ function PhotoIonizationScheme()
 end
 
 
-# `Base.string(scheme::PhotoIonizationScheme)`  ... provides a String notation for the variable scheme::PhotoIonizationScheme.
 function Base.string(scheme::PhotoIonizationScheme)
     sa = "Photoionization (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::PhotoIonizationScheme)`  ... prepares a proper printout of the scheme::PhotoIonizationScheme.
 function Base.show(io::IO, scheme::PhotoIonizationScheme)
     sa = Base.string(scheme);                print(io, sa, "\n")
     println(io, "multipoles:                 $(scheme.multipoles)  ")
@@ -1007,14 +985,12 @@ function RadiativeRecombinationScheme()
 end
 
 
-# `Base.string(scheme::RadiativeRecombinationScheme)`  ... provides a String notation for the variable scheme::RadiativeRecombinationScheme.
 function Base.string(scheme::RadiativeRecombinationScheme)
     sa = "Radiative recombination (scheme):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::RadiativeRecombinationScheme)`  ... prepares a proper printout of the scheme::RadiativeRecombinationScheme.
 function Base.show(io::IO, scheme::RadiativeRecombinationScheme)
     sa = Base.string(scheme);                print(io, sa, "\n")
     println(io, "multipoles:                 $(scheme.multipoles)  ")
@@ -1064,14 +1040,12 @@ function StepwiseDecayScheme()
 end
 
 
-# `Base.string(scheme::StepwiseDecayScheme)`  ... provides a String notation for the variable scheme::StepwiseDecayScheme.
 function Base.string(scheme::StepwiseDecayScheme)
     sa = "Stepwise decay (scheme) of an atomic cascade with:"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::StepwiseDecayScheme)`  ... prepares a proper printout of the scheme::StepwiseDecayScheme.
 function Base.show(io::IO, scheme::StepwiseDecayScheme)
     sa = Base.string(scheme);                print(io, sa, "\n")
     println(io, "processes:                  $(scheme.processes)  ")
@@ -1127,7 +1101,6 @@ function Block()
 end
 
 
-# `Base.show(io::IO, block::Cascade.Block)`  ... prepares a proper printout of the variable block::Cascade.Block.
 function Base.show(io::IO, block::Cascade.Block) 
     println(io, "NoElectrons:        $(block.NoElectrons)  ")
     println(io, "confs :             $(block.confs )  ")
@@ -1176,7 +1149,6 @@ function Step()
 end
 
 
-# `Base.show(io::IO, step::Cascade.Step)`  ... prepares a proper printout of the variable step::Cascade.Step.
 function Base.show(io::IO, step::Cascade.Step) 
     println(io, "process:                $(step.process)  ")
     println(io, "settings:               $(step.settings)  ")
@@ -1261,7 +1233,6 @@ function Computation(comp::Cascade.Computation;
 end
 
 
-# `Base.string(comp::Cascade.Computation)`  ... provides a String notation for the variable comp::Cascade.Computation.
 function Base.string(comp::Cascade.Computation)
     if        typeof(comp.scheme) == Cascade.StepwiseDecayScheme              sb = "stepwise decay scheme"
     elseif    typeof(comp.scheme) == Cascade.DielectronicCaptureScheme        sb = "(di-) electronic capture scheme"
@@ -1288,7 +1259,6 @@ function Base.string(comp::Cascade.Computation)
 end
 
 
-# `Base.show(io::IO, comp::Cascade.Computation)`  ... prepares a proper printout comp::Cascade.Computation.
 function Base.show(io::IO, comp::Cascade.Computation)
     sa = Base.string(comp)
     sa = sa * "\n ... in addition, the following parameters/settings are defined: ";       print(io, sa, "\n")

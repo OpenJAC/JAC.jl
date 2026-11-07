@@ -98,7 +98,6 @@ function Settings(set::CrystalFieldEmission.Settings;
 end
 
 
-# `Base.show(io::IO, settings::CrystalFieldEmission.Settings)`  ... prepares a proper printout of settings::CrystalFieldEmission.Settings.
 function Base.show(io::IO, settings::CrystalFieldEmission.Settings)
     println(io, "multipoles:               $(settings.multipoles)  ")
     println(io, "gauges:                   $(settings.gauges)  ")

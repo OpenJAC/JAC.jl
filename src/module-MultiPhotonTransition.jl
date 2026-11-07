@@ -555,8 +555,6 @@ function Settings(set::MultiPhotonTransition.Settings;
 end
 
 
-# `Base.show(io::IO, settings::MultiPhotonTransition.Settings)`
-#		... prepares a proper printout of the variable settings::MultiPhotonTransition.Settings.
 function Base.show(io::IO, settings::MultiPhotonTransition.Settings)
     println(io, "scheme:                   $(settings.scheme)  ")
     println(io, "multipoles:               $(settings.multipoles)  ")

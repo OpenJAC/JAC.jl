@@ -86,13 +86,11 @@ struct   SequentialAuger    <:  Basics.AbstractProcess   end
 struct   SimultaneousAuger  <:  Basics.AbstractProcess   end
 
 
-# `Base.string(kind::ResonantImpactIonization.SequentialAuger)`  ... provides a String notation for the variable kind.
 function Base.string(kind::ResonantImpactIonization.SequentialAuger)
     return( "resonant-electron-capture-with-sequential-double-autoionization" )
 end
 
 
-# `Base.string(kind::ResonantImpactIonization.SimultaneousAuger)`  ... provides a String notation for the variable kind.
 function Base.string(kind::ResonantImpactIonization.SimultaneousAuger)
     return( "resonant-electron-capture-with-simultaneous-double-autoionization" )
 end

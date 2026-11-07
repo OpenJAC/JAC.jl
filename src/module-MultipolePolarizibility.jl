@@ -323,8 +323,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::MultipolePolarizibility.Outcome)`
-#		 ... prepares a proper printout of the variable outcome::MultipolePolarizibility.Outcome.
 function Base.show(io::IO, outcome::MultipolePolarizibility.Outcome)
     println(io, "level:                     $(outcome.level)  ")
     println(io, "alpha0:                    $(outcome.alpha0)  ")
@@ -419,8 +417,6 @@ function Settings(set::MultipolePolarizibility.Settings;
 end
 
 
-# `Base.show(io::IO, settings:MultipolePolarizibility.Settings)`
-#		... prepares a proper printout of the variable settings::MultipolePolarizibility.Settings.
 function Base.show(io::IO, settings::MultipolePolarizibility.Settings)
     println(io, "multipoles:               $(settings.multipoles)  ")
     println(io, "gMultiplet:               $(settings.gMultiplet)  ")

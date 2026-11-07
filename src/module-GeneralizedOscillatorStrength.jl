@@ -82,7 +82,6 @@ function Settings(set::GeneralizedOscillatorStrength.Settings;
 end
 
 
-# `Base.show(io::IO, settings::GeneralizedOscillatorStrength.Settings)`  ... prepares a proper printout of settings.
 function Base.show(io::IO, settings::GeneralizedOscillatorStrength.Settings)
     println(io, "qValues:                  $(settings.qValues)  ")
     println(io, "calcOpticalLimit:         $(settings.calcOpticalLimit)  ")
@@ -116,7 +115,6 @@ function Channel()
 end
 
 
-# `Base.show(io::IO, channel::GeneralizedOscillatorStrength.Channel)`  ... prepares a proper printout of channel.
 function Base.show(io::IO, channel::GeneralizedOscillatorStrength.Channel)
     println(io, "q:                        $(channel.q)  ")
     println(io, "L:                        $(channel.L)  ")
@@ -167,7 +165,6 @@ function Line(initialLevel::Level, finalLevel::Level, deltaEnergy::Float64, qVal
 end
 
 
-# `Base.show(io::IO, line::GeneralizedOscillatorStrength.Line)`  ... prepares a proper printout of line.
 function Base.show(io::IO, line::GeneralizedOscillatorStrength.Line)
     println(io, "initialLevel:             $(line.initialLevel)  ")
     println(io, "finalLevel:               $(line.finalLevel)  ")

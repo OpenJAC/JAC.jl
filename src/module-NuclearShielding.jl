@@ -159,7 +159,6 @@ function Settings(set::NuclearShielding.Settings;
 end
 
 
-# `Base.show(io::IO, settings::NuclearShielding.Settings)`  ... prepares a proper printout of settings::NuclearShielding.Settings.
 function Base.show(io::IO, settings::NuclearShielding.Settings)
     println(io, "calcE2:                   $(settings.calcE2)  ")
     println(io, "calcM1:                   $(settings.calcM1)  ")
@@ -201,7 +200,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::NuclearShielding.Outcome)`  ... prepares a proper printout of outcome::NuclearShielding.Outcome.
 function Base.show(io::IO, outcome::NuclearShielding.Outcome)
     println(io, "level:                    $(outcome.level)  ")
     println(io, "gammaE2:                  $(outcome.gammaE2)  ")

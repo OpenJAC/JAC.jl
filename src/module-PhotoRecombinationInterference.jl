@@ -132,7 +132,6 @@ function Settings(set::PhotoRecombinationInterference.Settings;
 end
 
 
-# `Base.show(io::IO, settings::PhotoRecombinationInterference.Settings)`  ... prepares a proper printout of settings.
 function Base.show(io::IO, settings::PhotoRecombinationInterference.Settings)
     println(io, "multipoles:               $(settings.multipoles)  ")
     println(io, "gauges:                   $(settings.gauges)  ")
@@ -177,7 +176,6 @@ function Channel()
 end
 
 
-# `Base.show(io::IO, channel::PhotoRecombinationInterference.Channel)`  ... prepares a proper printout of channel.
 function Base.show(io::IO, channel::PhotoRecombinationInterference.Channel)
     println(io, "symmetry:                 $(channel.symmetry)  ")
     println(io, "amplitudesRR:             $(channel.amplitudesRR)  ")
@@ -214,7 +212,6 @@ function PartialWave()
 end
 
 
-# `Base.show(io::IO, pw::PhotoRecombinationInterference.PartialWave)`  ... prepares a proper printout of pw.
 function Base.show(io::IO, pw::PhotoRecombinationInterference.PartialWave)
     println(io, "kappa:                    $(pw.kappa)  ")
     println(io, "energy:                   $(pw.energy)  ")
@@ -269,7 +266,6 @@ function Pathway()
 end
 
 
-# `Base.show(io::IO, pathway::PhotoRecombinationInterference.Pathway)`  ... prepares a proper printout of pathway.
 function Base.show(io::IO, pathway::PhotoRecombinationInterference.Pathway)
     println(io, "initialLevel:             $(pathway.initialLevel)  ")
     println(io, "finalLevel:               $(pathway.finalLevel)  ")

@@ -83,7 +83,6 @@ function HfBasisVector()
 end
 
 
-# `Base.show(io::IO, hfBasisVector::Hfs.HfBasisVector)`  ... prepares a proper printout of the variable HfBasisVector.
 function Base.show(io::IO, hfBasisVector::Hfs.HfBasisVector) 
     println(io, "F:           $(hfBasisVector.F)  ")
     println(io, "parity:      $(hfBasisVector.parity)  ")
@@ -129,7 +128,6 @@ function HfLevel()
 end
 
 
-# `Base.show(io::IO, hfLevel::Hfs.HfLevel)`  ... prepares a proper printout of the variable hfLevel::Hfs.HfLevel.
 function Base.show(io::IO, hfLevel::Hfs.HfLevel) 
     println(io, "F:              $(hfLevel.F)  ")
     println(io, "M:              $(hfLevel.M)  ")
@@ -162,7 +160,6 @@ function HfMultiplet()
 end
 
 
-# `Base.show(io::IO, hfMultiplet::Hfs.HfMultiplet)`  ... prepares a proper printout of the variable hfMultiplet::Hfs.HfMultiplet.
 function Base.show(io::IO, hfMultiplet::Hfs.HfMultiplet) 
     println(io, "name:           $(hfMultiplet.name)  ")
     println(io, "hfLevels:       $(hfMultiplet.hfLevels)  ")
@@ -201,7 +198,6 @@ function InteractionMatrix()
 end
 
 
-# `Base.show(io::IO, im::Hfs.InteractionMatrix)`  ... prepares a proper printout of the variable InteractionMatrix.
 function Base.show(io::IO, im::Hfs.InteractionMatrix) 
     println(io, "calcM1:           $(im.calcM1)  ")
     println(io, "calcE2:           $(im.calcE2)  ")
@@ -254,7 +250,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::Hfs.Outcome)`  ... prepares a proper printout of the variable outcome::Hfs.Outcome.
 function Base.show(io::IO, outcome::Hfs.Outcome) 
     println(io, "Jlevel:                    $(outcome.Jlevel)  ")
     println(io, "AIoverMu:                  $(outcome.AIoverMu)  ")
@@ -328,7 +323,6 @@ function Settings(set::Hfs.Settings;
 end
 
 
-# `Base.show(io::IO, settings::Hfs.Settings)`  ... prepares a proper printout of the variable settings::Hfs.Settings.
 function Base.show(io::IO, settings::Hfs.Settings) 
     println(io, "calcM1:                   $(settings.calcM1)  ")
     println(io, "calcE2:                   $(settings.calcE2)  ")

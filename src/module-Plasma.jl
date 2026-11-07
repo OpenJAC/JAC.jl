@@ -241,7 +241,6 @@ function AverageAtomOutcome(temperature::Float64, massDensity::Float64, radiusWS
 end
 
 
-# `Base.show(io::IO, outcome::Plasma.AverageAtomOutcome)`  ... prepares a proper printout of the outcome.
 function Base.show(io::IO, outcome::Plasma.AverageAtomOutcome)
     println(io, "Average-atom outcome:")
     println(io, "  temperature:              $(outcome.temperature) a.u. = " *
@@ -362,14 +361,12 @@ function AverageAtomScheme()
 end
 
 
-# `Base.string(scheme::AverageAtomScheme)`  ... provides a String notation for the variable scheme::AverageAtomScheme.
 function Base.string(scheme::AverageAtomScheme)
     sa = "Average-atom computation with nMax =$(scheme.nMax) and lMax =$(scheme.lMax):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::AverageAtomScheme)`  ... prepares a proper printout of the scheme::AverageAtomScheme.
 function Base.show(io::IO, scheme::AverageAtomScheme)
     sa = Base.string(scheme);                print(io, sa)
     println(io, "\nscField:                  $(scheme.scField)  ")
@@ -415,7 +412,6 @@ function LineShiftScheme()
 end
 
 
-# `Base.show(io::IO, scheme::Plasma.LineShiftScheme)`  ... prepares a proper printout of the scheme::Plasma.LineShiftScheme.
 function Base.show(io::IO, scheme::Plasma.LineShiftScheme)
     println(io, "plasmaModel:            $(scheme.plasmaModel)  ")
     println(io, "initialConfigs:         $(scheme.initialConfigs)  ")
@@ -470,14 +466,12 @@ function SahaBoltzmannScheme()
 end
 
 
-# `Base.string(scheme::SahaBoltzmannScheme)`  ... provides a String notation for the variable scheme::SahaBoltzmannScheme.
 function Base.string(scheme::SahaBoltzmannScheme)
     sa = "Saha-Boltzmann computation with of an ionic mixture:"
     return( sa )
 end
 
 
-# `Base.show(io::IO, scheme::SahaBoltzmannScheme)`  ... prepares a proper printout of the scheme::SahaBoltzmannScheme.
 function Base.show(io::IO, scheme::SahaBoltzmannScheme)
     sa = Base.string(scheme);             println(io, sa)
     println(io, "plasmaModel:       $(scheme.plasmaModel)  ")
@@ -565,7 +559,6 @@ function SatelliteDiagnosticScheme(scheme::Plasma.SatelliteDiagnosticScheme;
 end
 
 
-# `Base.show(io::IO, scheme::SatelliteDiagnosticScheme)`  ... prepares a proper printout of the scheme::SatelliteDiagnosticScheme.
 function Base.show(io::IO, scheme::SatelliteDiagnosticScheme)
     println(io, "fromShells:        $(scheme.fromShells)  ")
     println(io, "toShells:          $(scheme.toShells)  ")
@@ -680,7 +673,6 @@ function CollisionalRadiativeScheme(scheme::Plasma.CollisionalRadiativeScheme;
 end
 
 
-# `Base.show(io::IO, scheme::CollisionalRadiativeScheme)`  ... prepares a proper printout of the scheme::CollisionalRadiativeScheme.
 function Base.show(io::IO, scheme::CollisionalRadiativeScheme)
     println(io, "NoExcitations:     $(scheme.NoExcitations)  ")
     println(io, "upperShellNo:      $(scheme.upperShellNo)  ")
@@ -870,19 +862,16 @@ function StructureBasedTreatment()
 end
 
 
-# `Base.show(io::IO, treatment::EmpiricalTreatment)`  ... provides a String notation for treatment::EmpiricalTreatment.
 function Base.show(io::IO, treatment::EmpiricalTreatment)
     print(io, "empirical ($(typeof(treatment.approx)))")
 end
 
 
-# `Base.show(io::IO, treatment::SemiEmpiricalTreatment)`  ... provides a String notation for treatment::SemiEmpiricalTreatment.
 function Base.show(io::IO, treatment::SemiEmpiricalTreatment)
     print(io, "semi-empirical ($(typeof(treatment.approx)), real input)")
 end
 
 
-# `Base.show(io::IO, treatment::StructureBasedTreatment)`  ... provides a String notation for treatment::StructureBasedTreatment.
 function Base.show(io::IO, treatment::StructureBasedTreatment)
     print(io, "structure-based (eiiModel = $(typeof(treatment.eiiModel)))")
 end
@@ -987,7 +976,6 @@ function KineticChargeBalanceScheme(scheme::Plasma.KineticChargeBalanceScheme;
 end
 
 
-# `Base.show(io::IO, scheme::KineticChargeBalanceScheme)`  ... prepares a proper printout of the scheme::KineticChargeBalanceScheme.
 function Base.show(io::IO, scheme::KineticChargeBalanceScheme)
     println(io, "chargeStages:          $(length(scheme.chargeStages)) stage(s)  ")
     println(io, "electronTemperatures:  $(scheme.electronTemperatures)  ")
@@ -1048,7 +1036,6 @@ function SuperConfigurationOpacityScheme(refConfigs::Array{Configuration,1})
 end
 
 
-# `Base.show(io::IO, scheme::Plasma.SuperConfigurationOpacityScheme)`  ... prepares a proper printout.
 function Base.show(io::IO, scheme::Plasma.SuperConfigurationOpacityScheme)
     println(io, "refConfigs:      $(scheme.refConfigs)  ")
     println(io, "opacityOmegas:   $(scheme.opacityOmegas)  ")
@@ -1099,7 +1086,6 @@ function SuperConfigurationIonizationScheme()
 end
 
 
-# `Base.show(io::IO, scheme::Plasma.SuperConfigurationIonizationScheme)`  ... prepares a proper printout.
 function Base.show(io::IO, scheme::Plasma.SuperConfigurationIonizationScheme)
     println(io, "refConfigsPerStage:   $(scheme.refConfigsPerStage)  ")
 end
@@ -1392,7 +1378,6 @@ function SuperConfigurationMixtureOpacityScheme(nuclearModels::Array{Nuclear.Mod
 end
 
 
-# `Base.show(io::IO, scheme::Plasma.SuperConfigurationMixtureOpacityScheme)`  ... prepares a proper printout.
 function Base.show(io::IO, scheme::Plasma.SuperConfigurationMixtureOpacityScheme)
     println(io, "nuclearModels:               $(scheme.nuclearModels)  ")
     println(io, "refConfigsPerSpeciesStages:  $(scheme.refConfigsPerSpeciesStages)  ")
@@ -1451,7 +1436,6 @@ function Settings(set::Plasma.Settings;
 end
 
 
-# `Base.show(io::IO, settings::Plasma.Settings)`  ... prepares a proper printout of the variable settings::Plasma.Settings.
 function Base.show(io::IO, settings::Plasma.Settings) 
     println(io, "temperature:               $(settings.temperature)  ")
     println(io, "density:                   $(settings.density)  ")
@@ -1538,14 +1522,12 @@ function Computation(wa::Bool)
 end
 
 
-# `Base.string(comp::Plasma.Computation)`  ... provides a String notation for the variable comp::Plasma.Computation.
 function Base.string(comp::Plasma.Computation)
     sa = "Plasma computation:  for Z = $(comp.nuclearModel.Z), "
     return( sa )
 end
 
 
-# `Base.show(io::IO, comp::Plasma.Computation)`  ... prepares a printout of comp::Plasma.Computation.
 function Base.show(io::IO, comp::Plasma.Computation)
     sa = Base.string(comp);             print(io, sa, "\n")
     println(io, "scheme:                $(comp.scheme)  ")
@@ -1581,7 +1563,6 @@ function PartialWaveData()
 end
 
 
-# `Base.show(io::IO, data::Plasma.PartialWaveData)`  ... prepares a proper printout of the variable settings::Plasma.PartialWaveData.
 function Base.show(io::IO, data::Plasma.PartialWaveData) 
     println(io, "kappa:          $(data.kappa)  ")
     println(io, "pairs:          $(data.pairs)  ")

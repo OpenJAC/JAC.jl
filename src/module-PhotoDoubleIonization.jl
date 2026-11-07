@@ -353,8 +353,6 @@ function Settings(set::PhotoDoubleIonization.Settings;
 end
 
 
-# `Base.show(io::IO, settings::PhotoDoubleIonization.Settings)`
-#   ... prepares a proper printout of the variable settings::PhotoDoubleIonization.Settings.
 function Base.show(io::IO, settings::PhotoDoubleIonization.Settings)
     println(io, "multipoles:               $(settings.multipoles)  ")
     println(io, "gauges:                   $(settings.gauges)  ")
@@ -387,7 +385,6 @@ struct  Channel
 end
 
 
-# `Base.show(io::IO, channel::PhotoDoubleIonization.Channel)`  ... prepares a proper printout of channel::PhotoDoubleIonization.Channel.
 function Base.show(io::IO, channel::PhotoDoubleIonization.Channel)
     println(io, "symmetry:               $(channel.symmetry)  ")
     println(io, "amplitudes:             $(channel.amplitudes)  ")
@@ -422,7 +419,6 @@ struct  PartialWavePair
 end
 
 
-# `Base.show(io::IO, pair::PhotoDoubleIonization.PartialWavePair)`  ... prepares a proper printout of pair::PhotoDoubleIonization.PartialWavePair.
 function Base.show(io::IO, pair::PhotoDoubleIonization.PartialWavePair)
     println(io, "kappa1:                 $(pair.kappa1)  ")
     println(io, "energy1:                $(pair.energy1)  ")
@@ -463,7 +459,6 @@ struct  Sharing
 end
 
 
-# `Base.show(io::IO, sharing::PhotoDoubleIonization.Sharing)`  ... prepares a proper printout of sharing::PhotoDoubleIonization.Sharing.
 function Base.show(io::IO, sharing::PhotoDoubleIonization.Sharing)
     println(io, "omega:                  $(sharing.omega)  ")
     println(io, "epsilon1:               $(sharing.epsilon1)  ")
@@ -502,7 +497,6 @@ function Line()
 end
 
 
-# `Base.show(io::IO, line::PhotoDoubleIonization.Line)`  ... prepares a proper printout of the variable line::PhotoDoubleIonization.Line.
 function Base.show(io::IO, line::PhotoDoubleIonization.Line)
     println(io, "initialLevel:      $(line.initialLevel)  ")
     println(io, "finalLevel:        $(line.finalLevel)  ")

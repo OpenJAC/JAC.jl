@@ -61,7 +61,6 @@ function Settings(set::DecayYield.Settings;
 end
 
 
-# `Base.show(io::IO, settings::DecayYield.Settings)`  ... prepares a proper printout of the variable settings::DecayYield.Settings.
 function Base.show(io::IO, settings::DecayYield.Settings)
     println(io, "approach:                 $(settings.approach)  ")
     println(io, "printBefore:              $(settings.printBefore)  ")
@@ -103,7 +102,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::DecayYield.Outcome)`  ... prepares a proper printout of the variable outcome::DecayYield.Outcome.
 function Base.show(io::IO, outcome::DecayYield.Outcome) 
     println(io, "level:                $(outcome.level)  ")
     println(io, "NoPhotonLines:        $(outcome.NoPhotonLines)  ")

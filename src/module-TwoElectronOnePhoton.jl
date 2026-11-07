@@ -68,8 +68,6 @@ function Settings(set::TwoElectronOnePhoton.Settings;
 end
 
 
-# `Base.show(io::IO, settings::TwoElectronOnePhoton.Settings)`  
-#    ... prepares a proper printout of the variable settings::TwoElectronOnePhoton.Settings.
 function Base.show(io::IO, settings::TwoElectronOnePhoton.Settings) 
     println(io, "multipoles:             $(settings.multipoles)  ")
     println(io, "gauges:                 $(settings.gauges)  ")
@@ -97,8 +95,6 @@ struct Channel
 end 
 
 
-# `Base.show(io::IO, channel::TwoElectronOnePhoton.Channel)`  
-#    ... prepares a proper printout of the variable channel::TwoElectronOnePhoton.Channel.
 function Base.show(io::IO, channel::TwoElectronOnePhoton.Channel) 
     print(io, "TwoElectronOnePhoton.Channel($(channel.multipole), $(channel.gauge), amp = $(channel.amplitude)) ") 
 end
@@ -132,7 +128,6 @@ function Line()
 end
 
 
-# `Base.show(io::IO, line::TwoElectronOnePhoton.Line)`  ... prepares a proper printout of the variable line::TwoElectronOnePhoton.Line.
 function Base.show(io::IO, line::TwoElectronOnePhoton.Line) 
     println(io, "initialLevel:         $(line.initialLevel)  ")
     println(io, "finalLevel:           $(line.finalLevel)  ")

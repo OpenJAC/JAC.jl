@@ -159,19 +159,16 @@ struct  IonProjectile  <:  AbstractStoppingProjectile
 end
 
 
-# `Base.show(io::IO, p::ElectronProjectile)`  ... provides a String notation for the variable p::ElectronProjectile.
 function Base.show(io::IO, p::ElectronProjectile)
     print(io, "an electron (z = -1, M = m_e)")
 end
 
 
-# `Base.show(io::IO, p::PositronProjectile)`  ... provides a String notation for the variable p::PositronProjectile.
 function Base.show(io::IO, p::PositronProjectile)
     print(io, "a positron (z = +1, M = m_e)")
 end
 
 
-# `Base.show(io::IO, p::IonProjectile)`  ... provides a String notation for the variable p::IonProjectile.
 function Base.show(io::IO, p::IonProjectile)
     print(io, "a bare ion (z = $(p.z), M = $(p.M) m_e)")
 end
@@ -240,19 +237,16 @@ struct  PartiallyIonizedGas  <:  AbstractStoppingMaterial
 end
 
 
-# `Base.show(io::IO, m::FreeElectronGas)`  ... provides a String notation for the variable m::FreeElectronGas.
 function Base.show(io::IO, m::FreeElectronGas)
     print(io, "the free electrons of a plasma with n_e = $(m.ne) [a.u.]")
 end
 
 
-# `Base.show(io::IO, m::NeutralAtomGas)`  ... provides a String notation for the variable m::NeutralAtomGas.
 function Base.show(io::IO, m::NeutralAtomGas)
     print(io, "the bound electrons of a neutral atom gas with Z = $(m.Z), A = $(m.A) and n_atom = $(m.natom) [a.u.]")
 end
 
 
-# `Base.show(io::IO, m::PartiallyIonizedGas)`  ... provides a String notation for the variable m::PartiallyIonizedGas.
 function Base.show(io::IO, m::PartiallyIonizedGas)
     print(io, "a partially ionized atom gas with Z = $(m.Z), A = $(m.A), chi_e = $(m.chie) free electrons per atom " *
               "and n_atom = $(m.natom) [a.u.]")
@@ -279,7 +273,6 @@ struct  GivenEinsteinA  <:  Empirical.AbstractEmpiricalApproximation
 end
 
 
-# `Base.show(io::IO, tripleA::GivenEinsteinA)`  ... provides a String notation for the variable tripleA::GivenEinsteinA.
 function Base.show(io::IO, tripleA::GivenEinsteinA)
     sa = "Given Einstein-A value for $(tripleA.multipole) transition with E_if [Hartree] = $(tripleA.energy) " *
          "and A_if [a.u.] = $(tripleA.rate) "
@@ -302,7 +295,6 @@ end
 ConstantCollisionStrength() = ConstantCollisionStrength(1.0)
 
 
-# `Base.show(io::IO, ccs::ConstantCollisionStrength)`  ... provides a String notation for the variable ccs::ConstantCollisionStrength.
 function Base.show(io::IO, ccs::ConstantCollisionStrength)
     print(io, "Constant collision strength Omega = $(ccs.Omega) ")
 end
@@ -366,7 +358,6 @@ function Computation(comp::Empirical.Computation;
 end
 
 
-# `Base.string(comp::Empirical.Computation)`  ... provides a String notation for the variable comp::Empirical.Computation.
 function Base.string(comp::Empirical.Computation)
     sa = "Empirical computation:    $(comp.name) for Z = $(comp.nuclearModel.Z), "
     sa = sa * " with the \nconfigurations:        "
@@ -376,7 +367,6 @@ function Base.string(comp::Empirical.Computation)
 end
 
 
-# `Base.show(io::IO, comp::Empirical.Computation)`  ... prepares a printout of comp::Empirical.Computation.
 function Base.show(io::IO, comp::Empirical.Computation)
     sa = Base.string(comp);             print(io, sa, "\n")
     println(io, "nuclearModel:          $(comp.nuclearModel)  ")

@@ -220,7 +220,6 @@ function FelPulse()
 end
 
 
-# `Base.show(io::IO, pulse::Pulse.FelPulse)`  ... prepares a proper printout of the variable pulse::Pulse.FelPulse.
 function Base.show(io::IO, pulse::Pulse.FelPulse) 
     println(io, "shape:         $(pulse.shape)  ")
     println(io, "omega:         $(pulse.omega)  ")
@@ -264,7 +263,6 @@ function GeneratedPulse()
 end
 
 
-# `Base.show(io::IO, pulse::Pulse.GeneratedPulse)`  ... prepares a proper printout of the variable pulse::Pulse.GeneratedPulse.
 function Base.show(io::IO, pulse::Pulse.GeneratedPulse) 
     println(io, "propagation:        $(pulse.propagation)  ")
     println(io, "omega:              $(pulse.omega)  ")
@@ -307,7 +305,6 @@ function Gaussian()
 end
 
 
-# `Base.show(io::IO, pulse::Pulse.Gaussian)`  ... prepares a proper printout of the variable pulse::Pulse.Gaussian.
 function Base.show(io::IO, pulse::Pulse.Gaussian) 
     println(io, "propagation:        $(pulse.propagation)  ")
     println(io, "omega:              $(pulse.omega)  ")
@@ -347,7 +344,6 @@ function GaussianSimplified()
 end
 
 
-# `Base.show(io::IO, pulse::Pulse.GaussianSimplified)`  ... prepares a proper printout of the variable pulse::Pulse.GaussianSimplified.
 function Base.show(io::IO, pulse::Pulse.GaussianSimplified) 
     println(io, "omega:         $(pulse.omega)  ")
     println(io, "A0:            $(pulse.A0)  ")
@@ -388,7 +384,6 @@ function SinSquared()
 end
 
 
-# `Base.show(io::IO, pulse::Pulse.SinSquared)`  ... prepares a proper printout of the variable pulse::Pulse.SinSquared.
 function Base.show(io::IO, pulse::Pulse.SinSquared) 
     println(io, "propagation:        $(pulse.propagation)  ")
     println(io, "omega:              $(pulse.omega)  ")

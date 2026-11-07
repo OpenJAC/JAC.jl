@@ -19,14 +19,12 @@ struct   IonicLevel
 end  
 
 
-# `Base.string(lev::Plasma.IonicLevel)`  ... provides a String notation for the variable lev::Plasma.IonicLevel.
 function Base.string(lev::Plasma.IonicLevel)
     sa = "Ionic level (energy=$(lev.energy), g=$(lev.g), nDensity=$(lev.nDensity), uppermostShell=$(lev.uppermostShell)):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, lev::Plasma.IonicLevel)`  ... prepares a proper printout of the lev::Plasma.IonicLevel.
 function Base.show(io::IO, lev::Plasma.IonicLevel)
     sa = Base.string(lev);                   print(io, sa)
 end
@@ -48,14 +46,12 @@ struct   IonicClass
 end  
 
 
-# `Base.string(ion::Plasma.IonicClass)`  ... provides a String notation for the variable ion::Plasma.IonicClass.
 function Base.string(ion::Plasma.IonicClass)
     sa = "Ionic class (q=$(ion.q), groundEnergy=$(ion.groundEnergy), No of ionic levels=$(length(ion.ionLevels))):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, ion::Plasma.IonicClass)`  ... prepares a proper printout of the ion::Plasma.IonicClass.
 function Base.show(io::IO, ion::Plasma.IonicClass)
     sa = Base.string(ion);                   print(io, sa)
 end
@@ -81,14 +77,12 @@ struct   IsotopeClass
 end  
 
 
-# `Base.string(isotope::Plasma.IsotopeClass)`  ... provides a String notation for the variable isotope::Plasma.IsotopeClass.
 function Base.string(isotope::Plasma.IsotopeClass)
     sa = "Isotope class (Z=$(isotope.isotopicFraction.Z), A=$(isotope.isotopicFraction.A)):"
     return( sa )
 end
 
 
-# `Base.show(io::IO, isotope::Plasma.IsotopeClass)`  ... prepares a proper printout of the isotope::Plasma.IsotopeClass.
 function Base.show(io::IO, isotope::Plasma.IsotopeClass)
     sa = Base.string(isotope);             print(io, sa)
     println(io, "isotopicDensity:          $(isotope.isotopicDensity)  ")

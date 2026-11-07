@@ -42,7 +42,6 @@ struct  QPartition
 end
 
 
-# `Base.show(io::IO, part::Hamiltonian.QPartition)`  ... prepares a proper printout of part::Hamiltonian.QPartition.
 function Base.show(io::IO, part::Hamiltonian.QPartition)
     println(io, "QPartition:  $(length(part.promoted)) promoted, $(length(part.folded)) folded in, " *
                 "$(length(part.discarded)) discarded;  justified = $(part.isJustified)" *
@@ -582,7 +581,6 @@ struct  ShapeCrossingPartition
 end
 
 
-# `Base.show(io::IO, part::Hamiltonian.ShapeCrossingPartition)`  ... prepares a proper printout of part.
 function Base.show(io::IO, part::Hamiltonian.ShapeCrossingPartition)
     println(io, "ShapeCrossingPartition: second-order correction for $(length(part.targetLevels)) target " *
                 "level(s) of P against $(length(part.newQIndices)) genuinely new CSF(s) of Q.")

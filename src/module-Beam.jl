@@ -44,14 +44,12 @@ function PlaneWave()
 end
 
 
-# `Base.string(beam::PlaneWave)`  ... provides a String notation for the variable beam::PlaneWave.
 function Base.string(beam::PlaneWave)
     sa = "Plane-wave beam with k-vec = ($(beam.kx), $(beam.ky), $(beam.kz))."
     return( sa )
 end
 
 
-# `Base.show(io::IO, beam::PlaneWave)`  ... prepares a proper printout of the beam::PlaneWave.
 function Base.show(io::IO, beam::PlaneWave)
     sa = Base.string(beam);                print(io, sa)
 end
@@ -80,7 +78,6 @@ function BesselBeam()
 end
 
 
-# `Base.string(beam::BesselBeam)`  ... provides a String notation for the variable beam::BesselBeam.
 function Base.string(beam::BesselBeam)
     sa = "Bessel beam along z-axis with OAM m = $(beam.mOAM), opening angle = $(beam.openingAngle) and " * 
             "kz = $(beam.kz)."
@@ -88,7 +85,6 @@ function Base.string(beam::BesselBeam)
 end
 
 
-# `Base.show(io::IO, beam::BesselBeam)`  ... prepares a proper printout of the beam::BesselBeam.
 function Base.show(io::IO, beam::BesselBeam)
     sa = Base.string(beam);                print(io, sa)
 end
@@ -126,7 +122,6 @@ function BesselGauss()
 end
 
 
-# `Base.string(beam::BesselGauss)`  ... provides a String notation for the variable beam::BesselGauss.
 function Base.string(beam::BesselGauss)
     sa = "Bessel-Gauss beam along z-axis with OAM m = $(beam.mOAM), opening angle = $(beam.openingAngle), " *
             "kz = $(beam.kz) and ring width = $(beam.ringWidth)."
@@ -134,7 +129,6 @@ function Base.string(beam::BesselGauss)
 end
 
 
-# `Base.show(io::IO, beam::BesselGauss)`  ... prepares a proper printout of the beam::BesselGauss.
 function Base.show(io::IO, beam::BesselGauss)
     sa = Base.string(beam);                print(io, sa)
 end
@@ -210,7 +204,6 @@ function gouyPhase(beam::Beam.LaguerreGauss, z::Float64)
 end
 
 
-# `Base.string(beam::LaguerreGauss)`  ... provides a String notation for the variable beam::LaguerreGauss.
 function Base.string(beam::LaguerreGauss)
     sa = "Laguerre-Gaussian beam along z-axis with OAM l = $(beam.lOAM), radial index p = $(beam.pRadial), " *
             "kz = $(beam.kz) and waist w_0 = $(beam.waist) a_o."
@@ -218,7 +211,6 @@ function Base.string(beam::LaguerreGauss)
 end
 
 
-# `Base.show(io::IO, beam::LaguerreGauss)`  ... prepares a proper printout of the beam::LaguerreGauss.
 function Base.show(io::IO, beam::LaguerreGauss)
     sa = Base.string(beam);                print(io, sa)
 end
@@ -248,14 +240,12 @@ function Component()
 end
 
 
-# `Base.string(beam::Component)`  ... provides a String notation for the variable beam::Component.
 function Base.string(beam::Component)
     sa = "Single component with cw = $(beam.cw)  of  a $(beam.beamType)"
     return( sa )
 end
 
 
-# `Base.show(io::IO, beam::Component)`  ... prepares a proper printout of the beam::Component.
 function Base.show(io::IO, beam::Component)
     sa = Base.string(beam);                print(io, sa)
 end
@@ -295,7 +285,6 @@ function PhotonBeam()
 end
 
 
-# `Base.show(io::IO, beam::Beam.PhotonBeam)`  ... prepares a proper printout of the beam::Beam.PhotonBeam.
 function Base.show(io::IO, beam::Beam.PhotonBeam)
     println(io, "beamType:           $(beam.beamType)  ")
     println(io, "polarization:       $(beam.polarization)  ")
@@ -329,7 +318,6 @@ struct   DominantMultipoles  <:  Beam.AbstractObservable
 end
 
 
-# `Base.show(io::IO, obs::DominantMultipoles)`  ... prepares a proper printout of the obs::DominantMultipoles.
 function Base.show(io::IO, obs::Beam.DominantMultipoles)
     sa = "Dominant multipole are to be determined at mesh: $(obs.mesh).";         print(io, sa)
 end
@@ -346,7 +334,6 @@ struct   IntensityPattern  <:  Beam.AbstractObservable
 end
 
 
-# `Base.show(io::IO, obs::IntensityPattern)`  ... prepares a proper printout of the obs::IntensityPattern.
 function Base.show(io::IO, obs::Beam.IntensityPattern)
     sa = "Intensity pattern is to be determined at mesh: $(obs.mesh).";         print(io, sa)
 end

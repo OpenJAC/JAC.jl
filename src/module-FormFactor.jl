@@ -50,7 +50,6 @@ function Settings(set::FormFactor.Settings;
 end
 
 
-# `Base.show(io::IO, settings::FormFactor.Settings)`  ... prepares a proper printout of the variable settings::FormFactor.Settings.
 function Base.show(io::IO, settings::FormFactor.Settings) 
     println(io, "qList:                    $(settings.qList)  ")
     println(io, "printBefore:              $(settings.printBefore)  ")
@@ -85,7 +84,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::FormFactor.Outcome)`  ... prepares a proper printout of the variable outcome::FormFactor.Outcome.
 function Base.show(io::IO, outcome::FormFactor.Outcome) 
     println(io, "level:                   $(outcome.level)  ")
     println(io, "qValues:                 $(outcome.qValues)  ")

@@ -65,7 +65,6 @@ end
 
 
 
-# `Base.show(io::IO, settings::Einstein.Settings)`  ... prepares a proper printout of the variable settings::Einstein.Settings.
 function Base.show(io::IO, settings::Einstein.Settings) 
     println(io, "multipoles:               $(settings.multipoles)  ")
     println(io, "printBefore:              $(settings.printBefore)  ")
@@ -90,7 +89,6 @@ struct Channel
 end 
 
 
-# `Base.show(io::IO, channel::Einstein.Channel)`  ... prepares a proper printout of the variable channel::EinsteinChannel.
 function Base.show(io::IO, channel::Einstein.Channel) 
     print(io, "$(channel.multipole) [$(channel.gauge); $(channel.amplitude)") 
 end
@@ -126,7 +124,6 @@ function Line(initialLevel::Level, finalLevel::Level, photonRate::EmProperty)
 end
 
 
-# `Base.show(io::IO, line::Einstein.Line)`  ... prepares a proper printout of the variable line::Einstein.Line.
 function Base.show(io::IO, line::Einstein.Line) 
     println(io, "initialLevel:         $(line.initialLevel)  ")
     println(io, "finalLevel:           $(line.finalLevel)  ")

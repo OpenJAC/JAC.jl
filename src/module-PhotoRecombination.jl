@@ -90,8 +90,6 @@ function Settings()
 end
 
 
-# `Base.show(io::IO, settings::PhotoRecombination.Settings)`
-#		... prepares a proper printout of the variable settings::PhotoRecombination.Settings.
 function Base.show(io::IO, settings::PhotoRecombination.Settings)
     println(io, "multipoles:               $(settings.multipoles)  ")
     println(io, "gauges:                   $(settings.gauges)  ")
@@ -168,7 +166,6 @@ struct  Line
 end
 
 
-# `Base.show(io::IO, line::PhotoRecombination.Line)`  ... prepares a proper printout of the variable line::PhotoRecombination.Line.
 function Base.show(io::IO, line::PhotoRecombination.Line)
     println(io, "initialLevel:      $(line.initialLevel)  ")
     println(io, "finalLevel:        $(line.finalLevel)  ")

@@ -111,8 +111,6 @@ struct MultipoleTerms
 end
 
 
-# `Base.show(io::IO, terms::DispersionCoefficient.MultipoleTerms)`
-#       ... prepares a proper printout of the variable terms::DispersionCoefficient.MultipoleTerms.
 function Base.show(io::IO, terms::DispersionCoefficient.MultipoleTerms)
     println(io, "multipole:                 $(terms.multipole)  ")
     println(io, "number of poles:           $(length(terms.strengths))  ")
@@ -174,8 +172,6 @@ function Partner()
 end
 
 
-# `Base.show(io::IO, partner::DispersionCoefficient.Partner)`
-#       ... prepares a proper printout of the variable partner::DispersionCoefficient.Partner.
 function Base.show(io::IO, partner::DispersionCoefficient.Partner)
     println(io, "name:                      $(partner.name)  ")
     println(io, "level:                     $(partner.level)  ")
@@ -207,8 +203,6 @@ struct Coefficient
 end
 
 
-# `Base.show(io::IO, coefficient::DispersionCoefficient.Coefficient)`
-#       ... prepares a proper printout of the variable coefficient::DispersionCoefficient.Coefficient.
 function Base.show(io::IO, coefficient::DispersionCoefficient.Coefficient)
     println(io, "C_$(coefficient.n):                     $(coefficient.value)  ")
     println(io, "pieces (l1,l2,value):      $(coefficient.pieces)  ")
@@ -255,8 +249,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::DispersionCoefficient.Outcome)`
-#       ... prepares a proper printout of the variable outcome::DispersionCoefficient.Outcome.
 function Base.show(io::IO, outcome::DispersionCoefficient.Outcome)
     println(io, "partnerA:                  $(outcome.partnerA.name)  ")
     println(io, "partnerB:                  $(outcome.partnerB.name)  ")
@@ -362,8 +354,6 @@ function Settings(set::DispersionCoefficient.Settings;
 end
 
 
-# `Base.show(io::IO, settings::DispersionCoefficient.Settings)`
-#       ... prepares a proper printout of the variable settings::DispersionCoefficient.Settings.
 function Base.show(io::IO, settings::DispersionCoefficient.Settings)
     println(io, "orders:                   $(settings.orders)  ")
     println(io, "multipoles:               $(settings.multipoles)  ")

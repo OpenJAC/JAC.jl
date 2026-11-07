@@ -76,7 +76,6 @@ function AnnihilationChannel()
 end
 
 
-# `Base.show(io::IO, ch::ParticleScattering.AnnihilationChannel)`  ... prepares a printout of ch::AnnihilationChannel.
 function Base.show(io::IO, ch::ParticleScattering.AnnihilationChannel)
     println(io, "kappa = $(ch.kappa),  multipole = $(ch.multipole),  gauge = $(ch.gauge),  J^pi = $(ch.totalSymmetry),  " *
                 "amplitude = $(ch.amplitude)")
@@ -113,7 +112,6 @@ function AnnihilationLine()
 end
 
 
-# `Base.show(io::IO, line::ParticleScattering.AnnihilationLine)`  ... prepares a printout of line::AnnihilationLine.
 function Base.show(io::IO, line::ParticleScattering.AnnihilationLine)
     println(io, "initialLevel:       $(line.initialLevel.index)  ")
     println(io, "finalLevel:         $(line.finalLevel.index)  ")

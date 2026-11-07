@@ -133,7 +133,6 @@ function Settings(set::PhotoIonizationInterference.Settings;
 end
 
 
-# `Base.show(io::IO, settings::PhotoIonizationInterference.Settings)`  ... prepares a proper printout of settings.
 function Base.show(io::IO, settings::PhotoIonizationInterference.Settings)
     println(io, "multipoles:               $(settings.multipoles)  ")
     println(io, "gauges:                   $(settings.gauges)  ")
@@ -179,7 +178,6 @@ function Channel()
 end
 
 
-# `Base.show(io::IO, channel::PhotoIonizationInterference.Channel)`  ... prepares a proper printout of channel.
 function Base.show(io::IO, channel::PhotoIonizationInterference.Channel)
     println(io, "symmetry:                 $(channel.symmetry)  ")
     println(io, "amplitudesPI:             $(channel.amplitudesPI)  ")
@@ -216,7 +214,6 @@ function PartialWave()
 end
 
 
-# `Base.show(io::IO, pw::PhotoIonizationInterference.PartialWave)`  ... prepares a proper printout of pw.
 function Base.show(io::IO, pw::PhotoIonizationInterference.PartialWave)
     println(io, "kappa:                    $(pw.kappa)  ")
     println(io, "energy:                   $(pw.energy)  ")
@@ -268,7 +265,6 @@ function Pathway()
 end
 
 
-# `Base.show(io::IO, pathway::PhotoIonizationInterference.Pathway)`  ... prepares a proper printout of pathway.
 function Base.show(io::IO, pathway::PhotoIonizationInterference.Pathway)
     println(io, "initialLevel:             $(pathway.initialLevel)  ")
     println(io, "finalLevel:               $(pathway.finalLevel)  ")

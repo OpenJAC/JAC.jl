@@ -51,8 +51,6 @@ struct  Line_2pAbsorptionMonochromatic
 end
 
 
-# `Base.show(io::IO, line::MultiPhotonTransition.Line_2pAbsorptionMonochromatic)`  
-#   ... prepares a proper printout of the variable line::MultiPhotonTransition.Line_2pAbsorptionMonochromatic.
 function Base.show(io::IO, line::MultiPhotonTransition.Line_2pAbsorptionMonochromatic) 
     println(io, "initialLevel:      $(line.initialLevel)  ")
     println(io, "finalLevel:        $(line.finalLevel)  ")

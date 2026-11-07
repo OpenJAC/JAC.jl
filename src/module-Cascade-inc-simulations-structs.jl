@@ -88,7 +88,6 @@ function DrRateCoefficients()
 end
 
 
-# `Base.show(io::IO, dist::Cascade.DrRateCoefficients)`  ... prepares a proper printout of the variable data::Cascade.DrRateCoefficients.
 function Base.show(io::IO, dist::Cascade.DrRateCoefficients) 
     println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
     println(io, "electronEnergyShift:      $(dist.electronEnergyShift)  ")
@@ -133,7 +132,6 @@ function RrRateCoefficients()
 end
 
 
-# `Base.show(io::IO, dist::Cascade.RrRateCoefficients)`  ... prepares a proper printout of the variable data::Cascade.RrRateCoefficients.
 function Base.show(io::IO, dist::Cascade.RrRateCoefficients) 
     println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
     println(io, "temperatures:             $(dist.temperatures)  ")
@@ -173,7 +171,6 @@ function EieRateCoefficients()
 end
 
 
-# `Base.show(io::IO, dist::Cascade.EieRateCoefficients)`  ... prepares a proper printout of the variable data::Cascade.EieRateCoefficients.
 function Base.show(io::IO, dist::Cascade.EieRateCoefficients)
     println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
     println(io, "temperatures:             $(dist.temperatures)  ")
@@ -216,7 +213,6 @@ function EaCrossSections()
 end
 
 
-# `Base.show(io::IO, dist::Cascade.EaCrossSections)`  ... prepares a proper printout of the variable data::Cascade.EaCrossSections.
 function Base.show(io::IO, dist::Cascade.EaCrossSections)
     println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
     println(io, "electronEnergies:         $(dist.electronEnergies)  ")
@@ -283,7 +279,6 @@ function ResonantIonizationStrengths()
 end
 
 
-# `Base.show(io::IO, dist::Cascade.ResonantIonizationStrengths)`  ... prepares a proper printout of the variable dist.
 function Base.show(io::IO, dist::Cascade.ResonantIonizationStrengths)
     println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
     println(io, "electronEnergyShift:      $(dist.electronEnergyShift)  ")
@@ -382,7 +377,6 @@ function EiiRateCoefficients()
 end
 
 
-# `Base.show(io::IO, dist::Cascade.EiiRateCoefficients)`  ... prepares a proper printout of the variable dist.
 function Base.show(io::IO, dist::Cascade.EiiRateCoefficients)
     println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
     println(io, "temperatures:             $(dist.temperatures)  ")
@@ -434,7 +428,6 @@ function PiRateCoefficients()
 end
 
 
-# `Base.show(io::IO, dist::Cascade.PiRateCoefficients)`  ... prepares a proper printout of the variable dist.
 function Base.show(io::IO, dist::Cascade.PiRateCoefficients)
     println(io, "initialLevelNo:           $(dist.initialLevelNo)  ")
     println(io, "photonDistributions:      $(dist.photonDistributions)  ")
@@ -535,7 +528,6 @@ function ExpansionOpacities()
 end
 
 
-# `Base.show(io::IO, opacities::Cascade.ExpansionOpacities)`  ... prepares a proper printout of the opacities::Cascade.ExpansionOpacities.
 function Base.show(io::IO, opacities::Cascade.ExpansionOpacities) 
     println(io, "levelPopulation:            $(opacities.levelPopulation)  ")
     println(io, "opacityDependence:          $(opacities.opacityDependence)  ")
@@ -763,8 +755,6 @@ function MeanOpacities()
 end
 
 
-# `Base.show(io::IO, opacities::Cascade.MeanOpacities)`
-#   ... prepares a proper printout of opacities::Cascade.MeanOpacities.
 function Base.show(io::IO, opacities::Cascade.MeanOpacities)
     println(io, "opacityMean:                $(opacities.opacityMean)  ")
     println(io, "contributions:              $(opacities.contributions)  ")
@@ -801,7 +791,6 @@ function ElectronIntensities()
 end
 
 
-# `Base.show(io::IO, data::Cascade.ElectronIntensities)`  ... prepares a proper printout of the variable data::Cascade.ElectronIntensities.
 function Base.show(io::IO, dist::Cascade.ElectronIntensities) 
     println(io, "minElectronEnergy:        $(dist.minElectronEnergy)  ")
     println(io, "maxElectronEnergy:        $(dist.maxElectronEnergy)  ")
@@ -837,8 +826,6 @@ function FinalLevelDistribution()
 end
 
 
-# `Base.show(io::IO, data::Cascade.FinalLevelDistribution)`  
-#       ... prepares a proper printout of the variable data::Cascade.FinalLevelDistribution.
 function Base.show(io::IO, dist::Cascade.FinalLevelDistribution) 
     println(io, "initialOccupations:       $(dist.initialOccupations)  ")
     println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
@@ -869,7 +856,6 @@ function IonDistribution()
 end
 
 
-# `Base.show(io::IO, data::Cascade.IonDistribution)`  ... prepares a proper printout of the variable data::Cascade.IonDistribution.
 function Base.show(io::IO, dist::Cascade.IonDistribution) 
     println(io, "initialOccupations:       $(dist.initialOccupations)  ")
     println(io, "leadingConfigs:           $(dist.leadingConfigs)  ")
@@ -905,7 +891,6 @@ function RelaxationCurve()
 end
 
 
-# `Base.show(io::IO, dist::Cascade.RelaxationCurve)`  ... prepares a proper printout of the variable data::Cascade.RelaxationCurve.
 function Base.show(io::IO, dist::Cascade.RelaxationCurve) 
     println(io, "timeStep:                 $(dist.timeStep)  ")
     println(io, "initialOccupations:       $(dist.initialOccupations)  ")
@@ -941,7 +926,6 @@ function PhotonIntensities()
 end
 
 
-# `Base.show(io::IO, dist::Cascade.PhotonIntensities)`  ... prepares a proper printout of the variable data::Cascade.PhotonIntensities.
 function Base.show(io::IO, dist::Cascade.PhotonIntensities) 
     println(io, "minPhotonEnergy:          $(dist.minPhotonEnergy)  ")
     println(io, "maxPhotonEnergy:          $(dist.maxPhotonEnergy)  ")
@@ -990,7 +974,6 @@ function PhotoAbsorptionSpectrum()
 end
 
 
-# `Base.show(io::IO, dist::Cascade.PhotoAbsorptionSpectrum)`  ... prepares a proper printout of the variable data::Cascade.PhotoAbsorptionSpectrum.
 function Base.show(io::IO, dist::Cascade.Cascade.PhotoAbsorptionSpectrum) 
     println(io, "includeIonization:        $(dist.includeIonization)  ")
     println(io, "includeExcitation:        $(dist.includeExcitation)  ")
@@ -1048,7 +1031,6 @@ function SimulationSettings()
 end
 
 
-# `Base.show(io::IO, settings::SimulationSettings)`  ... prepares a proper printout of the variable settings::SimulationSettings.
 function Base.show(io::IO, settings::SimulationSettings) 
     println(io, "printTree:                $(settings.printTree)  ")
     println(io, "printLongTree:            $(settings.printLongTree)  ")
@@ -1107,7 +1089,6 @@ function Simulation(sim::Cascade.Simulation;
 end
 
 
-# `Base.show(io::IO, simulation::Cascade.Simulation)`  ... prepares a proper printout of the variable simulation::Cascade.Simulation.
 function Base.show(io::IO, simulation::Cascade.Simulation) 
     println(io, "name:              $(simulation.name)  ")
     println(io, "property:          $(simulation.property)  ")
@@ -1209,7 +1190,6 @@ function ParticleCoincidences()
 end
 
 
-# `Base.show(io::IO, prop::Cascade.ParticleCoincidences)`  ... prepares a proper printout.
 function Base.show(io::IO, prop::Cascade.ParticleCoincidences)
     println(io, "gates:                    $(prop.gates)  ")
     println(io, "observed:                 $(prop.observed)  ")
@@ -1247,7 +1227,6 @@ struct  LineFlux
 end
 
 
-# `Base.show(io::IO, lf::Cascade.LineFlux)`  ... prepares a proper printout of the variable lf::Cascade.LineFlux.
 function Base.show(io::IO, lf::Cascade.LineFlux)
     println(io, "process:       $(lf.process)  ")
     println(io, "energy:        $(lf.energy)  ")
@@ -1257,7 +1236,6 @@ function Base.show(io::IO, lf::Cascade.LineFlux)
 end 
 
 
-# `Base.show(io::IO, index::Cascade.LineReference)`  ... prepares a proper printout of the variable index::Cascade.LineReference.
 function Base.show(io::IO, index::Cascade.LineReference) 
     println(io, "lines (typeof):        $(typeof(lines))  ")
     println(io, "process:               $(index.process)  ")
@@ -1289,7 +1267,6 @@ mutable struct  Level
 end 
 
 
-# `Base.show(io::IO, level::Cascade.Level)`  ... prepares a proper printout of the variable level::Cascade.Level.
 function Base.show(io::IO, level::Cascade.Level) 
     println(io, "energy:        $(level.energy)  ")
     println(io, "J:             $(level.J)  ")
@@ -1370,7 +1347,6 @@ struct  AbsorptionCrossSection
 end 
 
 
-# `Base.show(io::IO, cs::Cascade.AbsorptionCrossSection)`  ... prepares a proper printout of the variable cs::Cascade.AbsorptionCrossSection.
 function Base.show(io::IO, cs::Cascade.AbsorptionCrossSection) 
     println(io, "photonEnergy:      $(cs.photonEnergy)  ")
     println(io, "excitationCS:      $(cs.excitationCS)  ")

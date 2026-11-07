@@ -73,7 +73,6 @@ function Settings(set::RadiativeAuger.Settings;
 end
 
 
-# `Base.show(io::IO, settings::RadiativeAuger.Settings)`  ... prepares a proper printout of the variable settings::RadiativeAuger.Settings.
 function Base.show(io::IO, settings::RadiativeAuger.Settings) 
     println(io, "multipoles:                   $(settings.multipoles)  ")
     println(io, "gauges:                       $(settings.gauges)  ")

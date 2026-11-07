@@ -168,7 +168,6 @@ function Settings(set::HfsPaschenBack.Settings;
 end
 
 
-# `Base.show(io::IO, settings::HfsPaschenBack.Settings)`  ... prepares a proper printout of the variable settings::HfsPaschenBack.Settings.
 function Base.show(io::IO, settings::HfsPaschenBack.Settings)
     println(io, "includeBField:            $(settings.includeBField)  ")
     println(io, "bField:                   $(settings.bField)  [Tesla]")

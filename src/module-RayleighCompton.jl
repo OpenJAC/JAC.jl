@@ -104,7 +104,6 @@ function Settings(set::RayleighCompton.Settings;
 end
 
 
-# `Base.show(io::IO, settings::RayleighCompton.Settings)`  ... prepares a proper printout of the variable settings::RayleighCompton.Settings.
 function Base.show(io::IO, settings::RayleighCompton.Settings) 
     println(io, "multipoles:               $(settings.multipoles)  ")
     println(io, "gauges:                   $(settings.gauges)  ")
@@ -184,7 +183,6 @@ function Channel()
 end
 
 
-# `Base.show(io::IO, channel::RayleighCompton.Channel)`  ... prepares a proper printout of the variable channel::RayleighCompton.Channel.
 function Base.show(io::IO, channel::RayleighCompton.Channel) 
     println(io, "isS12:        $(channel.isS12)  ")
     println(io, "Jsym:         $(channel.Jsym)  ")
@@ -217,7 +215,6 @@ struct  Line
 end
 
 
-# `Base.show(io::IO, line::RayleighCompton.Line)`  ... prepares a proper printout of the variable line::RayleighCompton.Line.
 function Base.show(io::IO, line::RayleighCompton.Line) 
     println(io, "initialLevel:      $(line.initialLevel)  ")
     println(io, "finalLevel:        $(line.finalLevel)  ")

@@ -248,7 +248,6 @@ function Settings(settings::RandomPhase.Settings;
 end
 
 
-# `Base.show(io::IO, settings::RandomPhase.Settings)`  ... prepares a proper printout of settings::RandomPhase.Settings.
 function Base.show(io::IO, settings::RandomPhase.Settings)
     println(io, "activeSubshells:          $(settings.activeSubshells)  ")
     println(io, "targetSubshells:          $(settings.targetSubshells)  ")
@@ -323,7 +322,6 @@ struct CoupledResponse
 end
 
 
-# `Base.show(io::IO, response::RandomPhase.CoupledResponse)`  ... prepares a proper printout of response::RandomPhase.CoupledResponse.
 function Base.show(io::IO, response::RandomPhase.CoupledResponse)
     println(io, "multipole, gauge:         $(response.multipole), $(response.gauge)  ")
     println(io, "omega:                    $(response.omega)  ")

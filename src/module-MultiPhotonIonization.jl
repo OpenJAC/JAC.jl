@@ -69,7 +69,6 @@ function TwoPhotonOneElectronScheme()
 end
 
 
-# `Base.show(io::IO, scheme::MultiPhotonIonization.TwoPhotonOneElectronScheme)`  ... prepares a proper printout.
 function Base.show(io::IO, scheme::MultiPhotonIonization.TwoPhotonOneElectronScheme)
     println(io, "omegas:                   $(scheme.omegas)  ")
     println(io, "multipoles:               $(scheme.multipoles)  ")
@@ -141,7 +140,6 @@ function Settings(set::MultiPhotonIonization.Settings;
 end
 
 
-# `Base.show(io::IO, settings::MultiPhotonIonization.Settings)`  ... prepares a proper printout of the settings.
 function Base.show(io::IO, settings::MultiPhotonIonization.Settings)
     println(io, "scheme:                   $(settings.scheme)  ")
     println(io, "gauges:                   $(settings.gauges)  ")

@@ -86,7 +86,6 @@ function Settings(set::ElectronCapture.Settings;
 end
 
 
-# `Base.show(io::IO, settings::ElectronCapture.Settings)`  ... prepares a proper printout of the variable settings::ElectronCapture.Settings.
 function Base.show(io::IO, settings::ElectronCapture.Settings)
     println(io, "printBefore:                   $(settings.printBefore)  ")
     println(io, "lineSelection:                 $(settings.lineSelection)  ")
@@ -152,7 +151,6 @@ function Line(initialLevel::Level, finalLevel::Level, totalRate::Float64)
 end
 
 
-# `Base.show(io::IO, line::ElectronCapture.Line)`  ... prepares a proper printout of the variable line::ElectronCapture.Line.
 function Base.show(io::IO, line::ElectronCapture.Line) 
     println(io, "initialLevel:           $(line.initialLevel)  ")
     println(io, "finalLevel:             $(line.finalLevel)  ")

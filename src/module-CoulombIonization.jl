@@ -122,7 +122,6 @@ function Settings(set::CoulombIonization.Settings;
 end
 
 
-# `Base.show(io::IO, settings::CoulombIonization.Settings)`  ... prepares a proper printout of the settings.
 function Base.show(io::IO, settings::CoulombIonization.Settings)
     println(io, "ionEnergies:              $(settings.ionEnergies)  ")
     println(io, "electronEnergies:         $(settings.electronEnergies)  ")
@@ -158,7 +157,6 @@ struct  Channel
 end
 
 
-# `Base.show(io::IO, channel::CoulombIonization.Channel)`  ... prepares a proper printout of the channel.
 function Base.show(io::IO, channel::CoulombIonization.Channel) 
     println(io, "kappa:         $(channel.kappa)  ")
     println(io, "m:             $(channel.m)  ")
@@ -189,7 +187,6 @@ struct  MagneticLine
 end
 
 
-# `Base.show(io::IO, mLine::CoulombIonization.MagneticLine)`  ... prepares a proper printout of the magnetic line.
 function Base.show(io::IO, mLine::CoulombIonization.MagneticLine) 
     println(io, "Mi:            $(mLine.Mi)  ")
     println(io, "Mf:            $(mLine.Mf)  ")
@@ -226,7 +223,6 @@ struct  Line
 end
 
 
-# `Base.show(io::IO, line::CoulombIonization.Line)`  ... prepares a proper printout of the line.
 function Base.show(io::IO, line::CoulombIonization.Line) 
     println(io, "initialLevel:      $(line.initialLevel)  ")
     println(io, "finalLevel:        $(line.finalLevel)  ")

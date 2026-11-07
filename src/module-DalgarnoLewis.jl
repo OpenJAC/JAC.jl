@@ -132,7 +132,6 @@ function Settings(settings::DalgarnoLewis.Settings;
 end
 
 
-# `Base.show(io::IO, settings::DalgarnoLewis.Settings)`  ... prepares a proper printout of settings::DalgarnoLewis.Settings.
 function Base.show(io::IO, settings::DalgarnoLewis.Settings)
     println(io, "regularization:           $(settings.regularization)  ")
     println(io, "singularityTolerance:     $(settings.singularityTolerance)  ")
@@ -181,7 +180,6 @@ struct PerturbedOrbital
 end
 
 
-# `Base.show(io::IO, chi::DalgarnoLewis.PerturbedOrbital)`  ... prepares a proper printout of chi::DalgarnoLewis.PerturbedOrbital.
 function Base.show(io::IO, chi::DalgarnoLewis.PerturbedOrbital)
     println(io, "subshell:                 $(chi.subshell)  ")
     println(io, "sourceSubshell:           $(chi.sourceSubshell)  ")

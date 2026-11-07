@@ -56,13 +56,11 @@ end
 export EmStokes
 
 
-# `Base.show(io::IO, ps::EmStokes)`  ... prepares a proper printout of the variable ps::EmStokes.
 function Base.show(io::IO, ps::EmStokes) 
     sa = Base.string(ps);                print(io, sa)
 end
 
 
-# `Base.string(ps::EmStokes)`  ... provides a String notation for the variable ps::EmStokes.
 function Base.string(ps::EmStokes)
     sa = "Stokes parameter P1 = $(ps.P1),  P2 = $(ps.P2),  P3 = $(ps.P3)  "
     return( sa )
@@ -98,13 +96,11 @@ function ExpStokes()
 end
 
 
-# `Base.show(io::IO, ps::ExpStokes)`  ... prepares a proper printout of the variable ps::ExpStokes.
 function Base.show(io::IO, ps::ExpStokes) 
     sa = Base.string(ps);                print(io, sa)
 end
 
 
-# `Base.string(ps::ExpStokes)`  ... provides a String notation for the variable ps::ExpStokes.
 function Base.string(ps::ExpStokes)
     sa = "exp. Stokes parameters P1 = $(ps.P1),  P2 = $(ps.P2),  P3 = $(ps.P3)"
     return( sa )
@@ -140,13 +136,11 @@ function  LevelKey()
 end
 
 
-# `Base.show(io::IO, key::LevelKey)`  ... prepares a proper printout of the variable key::LevelKey.
 function Base.show(io::IO, key::LevelKey) 
     print(io, string(key) )
 end
 
 
-# `Base.string(key::LevelKey)`  ... provides a proper printout of the variable key::LevelKey.
 function Base.string(key::LevelKey) 
     return( "LevelKey[$(key.sym) ($(key.index)), en=$(key.energy), occ=$(key.relativeOcc)]")
 end
@@ -183,13 +177,11 @@ function  LineKey()
 end
 
 
-# `Base.show(io::IO, key::LineKey)`  ... prepares a proper printout of the variable key::LineKey.
 function Base.show(io::IO, key::LineKey) 
     print(io, string(key) )
 end
 
 
-# `Base.string(key::LineKey)`  ... provides a proper printout of the variable key::LevelKey.
 function Base.string(key::LineKey) 
     return( "LineKey[i=$(key.iLevelKey) --> f=$(key.fLevelKey), en=$(key.energy), strength=$(key.strength)]")
 end
@@ -219,13 +211,11 @@ function ScalarProperty(wa::Float64)
 end
 
 
-# `Base.show(io::IO, property::ScalarProperty)`  ... prepares a proper printout of the variable property::ScalarProperty.
 function Base.show(io::IO, property::ScalarProperty) 
     sa = Base.string(property);                print(io, sa)
 end
 
 
-# `Base.string(property::ScalarProperty)`  ... provides a String notation for the variable property::ScalarProperty.
 function Base.string(property::ScalarProperty)
     sa = "f($(property.arg)) = $(property.value)"
     return( sa )
@@ -247,7 +237,6 @@ struct  SolidAngle
 end
 
 
-# `Base.show(io::IO, Omega::SolidAngle)`  ... prepares a proper printout of the variable Omega::SolidAngle.
 function Base.show(io::IO, Omega::SolidAngle)
     sa = "Omega == (" * string(Omega.theta) * ", " * string(Omega.phi) * ")"
     print(io, sa)
@@ -275,13 +264,11 @@ end
 export TensorComp
 
 
-# `Base.show(io::IO, st::TensorComp)`  ... prepares a proper printout of the variable st::TensorComp.
 function Base.show(io::IO, st::TensorComp) 
     sa = Base.string(st);                print(io, sa)
 end
 
 
-# `Base.string(st::TensorComp)`  ... provides a String notation for the variable st::TensorComp.
 function Base.string(st::TensorComp)
     sa = "Statistical tensor component rho_($(st.k),$(st.q)) = $(st.comp)  "
     return( sa )

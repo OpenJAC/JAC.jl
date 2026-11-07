@@ -70,7 +70,6 @@ function Settings(set::CoulombExcitation.Settings;
 end
 
 
-# `Base.show(io::IO, settings::CoulombExcitation.Settings)`  ... prepares a proper printout of the variable settings::CoulombExcitation.Settings.
 function Base.show(io::IO, settings::CoulombExcitation.Settings) 
     println(io, "ionEnergies:              $(settings.ionEnergies)  ")
     println(io, "calcAlignment:            $(settings.calcAlignment)  ")
@@ -97,7 +96,6 @@ struct  Channel
 end
 
 
-# `Base.show(io::IO, channel::CoulombExcitation.Channel)`  ... prepares a proper printout of the variable channel::CoulombExcitation.Channel.
 function Base.show(io::IO, channel::CoulombExcitation.Channel) 
     println(io, "q:             $(channel.q)  ")
     println(io, "w:             $(channel.w)  ")
@@ -124,7 +122,6 @@ struct  MagneticLine
 end
 
 
-# `Base.show(io::IO, channel::CoulombExcitation.MagneticLine)`  ... prepares a proper printout of the variable channel::CoulombExcitation.MagneticLine.
 function Base.show(io::IO, mLine::CoulombExcitation.MagneticLine) 
     println(io, "Mi:            $(mLine.Mi)  ")
     println(io, "Mf:            $(mLine.Mf)  ")
@@ -157,7 +154,6 @@ struct  Line
 end
 
 
-# `Base.show(io::IO, line::CoulombExcitation.Line)`  ... prepares a proper printout of the variable line::CoulombExcitation.Line.
 function Base.show(io::IO, line::CoulombExcitation.Line) 
     println(io, "initialLevel:      $(line.initialLevel)  ")
     println(io, "finalLevel:        $(line.finalLevel)  ")

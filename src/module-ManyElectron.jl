@@ -117,7 +117,6 @@ function LSjjSettings(makeIt::Bool)
 end
 
 
-# `Base.show(io::IO, settings::LSjjSettings)`  ... prepares a proper printout of the variable settings::LSjjSettings.
 function Base.show(io::IO, settings::LSjjSettings) 
     println(io, "makeIt:            $(settings.makeIt)  ")
     println(io, "minWeight:         $(settings.minWeight)  ")
@@ -238,7 +237,6 @@ function AsfSettings(settings::AsfSettings;
 end
 
 
-# `Base.show(io::IO, settings::AsfSettings)`  ... prepares a proper printout of the settings::AsfSettings.
 function Base.show(io::IO, settings::AsfSettings)
         println(io, "generateScf:          $(settings.generateScf)  ")
         println(io, "eeInteraction:        $(settings.eeInteraction)  ")
@@ -258,7 +256,6 @@ function Base.show(io::IO, settings::AsfSettings)
 end
 
 
-# `Base.string(settings::AsfSettings)`  ... provides a String notation for the variable settings::AsfSettings.
 function Base.string(settings::AsfSettings)
         error("Not yet implemented.")
         sa = "Asf settings: scf route = $(settings.scfRoute), accuracy = (settings.accuracyScf)"
@@ -352,13 +349,11 @@ function CsfR(sa::String)
 end
 
 
-# `Base.show(io::IO, csf::CsfR)`  ... prepares a proper printout of the variable orbital::CsfR.
 function Base.show(io::IO, csf::CsfR) 
         print(io, string(csf) ) 
 end
 
 
-# `Base.string(csf::CsfR)`  ... provides a String notation for csf::CsfR.
 function Base.string(csf::CsfR) 
     sa = "\n   CSF: "
     if    csf.useStandardSubshells
@@ -683,7 +678,6 @@ function Base.show(io::IO, basis::Basis)
 end
 
 
-# `Base.string(basis::Basis)`  ... provides a String notation for variable basis::Basis.
 function Base.string(basis::Basis) 
     if  basis.isDefined
         sa = "Atomic basis:  $(length(basis.csfs)) CSF defined for $(basis.NoElectrons) elecrons."
@@ -752,7 +746,6 @@ function Level(level::Level, subshells::Array{Subshell,1})
 end
 
 
-# `Base.show(io::IO, level::Level)`  ... prepares a proper printout of the variable level::Level.
 function Base.show(io::IO, level::Level) 
     println(io, "Level: J = $(level.J), M = $(level.M), parity = $(level.parity), index = $(level.index) ")
     println(io, "energy:         $(level.energy)  ")
@@ -823,7 +816,6 @@ function Multiplet(multiplet::Multiplet, subshells::Array{Subshell,1})
 end
 
 
-# `Base.show(io::IO, multiplet::Multiplet)`  ... prepares a proper printout of the variable multiplet::Multiplet.
 function Base.show(io::IO, multiplet::Multiplet) 
     println(io, "name:        $(multiplet.name)  ")
     println(io, "levels:      $(multiplet.levels)  ")

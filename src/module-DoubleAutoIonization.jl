@@ -84,7 +84,6 @@ function Settings(set::DoubleAutoIonization.Settings;
 end
 
 
-# `Base.show(io::IO, settings::DoubleAutoIonization.Settings)`  ... prepares a proper printout of the variable settings::DoubleAutoIonization.Settings.
 function Base.show(io::IO, settings::DoubleAutoIonization.Settings)
     println(io, "green:                         (settings.green)  ")
     println(io, "NoEnergySharings:             $(settings.NoEnergySharings)  ")
@@ -124,8 +123,6 @@ struct  ReducedChannel
 end
 
 
-# `Base.show(io::IO, channel::DoubleAutoIonization.ReducedChannel)`  
-#       ... prepares a proper printout of the variable cannel::DoubleAutoIonization.ReducedChannel.
 function Base.show(io::IO, channel::DoubleAutoIonization.ReducedChannel) 
     # sa = "reduced DA channel for J^P=(channel.tSymmetry)  with " * 
     #      "kappa1=$(channel.kappa1), energy1=$(channel.energy1), phase1=$(channel.phase1), " *
@@ -164,7 +161,6 @@ struct  Sharing
 end
 
 
-# `Base.show(io::IO, sharing::DoubleAutoIonization.Sharing)`  ... prepares a proper printout of the variable sharing::DoubleAutoIonization.Sharing.
 function Base.show(io::IO, sharing::DoubleAutoIonization.Sharing) 
     println(io, "epsilon1:               $(sharing.epsilon1)  ")
     println(io, "epsilon2:               $(sharing.epsilon2)  ")

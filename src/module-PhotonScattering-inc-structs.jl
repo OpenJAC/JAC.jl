@@ -120,7 +120,6 @@ function Channel()
 end
 
 
-# `Base.show(io::IO, ch::PhotonScattering.Channel)`  ... prepares a proper printout of the variable ch::PhotonScattering.Channel.
 function Base.show(io::IO, ch::PhotonScattering.Channel)
     println(io, "kappa = $(ch.kappa),  in = $(ch.inMultipole),  out = $(ch.outMultipole),  gauge = $(ch.gauge),  " *
                 "ordering = $(ch.timeOrdering),  J^pi = $(ch.totalSymmetry),  amplitude = $(ch.amplitude)")
@@ -157,7 +156,6 @@ function Observables()
 end
 
 
-# `Base.show(io::IO, obs::PhotonScattering.Observables)`  ... prepares a proper printout of obs::PhotonScattering.Observables.
 function Base.show(io::IO, obs::PhotonScattering.Observables)
     println(io, "theta = $(obs.theta),  phi = $(obs.phi),  dcs = $(obs.dcs),  " *
                 "P1 = $(obs.P1),  P2 = $(obs.P2),  P3 = $(obs.P3)")
@@ -198,7 +196,6 @@ function Line()
 end
 
 
-# `Base.show(io::IO, line::PhotonScattering.Line)`  ... prepares a proper printout of the variable line::PhotonScattering.Line.
 function Base.show(io::IO, line::PhotonScattering.Line)
     println(io, "initialLevel:       $(line.initialLevel.index)  ")
     println(io, "finalLevel:         $(line.finalLevel.index)  ")

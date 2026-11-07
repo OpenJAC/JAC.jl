@@ -188,7 +188,6 @@ function Settings(set::PhotonScattering.Settings;
 end
 
 
-# `Base.show(io::IO, settings::PhotonScattering.Settings)`  ... prepares a proper printout of settings::PhotonScattering.Settings.
 function Base.show(io::IO, settings::PhotonScattering.Settings)
     println(io, "process:               $(settings.process)  ")
     println(io, "approximation:         $(settings.approximation)  ")

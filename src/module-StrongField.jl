@@ -314,7 +314,6 @@ function Settings(set::StrongField.Settings;
 end
 
 
-# `Base.show(io::IO, settings::StrongField.Settings)`  ... prepares a proper printout of the variable settings::StrongField.Settings.
 function Base.show(io::IO, settings::StrongField.Settings) 
     println(io, "multipoles:                 $(settings.multipoles)  ")
     println(io, "use-gauges:                 $(settings.gauge)  ")
@@ -363,7 +362,6 @@ function Computation()
 end
 
 
-# `Base.string(comp::StrongField.Computation)`  ... provides a String notation for the variable comp::StrongField.Computation.
 function Base.string(comp::StrongField.Computation)
     sa = "Strong-field computation:  " * string(comp.observable) * " for Z = $(comp.nuclearModel.Z)  with " * string(comp.volkov) * "\n"
     sa = sa * " initial level with (J, P, energy) = ($(comp.initialLevel.J), $(comp.initialLevel.parity), $(comp.initialLevel.energy)) \n" 
@@ -374,7 +372,6 @@ function Base.string(comp::StrongField.Computation)
 end
 
 
-# `Base.show(io::IO, comp::StrongField.Computation)`  ... prepares a proper printout of the variable comp::StrongField.Computation.
 function Base.show(io::IO, comp::StrongField.Computation) 
     sa = Base.string(comp);             print(io, sa, "\n\n")
     println(io, "Settings:              \n$(comp.settings)    ")  
@@ -429,8 +426,6 @@ struct   OutcomeEnergyDistribution
 end
 
 
-# `Base.show(io::IO, outcome::StrongField.OutcomeEnergyDistribution)`  
-#       ... prepares a proper printout of the variable outcome::StrongField.OutcomeEnergyDistribution.
 function Base.show(io::IO, outcome::StrongField.OutcomeEnergyDistribution) 
     println(io, "theta:             $(outcome.theta)  ")
     println(io, "phi:               $(outcome.phi)  ")
@@ -455,8 +450,6 @@ struct   OutcomeMomentumDistribution
 end
 
 
-# `Base.show(io::IO, outcome::StrongField.OutcomeMomentumDistribution)`  
-#       ... prepares a proper printout of the variable outcome::StrongField.OutcomeMomentumDistribution.
 function Base.show(io::IO, outcome::StrongField.OutcomeMomentumDistribution) 
     println(io, "theta:             $(outcome.theta)  ")
     println(io, "momenta:           $(outcome.momenta)  ")
@@ -482,8 +475,6 @@ struct   OutcomeAzimuthalAngularDistribution
 end
 
 
-# `Base.show(io::IO, outcome::StrongField.OutcomeAzimuthalAngularDistribution)`  
-#       ... prepares a proper printout of the variable outcome::StrongField.OutcomePolarAngularDistribution.
 function Base.show(io::IO, outcome::StrongField.OutcomeAzimuthalAngularDistribution) 
     println(io, "theta:             $(outcome.theta)  ")
     println(io, "energy:            $(outcome.energy)  ")
@@ -510,8 +501,6 @@ struct   OutcomePolarAngularDistribution
 end
 
 
-# `Base.show(io::IO, outcome::StrongField.OutcomePolarAngularDistribution)`  
-#   ... prepares a proper printout of the variable outcome::StrongField.OutcomePolarAngularDistribution.
 function Base.show(io::IO, outcome::StrongField.OutcomePolarAngularDistribution) 
     println(io, "phi:             $(outcome.phi)  ")
     println(io, "energy:            $(outcome.energy)  ")

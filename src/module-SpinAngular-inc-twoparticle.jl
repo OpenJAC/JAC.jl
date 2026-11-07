@@ -53,7 +53,6 @@ struct  Coefficient2p{K<:AbstractTwoElectronKind}
 end
 
 
-# `Base.show(io::IO, coeff::SpinAngular.Coefficient2p)`  ... prepares a proper printout of coeff.
 function Base.show(io::IO, coeff::SpinAngular.Coefficient2p{K})  where K<:AbstractTwoElectronKind
     print(io, "   V^$(coeff.nu) [$(coeff.a), $(coeff.b); $(coeff.c), $(coeff.d)] = $(coeff.V)   ($(K.name.name))")
 end

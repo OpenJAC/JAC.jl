@@ -51,7 +51,6 @@ function AngularJ64(rational::Rational{Int64})
 end
 
 
-# `Base.show(io::IO, j::AngularJ64)`  ... prepares a proper printout of the variable j::AngularJ64.
 function Base.show(io::IO, j::AngularJ64) 
     if      j.den == 1    print(io, j.num)
     elseif  j.den == 2    print(io, j.num, "/2")
@@ -152,7 +151,6 @@ function AngularM64(j::AngularJ64)
 end
 
 
-# `Base.show(io::IO, m::AngularM64)`  ... prepares a proper printout of the variable m::AngularM64.
 function Base.show(io::IO, m::AngularM64) 
     if      m.den == 1    print(io, m.num)
     elseif  m.den == 2    print(io, m.num, "/2")
@@ -224,13 +222,11 @@ function  LevelSymmetry(i::Int64,sa::String)
 end
 
 
-# `Base.show(io::IO, sym::LevelSymmetry)`  ... prepares a proper printout of the variable sym::LevelSymmetry.
 function Base.show(io::IO, sym::LevelSymmetry) 
     print(io, string(sym) )
 end
 
 
-# `Base.string(sym::LevelSymmetry)`  ... provides a proper printout of the variable sym::LevelSymmetry.
 function Base.string(sym::LevelSymmetry) 
     if      sym.parity == plus     return( "$(sym.J) +" )
     elseif  sym.parity == minus    return( "$(sym.J) -" )  
@@ -355,14 +351,12 @@ struct   RestrictMaximumDisplacements  <: AbstractConfigurationRestriction
 end
 
 
-# `Base.string(res::RestrictMaximumDisplacements)`  ... provides a proper printout of the variable res::RestrictMaximumDisplacements.
 function Base.string(res::RestrictMaximumDisplacements)
     sa = "Restrict to configurations with maximum $(res.maxDisplace) displacements w.r.t. $(res.conf)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, res::RestrictMaximumDisplacements)`  ... prepares a proper printout of the variable res::RestrictMaximumDisplacements.
 function Base.show(io::IO, res::RestrictMaximumDisplacements)
     sa = string(res);       print(io, sa)
 end
@@ -384,14 +378,12 @@ struct   RestrictNoElectronsTo  <: AbstractConfigurationRestriction
 end
 
 
-# `Base.string(res::RestrictNoElectronsTo)`  ... provides a proper printout of the variable res::RestrictNoElectronsTo.
 function Base.string(res::RestrictNoElectronsTo)
     sa = "Restrict to configurations with a maximum of $(res.ne) electrons in shells with n >= $(res.nmin) & l >= $(res.lmin)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, res::RestrictNoElectronsTo)`  ... prepares a proper printout of the variable res::RestrictNoElectronsTo.
 function Base.show(io::IO, res::RestrictNoElectronsTo)
     sa = string(res);       print(io, sa)
 end
@@ -408,14 +400,12 @@ struct   RestrictParity  <: AbstractConfigurationRestriction
 end
 
 
-# `Base.string(res::RestrictParity)`  ... provides a proper printout of the variable res::RestrictParity.
 function Base.string(res::RestrictParity)
     sa = "Restrict to configurations with parity $(res.parity)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, res::RestrictParity)`  ... prepares a proper printout of the variable res::RestrictParity.
 function Base.show(io::IO, res::RestrictParity)
     sa = string(res);       print(io, sa)
 end
@@ -434,14 +424,12 @@ struct   RestrictToShellDoubles  <: AbstractConfigurationRestriction
 end
 
 
-# `Base.string(res::RestrictToShellDoubles)`  ... provides a proper printout of the variable res::RestrictToShellDoubles.
 function Base.string(res::RestrictToShellDoubles)
     sa = "Restrict to configurations with a double electron occupation in shells with n >= $(res.nmin) & l >= $(res.lmin)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, res::RestrictToShellDoubles)`  ... prepares a proper printout of the variable res::RestrictToShellDoubles.
 function Base.show(io::IO, res::RestrictToShellDoubles)
     sa = string(res);       print(io, sa)
 end
@@ -460,14 +448,12 @@ struct   RequestMinimumOccupation  <: AbstractConfigurationRestriction
 end
 
 
-# `Base.string(res::RequestMinimumOccupation)`  ... provides a proper printout of the variable res::RequestMinimumOccupation.
 function Base.string(res::RequestMinimumOccupation)
     sa = "Request a minimum occupation of $(res.ne) electron in the (list of) shells $(res.shells)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, res::RequestMinimumOccupation)`  ... prepares a proper printout of the variable res::RequestMinimumOccupation.
 function Base.show(io::IO, res::RequestMinimumOccupation)
     sa = string(res);       print(io, sa)
 end
@@ -486,14 +472,12 @@ struct   RequestMaximumOccupation  <: AbstractConfigurationRestriction
 end
 
 
-# `Base.string(res::RequestMaximumOccupation)`  ... provides a proper printout of the variable res::RequestMaximumOccupation.
 function Base.string(res::RequestMaximumOccupation)
     sa = "Request a maximum occupation of $(res.ne) electron in the (list of) shells $(res.shells)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, res::RequestMaximumOccupation)`  ... prepares a proper printout of the variable res::RequestMaximumOccupation.
 function Base.show(io::IO, res::RequestMaximumOccupation)
     sa = string(res);       print(io, sa)
 end
@@ -677,14 +661,12 @@ struct   AddElectrons                 <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.AddElectrons)`  ... provides a proper printout of the variable theme::Basics.AddElectrons.
 function Base.string(theme::Basics.AddElectrons)
     sa = "AddElectrons theme with number of electrons ne=$(theme.ne) added into $(theme.intoShells)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.AddElectrons)`  ... prepares a proper printout of the variable theme::Basics.AddElectrons.
 function Base.show(io::IO, theme::Basics.AddElectrons)
     sa = string(theme);       print(io, sa)
 end
@@ -701,14 +683,12 @@ struct   ByNumber                     <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ByNumber)`  ... provides a proper printout of the variable theme::Basics.ByNumber.
 function Base.string(theme::Basics.ByNumber)
     sa = "ByNumber theme with selected numbers of electrons $(theme.NoElectrons)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.ByNumber)`  ... prepares a proper printout of the variable theme::Basics.ByNumber.
 function Base.show(io::IO, theme::Basics.ByNumber)
     sa = string(theme);       print(io, sa)
 end
@@ -725,14 +705,12 @@ struct   ByParity                     <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ByParity)`  ... provides a proper printout of the variable theme::Basics.ByParity.
 function Base.string(theme::Basics.ByParity)
     sa = "ByParity theme with selected parity P=$(theme.P)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.ByParity)`  ... prepares a proper printout of the variable theme::Basics.ByParity.
 function Base.show(io::IO, theme::Basics.ByParity)
     sa = string(theme);       print(io, sa)
 end
@@ -753,14 +731,12 @@ struct   ExciteElectrons              <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ExciteElectrons)`  ... provides a proper printout of the variable theme::Basics.ExciteElectrons.
 function Base.string(theme::Basics.ExciteElectrons)
     sa = "ExciteElectrons theme with number of electrons ne=$(theme.ne) from $(theme.fromShells) into $(theme.intoShells)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.ExciteElectrons)`  ... prepares a proper printout of the variable theme::Basics.ExciteElectrons.
 function Base.show(io::IO, theme::Basics.ExciteElectrons)
     sa = string(theme);       print(io, sa)
 end
@@ -777,14 +753,12 @@ struct   ExpandShells                 <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ExpandShells)`  ... provides a proper printout of the variable theme::Basics.ExpandShells.
 function Base.string(theme::Basics.ExpandShells)
     sa = "ExpandShells theme with shells=$(theme.shells)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.ExpandShells)`  ... prepares a proper printout of the variable theme::Basics.ExpandShells.
 function Base.show(io::IO, theme::Basics.ExpandShells)
     sa = string(theme);       print(io, sa)
 end
@@ -805,7 +779,6 @@ struct   ForDielectronicCapture         <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ForDielectronicCapture)`  ... provides a proper printout of the variable theme::Basics.ForDielectronicCapture.
 function Base.string(theme::Basics.ForDielectronicCapture)
     sa = "ForDielectronicCapture theme with electron excitaton from $(theme.fromShells) to $(theme.toShells) " *
          "as well as the capture of an additional electron into $(theme.intoShells)."
@@ -813,7 +786,6 @@ function Base.string(theme::Basics.ForDielectronicCapture)
 end
 
 
-# `Base.show(io::IO, theme::Basics.ForDielectronicCapture)`  ... prepares a proper printout of the variable theme::Basics.ForDielectronicCapture.
 function Base.show(io::IO, theme::Basics.ForDielectronicCapture)
     sa = string(theme);       print(io, sa)
 end
@@ -838,7 +810,6 @@ struct   ForDielectronicRecombination           <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ForDielectronicRecombination)`  ... provides a proper printout of the variable theme::Basics.ForDielectronicRecombination.
 function Base.string(theme::Basics.ForDielectronicRecombination)
     sa = "ForDielectronicRecombination theme with electron excitaton from $(theme.fromShells) to $(theme.toShells), " *
          "together with the capture of an additional electron into $(theme.intoShells) " *
@@ -847,7 +818,6 @@ function Base.string(theme::Basics.ForDielectronicRecombination)
 end
 
 
-# `Base.show(io::IO, theme::Basics.ForDielectronicRecombination)`  ... prepares a proper printout of the variable theme::Basics.ForDielectronicRecombination.
 function Base.show(io::IO, theme::Basics.ForDielectronicRecombination)
     sa = string(theme);       print(io, sa)
 end  
@@ -864,14 +834,12 @@ struct   ForElectronCapture             <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ForElectronCapture)`  ... provides a proper printout of the variable theme::Basics.ForElectronCapture.
 function Base.string(theme::Basics.ForElectronCapture)
     sa = "ForElectronCapture theme with one additional electron into $(theme.intoShells)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.ForElectronCapture)`  ... prepares a proper printout of the variable theme::Basics.ForElectronCapture.
 function Base.show(io::IO, theme::Basics.ForElectronCapture)
     sa = string(theme);       print(io, sa)
 end
@@ -893,7 +861,6 @@ struct   ForHollowIons                  <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ForHollowIons)`  ... provides a proper printout of the variable theme::Basics.ForHollowIons.
 function Base.string(theme::Basics.ForHollowIons)
     sa = "ForHollowIons theme with number of electrons ne=$(theme.ne), the capture into into $(theme.intoShells) and " *
          "the subsequent decay into $(theme.decayShells)"
@@ -901,7 +868,6 @@ function Base.string(theme::Basics.ForHollowIons)
 end
 
 
-# `Base.show(io::IO, theme::Basics.ForHollowIons)`  ... prepares a proper printout of the variable theme::Basics.ForHollowIons.
 function Base.show(io::IO, theme::Basics.ForHollowIons)
     sa = string(theme);       print(io, sa)
 end
@@ -918,14 +884,12 @@ struct   ForPhotoRecombination          <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ForPhotoRecombination)`  ... provides a proper printout of the variable theme::Basics.ForPhotoRecombination.
 function Base.string(theme::Basics.ForPhotoRecombination)
     sa = "ForPhotoRecombination theme with one additional electron into $(theme.intoShells)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.ForPhotoRecombination)`  ... prepares a proper printout of the variable theme::Basics.ForPhotoRecombination.
 function Base.show(io::IO, theme::Basics.ForPhotoRecombination)
     sa = string(theme);       print(io, sa)
 end
@@ -952,7 +916,6 @@ struct   ForRasExcitations               <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ForRasExcitations)`  ... provides a proper printout of the variable theme::Basics.ForRasExcitations.
 function Base.string(theme::Basics.ForRasExcitations)
     sa = "ForRasExcitations theme with SDTQ = ($(theme.se), $(theme.de), $(theme.te), $(theme.qe)) and excitations " *
          "from $(theme.fromShells) into $(theme.intoShells)."
@@ -960,7 +923,6 @@ function Base.string(theme::Basics.ForRasExcitations)
 end
 
 
-# `Base.show(io::IO, theme::Basics.ForRasExcitations)`  ... prepares a proper printout of the variable theme::Basics.ForRasExcitations.
 function Base.show(io::IO, theme::Basics.ForRasExcitations)
     sa = string(theme);       print(io, sa)
 end
@@ -994,7 +956,6 @@ function ForStepwiseDecay(maximallyReleased::Int64)
 end
 
 
-# `Base.string(theme::Basics.ForStepwiseDecay)`  ... provides a proper printout of the variable theme::Basics.ForStepwiseDecay.
 function Base.string(theme::Basics.ForStepwiseDecay)
     sa = "ForStepwiseDecay theme with the maximum number of released electrons $(theme.maximallyReleased) " *
          "and the additional decay shells $(theme.decayShells)."
@@ -1002,7 +963,6 @@ function Base.string(theme::Basics.ForStepwiseDecay)
 end
 
 
-# `Base.show(io::IO, theme::Basics.ForStepwiseDecay)`  ... prepares a proper printout of the variable theme::Basics.ForStepwiseDecay.
 function Base.show(io::IO, theme::Basics.ForStepwiseDecay)
     sa = string(theme);       print(io, sa)
 end
@@ -1019,14 +979,12 @@ struct   HyperfineStructure             <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.HyperfineStructure)`  ... provides a proper printout of the variable theme::Basics.HyperfineStructure.
 function Base.string(theme::Basics.HyperfineStructure)
     sa = "HyperfineStructure theme with nuclear spin $(theme.spinI)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.HyperfineStructure)`  ... prepares a proper printout of the variable theme::Basics.HyperfineStructure.
 function Base.show(io::IO, theme::Basics.HyperfineStructure)
     sa = string(theme);       print(io, sa)
 end
@@ -1044,14 +1002,12 @@ struct   ZeemanStructure                <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.ZeemanStructure)`  ... provides a proper printout of the variable theme::Basics.ZeemanStructure.
 function Base.string(theme::Basics.ZeemanStructure)
     sa = "ZeemanStructure theme with a magnetic flux density of $(theme.BField) Tesla."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.ZeemanStructure)`  ... prepares a proper printout of the variable theme::Basics.ZeemanStructure.
 function Base.show(io::IO, theme::Basics.ZeemanStructure)
     sa = string(theme);       print(io, sa)
 end
@@ -1070,14 +1026,12 @@ struct   RemoveElectrons              <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.RemoveElectrons)`  ... provides a proper printout of the variable theme::Basics.RemoveElectrons.
 function Base.string(theme::Basics.RemoveElectrons)
     sa = "RemoveElectrons theme with number of electrons ne=$(theme.ne) from $(theme.fromShells)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.RemoveElectrons)`  ... prepares a proper printout of the variable theme::Basics.RemoveElectrons.
 function Base.show(io::IO, theme::Basics.RemoveElectrons)
     sa = string(theme);       print(io, sa)
 end
@@ -1118,7 +1072,6 @@ function Basics.RestrictExcitations(theme::Basics.ExciteElectrons, restrictions:
 end
 
 
-# `Base.string(theme::Basics.RestrictExcitations)`  ... provides a proper printout of the variable theme::Basics.RestrictExcitations.
 function Base.string(theme::Basics.RestrictExcitations)
     sa = "RestrictExcitations theme with the excitation of $(theme.ne) electrons from $(theme.fromShells) " *
          "to $(theme.toShells) and with the following $(length(theme.restrictions)) restriction:"
@@ -1126,7 +1079,6 @@ function Base.string(theme::Basics.RestrictExcitations)
 end
 
 
-# `Base.show(io::IO, theme::Basics.RestrictExcitations)`  ... prepares a proper printout of the variable theme::Basics.RestrictExcitations.
 function Base.show(io::IO, theme::Basics.RestrictExcitations)
     sa = string(theme);       print(io, sa)
     for  restriction  in  theme.restrictions
@@ -1148,14 +1100,12 @@ struct   GroundConfiguration          <:  AbstractConfigurationTheme
 end
 
 
-# `Base.string(theme::Basics.GroundConfiguration)`  ... provides a proper printout of the variable theme::Basics.GroundConfiguration.
 function Base.string(theme::Basics.GroundConfiguration)
     sa = "GroundConfiguration theme with charge Z=$(theme.Z) and NoElectrons=$(theme.NoElectrons)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.GroundConfiguration)`  ... prepares a proper printout of the variable theme::Basics.GroundConfiguration.
 function Base.show(io::IO, theme::Basics.GroundConfiguration)
     sa = string(theme);       print(io, sa)
 end
@@ -1186,14 +1136,12 @@ end
 TotalAM() = TotalAM(true, AngularJ64[])
 
 
-# `Base.string(theme::Basics.TotalAM)`  ... provides a proper printout of the variable theme::Basics.TotalAM.
 function Base.string(theme::Basics.TotalAM)
     sa = "Total angular momenta with allJ=$(theme.allJ) and totalJs=$(theme.totalJs)."
     return( sa )
 end
 
 
-# `Base.show(io::IO, theme::Basics.TotalAM)`  ... prepares a proper printout of the variable theme::Basics.TotalAM.
 function Base.show(io::IO, theme::Basics.TotalAM)
     sa = string(theme);       print(io, sa)
 end
@@ -1344,20 +1292,17 @@ end
      "the biorthogonal route that lifts that assumption."                                                                       HminusE
 
 
-# `Base.show(io::IO, op::VeeOnly)`  ... prepares a proper printout of the variable op::VeeOnly.
 function Base.show(io::IO, op::VeeOnly)
     print(io, "V^(e-e) only [$(op.kind)]")
 end
 
 
-# `Base.show(io::IO, op::HminusE)`  ... prepares a proper printout of the variable op::HminusE.
 function Base.show(io::IO, op::HminusE)
     print(io, "H - E [$(op.kind)]")
 end
 
 export  AbstractTransitionOperator, VeeOnly, HminusE
 
-# `Base.show(io::IO, CoulombBreit}::)`  ... prepares a proper printout of the variable CoulombBreit}::.
 function Base.show(io::IO, eeint::BreitInteraction) 
     sa = "$(typeof(eeint)) [factor=$(eeint.factor)]";                print(io, sa)
 end
@@ -1485,7 +1430,6 @@ struct  Cartesian2DFieldValue{Type}        <: Basics.AbstractFieldValue
 end 
 
 
-# `Base.show(io::IO, value::Cartesian2DFieldValue{Type})`  ... prepares a proper printout of the variable value::Cartesian2DFieldValue{Type}.
 function Base.show(io::IO, value::Cartesian2DFieldValue{Type}) 
     sa = "Cartesian 2D field value f(x,y) = f($(value.x),$(value.y)) = $(value.val)";                print(io, sa)
 end
@@ -1508,7 +1452,6 @@ struct  Cartesian3DFieldValue{Type}        <: Basics.AbstractFieldValue
 end 
 
 
-# `Base.show(io::IO, value::Cartesian3DFieldValue{Type})`  ... prepares a proper printout of the variable value::Cartesian3DFieldValue{Type}.
 function Base.show(io::IO, value::Cartesian3DFieldValue{Type}) 
     sa = "Cartesian 3D field value f(x,y,z) = f($(value.x),$(value.y),$(value.z)) = $(value.val)";                print(io, sa)
 end
@@ -1529,7 +1472,6 @@ struct  PolarFieldValue{Type}             <: Basics.AbstractFieldValue
 end 
 
 
-# `Base.show(io::IO, value::PolarFieldValue{Type})`  ... prepares a proper printout of the variable value::PolarFieldValue{Type}.
 function Base.show(io::IO, value::PolarFieldValue{Type}) 
     sa = "Polar field value f(rho,phi) = f($(value.rho),$(value.phi)) = $(value.val)";                print(io, sa)
 end    
@@ -1552,7 +1494,6 @@ struct  SphericalFieldValue{Type}             <: Basics.AbstractFieldValue
 end 
 
 
-# `Base.show(io::IO, value::SphericalFieldValue{Type})`  ... prepares a proper printout of the variable value::SphericalFieldValue{Type}.
 function Base.show(io::IO, value::SphericalFieldValue{Type}) 
     sa = "Spherical field value f(r,theta,phi) = f($(value.r),$(value.theta),$(value.phi)) = $(value.val)";       print(io, sa)
 end
@@ -1588,7 +1529,6 @@ struct  Cartesian2DFieldVector{Type}        <: Basics.AbstractFieldVector
 end 
 
 
-# `Base.show(io::IO, vector::Cartesian2DFieldVector{Type})`  ... prepares a proper printout of the variable vector::Cartesian2DFieldVector{Type}.
 function Base.show(io::IO, vector::Cartesian2DFieldVector{Type}) 
     sa = "Cartesian 2D field vector (Ax, Ay) = ($(vector.x),$(vector.y)).";                print(io, sa)
 end
@@ -1609,7 +1549,6 @@ struct  Cartesian3DFieldVector{Type}        <: Basics.AbstractFieldVector
 end 
 
 
-# `Base.show(io::IO, vector::Cartesian3DFieldVector{Type})`  ... prepares a proper printout of the variable vector::Cartesian3DFieldVector{Type}.
 function Base.show(io::IO, vector::Cartesian3DFieldVector{Type}) 
     sa = "Cartesian 3D field vector (Ax, Ay, Az) = ($(vector.x),$(vector.y),$(vector.z))";                print(io, sa)
 end
@@ -1637,13 +1576,11 @@ struct         NoEmField    <:  AbstractEmField   end
 @doc "... No electric and magnetic field is defined."                                                                                        NoEmField
 
 
-# `Base.show(io::IO, field::AbstractEmField)`  ... prepares a proper printout of the variable field::AbstractEmField.
 function Base.show(io::IO, field::AbstractEmField) 
     print(io, string(field) )
 end
 
 
-# `Base.string(field::AbstractEmField)`  ... provides a proper printout of the variable field::AbstractEmField.
 function Base.string(field::AbstractEmField) 
     if       field == NoEmField()     return("No electric and magnetic field is defined.")
     else     error("stop a")
@@ -1662,7 +1599,6 @@ struct  StaticField           <:  AbstractEmField
 end 
 
 
-# `Base.show(io::IO, field::StaticField)`  ... prepares a proper printout of the variable field::StaticField.
 function Base.show(io::IO, field::StaticField) 
     sa = "Static field with amplitude A_o = $(field.amplitude)."
     print(io, sa)
@@ -1684,7 +1620,6 @@ struct  TimeHarmonicField           <:  AbstractEmField
 end 
 
 
-# `Base.show(io::IO, field::TimeHarmonicField)`  ... prepares a proper printout of the variable field::TimeHarmonicField.
 function Base.show(io::IO, field::TimeHarmonicField) 
     sa = "Time-harmonic field with frequency $(field.omega) and amplitude A_o = $(field.amplitude)."
     print(io, sa)
@@ -1746,7 +1681,6 @@ struct  Cartesian2DMesh   <: Basics.AbstractMesh
 end 
 
 
-# `Base.show(io::IO, cMesh::Cartesian2DMesh)`  ... prepares a proper printout of the variable cMesh::Cartesian2DMesh.
 function Base.show(io::IO, cMesh::Cartesian2DMesh) 
     sa = "2D Cartesian mesh with xMesh = $(cMesh.xMesh) and yMesh = $(cMesh.yMesh)";   print(io, sa)
 end
@@ -1775,7 +1709,6 @@ function GLegenreMesh()
 end
 
 
-# `Base.show(io::IO, glMesh::GLegenreMesh)`  ... prepares a proper printout of the variable glMesh::GLegenreMesh.
 function Base.show(io::IO, glMesh::GLegenreMesh) 
     sa = "Gauss-Legendre mesh for the interval  [a,b] = [$(glMesh.a),$(glMesh.b)]  and with $(glMesh.NoZeros) zeros."
     print(io, sa)
@@ -1805,7 +1738,6 @@ function LinearMesh()
 end
 
 
-# `Base.show(io::IO, lMesh::LinearMesh)`  ... prepares a proper printout of the variable lMesh::LinearMesh.
 function Base.show(io::IO, lMesh::LinearMesh) 
     # `lMesh`, not `glMesh` (fixed 09-Aug-2026): the two interpolations named the variable of the GLegenreMesh show method just above, so
     # displaying a LinearMesh raised an UndefVarError.
@@ -1835,7 +1767,6 @@ function PolarMesh()
 end
 
 
-# `Base.show(io::IO, pMesh::PolarMesh)`  ... prepares a proper printout of the variable pMesh::PolarMesh.
 function Base.show(io::IO, pMesh::PolarMesh) 
     sa = "2D polar mesh with  rhoMesh::$(typeof(pMesh.rhoMesh))  and  phiMesh::$(typeof(pMesh.phiMesh))";     print(io, sa)
 end
@@ -1864,7 +1795,6 @@ function SphericalMesh()
 end
 
 
-# `Base.show(io::IO, sMesh::SphericalMesh)`  ... prepares a proper printout of the variable sMesh::SphericalMesh.
 function Base.show(io::IO, sMesh::SphericalMesh) 
     sa = "3D spherical mesh with  rMesh::$(typeof(sMesh.rMesh)),  thetaMesh::$(typeof(sMesh.thetaMesh))  and  " * 
             "phiMesh::$(typeof(sMesh.phiMesh))"
@@ -1905,13 +1835,11 @@ struct         WithoutAutoionizationModel   <:  AbstractPlasmaModel   end
 @doc "... No plasma model defined."                                                                                                      NoPlasmaModel
 
 
-# `Base.show(io::IO, model::AbstractPlasmaModel)`  ... prepares a proper printout of the variable model::AbstractPlasmaModel.
 function Base.show(io::IO, model::AbstractPlasmaModel) 
     print(io, string(model) )
 end
 
 
-# `Base.string(model::AbstractPlasmaModel)`  ... provides a proper printout of the variable model::AbstractPlasmaModel.
 function Base.string(model::AbstractPlasmaModel) 
     if       model == NoPlasmaModel()               return("No plasma model.")
     elseif   model == DebyeBox()                    return("Debye-box model.")
@@ -1942,7 +1870,6 @@ function DebyeHueckelModel()
 end
 
 
-# `Base.show(io::IO, model::DebyeHueckelModel)`  ... prepares a proper printout of the variable model::DebyeHueckelModel.
 function Base.show(io::IO, model::DebyeHueckelModel)
     sa = "Debye-Hueckel plasma model with Debye length D = $(model.debyeLength) a_o."
     print(io, sa)
@@ -1970,7 +1897,6 @@ function IonSphereModel()
 end
 
 
-# `Base.show(io::IO, model::IonSphereModel)`  ... prepares a proper printout of the variable model::IonSphereModel.
 function Base.show(io::IO, model::IonSphereModel) 
     sa = "Ion-sphere plasma model with (Wigner-Seitz radius) R = $(model.radius) a_o and electron density n_e (T) = " *
          "$(model.electronDensity)"
@@ -2004,7 +1930,6 @@ function StewartPyattModel()
 end
 
 
-# `Base.show(io::IO, model::StewartPyattModel)`  ... prepares a proper printout of the variable model::StewartPyattModel.
 function Base.show(io::IO, model::StewartPyattModel) 
     sa = "Stewart-PyattModel plasma model with (Wigner-Seitz radius) R = $(model.radius) a_o, electron density n_e (T) = " *
          "$(model.electronDensity), and lambda = $(model.lambda)"
@@ -2066,7 +1991,6 @@ function EckerKroellModel()
 end
 
 
-# `Base.show(io::IO, model::EckerKroellModel)`  ... prepares a proper printout of the variable model::EckerKroellModel.
 function Base.show(io::IO, model::EckerKroellModel) 
     # cEK is NAMED in the printout rather than left as a bare number: 1.0 and 1.73 are both defensible and give
     # IPD shifts differing by 73 %, so a user must be able to see which one produced their number.
@@ -2098,13 +2022,11 @@ struct         NoLineShiftSettings   <:  AbstractLineShiftSettings   end
 
 @doc "... No line-shift settings are defined."                                                                                     NoLineShiftSettings
 
-# `Base.show(io::IO, settings::AbstractLineShiftSettings)`  ... prepares a proper printout of the variable settings::AbstractLineShiftSettings.
 function Base.show(io::IO, settings::AbstractLineShiftSettings) 
     print(io, string(settings) )
 end
 
 
-# `Base.string(settings::AbstractLineShiftSettings)`  ... provides a proper printout of the variable settings::AbstractLineShiftSettings.
 function Base.string(settings::AbstractLineShiftSettings) 
     if       typeof(settings) == Basics.NoLineShiftSettings        return("No line-shift settings.")
     else     return("Plasma settings for $(typeof(settings)) computations.")
@@ -2425,13 +2347,11 @@ struct         DefaultQuantizationAxis  <:  AbstractQuantizationAxis   end
 @doc "... Use the (default) z-axis for quantization of atomic levels."                                                         DefaultQuantizationAxis
 
 
-# `Base.show(io::IO, axis::AbstractQuantizationAxis)`  ... prepares a proper printout of the variable axis::AbstractQuantizationAxis.
 function Base.show(io::IO, axis::AbstractQuantizationAxis) 
     print(io, string(axis) )
 end
 
 
-# `Base.string(axis::AbstractQuantizationAxis)`  ... provides a proper printout of the variable axis::AbstractQuantizationAxis.
 function Base.string(axis::AbstractQuantizationAxis) 
     if       axis == DefaultQuantizationAxis()     return("Default (z-) quantization axis.")
     else     error("stop a")
@@ -2451,7 +2371,6 @@ struct  StaticQuantizationAxis   <:  AbstractQuantizationAxis
 end 
 
 
-# `Base.show(io::IO, axis::StaticQuantizationAxis)`  ... prepares a proper printout of the variable axis::StaticQuantizationAxi.
 function Base.show(io::IO, axis::StaticQuantizationAxis) 
     sa = "Static quantization axis along nVector = $(axis.nVector)."
     print(io, sa)
@@ -2475,7 +2394,6 @@ struct  HarmonicQuantizationAxis   <:  AbstractQuantizationAxis
 end 
 
 
-# `Base.show(io::IO, axis::HarmonicQuantizationAxis)`  ... prepares a proper printout of the variable axis::HarmonicQuantizationAxis.
 function Base.show(io::IO, axis::HarmonicQuantizationAxis) 
     sa = "Time-harmonic quantization axis with frequency $(axis.omega) along nVector = $(axis.nVector)."
     print(io, sa)
@@ -3329,13 +3247,11 @@ function  LevelSelection(active::Bool; indices::Array{Int64,1}=Int64[], symmetri
 end
 
 
-# `Base.show(io::IO, selection::LevelSelection)`  ... prepares a proper printout of the variable selection::LevelSelection.
 function Base.show(io::IO, selection::LevelSelection) 
     print(io, string(selection) )
 end
 
 
-# `Base.string(selection::LevelSelection)`  ... provides a proper printout of the variable selection::LevelSelection.
 function Base.string(selection::LevelSelection) 
     if  selection.active   sa = "LevelSelection:  indices = $(selection.indices);    symmetries = $(selection.symmetries)."
     else                   sa = "Inactive LevelSelection."
@@ -3380,13 +3296,11 @@ function  LineSelection(active::Bool; indexPairs::Array{Tuple{Int64,Int64},1}=Tu
 end
 
 
-# `Base.show(io::IO, selection::LineSelection)`  ... prepares a proper printout of the variable selection::LineSelection.
 function Base.show(io::IO, selection::LineSelection) 
     print(io, string(selection) )
 end
 
 
-# `Base.string(selection::LineSelection)`  ... provides a proper printout of the variable selection::LineSelection.
 function Base.string(selection::LineSelection) 
     if  selection.active   sa = "LineSelection:  indexPairs = $(selection.indexPairs);    symmetryPairs = $(selection.symmetryPairs)."
     else                   sa = "Inactive LineSelection."
@@ -3431,13 +3345,11 @@ function  PathwaySelection(active::Bool; indexTriples::Array{Tuple{Int64,Int64,I
 end
 
 
-# `Base.show(io::IO, selection::PathwaySelection)`  ... prepares a proper printout of the variable selection::PathwaySelection.
 function Base.show(io::IO, selection::PathwaySelection) 
     print(io, string(selection) )
 end
 
 
-# `Base.string(selection::PathwaySelection)`  ... provides a proper printout of the variable selection::PathwaySelection.
 function Base.string(selection::PathwaySelection) 
     if  selection.active   sa = "PathwaySelection:  indexTriples = $(selection.indexTriples);    symmetryTriples = $(selection.symmetryTriples)."
     else                   sa = "Inactive PathwaySelection."
@@ -3480,13 +3392,11 @@ function  ShellSelection(active::Bool; shells::Array{Shell,1}=Shell[], lSymmetri
 end
 
 
-# `Base.show(io::IO, selection::ShellSelection)`  ... prepares a proper printout of the variable selection::ShellSelection.
 function Base.show(io::IO, selection::ShellSelection) 
     print(io, string(selection) )
 end
 
 
-# `Base.string(selection::ShellSelection)`  ... provides a proper printout of the variable selection::ShellSelection.
 function Base.string(selection::ShellSelection) 
     if  selection.active   sa = "ShellSelection:  shells = $(selection.shells);    symmetries = $(selection.lSymmetries)."
     else                   sa = "Inactive LevelSelection."

@@ -89,7 +89,6 @@ function MeanFieldSettings(settings::AtomicState.MeanFieldSettings;
 end
 
 
-# `Base.show(io::IO, settings::MeanFieldSettings)`  ... prepares a proper printout of the settings::MeanFieldSettings.
 function Base.show(io::IO, settings::MeanFieldSettings)
         println(io, "scField:                  $(settings.scField)  ")
         println(io, "gridStopper:              $(settings.gridStopper)  ")
@@ -118,7 +117,6 @@ function MeanFieldBasis()
 end
 
 
-# `Base.string(basis::MeanFieldBasis)`  ... provides a String notation for the variable basis::MeanFieldBasi.
 function Base.string(basis::MeanFieldBasis)
     if !(basis.settings.scField  in [DFSField(), HSField()])
         error("A MeanFieldBasis presently supports only a DFSField() or HSField() but received:  $(basis.settings.scField)")
@@ -128,7 +126,6 @@ function Base.string(basis::MeanFieldBasis)
 end
 
 
-# `Base.show(io::IO, basis::MeanFieldBasis)`  ... prepares a proper printout of the basis::MeanFieldBasis.
 function Base.show(io::IO, basis::MeanFieldBasis)
     sa = Base.string(basis);       print(io, sa, "\n")
 end
@@ -157,14 +154,12 @@ function MeanFieldMultiplet()
 end
 
 
-# `Base.string(basis::MeanFieldMultiplet)`  ... provides a String notation for the variable basis::MeanFieldMultiplet.
 function Base.string(basis::MeanFieldMultiplet)
     sa = "Mean-field multiplet for a $(basis.settings.scField) SCF field:"
     return( sa )
 end
 
 
-# `Base.show(io::IO, basis::MeanFieldMultiplet)`  ... prepares a proper printout of the basis::MeanFieldMultiplet.
 function Base.show(io::IO, basis::MeanFieldMultiplet)
     sa = Base.string(basis);       print(io, sa, "\n")
 end
@@ -215,7 +210,6 @@ function OneElectronSettings(settings::AtomicState.OneElectronSettings;
 end
 
 
-# `Base.show(io::IO, settings::OneElectronSettings)`  ... prepares a proper printout of the settings::OneElectronSettings.
 function Base.show(io::IO, settings::OneElectronSettings)
         println(io, "nMax:                 $(settings.nMax)  ")
         println(io, "lValues:              $(settings.lValues)  ")
@@ -247,15 +241,12 @@ function OneElectronSpectrum()
 end
 
 
-# `Base.string(spectrum::OneElectronSpectrum)`  ... provides a String notation for the variable spectrum::OneElectronSpectrum.
 function Base.string(spectrum::OneElectronSpectrum)
     sa = "One-electron spectrum for given atomic potential:"
     return( sa )
 end
 
 
-# `Base.show(io::IO, spectrum::OneElectronSpectrum)`  
-#       ... prepares a proper printout of the (individual step of computations) spectrum::OneElectronSpectrum.
 function Base.show(io::IO, spectrum::OneElectronSpectrum)
     sa = Base.string(spectrum);       print(io, sa, "\n")
     println(io, "... and the current settings:")
@@ -440,7 +431,6 @@ function RasSettings(set::AtomicState.RasSettings;
 end
 
 
-# `Base.show(io::IO, settings::RasSettings)`  ... prepares a proper printout of the settings::RasSettings.
 function Base.show(io::IO, settings::RasSettings)
         println(io, "levelsScf:            $(settings.levelsScf)  " *
                     (settings.levelSelectionCI.active ? "  (NOT in force: levelSelectionCI is active and wins)" :
@@ -569,14 +559,12 @@ function RasStep(rasStep::AtomicState.RasStep;
 end
 
 
-# `Base.string(step::AtomicState.RasStep)`  ... provides a String notation for the variable step::AtomicState.RasStep.
 function Base.string(step::AtomicState.RasStep)
     sa = "\nCI or RAS step with $(length(step.frozenShells)) (explicitly) frozen shell(s): $(step.frozenShells)  ... and virtual excitations"
     return( sa )
 end
 
 
-# `Base.show(io::IO, step::AtomicState.RasStep)`  ... prepares a proper printout of the (individual step of computations) step::AtomicState.RasStep.
 function Base.show(io::IO, step::AtomicState.RasStep)
     sa = Base.string(step);                 print(io, sa, "\n")
     if  length(step.seFrom) > 0
@@ -647,14 +635,12 @@ function RasLayer(newShells::Array{Shell,1}; se::Bool=true, de::Bool=true,
 end
 
 
-# `Base.string(layer::AtomicState.RasLayer)`  ... provides a String notation for the variable layer::AtomicState.RasLayer.
 function Base.string(layer::AtomicState.RasLayer)
     sa = "RAS layer, adding shells $(layer.newShells)  (single excitations = $(layer.se), double excitations = $(layer.de))"
     return( sa )
 end
 
 
-# `Base.show(io::IO, layer::AtomicState.RasLayer)`  ... prepares a proper printout of the variable layer::AtomicState.RasLayer.
 function Base.show(io::IO, layer::AtomicState.RasLayer)
     sa = Base.string(layer);       print(io, sa, "\n")
 end
@@ -720,14 +706,12 @@ function RasExpansion(symmetries::Array{LevelSymmetry,1}, NoElectrons::Int64, co
 end
 
 
-# `Base.string(expansion::RasExpansion)`  ... provides a String notation for the variable expansion::RasExpansion.
 function Base.string(expansion::RasExpansion)
     sa = "RAS expansion for symmétry $(expansion.symmetries) and with $(length(expansion.steps)) steps:"
     return( sa )
 end
 
 
-# `Base.show(io::IO, expansion::RasExpansion)`  ... prepares a proper printout of the (individual step of computations) expansion::RasExpansion.
 function Base.show(io::IO, expansion::RasExpansion)
     sa = Base.string(expansion);       print(io, sa, "\n")
     println(io, "$(expansion.steps)  ")
@@ -1274,7 +1258,6 @@ function CiSettings(settings::AtomicState.CiSettings;
 end
 
 
-# `Base.show(io::IO, settings::CiSettings)`  ... prepares a proper printout of the settings::CiSettings.
 function Base.show(io::IO, settings::CiSettings)
         println(io, "eeInteractionCI:          $(settings.eeInteractionCI)  ")
         println(io, "levelSelectionCI:         $(settings.levelSelectionCI)  ")
@@ -1307,14 +1290,12 @@ function CiExpansion()
 end
 
 
-# `Base.string(expansion::CiExpansion)`  ... provides a String notation for the variable expansion::CiExpansion.
 function Base.string(expansion::CiExpansion)
     sa = "CI expansion with (additional) excitations:"
     return( sa )
 end
 
 
-# `Base.show(io::IO, expansion::CiExpansion)`  ... prepares a proper printout of the (individual step of computations) expansion::CiExpansion.
 function Base.show(io::IO, expansion::CiExpansion)
     sa = Base.string(expansion);       print(io, sa, "\n")
     println(io, "$(expansion.excitations)  ")
@@ -1432,7 +1413,6 @@ function GreenSettings(settings::AtomicState.GreenSettings;
 end
 
 
-# `Base.show(io::IO, settings::AtomicState.GreenSettings)`  ... prepares a proper printout of the variable settings::AtomicState.GreenSettings.
 function Base.show(io::IO, settings::AtomicState.GreenSettings) 
     println(io, "nMax:                     $(settings.nMax)  ")
     println(io, "lValues:                  $(settings.lValues)  ")
@@ -1463,7 +1443,6 @@ function GreenChannel()
 end
 
 
-# `Base.show(io::IO, channel::AtomicState.GreenChannel)`  ... prepares a proper printout of the variable channel::AtomicState.GreenChannel.
 function Base.show(io::IO, channel::AtomicState.GreenChannel) 
     println(io, "symmetry:                $(channel.symmetry)  ")
     println(io, "gMultiplet:              $(channel.gMultiplet)  ")
@@ -1498,7 +1477,6 @@ function GreenExpansion()
 end
 
 
-# `Base.string(expansion::GreenExpansion)`  ... provides a String notation for the variable expansion::GreenExpansion.
 function Base.string(expansion::GreenExpansion)
     sa = "Green (function) expansion in $(expansion.approach) approach and for excitation scheme  $(expansion.excitationScheme)," *
             "\nincluding (Green function channels with) symmetries $(expansion.levelSymmetries):"
@@ -1506,7 +1484,6 @@ function Base.string(expansion::GreenExpansion)
 end
 
 
-# `Base.show(io::IO, expansion::GreenExpansion)`  ... prepares a proper printout of the (individual step of computations) expansion::GreenExpansion.
 function Base.show(io::IO, expansion::GreenExpansion)
     sa = Base.string(expansion);       print(io, sa, "\n")
     println(io, "... and the current settings:")
@@ -1693,7 +1670,6 @@ end
 
 
 
-# `Base.string(rep::Representation)`  ... provides a String notation for the variable rep::AtomicState.Representation
 function Base.string(rep::Representation)
     sa = "Atomic representation:   $(rep.name) for Z = $(rep.nuclearModel.Z) and with reference configurations: \n   "
     for  refConfig  in  rep.refConfigs     sa = sa * string(refConfig) * ",  "     end
@@ -1701,7 +1677,6 @@ function Base.string(rep::Representation)
 end
 
 
-# `Base.show(io::IO, rep::Representation)`  ... prepares a printout of rep::Representation.
 function Base.show(io::IO, rep::Representation)
     sa = Base.string(rep);            print(io, sa, "\n")
     println(io, "representation type:   $(rep.repType)  ")

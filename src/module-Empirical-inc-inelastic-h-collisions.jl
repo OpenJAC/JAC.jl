@@ -476,7 +476,6 @@ struct  InelasticHChannel
 end
 
 
-# `Base.show(io::IO, ch::InelasticHChannel)`  ... provides a String notation for the variable ch::InelasticHChannel.
 function Base.show(io::IO, ch::InelasticHChannel)
     print(io, "$(ch.name):  E = $(ch.E) [a.u.],  pstat = $(ch.pstat)")
 end

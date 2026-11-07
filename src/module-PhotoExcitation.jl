@@ -91,7 +91,6 @@ function Settings(set::PhotoExcitation.Settings;
 end
 
 
-# `Base.show(io::IO, settings::PhotoExcitation.Settings)`  ... prepares a proper printout of the variable settings::PhotoExcitation.Settings.
 function Base.show(io::IO, settings::PhotoExcitation.Settings) 
     println(io, "multipoles:               $(settings.multipoles)  ")
     println(io, "use-gauges:               $(settings.gauges)  ")
@@ -144,7 +143,6 @@ function Line(initialLevel::Level, finalLevel::Level, omega::Float64, crossSecti
 end
 
 
-# `Base.show(io::IO, line::PhotoExcitation.Line)`  ... prepares a proper printout of the variable line::PhotoExcitation.Line.
 function Base.show(io::IO, line::PhotoExcitation.Line) 
     println(io, "initialLevel:         $(line.initialLevel)  ")
     println(io, "finalLevel:           $(line.finalLevel)  ")

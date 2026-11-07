@@ -30,7 +30,6 @@ function RamanLevel()
 end
 
 
-# `Base.show(io::IO, lioulevel::Liouville.RamanLevel)`  ... prepares a proper printout of the variable settings::Liouville.RamanLevel.
 function Base.show(io::IO, data::Liouville.RamanLevel) 
     println(io, "leadingConfig:          $(lioulevel.leadingConfig)  ")
     println(io, "leadingNotation:        $(lioulevel.leadingNotation)  ")

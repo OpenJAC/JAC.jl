@@ -90,7 +90,6 @@ struct SublevelJ
 end
 
 
-# `Base.show(io::IO, Jsublevel::StarkShift.SublevelJ)`  ... prepares a proper printout of the variable Jsublevel::StarkShift.SublevelJ.
 function Base.show(io::IO, Jsublevel::StarkShift.SublevelJ) 
     println(io, "Sublevel [M=$(Jsublevel.M); energy = $(Jsublevel.energy)]")
 end
@@ -129,8 +128,6 @@ struct MagicWavelength
 end
 
 
-# `Base.show(io::IO, mw::StarkShift.MagicWavelength)`
-#        ... prepares a proper printout of the variable mw::StarkShift.MagicWavelength.
 function Base.show(io::IO, mw::StarkShift.MagicWavelength)
     sa = mw.aboveResonance ? "  [ABOVE a resonance: a principal value, not a polarizability]" : ""
     sb = mw.alphaCommon < 0.0 ? "  [alphaCommon < 0: this trap REPELS]" : ""
@@ -193,7 +190,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::StarkShift.Outcome)`  ... prepares a proper printout of the variable StarkShift.Outcome.
 function Base.show(io::IO, outcome::StarkShift.Outcome)
     println(io, "Jlevel:           $(outcome.Jlevel)  ")
     println(io, "Theta1:           $(outcome.Theta1)  ")
@@ -307,7 +303,6 @@ function Settings(set::StarkShift.Settings;
 end
 
 
-# `Base.show(io::IO, settings::StarkShift.Settings)`  ... prepares a proper printout of the variable settings::StarkShift.Settings.
 function Base.show(io::IO, settings::StarkShift.Settings)
     println(io, "calcEDM:               $(settings.calcEDM)  ")
     println(io, "calcEQM:               $(settings.calcEQM)  ")

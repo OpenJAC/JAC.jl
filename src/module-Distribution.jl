@@ -60,7 +60,6 @@ struct   PhotonBremsstrahlungThin  <:  Distribution.AbstractPhotonDistribution
 end
 
 
-# `Base.show(io::IO, dist::PhotonBremsstrahlungThin)`  ... provides a String notation for the variable dist::PhotonBremsstrahlungThin.
 function Base.show(io::IO, dist::PhotonBremsstrahlungThin)
     sa = "Free-free bremsstrahlungs distribution of a hot, optically-thin plasma at temperature T = $(dist.T)"
     print(io, sa)
@@ -79,7 +78,6 @@ struct   PhotonBremsstrahlungThick  <:  Distribution.AbstractPhotonDistribution
 end
 
 
-# `Base.show(io::IO, dist::PhotonBremsstrahlungThick)`  ... provides a String notation for the variable dist::PhotonBremsstrahlungThick.
 function Base.show(io::IO, dist::PhotonBremsstrahlungThick)
     sa = "Free-free bremsstrahlungs distribution of a hot, optically-thick plasma at temperature T = $(dist.T)"
     print(io, sa)
@@ -99,7 +97,6 @@ struct   PhotonDilute  <:  Distribution.AbstractPhotonDistribution
 end
 
 
-# `Base.show(io::IO, dist::PhotonDilute)`  ... provides a String notation for the variable dist::PhotonDilute.
 function Base.show(io::IO, dist::PhotonDilute)
     sa = "Dilute photon distribution of a plasma at temperature T = $(dist.T)"
     print(io, sa)
@@ -117,7 +114,6 @@ struct   PhotonPlanck  <:  Distribution.AbstractPhotonDistribution
 end
 
 
-# `Base.show(io::IO, dist::PhotonPlanck)`  ... provides a String notation for the variable dist::PhotonPlanck.
 function Base.show(io::IO, dist::PhotonPlanck)
     sa = "Planck's black-body photon distribution of a hot, optically-thick plasma at temperature T = $(dist.T)"
     print(io, sa)
@@ -145,7 +141,6 @@ struct   PhotonPowerLaw  <:  Distribution.AbstractPhotonDistribution
 end
 
 
-# `Base.show(io::IO, dist::PhotonPowerLaw)`  ... provides a String notation for the variable dist::PhotonPowerLaw.
 function Base.show(io::IO, dist::PhotonPowerLaw)
     sa = "Power-law photon distribution with parameters A = $(dist.A), p = $(dist.p), omegaMin = $(dist.omegaMin) " * 
          "omegaMax = $(dist.omegaMax) of a plasma at temperature T = $(dist.T)"
@@ -167,7 +162,6 @@ struct   PhotonVacuumField  <:  Distribution.AbstractPhotonDistribution
 end
 
 
-# `Base.show(io::IO, dist::PhotonVacuumField)`  ... provides a String notation for the variable dist::PhotonVacuumField.
 function Base.show(io::IO, dist::PhotonVacuumField)
     sa = "Vacuum (zero-intensity) photon distribution, independent of the temperature T = $(dist.T)"
     print(io, sa)
@@ -205,7 +199,6 @@ struct   ElectronBiMaxwell   <:  Distribution.AbstractElectronDistribution
 end
 
 
-# `Base.show(io::IO, dist::ElectronBiMaxwell)`  ... provides a String notation for the variable dist::ElectronBiMaxwell.
 function Base.show(io::IO, dist::ElectronBiMaxwell)
     sa = "Bi-Maxwellian electron distribution at the temperatures T_par = $(dist.Tpar) and T_perp = $(dist.Tperp)"
     print(io, sa)
@@ -225,7 +218,6 @@ struct   ElectronFermiDirac  <:  Distribution.AbstractElectronDistribution
 end
 
 
-# `Base.show(io::IO, dist::ElectronFermiDirac)`  ... provides a String notation for the variable dist::ElectronFermiDirac.
 function Base.show(io::IO, dist::ElectronFermiDirac)
     sa = "Fermi-Dirac electron distribution of a generated plasma at temperature T = $(dist.T)"
     print(io, sa)
@@ -243,7 +235,6 @@ struct   ElectronMaxwell  <:  Distribution.AbstractElectronDistribution
 end
 
 
-# `Base.show(io::IO, dist::ElectronMaxwell)`  ... provides a String notation for the variable dist::ElectronMaxwell.
 function Base.show(io::IO, dist::ElectronMaxwell)
     sa = "Maxwell-Boltzmann electron distribution of a generated plasma at temperature T = $(dist.T)"
     print(io, sa)

@@ -56,7 +56,6 @@ function AtomicModel()
 end
 
 
-# `Base.show(io::IO, am::AtomicFeatures.AtomicModel)`  ... prepares a proper printout of the variable am::AtomicFeatures.AtomicModel
 function Base.show(io::IO, am::AtomicFeatures.AtomicModel) 
     println(io, "nMax:              $(am.nMax)  ")
     println(io, "lMax:              $(am.lMax)  ")
@@ -95,7 +94,6 @@ struct  XyVector
 end 
 
 
-# `Base.show(io::IO, v::AtomicFeatures.XyVector)`  ... prepares a proper printout of the variable v::AtomicFeatures.XyVector
 function Base.show(io::IO, v::AtomicFeatures.XyVector) 
     println(io, "L:           $(v.L)  ")
     println(io, "S:           $(v.S)  ")

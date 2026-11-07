@@ -198,7 +198,6 @@ function Settings(set::InternalConversion.Settings;
 end
 
 
-# `Base.show(io::IO, settings::InternalConversion.Settings)`  ... prepares a proper printout of settings::InternalConversion.Settings.
 function Base.show(io::IO, settings::InternalConversion.Settings)
     println(io, "multipoles:               $(settings.multipoles)  ")
     println(io, "gammaEnergy:              $(settings.gammaEnergy)  ")
@@ -270,7 +269,6 @@ function Line(initialLevel::Level, finalLevel::Level, electronEnergy::Float64)
 end
 
 
-# `Base.show(io::IO, line::InternalConversion.Line)`  ... prepares a proper printout of line::InternalConversion.Line.
 function Base.show(io::IO, line::InternalConversion.Line)
     println(io, "initialLevel:           $(line.initialLevel)  ")
     println(io, "finalLevel:             $(line.finalLevel)  ")

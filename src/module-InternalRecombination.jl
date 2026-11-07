@@ -104,8 +104,6 @@ function Settings(set::InternalRecombination.Settings;
 end
 
 
-# `Base.show(io::IO, settings::InternalRecombination.Settings)`  
-#   ... prepares a proper printout of the variable settings::InternalRecombination.Settings.
 function Base.show(io::IO, settings::InternalRecombination.Settings) 
     println(io, "rydbergShells:            $(settings.rydbergShells)  ")
     println(io, "printBefore:              $(settings.printBefore)  ")
@@ -163,7 +161,6 @@ function Line()
 end
 
 
-# `Base.show(io::IO, line::InternalRecombination.Line)`  ... prepares a proper printout of the variable line::InternalRecombination.Line.
 function Base.show(io::IO, line::InternalRecombination.Line) 
     println(io, "initialLevel:           $(line.initialLevel)  ")
     println(io, "finalLevel:             $(line.finalLevel)  ")

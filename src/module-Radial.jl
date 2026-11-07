@@ -225,7 +225,6 @@ function Grid(gr::Radial.Grid;
 end
 
 
-# `Base.show(io::IO, grid::Radial.Grid)`  ... prepares a proper printout of the variable grid::Radial.Grid.
 function Base.show(io::IO, grid::Radial.Grid) 
 
     sa = Base.string(grid::Radial.Grid);    print(io, sa * "\n")
@@ -240,7 +239,6 @@ function Base.show(io::IO, grid::Radial.Grid)
 end
 
 
-# `Base.string(grid::Radial.Grid)`  ... provides a String notation for the variable grid::Radial.Grid.
 function Base.string(grid::Radial.Grid) 
     if   grid.NoPoints == 0
         sa = "Radial grid not defined;  NoPoints = $(grid.NoPoints) ..."
@@ -425,7 +423,6 @@ function GridGL(::GridGaussLegendreFinite, tmin::Float64, tmax::Float64, orderGL
 end
 
 
-# `Base.show(io::IO, grid::GridGL)`  ... prepares a proper printout of the variable grid::GridGL.
 function Base.show(io::IO, grid::GridGL) 
     print(io, "Gauss-Legendre grid with $(grid.nt) mesh points: \n")
     print(io, "t:   ", grid.t[1:5],    "  ...  ", grid.t[grid.nt-4:grid.nt],     "\n") 
@@ -469,7 +466,6 @@ function GridGH(orderGH::Int64; printout::Bool=false)
 end
 
 
-# `Base.show(io::IO, grid::GridGH)`  ... prepares a proper printout of the variable grid::GridGH.
 function Base.show(io::IO, grid::GridGH) 
     print(io, "Gauss-Hermite grid with $(grid.nt) mesh points: \n")
     print(io, "t:   ", grid.t[1:5],    "  ...  ", grid.t[grid.nt-4:grid.nt],    "\n") 
@@ -500,7 +496,6 @@ function Density()
 end
 
 
-# `Base.show(io::IO, density::Radial.Density)`  ... prepares a proper printout of the variable density::Radial.Density.
 function Base.show(io::IO, density::Radial.Density) 
 
     sa = Base.string(density);    print(io, sa * "\n")
@@ -516,7 +511,6 @@ function Base.show(io::IO, density::Radial.Density)
 end
 
 
-# `Base.string(density::Radial.Density)`  ... provides a String notation for the variable density::Radial.Density.
 function Base.string(density::Radial.Density)
     if  length(density.Dr)  == 0
         sa = "Radial density not yet defined; kind = $(density.name) ..."
@@ -549,7 +543,6 @@ function Potential()
 end
 
 
-# `Base.show(io::IO, potential::Radial.Potential)`  ... prepares a proper printout of the variable potential::Radial.Potential.
 function Base.show(io::IO, potential::Radial.Potential) 
 
     sa = Base.string(potential);    print(io, sa * "\n")
@@ -563,7 +556,6 @@ function Base.show(io::IO, potential::Radial.Potential)
 end
 
 
-# `Base.string(potential::Radial.Potential)`  ... provides a String notation for the variable potential::Radial.Potential.
 function Base.string(potential::Radial.Potential) 
     if  length(potential.Zr)  == 0
         sa = "Radial potential not yet defined; kind = $(potential.name) ..."
@@ -634,7 +626,6 @@ function Orbital(label::String, energy::Float64)
 end
 
 
-# `Base.show(io::IO, orbital::Orbital)`  ... prepares a proper printout of the variable orbital::Orbital.
 function Base.show(io::IO, orbital::Orbital) 
     n = length(orbital.P)
 
@@ -674,7 +665,6 @@ function Base.show(io::IO, orbital::Orbital)
 end
 
 
-# `Base.string(orbital::Orbital)`  ... provides a String notation for the variable orbital::Orbital with just basic information.
 function Base.string(orbital::Orbital) 
     if  orbital.isBound           sa = "Bound-state orbital "     else    sa = "Free-electron orbital "         end
     if  orbital.useStandardGrid   sb = "the standard grid: "      else    sb = "an explicitly-defined grid: "   end
@@ -715,7 +705,6 @@ function SingleSymOrbitals()
 end
 
 
-# `Base.show(io::IO, symOrbitals::SingleSymOrbitals)`  ... prepares a proper printout of the variable symOrbitals::SingleSymOrbitals.
 function Base.show(io::IO, symOrbitals::SingleSymOrbitals) 
     sa = "Single-symmetry orbital set for kappa=$(symOrbitals.kappa) with $(symOrbitals.NoStates) states "
     if  symOrbitals.onlyPositive   sa = sa * "from just the positive part of the spectrum."
@@ -749,7 +738,6 @@ function SingleElecSpectrum()
 end
 
 
-# `Base.show(io::IO, spectrum::SingleElecSpectrum)`  ... prepares a proper printout of the variable spectrum::SingleElecSpectrum.
 function Base.show(io::IO, spectrum::SingleElecSpectrum) 
     sa = "Single-electron spectrum $(spectrum.name) for different kappa-symmetries and (individual) number of orbitals " *
             "positive and/or positive & negative energy."

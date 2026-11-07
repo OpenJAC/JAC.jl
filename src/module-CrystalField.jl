@@ -123,7 +123,6 @@ function Lattice()
 end
 
 
-# `Base.show(io::IO, lattice::CrystalField.Lattice)`  ... prepares a proper printout of lattice::CrystalField.Lattice.
 function Base.show(io::IO, lattice::Lattice)
     println(io, "Crystal-field lattice \"$(lattice.symmetryLabel)\" of $(length(lattice.ions)) point charges.")
 end
@@ -180,13 +179,11 @@ struct  CfMultiplet
 end
 
 
-# `Base.show(io::IO, cfLevel::CrystalField.CfLevel)`  ... prepares a proper printout of cfLevel::CrystalField.CfLevel.
 function Base.show(io::IO, cfLevel::CfLevel)
     println(io, "Crystal-field sublevel:  energy = $(cfLevel.energy)")
 end
 
 
-# `Base.show(io::IO, multiplet::CrystalField.CfMultiplet)`  ... prepares a proper printout of multiplet::CrystalField.CfMultiplet.
 function Base.show(io::IO, multiplet::CfMultiplet)
     println(io, "Crystal-field multiplet \"$(multiplet.name)\" of $(length(multiplet.cfLevels)) Stark sublevels.")
 end
@@ -268,7 +265,6 @@ function Settings(set::CrystalField.Settings;
 end
 
 
-# `Base.show(io::IO, settings::CrystalField.Settings)`  ... prepares a proper printout of settings::CrystalField.Settings.
 function Base.show(io::IO, settings::CrystalField.Settings)
     println(io, "lattice:                  $(settings.lattice)  ")
     println(io, "model:                    $(settings.model)  ")
@@ -301,7 +297,6 @@ function Outcome()
 end
 
 
-# `Base.show(io::IO, outcome::CrystalField.Outcome)`  ... prepares a proper printout of outcome::CrystalField.Outcome.
 function Base.show(io::IO, outcome::CrystalField.Outcome)
     println(io, "Jlevel:                   J = $(outcome.Jlevel.J), parity = $(outcome.Jlevel.parity)  ")
     println(io, "cfMultiplet:              $(outcome.cfMultiplet)  ")

@@ -25,7 +25,6 @@ struct  LsjLevel
 end
 
 
-# `Base.show(io::IO, level::DeepLearning.LsjLevel)`  ... prepares a proper printout of the variable level::DeepLearning.LsjLevel
 function Base.show(io::IO, level::DeepLearning.LsjLevel)
     println(io, "conf:        $(level.conf)  ")
     println(io, "L:           $(level.L)  ")
@@ -58,7 +57,6 @@ struct  NistLevel
 end
 
 
-# `Base.show(io::IO, level::DeepLearning.NistLevel)`  ... prepares a proper printout of the variable level::DeepLearning.NistLevel
 function Base.show(io::IO, level::DeepLearning.NistLevel)
     println(io, "conf:        $(level.conf)  ")
     println(io, "L:           $(level.L)  ")
@@ -90,14 +88,12 @@ function LevelEstimationRequest()
 end
 
 
-# `Base.string(request::LevelEstimationRequest)`  ... provides a String notation for the variable request::LevelEstimationRequest.
 function Base.string(request::LevelEstimationRequest)
     sa = "NN request for level estimation:"
     return( sa )
 end
 
 
-# `Base.show(io::IO, request::LevelEstimationRequest)`  ... prepares a proper printout of the request::LevelEstimationRequest.
 function Base.show(io::IO, request::LevelEstimationRequest)
     sa = Base.string(request);        print(io, sa, "\n")
     println(io, "configs:             $(request.configs)  ")

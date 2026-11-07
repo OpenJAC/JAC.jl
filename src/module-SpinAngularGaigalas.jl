@@ -65,7 +65,6 @@ function OneParticleOperator()
     OneParticleOperator( 0, Basics.plus, false)
 end
 
-# `Base.show(io::IO, op::OneParticleOperator)`  ... prepares a proper printout of the op::OneParticleOperator.
 function Base.show(io::IO, op::OneParticleOperator)
         sa = "One-particle operator O^($(op.rank) $(op.parity))"
         if op.sameOrbitalSet  sa = sa * ", defined for CSF from the same orbital set."
@@ -97,7 +96,6 @@ function TwoParticleOperator()
     TwoParticleOperator( 0, Basics.plus, false)
 end
 
-# `Base.show(io::IO, op::TwoParticleOperator)`  ... prepares a proper printout of the op::TwoParticleOperator.
 function Base.show(io::IO, op::TwoParticleOperator)
         sa = "Two-particle operator O^($(op.rank) $(op.parity))"
         if op.sameOrbitalSet  sa = sa * ", defined for CSF from the same orbital set."
@@ -123,7 +121,6 @@ struct  Coefficient1p
     T          ::Float64
 end
 
-# `Base.show(io::IO, coeff::Coefficient1p)`  ... prepares a proper printout of the coeff::Coefficient1p.
 function Base.show(io::IO, coeff::Coefficient1p)
     # sa = "\n V^($(coeff.L)) [$(coeff.a), $(coeff.b)] = $(coeff.v)"
     sa = "   T^$(coeff.nu) [$(coeff.a), $(coeff.b)] = $(coeff.T)"
@@ -153,7 +150,6 @@ struct  Coefficient2p
 end
 
 
-# `Base.show(io::IO, term::QspaceTerm)`  ... prepares a proper printout of term::QspaceTerm.
 function Base.show(io::IO, term::QspaceTerm)
     if  term.Nr == 0   
         sa = "|$(term.j) $(term.Q) $(term.J) min_odd=$(term.min_odd) max_odd=$(term.max_odd) " * 
@@ -165,7 +161,6 @@ function Base.show(io::IO, term::QspaceTerm)
     println(io, sa)
 end
 
-# `Base.show(io::IO, coeff::Coefficient2p)`  ... prepares a proper printout of the coeff::Coefficient2p.
 function Base.show(io::IO, coeff::Coefficient2p)
     sa = "\n V^($(coeff.nu)) [$(coeff.a), $(coeff.b)| $(coeff.c), $(coeff.d)] = $(coeff.V)"
     print(io, sa)

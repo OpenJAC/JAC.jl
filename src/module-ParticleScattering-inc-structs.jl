@@ -102,7 +102,6 @@ function PartialWave()
 end
 
 
-# `Base.show(io::IO, pw::ParticleScattering.PartialWave)`  ... prepares a proper printout of pw::ParticleScattering.PartialWave.
 function Base.show(io::IO, pw::ParticleScattering.PartialWave)
     sa = Basics.subshell_l(Subshell(101, pw.kappa));    sb = Basics.subshell_j(Subshell(101, pw.kappa))
     println(io, "kappa = $(pw.kappa)  (l = $sa, j = $sb),  energy = $(pw.energy),  phaseShift = $(pw.phaseShift)")
@@ -141,7 +140,6 @@ function ScatteringChannel()
 end
 
 
-# `Base.show(io::IO, ch::ParticleScattering.ScatteringChannel)`  ... prepares a printout of ch::ParticleScattering.ScatteringChannel.
 function Base.show(io::IO, ch::ParticleScattering.ScatteringChannel)
     println(io, "kappa_i = $(ch.initialKappa),  kappa_f = $(ch.finalKappa),  J^pi = $(ch.totalSymmetry),  " *
                 "amplitude = $(ch.amplitude)")
@@ -174,7 +172,6 @@ function AngularObservables()
 end
 
 
-# `Base.show(io::IO, obs::ParticleScattering.AngularObservables)`  ... printout of obs::ParticleScattering.AngularObservables.
 function Base.show(io::IO, obs::ParticleScattering.AngularObservables)
     println(io, "theta = $(obs.theta),  phi = $(obs.phi),  dcs = $(obs.dcs),  S = $(obs.sherman)")
 end
@@ -204,7 +201,6 @@ function IntegratedObservables()
 end
 
 
-# `Base.show(io::IO, obs::ParticleScattering.IntegratedObservables)`  ... printout of obs::IntegratedObservables.
 function Base.show(io::IO, obs::ParticleScattering.IntegratedObservables)
     println(io, "sigma_el = $(obs.sigmaElastic),  sigma_1 = $(obs.sigmaMomentumTransfer),  " *
                 "sigma_2 = $(obs.sigmaViscosity)")
@@ -252,7 +248,6 @@ function Event()
 end
 
 
-# `Base.show(io::IO, event::ParticleScattering.Event)`  ... prepares a proper printout of event::ParticleScattering.Event.
 function Base.show(io::IO, event::ParticleScattering.Event)
     println(io, "projectile:         $(event.projectile)  ")
     println(io, "process:            $(event.process)  ")

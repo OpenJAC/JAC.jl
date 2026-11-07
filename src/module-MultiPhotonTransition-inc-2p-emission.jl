@@ -64,8 +64,6 @@ struct  Line_2pEmission
 end
 
 
-# `Base.show(io::IO, line::MultiPhotonTransition.Line_2pEmission)`  
-#   ... prepares a proper printout of the variable line::MultiPhotonTransition.Line_2pEmission.
 function Base.show(io::IO, line::MultiPhotonTransition.Line_2pEmission) 
     println(io, "initialLevel:      $(line.initialLevel)  ")
     println(io, "finalLevel:        $(line.finalLevel)  ")

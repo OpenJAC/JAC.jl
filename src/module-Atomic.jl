@@ -144,7 +144,6 @@ function Computation(wa::Bool)
 end
 
 
-# `Base.string(comp::Atomic.Computation)`  ... provides a String notation for the variable comp::Atomic.Computation.
 function Base.string(comp::Atomic.Computation)
     sa = "Atomic computation:    $(comp.name) for Z = $(comp.nuclearModel.Z), "
     if  comp.processSettings != Nothing   sa = sa * "for the process (comp.process) and with the \n\ninitial configurations:       "
@@ -162,7 +161,6 @@ function Base.string(comp::Atomic.Computation)
 end
 
 
-# `Base.show(io::IO, comp::Atomic.Computation)`  ... prepares a printout of comp::Atomic.Computation.
 function Base.show(io::IO, comp::Atomic.Computation)
     sa = Base.string(comp);             print(io, sa, "\n\n")
     println(io, "nuclearModel:          $(comp.nuclearModel)  ")
