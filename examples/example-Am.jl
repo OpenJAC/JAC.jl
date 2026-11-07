@@ -6,8 +6,6 @@ println("Am) Apply & test procedures to establish a configuration-based language
 # configuration-themes  <:  AbstractConfigurationTheme. This file does not strictly follow the list of themes as displayed
 # by ? Basics.displayConfigurationthemes
 
-include("test-code.jl")
-
 heConf   = Configuration("[He]");    arConf = Configuration("[Ar]");    xeConf =  Configuration("[Xe]")
 heShells = Basics.generateShellList(2, 4, [0,1,2,3]);          heSubshells = Basics.generateSubshellList(heShells)
 arShells = Basics.generateShellList(4, 6, [0,1,2,3,4,5]);      arSubshells = Basics.generateSubshellList(arShells)
@@ -23,6 +21,7 @@ if      false
          Basics.displayConfigurations(stdout, wa, longForm=true, details="He + Ar + Xe")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Add, excite or remove electrons from some reference configurations
     # ------------------------------------------------------------------
@@ -36,6 +35,7 @@ elseif  false
          Basics.displayConfigurations(stdout, wa, longForm=true, details="1 removed electron")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Add, excite or remove electrons due to given atomic processes
     # -------------------------------------------------------------
@@ -59,6 +59,7 @@ elseif  false
          Basics.displayConfigurations(stdout, wg, longForm=true, details="ForRasExcitations")
     #
 elseif  true
+    # Last visit:  07-Nov-2026   (repaired -- removed a dead include("test-code.jl") that blocked the whole file)
     # Last visit:  16-Oct-2026
     # Add, excite or remove electrons due to given atomic processes
     # -------------------------------------------------------------
@@ -113,6 +114,7 @@ elseif  false
     wc = Basics.generateConfigurations(RelativisticConfigurations(), xeConf);                           @show wc
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  16-Oct-2026
     # Extract some particular single configuration
     # -------------------------------------------- 
@@ -131,6 +133,7 @@ elseif  false
     we = Basics.extractConfiguration(FromBasis(), basis, basis.csfs[8]);                                @show we
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Extract information from a single (relativistic) configuration
     # --------------------------------------------------------------
@@ -185,6 +188,7 @@ elseif  false
     we = Basics.extractConfigurations(TotalAM(false, [AngularJ64(2)]), refConfigs);                     @show we
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Extract information from a single (relativistic) configuration
     # --------------------------------------------------------------
     name        = "Oxygen 1s^2 2s^2 2p^4 ground configuration"
@@ -206,6 +210,7 @@ elseif  false
     wj = Basics.extractFromConfiguration(ClosedSubshells(), "[Xe]");                                    @show wj
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Extract parity, is-occupied and multiplicity from a single standard or relativistic configuration
     # -------------------------------------------------------------------------------------------------
@@ -231,6 +236,7 @@ elseif  false
     wc = Basics.extractFromConfigurations(ClosedShells(), allConfs);                                    @show wc
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Extract information from a list of configurations    
     # -------------------------------------------------
     fromShells = [Shell("3s"), Shell("3p")]
