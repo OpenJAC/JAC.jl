@@ -14,6 +14,7 @@ if      false
     ## wa  = RacahAlgebra.recursionW3j(w3j, RacahAlgebra.RecursionW3jLouck())
     #
 elseif  false 
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  13May2024
     # Look for special value for Wigner 3j symbol 
@@ -24,6 +25,7 @@ elseif  false
     RacahAlgebra.evaluate(rex, special=true)
     #
 elseif  true    
+    # Last visit:  07-Nov-2026
     # Last successful:  13May2024
     # Look for special value for Wigner 6j symbol 
     a   = Basic(:a);     b  = Basic(:b);    c  = Basic(:c)
@@ -33,6 +35,7 @@ elseif  true
     RacahAlgebra.evaluate(rex, special=true)
     #
 elseif  true    
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  unknown ...
     # Look for special value for Wigner 9j symbol 
@@ -58,6 +61,7 @@ elseif  false
     rex  = RacahAlgebra.evaluate(rex)
     #
 elseif  false   
+    # Last visit:  07-Nov-2026
     # Last successful:  unknown ...
     # Evaluate the Racah expression for the Coulomb interaction strength; from Racah-02.ps
     ja   = Basic(:ja);    jb = Basic(:jb);    jc = Basic(:jc);    jd = Basic(:jd);    Jab = Basic(:Jab);    Jcd = Basic(:Jcd);    L = Basic(:L)
@@ -71,6 +75,7 @@ elseif  false
     rex  = RacahAlgebra.evaluate(rex)
     #
 elseif  true   
+    # Last visit:  07-Nov-2026
     # Last successful:  unknown ...
     # Evaluate the Racah expression for the Feynman-Goldstone diagram; from Racah-02.ps
     ja   = Basic(:ja);    jb = Basic(:jb);    jr = Basic(:jr);    js = Basic(:js);    L1 = Basic(:L1);    L2 = Basic(:L2)
@@ -92,6 +97,7 @@ elseif  false
     rex = RacahAlgebra.evaluate(rex, special=true);     println("rex-special value   = $rex")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  unknown ...
     # Test for special values of the Wigner 6j symbols; selectW6j(1..22)

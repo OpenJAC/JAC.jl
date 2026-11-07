@@ -44,6 +44,7 @@ if  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  31-Jul-2026
     # Branch b: Ca (Z=20) K-shell hole, "1s 2s^2 2p^6 3s^2 3p^6 4s^2" (19 electrons; neutral Ca [Ar]4s^2
     #   minus one 1s electron) -- matches Koziol's own valence configuration "4s^2" for Ca exactly.
@@ -100,6 +101,7 @@ elseif  false
     perform(wa2)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  31-Jul-2026
     # Branch d: Zn (Z=30) K-shell hole, "1s 2s^2 2p^6 3s^2 3p^6 3d^10 4s^2" (29 electrons; neutral Zn
     #   [Ar]3d^10 4s^2 minus one 1s electron; 3d^10 is a CLOSED subshell, so this system's CSF space is much
@@ -124,6 +126,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  31-Jul-2026 (all 4 sub-computations ran cleanly; decayShells' effect is CONFIRMED
     #   ABSENT for StepwiseDecayScheme, root cause found and documented below, not a fixed positive result)
@@ -214,6 +217,7 @@ elseif  false
     perform(wa4)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  31-Jul-2026
     # Branch f: Si (Z=14) K-shell hole, "1s 2s^2 2p^6 3s^2 3p^2" (13 electrons; neutral Si [Ne]3s^2 3p^2
@@ -250,6 +254,7 @@ elseif  false
     perform(wa2)
     #
 elseif  true
+    # Last visit:  07-Nov-2026   (TIMED OUT at 500 s)
     # Last visit:  18-Oct-2026 (TIMED OUT at 500 s)
     # Last successful:  13-Oct-2026
     # Branch g: Sc (Z=21) K-shell hole, "1s 2s^2 2p^6 3s^2 3p^6 3d^1 4s^2" (20 electrons; neutral Sc

@@ -91,6 +91,7 @@ grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.6e-2, rb
 ## (see each REPORT) rather than relying on this non-functional display column.
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  16-Oct-2026
     # Last successful:  unknown ... (see REPORT -- root cause #2 above still open, absolute magnitude not
     #   yet trustworthy)
@@ -127,6 +128,7 @@ if  true
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  16-Oct-2026
     # Last successful:  unknown ... (see REPORT -- absolute magnitude not yet trustworthy, see finding above)
     # Branch 2: new, minimal illustrative case for Na-like Fe (Fe XVI, Z=26), directly testing the user's own

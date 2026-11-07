@@ -2,6 +2,7 @@
 println("Ae) Apply & test the QED model corrections to the level structure of atoms and ions.")
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last successful:  29-Jul-2026: E1(Coulomb) = -1519.352175 Ha. Delta E(Petersburg) = +1.609769 Ha
     # (~43.8 eV -- a physically plausible 1s Lamb-shift magnitude for Z=54, correct sign: self-energy
     # dominates and RAISES the energy). Delta E(Sydney) = +1.241483 Ha -- SAME SIGN as Petersburg, ratio
@@ -83,6 +84,7 @@ elseif  false
             "non-additive residual = $(dCombined-(dBreit+dQed)) Ha")
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  29-Jul-2026: widened Z-scan (1s), AFTER the second round of QedSydney fixes (see
     # Branch 1 comment -- alpha^3 damping + Rci-Q Table I coefficient in qedElectricFormFactor):
     # Delta E(Petersburg)/Delta E(Sydney)/ratio = Z=30: +0.230363/+0.205793/+0.893;
@@ -144,6 +146,7 @@ elseif  false
             "(self-energy term forced to exactly 0 by code guard; only Uehling VP survives)")
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  29-Jul-2026: Be-like Fe (Z=26), 6-CSF basis spanning J=0(x3)/1/2(x2), even parity.
     # QED (Petersburg) shifts EVERY level's energy by ~0.14-0.16 Ha (self-energy-dominated, matches the 1s
     # weight in each CSF), AND shifts the CSF-mixing coefficients in every block that has real mixing:

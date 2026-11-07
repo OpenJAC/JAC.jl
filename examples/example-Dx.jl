@@ -11,6 +11,7 @@ println("    product through the KLL resonances; and Phys. Rev. Lett. 74 (1995) 
 println("    observation of the Fano asymmetry in uranium.")
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last successful:  20-Aug-2026
     #   [PROVENANCE: produced on Julia 1.10.9, with a Manifest re-resolved for 1.10 because the checkout's Manifest had been
     #    resolved under 1.12.6 on the maintainer machine.  Re-run there to confirm.]
@@ -90,6 +91,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  20-Aug-2026
     #   [PROVENANCE: as branch a.]
@@ -170,6 +172,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last reproduced:  20-Oct-2026 (1 of 1 numbers on the claim line)
     # Last successful:  20-Aug-2026

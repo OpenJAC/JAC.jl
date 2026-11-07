@@ -61,6 +61,7 @@ grid = Radial.Grid(Radial.Grid(true); rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbo
 
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful: 08-Aug-2026 ... 41 s.  14 steps; 38 PhotoEmission and 10 AutoIonization lines, written
     #                  to zzz-cascade-hollow-ion-computations-<date>.jld.  Both channels are open, which is the
@@ -118,6 +119,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful: 08-Aug-2026 ... 48 s for the three runs.
     #                      processes           radiative lines    Auger lines
@@ -151,6 +153,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (RAISED -- see priority item 10)
     # Last visit:      08-Aug-2026 ... runs, and the machinery is verified: Cascade.reviewData now finds the
     #                  lines (it could not before defect 4 was fixed), sorts 21 levels across all charge states,
     #                  propagates, and returns a normalised distribution summing to 1.00000.

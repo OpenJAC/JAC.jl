@@ -6,6 +6,7 @@ println("    F(q) = 16 Z^4 / (4 Z^2 + q^2)^2 [a.u.], derived analytically from t
 println("    1s density -- see project memory project_formfactor_scattering.md.")
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last successful:  31-Jul-2026
     # Branch a: Ne-like Fe (Z=26) [Ne] 3s^2 3p^5 / [Ne] 3s 3p^6, N_e = 17 electrons for both configurations.
     #   Tests the ONE exact, model-independent identity a standard form factor must satisfy: F^(standard)(0)
@@ -27,6 +28,7 @@ if  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  31-Jul-2026
     # Branch b: H(1s), bare single-electron test against the EXACT closed-form hydrogenic form factor.
@@ -55,6 +57,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  31-Jul-2026
     # Branch c: neutral Ne (Z=10), [Ne] closed shell -- comparison against Waasmaier & Kirfel (1995),
@@ -82,6 +85,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  31-Jul-2026
     # Branch d: neutral Ar (Z=18), [Ar] closed shell -- comparison against BOTH Waasmaier & Kirfel (1995)
@@ -106,6 +110,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  31-Jul-2026
     # Branch e: Fe3+ ION (Z=26, 23 electrons), [Ar] 3d^5 -- comparison against Waasmaier & Kirfel (1995),

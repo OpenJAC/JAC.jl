@@ -144,6 +144,7 @@ grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rb
 ##  DIAGNOSTICS -- run this first on any new system
 ## =====================================================================================================
 if  false
+    # Last visit:  07-Nov-2026
     # Last successful:  07-Aug-2026
     #
     # DATED for what a diagnostic can verify: that it reports the right thing, in the right order, with the
@@ -384,6 +385,7 @@ elseif  false
     perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # 07-Aug-2026: NOT successful -- n_max = 12 is far from converged
     #
@@ -449,6 +451,7 @@ elseif  false
     end
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # OWN GRID: the file-level grid (80 a.u.) is refused for this branch, which wants about 255 a.u.
     # A local grid leaves the branches that are already matched undisturbed; hp = rbox/300.
@@ -919,6 +922,7 @@ elseif  true
     perform(wd)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  07-Aug-2026        ## for the ANGULAR structure; the absolute scale is NOT verified
     #
     # DATED on the same basis as branch g, and BIT-IDENTICAL across blocker A2 -- which is itself the check:
@@ -1011,6 +1015,7 @@ elseif  false
     perform(wi)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # OWN GRID: the file-level grid (80 a.u.) is refused for this branch, which wants about 209 a.u.
     # A local grid leaves the branches that are already matched undisturbed; hp = rbox/300.
     grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.6967, rbox = 209.0)
@@ -1094,6 +1099,7 @@ elseif  false
     perform(we)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  11-Aug-2026     ## for the PHOTON-ENERGY DEPENDENCE of the absorption cross section;
     #                                   ## the absolute scale remains unverified, see below.
@@ -1253,6 +1259,7 @@ elseif  false
 ##  TWO-PHOTON EMISSION, A SELECTION RULE  (an EXACT check that needs no reference number at all)
 ## =====================================================================================================
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  01-Nov-2026
     # Last successful:  01-Nov-2026   ## the midpoint row (omega1 = omega2) of this branch's own printed table:
     #                                 ## pure E1E1 gives 0.00000e+00 in BOTH gauges at Z = 2, 18 AND 30, while

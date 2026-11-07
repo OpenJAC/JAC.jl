@@ -7,6 +7,7 @@ Defaults.setDefaults("unit: energy", "Hz")
 setDefaults("print summary: open", "zzz-Hfs.sum")
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last successful:  28-Aug-2026 -- A(1s) now reads 1.421215e+03 MHz where this branch recorded 1423.157 MHz, a
     # move of 0.14 % and TOWARD the measured value: agreement with the famous 1420.405751 MHz 21 cm line improves
     # from 0.19 % to 0.057 %. The record is from 26-Jul, so the shift is not attributable to any one change; it is
@@ -69,6 +70,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  29-Jul-2026
     # Branch c (AL-Field / Breit revisit): reuses branch b's Na [Ne] 3s system, now that the AL-Field SCF
@@ -122,6 +124,7 @@ elseif  false
     perform(wa4)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  30-Jul-2026 (J=3/2/kappa=+2 level ONLY -- see OPEN BUG below for J=5/2/kappa=-3)
     # Branch e (M3 fix verification): Sc (Z=21) [Ar] 3d 4s^2 ^2D_3/2,5/2 -- a single-open-subshell (3d^1)
     #   system, same structural class as branch b/c's Na 3s, chosen specifically to verify TWO bugs just

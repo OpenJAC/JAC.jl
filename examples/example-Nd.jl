@@ -7,6 +7,7 @@ setDefaults("unit: rate",          "1/s")
 setDefaults("print summary: open", "zzz-Empirical.sum")
 
 if  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  16-Jul-2026
     # Branch 1: Empirical.impactIonizationCrossSection(energies, iConf, fConf, Lotz1967()) --

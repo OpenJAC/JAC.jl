@@ -7,6 +7,7 @@ setDefaults("print summary: open", "zzz-ForPedestrians.sum")
 
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last successful:  26Jun2026
     # BEB electron impact-ionization cross sections for all subshells of neutral neon (Z=10).
     # Energy grid covers all shells: 2p (~21 eV), 2s (~48 eV), 1s (~870 eV).
@@ -16,6 +17,7 @@ if  false
     estimateCrossSections(Basics.ForImpactIonization(), initialConfigs, electronEnergies=electronEnergies)
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last successful:  26Jun2026
     # BEB electron impact-ionization cross sections for all subshells of neutral argon (Z=18).
     # Energy grid covers all shells: 3p (~16 eV), 3s (~33 eV), 2p/2s (~250-330 eV), 1s (~3200 eV).

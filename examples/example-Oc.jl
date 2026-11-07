@@ -6,6 +6,7 @@ setDefaults("print summary: open", "zzz-ParticleScattering.sum")
 setDefaults("unit: energy", "eV")
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  17-Aug-2026
     # Last successful:  17-Aug-2026
     # THE PHYSICS. The Sherman function S(theta) is the analysing power of Mott polarimetry: the left-right asymmetry

@@ -5,6 +5,7 @@ setDefaults("print summary: open", "zzz-PhotonScattering.sum")
 setDefaults("unit: energy", "eV")
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:      21-Aug-2026
     # Last successful:  unknown ... NOT VERIFIED; the gauges disagree, see the report below.
     #
@@ -62,6 +63,7 @@ if  true
     wb = perform(wa; output=true)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  unknown ... the test RAN and gave a clean, quantitative answer, but that answer is a FAILURE,
     #                              so the branch is not dated.  Read the report -- the failure is the useful part.

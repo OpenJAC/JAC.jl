@@ -10,6 +10,7 @@ setDefaults("unit: rate", "a.u.")
 grid        = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rbox = 10.0)
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  01-Nov-2026
     # Last successful:  unknown ...
     # Photo-double ionization of he-like Be: 1s^2   -->  epsilon1 kappa1 + epsilon2 kappa2:

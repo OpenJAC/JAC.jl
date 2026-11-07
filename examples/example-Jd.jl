@@ -15,6 +15,7 @@ println("    intensity-ratio Te diagnostic).")
 
 
 if  true
+    # Last visit:  07-Nov-2026   (RAISED -- see priority item 9)
     # Last visit:  20-Oct-2026
     # Last successful:  unknown ...
     # Branch a: the Gabriel (1972) case -- He-like Fe (Fe XXV), the classic, most extensively tabulated
@@ -107,6 +108,7 @@ if  true
     wb = perform(computation, output=true)
     #
 elseif  true
+    # Last visit:  07-Nov-2026   (RAISED -- see priority item 9)
     # Last visit:  20-Oct-2026
     # Last successful:  unknown ...
     # Branch b: F-like Ne+, the more complex, OPEN-SHELL recombining-ion case (2P_3/2+2P_1/2 ground,

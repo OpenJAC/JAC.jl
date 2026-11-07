@@ -47,6 +47,7 @@ if  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  24-Jul-2026
     # Branch 2: Li-like sequence E-A, exercising the explicit correction factors 0.6/0.8/1.25 for C/N/O -- if
@@ -86,6 +87,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  24-Jul-2026
     # Branch 3: total ionization rate alpha^(EII: total) = alpha^(DI) + alpha^(EA) -- the actual physical payoff.
@@ -117,6 +119,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  24-Jul-2026
     # Branch 4: scope checks -- two distinct gaps in the paper's own coverage must be rejected cleanly.

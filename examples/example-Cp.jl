@@ -46,6 +46,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  21-Oct-2026
     # Last reproduced:  21-Oct-2026 (all three ions of the claim's table)
     # Last successful: 29-Sep-2026 -- the three CLOSED-SHELL ions of Sternheimer, Phys. Rev. 159, 266 (1967),
@@ -72,6 +73,7 @@ elseif  false
     end
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful: 29-Sep-2026 -- A NEGATIVE RESULT, AND THAT IS WHY THE BRANCH EXISTS.  The far-field
     #   coefficient assumes the external charges are infinitely distant.  In CaF2 the nearest neighbours sit
@@ -107,6 +109,7 @@ elseif  false
     end
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:      29-Sep-2026
     # Last successful: 29-Sep-2026 -- the sum over intermediate states converges FAST and on BOUND virtuals:
     #   keeping only the largest 1, 2, 5, 10, 20 terms per channel reaches the full answer to better than 1 %
@@ -134,6 +137,7 @@ elseif  false
     end
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  21-Oct-2026 (RAISED AS DESIGNED -- both guards fired)
     # Last successful: 29-Sep-2026 -- A GUARD TEST: both calls below MUST raise, and raising is the pass.
     #   (i)  an OPEN-SHELL ion.  A shielding factor is the SCALAR response of a spherical ion; for an open shell
@@ -163,6 +167,7 @@ elseif  false
     #
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful: 04-Oct-2026 -- THE OVERALL CONSTANT IS DERIVED, AND THIS BRANCH CHECKS EVERY LINK.
     #   `NuclearShielding.GAMMA_PREFACTOR` used to carry a factor of two and a sign that had been fixed by
@@ -234,6 +239,7 @@ elseif  false
     #
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful: 06-Oct-2026 -- SELF-CONSISTENT SCREENING, AND THE SHELL THAT DECIDES ITS SIZE.
     #   The module's default response is UNCOUPLED: the induced field is not allowed to act back.  With

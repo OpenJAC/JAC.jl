@@ -148,6 +148,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last visit:      06-Aug-2026
     # Last reproduced:  16-Oct-2026 (4 of 4 numbers on the claim line)
     # Last successful: 06-Aug-2026 ... three spectra, <1 s.  Level 1 peaks at 287.6 eV and level 2 at

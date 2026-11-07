@@ -38,6 +38,7 @@ grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.6e-2, rb
 
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last visit:  16-Oct-2026 -- RE-RUN, AND EVERY LINE AGREES TO 0.08-0.14 %. Today against the 9-Aug column:
     #   STEP 2   2-->1  C 2.760519e+06 / B 9.565061e+06   (was 2.757046e+06 / 9.551948e+06)   +0.13 %
     #            4-->1  C 1.375121e+10 / B 5.448745e+10   (was 1.376205e+10 / 5.453150e+10)   -0.08 %
@@ -206,6 +207,7 @@ if  false
     # stays dated "Last visit", not "Last successful" (Rule 7).
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last visit:  04-Aug-2026
     # --- Li-like O5+: the Togawa et al. TEOP case, the first branch with a real literature counterpart.
     #

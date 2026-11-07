@@ -5,6 +5,7 @@ setDefaults("print summary: open", "zzz-ForPedestrians.sum")
 
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last successful:  26Jun2026
     # Ar^2+ with two L-shell vacancies: the three KLL Auger final-state configuration groups.
     # Shows jj (FineStructure) and LS (FineStructureLS) coupling of 2p^4, 2s 2p^5, and 2p^6 open shells.
@@ -15,6 +16,7 @@ if  false
     displayCouplings(Basics.FineStructureLS(), configs)
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last successful:  26Jun2026
     # Ar^2+ with one K-shell and one L-shell vacancy (KL double holes).
     # Shows jj and LS coupling of the 1s + 2p and 1s + 2s open-shell combinations.

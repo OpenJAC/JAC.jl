@@ -19,6 +19,7 @@ println("At) Apply & test the RandomPhase module: orchestrating one DalgarnoLewi
 # between them to begin with) is explicitly NOT claimed; see the long comment in branch (b) itself.
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last successful:  11-Oct-2026
     # Branch (a): the orchestration adds no physics of its own. Two active electrons of the SAME H-like 1s/2s
     # basis are both driven by an E1 operator at omega = 0.3 a.u. into the SAME 2p_1/2 target channel, through

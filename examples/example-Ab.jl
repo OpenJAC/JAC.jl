@@ -64,6 +64,7 @@ if  true
     wb = perform(wa)
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  unknown -- HISTORICAL RECORD, no longer reproducible as written (see note below)
     # Branch 0-reference: originally the same He 1s^2 case as Branch 0 above, but with the ORIGINAL, un-fixed
     # Basics.ALField() -- kept here for direct comparison. Result on the 62-spline baseline grid (19-Jul-2026):
@@ -82,6 +83,7 @@ elseif  false
     wb = perform(wa)
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  unknown
     # Branch 1 (was: `if true`): the original neon/ALField case that started this debugging session.

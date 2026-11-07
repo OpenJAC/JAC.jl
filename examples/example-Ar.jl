@@ -134,6 +134,7 @@ if  false
     # were taken without an intruder check.  Before they are trusted, read the step's warning block.
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:      13-Sep-2026
     # Last successful:  unknown -- withdrawn for the reason given in branch (a): the 12-Sep value was earned on
     #                   defective angular coefficients.  Re-run 13-Sep on the repaired code the CI still uses all
@@ -172,6 +173,7 @@ elseif  false
     println(">> step 3 : $(length(ls)) levels, lowest = $(ls[1].energy) Ha  -- EXPECTED -459.93426153 Ha")
 
 elseif  true
+    # Last visit:  07-Nov-2026   (TIMED OUT at 500 s)
     # Last visit:  20-Oct-2026 (TIMED OUT at 500 s)
     # Last successful:  13-Sep-2026 -- the table this branch prints, against NIST ASD 5.12.  Coulomb+Breit(0.):
     #                   3P*_0 233235 / 233406 / 235209,  3P*_1 239101 / 239246 / 240884,
@@ -374,6 +376,7 @@ elseif  false
     runRas("0-layer", [RasStep()])
     runRas("1-layer", [RasStep(), RasStep(RasStep(); seFrom=v3, seTo=n4, deFrom=v3, deTo=n4, frozen=frz)])
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  02-Nov-2026
     #
     # e) THE TWO Q-SPACE PERTURBATION ROUTES, ON BRANCH (a)'s OWN Cl III CASE (competition item 11).

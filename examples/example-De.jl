@@ -33,6 +33,7 @@ grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rb
 ## (added 17-Aug-2026) is the one that supplies a real gMultiplet and exercises the path.
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last successful:  28-Aug-2026 -- REPRODUCES. Total K-shell Auger rate 9.461809e-03 a.u. against the recorded
     # 9.464e-3 (0.02 %), lifetime 2.556471e-15 s and total width 2.574689e-01 eV, i.e. 2.556 fs and 0.2575 eV
     # exactly as recorded, still matching the tabulated Ne K-shell width of ~0.24-0.27 eV.
@@ -83,6 +84,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last reproduced:  20-Oct-2026 (3 of 3 numbers on the claim line)
     # Last successful:  28-Aug-2026 -- REPRODUCES, INCLUDING THE EXACT ZERO. Level 1 width 8.322900e-02 eV against
@@ -122,6 +124,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last reproduced:  20-Oct-2026 (2 of 2 numbers on the claim line)
     # Last successful:  17-Oct-2026  ## widths 0.102017 and 0.101619 eV, box 33.1 a.u., 4s_1/2 at 0.797
@@ -193,6 +196,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last visit:  26-Oct-2026   ## three runs: 3P_2 both branches 598.3221e-7, 3P_2 continuum-only 187.6895e-7,
     #   1D_2 both branches 765.3257e-7, all at the converged nInt 24 / factor 8 / maxKappa 4
     # Last successful:  unknown ...
@@ -464,6 +468,7 @@ elseif  true
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  26-Oct-2026   ## 3P_2 (level 1) 132528.6320e-7 a.u. = 360.63 meV, REPRODUCING the 25-Oct
     #   value to the digit, and 1D_2 (level 4) 130617.3264e-7 = 355.43 meV;  41 channels each.  The width is
     #   nearly LEVEL-INDEPENDENT -- 1.4 % apart -- which matters because the measured 323(15) meV belongs to the

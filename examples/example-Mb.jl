@@ -7,6 +7,7 @@ setDefaults("print summary: open", "zzz-ForPedestrians.sum")
 
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  26Jun2026
     # computeTransitionRates(ForPhotoEmission): K-alpha radiative rates for the 1s-hole of neutral neon.
@@ -17,6 +18,7 @@ if  false
     computeTransitionRates(Basics.ForPhotoEmission(), initialConfigs, finalConfigs)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  26Jun2026
     # computeTransitionRates(ForPhotoEmission): K-alpha radiative rates for the 1s-hole of neutral argon.
     setDefaults("nuclear: charge", 18.0)
@@ -25,6 +27,7 @@ elseif  false
     computeTransitionRates(Basics.ForPhotoEmission(), initialConfigs, finalConfigs)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  26Jun2026
     # computeTransitionRates(ForPhotoEmission): radiative rates among the low-lying levels of neutral lithium.
     setDefaults("nuclear: charge", 3.0)
@@ -44,6 +47,7 @@ elseif  false
     computeTransitionRates(Basics.ForAutoIonization(), initialConfigs, finalConfigs)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  26Jun2026
     # computeTransitionRates(ForAutoIonization): KLL Auger rates for the 1s-hole of neutral argon.
     # Initial: 1s vacancy (17 electrons);  final: Ar^2+ with two L-shell vacancies (16 electrons).
@@ -72,6 +76,7 @@ elseif  false
     computeBranchingFractions(Basics.ForAutoIonization(), initialConfigs, finalConfigs)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  28Jun2026
     # displaySpectrum(ForPhotoEmission): photon emission spectrum for low-lying levels of neutral lithium.
     # Three initial configs (2p, 3s, 3p) -> two final configs (2s, 2p): several E1 lines visible.

@@ -37,6 +37,7 @@ if  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  24-Jul-2026
     # Branch 2: He-like sequence DR, general Z-scaling formula (Sect. 3.2.2), for Fe XXV -- a classic
@@ -115,6 +116,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  24-Jul-2026
     # Branch 4: scope check -- an isoelectronic sequence beyond H-like/He-like must be rejected cleanly, not

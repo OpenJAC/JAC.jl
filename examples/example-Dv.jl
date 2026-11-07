@@ -35,6 +35,7 @@ if  false
     perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  02-Sep-2026
     # Last successful:  unknown ...
     #
@@ -93,6 +94,7 @@ elseif  false
     #
     #
 elseif  true
+    # Last visit:  07-Nov-2026   (TIMED OUT at 500 s)
     # Last visit:  21-Oct-2026
     # Last successful:  21-Oct-2026   ## A_20 = -0.79999 (J = 2) and -0.93832 (J = 1) for 2s_1/2 2p_3/2, with the
     #                                 ## six-resonance table below;  CoulombBreit(1.), maxKappa = 6, rbox = 5 a.u.

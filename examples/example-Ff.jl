@@ -97,6 +97,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:      06-Aug-2026
     # Last successful: 06-Aug-2026 ... ~3.4 s for both runs.  57 radiative lines with [E1] against 63 with
     #                  [E1, M1, E2], while the Auger lines stay at 16 in both -- which is the point: a photon
@@ -127,6 +128,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:      06-Aug-2026
     # Last successful: 06-Aug-2026 ... ~3 s.  alpha^DR (Coulomb) in cm^3/s:
     #                      1e4 K  9.52e-129     1e5 K  6.55e-23     1e6 K  2.78e-13
@@ -160,6 +162,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful: 06-Aug-2026 ... ~5.8 s for both runs.  Adding n = 3 to the capture shells:
     #                      KLL         12 steps,  16 Auger lines,   57 radiative lines
@@ -193,6 +196,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful: 06-Aug-2026 ... ~30 s (two cascades and two simulations).  In cm^3/s:
     #                      T [K]        KLL only     KLL + KLM    Arnaud 1985   (KLL+KLM)/Arnaud

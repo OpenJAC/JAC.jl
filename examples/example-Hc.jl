@@ -42,6 +42,7 @@ if  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  14-Jul-2026
     # Branch 2: Configuration binding energies -- all three tabulations.
@@ -100,6 +101,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     #
     # Last successful:  14-Jul-2026
@@ -228,6 +230,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     #
     # Last successful:  15-Jul-2026

@@ -5,6 +5,7 @@ setDefaults("unit: energy", "eV")
 setDefaults("print summary: open", "zzz-Empirical.sum")
 
 if  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  16-Jul-2026
     # Branch 1: Empirical.recombinationConfigurations(iConf; nLayers) and the single-channel
@@ -77,6 +78,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  16-Jul-2026
     # Branch 3: three-body vs. radiative recombination -- the crossover density.

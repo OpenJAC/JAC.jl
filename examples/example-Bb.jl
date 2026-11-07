@@ -132,6 +132,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  21-Aug-2026
     #   [PROVENANCE: as branch a.]
     # Branch c: THE RANK-0 NORMALIZATION, measured rather than assumed.  This is the branch to re-run first if anything
@@ -179,6 +180,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  21-Aug-2026
     #   [PROVENANCE: as branch a.]
     # Branch d: THE NUCLEAR MODEL IS NOT A DETAIL HERE.  These amplitudes are nuclear-overlap quantities: the operator
@@ -228,6 +230,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  21-Aug-2026
     #   [PROVENANCE: as branch a.]
     # Branch e: THE Z-DEPENDENCE -- CLOSED, and the law is Z^4, not Z^3.
@@ -279,6 +282,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  21-Aug-2026
     #   [PROVENANCE: as branch a.]
     # Branch f: THE ANAPOLE, and the mistake that only Hermiticity could catch.  Written last, because the anapole was
@@ -456,6 +460,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  22-Aug-2026
     #   [PROVENANCE: as branch a.]
     # Branch h: THE NEUTRON SKIN -- a sensitivity study, and a limitation of this module made quantitative.
@@ -578,6 +583,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  22-Aug-2026
     #   [PROVENANCE: as branch a.]

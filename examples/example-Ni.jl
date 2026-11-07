@@ -7,6 +7,7 @@ setDefaults("unit: rate",          "1/s")
 setDefaults("print summary: open", "zzz-Empirical.sum")
 
 if  true
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  23-Jul-2026
     # Branch 1: low-level building blocks (Empirical.nonadiabaticRadius, landauZenerProbability) and
@@ -64,6 +65,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last visit:  16-Oct-2026
     # Last successful:  unknown -- deliberately left undated, see below.

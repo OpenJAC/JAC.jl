@@ -40,6 +40,7 @@ if  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  17-Jul-2026
     # Branch 2: the Quantity relation -- stopping power vs. stopping cross section.
@@ -106,6 +107,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last visit:  18-Oct-2026
     # Last reproduced:  18-Oct-2026 (1 of 1 to 1e-5)

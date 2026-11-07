@@ -12,6 +12,7 @@ grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 1.0e-2, rb
 
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     #   "Last successful" (Rule 7) because it has never recorded anything to compare against and this run only
     #   establishes a baseline. What it produces: two Green-function channels, 1/2 + with 52 levels spanning

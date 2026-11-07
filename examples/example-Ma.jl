@@ -6,6 +6,7 @@ setDefaults("print summary: open", "zzz-ForPedestrians.sum")
 
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last successful:  26Jun2026
     # Level energies for neon ground configuration and the first excited 2p^5 3s configuration.
     # Simple demo; also used in demos/A4-Pluto-for-pedestrians.jl.
@@ -14,6 +15,7 @@ if  false
     computeLevelEnergies(Basics.ForGivenConfigs(), configs)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  26Jun2026
     # Level energies for the argon ground configuration and the K-hole configuration;
     # corresponds to Figure 3(a) of the pedestrian review article.
@@ -22,6 +24,7 @@ elseif  false
     computeLevelEnergies(Basics.ForGivenConfigs(), configs)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  26Jun2026
     # Level energies for several low-lying configurations of neutral oxygen (open-shell case).

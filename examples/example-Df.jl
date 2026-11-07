@@ -49,6 +49,7 @@ grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.6e-2, rb
 
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # --- Branch a: He-like C4+ (Z=6) + e- --> Li-like C3+, K-LL dielectronic recombination.
     #
@@ -241,6 +242,7 @@ elseif  false
     perform(wd)
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (RAISED -- see priority item 9)
     # Last visit:  20-Oct-2026
     # --- Branch e: K-LL DR of He-like W72+ (Z=74) -- the Tu et al. benchmark, and the first case with a WIDE
     #     spread of J_f. Structurally identical to branch a): initial 1s^2, intermediate 1s2l2l', final 1s^2 2l,
@@ -332,6 +334,7 @@ elseif  false
     perform(we)
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (RAISED -- see priority item 9)
     # Last visit:  16-Oct-2026 (TIMED OUT at 500 s)
     # --- Branch f: Delta-n = 0 DR of Be-like Au75+ (Z=79) with a high-n Rydberg spectator -- the first branch
     #     that exercises the HydrogenicCorrections, and the reason they were ported to the re-structured route.

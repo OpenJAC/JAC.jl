@@ -7,6 +7,7 @@ setDefaults("print summary: open", "zzz-radiative.sum")
 
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  28-Aug-2026 -- RE-RUN UNCHANGED. Every number recorded below reproduces to all four
     # figures it was quoted to: 4.585787e12 / 4.755319e12 (Kalpha1, Coulomb/Babushkin), 2.305319e12 / 2.390639e12

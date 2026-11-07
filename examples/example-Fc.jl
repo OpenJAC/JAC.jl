@@ -165,6 +165,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:      06-Aug-2026
     # Last successful: 06-Aug-2026 ... filter verified to act, but far more loosely than intended; 2 of 3
     #                  configurations excluded, 1 step and 11 lines survive.  Warm cost ~4 s.

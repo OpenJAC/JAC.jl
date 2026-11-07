@@ -8,6 +8,7 @@ setDefaults("unit: energy", "eV")
 setDefaults("unit: rate", "1/s")
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  unknown -- the fit TARGET below is deliberately SYNTHETIC (see this branch's own
     #   comment), so there is nothing measured to verify the result against yet; this demonstrates the
@@ -271,6 +272,7 @@ elseif  false
             fmOrthoE.degreesOfFreedom)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  21-Oct-2026   ## pooled J=2+J=4, SAME 10 global classes, 4 targets, degreesOfFreedom
     #                                    improves from -8 (either block alone) to -6; combined orthogonal rms
     #                                    = 125.2 cm^-1, still far below the unscaled ab initio residual.
@@ -322,6 +324,7 @@ elseif  false
     println(">>> source: NIST ASD (L3974), Pr IV 4f2 J=2 and J=4 together")
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last successful:  23-Oct-2026   ## V III 3d3, CORRELATED (3p^4.3d^5) + GROUPED (Slater-vs-CI) route,
     #                                    13 targets across 5 pooled blocks, 2 shared classes, rms = 278.5
     #                                    cm^-1 at degreesOfFreedom = +11 -- the first genuinely OVER-

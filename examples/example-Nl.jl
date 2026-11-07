@@ -89,6 +89,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  24-Jul-2026
     # Branch 2 (Ca): same recipe as branch 1, but a much lighter, far less relativistic ion (Z=20 vs. Ba's Z=56) --

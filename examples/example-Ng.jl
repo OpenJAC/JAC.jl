@@ -6,6 +6,7 @@ setDefaults("unit: rate",   "1/s")
 setDefaults("print summary: open", "zzz-Empirical.sum")
 
 if  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  17-Jul-2026
     # Branch 1: Empirical.tunnelingIonizationRate(fields, Z, Ip, l, ADK1986()) -- the direct (Z, Ip, l) method,
@@ -37,6 +38,7 @@ if  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  17-Jul-2026
     # Branch 2: Empirical.tunnelingIonizationRate(fields, iConf, fConf, ADK1986()) -- the Configuration-based
@@ -74,6 +76,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  17-Jul-2026
     # Branch 3: the tunneling regime and its boundary -- rate vs. field strength across F_c.

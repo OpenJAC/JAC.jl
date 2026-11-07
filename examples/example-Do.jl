@@ -127,6 +127,7 @@ elseif  false
     perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  06-Aug-2026
     # --- Branch b: the hyperfine-interaction matrix elements of H-like 229Th89+, against Shabaev Table I.
@@ -189,6 +190,7 @@ elseif  false
     perform(wb)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  06-Aug-2026
     # --- Branch c: the same for Li-like 229Th87+, whose unpaired electron is 2s_1/2 rather than 1s_1/2.
@@ -232,6 +234,7 @@ elseif  false
     perform(wc)
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  06-Aug-2026
     # --- Branch d: the isomeric lifetime of H-like 229Th89+, as a function of B(M1). THE HEADLINE RESULT.
@@ -339,6 +342,7 @@ elseif  true
     end
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # --- Branch e: B-like 205Pb77+, from Wang/Li/Wang, examples/papers/2025.prl-wu-nuclear-mixing-boron-like.pdf.
     #
@@ -376,6 +380,7 @@ elseif  false
     perform(we)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  06-Aug-2026
     # --- Branch f: 205Pb q+ for q = 73, 74, 75, from Wang/Wang, examples/papers/2025.atoms-wu-nuclear-mixing-pb.pdf.
     #

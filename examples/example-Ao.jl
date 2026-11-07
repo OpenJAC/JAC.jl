@@ -110,6 +110,7 @@ end
 
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  01-Sep-2026
     # Last successful:  01-Sep-2026 -- AL -36.49373663, EOL -36.49688571, EOL-AL -0.00314908 Ha,
     #                   mixing +0.9609 +0.2258 under BOTH fields, worst same-kappa overlap 2.2e-16.
@@ -151,6 +152,7 @@ elseif  false
                   [Configuration("1s^2 2s^2 2p^6 3s^2 3p"), Configuration("1s^2 2s^2 2p^6 3p^3")], grid)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  01-Sep-2026 -- AL -288.66105540, EOL -288.66499124, EOL-AL -0.00393584 Ha,
     #                   mixing +0.9745 +0.1826 (AL) against +0.9740 +0.1835 (EOL); 26 s and 45 s.

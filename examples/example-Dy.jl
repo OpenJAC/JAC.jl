@@ -28,6 +28,7 @@ setDefaults("method: normalization, pure sine")
 
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last successful:  20-Oct-2026   ## ratio (PI-limit / PhotoIonization) = 1.000000000000
     #
     # Branch a: THE PI-LIMIT CHECK, needing no external reference. With includeResonance = false the coherent
@@ -163,6 +164,7 @@ elseif  false
     println(">>> (see Plasma.voigtLineProfile's own docstring, and challenges-list item S29).")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  21-Oct-2026   ## ran cleanly; q(amplitude-ratio) = 0.568 (both channels) against
     #                                Madden & Codling's published -2.75 -- NOT a reproduction, see the
     #                                caveats in the comment block below. No Last successful date: this
@@ -261,6 +263,7 @@ elseif  false
     println(">>>   value above -- left open, see the comment block; neither reproduces the published -2.75)")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  22-Oct-2026   ## d=2 peak sigma=1.336915 at 6605.7670 eV (790x background); d=4 peak
     #                               sigma=0.076965 at 6637.6250 eV (351x background). See the comment
     #                               block for the honest reading: no sub-background DIP was resolved in

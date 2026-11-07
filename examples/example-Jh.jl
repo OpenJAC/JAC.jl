@@ -97,6 +97,7 @@ if  false
     println(">>> already-validated single-species machinery, adding no new CSF-level approximation.")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  18-Oct-2026
     #
@@ -142,6 +143,7 @@ elseif  false
     println(">>> ion density/temperature leaves the C2+ complex only a trace population.")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026   -- not `Last successful`: see the note below on what is likely missing.
     #
     # Branch c: a REAL literature test for the stage axis, not an internal re-derivation. CH plasma (equal
@@ -246,6 +248,7 @@ elseif  false
     println(">>> -- not a configuration-space gap, since adding further shells had already stopped helping.")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  19-Oct-2026   ## at omega = 1.2 Ha: bound-bound 1.5e-15, bound-free 4.1e-7 [a0^2];
     #                                    Rosseland (bound-bound+bound-free) 9.1e-6 [a0^2]
@@ -286,6 +289,7 @@ elseif  false
     println(">>> a line-only spectrum. Bound-free supplies the physical floor that makes it meaningful.")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  19-Oct-2026   ## crossover at omega = 0.95 Ha: bound-bound 1.0e-9, free-free 9.8e-9
     #                                    [a0^2] (free-free already 10x larger at the NEXT point past the

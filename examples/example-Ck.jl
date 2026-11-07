@@ -8,6 +8,7 @@ println("    complementary (non-CSF, ab-initio point-charge + Dirac-DFT determin
 using Printf
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last successful:  28-Aug-2026 -- RE-RUN, AND BOTH GROUP-THEORY PREDICTIONS HOLD EXACTLY. J = 3/2 (Gamma8) does
     # NOT split: all four sublevels sit at 0.000000 cm^-1 and the CXS is 0.000000 exactly. J = 5/2 splits into
     # exactly two groups of 2 and 4: sublevels 1-2 at 0.000000 cm^-1 and sublevels 3-6 at 0.065832 cm^-1, giving
@@ -69,6 +70,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  28-Jul-2026 (illustrative only, see caveats below -- not a literature match)
     # Branch b: real published crystal geometry, illustrative magnitude check (NOT a reproduction of
@@ -147,6 +149,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  29-Jul-2026
     # Branch c: test the two new features suggested by a re-read of Uldry, Vernay & Delley, Phys.

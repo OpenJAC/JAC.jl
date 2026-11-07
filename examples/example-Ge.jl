@@ -10,6 +10,7 @@ k   = Basic(:k);     q   = Basic(:q );    K   = Basic(:K);     Q   = Basic(:Q);
 kk  = Basic(:kk);    qq  = Basic(:qq);    KK  = Basic(:KK);    QQ  = Basic(:QQ);
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful: 01-Sep-2026 -- the reductions were read and are as described below: the field components
     #                  come out separated from the electronic reduced matrix elements, with the 3-j symbols
@@ -76,6 +77,7 @@ if  true
     wm6     = SphericalTensor.expandSphericalMatrixElements([me5s, me5]);       println("\n $me5s $me5");  @show wm6
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:      01-Sep-2026
     # Last successful: 01-Sep-2026 -- all three identities hold. The Wigner-Eckart factor prints as
     #                  (-1)^(ja+jb-k) sqrt(2ja+1) W3j(jb, k, ja; mb, q, -ja), which IS the Clebsch-Gordan

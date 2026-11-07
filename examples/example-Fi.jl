@@ -66,6 +66,7 @@ grid = Radial.Grid(Radial.Grid(true); rnt = 4.0e-6, h = 5.0e-2, hp = 0.8e-2, rbo
 
 
 if  true
+    # Last visit:  07-Nov-2026   (TIMED OUT at 500 s)
     # Last visit:      24-Aug-2026
     # Last successful: 24-Aug-2026 ... see the REPORT below; the record that follows is the 08-Aug run, whose
     #                  numbers all still stand.
@@ -124,6 +125,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (TIMED OUT at 500 s)
     # Last visit:      08-Aug-2026
     # Last successful: 08-Aug-2026 ... ~51 min for the three caps.  Summed Omega over the 1s 2s 2p levels, one
     #                  excited block, two impact energies:

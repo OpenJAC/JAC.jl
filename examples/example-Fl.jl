@@ -39,6 +39,7 @@ end
 
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last successful:  23-Aug-2026
     #   [PROVENANCE: produced on Julia 1.10.9, with a Manifest re-resolved for 1.10 because the checkout's Manifest had
     #    been resolved under 1.12.6 on the maintainer machine.  Re-run there to confirm.]
@@ -76,6 +77,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last visit:  20-Oct-2026 (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last successful:  23-Aug-2026
     #   [PROVENANCE: as branch a.]  Seconds; no amplitude is recomputed.
@@ -221,6 +223,7 @@ elseif  false
     #
 
 elseif  false
+    # Last visit:  07-Nov-2026   (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last visit:  18-Oct-2026 (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last successful:  23-Aug-2026
     #   [PROVENANCE: as branch a.]
@@ -278,6 +281,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last visit:  20-Oct-2026 (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last successful:  24-Aug-2026
     #   Seconds on top of branch a; no amplitude is recomputed.

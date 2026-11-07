@@ -8,6 +8,7 @@ setDefaults("unit: energy", "eV")
 grid = Radial.Grid(Radial.Grid(false), rnt = 4.0e-6, h = 5.0e-2, hp = 0.6e-2, rbox = 10.0)
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  unknown ...
     # Elastic scattering of 300 eV electrons at the He 1s^2 ^1S_0 ground level, plane-wave projectile, static field
@@ -38,6 +39,7 @@ if  true
     we = ParticleScattering.extractCrossSections(wd[ParticleScattering.Settings], 300.0, 0.0)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  unknown ...
     #

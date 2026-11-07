@@ -16,6 +16,7 @@ setDefaults("print summary: open", "zzz-ThreeBodyRecombination.sum")
 
 
 if  false
+    # Last visit:  07-Nov-2026
     # Branch a: C^5+ (1s) -> C^4+ (1s^2), a bare K-shell capture -- the simplest possible case, used here
     #   to demonstrate the module end to end and to check the Maxwellian rate integral is numerically
     #   converged, not to validate against a literature number (there is no simple one for this exact
@@ -52,6 +53,7 @@ end
 
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  21-Oct-2026
     #
     # Branch b: Na-like Ne-core -> Na (3s), a single valence electron captured outside a closed Ne core --

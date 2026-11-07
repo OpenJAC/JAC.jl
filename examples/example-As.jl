@@ -30,6 +30,7 @@ println("As) Apply & test the DalgarnoLewis module: a direct inhomogeneous-equat
 # still open.
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last successful:  11-Oct-2026
     # Branch (a): THE IDENTITY ITSELF, COULOMB GAUGE. Solve for chi in the 2p_1/2 channel, driven by an E1
     # operator from H's 2s orbital at omega = 0.3 a.u., then form <1s||E1||chi> two ways: directly from chi, and

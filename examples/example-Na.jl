@@ -35,6 +35,7 @@ if  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  15-Jul-2026
     # Branch 2: Empirical.bindingEnergy(Z, subsh::Subshell) -- subshell-resolved comparison.
@@ -71,6 +72,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  15-Jul-2026
     # Branch 3: Empirical.ionizationPotential and Empirical.totalEnergy for neutral atoms.

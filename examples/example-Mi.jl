@@ -17,6 +17,7 @@ if  false
     computeProperties(Basics.HyperfineStructure(AngularJ64(3//2)), configs, nuclearModel=nm)
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  18Aug2026
     # 1H 1s: the hyperfine splitting is the 21 cm line, A = 1420.405751 MHz.  JAC gives 1421.22 MHz, i.e.
@@ -31,6 +32,7 @@ elseif  true
     computeProperties(Basics.HyperfineStructure(AngularJ64(1//2)), configs, nuclearModel=nm)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  unknown ... the same sodium case WITHOUT nuclear moments, to show what the note says:
     # Nuclear.Model(Z) carries mu = Q = 0, so every constant comes out zero by construction rather than by error.
@@ -53,6 +55,7 @@ elseif  false
     computeProperties(Basics.ZeemanStructure(0.0), configs)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  18Aug2026
     # He 1s2p, the SECOND independent test case of Andersson & Jonsson (2008), CPC 178, 156 -- a two-electron
     # LS-coupled multiplet rather than a single f electron, so it probes different angular machinery.
@@ -66,6 +69,7 @@ elseif  false
     computeProperties(Basics.ZeemanStructure(0.0), configs)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  unknown ... the same levels IN A FIELD: g_J plus the Zeeman splittings at 1 Tesla.
     # A non-zero field in the theme is what turns the splittings on.

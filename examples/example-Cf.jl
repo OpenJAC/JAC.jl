@@ -35,6 +35,7 @@ elseif  false
     wb = perform(wa; output=true)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  23-Jul-2026
     # Branch c: genuine natural-ORBITAL mixing (same kappa) -- Be 1S0, 2-config CI  1s^2 2s^2  <->  1s^2 2s 3s
     #   (2s and 3s share kappa = -1, so the 1p RDM's kappa=-1 block is now 3x3: 1s, 2s, 3s). NOTE: a genuinely
@@ -84,6 +85,7 @@ elseif  false
     end
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  23-Jul-2026
     # Branch e: radial electron density and natural-orbital normalization -- same Be 2s/3s CI system.
     #   Checks: (1) each natural orbital stays normalized under the linear-combination construction,

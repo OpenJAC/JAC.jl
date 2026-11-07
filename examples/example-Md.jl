@@ -15,6 +15,7 @@ if  false
     computeLifetimes(Basics.ForPhotoEmission(), configs)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  26Jun2026
     # computeLifetimes(ForAutoIonization): KLL Auger lifetime of the Ne 1s-hole state.
@@ -24,6 +25,7 @@ elseif  false
     computeLifetimes(Basics.ForAutoIonization(), configs)
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last successful:  26Jun2026
     # Ar 1s-hole: both radiative and KLL Auger lifetimes, to estimate the K-shell fluorescence yield.
     # ω_K = Γ_rad / (Γ_rad + Γ_Auger)  ... read Γ_rad and Γ_Auger [1/s] from the two output tables.

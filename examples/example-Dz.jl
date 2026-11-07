@@ -19,6 +19,7 @@ setDefaults("print summary: open", "zzz-PhotoIonizationPseudostates.sum")
 
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last successful:  05-Nov-2026   ## H 1s photoionization at E_photon=0.7 Ha=19.048 eV against the EXACT
     #                                     Stobbe (1930)/Bethe-Salpeter closed form: sigma(exact)=9.039e-02 a0^2;
     #                                     JAC PhotoIonization reproduces it to ratio=1.0000 (0.00% gauge gap);

@@ -2,6 +2,7 @@
 println("Cl) Apply & test the StarkShift module with ASF from an internally generated multiplet.")
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # 16-Oct-2026: RUNS (exit 0) after the box was matched, and CANNOT BE DATED.
     #   H(1s) with np perturbers, n = 2..5: alpha_0 = 2.0699 a.u. in both gauges against the EXACT 4.5,

@@ -107,6 +107,7 @@ elseif  false
     #
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  22-Oct-2026   ## alpha_K = 1.530727e+03, against the no-vacancy 1544(1) of Table IV
     # Last successful:  unknown ...
     # Branch c: 119Sn, K-shell M4 alpha_K vs. Nica et al., Phys. Rev. C 89, 014303 (2014), Table IV

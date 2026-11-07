@@ -64,6 +64,7 @@ if  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last visit:  20-Oct-2026 (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last successful: 23-Aug-2026
     #
@@ -245,6 +246,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  true
+    # Last visit:  07-Nov-2026   (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last visit:      23-Aug-2026
     # Last successful: 23-Aug-2026
     #

@@ -23,6 +23,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  18-Aug-2026
     # Branch c: THREE open shells -- exercises LSjj.GeneralOpenShells(3). The formerly-existing
     #   LSjj.ThreeOpenShells code (never independently validated before -- present in the file for years
@@ -40,6 +41,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  18-Aug-2026
     # Branch d: FOUR open shells -- exercises LSjj.GeneralOpenShells(4); no prior hand-derived code
@@ -68,6 +70,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  18-Aug-2026
     # Branch f: GROUND-LEVEL CLASSIFICATION of an open d-shell, Co^2+ (Co III) 3d^7, against NIST ASD.
@@ -96,6 +99,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  18-Aug-2026
     # Branch g: GROUND-LEVEL CLASSIFICATION of an open f-shell, Dy^3+ (Dy IV) 4f^9, against NIST ASD.

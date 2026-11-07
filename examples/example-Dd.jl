@@ -139,6 +139,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (RAISED -- see priority item 9)
     # Last visit:  20-Oct-2026
     # Last reproduced:  20-Oct-2026 (10 of 10 numbers on the claim line)
     # Last successful:  28-Aug-2026 -- total (all 5 final shells summed) Coulomb/Babushkin 1.487028e6/1.440833e6,

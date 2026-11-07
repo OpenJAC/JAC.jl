@@ -11,6 +11,7 @@ println("    than hiding it.")
 using Printf
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  21-Aug-2026
     #   [PROVENANCE: produced on Julia 1.10.9, with a Manifest re-resolved for 1.10 because the checkout's Manifest had been
@@ -97,6 +98,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  21-Aug-2026
     #   [PROVENANCE: as branch a.]
@@ -207,6 +209,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  21-Aug-2026
     #   [PROVENANCE: as branch a.]
@@ -431,6 +434,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  22-Aug-2026
     #   [PROVENANCE: as branch a.]
     # Branch g: Ba+, AND THE FIRST REAL EXERCISE OF THE MANY-ELECTRON PATH.  Every verified branch before this one used
@@ -550,6 +554,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  22-Aug-2026
     #   [PROVENANCE: as branch a.]
@@ -645,6 +650,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  05-Sep-2026
     #   [Verified against a published calculation, not merely run: the two hyperfine components of the 5d_3/2
     #    line come out 1.172 and 1.171 times the Dirac-Fock column of Mani & Angom, arXiv:1104.3473 Table I,

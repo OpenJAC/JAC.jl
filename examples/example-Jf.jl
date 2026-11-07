@@ -39,6 +39,7 @@ if  false
     println(">>> cool-plasma limit requires.")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  16-Oct-2026
     #
@@ -69,6 +70,7 @@ elseif  false
     println(">>> already visibly converging toward the degeneracy-only limit, as a hot enough plasma must.")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  17-Oct-2026
     #
     # Branch c: the SAME three configurations and the COOL (1 eV) temperature of branch a, but now reading
@@ -121,6 +123,7 @@ elseif  false
             gfs[2]/gfEffs[2], gfs[2])
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  17-Oct-2026
     #
     # Branch d: A SIZE THE TOY C I COMPLEX NEVER REACHES. Co^2+ (Co III, Z=27), the SAME [Ar] 3d^7 ground
@@ -221,6 +224,7 @@ elseif  false
     println(">>> array's own mean transition energy from branch c, as it must.")
     #
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last successful:  20-Oct-2026   ## perform() ~115 s; sum-rule relative difference 2.255e-03; peak
     #                                    kappa 38.4909 a0^2 at omega = 0.3200 Ha (8.708 eV); exchange check
     #                                    mean(up)+mean(down) = 5.6e-17, totalStrength/variance reldiff

@@ -37,6 +37,7 @@ if  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  30-Jul-2026
     # Branch b: Li-like Nd (Z=60), 1s^2 2s ^2S_1/2 / 1s^2 2p ^2P_1/2,3/2 -- the RIS3/RIS4 papers' own worked
     #   example. 74Nd-142 Fermi nucleus (rms 4.9123 fm), single configuration (no correlation).
@@ -95,6 +96,7 @@ elseif  false
     wb = perform(wa)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  29-Jul-2026
     # Branch d (AL-Field / Breit revisit): reuses branch c's single-configuration Li-like Nd 1s^2 2s system,
     #   now that AL-Field (Basics.ALField()) has been root-cause-fixed and promoted to the standard
@@ -148,6 +150,7 @@ elseif  false
     perform(wa4)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  12-Aug-2026
     # Last successful:  unknown ... the decomposition OVERSHOOTS the measured shifts; see the verdict below.
     #

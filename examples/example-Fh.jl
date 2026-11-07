@@ -128,6 +128,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (TIMED OUT at 500 s)
     # Last visit:      07-Aug-2026
     # Last successful: 07-Aug-2026 ... the Bethe slope reproduced to 0.8%; see below.
     #
@@ -184,6 +185,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last visit:      07-Aug-2026
     # Last successful: 07-Aug-2026 ... seconds, since no amplitude is recomputed.  For 1s -> 2p_1/2:
     #                      T [K]      5.0e5      1.0e6      2.0e6      5.0e6      1.0e7
@@ -230,6 +232,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026   (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last visit:      07-Aug-2026
     # Last successful: 07-Aug-2026 ... 1s -> 2p summed over both fine-structure components [cm^3/s]:
     #                      T [K]      kT [eV]    cascade      Van Regemorter    ratio

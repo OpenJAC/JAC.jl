@@ -7,6 +7,7 @@ println("Ai) Apply & test for restricted-active-space (RAS) expansions.")
 # see example-Ar.jl.  Nothing in THIS file uses it; every branch here is variational.
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last reproduced:  18-Oct-2026 (3 of 5 to 1e-5, 2 more to 1e-3)
     # Last successful:  01-Sep-2026 -- step1 -14.57132546, step2 -14.61403156 Ha, w_ref 0.90451, 2p at
@@ -313,6 +314,7 @@ elseif  false
         haskey(wb, k)  &&  println(">> step $i : lowest level = $(sort(wb[k].levels, by = l -> l.energy)[1].energy) Ha")
     end    #
 elseif  false
+    # Last visit:  07-Nov-2026   (TIMED OUT at 500 s)
     # Last visit:  15-Sep-2026
     # Last successful:  15-Sep-2026 -- numbers below, produced by the run this branch performs.
     #

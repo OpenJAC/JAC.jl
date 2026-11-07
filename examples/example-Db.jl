@@ -4,6 +4,7 @@ println("Db) Apply & test the PhotoExcitation module with ASF from an internally
 setDefaults("print summary: open", "zzz-PhotoExcitation.sum")
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last successful:  28-Aug-2026 -- REPRODUCES EXACTLY. Energies 1.84650119 and 1.84657903 eV (record: 1.8464),
     # summed absorption oscillator strength f = 0.65048 (Coulomb) / 0.88455 (Babushkin) against the recorded

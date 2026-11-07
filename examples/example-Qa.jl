@@ -78,6 +78,7 @@ if  true
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:      25-Aug-2026
     # Last successful: 25-Aug-2026
     #

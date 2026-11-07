@@ -2,6 +2,7 @@
 println("Ac) Apply & test the CI part for open-shell multiplets of increasing complexity, without Breit interaction.")
 
 if  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last reproduced:  18-Oct-2026 (1 of 2 to 1e-5, 1 more to 1e-3)
     # Last successful:  31-Aug-2026: E1 = -54.414213603268 Ha, nlev=5.
@@ -69,6 +70,7 @@ elseif  false
     println(">> [Branch 2] CI-only (isolated re-diagonalization) took $(round(time()-t1, digits=3)) s,  lowest level energy = $(mp2.levels[1].energy)")
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  unknown ... THE 28-Jul-2026 CLAIM IS WITHDRAWN, 18-Oct-2026, for the same reason as
     #   Branch 2 and from the same commit: its E1 = -54.400809719941 Ha was too bound by the interchanged
@@ -100,6 +102,7 @@ elseif  false
     println(">> [Branch 3] CI-only (isolated re-diagonalization) took $(round(time()-t1, digits=3)) s,  lowest level energy = $(mp2.levels[1].energy)")
 
 elseif  true
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful:  unknown ... THE 28-Jul-2026 CLAIM IS WITHDRAWN, 18-Oct-2026, and THIS IS THE BRANCH THAT
     #   SHOWS THE SIZE OF THE DEFECT. Its E1 = -74.960229746756 Ha was too bound by 142.8 mHa -- about

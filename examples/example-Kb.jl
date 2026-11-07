@@ -21,6 +21,7 @@ println("Kb) Apply & test the AtomicFeatures module: the FEATURE VECTORS that a 
 using SymEngine
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:      01-Sep-2026
     # Last successful: 01-Sep-2026 -- every occupation below is what counting the configuration by hand gives.
     #
@@ -45,6 +46,7 @@ if  true
     end
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:      01-Sep-2026
     # Last successful: 01-Sep-2026 -- <r> and <r^2> come out in the expected order 1s < 2s < 2p for neon, and the
     #                  mean occupation numbers reproduce the closed-shell values 2, 2, 2, 4 exactly.

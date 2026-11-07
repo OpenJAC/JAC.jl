@@ -6,6 +6,7 @@ setDefaults("print summary: open", "zzz-ParticleScattering.sum")
 setDefaults("unit: energy", "eV")
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last visit:  17-Aug-2026
     # Last successful:  unknown ...
     # THE FIRST COMPARISON OF THIS MODULE WITH MEASURED DATA. Jablonski, Salvat & Powell, J. Phys. Chem. Ref. Data 33,

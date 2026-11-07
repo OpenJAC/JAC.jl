@@ -57,6 +57,7 @@ if  true
     println(">> [Branch 1] Timing ratio CI-only:  Breit/Coulomb = $(round(tBreitCI/tCoulombCI,digits=2))x,  Gaunt/Coulomb = $(round(tGauntCI/tCoulombCI,digits=2))x,  Gaunt/Breit = $(round(tGauntCI/tBreitCI,digits=2))x")
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last reproduced:  18-Oct-2026 (2 of 3 to 1e-5, 1 more to 1e-3)
     # Last successful:  14-Aug-2026: E1(Coulomb) = -6331.333108 Ha, nlev=31; Delta E(Breit) = 5.246673 Ha,
@@ -172,6 +173,7 @@ elseif  false
     end
 
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  15-Aug-2026: the relative frequency correction is negative throughout and grows
     # monotonically in magnitude, -0.25 % at Z=26, -1.16 % at Z=54 and -2.30 % at Z=79, i.e. roughly as
     # Z^2, which is what omega ~ Delta E / c demands.

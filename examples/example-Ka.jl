@@ -3,6 +3,7 @@ println("Ka) Train & apply a neural network for estimating missing energies in t
 
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last successful:  unknown ...
     # Compute the atomic model for Ar^+, Ar^2+, Ar^3+ ions and with nMax = 4;
     # extract the NIST levels from externally prepared files
@@ -21,6 +22,7 @@ elseif  true
     DeepLearning.writeFeatureVectors(testXy,  "nn.test-data-$(today()).txt")
     #
 elseif  true
+    # Last visit:  07-Nov-2026   (NEEDS AN EARLIER BRANCH OF THIS FILE)
     # Last visit:  16-Aug-2026
     # Last successful:  unknown ...
     # Run the network for one or several configurations and compared with predicted excitation energies

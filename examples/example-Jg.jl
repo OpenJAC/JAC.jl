@@ -11,6 +11,7 @@ println("    three charge states, from SuperConfigurations.Group's rather than d
 
 
 if  true
+    # Last visit:  07-Nov-2026
     # Last successful:  17-Oct-2026
     #
     # Branch a: carbon (Z=6), three charge states -- C I (1s^2 2s^2 2p^2, q=0), C II (1s^2 2s^2 2p, q=1),
@@ -57,6 +58,7 @@ if  true
     println(">>> are the same equation, not merely two formulas that happen to agree once.")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last successful:  17-Oct-2026
     #
     # Branch b: the SAME three charge states, but COOLER (4 eV) and at a HIGHER density (1e-4 a.u.). CHECK:

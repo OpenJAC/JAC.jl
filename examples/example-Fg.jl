@@ -151,6 +151,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
     # Last reproduced:  20-Oct-2026 (6 of 6 numbers on the claim line)
     #                      points  E_max      T = 1e5      T = 1e6      T = 1e7
@@ -224,6 +225,7 @@ elseif  false
     setDefaults("print summary: close", "")
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     # Last visit:  18-Oct-2026
     # Last successful: 07-Aug-2026 ... ~38 s.  Ratios 13.6, 18.0 and 23.7 at 1e6, 3e6 and 1e7 K.  This is the
     #                  branch that first exposed the flat temperature dependence and then confirmed the

@@ -44,6 +44,7 @@ if  true
     wb          = perform(wa, output=true)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  08-Oct-2026
     # Branch 2: the same boron system at T = 5 eV instead of 10 eV, to see how little the result moves.
@@ -171,6 +172,7 @@ elseif  false
     wb          = perform(wa, output=true)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  11-Oct-2026
     # Branch 5: THE OPTICAL PROPERTIES -- the average-atom Kubo-Greenwood conductivity and the optical constants
@@ -230,6 +232,7 @@ elseif  false
     wb          = perform(wa, output=true)
     #
 elseif  false
+    # Last visit:  07-Nov-2026
     #
     # Last successful:  12-Oct-2026
     # Branch 6: THE DC CONDUCTIVITY WITH NOTHING FITTED -- the same aluminium plasma as Branches 4 and 5, but
