@@ -69,6 +69,7 @@ struct Settings  <:  AbstractProcessSettings
 """
 `PhotoExcitationFluores.Settings()`  
     ... constructor for the default values of photon-impact excitation-autoionizaton settings.
+        A `settings::PhotoExcitationFluores.Settings` is returned.
 """
 function Settings()
     Settings( Basics.EmMultipole[], UseGauge[], false, false, false, false, ExpStokes(), SolidAngle[], 0., PathwaySelection() )
@@ -79,6 +80,7 @@ end
 `PhotoExcitationFluores.Settings(set::PhotoExcitationFluores.Settings; keywords...)`
     ... keyword constructor to modify selected fields of a PhotoExcitationFluores.Settings object;
         for fields not given, the values of set are used.
+        A `settings::PhotoExcitationFluores.Settings` is returned.
 """
 function Settings(set::PhotoExcitationFluores.Settings;
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,           gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
@@ -146,6 +148,7 @@ end
 `PhotoExcitationFluores.Pathway()`  
     ... 'empty' constructor for an photon-impact excitation-autoionization pathway between a specified initial, 
         intermediate and final level.
+        A `pathway::PhotoExcitationFluores.Pathway` is returned.
 """
 function Pathway()
     Pathway(Level(), Level(), Level(), 0., 0., 0., false, PhotoExcitationFluores.Channel[] )

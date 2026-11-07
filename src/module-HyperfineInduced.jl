@@ -116,6 +116,7 @@ end
 
 """
 `HyperfineInduced.Settings()`  ... constructor for the default values.
+        A `settings::HyperfineInduced.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[E1], EmMultipole[M1], UseGauge[Basics.UseCoulomb], Nuclear.Isomer[],
@@ -225,6 +226,7 @@ end
 """
 `HyperfineInduced.Line(initialLevel::Hfs.HfLevel, finalLevel::Hfs.HfLevel, omega::Float64)`
     ... constructor for a line without channels or rate yet.
+        A `line::HyperfineInduced.Line` is returned.
 """
 function Line(initialLevel::Hfs.HfLevel, finalLevel::Hfs.HfLevel, omega::Float64)
     Line(initialLevel, finalLevel, omega, EmProperty(0., 0.), HyperfineInduced.Channel[])

@@ -48,6 +48,7 @@ end
 
 """
 `ElectronCapture.Settings()`  ... constructor for the default values of ElectronCapture line computations
+        A `settings::ElectronCapture.Settings` is returned.
 """
 function Settings()
     Settings(false, LineSelection(), 0., 1.0e5, 2, CoulombInteraction(), true, Beam.PlaneWave(), [(0., 0.)], nothing)

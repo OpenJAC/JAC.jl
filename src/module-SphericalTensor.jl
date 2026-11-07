@@ -46,6 +46,7 @@ end
 
 """
 `SphericalTensor.CkOperator(k::Basic)`  ... constructor for just setting the rank (star = false).
+        A `ckOperator::SphericalTensor.CkOperator` is returned.
 """
 function CkOperator(k::Basic)
     CkOperator(false, k)
@@ -75,6 +76,7 @@ end
 
 """
 `SphericalTensor.CoulombOperator()`  ... constructor for just setting the dipole operator (star = false).
+        A `coulombOperator::SphericalTensor.CoulombOperator` is returned.
 """
 function CoulombOperator()
     CoulombOperator(false)
@@ -104,6 +106,7 @@ end
 
 """
 `SphericalTensor.DipoleOperator()`  ... constructor for just setting the dipole operator (star = false).
+        A `dipoleOperator::SphericalTensor.DipoleOperator` is returned.
 """
 function DipoleOperator()
     DipoleOperator(false)
@@ -135,6 +138,7 @@ end
 
 """
 `SphericalTensor.TkOperator(k::Basic)`  ... constructor for just setting the rank (star = false).
+        A `tkOperator::SphericalTensor.TkOperator` is returned.
 """
 function TkOperator(k::Basic)
     TkOperator(false, k)
@@ -208,6 +212,7 @@ end
 
 """
 `SphericalTensor.UVector()`  ... constructor for just setting the vector (star = false).
+        A `uVector::SphericalTensor.UVector` is returned.
 """
 function UVector()
     UVector(false)
@@ -246,6 +251,7 @@ end
 """
 `SphericalTensor.TensorProduct(k::Basic, tensor1::AbstractSphericalTensor, tensor2::AbstractSphericalTensor)`  
     ... constructor for just setting the tensor product (star = false).
+        A `tensorProduct::SphericalTensor.TensorProduct` is returned.
 """
 function TensorProduct(k::Basic, tensor1::AbstractSphericalTensor, tensor2::AbstractSphericalTensor)
     TensorProduct(false, k, tensor1, tensor2)
@@ -333,6 +339,7 @@ end
 
 """
 `SphericalTensor.SphericalState(j::Basic, m::Basic)`  ... constructor for just setting the ket-vector (star = false).
+        A `sphericalState::SphericalTensor.SphericalState` is returned.
 """
 function SphericalState(j::Basic, m::Basic)
     SphericalState(false, j, m)
@@ -377,6 +384,7 @@ end
 """
 `SphericalTensor.SphericalMatrixElement(leftState::SphericalState, tensor::AbstractSphericalTensor, q::Basic, rightState::SphericalState)`  
     ... constructor for just setting the matrix element without constant and with star = false.
+        A `sphericalMatrixElement::SphericalTensor.SphericalMatrixElement` is returned.
 """
 function SphericalMatrixElement(leftState::SphericalState, tensor::AbstractSphericalTensor, q::Basic, rightState::SphericalState)
     SphericalMatrixElement(false, leftState, ScalarConstant(false, Basic(1)), tensor, q, rightState)

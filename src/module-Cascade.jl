@@ -117,6 +117,7 @@ end
 
 """
 `Cascade.DielectronicCaptureScheme()`  ... constructor for a 'default' instance of a Cascade.DielectronicCaptureScheme.
+        A `dielectronicCaptureScheme::Cascade.DielectronicCaptureScheme` is returned.
 """
 function DielectronicCaptureScheme()
     DielectronicCaptureScheme(0., 0., 0, Shell[], Shell[], Shell[] )
@@ -196,6 +197,7 @@ end
 
 """
 `Cascade.DielectronicRecombinationScheme()`  ... constructor for an 'default' instance of a Cascade.DielectronicRecombinationScheme.
+        A `dielectronicRecombinationScheme::Cascade.DielectronicRecombinationScheme` is returned.
 """
 function DielectronicRecombinationScheme()
     DielectronicRecombinationScheme([E1], false, Shell(1,0), 1.0, 0., 0., 1, Shell[], Shell[], Shell[], Shell[] )
@@ -271,6 +273,7 @@ end
 
 """
 `Cascade.ElectronExcitationScheme()`  ... constructor for an 'default' instance of a Cascade.ElectronExcitationScheme.
+        A `electronExcitationScheme::Cascade.ElectronExcitationScheme` is returned.
 """
 function ElectronExcitationScheme()
     ElectronExcitationScheme([ImpactExc()], Shell[], Shell[], Float64[], Int64[], 0, 0., 0., 0., 0, Shell[], Shell[], Shell[] )
@@ -411,6 +414,7 @@ end
 
 """
 `Cascade.ElectronIonizationScheme()`  ... constructor for an 'default' instance of a Cascade.ElectronIonizationScheme.
+        A `electronIonizationScheme::Cascade.ElectronIonizationScheme` is returned.
 """
 function ElectronIonizationScheme()
     ElectronIonizationScheme(Float64[], Shell[], Shell[], Int64[], 1, 0., Basics.AbstractProcess[Basics.ImpactExcAuto()], Shell[], 0. )
@@ -425,6 +429,7 @@ end
         resonant channels were added; processes defaults to [Basics.ImpactExcAuto()], intoShells to empty and
         dblAugerOverride to 0.  It exists so that computations written against the earlier six-field struct -- such
         as the dated branches of example-Fi.jl -- keep running unchanged.
+        A `electronIonizationScheme::Cascade.ElectronIonizationScheme` is returned.
 """
 function ElectronIonizationScheme(electronEnergies::Array{Float64,1}, excitationFromShells::Array{Shell,1},
                                   excitationToShells::Array{Shell,1}, lValues::Array{Int64,1}, NoExcitations::Int64,
@@ -496,6 +501,7 @@ end
 
 """
 `Cascade.ExpansionOpacityScheme()`  ... constructor for an 'default' instance of a Cascade.ExpansionOpacityScheme.
+        A `expansionOpacityScheme::Cascade.ExpansionOpacityScheme` is returned.
 """
 function ExpansionOpacityScheme()
     ExpansionOpacityScheme([E1], 0., 1.0, 1, Shell[], Shell[], false)
@@ -549,6 +555,7 @@ end
 
 """
 `Cascade.HollowIonScheme()`  ... constructor for an 'default' instance of a Cascade.HollowIonScheme.
+        A `hollowIonScheme::Cascade.HollowIonScheme` is returned.
 """
 function HollowIonScheme()
     HollowIonScheme([Auger(), Radiative()], [E1], 0, Shell[], Shell[] )
@@ -618,6 +625,7 @@ end
 
 """
 `Cascade.ImpactExcitationScheme()`  ... constructor for an 'default' instance of a Cascade.ImpactExcitationScheme.
+        A `impactExcitationScheme::Cascade.ImpactExcitationScheme` is returned.
 """
 function ImpactExcitationScheme()
     ImpactExcitationScheme(Shell[], Shell[], Float64[], Int64[], 0, 0., 0. )
@@ -676,6 +684,7 @@ end
 
 """
 `Cascade.ImpactIonizationScheme()`  ... constructor for an 'default' instance of a Cascade.ImpactIonizationScheme.
+        A `impactIonizationScheme::Cascade.ImpactIonizationScheme` is returned.
 """
 function ImpactIonizationScheme()
     # ImpactExc is what this constructor has always named; only the missing () is repaired here, which is what
@@ -754,6 +763,7 @@ end
 
 """
 `Cascade.PhotoAbsorptionScheme()`  ... constructor for an 'default' instance of a Cascade.PhotoAbsorptionScheme.
+        A `photoAbsorptionScheme::Cascade.PhotoAbsorptionScheme` is returned.
 """
 function PhotoAbsorptionScheme()
     PhotoAbsorptionScheme([E1], Float64[], Float64[], Shell[], Shell[], LevelSelection(false), [0], true, false, 0., 0.)
@@ -832,6 +842,7 @@ end
 
 """
 `Cascade.PhotoExcitationScheme()`  ... constructor for an 'default' instance of a Cascade.PhotoExcitationScheme.
+        A `photoExcitationScheme::Cascade.PhotoExcitationScheme` is returned.
 """
 function PhotoExcitationScheme()
     PhotoExcitationScheme([E1], 1.0, 100., 0, Shell[], Shell[], LevelSelection(false), [0], 0., 0. )
@@ -904,6 +915,7 @@ end
 
 """
 `Cascade.PhotoIonizationScheme()`  ... constructor for an 'default' instance of a Cascade.PhotoIonizationScheme.
+        A `photoIonizationScheme::Cascade.PhotoIonizationScheme` is returned.
 """
 function PhotoIonizationScheme()
     PhotoIonizationScheme([E1], Float64[], Float64[], Shell[], Shell[], LevelSelection(false), [0], 0., 0.)
@@ -979,6 +991,7 @@ end
 
 """
 `Cascade.RadiativeRecombinationScheme()`  ... constructor for an 'default' instance of a Cascade.RadiativeRecombinationScheme.
+        A `radiativeRecombinationScheme::Cascade.RadiativeRecombinationScheme` is returned.
 """
 function RadiativeRecombinationScheme()
     RadiativeRecombinationScheme([E1], Int64[], 0, 0., 0., 0., Shell[] )
@@ -1034,6 +1047,7 @@ end
 
 """
 `Cascade.StepwiseDecayScheme()`  ... constructor for an 'default' instance of a Cascade.StepwiseDecayScheme.
+        A `stepwiseDecayScheme::Cascade.StepwiseDecayScheme` is returned.
 """
 function StepwiseDecayScheme()
     StepwiseDecayScheme([Radiative()], 0, Dict{Int64,Float64}(), 0, Shell[], Shell[], Shell[] )
@@ -1095,6 +1109,7 @@ end
 
 """
 `Cascade.Block()`  ... constructor for an 'empty' instance of a Cascade.Block.
+        A `block::Cascade.Block` is returned.
 """
 function Block()
     Block( )
@@ -1143,6 +1158,7 @@ end
 
 """
 `Cascade.Step()`  ... constructor for an 'empty' instance of a Cascade.Step.
+        A `step::Cascade.Step` is returned.
 """
 function Step()
     Step( Basics.NoProcess, PhotoEmission.Settings, Configuration[], Configuration[], Multiplet(), Multiplet())
@@ -1195,6 +1211,7 @@ end
 
 """
 `Cascade.Computation()`  ... constructor for an 'default' instance of a Cascade.Computation.
+        A `computation::Cascade.Computation` is returned.
 """
 function Computation()
     Computation("Default cascade computation",  Nuclear.Model(10.), Radial.Grid(), AsfSettings(), Cascade.StepwiseDecayScheme(), 

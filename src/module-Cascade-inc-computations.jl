@@ -527,6 +527,7 @@ end
 """
 `Cascade.displayLevels(stream::IO, multiplets::Array{Multiplet,1}; sa::String="")`  
     ... display on stream the initial configurations as well as the calculated levels for all initial multiplets.
+        A neat table is printed but nothing is returned otherwise.
 """
 function displayLevels(stream::IO, multiplets::Array{Multiplet,1}; sa::String="")
     nx = 44
@@ -557,6 +558,7 @@ end
 `Cascade.displaySteps(stream::IO, steps::Array{Cascade.Step,1}; sa::String="")` 
     ... displays all predefined steps in a neat table and supports to delete individual steps from the list.
         sa::String can be used to display details about the given steps
+        A neat table is printed but nothing is returned otherwise.
 """
 function displaySteps(stream::IO, steps::Array{Cascade.Step,1}; sa::String="")
     nx = 170

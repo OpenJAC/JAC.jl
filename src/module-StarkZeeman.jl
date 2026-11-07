@@ -161,6 +161,7 @@ end
 
 """
 `StarkZeeman.Settings()`  ... constructor for an `empty` instance of StarkZeeman.Settings.
+        A `settings::StarkZeeman.Settings` is returned.
 """
 function Settings()
     Settings(false, false, 0., (0., 0., 1.), 0., (0., 0., 1.), false, false, LevelSelection())

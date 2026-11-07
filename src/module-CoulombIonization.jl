@@ -88,6 +88,7 @@ end
 
 """
 `CoulombIonization.Settings()`  ... constructor for the default values of Coulomb-ionization line computations.
+        A `settings::CoulombIonization.Settings` is returned.
 """
 function Settings()
     Settings(Float64[], Float64[], false, false, LineSelection(), 0, Int64[], nothing)

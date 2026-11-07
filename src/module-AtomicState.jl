@@ -59,6 +59,7 @@ end
 
 """
 `AtomicState.MeanFieldSettings()`  ... constructor for setting the default values.
+        A `meanFieldSettings::AtomicState.MeanFieldSettings` is returned.
 """
 function MeanFieldSettings()
     MeanFieldSettings(DFSField(), true)
@@ -184,6 +185,7 @@ end
 
 """
 `AtomicState.OneElectronSettings()`  ... constructor for setting the default values.
+        A `oneElectronSettings::AtomicState.OneElectronSettings` is returned.
 """
 function OneElectronSettings()
     OneElectronSettings(10, [0, 1], LevelSelection(true, indices=[1]))
@@ -385,6 +387,7 @@ end
 
 """
 `AtomicState.RasSettings()`  ... constructor for setting the default values.
+        A `rasSettings::AtomicState.RasSettings` is returned.
 """
 function RasSettings()
     # RotationRoute(24) is what the driver built from the old maxIterationsScf = 24, so the default is unchanged in behaviour.
@@ -507,6 +510,7 @@ end
 
 """
 `AtomicState.RasStep()`  ... constructor for an 'empty' instance of a variable::AtomicState.RasStep
+        A `rasStep::AtomicState.RasStep` is returned.
 """
 function RasStep()
     RasStep(Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[], Shell[],    Shell[], Shell[], String[],
@@ -532,6 +536,7 @@ end
         NOTE THAT `scfRoute` CANNOT BE CLEARED BACK TO `nothing` THROUGH THIS CONSTRUCTOR, since `nothing` is also how the
         keyword says "leave this field alone" -- which is the price of the keyword-copy pattern and is the same for every other
         field here.  Build a fresh `RasStep()` to drop an override.
+        A `rasStep::AtomicState.RasStep` is returned.
 """
 function RasStep(rasStep::AtomicState.RasStep;
                     seFrom::Array{Shell,1}=Shell[], seTo::Array{Shell,1}=Shell[],
@@ -629,6 +634,7 @@ end
                      `treatment::Basics.AbstractQTreatment=Basics.Variational())`
     ... constructor for a variable::AtomicState.RasLayer with the given new shells and, by default, both single
         and double excitations enabled.
+        A `rasLayer::AtomicState.RasLayer` is returned.
 """
 function RasLayer(newShells::Array{Shell,1}; se::Bool=true, de::Bool=true,
                   treatment::Basics.AbstractQTreatment=Basics.Variational())
@@ -667,6 +673,7 @@ struct         RasExpansion    <:  AbstractRepresentationType
 
 """
 `AtomicState.RasExpansion()`  ... constructor for an 'empty' instance of the a variable::AtomicState.RasExpansion
+        A `rasExpansion::AtomicState.RasExpansion` is returned.
 """
 function RasExpansion()
     RasExpansion([Basics.LevelSymmetry(0, Basics.plus)], 0, AtomicState.RasStep[], AtomicState.RasSettings())
@@ -684,6 +691,7 @@ end
         the current layer). `fromShells` are optimized together with the FIRST layer's new shells (their one and
         only chance to vary, exactly as for a plain reference SCF), then frozen from the second layer onward,
         alongside every earlier layer's own newShells (never the current layer's).
+        A `rasExpansion::AtomicState.RasExpansion` is returned.
 """
 function RasExpansion(symmetries::Array{LevelSymmetry,1}, NoElectrons::Int64, coreShells::Array{Shell,1},
                        fromShells::Array{Shell,1}, layers::Array{AtomicState.RasLayer,1}, settings::AtomicState.RasSettings)
@@ -1236,6 +1244,7 @@ end
 
 """
 `AtomicState.CiSettings()`  ... constructor for setting the default values.
+        A `ciSettings::AtomicState.CiSettings` is returned.
 """
 function CiSettings()
     CiSettings(CoulombInteraction(), LevelSelection() )
@@ -1368,6 +1377,7 @@ end
 
 """
 `AtomicState.GreenSettings()`  ... constructor for an `empty` instance of AtomicState.GreenSettings.
+        A `greenSettings::AtomicState.GreenSettings` is returned.
 """
 function GreenSettings()
     # `GreenSettings`, not `Settings` (fixed 07-Aug-2026): this constructor called `Settings(...)`, so the
@@ -1383,6 +1393,7 @@ end
         which is what `generate(GreenExpansion, ...)` used unconditionally before `scField` existed. Supply the
         sixth argument (or use the keyword constructor) whenever the Green space must match the potential of a
         surrounding computation -- see the note in the struct docstring.
+        A `greenSettings::AtomicState.GreenSettings` is returned.
 """
 function GreenSettings(nMax::Int64, lValues::Array{Int64,1}, dampingTau::Float64, printBefore::Bool,
                        levelSelection::LevelSelection)
@@ -1439,6 +1450,7 @@ end
 
 """
 `AtomicState.GreenChannel()`  ... constructor for an `empty` instance of AtomicState.GreenChannel.
+        A `greenChannel::AtomicState.GreenChannel` is returned.
 """
 function GreenChannel()
     GreenChannel( LevelSymmetry(0, Basics.plus), ManyElectron.Multiplet() )
@@ -1473,6 +1485,7 @@ end
 
 """
 `AtomicState.GreenExpansion()`  ... constructor for an `empty` instance of AtomicState.GreenExpansion.
+        A `greenExpansion::AtomicState.GreenExpansion` is returned.
 """
 function GreenExpansion()
     GreenExpansion( AtomicState.SingleCSFwithoutCI(), Basics.NoExcitationScheme(), LevelSymmetry[], 0, AtomicState.GreenSettings())
@@ -1537,6 +1550,7 @@ end
 
 """
 `AtomicState.Representation()`  ... constructor for an 'empty' instance of the a variable::AtomicState.Representation
+        A `representation::AtomicState.Representation` is returned.
 """
 function Representation()
     Representation("", Nuclear.Model(1.0), Radial.Grid(), ManyElectron.Configuration[], CiExpansion(), Basics.SeparateOrbitals())
@@ -1619,6 +1633,7 @@ end
                         levelSymmetries, 3, greenSettings) ) 
                         
     ... These simple examples can be further improved by overwriting the corresponding parameters.
+        A `representation::AtomicState.Representation` is returned.
 """
 function Representation(wa::Bool)    
     AtomicState.Representation()    

@@ -167,6 +167,7 @@ end
 
 """
 `InternalConversion.Settings()`  ... constructor for the default values of internal-conversion computations.
+        A `settings::InternalConversion.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[], 0., 100, false, LineSelection(), false, nothing)
@@ -265,6 +266,7 @@ end
 """
 `InternalConversion.Line(initialLevel::Level, finalLevel::Level, electronEnergy::Float64)`
     ... constructor for an internal-conversion line with as-yet unevaluated channels/ICC.
+        A `line::InternalConversion.Line` is returned.
 """
 function Line(initialLevel::Level, finalLevel::Level, electronEnergy::Float64)
     Line(initialLevel, finalLevel, electronEnergy, 0., Channel[])

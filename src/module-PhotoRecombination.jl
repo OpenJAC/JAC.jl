@@ -87,6 +87,7 @@ end
 
 """
 `PhotoRecombination.Settings()`  ... constructor for the default values of photo recombination line computations
+        A `settings::PhotoRecombination.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[], UseGauge[], Float64[], Float64[], false, false, false, false, false, 0, LineSelection(), nothing )

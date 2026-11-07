@@ -110,6 +110,7 @@ end
 
 """
 `DalgarnoLewis.Settings()`  ... constructor for an `empty` instance of DalgarnoLewis.Settings.
+        A `settings::DalgarnoLewis.Settings` is returned.
 """
 function Settings()
     Settings( 0.0, 1.0e-6, false )
@@ -119,6 +120,7 @@ end
 """
 `DalgarnoLewis.Settings(settings::DalgarnoLewis.Settings; regularization=.., singularityTolerance=.., printBefore=..)`
     ... the standard JAC keyword copy-constructor.
+        A `settings::DalgarnoLewis.Settings` is returned.
 """
 function Settings(settings::DalgarnoLewis.Settings;
     regularization::Union{Nothing,Float64}=nothing,              singularityTolerance::Union{Nothing,Float64}=nothing,

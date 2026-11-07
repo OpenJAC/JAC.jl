@@ -41,6 +41,7 @@ end
 `IsotopeShift.Settings(; calcNMS::Bool=true,` calcSMS::Bool=false, calcF::Bool=false, calcBoson::Bool=false, 
                             printBefore::Bool=true, bosonMass::Float64=0., levelSelection::LevelSelection=LevelSelection()) 
     ... keyword constructor to overwrite selected value of isoshift computations.
+        A `settings::IsotopeShift.Settings` is returned.
 """
 function Settings(; calcNMS::Bool=true, calcSMS::Bool=false, calcF::Bool=false, calcBoson::Bool=false,
                     printBefore::Bool=true, bosonMass::Float64=0., levelSelection::LevelSelection=LevelSelection())
@@ -52,6 +53,7 @@ end
 `IsotopeShift.Settings(set::IsotopeShift.Settings; keywords...)`
     ... keyword constructor to modify selected fields of an IsotopeShift.Settings object;
         for fields not given, the values of set are used.
+        A `settings::IsotopeShift.Settings` is returned.
 """
 function Settings(set::IsotopeShift.Settings;
         calcNMS::Union{Nothing,Bool}=nothing,             calcSMS::Union{Nothing,Bool}=nothing,
@@ -114,6 +116,7 @@ end
 
 """
 `IsotopeShift.Outcome()`  ... constructor for an `empty` instance of Hfs.Outcome for the computation of isotope-shift properties.
+        A `outcome::IsotopeShift.Outcome` is returned.
 """
 function Outcome()
     Outcome(Level(), 0., 0., 0., 0., 0.,   0., 0., 0., 0.)

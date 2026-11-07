@@ -34,6 +34,7 @@ end
 
 """
 `Basics.AngularJ64(j::Integer)`  ... constructor for a given integer (numerator).
+        A `angularJ64::Basics.AngularJ64` is returned.
 """
 function AngularJ64(j::Integer)
     j < 0   &&   error("j must be positive.")
@@ -43,6 +44,7 @@ end
 
 """
 `Basics.AngularJ64(rational::Rational{Int64})`  ... constructor for a given  Rational{Int64}.
+        A `angularJ64::Basics.AngularJ64` is returned.
 """
 function AngularJ64(rational::Rational{Int64})
     !(rational.den in [1,2])   &&   error("Denominator must be 1 or 2.")
@@ -105,6 +107,7 @@ end
 
 """
 `Basics.AngularM64(m::Integer)`  ... constructor for a given integer (numerator).
+        A `angularM64::Basics.AngularM64` is returned.
 """
 function AngularM64(m::Integer)
     AngularM64(m, 1)
@@ -114,6 +117,7 @@ end
 """
 `Basics.AngularM64(m::Integer, j::AngularJ64)`  
     ... constructor for a given integer (numerator) that is consistent with a given j-value.
+        A `angularM64::Basics.AngularM64` is returned.
 """
 function AngularM64(m::Integer, j::AngularJ64)
     !(j.den == 1)      &&  error("m must be integer for j = $(j).")
@@ -124,6 +128,7 @@ end
 
 """
 `Basics.AngularM64(rational::Rational{Int64})`  ... constructor for a given  Rational{Int64}.
+        A `angularM64::Basics.AngularM64` is returned.
 """
 function AngularM64(rational::Rational{Int64})
     !(rational.den in [1,2])  &&  error("Denominator must be 1 or 2.")
@@ -134,6 +139,7 @@ end
 """
 `Basics.AngularM64(rational::Rational{Int64}, j::AngularJ64)`  
     ... constructor for a given  Rational{Int64} that is consistent with a given m-value.
+        A `angularM64::Basics.AngularM64` is returned.
 """
 function AngularM64(rational::Rational{Int64}, j::AngularJ64)
     !(rational.den in [1,2])      &&   error("Denominator must be 1 or 2.")
@@ -145,6 +151,7 @@ end
 
 """
 `Basics.AngularM64(j::AngularJ64)`  ... constructor for a given j::AngularJ64 to define m = j.
+        A `angularM64::Basics.AngularM64` is returned.
 """
 function AngularM64(j::AngularJ64)
     AngularM64(j.num, j.den)
@@ -190,6 +197,7 @@ end
 
 """
 `Basics.LevelSymmetry(rational::Rational{Int64}, parity::Parity)`  ... constructor for a given (Rational,Parity).
+        A `levelSymmetry::Basics.LevelSymmetry` is returned.
 """
 function  LevelSymmetry(rational::Rational{Int64}, parity::Parity)
     !(rational.den in [1,2])      &&   error("Denominator must be 1 or 2.")
@@ -199,6 +207,7 @@ end
 
 """
 `Basics.LevelSymmetry(i::Int64, parity::Parity)`  ... constructor for a given (Int64,Parity).
+        A `levelSymmetry::Basics.LevelSymmetry` is returned.
 """
 function  LevelSymmetry(i::Int64, parity::Parity)
     LevelSymmetry( AngularJ64(i), parity )    
@@ -207,6 +216,7 @@ end
 
 """
 `Basics.LevelSymmetry(rational::Rational{Int64}, sa::String)`  ... constructor for a given (Rational,String).
+        A `levelSymmetry::Basics.LevelSymmetry` is returned.
 """
 function  LevelSymmetry(rational::Rational{Int64},sa::String)
     !(rational.den in [1,2])      &&   error("Denominator must be 1 or 2.")
@@ -216,6 +226,7 @@ end
 
 """
 `Basics.LevelSymmetry(i::Int64, sa::String)`  ... constructor for a given (Int64,String).
+        A `levelSymmetry::Basics.LevelSymmetry` is returned.
 """
 function  LevelSymmetry(i::Int64,sa::String)
     LevelSymmetry( AngularJ64(i), Parity(sa) )    
@@ -1057,6 +1068,7 @@ end
 """
 `Basics.RestrictExcitations(restrictions::Array{AbstractConfigurationRestriction,1})`  
     ... constructor to just provide a set of restriction.
+        A `restrictExcitations::Basics.RestrictExcitations` is returned.
 """
 function Basics.RestrictExcitations(restrictions::Array{AbstractConfigurationRestriction,1})
     Basics.RestrictExcitations(0, Shell[], Shell[], restrictions)
@@ -1066,6 +1078,7 @@ end
 """
 `Basics.RestrictExcitations(theme::Basics.ExciteElectrons, restrictions::Array{AbstractConfigurationRestriction,1})`  
     ... constructor to specify the paraemterss by the ExciteElectron() theme.
+        A `restrictExcitations::Basics.RestrictExcitations` is returned.
 """
 function Basics.RestrictExcitations(theme::Basics.ExciteElectrons, restrictions::Array{AbstractConfigurationRestriction,1})
     Basics.RestrictExcitations(theme.ne, theme.fromShells, theme.intoShells, restrictions)
@@ -1703,6 +1716,7 @@ end
 
 """
 `Basics.GLegenreMesh()`  ... constructor for the default settings of GLegenreMesh.
+        A `gLegenreMesh::Basics.GLegenreMesh` is returned.
 """
 function GLegenreMesh()
     GLegenreMesh( 0., 1.0, 4)
@@ -1732,6 +1746,7 @@ end
 
 """
 `Basics.LinearMesh()`  ... constructor for the default settings of LinearMesh.
+        A `linearMesh::Basics.LinearMesh` is returned.
 """
 function LinearMesh()
     # THE TYPE HERE WAS `GLegenreMesh` UNTIL 07-Nov-2026 and the call ran, because the two structs
@@ -1766,6 +1781,7 @@ end
 
 """
 `Basics.PolarMesh()`  ... constructor for the default settings of PolarMesh.
+        A `polarMesh::Basics.PolarMesh` is returned.
 """
 function PolarMesh()
     PolarMesh( Basics.GLegenreMesh(0.0, 1.0, 12), Basics.GLegenreMesh(0.0, 2pi, 12))
@@ -1794,6 +1810,7 @@ end
 
 """
 `Basics.SphericalMesh()`  ... constructor for the default settings of Spherical.
+        A `sphericalMesh::Basics.SphericalMesh` is returned.
 """
 function SphericalMesh()
     SphericalMesh( Basics.GLegenreMesh(0., 1.0, 12), Basics.GLegenreMesh(0., pi, 8), Basics.GLegenreMesh(0., 2pi, 12) )
@@ -1869,6 +1886,7 @@ end
 
 """
 `Basics.DebyeHueckelModel()`  ... constructor for the default settings of Basics.DebyeHueckelModel().
+        A `debyeHueckelModel::Basics.DebyeHueckelModel` is returned.
 """
 function DebyeHueckelModel()
     DebyeHueckelModel( 0.1 )
@@ -1896,6 +1914,7 @@ end
 
 """
 `Basics.IonSphereModel()`  ... constructor for the default settings of Basics.IonSphereModel().
+        A `ionSphereModel::Basics.IonSphereModel` is returned.
 """
 function IonSphereModel()
     IonSphereModel( 0.9, 0. )
@@ -1929,6 +1948,7 @@ end
 
 """
 `Basics.StewartPyattModel()`  ... constructor for the default settings of Basics.StewartPyattModel().
+        A `stewartPyattModel::Basics.StewartPyattModel` is returned.
 """
 function StewartPyattModel()
     StewartPyattModel( 0., 0., 0. )
@@ -1990,6 +2010,7 @@ end
 
 """
 `Basics.EckerKroellModel()`  ... constructor for the default settings of Basics.EckerKroellModel().
+        A `eckerKroellModel::Basics.EckerKroellModel` is returned.
 """
 function EckerKroellModel()
     EckerKroellModel( 0., 0., 0., 1.0 )
@@ -3226,6 +3247,7 @@ end
 
 """
 `Basics.LevelSelection()`  ... constructor for an inactive LevelSelection.
+        A `levelSelection::Basics.LevelSelection` is returned.
 """
 function  LevelSelection()
     LevelSelection( false, Int64[], LevelSymmetry[], Configuration[])    
@@ -3243,6 +3265,7 @@ end
         `symmetries`, which then restricts the selected reference levels to those J^P: that is the
         one-orbital-set-per-J route for the RAS layers on top of an AL-optimized reference.
         See SelfConsistent.selectTargetLevelsEOL.
+        A `levelSelection::Basics.LevelSelection` is returned.
 """
 function  LevelSelection(active::Bool; indices::Array{Int64,1}=Int64[], symmetries::Array{LevelSymmetry,1}=LevelSymmetry[],
                         configurations::Array{Configuration,1}=Configuration[])
@@ -3282,6 +3305,7 @@ end
 
 """
 `Basics.LineSelection()`  ... constructor for an inactive LineSelection.
+        A `lineSelection::Basics.LineSelection` is returned.
 """
 function  LineSelection()
     LineSelection( false, Tuple{Int64,Int64}[], Tuple{LevelSymmetry,LevelSymmetry}[])    
@@ -3292,6 +3316,7 @@ end
 `Basics.LineSelection(active::Bool; indexPairs::Array{Tuple{Int64,Int64},1}=Tuple{Int64,Int64}[],
                                     symmetryPairs::Array{Tuple{LevelSymmetry,LevelSymmetry},1}=Tuple{LevelSymmetry,LevelSymmetry}[])`  
     ... constructor for specifying the details of a LineSelection.
+        A `lineSelection::Basics.LineSelection` is returned.
 """
 function  LineSelection(active::Bool; indexPairs::Array{Tuple{Int64,Int64},1}=Tuple{Int64,Int64}[],
                                         symmetryPairs::Array{Tuple{LevelSymmetry,LevelSymmetry},1}=Tuple{LevelSymmetry,LevelSymmetry}[])
@@ -3331,6 +3356,7 @@ end
 
 """
 `Basics.PathwaySelection()`  ... constructor for an inactive PathwaySelection.
+        A `pathwaySelection::Basics.PathwaySelection` is returned.
 """
 function  PathwaySelection()
     PathwaySelection( false, Tuple{Int64,Int64,Int64}[], Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry}[])    
@@ -3341,6 +3367,7 @@ end
 `Basics.PathwaySelection(active::Bool; indexTriples::Array{Tuple{Int64,Int64,Int64},1}=Tuple{Int64,Int64,Int64}[],
                 symmetryTriples::Array{Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry},1}=Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry}[])`  
     ... constructor for specifying the details of a PathwaySelection.
+        A `pathwaySelection::Basics.PathwaySelection` is returned.
 """
 function  PathwaySelection(active::Bool; indexTriples::Array{Tuple{Int64,Int64,Int64},1}=Tuple{Int64,Int64,Int64}[],
             symmetryTriples::Array{Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry},1}=Tuple{LevelSymmetry,LevelSymmetry,LevelSymmetry}[])
@@ -3380,6 +3407,7 @@ end
 
 """
 `Basics.ShellSelection()`  ... constructor for an inactive ShellSelection.
+        A `shellSelection::Basics.ShellSelection` is returned.
 """
 function  ShellSelection()
     ShellSelection( false, Shell[], Int64[])    
@@ -3389,6 +3417,7 @@ end
 """
 `Basics.ShellSelection(active::Bool; shells::Array{Shell,1}=Shell[], lSymmetries::Array{Int64,1}=Int64[])`  
     ... constructor for specifying the details of a ShellSelection.
+        A `shellSelection::Basics.ShellSelection` is returned.
 """
 function  ShellSelection(active::Bool; shells::Array{Shell,1}=Shell[], lSymmetries::Array{Int64,1}=Int64[])
     if  active   ShellSelection( true, shells, lSymmetries)  

@@ -38,6 +38,7 @@ end
 """
 `ImpactExcitation.RateCoefficients()`  ... constructor for the default values of electron-impact excitation rate coefficient or
                                             effective collision strength computations.
+        A `rateCoefficients::ImpactExcitation.RateCoefficients` is returned.
 """
 function RateCoefficients()
     RateCoefficients(Level(), Level(), Float64[], Float64[], Float64[])
@@ -84,6 +85,7 @@ end
 
 """
 `ImpactExcitation.Settings()`  ... constructor for the default values of electron-impact excitation line computations.
+        A `settings::ImpactExcitation.Settings` is returned.
 """
 function Settings()
     Settings( LineSelection(), Float64[], 0., 300, false, 30.0, 6, [5e4, 1e5, 2e5, 3e5, 5e5, 7e5, 1e6], false, CoulombInteraction(), nothing)
@@ -216,6 +218,7 @@ end
 
 """
 `ImpactExcitation.Line()`  ... 'empty' constructor for an electron-impact excitation line between a specified initial and final level.
+        A `line::ImpactExcitation.Line` is returned.
 """
 function Line()
     Line(Level(), Level(), 0., 0., 0., 0., ImpactExcitation.Channel[], 1.0 )
@@ -225,6 +228,7 @@ end
 """
 `ImpactExcitation.Line(initialLevel::Level, finalLevel::Level, crossSection::Float64)`  
     ... constructor for an electron-impact excitation line between a specified initial and final level.
+        A `line::ImpactExcitation.Line` is returned.
 """
 function Line(initialLevel::Level, finalLevel::Level, crossSection::Float64)
     Line(initialLevel, finalLevel, 0., 0., crossSection, 0., ImpactExcitation.Channel[], 1.0 )
@@ -1035,6 +1039,7 @@ end
 `ImpactExcitation.displayResults(line::ImpactExcitation.Line)`
     ... to display energies, cross sections, collision stregths, convergence etc. for a single line immediatly after
         the calculation for that line is completed.
+        A neat table is printed but nothing is returned otherwise.
 """
 function displayResults(line::ImpactExcitation.Line)
     nx = 142
@@ -1074,6 +1079,7 @@ end
     ... the same table, but written to the given stream so that a cascade can also place it into the summary
         file.  A rate coefficient is the quantity such a computation is run for and should not go to the
         screen alone.
+        A neat table is printed but nothing is returned otherwise.
 """
 function displayResults(stream::IO, allRates::Array{RateCoefficients,1})
     nx = 115

@@ -180,6 +180,7 @@ end
                                            popVectors::Dict, levelCounts::Array{Int64,1})`
     ... prints a table of the relative populations (Coulomb/Babushkin) of every (stage, local level) slot, one row
         per (slot, temperature) pair, following JAC's usual table style.
+        A neat table is printed but nothing is returned otherwise.
 """
 function displayKineticChargeBalanceResults(stream::IO, scheme::Plasma.KineticChargeBalanceScheme, Ne::Float64, popVectors::Dict,
                                             levelCounts::Array{Int64,1})

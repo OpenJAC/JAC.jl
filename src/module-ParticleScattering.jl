@@ -80,6 +80,7 @@ end
 
 """
 `ParticleScattering.Settings()`  ... constructor for the default ParticleScattering.Settings.
+        A `settings::ParticleScattering.Settings` is returned.
 """
 function Settings()
     Settings( ParticleScattering.Electron(), ParticleScattering.ElasticScattering(),

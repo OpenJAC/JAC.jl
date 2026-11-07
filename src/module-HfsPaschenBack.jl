@@ -132,6 +132,7 @@ end
 
 """
 `HfsPaschenBack.Settings()`  ... constructor for an `empty` instance of HfsPaschenBack.Settings.
+        A `settings::HfsPaschenBack.Settings` is returned.
 """
 function Settings()
     Settings(false, 0., (0., 0., 1.), false, false, 0., (0., 0., 1.), false, Hfs.HfMultiplet[], false)

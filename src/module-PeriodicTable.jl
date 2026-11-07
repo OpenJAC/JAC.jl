@@ -188,6 +188,7 @@ end
 
 """
 `PeriodicTable.Isotope(i::Int64)`  ... simple constructur for an empty instance of an isotope.
+        A `isotope::PeriodicTable.Isotope` is returned.
 """
 function Isotope(i::Int64)
     Isotope( i, NaN, AngularJ64(0), NaN, NaN)
@@ -224,6 +225,7 @@ end
 
 """
 `PeriodicTable.Element(charge::Int64, symbol::Symbol)`  ... simple constructur for defining an element
+        A `element::PeriodicTable.Element` is returned.
 """
 function Element(charge::Int64, symbol::Symbol)
     Element(charge, symbol, "not defined", 999.99, Isotope[])

@@ -49,6 +49,7 @@ end
 
 """
 `PhotoExcitation.Settings()`  ... 'empty' constructor for the default values of photo-excitation line computations
+        A `settings::PhotoExcitation.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[], UseGauge[], false, false, false, false, false, LineSelection(), 0., 0., 1.0e6, Basics.ExpStokes())
@@ -141,6 +142,7 @@ end
 """
 `PhotoExcitation.Line(initialLevel::Level, finalLevel::Level, omega::Float64, crossSection::EmProperty)`  
     ... constructor an photo-excitation line between a specified initial and final level.
+        A `line::PhotoExcitation.Line` is returned.
 """
 function Line(initialLevel::Level, finalLevel::Level, omega::Float64, crossSection::EmProperty)
     Line(initialLevel, finalLevel, omega, EmProperty(0., 0.), crossSection, false, MultipoleAmplitude[])

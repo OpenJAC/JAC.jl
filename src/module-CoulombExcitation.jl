@@ -38,6 +38,7 @@ end
 
 """
 `CoulombExcitation.Settings()`  ... constructor for the default values of Coulomb-excitation line computations.
+        A `settings::CoulombExcitation.Settings` is returned.
 """
 function Settings()
     Settings(Float64[], false, false, LineSelection(), 0)

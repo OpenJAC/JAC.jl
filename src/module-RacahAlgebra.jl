@@ -72,6 +72,7 @@ end
 """
 `RacahAlgebra.Kronecker(i::AngMomentum, k::AngMomentum)`  
     ... constructor for defining a Kronecker delta symbol either by Julia Symbol's or SymEngine Basic variables.
+        A `kronecker::RacahAlgebra.Kronecker` is returned.
 """
 function Kronecker(i::AngMomentum, k::AngMomentum)
     wi = AngMomentum(i);    wk = AngMomentum(k)
@@ -110,6 +111,7 @@ end
 """
 `RacahAlgebra.Triangle(ja::AngMomentum, jb::AngMomentum, jc::AngMomentum)`  
     ... constructor for defining a Triangle delta symbol either by Julia Symbol's or SymEngine Basic variables.
+        A `triangle::RacahAlgebra.Triangle` is returned.
 """
 function Triangle(ja::AngMomentum, jb::AngMomentum, jc::AngMomentum)
     wja = AngMomentum(ja);    wjb = AngMomentum(jb);    wjc = AngMomentum(jc)    
@@ -154,6 +156,7 @@ end
 """
 `RacahAlgebra.W3j(ja::AngMomentum, jb::AngMomentum, jc::AngMomentum, ma::AngMomentum, mb::AngMomentum, mc::AngMomentum)`  
     ... constructor for defining the Wigner 3-j symbol either by Julia Symbol's or SymEngine Basic variables.
+        A `w3j::RacahAlgebra.W3j` is returned.
 """
 function W3j(ja::AngMomentum, jb::AngMomentum, jc::AngMomentum, 
                 ma::AngMomentum, mb::AngMomentum, mc::AngMomentum)
@@ -199,6 +202,7 @@ end
 `RacahAlgebra.W6j(a::AngMomentum, b::AngMomentum, c::AngMomentum, 
                     d::AngMomentum, e::AngMomentum, f::AngMomentum)`  
     ... constructor for defining the Wigner 6-j symbol either by Julia Symbol's or SymEngine Basic variables.
+        A `w6j::RacahAlgebra.W6j` is returned.
 """
 function  W6j(a::AngMomentum, b::AngMomentum, c::AngMomentum, 
                 d::AngMomentum, e::AngMomentum, f::AngMomentum)
@@ -249,6 +253,7 @@ end
                     d::AngMomentum, e::AngMomentum, f::AngMomentum,
                     g::AngMomentum, h::AngMomentum, i::AngMomentum)`  
     ... constructor for defining the Wigner 9j symbol either by Julia Symbol's or SymEngine Basic variables.
+        A `w9j::RacahAlgebra.W9j` is returned.
 """
 function  W9j(a::AngMomentum, b::AngMomentum, c::AngMomentum, 
                 d::AngMomentum, e::AngMomentum, f::AngMomentum,
@@ -357,6 +362,7 @@ end
 """
 `RacahAlgebra.Djpq(j::AngMomentum, p::AngMomentum, q::AngMomentum, beta::Basic)`  
     ... constructor for defining the spherical harmonic Y_lm (theta,phi) either by Julia Symbol's or SymEngine Basic variables.
+        A `djpq::RacahAlgebra.Djpq` is returned.
 """
 function  Djpq(j::AngMomentum, p::AngMomentum, q::AngMomentum, beta::Basic)
     wj = AngMomentum(j);    wp = AngMomentum(p);    wq = AngMomentum(q)
@@ -444,6 +450,7 @@ end
 """
 `RacahAlgebra.RacahExpression()`  
     ... constructor for defining an empty RacahExpression.
+        A `racahExpression::RacahAlgebra.RacahExpression` is returned.
 """
 function  RacahExpression()
     RacahExpression( Basic[], Integral[], Basic(0), Basic(1), Kronecker[], Triangle[], W3j[], W6j[], W9j[], Ylm[], Djpq[] )

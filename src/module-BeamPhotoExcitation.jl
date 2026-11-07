@@ -37,6 +37,7 @@ end
 
 """
 `BeamPhotoExcitation.Settings()`  ... 'empty' constructor for the default values of beam-photo-excitation computations.
+        A `settings::BeamPhotoExcitation.Settings` is returned.
 """
 function Settings()
     Settings(Beam.LaguerreGauss(), Beam.NoObservable(), EmMultipole[], UseGauge[], false, LineSelection(), 0.)
@@ -118,6 +119,7 @@ end
 """
 `BeamPhotoExcitation.Outcome()`  
     ... constructor for an 'empty' beam-photo-excitation outcome for a specified initial and final level.
+        A `outcome::BeamPhotoExcitation.Outcome` is returned.
 """
 function Outcome()
     Outcome( Level(), Level(), 0., Beam.LaguerreGauss(), Beam.NoObservable(), Basics.Cartesian2DFieldValue{Float64}[] )

@@ -88,6 +88,7 @@ end
 
 """
 `PhotoIonization.Settings()`  ... constructor for the default values of photoionization line computations
+        A `settings::PhotoIonization.Settings` is returned.
 """
 function Settings()
     Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb, Basics.UseBabushkin], Float64[], Float64[], Float64[],
@@ -188,6 +189,7 @@ end
 
 """
 `PhotoIonization.PlasmaSettings()`  ... constructor for a standard instance of PhotoIonization.PlasmaSettings.
+        A `plasmaSettings::PhotoIonization.PlasmaSettings` is returned.
 """
 function PlasmaSettings()
     PlasmaSettings([E1], [Basics.UseCoulomb], Float64[], true, LineSelection() )

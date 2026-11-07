@@ -90,6 +90,7 @@ end
 
 """
 `LandeZeeman.Outcome()`  ... constructor for an `empty` instance of LandeZeeman.Outcome.
+        A `outcome::LandeZeeman.Outcome` is returned.
 """
 function Outcome()
     Outcome(Level(), 0., ComplexF64(0.), ComplexF64(0.), AngularJ64(0), SublevelJ[],  SublevelF[])
@@ -139,6 +140,7 @@ end
 """
 `LandeZeeman.Settings()`
     ... constructor for an `empty` instance of ZeemanSettings for the computation of isotope M and F parameters.
+        A `settings::LandeZeeman.Settings` is returned.
 """
 function Settings()
     Settings(false, false, false, false, false, false, 0., LevelSelection(), Multiplet() )
@@ -149,6 +151,7 @@ end
 `LandeZeeman.Settings(set::LandeZeeman.Settings; keywords...)`
     ... keyword constructor to modify selected fields of a LandeZeeman.Settings object;
         for fields not given, the values of set are used.
+        A `settings::LandeZeeman.Settings` is returned.
 """
 function Settings(set::LandeZeeman.Settings;
         calcLandeJ::Union{Nothing,Bool}=nothing,           calcLandeF::Union{Nothing,Bool}=nothing,

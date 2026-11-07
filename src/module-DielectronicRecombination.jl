@@ -389,6 +389,7 @@ end
 """
 `DielectronicRecombination.Settings()`
     ... constructor for the default values of dielectronic recombination pathway computations.
+        A `settings::DielectronicRecombination.Settings` is returned.
 """
 function Settings()
     Settings([E1], UseGauge[], false, false, false, false, false, false, PathwaySelection(), 0., 0., 0., Float64[],
@@ -497,6 +498,7 @@ end
 """
 `DielectronicRecombination.ResonanceSelection()`  
     ... constructor for an 'empty' instance of a ResonanceSelection()
+        A `resonanceSelection::DielectronicRecombination.ResonanceSelection` is returned.
 """
 function ResonanceSelection()
     ResonanceSelection(false, Shell[], Shell[], Shell[] )

@@ -107,6 +107,7 @@ end
 """
 `StarkBroadening.Settings()`  ... constructor for the default values of an electron-impact Stark-broadening
     computation.
+        A `settings::StarkBroadening.Settings` is returned.
 """
 function  Settings()
     Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], 0., 0., 0., LineSelection(), nothing, false)

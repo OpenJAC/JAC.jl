@@ -64,6 +64,7 @@ end
 
 """
 `RayleighCompton.Settings()`  ... constructor for the default values of Rayleigh-Compton photon-scattering estimates.
+        A `settings::RayleighCompton.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[], UseGauge[], Float64[], GreenChannel[], false, false, false, false, ExpStokes(), SolidAngle[], LineSelection() )
@@ -183,6 +184,7 @@ end
 
 """
 `RayleighCompton.Channel()`  ... constructor for an `empty` instance of RayleighCompton.Channel.
+        A `channel::RayleighCompton.Channel` is returned.
 """
 function Channel()
     Channel(true, LevelSymmetry(), E1, E1, Basics.Coulomb, Basics.EmProperty(0.), 0., 0., ComplexF64(0.) )

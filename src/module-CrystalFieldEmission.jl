@@ -63,6 +63,7 @@ end
 
 """
 `CrystalFieldEmission.Settings()`  ... constructor for the default values of crystal-field-resolved transitions.
+        A `settings::CrystalFieldEmission.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], CrystalField.Lattice(), CrystalField.PointChargeModel(),

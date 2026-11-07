@@ -316,6 +316,7 @@ end
 `MultipolePolarizibility.Outcome()`
     ... constructor for an `empty` instance of MultipolePolarizibility.Outcome for the computation of static
         polarizibilities.
+        A `outcome::MultipolePolarizibility.Outcome` is returned.
 """
 function Outcome()
     Outcome(Level(), EmProperty(0.), EmProperty(0.), MultipolePolarizibility.Contribution[],
@@ -386,6 +387,7 @@ end
 """
 `MultipolePolarizibility.Settings()`
     ... constructor for an `empty` instance of MultipolePolarizibility.Settings for the computation dynamic polarizibilities.
+        A `settings::MultipolePolarizibility.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[], Multiplet(), Float64[], 0, false, LevelSelection(), false )

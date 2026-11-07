@@ -36,6 +36,7 @@ end
 
 """
 `TwoElectronOnePhoton.Settings()`  ... constructor for the default values of TEOP line computations
+        A `settings::TwoElectronOnePhoton.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], false, LineSelection(), 0., CoulombInteraction(), Multiplet() )
@@ -124,6 +125,7 @@ end
 """
 `TwoElectronOnePhoton.Line()`  
     ... constructor an empty TEOP line.
+        A `line::TwoElectronOnePhoton.Line` is returned.
 """
 function Line()
     Line(Level(), Level(), 0., EmProperty(0., 0.), TwoElectronOnePhoton.Channel[])

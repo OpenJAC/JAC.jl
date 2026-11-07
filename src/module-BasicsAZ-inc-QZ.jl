@@ -780,6 +780,7 @@ end
 
 """
 `Basics.Subshell(n::Int64, symmetry::LevelSymmetry)`  ... constructor for a given principal quantum number n and (level) symmetry.
+        A `subshell::BasicsAZ.Subshell` is returned.
 """
 function Basics.Subshell(n::Int64, symmetry::LevelSymmetry) 
     if  symmetry.parity == Basics.plus

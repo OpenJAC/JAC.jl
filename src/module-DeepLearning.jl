@@ -67,6 +67,7 @@ end
 
 """
 `DeepLearning.Application()`  ... constructor for an 'default' instance of a DeepLearning.Application.
+        A `application::DeepLearning.Application` is returned.
 """
 function Application()
     Application( "Default deep-learning application", AtomicFeatures.AtomicModel(), LevelEstimationRequest() )

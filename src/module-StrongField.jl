@@ -279,6 +279,7 @@ end
 """
 `StrongField.Settings()`  
     ... constructor for the default values of SFA computations.
+        A `settings::StrongField.Settings` is returned.
 """
 function Settings()
     Settings([E1], "Coulomb", true, true, false, false, true)
@@ -360,6 +361,7 @@ end
 
 """
 `StrongField.Computation()`  ... constructor for an `default` instance of StrongField.Computation().
+        A `computation::StrongField.Computation` is returned.
 """
 function Computation()
     Computation( SfaNoObservable(), Nuclear.Model(1.0), Radial.Grid(true), Orbital("1s_1/2",0.5), Orbital("1s_1/2",0.5), 

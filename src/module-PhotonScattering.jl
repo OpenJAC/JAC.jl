@@ -134,6 +134,7 @@ end
 
 """
 `PhotonScattering.Settings()`  ... constructor for the default PhotonScattering.Settings.
+        A `settings::PhotonScattering.Settings` is returned.
 """
 function Settings()
     Settings( PhotonScattering.BoundFreePairCreation(), PhotonScattering.FirstOrderVertex(), Beam.PlaneWave(),

@@ -90,6 +90,7 @@ export ExpStokes
 
 """
 `Basics.ExpStokes()`  ... constructor for an (empty or unpolarized) Stokes vector.
+        A `expStokes::Basics.ExpStokes` is returned.
 """
 function ExpStokes()
     ExpStokes(0., 0., 0.)
@@ -130,6 +131,7 @@ export  LevelKey
 
 """
 `Basics.LevelKey()`  ... constructor for an empty instance of a LevelKey.
+        A `levelKey::Basics.LevelKey` is returned.
 """
 function  LevelKey()
     LevelKey( LevelSymmetry(0,Basics.plus), 0, 0., 0.)    
@@ -171,6 +173,7 @@ export LineKey
 
 """
 `Basics.LineKey()`  ... constructor for an empty instance of a LineKey.
+        A `lineKey::Basics.LineKey` is returned.
 """
 function  LineKey()
     LineKey( LevelKey(), LevelKey(), 0., 0.)    
@@ -205,6 +208,7 @@ end
 
 """
 `Basics.ScalarProperty(wa::Float64)`  ... constructor for an `constant` instance of ScalarProperty{T}.
+        A `scalarProperty::Basics.ScalarProperty` is returned.
 """
 function ScalarProperty(wa::Float64)
     ScalarProperty{T}(wa, 0.)

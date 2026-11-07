@@ -162,6 +162,7 @@ Base.propertynames(grid::Radial.Grid) =
 
 """
 `Radial.Grid()` ... constructor to define an 'empty' grid.
+        A `grid::Radial.Grid` is returned.
 """
 function Grid()
     Radial.Grid( GridParameters(0., 0., 0., 0, 0), KnotSequence(Float64[], Float64[], 0, 0),
@@ -172,6 +173,7 @@ end
 """
 `Radial.Grid(exponential::Bool; printout::Bool=false)` 
     ... constructor to define either a standard 'exponential' mesh (true) or a 'log-lin' mesh (false).
+        A `grid::Radial.Grid` is returned.
 """
 function Grid(exponential::Bool; printout::Bool=false)
     orderL = 7;    orderS = 8;   orderGL = 7
@@ -376,6 +378,7 @@ end
 """
 `Radial.GridGL()`  
     ... specified a default version of a Gauss-Legendre grid with 6 points in the interval [0.,1.].
+        A `gridGL::Radial.GridGL` is returned.
 """
 function GridGL()
     GridGL(GridGaussLegendreFinite(), 0., 1., 6; printout=false)
@@ -385,6 +388,7 @@ end
 """
 `Radial.GridGL(::GridGaussLegendreQED, orderGL::Int64; printout::Bool=false)`
     ... constructor to define Gauss-Legendre grid for the typical QED computation in the interval [1.0, infinity).
+        A `gridGL::Radial.GridGL` is returned.
 """
 function GridGL(::GridGaussLegendreQED, orderGL::Int64; printout::Bool=false)
     txlow = 1.;    t = Float64[];    wt = Float64[];    nt = 0
@@ -408,6 +412,7 @@ end
 """
 `Radial.GridGL(::GridGaussLegendreFinite, tmin::Float64, tmax::Float64, orderGL::Int64; printout::Bool=false)`
     ... constructor to define Gauss-Legendre grid in the finite interval [tmin, tmax].
+        A `gridGL::Radial.GridGL` is returned.
 """
 function GridGL(::GridGaussLegendreFinite, tmin::Float64, tmax::Float64, orderGL::Int64; printout::Bool=false)
     t = Float64[];    wt = Float64[]
@@ -450,6 +455,7 @@ end
 """
 `Radial.GridGH(orderGH::Int64; printout::Bool=false)`  
     ... constructor to define Gauss-Hermite grid.
+        A `gridGH::Radial.GridGH` is returned.
 """
 function GridGH(orderGH::Int64; printout::Bool=false)
     t = Float64[];    wt = Float64[]
@@ -493,6 +499,7 @@ end
 
 """
 `Radial.Density()`  ... constructor to define an 'empty' instance of the radial density.
+        A `density::Radial.Density` is returned.
 """
 function Density()
     Density("", Float64[], Radial.Grid())
@@ -540,6 +547,7 @@ end
 
 """
 `Radial.Potential()`  ... constructor to define an 'empty' instance of the radial potential.
+        A `potential::Radial.Potential` is returned.
 """
 function Potential()
     Potential("", Float64[], Radial.Grid())
@@ -602,6 +610,7 @@ end
 `Radial.Orbital(subshell::Subshell, energy::Float64)`  
     ... constructor for given subshell and energy, and where useStandardGrid is set to true; the grid must be defined 
         explicitly and neither the large and small components nor their derivatives are yet defined in this case.
+        A `orbital::Radial.Orbital` is returned.
 """
 function Orbital(subshell::Subshell, energy::Float64)
     if energy < 0    isBound = true    else    isBound = false    end
@@ -617,6 +626,7 @@ end
 `Radial.Orbital(label::String, energy::Float64)`  
     ... constructor for given string identifier and energy, and where useStandardGrid is set to true; the grid must be 
         defined explicitly and neither the large and small components nor their derivatives are yet defined in this case.
+        A `orbital::Radial.Orbital` is returned.
 """
 function Orbital(label::String, energy::Float64)
     if energy < 0    isBound = true    else    isBound = false    end
@@ -702,6 +712,7 @@ end
 
 """
     `Radial.SingleSymOrbitals()`  ... constructor for providing an 'empty' instance of this struct.
+        A `singleSymOrbitals::Radial.SingleSymOrbitals` is returned.
 """
 function SingleSymOrbitals()
     SingleSymOrbitals(0, 0, true, Orbital[], Orbital[], Radial.Grid() )
@@ -735,6 +746,7 @@ end
 
 """
     `Radial.SingleElecSpectrum()`  ... constructor for providing an 'empty' instance of this struct.
+        A `singleElecSpectrum::Radial.SingleElecSpectrum` is returned.
 """
 function SingleElecSpectrum()
     SingleElecSpectrum("", SingleSymOrbitals[])

@@ -49,6 +49,7 @@ end
 
 """
 `DielectronicRecombination.HfCaptureLine()`  ... constructor for an 'empty' HfCaptureLine.
+        A `hfCaptureLine::DielectronicRecombination.HfCaptureLine` is returned.
 """
 function HfCaptureLine()
     em = EmProperty(0., 0.)
@@ -91,6 +92,7 @@ end
 
 """
 `DielectronicRecombination.HfPhotonLine()`  ... constructor for an 'empty' HfPhotonLine.
+        A `hfPhotonLine::DielectronicRecombination.HfPhotonLine` is returned.
 """
 function HfPhotonLine()
     HfPhotonLine(Hfs.HfLevel(), Hfs.HfLevel(), 0., EmProperty(0., 0.))

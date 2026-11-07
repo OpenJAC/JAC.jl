@@ -24,6 +24,7 @@ end
 
 """
 `Liouville.RamanLevel()`  ... constructor for the default values of Liouville.RamanLevel set
+        A `ramanLevel::Liouville.RamanLevel` is returned.
 """
 function RamanLevel()
     RamanLevel( Configuration(), "xx", Level() )

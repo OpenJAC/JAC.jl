@@ -189,6 +189,7 @@ end
 
 """
 `MultiPhotonTransition.TwoPhotonEmissionScheme()`  ... constructor for the default values.
+        A `twoPhotonEmissionScheme::MultiPhotonTransition.TwoPhotonEmissionScheme` is returned.
 """
 function TwoPhotonEmissionScheme()
     TwoPhotonEmissionScheme( AbstractMultiPhotonProperty[EnergyDiffCs()], 4 )
@@ -241,6 +242,7 @@ end
 
 """
 `MultiPhotonTransition.TwoPhotonAbsorptionScheme()`  ... constructor for the default values.
+        A `twoPhotonAbsorptionScheme::MultiPhotonTransition.TwoPhotonAbsorptionScheme` is returned.
 """
 function TwoPhotonAbsorptionScheme()
     TwoPhotonAbsorptionScheme( AbstractMultiPhotonProperty[TotalAlpha0(), TotalCsLinear()] )
@@ -300,6 +302,7 @@ end
 
 """
 `MultiPhotonTransition.TwoPhotonAbsorptionBichromaticScheme()`  ... constructor for the default values.
+        A `twoPhotonAbsorptionBichromaticScheme::MultiPhotonTransition.TwoPhotonAbsorptionBichromaticScheme` is returned.
 """
 function TwoPhotonAbsorptionBichromaticScheme()
     TwoPhotonAbsorptionBichromaticScheme( AbstractMultiPhotonProperty[TotalCsUnpolarized()], 0.05 )
@@ -353,6 +356,7 @@ end
 
 """
 `MultiPhotonTransition.ThreePhotonEmissionScheme()`  ... constructor for the default values.
+        A `threePhotonEmissionScheme::MultiPhotonTransition.ThreePhotonEmissionScheme` is returned.
 """
 function ThreePhotonEmissionScheme()
     ThreePhotonEmissionScheme( AbstractMultiPhotonProperty[EnergyDiffCs()], 4 )
@@ -409,6 +413,7 @@ end
 
 """
 `MultiPhotonTransition.ThreePhotonAbsorptionScheme()`  ... constructor for the default values.
+        A `threePhotonAbsorptionScheme::MultiPhotonTransition.ThreePhotonAbsorptionScheme` is returned.
 """
 function ThreePhotonAbsorptionScheme()
     ThreePhotonAbsorptionScheme( AbstractMultiPhotonProperty[TotalCsUnpolarized()], 0., 0. )
@@ -518,6 +523,7 @@ end
 
 """
 `MultiPhotonTransition.Settings()`  ... constructor for the default values.
+        A `settings::MultiPhotonTransition.Settings` is returned.
 """
 function Settings()
     Settings( TwoPhotonEmissionScheme(), EmMultipole[E1], UseGauge[Basics.UseCoulomb], Multiplet(), 1.0e-8,

@@ -95,6 +95,7 @@ const  E4 = EmMultipole(4, true);     const  M4 = EmMultipole(4, false)
 
 """
 `Basics.EmMultipole(sa::String)`  ... constructor for a given String.
+        A `emMultipole::Basics.EmMultipole` is returned.
 """
 function EmMultipole(sa::String)
     if       sa == "E1"    L = 1;   electric = true
@@ -173,6 +174,7 @@ export EmProperty, displayGaugeConsistency, gaugeConsistency
 
 """
 `Basics.EmProperty(wa::Float64)`  ... constructor for an `constant` instance of EmProperty.
+        A `emProperty::Basics.EmProperty` is returned.
 """
 function EmProperty(wa::Float64)
     EmProperty(wa, wa)
@@ -287,6 +289,7 @@ export EmPropertyC
 
 """
 `Basics.EmPropertyC(wa::Float64)`  ... constructor for an `constant` instance of EmPropertyC.
+        A `emPropertyC::Basics.EmPropertyC` is returned.
 """
 function EmPropertyC(wa::Float64)
     EmPropertyC(wa, wa)
@@ -299,6 +302,7 @@ end
     Added 13-Aug-2026 for amplitudes: a MAGNETIC multipole has no gauge dependence, so its amplitude is the
     same number in both components. Saying that with this constructor is what removes the special case in
     which a magnetic contribution has to be added to the Coulomb AND the Babushkin sum by hand.
+        A `emPropertyC::Basics.EmPropertyC` is returned.
 """
 function EmPropertyC(wa::Complex{Float64})
     EmPropertyC(wa, wa)
@@ -395,6 +399,7 @@ export IsotopicFraction
 
 """
 `Basics.IsotopicFraction()`  ... constructor for an `empty` instance of IsotopicFraction.
+        A `isotopicFraction::Basics.IsotopicFraction` is returned.
 """
 function IsotopicFraction()
     IsotopicFraction(0., 0., 0.)
@@ -491,6 +496,7 @@ export  Shell
 
 """
 `Basics.Shell(sa::Union{String,SubString{String}})`  ... constructor for a given String, such as 1s, 2s, 2p, ... .
+        A `shell::Basics.Shell` is returned.
 """
 function Shell(sa::Union{String,SubString{String}}) 
     wa = strip( Base.convert(String, sa) )
@@ -702,6 +708,7 @@ Base.hash(sh::Subshell, h::UInt) = hash(sh.kappa, hash(sh.n, h ⊻ 0x53756273680
 
 """
 `Basics.Subshell(sa::String)`  ... constructor for a given String, such as 1s_1/2, 2s_1/2, 2p_3/2, ... .
+        A `subshell::Basics.Subshell` is returned.
 """
 function Subshell(sa::String) 
     wa = strip( sa );   
@@ -883,6 +890,7 @@ export  CorePolarization
 
 """
 `Basics.CorePolarization()`  ... constructor for the default values of core-polarization contributions.
+        A `corePolarization::Basics.CorePolarization` is returned.
 """
 function CorePolarization()
     CorePolarization(false, 0., 0., Shell[])
@@ -955,6 +963,7 @@ end
 `Basics.Configuration(sa::String)`  
     ... constructor for a given configuration string, such as "[He]", "[Ne]", "[Ne] 3s 3p^6"  or "1s 2p^6 3s^2 3p".
         One can also use "1s^0" to represent a (bare-ion) empty configuration.
+        A `configuration::Basics.Configuration` is returned.
 """
 function Configuration(sa::String)
     sax = strip(sa)
@@ -1038,6 +1047,7 @@ end
 `Base.string(conf::Configuration, open::Bool)`  
     ... provides, if open=trueM a String notation for the open-shell part of variable conf::Configuration,
         and the standard printout for open=false.
+        A `sa::String` is returned.
 """
 function Base.string(conf::Configuration, open::Bool)
     if    false   sa = Base.string(conf)

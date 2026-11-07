@@ -59,6 +59,7 @@ end
 
 """
 `Einstein.Settings()`  ... constructor for the default values of Einstein line computations.
+        A `settings::Einstein.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[], false, LineSelection(), 0., 0., 0.)
@@ -120,6 +121,7 @@ end
 """
 `Einstein.Line(initialLevel::Level, finalLevel::Level, photonRate::EmProperty)`  
     ... constructor an Einstein line between a specified initial and final level.
+        A `line::Einstein.Line` is returned.
 """
 function Line(initialLevel::Level, finalLevel::Level, photonRate::EmProperty)
     Line(initialLevel, finalLevel, 0, 0, photonRate, EmProperty(0., 0.), Einstein.Channel[])

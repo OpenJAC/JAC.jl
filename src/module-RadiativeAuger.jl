@@ -35,6 +35,7 @@ end
 
 """
 `RadiativeAuger.Settings()`  ... constructor for the default values of RadiativeAuger line computations
+        A `settings::RadiativeAuger.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[], UseGauge[], GreenChannel[], 0, 3, false, CoulombInteraction(), LineSelection())

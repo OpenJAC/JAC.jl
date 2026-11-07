@@ -70,6 +70,7 @@ end
 
 """
 `ParticleScattering.AnnihilationChannel()`  ... constructor for a default ParticleScattering.AnnihilationChannel.
+        A `annihilationChannel::ParticleScattering.AnnihilationChannel` is returned.
 """
 function AnnihilationChannel()
     AnnihilationChannel(-1, E1, Basics.Coulomb, LevelSymmetry(AngularJ64(0), Basics.plus), ComplexF64(0.))
@@ -106,6 +107,7 @@ end
 
 """
 `ParticleScattering.AnnihilationLine()`  ... constructor for a default ParticleScattering.AnnihilationLine.
+        A `annihilationLine::ParticleScattering.AnnihilationLine` is returned.
 """
 function AnnihilationLine()
     AnnihilationLine( Level(), Level(), 0., 0., EmProperty(0., 0.), AnnihilationChannel[] )

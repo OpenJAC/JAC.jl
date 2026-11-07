@@ -93,6 +93,7 @@ end
 
 """
 `ImpactIonization.Settings()`  ... constructor for the default values of empirical electron-impact ionization cross sections.
+        A `settings::ImpactIonization.Settings` is returned.
 """
 function Settings()
     Settings(BEBmodel(), 1, Float64[], false, false, ShellSelection())
@@ -131,6 +132,7 @@ end
 """
 `Base.show(io::IO, settings::ImpactIonization.Settings)`
     ... prepares a proper printout of the variable settings::ImpactIonization.Settings.
+        nothing is returned.
 """
 function Base.show(io::IO, settings::ImpactIonization.Settings)
     println(io, "model:                       $(settings.model)  ")
@@ -177,6 +179,7 @@ end
 """
 `Base.show(io::IO, cs::ImpactIonization.MultipleCrossSection)`
     ... prepares a proper printout of the variable cs::ImpactIonization.MultipleCrossSection.
+        nothing is returned.
 """
 function Base.show(io::IO, cs::ImpactIonization.MultipleCrossSection)
     println(io, "impactEnergy:       $(cs.impactEnergy)  ")
@@ -187,6 +190,7 @@ end
 """
 `Base.show(io::IO, cs::ImpactIonization.CrossSection)`
     ... prepares a proper printout of the variable cs::ImpactIonization.CrossSection.
+        nothing is returned.
 """
 function Base.show(io::IO, cs::ImpactIonization.CrossSection)
     println(io, "subshell:           $(cs.subshell)  ")

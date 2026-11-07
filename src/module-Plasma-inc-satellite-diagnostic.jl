@@ -169,6 +169,7 @@ end
 """
 `Plasma.displaySatelliteDiagnosticResults(stream::IO, temperatures::Array{Float64,1}, satelliteAlpha::Dict{Float64,EmProperty}, parentAlpha::Dict{Float64,Float64}, branchingFraction::EmProperty, ratios::Dict{Float64,EmProperty})`
     ... prints a table of the satellite/parent rate coefficients and the combined R(Te) ratio.
+        A neat table is printed but nothing is returned otherwise.
 """
 function  displaySatelliteDiagnosticResults(stream::IO, temperatures::Array{Float64,1},
                                             satelliteAlpha::Dict{Float64,EmProperty}, parentAlpha::Dict{Float64,Float64},

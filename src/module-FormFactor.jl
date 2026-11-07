@@ -26,6 +26,7 @@ end
 
 """
 `FormFactor.Settings()`  ... constructor for an `empty` instance of FormFactor.Settings for the computation of atomic form factors.
+        A `settings::FormFactor.Settings` is returned.
 """
 function Settings()
     Settings(Float64[0., 0.1, 1.0, 10.], false, LevelSelection() )
@@ -79,6 +80,7 @@ end
 """
 `FormFactor.Outcome()`  
     ... constructor for an `empty` instance of FormFactor.Outcome for the computation of atomic form factors.
+        A `outcome::FormFactor.Outcome` is returned.
 """
 function Outcome()
     Outcome(Level(), Float64[], Float64[], Float64[])

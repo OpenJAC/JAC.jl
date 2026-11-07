@@ -70,6 +70,7 @@ end
 
 """
 `ResonantInelastic.Settings()`  ... constructor for the default values of radiative line computations
+        A `settings::ResonantInelastic.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], false, false, 1.0, 0., PathwaySelection(), 

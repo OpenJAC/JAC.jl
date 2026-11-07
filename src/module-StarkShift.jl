@@ -183,6 +183,7 @@ end
 
 """
 `StarkShift.Outcome()`  ... constructor for an `empty` instance of StarkShift.Outcome.
+        A `outcome::StarkShift.Outcome` is returned.
 """
 function Outcome()
     Outcome(Level(), 0., 0., EmProperty(0.), EmProperty(0.), StarkShift.SublevelJ[], EmProperty(0.), 0.,
@@ -264,6 +265,7 @@ end
 """
 `StarkShift.Settings()`
     ... constructor for an `empty` instance of StarkShift.Settings.
+        A `settings::StarkShift.Settings` is returned.
 """
 function Settings()
         Settings(false, false, false, false, Multiplet(), false, 0., 0., 0., 0, Float64[], LevelSelection() )

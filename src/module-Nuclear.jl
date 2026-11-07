@@ -207,6 +207,7 @@ end
 """
 `Nuclear.Model(Z::Real)`  
     ... to specify a Fermi-type nucleus with charge Z, and where the nuclear spin and nuclear moments are all set to zero.
+        A `model::Nuclear.Model` is returned.
 """
 function Model(Z::Real)
     Z < 0.1  &&  error("Z must be >= 0.1")
@@ -225,6 +226,7 @@ end
 """
 `Nuclear.Model(Z::Real, M::Float64)`  
     ... to specify a Fermi-type nucleus with charge Z and mass M, and where the nuclear spin and nuclear moments are all set to zero.
+        A `model::Nuclear.Model` is returned.
 """
 function Model(Z::Real, M::Float64)
     Z < 0.1  &&  error("Z must be >= 0.1")
@@ -244,6 +246,7 @@ end
 `Nuclear.Model(Z::Real, model::Nuclear.AbstractNuclearModel)`  
     ... to specify a nucleus with charge Z and the given model -- PointNucleus(), UniformNucleus() or
         FermiNucleus() -- and where the nuclear spin and nuclear moments are all set to zero.
+        A `model::Nuclear.Model` is returned.
 """
 function Model(Z::Real, model::AbstractNuclearModel)
     Z < 0.1  &&  error("Z must be >= 0.1")
@@ -337,6 +340,7 @@ end
         `Float64[]`, i.e. of unequal length, which breaks the pairing the two fields are supposed to express and
         would give an out-of-bounds the moment anything iterated them together. An empty isomer has no known
         nuclear transition, which is the honest default.
+        A `isomer::Nuclear.Isomer` is returned.
 """
 function Isomer()
     Isomer( AngularJ64(0), Basics.plus, 0., 0., 0., 0., EmMultipole[], Float64[])

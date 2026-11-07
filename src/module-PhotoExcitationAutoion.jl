@@ -73,6 +73,7 @@ end
 """
 `PhotoExcitationAutoion.Settings()`
     ... constructor for the default values of photon-impact excitation-autoionizaton settings.
+        A `settings::PhotoExcitationAutoion.Settings` is returned.
 """
 function Settings()
     Settings( Basics.EmMultipole[], UseGauge[], false, false, false, false, Basics.ExpStokes(), SolidAngle[], 0., 0, PathwaySelection())
@@ -83,6 +84,7 @@ end
 `PhotoExcitationAutoion.Settings(set::PhotoExcitationAutoion.Settings; keywords...)`
     ... keyword constructor to modify selected fields of a PhotoExcitationAutoion.Settings object;
         for fields not given, the values of set are used.
+        A `settings::PhotoExcitationAutoion.Settings` is returned.
 """
 function Settings(set::PhotoExcitationAutoion.Settings;
         multipoles::Union{Nothing,Array{EmMultipole,1}}=nothing,           gauges::Union{Nothing,Array{UseGauge,1}}=nothing,
@@ -157,6 +159,7 @@ end
 `PhotoExcitationAutoion.Pathway()`  
     ... 'empty' constructor for an photon-impact excitation-autoionization pathway between a specified initial, intermediate 
         and final level.
+        A `pathway::PhotoExcitationAutoion.Pathway` is returned.
 """
 function Pathway()
     Pathway(Level(), Level(), Level(), 0., 0., EmProperty(0., 0.), EmProperty(0., 0.), MultipoleAmplitude[], 

@@ -77,6 +77,7 @@ end
 
 """
 `Hfs.HfBasisVector()`  ... constructor for an `empty` instance of HfBasisVector`.
+        A `hfBasisVector::Hfs.HfBasisVector` is returned.
 """
 function HfBasisVector()
     HfBasisVector(AngularJ64(0), Basics.plus, Nuclear.Isomer(), Level())
@@ -122,6 +123,7 @@ end
 
 """
 `Hfs.HfLevel()`  ... constructor for an `empty` instance of HfLevel.
+        A `hfLevel::Hfs.HfLevel` is returned.
 """
 function HfLevel()
     HfLevel(AngularJ64(0), AngularM64(0), Basics.plus, 0, 0., HfBasisVector[], Float64[])
@@ -154,6 +156,7 @@ end
 
 """
 `Hfs.HfMultiplet()`  ... constructor for an `empty` instance of Hfs.HfMultiplet.
+        A `hfMultiplet::Hfs.HfMultiplet` is returned.
 """
 function HfMultiplet()
     HfMultiplet("", HfLevel[])
@@ -192,6 +195,7 @@ end
 
 """
 `Hfs.InteractionMatrix()`  ... constructor for an `empty` instance of InteractionMatrix.
+        A `interactionMatrix::Hfs.InteractionMatrix` is returned.
 """
 function InteractionMatrix()
     InteractionMatrix(false, false, false, zeros(2,2), zeros(2,2), zeros(2,2))
@@ -244,6 +248,7 @@ end
 
 """
 `Hfs.Outcome()`  ... constructor for an `empty` instance of Hfs.Outcome for the computation of HFS properties.
+        A `outcome::Hfs.Outcome` is returned.
 """
 function Outcome()
     Outcome(Level(), 0., 0., 0., 0., 0., 0., AngularJ64(0), HfMultiplet() )
@@ -292,6 +297,7 @@ end
 `Hfs.Settings(; calcM1::Bool=true,` calcE2::Bool=false, calcM3::Bool=false, calcNondiagonal::Bool=false,
                 calcHfMultiplet::Bool=false, printBefore::Bool=false, levelSelection::LevelSelection=LevelSelection())
     ... keyword constructor to create a Hfs.Settings with selected non-default values.
+        A `settings::Hfs.Settings` is returned.
 """
 function Settings(; calcM1::Bool=true, calcE2::Bool=false, calcM3::Bool=false, calcNondiagonal::Bool=false,
                     calcHfMultiplet::Bool=false, printBefore::Bool=false, levelSelection::LevelSelection=LevelSelection())

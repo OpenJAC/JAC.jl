@@ -88,6 +88,7 @@ end
 
 """
 `AutoIonization.Settings()`  ... constructor for the default values of AutoIonization line computations.
+        A `settings::AutoIonization.Settings` is returned.
 """
 function Settings()
     Settings(false, false, false, false, LineSelection(), 0., 0., 10e5, 100, CoulombInteraction(), Multiplet(), Multiplet(), 0, 3., nothing)
@@ -176,6 +177,7 @@ end
 
 """
 `AutoIonization.PlasmaSettings()`  ... constructor for a standard instance of AutoIonization.PlasmaSettings.
+        A `plasmaSettings::AutoIonization.PlasmaSettings` is returned.
 """
 function PlasmaSettings()
     PlasmaSettings(true, LineSelection() )

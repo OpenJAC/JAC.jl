@@ -43,6 +43,7 @@ end
 
 """
 `DoubleAutoIonization.Settings()`  ... constructor for the default values of DoubleAutoIonization line computations
+        A `settings::DoubleAutoIonization.Settings` is returned.
 """
 function Settings()
     Settings(GreenChannel[], 0, false, 0., 10e5, 100, CoulombInteraction(), LineSelection(), nothing)

@@ -60,6 +60,7 @@ end
 
 """
 `Liouville.StimulatedRamanScheme()`  ... constructor for an 'default' instance of a Liouville.StimulatedRamanScheme.
+        A `stimulatedRamanScheme::Liouville.StimulatedRamanScheme` is returned.
 """
 function StimulatedRamanScheme()
     StimulatedRamanScheme( LevelSelection(false), String[], 0., 0., false )
@@ -106,6 +107,7 @@ end
 
 """
 `Liouville.Settings()`  ... constructor for the default values of Liouville computations
+        A `settings::Liouville.Settings` is returned.
 """
 function Settings()
     Settings(false)
@@ -166,6 +168,7 @@ end
 
 """
 `Liouville.Computation()`  ... constructor for an 'empty' instance::Liouville.Computation.
+        A `computation::Liouville.Computation` is returned.
 """
 function Computation()
     Computation(StimulatedRamanScheme(), Liouville.FirstOrderTimeEvolution(), 0., Pulse.AbstractPulse[], Nuclear.Model(1.), Radial.Grid(), 
@@ -221,6 +224,7 @@ end
         Liouville.Computation(Liouville.Computation(), grid=grid, nuclearModel=nuclearM, refConfigs=refConfigs, asfSettings=... )
     
     ... These simple examples can be further improved by overwriting the corresponding parameters.
+            A `computation::Liouville.Computation` is returned.
 """
 function Computation(wa::Bool)    
     Liouville.Computation()    
@@ -261,6 +265,7 @@ end
 
 """
 `Liouville.DensityMatrixData()`  ... constructor for the default values of Liouville.DensityMatrixData set
+        A `densityMatrixData::Liouville.DensityMatrixData` is returned.
 """
 function DensityMatrixData()
     DensityMatrixData( 0., zeros(2,2) )

@@ -132,6 +132,7 @@ end
 
 """
 `Pulse.PlaneWaveBeam()`  ... constructor for an `empty` instance of Pulse.PlaneWaveBeam().
+        A `planeWaveBeam::Pulse.PlaneWaveBeam` is returned.
 """
 function PlaneWaveBeam()
     PlaneWaveBeam( 0., 0., 0. )
@@ -214,6 +215,7 @@ end
 
 """
 `Pulse.FelPulse()`  ... constructor for an `empty` instance of Pulse.FelPulse().
+        A `felPulse::Pulse.FelPulse` is returned.
 """
 function FelPulse()
     FelPulse( "NoShape", 0., 0., 0., 0., 0. )
@@ -257,6 +259,7 @@ end
 
 """
 `Pulse.GeneratedPulse()`  ... constructor for an `empty` instance of Pulse.GeneratedPulse().
+        A `generatedPulse::Pulse.GeneratedPulse` is returned.
 """
 function GeneratedPulse()
     GeneratedPulse( SolidAngle(0., 0.), 0., 0., 0., EmMultipole[], Pulse.GaussianShape, Pulse.LinearPolarized  )
@@ -299,6 +302,7 @@ end
 
 """
 `Pulse.Gaussian()`  ... constructor for an `empty` instance of Pulse.Gaussian().
+        A `gaussian::Pulse.Gaussian` is returned.
 """
 function Gaussian()
     Gaussian( SolidAngle(0., 0.), 0., 0., EmMultipole[], Pulse.GaussianEnvelope(0.)  )
@@ -338,6 +342,7 @@ end
 
 """
 `Pulse.GaussianSimplified()`  ... constructor for an `empty` instance of Pulse.GaussianSimplified().
+        A `gaussianSimplified::Pulse.GaussianSimplified` is returned.
 """
 function GaussianSimplified()
     # THE TYPE HERE WAS `Gaussian` UNTIL 07-Nov-2026, and unlike the sibling slip in
@@ -383,6 +388,7 @@ end
 
 """
 `Pulse.SinSquared()`  ... constructor for an `empty` instance of Pulse.SinSquared().
+        A `sinSquared::Pulse.SinSquared` is returned.
 """
 function SinSquared()
     SinSquared( SolidAngle(0., 0.), 0., 0., EmMultipole[], Pulse.SinSquaredEnvelope(0.)  )

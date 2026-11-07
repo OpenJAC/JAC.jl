@@ -56,6 +56,7 @@ end
 
 """
 `Statistical.ResonanceR()`  ... constructor for an `empty` instance of Statistical.ResonanceR().
+        A `resonanceR::Statistical.ResonanceR` is returned.
 """
 function ResonanceR()
     ResonanceR( true, Level(), 0., 0. )
@@ -95,6 +96,7 @@ end
 
 """
 `Statistical.Tensor()`  ... constructor for an `empty` instance of Statistical.Tensor().
+        A `tensor::Statistical.Tensor` is returned.
 """
 function Tensor()
     Tensor( AngularJ64(0), AngularM64(0), LevelKey(), LevelKey(), Basics.DefaultQuantizationAxis(), ComplexF64(0.) )

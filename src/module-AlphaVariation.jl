@@ -28,6 +28,7 @@ end
 
 """
 `AlphaVariation.Settings()`  ... constructor for an `empty` instance of AlphaVariation.Settings for the computation of alpha variation parameters.
+        A `settings::AlphaVariation.Settings` is returned.
 """
 function Settings()
     Settings(false, 0.125, false, LevelSelection() )
@@ -86,6 +87,7 @@ end
 
 """
 `AlphaVariation.Outcome()`  ... constructor for an `empty` instance of AlphaVariation.Outcome for the computation of alpha-variation properties.
+        A `outcome::AlphaVariation.Outcome` is returned.
 """
 function Outcome()
     Outcome(Level(), 0., 0., 0.)

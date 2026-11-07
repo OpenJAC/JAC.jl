@@ -325,6 +325,7 @@ end
 
 """
 `Empirical.Computation()`  ... constructor for an 'empty' instance::Empirical.Computation.
+        A `computation::Empirical.Computation` is returned.
 """
 function Computation()
     Computation("", Nuclear.Model(1.), Radial.Grid(), Configuration[], ImpactIonization.Settings() )

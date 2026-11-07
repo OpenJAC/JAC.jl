@@ -354,6 +354,7 @@ end
 
 """
 `Plasma.AverageAtomScheme()`  ... constructor for an 'default' instance of a Plasma.AverageAtomScheme.
+        A `averageAtomScheme::Plasma.AverageAtomScheme` is returned.
 """
 function AverageAtomScheme()
     AverageAtomScheme( 1, 0, Basics.AaHSField(), false, false, false, Subshell[], Float64[], Float64[],
@@ -406,6 +407,7 @@ end
 
 """
 `Plasma.LineShiftScheme()`  ... constructor for a standard instance of Plasma.LineShiftScheme.
+        A `lineShiftScheme::Plasma.LineShiftScheme` is returned.
 """
 function LineShiftScheme()
     LineShiftScheme( Basics.NoPlasmaModel(), Configuration[], Configuration[], Basics.NoLineShiftSettings() )
@@ -460,6 +462,7 @@ end
 
 """
 `Plasma.SahaBoltzmannScheme()`  ... constructor for an 'default' instance of a Plasma.SahaBoltzmannScheme.
+        A `sahaBoltzmannScheme::Plasma.SahaBoltzmannScheme` is returned.
 """
 function SahaBoltzmannScheme()
     SahaBoltzmannScheme( Basics.NoPlasmaModel(), false, false, 0:0, 0., 0., 0., 0., IsotopicFraction[], String[] )
@@ -526,6 +529,7 @@ end
 
 """
 `Plasma.SatelliteDiagnosticScheme()`  ... constructor for an 'default' instance of a Plasma.SatelliteDiagnosticScheme.
+        A `satelliteDiagnosticScheme::Plasma.SatelliteDiagnosticScheme` is returned.
 """
 function SatelliteDiagnosticScheme()
     SatelliteDiagnosticScheme( Shell[], Shell[], Shell[], Shell[],
@@ -635,6 +639,7 @@ end
 
 """
 `Plasma.CollisionalRadiativeScheme()`  ... constructor for an 'default' instance of a Plasma.CollisionalRadiativeScheme.
+        A `collisionalRadiativeScheme::Plasma.CollisionalRadiativeScheme` is returned.
 """
 function CollisionalRadiativeScheme()
     CollisionalRadiativeScheme( 1, 4, ImpactExcitation.Settings(), PhotoEmission.Settings(), AutoIonization.Settings(),
@@ -862,6 +867,7 @@ end
 
 """
 `Plasma.StructureBasedTreatment()`  ... constructor with the default eiiModel = ImpactIonization.BEBmodel().
+        A `structureBasedTreatment::Plasma.StructureBasedTreatment` is returned.
 """
 function StructureBasedTreatment()
     StructureBasedTreatment( ImpactIonization.BEBmodel() )
@@ -941,6 +947,7 @@ end
 
 """
 `Plasma.KineticChargeBalanceScheme()`  ... constructor for a default instance of a Plasma.KineticChargeBalanceScheme.
+        A `kineticChargeBalanceScheme::Plasma.KineticChargeBalanceScheme` is returned.
 """
 function KineticChargeBalanceScheme()
     KineticChargeBalanceScheme( Plasma.ChargeStage[], [1.0e4],
@@ -1031,6 +1038,7 @@ end
 
 """
 `Plasma.SuperConfigurationOpacityScheme()`  ... constructor for a standard (empty) instance.
+        A `superConfigurationOpacityScheme::Plasma.SuperConfigurationOpacityScheme` is returned.
 """
 function SuperConfigurationOpacityScheme()
     SuperConfigurationOpacityScheme( Configuration[], Float64[] )
@@ -1041,6 +1049,7 @@ end
 `Plasma.SuperConfigurationOpacityScheme(refConfigs::Array{Configuration,1})`
     ... constructor with `opacityOmegas` defaulted to empty, i.e. Stages 1 and 2 only -- every existing
         caller from before Stage 3 was added keeps working unchanged.
+        A `superConfigurationOpacityScheme::Plasma.SuperConfigurationOpacityScheme` is returned.
 """
 function SuperConfigurationOpacityScheme(refConfigs::Array{Configuration,1})
     SuperConfigurationOpacityScheme( refConfigs, Float64[] )
@@ -1091,6 +1100,7 @@ end
 
 """
 `Plasma.SuperConfigurationIonizationScheme()`  ... constructor for a standard (empty) instance.
+        A `superConfigurationIonizationScheme::Plasma.SuperConfigurationIonizationScheme` is returned.
 """
 function SuperConfigurationIonizationScheme()
     SuperConfigurationIonizationScheme( Array{Configuration,1}[] )
@@ -1280,6 +1290,7 @@ end
 
 """
 `Plasma.SuperConfigurationMixtureOpacityScheme()`  ... constructor for a standard (empty) instance.
+        A `superConfigurationMixtureOpacityScheme::Plasma.SuperConfigurationMixtureOpacityScheme` is returned.
 """
 function SuperConfigurationMixtureOpacityScheme()
     SuperConfigurationMixtureOpacityScheme( Nuclear.Model[], Array{Array{Configuration,1},1}[], Float64[], Float64[],
@@ -1422,6 +1433,7 @@ end
 
 """
 `Plasma.Settings()`  ... constructor for the default values of plasma computations
+        A `settings::Plasma.Settings` is returned.
 """
 function Settings()
     Settings(0., 0., false)
@@ -1481,6 +1493,7 @@ end
 
 """
 `Plasma.Computation()`  ... constructor for an 'empty' instance::Plasma.Computation.
+        A `computation::Plasma.Computation` is returned.
 """
 function Computation()
     Computation(AverageAtomScheme(), Nuclear.Model(1.), Radial.Grid(), Configuration[], AsfSettings(), Plasma.Settings() )
@@ -1530,6 +1543,7 @@ end
         Plasma.Computation(Plasma.Computation(), grid=grid, nuclearModel=nuclearM, refConfigs=refConfigs, asfSettings=... )
     
     ... These simple examples can be further improved by overwriting the corresponding parameters.
+            A `computation::Plasma.Computation` is returned.
 """
 function Computation(wa::Bool)    
     Plasma.Computation()    
@@ -1571,6 +1585,7 @@ end
 
 """
 `Plasma.PartialWaveData()`  ... constructor for the default values of Plasma.PartialWaveData set
+        A `partialWaveData::Plasma.PartialWaveData` is returned.
 """
 function PartialWaveData()
     PartialWaveData( -1, Tuple{Float64, Float64}[] )

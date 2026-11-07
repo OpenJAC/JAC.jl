@@ -82,6 +82,7 @@ end
 
 """
 `Cascade.DrRateCoefficients()`  ... (simple) constructor for cascade DrRateCoefficients.
+        A `drRateCoefficients::Cascade.DrRateCoefficients` is returned.
 """
 function DrRateCoefficients()
     DrRateCoefficients(1, 0.,  Float64[], 0, 0, DielectronicRecombination.ResonanceSelection() )
@@ -126,6 +127,7 @@ end
 
 """
 `Cascade.RrRateCoefficients()`  ... (simple) constructor for cascade RrRateCoefficients.
+        A `rrRateCoefficients::Cascade.RrRateCoefficients` is returned.
 """
 function RrRateCoefficients()
     RrRateCoefficients(1, Float64[], EmMultipole[], LevelSelection(), Configuration[])
@@ -165,6 +167,7 @@ end
 
 """
 `Cascade.EieRateCoefficients()`  ... (simple) constructor for cascade EieRateCoefficients.
+        A `eieRateCoefficients::Cascade.EieRateCoefficients` is returned.
 """
 function EieRateCoefficients()
     EieRateCoefficients(1, Float64[], LevelSelection())
@@ -207,6 +210,7 @@ end
 
 """
 `Cascade.EaCrossSections()`  ... (simple) constructor for cascade EaCrossSections.
+        A `eaCrossSections::Cascade.EaCrossSections` is returned.
 """
 function EaCrossSections()
     EaCrossSections(1, Float64[])
@@ -273,6 +277,7 @@ end
 
 """
 `Cascade.ResonantIonizationStrengths()`  ... (simple) constructor for cascade ResonantIonizationStrengths.
+        A `resonantIonizationStrengths::Cascade.ResonantIonizationStrengths` is returned.
 """
 function ResonantIonizationStrengths()
     ResonantIonizationStrengths(1, 0., 0.)
@@ -371,6 +376,7 @@ end
 
 """
 `Cascade.EiiRateCoefficients()`  ... (simple) constructor for cascade EiiRateCoefficients.
+        A `eiiRateCoefficients::Cascade.EiiRateCoefficients` is returned.
 """
 function EiiRateCoefficients()
     EiiRateCoefficients(1, Float64[], 0., 0., 0., Configuration("1s^2"))
@@ -422,6 +428,7 @@ end
 
 """
 `Cascade.PiRateCoefficients()`  ... (simple) constructor for cascade PiRateCoefficients.
+        A `piRateCoefficients::Cascade.PiRateCoefficients` is returned.
 """
 function PiRateCoefficients()
     PiRateCoefficients(1, Distribution.AbstractPhotonDistribution[])
@@ -522,6 +529,7 @@ end
 
 """
 `Cascade.ExpansionOpacities()`  ... (simple) constructor for expansion opacity simulations.
+        A `expansionOpacities::Cascade.ExpansionOpacities` is returned.
 """
 function ExpansionOpacities()
     ExpansionOpacities(Basics.BoltzmannLevelPopulation(), WavelengthOpacityDependence(0.01), 1.0e10, 1.0e-13, 5000., 86400.,  0., Float64[])
@@ -748,6 +756,7 @@ end
 
 """
 `Cascade.MeanOpacities()`  ... (simple) constructor for mean-opacity simulations.
+        A `meanOpacities::Cascade.MeanOpacities` is returned.
 """
 function MeanOpacities()
     MeanOpacities(RosselandMean(), Cascade.AbstractOpacityContribution[ BoundBoundOpacity(Basics.BoltzmannLevelPopulation()) ],
@@ -785,6 +794,7 @@ end
 
 """
 `Cascade.ElectronIntensities()`  ... (simple) constructor for cascade ElectronIntensities.
+        A `electronIntensities::Cascade.ElectronIntensities` is returned.
 """
 function ElectronIntensities()
     ElectronIntensities(0., 1.0e6,  [(1, 1.0)])
@@ -820,6 +830,7 @@ end
 
 """
 `Cascade.FinalLevelDistribution()`  ... (simple) constructor for cascade FinalLevelDistribution.
+        A `finalLevelDistribution::Cascade.FinalLevelDistribution` is returned.
 """
 function FinalLevelDistribution()
     FinalLevelDistribution([(1, 1.0)], Configuration[], Configuration[])
@@ -850,6 +861,7 @@ end
 
 """
 `Cascade.IonDistribution()`  ... (simple) constructor for cascade IonDistribution data.
+        A `ionDistribution::Cascade.IonDistribution` is returned.
 """
 function IonDistribution()
     IonDistribution([(1, 1.0)], Configuration[])
@@ -885,6 +897,7 @@ end
 
 """
 `Cascade.RelaxationCurve()`  ... (simple) constructor for cascade RelaxationCurve.
+        A `relaxationCurve::Cascade.RelaxationCurve` is returned.
 """
 function RelaxationCurve()
     RelaxationCurve(10., [(1, 1.0)], Configuration[], Configuration[])
@@ -920,6 +933,7 @@ end
 
 """
 `Cascade.PhotonIntensities()`  ... (simple) constructor for cascade PhotonIntensities.
+        A `photonIntensities::Cascade.PhotonIntensities` is returned.
 """
 function PhotonIntensities()
     PhotonIntensities(0., 1.0e6,  [(1, 1.0)], Configuration[])
@@ -968,6 +982,7 @@ end
 
 """
 `Cascade.PhotoAbsorptionSpectrum()`  ... (simple) constructor for cascade PhotoAbsorptionSpectrum.
+        A `photoAbsorptionSpectrum::Cascade.PhotoAbsorptionSpectrum` is returned.
 """
 function PhotoAbsorptionSpectrum()
     PhotoAbsorptionSpectrum(true, false, 0.1, 1., [1.0],  Shell[], [(1, 1.0)], Configuration[])
@@ -1025,6 +1040,7 @@ end
 
 """
 `Cascade.SimulationSettings()`  ... constructor for an 'empty' instance of a Cascade.Block.
+        A `simulationSettings::Cascade.SimulationSettings` is returned.
 """
 function SimulationSettings()
     SimulationSettings(false, false, 0.)
@@ -1060,6 +1076,7 @@ end
 
 """
 `Cascade.Simulation()`  ... constructor for an 'default' instance of a Cascade.Simulation.
+        A `simulation::Cascade.Simulation` is returned.
 """
 function Simulation()
     Simulation("Default cascade simulation", Cascade.PhotoAbsorptionSpectrum(), Cascade.ProbPropagation(), 
@@ -1186,6 +1203,7 @@ end
 
 """
 `Cascade.ParticleCoincidences()`  ... (simple) constructor for cascade ParticleCoincidences.
+        A `particleCoincidences::Cascade.ParticleCoincidences` is returned.
 """
 function ParticleCoincidences()
     ParticleCoincidences( Cascade.AbstractCoincidenceGate[], Cascade.ElectronGate(0., 1.0e6), [(1, 1.0)] )

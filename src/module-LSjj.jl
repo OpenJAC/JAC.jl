@@ -106,6 +106,7 @@ end
 
 """
 `Base.show(io::IO, csf::CsfNR)`  ... prepares a proper printout of the variable csf::CsfNR.
+        nothing is returned.
 """
 function Base.show(io::IO, csf::CsfNR) 
     println(io, "J:             $(csf.J)  ")
@@ -159,6 +160,7 @@ end
 
 """
 `LSjj.BasisNR()`  ... constructor for an 'empty' instance::BasisNR.
+        A `basisNR::LSjj.BasisNR` is returned.
 """
 function BasisNR()
         BasisNR(0, Shell[], CsfNR[] )
@@ -167,6 +169,7 @@ end
 
 """
 `Base.show(io::IO, basis::BasisNR)`  ... prepares a proper printout of the variable basis::BasisNR.
+        nothing is returned.
 """
 function Base.show(io::IO, basis::BasisNR) 
     println(io, "NoElectrons:        $(basis.NoElectrons)  ")

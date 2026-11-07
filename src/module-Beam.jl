@@ -38,6 +38,7 @@ end
 
 """
 `Beam.PlaneWave()`  ... constructor for an 'default' Beam.PlaneWave.
+        A `planeWave::Beam.PlaneWave` is returned.
 """
 function PlaneWave()
     PlaneWave(0., 0., 1.)
@@ -72,6 +73,7 @@ end
 
 """
 `Beam.BesselBeam()`  ... constructor for an 'default' Beam.BesselBeam.
+        A `besselBeam::Beam.BesselBeam` is returned.
 """
 function BesselBeam()
     BesselBeam(0, 0., 1.)
@@ -116,6 +118,7 @@ end
 
 """
 `Beam.BesselGauss()`  ... constructor for an 'default' Beam.BesselGauss.
+        A `besselGauss::Beam.BesselGauss` is returned.
 """
 function BesselGauss()
     BesselGauss(0, 0., 1., 0.1)
@@ -165,6 +168,7 @@ end
 
 """
 `Beam.LaguerreGauss()`  ... constructor for an 'default' Beam.LaguerreGauss.
+        A `laguerreGauss::Beam.LaguerreGauss` is returned.
 """
 function LaguerreGauss()
     LaguerreGauss(0, 0, 1., 1.)
@@ -234,6 +238,7 @@ end
 
 """
 `Beam.Component()`  ... constructor for an 'default' Beam.Component.
+        A `component::Beam.Component` is returned.
 """
 function Component()
     Component( 1.0, LaguerreGauss() )
@@ -279,6 +284,7 @@ end
 
 """
 `Beam.PhotonBeam()`  ... constructor for an 'default' Beam.PhotonBeam.
+        A `photonBeam::Beam.PhotonBeam` is returned.
 """
 function PhotonBeam()
     PhotonBeam( LaguerreGauss(), Basics.LinearPolarization(), Pulse.InfiniteEnvelope(), 1.0, 1.0, 0.0 )

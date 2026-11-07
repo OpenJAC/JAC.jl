@@ -305,6 +305,7 @@ end
 
 """
 `PhotoDoubleIonization.Settings()`  ... constructor for the default values of PhotoDoubleIonization line computations
+        A `settings::PhotoDoubleIonization.Settings` is returned.
 """
 function Settings()
     Settings(Basics.EmMultipole[E1], Basics.UseGauge[Basics.UseCoulomb, Basics.UseBabushkin], Float64[], 0., 0, 0, 3., 0, false, false,

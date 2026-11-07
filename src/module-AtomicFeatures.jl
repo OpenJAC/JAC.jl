@@ -49,6 +49,7 @@ end
 
 """
 `AtomicFeatures.AtomicModel()`  ... constructor for an 'empty' instance of AtomicFeatures.AtomicModel.
+        A `atomicModel::AtomicFeatures.AtomicModel` is returned.
 """
 function AtomicModel()
     AtomicModel( 0, 0, Radial.Grid(), ManyElectron.AsfSettings(), Nuclear.Model(1.), Shell[], Subshell[],

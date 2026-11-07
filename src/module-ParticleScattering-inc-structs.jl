@@ -96,6 +96,7 @@ end
 
 """
 `ParticleScattering.PartialWave()`  ... constructor for a default ParticleScattering.PartialWave.
+        A `partialWave::ParticleScattering.PartialWave` is returned.
 """
 function PartialWave()
     PartialWave(-1, 0., 0.)
@@ -134,6 +135,7 @@ end
 
 """
 `ParticleScattering.ScatteringChannel()`  ... constructor for a default ParticleScattering.ScatteringChannel.
+        A `scatteringChannel::ParticleScattering.ScatteringChannel` is returned.
 """
 function ScatteringChannel()
     ScatteringChannel(-1, -1, LevelSymmetry(AngularJ64(0), Basics.plus), ComplexF64(0.))
@@ -166,6 +168,7 @@ end
 
 """
 `ParticleScattering.AngularObservables()`  ... constructor for a default ParticleScattering.AngularObservables.
+        A `angularObservables::ParticleScattering.AngularObservables` is returned.
 """
 function AngularObservables()
     AngularObservables(0., 0., 0., NaN)
@@ -195,6 +198,7 @@ end
 
 """
 `ParticleScattering.IntegratedObservables()`  ... constructor for a default ParticleScattering.IntegratedObservables.
+        A `integratedObservables::ParticleScattering.IntegratedObservables` is returned.
 """
 function IntegratedObservables()
     IntegratedObservables(0., 0., 0.)
@@ -241,6 +245,7 @@ end
 
 """
 `ParticleScattering.Event()`  ... constructor for a default ParticleScattering.Event.
+        A `event::ParticleScattering.Event` is returned.
 """
 function Event()
     Event( Electron(), ElasticScattering(), StaticFieldFurnessMcCarthy(), Beam.PlaneWave(), Level(), Level(), 0.,

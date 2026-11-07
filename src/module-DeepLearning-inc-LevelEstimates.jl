@@ -82,6 +82,7 @@ end
 
 """
 `DeepLearning.LevelEstimationRequest()`  ... constructor for an 'default' instance of a DeepLearning.LevelEstimationRequest.
+        A `levelEstimationRequest::DeepLearning.LevelEstimationRequest` is returned.
 """
 function LevelEstimationRequest()
     LevelEstimationRequest( Configuration[], NistLevel[])

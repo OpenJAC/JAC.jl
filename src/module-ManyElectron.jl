@@ -111,6 +111,7 @@ end
 
 """
 `ManyElectron.LSjjSettings(makeIt::Bool)`  ... constructor for the default values of jj-LS transformations.
+        A `lSjjSettings::ManyElectron.LSjjSettings` is returned.
 """
 function LSjjSettings(makeIt::Bool)
     LSjjSettings(makeIt, 0.05, 0.1, LevelSelection() )
@@ -179,6 +180,7 @@ struct  AsfSettings
 
 """
 `ManyElectron.AsfSettings()`  ... constructor for setting the default values.
+        A `asfSettings::ManyElectron.AsfSettings` is returned.
 """
 function AsfSettings()
     AsfSettings(true, CoulombInteraction(), Basics.DFSField(), StartFromHydrogenic(), Basics.AutomaticRoute(), 1.0e-6, Subshell[], Subshell[],  
@@ -323,6 +325,7 @@ end
 """
 `ManyElectron.CsfR(J::AngularJ64, parity::Parity)`  
     ... simple constructor for given J and parity, and where standardOrbitals is set to false.
+        A `csfR::ManyElectron.CsfR` is returned.
 """
 function CsfR(J::AngularJ64, parity::Parity)
         CsfR(false, J, parity, Int64[], Int64[], AngularJ64[], AngularJ64[], Subshell[] )
@@ -332,6 +335,7 @@ end
 """
 `ManyElectron.CsfR(sa::String)`  
     ... simple constructor for given closed-shell occupation (such as "[Ne]"), and where standardOrbitals is set to true.
+        A `csfR::ManyElectron.CsfR` is returned.
 """
 function CsfR(sa::String)
         wa = Basics.extractFromConfiguration(Basics.ClosedSubshells(), sa)
@@ -584,6 +588,7 @@ end
 
 """
 `ManyElectron.Basis()`  ... constructor for an 'empty' instance::Basis with isDefined == false.
+        A `basis::ManyElectron.Basis` is returned.
 """
 function Basis()
         Basis(false, 0, Subshell[], CsfR[], Subshell[], Dict{Subshell, Orbital}() )
@@ -650,6 +655,7 @@ end
 """
 `ManyElectron.Basis(sa::String, cslFilename::String, rwfFilename::String)`  
     ... to construct an instance::Basis from the Grasp92/Grasp2013 .csl and .rwf files.
+        A `basis::ManyElectron.Basis` is returned.
 """
 function Basis(sa::String, cslFilename::String, rwfFilename::String)
     if  sa == "from Grasp2013"
@@ -669,6 +675,7 @@ end
 
 """
 `Base.show(io::IO, basis::Basis; full=false)`  ... prepares a proper printout of the variable basis::Basis.
+        nothing is returned.
 """
 function Base.show(io::IO, basis::Basis) 
     print(io, string(basis), "\n")
@@ -723,6 +730,7 @@ end
 
 """
 `ManyElectron.Level()`  ... constructor an empty level without useful data.
+        A `level::ManyElectron.Level` is returned.
 """
 function Level()
     Level( AngularJ64(0),  AngularM64(0), Parity("+"), 0, 0., 0., false, Basis(), Vector{Float64}[] )
@@ -732,6 +740,7 @@ end
 """
 `ManyElectron.Level(J::AngularJ64, parity::Parity, energy::Float64, relativeOcc::Float64)`  
     ... constructor an atomic level without a state representation: hasStateRep == false.
+        A `level::ManyElectron.Level` is returned.
 """
 function Level(J::AngularJ64, parity::Parity, energy::Float64, relativeOcc::Float64)
     Level(J, J, parity, 0, energy, relativeOcc, false, Basis(), Vector{Float64}[] )
@@ -776,6 +785,7 @@ end
 
 """
     `ManyElectron.Multiplet()`  ... constructor for providing an 'empty' instance of this struct.
+        A `multiplet::ManyElectron.Multiplet` is returned.
 """
 function Multiplet()
     Multiplet("", Level[] )

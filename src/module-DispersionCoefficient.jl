@@ -241,6 +241,7 @@ end
 """
 `DispersionCoefficient.Outcome()`
     ... constructor for an `empty` instance of DispersionCoefficient.Outcome.
+        A `outcome::DispersionCoefficient.Outcome` is returned.
 """
 function Outcome()
     Outcome( Partner("", Level(), DispersionCoefficient.MultipoleTerms[]),
@@ -318,6 +319,7 @@ end
 """
 `DispersionCoefficient.Settings()`
     ... constructor for an `empty` instance of DispersionCoefficient.Settings.
+        A `settings::DispersionCoefficient.Settings` is returned.
 """
 function Settings()
     Settings( [6, 8, 10], EmMultipole[E1, E2, E3], false, Inf, Inf, Multiplet(), DispersionCoefficient.Partner(),

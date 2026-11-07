@@ -76,6 +76,7 @@ end
 
 """
 `CrystalField.PointChargeModel()`  ... constructor for the unscaled (scaleField = 1.0) point-charge model.
+        A `pointChargeModel::CrystalField.PointChargeModel` is returned.
 """
 function PointChargeModel()
     PointChargeModel(1.0)
@@ -117,6 +118,7 @@ end
 
 """
 `CrystalField.Lattice()`  ... constructor for an empty lattice (no external field).
+        A `lattice::CrystalField.Lattice` is returned.
 """
 function Lattice()
     Lattice(PointCharge[], "")
@@ -237,6 +239,7 @@ end
 
 """
 `CrystalField.Settings()`  ... constructor for a Settings with an empty lattice and otherwise default values.
+        A `settings::CrystalField.Settings` is returned.
 """
 function Settings()
     Settings( Lattice(), PointChargeModel(), 6, false, false, LevelSelection() )
@@ -293,6 +296,7 @@ end
 
 """
 `CrystalField.Outcome()`  ... constructor for an `empty` instance of CrystalField.Outcome.
+        A `outcome::CrystalField.Outcome` is returned.
 """
 function Outcome()
     Outcome( Level(), CfMultiplet("", CfLevel[]) )

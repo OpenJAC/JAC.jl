@@ -188,6 +188,7 @@ end
 
 """
 `Basics.LevelSymmetry(subsh::Subshell)`  ... constructor for a given (Subshell).
+        A `levelSymmetry::BasicsAZ.LevelSymmetry` is returned.
 """
 function  Basics.LevelSymmetry(subsh::Subshell)
     if  rem(Basics.subshell_l(subsh), 2) == 0   sa = "+"    else    sa = "-"    end

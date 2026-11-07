@@ -34,6 +34,7 @@ end
 """
 `DecayYield.Settings()`
     ... constructor for an `empty` instance of DecayYield.Settings for the computation of fluorescence and Auger yields.
+        A `settings::DecayYield.Settings` is returned.
 """
 function Settings()
     Settings(Basics.AverageSCA(), false, false, LevelSelection(), Shell[] )
@@ -98,6 +99,7 @@ end
 """
 `DecayYield.Outcome()`  
     ... constructor for an `empty` instance of DecayYield.Outcome for the computation of fluorescence and Auger yields.
+        A `outcome::DecayYield.Outcome` is returned.
 """
 function Outcome()
     Outcome(Level(), 0, 0, EmProperty(0.), 0., EmProperty(0.), EmProperty(0.))

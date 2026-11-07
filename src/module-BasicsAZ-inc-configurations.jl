@@ -408,6 +408,7 @@ end
     + HyperfineStructure()
         ... to display the total F hyperfine-structure levels a configuration (without energies).
         
+        A neat table is printed but nothing is returned otherwise.
 """
 function  Basics.displayConfigurationThemes()
     return( nothing )

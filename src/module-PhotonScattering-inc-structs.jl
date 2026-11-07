@@ -113,6 +113,7 @@ end
 
 """
 `PhotonScattering.Channel()`  ... constructor for a default PhotonScattering.Channel.
+        A `channel::PhotonScattering.Channel` is returned.
 """
 function Channel()
     Channel(-1, E1, E1, Basics.Coulomb, PhotonScattering.NoTimeOrdering(),
@@ -150,6 +151,7 @@ end
 
 """
 `PhotonScattering.Observables()`  ... constructor for a default PhotonScattering.Observables.
+        A `observables::PhotonScattering.Observables` is returned.
 """
 function Observables()
     Observables(0., 0., EmProperty(0., 0.), 0., 0., 0.)
@@ -190,6 +192,7 @@ end
 
 """
 `PhotonScattering.Line()`  ... constructor for a default PhotonScattering.Line.
+        A `line::PhotonScattering.Line` is returned.
 """
 function Line()
     Line( Level(), Level(), 0., 0., 0., EmProperty(0., 0.), PhotonScattering.Channel[], PhotonScattering.Observables[] )

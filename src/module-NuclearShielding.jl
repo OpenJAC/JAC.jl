@@ -124,6 +124,7 @@ end
 
 """
 `NuclearShielding.Settings()`  ... constructor for an `empty` instance of NuclearShielding.Settings.
+        A `settings::NuclearShielding.Settings` is returned.
 """
 function Settings()
     Settings(true, false, UniformField(), 0, false, 16, 0.5, false, LevelSelection() )
@@ -197,6 +198,7 @@ end
 
 """
 `NuclearShielding.Outcome()`  ... constructor for an `empty` instance of NuclearShielding.Outcome.
+        A `outcome::NuclearShielding.Outcome` is returned.
 """
 function Outcome()
     Outcome( Level(), 0., 0., UniformField(), Contribution[] )

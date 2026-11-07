@@ -76,6 +76,7 @@ end
 """
 `ThreeBodyRecombination.Settings()`  ... constructor for the default values of a three-body-recombination
     computation.
+        A `settings::ThreeBodyRecombination.Settings` is returned.
 """
 function  Settings()
     Settings(ImpactIonization.BEBmodel(), 0., LineSelection(), false)

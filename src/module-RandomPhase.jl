@@ -202,6 +202,7 @@ end
 
 """
 `RandomPhase.Settings()`  ... constructor for an `empty` instance of RandomPhase.Settings.
+        A `settings::RandomPhase.Settings` is returned.
 """
 function Settings()
     # allChannels DEFAULTS TO TRUE -- changed 14-Oct-2026, on the maintainer's instruction and on a
@@ -222,6 +223,7 @@ end
                        maxIterations=.., accuracy=.., mixing=.., dalgarnoLewis=.., printBefore=.., andersonDepth=..,
                        allChannels=.., directSolve=..)`
     ... the standard JAC keyword copy-constructor.
+        A `settings::RandomPhase.Settings` is returned.
 """
 function Settings(settings::RandomPhase.Settings;
     activeSubshells::Union{Nothing,Array{Subshell,1}}=nothing,   targetSubshells::Union{Nothing,Dict{Subshell,Subshell}}=nothing,

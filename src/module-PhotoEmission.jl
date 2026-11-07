@@ -47,6 +47,7 @@ end
 
 """
 `PhotoEmission.Settings()`  ... constructor for the default values of radiative line computations
+        A `settings::PhotoEmission.Settings` is returned.
 """
 function Settings()
     Settings(EmMultipole[E1], UseGauge[Basics.UseCoulomb], false, false, CorePolarization(), LineSelection(), 0., 0., 10000., false)

@@ -60,6 +60,7 @@ end
 
 """
 `SpinAngularGaigalas.OneParticleOperator()`  ... constructor for setting the default values.
+        A `oneParticleOperator::SpinAngularGaigalas.OneParticleOperator` is returned.
 """
 function OneParticleOperator()
     OneParticleOperator( 0, Basics.plus, false)
@@ -91,6 +92,7 @@ end
 
 """
 `SpinAngularGaigalas.TwoParticleOperator()`  ... constructor for setting the default values.
+        A `twoParticleOperator::SpinAngularGaigalas.TwoParticleOperator` is returned.
 """
 function TwoParticleOperator()
     TwoParticleOperator( 0, Basics.plus, false)

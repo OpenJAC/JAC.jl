@@ -63,6 +63,7 @@ end
 
 """
 `MultiPhotonIonization.TwoPhotonOneElectronScheme()`  ... constructor for a default TwoPhotonOneElectronScheme.
+        A `twoPhotonOneElectronScheme::MultiPhotonIonization.TwoPhotonOneElectronScheme` is returned.
 """
 function TwoPhotonOneElectronScheme()
     TwoPhotonOneElectronScheme(Float64[], [E1], 1.0e-3)

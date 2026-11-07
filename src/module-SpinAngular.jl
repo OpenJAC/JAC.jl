@@ -155,6 +155,7 @@ end
 
 """
 `SpinAngular.OneParticleOperator()`  ... constructor for a scalar, parity-even one-particle operator.
+        A `oneParticleOperator::SpinAngular.OneParticleOperator` is returned.
 """
 function OneParticleOperator()
     OneParticleOperator( 0, Basics.plus )
@@ -181,6 +182,7 @@ end
 
 """
 `SpinAngular.TwoParticleOperator()`  ... constructor for the scalar, parity-even two-particle operator.
+        A `twoParticleOperator::SpinAngular.TwoParticleOperator` is returned.
 """
 function TwoParticleOperator()
     TwoParticleOperator( 0, Basics.plus )

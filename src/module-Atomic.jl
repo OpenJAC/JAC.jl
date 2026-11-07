@@ -60,6 +60,7 @@ end
 
 """
 `Atomic.Computation()`  ... constructor for an 'empty' instance::Atomic.Computation.
+        A `computation::Atomic.Computation` is returned.
 """
 function Computation()
     Computation("", Nuclear.Model(1.), Radial.Grid(), Basics.AbstractPropertySettings[], 
@@ -143,6 +144,7 @@ end
                             process = Radiative(), processSettings=photoSettings ); 
     
     ... These simple examples can be further improved by overwriting the corresponding parameters.
+        A `computation::Atomic.Computation` is returned.
 """
 function Computation(wa::Bool)    
     Atomic.Computation()    

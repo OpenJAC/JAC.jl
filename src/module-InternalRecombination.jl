@@ -74,6 +74,7 @@ end
 
 """
 `InternalRecombination.Settings()`  ... constructor for the default values of InternalRecombination line computations
+        A `settings::InternalRecombination.Settings` is returned.
 """
 function Settings()
     Settings(Shell[], false, 0., 0.1, LineSelection(), CoulombInteraction())
@@ -156,6 +157,7 @@ end
 """
 `InternalRecombination.Line()`  
     ... constructor for an empty InternalRecombination line.
+        A `line::InternalRecombination.Line` is returned.
 """
 function Line()
     Line(Level(), Level(), 0., 0., 0., InternalRecombination.Channel[])
