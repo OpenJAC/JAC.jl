@@ -33,9 +33,24 @@ using Printf, ..ExportDataSet
     ... to format a number the way adf04's data lines do: a 2-decimal mantissa, a sign, and a 2-digit
         exponent, with NO 'e' or 'd' letter (e.g. 6.27e8 -> "6.27+08", 0.26 -> "2.60-01"), matching the
         `fm.n` / `e8.2`-without-letter convention the ADAS manual describes for STRG4/STRG5.
+        A NEGATIVE x RAISES, because the field is seven characters wide and has no column for a sign:
+        the minus would take one, every field after it on the line would shift, and the file would be
+        read by ADAS without complaint and wrongly. Every quantity this formats is non-negative by
+        construction, so a negative argument is a caller error rather than a case to support.
         A value::String of exactly 7 characters is returned.
 """
 function  formatExponential(x::Float64)
+    # THE GUARD RAISES RATHER THAN WIDENING THE FIELD, on the maintainer's decision of 07-Nov-2026.
+    # Found by `TestFrames.testModule_ExportAdas` on its first run: the function returned EIGHT
+    # characters for a negative argument ("-3.21+04") against the seven its own docstring promised.
+    # Nothing in JAC could reach it -- all three call sites in `writeAdf04` pass an ionisation
+    # potential, a temperature, an A-value or an effective collision strength, none of which can be
+    # negative -- so no file written before today is affected and no number anywhere moves.
+    x < 0.0    &&   error("ExportAdas.formatExponential(): x = $x is negative, and the seven-character "  *
+                          "adf04 field has no column for a sign.  Every quantity this formats -- an "     *
+                          "ionisation potential, a temperature, an A-value, an effective collision "      *
+                          "strength -- is non-negative;  formatting a negative one would shift every "    *
+                          "field after it on the line and the file would be read wrongly without error.")
     x == 0.0   &&   return( "0.00+00" )
     expo = floor(Int64, log10(abs(x)))
     mant = x / 10.0^expo

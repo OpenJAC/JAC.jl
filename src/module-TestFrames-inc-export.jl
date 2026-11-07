@@ -42,15 +42,10 @@ function testModule_ExportAdas(; short::Bool=true)
     # THE adf04 NUMBER FORMAT IS EXACTLY SEVEN CHARACTERS, mantissa + sign + two-digit exponent, and
     # the format's own column layout depends on it;  a number one character wide or narrow shifts every
     # field after it on the line.  Its own docstring states the seven, so this checks the stated contract.
-    # THE DOMAIN IS THE NON-NEGATIVE ONE, and that is a finding rather than a convenience:  a NEGATIVE
-    # argument returns EIGHT characters, since the minus takes a column the fixed `%4.2f` does not have
-    # -- `formatExponential(-3.21e+04)` gives '-3.21+04'.  Nothing in `writeAdf04` can reach it, because
-    # all three of its call sites pass a quantity that cannot be negative (an ionisation potential, a
-    # temperature, an A-value or an effective collision strength), so no file JAC writes today is
-    # affected.  But the docstring promises seven characters unconditionally, and a caller using the
-    # function directly would get a silently misaligned adf04 line.  Reported to the maintainer
-    # 07-Nov-2026;  whether it should raise or widen is his call, so the test pins the domain that is
-    # actually used rather than asserting a contract the code does not keep.
+    # THE DOMAIN IS THE NON-NEGATIVE ONE, and the function now RAISES outside it -- the maintainer's
+    # decision of 07-Nov-2026, after this very test found that a negative argument returned EIGHT
+    # characters ('-3.21+04') against the seven the docstring promised.  The seven-character adf04
+    # field has no column for a sign, so a negative would shift every field after it on the line.
     for  x  in  [0.0, 1.0, 1.234e-05, 9.87e+12, 3.21e+04, 1.0e-99, 5.0e+99]
         sa = ExportAdas.formatExponential(x)
         if  length(sa) != 7     success = false
@@ -58,6 +53,15 @@ function testModule_ExportAdas(; short::Bool=true)
     end
     if  ExportAdas.formatExponential(0.0) != "0.00+00"
         success = false;   println("** ExportAdas.formatExponential(0.0) is not '0.00+00'")             end
+    # AND THE GUARD MUST FIRE.  A test that only checks the non-negative domain would pass just as
+    # well against the old, silently-misaligning version, so this is the assertion that pins the fix.
+    try    ExportAdas.formatExponential(-3.21e+04)
+           success = false;   println("** formatExponential accepted a negative argument")
+    catch  ex
+        if  !isa(ex, ErrorException)
+            success = false;   println("** formatExponential(-3.21e+04) raised $(typeof(ex)), not an error")  end
+    end
+
     # THE MANTISSA-CARRY BRANCH:  9.999e+03 rounds to 10.00, which must become 1.00+04 and not 10.00+03.
     if  ExportAdas.formatExponential(9.999e+03) != "1.00+04"
         success = false
