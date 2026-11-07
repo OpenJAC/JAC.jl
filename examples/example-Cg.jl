@@ -219,6 +219,9 @@ elseif  false
 elseif  false
     # Last visit:  07-Nov-2026
     # Last visit:  20-Oct-2026
+    # Last reproduced:  07-Nov-2026 (4 of 4 numbers on the 13-Oct-2026 claim line, level 1: E, No_R, No_A,
+    #   omega_R/omega_A) -- also confirms the "BOX TOO SMALL" warning this branch prints (priority list item
+    #   11, Z_eff=2) is a false positive: the dated physics is unaffected by it.
     # Last successful:  31-Jul-2026
     # Branch f: Si (Z=14) K-shell hole, "1s 2s^2 2p^6 3s^2 3p^2" (13 electrons; neutral Si [Ne]3s^2 3p^2
     #   minus one 1s electron) -- explicit levelSelection test, per user request. Si's open 3p^2 shell gives
