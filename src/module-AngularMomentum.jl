@@ -87,6 +87,7 @@ end
 """
 `AngularMomentum.getWignerMethod()`
     ... to return the method::AbstractWignerMethod by which the Wigner symbols are currently evaluated.
+        A method::AngularMomentum.AbstractWignerMethod is returned.
 """
 function getWignerMethod()
 
@@ -365,6 +366,7 @@ end
 """
 `AngularMomentum.isAllowedMultipole(syma::LevelSymmetry, multipole::EmMultipole, symb::LevelSymmetry)`
     ... evaluates to true if the given multipole may connect the two level symmetries, and false otherwise.
+        A value::Bool is returned.
 """
 function  isAllowedMultipole(syma::LevelSymmetry, multipole::EmMultipole, symb::LevelSymmetry)
     if  isTriangle(syma.J, AngularJ64(multipole.L), symb.J)  &&
@@ -378,6 +380,7 @@ end
 `AngularMomentum.isTriangle(ja::AngularJ64, jb::AngularJ64, jc::AngularJ64)`  
     ... evaluates to true if Delta(ja,jb,jc) = 1, ie. if the angular momenta ja, jb and jc can couple to each other, 
         and false otherwise.
+        A value::Bool is returned.
 """
 function isTriangle(ja::AngularJ64, jb::AngularJ64, jc::AngularJ64) 
     if  ja.den == 1   ja2 = 2ja.num   else   ja2 = ja.num   end
@@ -394,6 +397,7 @@ end
 `AngularMomentum.isTriangle(ja::Int64, jb::Int64, jc::Int64)`  
     ... evaluates to true if Delta(ja,jb,jc) = 1, ie. if the three integer (length) ja, jb and jc can form a triangle, 
         and false otherwise.
+        A value::Bool is returned.
 """
 function isTriangle(ja::Int64, jb::Int64, jc::Int64) 
     if  ja + jb >= jc     &&    jc + ja >= jb   &&   jb + jc >= ja    return( true )
@@ -434,6 +438,7 @@ end
 
 """
 `AngularMomentum.kappa_j(kappa::Int64)`  ... calculates the j::AngularJ64 value of a given kappa.
+        A j::AngularJ64 is returned.
 """
 function  kappa_j(kappa::Int64)  
     j = AngularJ64( abs(kappa) - 1//2 )
@@ -443,6 +448,7 @@ end
 
 """
 `AngularMomentum.kappa_l(kappa::Int64)`  ... calculates the l::AngularJ64 value of a given kappa.
+        An l::AngularJ64 is returned.
 """
 function  kappa_l(kappa::Int64)  
     if  kappa < 0    l  = abs(kappa) -1   else   l  = kappa   end
@@ -506,6 +512,7 @@ end
     ... evaluates to true if the given multipole fullfills the parity selection rule pi(a, multipole, b) = 1, 
         and false otherwise. This includes a proper test for both, electric and magnetic multipoles, based on 
         multipole.electric.
+        A value::Bool is returned.
 """
 function  parityEmMultipolePi(pa::Parity, multipole::EmMultipole, pb::Parity)
     # The the multipolarity into account to 'interprete' electric multipoles
@@ -656,6 +663,7 @@ end
 `AngularMomentum.triangularDelta(ia2::Int64, ib2::Int64, ic2::Int64)`  
     ... calculates the tringular Delta(ja,jb,jc). The arguments in this integer function are i2a = 2*ja+1, ... 
         The result is 0 if the triangular condition failes and 1 otherwise. 
+        A value::Int64, either 0 or 1, is returned.
 """
 function triangularDelta(ia2::Int64, ib2::Int64, ic2::Int64)    
     i = ib2 - ic2
@@ -666,6 +674,7 @@ end
 """
 `AngularMomentum.triangularDelta(ja::AngularJ64, jb::AngularJ64, jc::AngularJ64)`  
     ... calculates the tringular Delta(ja,jb,jc). The result is 0 if the triangular condition failes and 1 otherwise. 
+        A value::Int64, either 0 or 1, is returned.
 """
 function triangularDelta(ja::AngularJ64, jb::AngularJ64, jc::AngularJ64)    
     if  abs(ja.num//ja.den - jb.num//jb.den) <= jc.num//jc.den <= ja.num//ja.den + jb.num//jb.den  return( 1 )   else    return( 0 )    end

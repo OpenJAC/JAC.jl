@@ -489,6 +489,7 @@ const fermiA = 2.3/(4 * log(3))     # made const 12-Aug-2026: it is read inside 
     ... provides a value::Float64 for the root-mean-squared radius R [fm] of a uniformly-distributed charge
         density of a nucleus with mass number A.  Renamed from Nuclear.Rrms on 12-Aug-2026 to follow JAC's
         camelCase rule for function names.
+        A value::Float64 is returned.
 """
 function rrmsRadius(A::Float64)
     return( 0.836 * A^(1/3) + 0.57 )
@@ -499,6 +500,7 @@ end
 `Nuclear.fermiRrms(b::Float64)`  
     ... provides a value::Float64 for the root-mean-squared radius of a fermi-distributed charge 
         density for given fermi_a and fermi_b parameters.
+        A value::Float64 is returned.
 """
 function fermiRrms(b::Float64)
 
@@ -522,6 +524,7 @@ end
 
         which is the expression below.  For w = 0 it collapses identically to 12 a^2 L_5 / L_3, i.e. to
         Nuclear.fermiRrms, and that is used as a regression test of this whole model.
+        A value::Float64 is returned.
 """
 function threeParameterFermiRrms(c::Float64, a::Float64, w::Float64)
     L3 = Math.polylogExp(c/a, 3);   L5 = Math.polylogExp(c/a, 5);   L7 = Math.polylogExp(c/a, 7)
@@ -638,6 +641,7 @@ end
     ... computes the half-density radius parameter c [fm] of a deformed Fermi nucleus with the given rms
         radius R, skin thickness a and deformation.  Bisects, for the reasons given at
         Nuclear.computeThreeParameterFermiC.
+        A value::Float64 is returned.
 """
 function computeDeformedFermiC(R::Float64, a::Float64, model::Nuclear.DeformedFermiNucleus)
     R <= 0.  &&  error("Nuclear.computeDeformedFermiC(): R_rms = $R fm must be positive.")
@@ -687,6 +691,7 @@ end
         smooth and increasing for c >~ 2.5 fm, and for smaller c it is non-monotone and eventually singular,
         since |w| a^2/c^2 then reaches O(1).  cFloor below marks that boundary.  Every physically meaningful
         nucleus has c ~ 1.2 R with R >~ 2 fm and so sits far above it.
+        A value::Float64 is returned.
 """
 function computeThreeParameterFermiC(R::Float64, a::Float64, w::Float64)
     R <= 0.  &&  error("Nuclear.computeThreeParameterFermiC(): R_rms = $R fm must be positive.")
@@ -725,6 +730,7 @@ end
 `Nuclear.computeFermiBParameter(R::Float64)`  
     ... computes a value::Float64 for the fermi_b parameter for a fermi-distributed nuclear with 
         root-mean square radius R.
+        A value::Float64 is returned.
 """
 function computeFermiBParameter(R::Float64)
 

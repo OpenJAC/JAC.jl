@@ -28,6 +28,7 @@ const  rciQ_Ael0 = [  7.72308e-1   -2.40991e-4    3.48842e-5   -2.83516e-7    3.
                                                                             - 2c^2 Q_a Q_b + V_nuc (r) (P_a P_b + Q_a Q_b) ]`
                                 
         for the orbitals a and b on the grid. potential.Zr must provide the effective nuclear charge Z(r) on this grid.
+        A value::Float64 is returned.
 """
 function GrantIab(a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, potential::Radial.Potential)
     if  a.subshell.kappa != b.subshell.kappa    return( 0 )    end
@@ -53,6 +54,7 @@ end
                                                                             - 2c^2 Q_a Q_b + V_nuc (r) (P_a P_b + Q_a Q_b) ] * exp(-tau * r)`
                                 
         for the orbitals a and b on the grid. potential.Zr must provide the effective nuclear charge Z(r) on this grid.
+        A value::Float64 is returned.
 """
 function GrantIabDamped(tau::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid, potential::Radial.Potential)
     if  a.subshell.kappa != b.subshell.kappa    return( 0 )    end
@@ -74,6 +76,7 @@ end
 `RadialIntegrals.GrantILminus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
     ... computes Grant's (radial) integral for two relativistic orbitals:  
         I_L^- (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a Q_b - Q_a P_b ] .
+        A value::Float64 is returned.
 """
 function GrantILminus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
     mtp = min(size(a.P, 1), size(b.P, 1))
@@ -88,6 +91,7 @@ end
 `RadialIntegrals.GrantILplus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
     ... computes Grant's (radial) integral for two relativistic orbitals:  
         I_L^+ (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a Q_b + Q_a P_b ] .
+        A value::Float64 is returned.
 """
 function GrantILplus(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
     mtp = min(size(a.P, 1), size(b.P, 1))
@@ -102,6 +106,7 @@ end
 `RadialIntegrals.GrantIL0(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
     ... computes Grant's (radial) integral for two relativistic orbitals:  
         I_L^0 (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a Q_b ] .
+        A value::Float64 is returned.
 """
 function GrantIL0(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
     mtp = min(size(a.P, 1), size(b.P, 1))
@@ -116,6 +121,7 @@ end
 `RadialIntegrals.GrantJL(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
     ... computes Grant's (radial) integral for two relativistic orbitals:  
         J_L (q; a,b) = int_0^\\infty dr j_L (qr) [ P_a P_b + Q_a Q_b ] .
+        A value::Float64 is returned.
 """
 function GrantJL(L::Int64, q::Float64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
     mtp = min(size(a.P, 1), size(b.P, 1))
@@ -216,6 +222,7 @@ end
 + (orbital1::Radial.Orbital, orbital2::Radial.Orbital, grid::Radial.Grid)`  
     ... computes the (radial) overlap integral <orbital_a|orbital_b>  for two relativistic orbitals of the same 
         symmetry (kappa).
+        A value::Float64 is returned.
 """
 function overlap(orbital1::Radial.Orbital, orbital2::Radial.Orbital, grid::Radial.Grid)
     mtp = min(size(orbital1.P, 1), size(orbital2.P, 1))
@@ -232,6 +239,7 @@ end
 """
 + (p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)`  
     ... computes the (radial) overlap integral of two (non-relativistic) radial orbital functions <p1|p2>  as defined on grid.
+        A value::Float64 is returned.
 """
 function overlap(p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)
     
@@ -458,6 +466,7 @@ end
 
 + (k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)`  
     ... computes this integral for two relativistic orbitals:   < r^k >_ab = int_0^\\infty  dr  [P_a P_b + Q_a Q_b]  r^k
+        A value::Float64 is returned.
 """
 function rkDiagonal(k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
     mtp = min(size(a.P, 1), size(b.P, 1))
@@ -479,6 +488,7 @@ end
 """
 + (k::Int64, p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)`
     ... computes this integral for two non-relativistic orbitals:   < r^k >_ab = int_0^\\infty  dr  [P_a P_b]  r^k
+        A value::Float64 is returned.
 """
 function rkDiagonal(k::Int64, p1List::Array{Float64,1}, p2List::Array{Float64,1}, grid::Radial.Grid)
     mtp = min( length(p1List), length(p2List))
@@ -493,6 +503,7 @@ end
 `RadialIntegrals.rkNonDiagonal(k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)` 
     ... computes the (radial and non-diagonal) integral of r^k for two relativistic orbitals:
         [ r^k ]_ab = int_0^\\infty dr [P_a Q_b + Q_a P_b] r^k
+        A value::Float64 is returned.
 """
 function rkNonDiagonal(k::Int64, a::Radial.Orbital, b::Radial.Orbital, grid::Radial.Grid)
     mtp = min(size(a.P, 1), size(b.P, 1))
@@ -1218,6 +1229,7 @@ end
         W_5 [ac|bd] = int_0^infty dr   int_0^r ds   [Pa Qc]_{r}  * ( s^nu / r^(nu+1) ) * [Pb Qd]_{s}
 
         as it frequently occurs in the frequency-independent Breit interaction.
+        A value::Float64 is returned.
 """
 function W5_Integral(mu::Int64, nu::Int64, a::Radial.Orbital, b::Radial.Orbital,  
                                             c::Radial.Orbital, d::Radial.Orbital, grid::Radial.Grid)

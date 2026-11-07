@@ -274,6 +274,7 @@ end
 `Base.:(==)(seta::AsfSettings, setb::AsfSettings)`  
     ... compares (recursively) two instances of AsfSettings and return true if all subfields are equal, 
         and false otherwise
+        A value::Bool is returned.
 """
 function  Base.:(==)(seta::AsfSettings, setb::AsfSettings)
 
@@ -388,6 +389,7 @@ end
 `Base.:(==)(csfa::CsfR, csfb::CsfR)`  
     ... compares (recursively) two relativistic CSFs and return true if all subfields are equal, 
         and false otherwise
+        A value::Bool is returned.
 """
 function  Base.:(==)(csfa::CsfR, csfb::CsfR)
     # Stop the comparison with an error message if the CSF are not defined w.r.t a common subshell list.
@@ -411,6 +413,7 @@ end
 """
 `ManyElectron.CsfRGrasp92(subshells::Array{Subshell,1}, coreSubshells::Array{Subshell,1}, sa::String, sb::String, sc::String)`  
     ... to construct a CsfR from 3 Grasp-Strings and the given list of subshells and core subshells.
+        A `csf::ManyElectron.CsfR` is returned.
 """
 function CsfRGrasp92(subshells::Array{Subshell,1}, coreSubshells::Array{Subshell,1}, sa::String, sb::String, sc::String)
     occupation = Int64[];	 seniorityNr = Int64[];	 subshellJ = AngularJ64[];    subshellX = AngularJ64[];    subshellsx = Subshell[]
@@ -514,6 +517,7 @@ end
 """
 `ManyElectron.parseA(x::AbstractString)`
     ... helper function for `ManyElectron.CsfRGrasp92`
+        Either `nothing` for an empty string, a `value::Int64` for one or two characters, or an `Expr` holding a rational for three, is returned.
 """
 function parseA(x::AbstractString)
     y = strip(x)
@@ -534,6 +538,7 @@ end
         and their coupling (if necessary) but does not support a re-arrangement of the subshell order. This constructor 
         is used to 'combine' individual CsfR into a common list (such as in a Basis) and, thus, use StandardSubshells = true 
         is set. This method terminates with an error message if the given subshell list requires a re-coupling of the CSF.
+        A `csf::ManyElectron.CsfR` is returned.
 """
 function CsfRTransformToStandardSubshells(csf::CsfR, subshells::Array{Subshell,1})
     J = csf.J;    parity = csf.parity; 
@@ -799,6 +804,7 @@ end
     
 + `("from Grasp2018", cslFilename::String, rwfFilename::String, mixFilename::String)` 
     ... to do the same but for files from Grasp2018.
+        A `multiplet::ManyElectron.Multiplet` is returned.
 """
 function Multiplet(sa::String, cslFilename::String, rwfFilename::String, mixFilename::String)
     if  sa == "from Ratip2012"
